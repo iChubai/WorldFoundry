@@ -72,10 +72,7 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
 
     # Treat explicit filesystem-like inputs as local paths.
     looks_like_path = (
-        candidate.is_absolute()
-        or model_name.startswith(".")
-        or model_name.startswith("~")
-        or candidate.exists()
+        candidate.is_absolute() or model_name.startswith(".") or model_name.startswith("~") or candidate.exists()
     )
     if looks_like_path:
         if not candidate.is_absolute():
@@ -96,17 +93,16 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
         required_files = ("config.json", "model.safetensors")
         missing_files = [name for name in required_files if not (candidate / name).exists()]
         if missing_files:
-            raise FileNotFoundError(
-                f"Local DA3 model directory is missing required files {missing_files}: {candidate}"
-            )
+            raise FileNotFoundError(f"Local DA3 model directory is missing required files {missing_files}: {candidate}")
         return str(candidate)
 
     return model_name
 
+
 class Reward3DBackend:
     """Generate 3D reward artifacts from a video rollout."""
 
-    def __init__(self, device='cuda', model_name=DEFAULT_RECONSTRUCTION_MODEL):
+    def __init__(self, device="cuda", model_name=DEFAULT_RECONSTRUCTION_MODEL):
         """
         Initialize the 3D reward backend.
 
@@ -181,9 +177,7 @@ class Reward3DBackend:
         camera_motion_score, pred_pose_rel, target_pose_rel = self._compute_camera_motion_score(
             prediction, camera_trajectory
         )
-        trajectory_comparison_image = self._render_trajectory_comparison(
-            pred_pose_rel, target_pose_rel
-        )
+        trajectory_comparison_image = self._render_trajectory_comparison(pred_pose_rel, target_pose_rel)
 
         return gs_video, meta_view, camera_motion_score, trajectory_comparison_image
 
@@ -357,8 +351,8 @@ class Reward3DBackend:
         # render_3dgs expects:
         #   extrinsics: (batch_views, 4, 4)
         #   intrinsics: (batch_views, 3, 3) - normalized
-        meta_extrinsics = extrinsics[farthest_idx:farthest_idx+1]  # (1, 4, 4)
-        meta_intrinsics = intrinsics[farthest_idx:farthest_idx+1].clone()  # (1, 3, 3)
+        meta_extrinsics = extrinsics[farthest_idx : farthest_idx + 1]  # (1, 4, 4)
+        meta_intrinsics = intrinsics[farthest_idx : farthest_idx + 1].clone()  # (1, 3, 3)
 
         # Normalize intrinsics by dividing by image dimensions
         meta_intrinsics[:, 0, :] /= W  # Normalize x coordinates
@@ -385,10 +379,10 @@ class Reward3DBackend:
         return meta_view
 
     def _parse_camera_matrix(self, matrix_str: str) -> np.ndarray:
-        cols_str = matrix_str.strip().split('] [')
+        cols_str = matrix_str.strip().split("] [")
         cols = []
         for col_str in cols_str:
-            col_str = col_str.replace('[', '').replace(']', '').strip()
+            col_str = col_str.replace("[", "").replace("]", "").strip()
             if not col_str:
                 continue
             values = [float(x) for x in col_str.split()]
@@ -425,10 +419,7 @@ class Reward3DBackend:
             return list(range(total_frames)) + [total_frames - 1] * (target_len - total_frames)
         if target_len == 1:
             return [0]
-        return [
-            int(round(i * (total_frames - 1) / (target_len - 1)))
-            for i in range(target_len)
-        ]
+        return [int(round(i * (total_frames - 1) / (target_len - 1))) for i in range(target_len)]
 
     def _extract_target_camera_poses(self, camera_trajectory, target_len: int) -> np.ndarray | None:
         if camera_trajectory is None:
@@ -537,8 +528,7 @@ class Reward3DBackend:
         # small frame-to-frame jitter. Treat such trajectories as near-static so
         # the score reflects consistency instead of matching noise.
         target_is_near_static = (
-            target_trans_per_step < static_trans_per_step_eps
-            and target_rot_per_step < static_rot_per_step_eps
+            target_trans_per_step < static_trans_per_step_eps and target_rot_per_step < static_rot_per_step_eps
         )
 
         if target_trans_total < trans_eps or target_is_near_static:
@@ -548,9 +538,7 @@ class Reward3DBackend:
             translation_scale = max(target_trans_total / max(len(target_centers) - 1, 1), 1.0)
             mean_error_score = float(np.exp(-mean_translation_error / (2.0 * translation_scale)))
             path_score = self._flatten_cos_score(pred_centers, target_centers)
-            extent_score = float(
-                np.exp(-abs(np.log((pred_trans_total + eps) / (target_trans_total + eps))))
-            )
+            extent_score = float(np.exp(-abs(np.log((pred_trans_total + eps) / (target_trans_total + eps)))))
             trans_score = 0.4 * path_score + 0.3 * extent_score + 0.3 * mean_error_score
 
         rotation_errors = [
@@ -565,9 +553,7 @@ class Reward3DBackend:
         else:
             mean_error_score = float(np.exp(-mean_rotation_error / 6.0))
             final_error_score = float(np.exp(-final_rotation_error / 6.0))
-            extent_score = float(
-                np.exp(-abs(np.log((pred_rot_total + eps) / (target_rot_total + eps))))
-            )
+            extent_score = float(np.exp(-abs(np.log((pred_rot_total + eps) / (target_rot_total + eps)))))
             rot_score = 0.5 * mean_error_score + 0.3 * final_error_score + 0.2 * extent_score
 
         if target_is_near_static or (target_trans_total < trans_eps and target_rot_total < rot_eps):
@@ -684,7 +670,9 @@ class Reward3DBackend:
         plt.close(fig)
         return image
 
-    def _compute_camera_motion_score(self, prediction, camera_trajectory=None) -> Tuple[float, Optional[np.ndarray], Optional[np.ndarray]]:
+    def _compute_camera_motion_score(
+        self, prediction, camera_trajectory=None
+    ) -> Tuple[float, Optional[np.ndarray], Optional[np.ndarray]]:
         """
         Compute camera motion similarity between predicted and target trajectories.
 

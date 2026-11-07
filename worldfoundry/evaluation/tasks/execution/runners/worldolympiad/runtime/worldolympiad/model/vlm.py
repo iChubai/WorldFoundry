@@ -130,8 +130,7 @@ def chat_qwenvl_server_call(
                 response_json = response.json()
             except Exception as exc:
                 raise RuntimeError(
-                    f"QwenVL server response is not JSON. status={response.status_code}, "
-                    f"body={response.text[:500]}"
+                    f"QwenVL server response is not JSON. status={response.status_code}, body={response.text[:500]}"
                 ) from exc
             if response.status_code >= 400:
                 raise RuntimeError(f"QwenVL server HTTP {response.status_code}: {response_json}")

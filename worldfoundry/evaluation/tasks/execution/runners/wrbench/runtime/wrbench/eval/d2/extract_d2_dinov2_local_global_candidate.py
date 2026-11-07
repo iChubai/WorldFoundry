@@ -225,7 +225,9 @@ def merge_candidate_fields(
             out["d2_lg_min_global_first_local_low_relief05_candidate"] = _clip01(
                 min_global_local_low + 0.05 * max(0.0, local_mean - local_low)
             )
-        out["d2_lg_geom_global_first_local_low_candidate"] = math.sqrt(max(0.0, global_first_last) * max(0.0, local_low))
+        out["d2_lg_geom_global_first_local_low_candidate"] = math.sqrt(
+            max(0.0, global_first_last) * max(0.0, local_low)
+        )
         out["d2_lg_blend_global_first_local_low_50_50_candidate"] = _clip01(0.50 * global_first_last + 0.50 * local_low)
     if current is not None and local_low is not None:
         out["d2_lg_blend_mainline_local_low_75_25_candidate"] = _clip01(0.75 * current + 0.25 * local_low)
@@ -343,7 +345,11 @@ def _extract_one(
         **sample_meta,
     }
     if frames is None:
-        return merge_candidate_fields(out, compute_local_global_candidate(np.empty((0, 1)), np.empty((0, 1, 1))), current_mainline=current_mainline)
+        return merge_candidate_fields(
+            out,
+            compute_local_global_candidate(np.empty((0, 1)), np.empty((0, 1, 1))),
+            current_mainline=current_mainline,
+        )
 
     out["d2_lg_original_frame_shape"] = [int(value) for value in frames.shape[1:]]
     global_features, patch_features, feature_meta = _extract_feature_tensors(
@@ -538,7 +544,9 @@ def main(argv: Iterable[str] | None = None) -> int:
             f.write(json.dumps(out, ensure_ascii=False, sort_keys=True) + "\n")
             f.flush()
             if idx % 10 == 0:
-                print(f"processed {idx}/{len(rows_to_run)} this_run, total_done={len(done) + idx}/{len(rows)}", flush=True)
+                print(
+                    f"processed {idx}/{len(rows_to_run)} this_run, total_done={len(done) + idx}/{len(rows)}", flush=True
+                )
 
     all_rows = _read_jsonl(args.out_jsonl)
     summary = qa_rows(all_rows, requested=len(rows))

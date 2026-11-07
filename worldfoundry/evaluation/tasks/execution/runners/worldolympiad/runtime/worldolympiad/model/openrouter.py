@@ -85,6 +85,7 @@ def _post_with_retry(
                 continue
             raise RuntimeError(f"OpenRouter request failed after {max_retries} attempts: {exc}") from exc
 
+
 def text_openrouter_call(system_prompt: str, user_content: str, model_name: str) -> Dict:
     """Text-only OpenRouter helper (no video)."""
     payload = {
@@ -99,10 +100,11 @@ def text_openrouter_call(system_prompt: str, user_content: str, model_name: str)
     return _post_with_retry(url, headers, payload, timeout=180, max_retries=3)
 
 
-def video_openrouter_call(data_url, system_prompt: str, user_content: str, model_name: str = "google/gemini-2.5-flash") -> Dict:
+def video_openrouter_call(
+    data_url, system_prompt: str, user_content: str, model_name: str = "google/gemini-2.5-flash"
+) -> Dict:
     """Helper function to encode video and call OpenRouter API."""
     if type(data_url) is not list:
-
         messages = [
             {
                 "role": "system",
@@ -115,9 +117,9 @@ def video_openrouter_call(data_url, system_prompt: str, user_content: str, model
                         "type": "text",
                         "text": user_content,
                     },
-                    data_url
-                ]
-            }
+                    data_url,
+                ],
+            },
         ]
     else:
         messages = [
@@ -132,23 +134,15 @@ def video_openrouter_call(data_url, system_prompt: str, user_content: str, model
                         "type": "text",
                         "text": user_content,
                     }
-                ]
-            },{
-                "role": "user",
-                "content": [
-                    "These are the frames extracted from the video"
-                ]
-            }
+                ],
+            },
+            {"role": "user", "content": ["These are the frames extracted from the video"]},
         ]
 
         for frame in data_url:
             messages[2]["content"].append(frame)
 
-    
-    payload = {
-        "model": model_name,
-        "messages": messages
-    }
+    payload = {"model": model_name, "messages": messages}
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = _openrouter_headers()
     resp_json = _post_with_retry(url, headers, payload, timeout=180, max_retries=3)

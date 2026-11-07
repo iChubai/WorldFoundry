@@ -28,6 +28,7 @@ from typing import Any
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _col(value: Any, width: int) -> str:
     """Left-justify *value* in a field of *width* characters."""
     return str(value).ljust(width)
@@ -50,6 +51,7 @@ def _print_table(rows: list[list[str]], headers: list[str]) -> None:
 # ---------------------------------------------------------------------------
 # Sub-command: models
 # ---------------------------------------------------------------------------
+
 
 def _cmd_models(args: argparse.Namespace) -> int:
     import wrbench
@@ -82,10 +84,7 @@ def _cmd_models(args: argparse.Namespace) -> int:
         print(json.dumps(data, indent=2))
         return 0
 
-    rows = [
-        [r.key, r.input_kind, r.adapter, r.payload_type, r.amplitude.calibration_status]
-        for r in records
-    ]
+    rows = [[r.key, r.input_kind, r.adapter, r.payload_type, r.amplitude.calibration_status] for r in records]
     _print_table(rows, ["key", "input_kind", "adapter", "payload_type", "calibration_status"])
     return 0
 
@@ -93,6 +92,7 @@ def _cmd_models(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 # Sub-command: presets
 # ---------------------------------------------------------------------------
+
 
 def _cmd_presets(args: argparse.Namespace) -> int:
     import wrbench
@@ -133,6 +133,7 @@ def _cmd_presets(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 # Sub-command: actions
 # ---------------------------------------------------------------------------
+
 
 def _cmd_actions(args: argparse.Namespace) -> int:
     import wrbench
@@ -198,6 +199,7 @@ def _cmd_actions(args: argparse.Namespace) -> int:
 # Sub-command: generate
 # ---------------------------------------------------------------------------
 
+
 def _resolve_preset_camera(camera_str: str, args: argparse.Namespace):
     """Return a CameraScript or camera string for ``--camera preset:<name>``."""
     import wrbench
@@ -205,7 +207,7 @@ def _resolve_preset_camera(camera_str: str, args: argparse.Namespace):
     if not camera_str.startswith("preset:"):
         return camera_str  # raw script string
 
-    preset_name = camera_str[len("preset:"):]
+    preset_name = camera_str[len("preset:") :]
     kwargs: dict[str, Any] = {}
     if args.peak_deg is not None:
         kwargs["peak_deg"] = args.peak_deg
@@ -358,6 +360,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
 # Sub-command: doctor
 # ---------------------------------------------------------------------------
 
+
 def _doctor_check_model(key: str) -> tuple[bool, list[str]]:
     """Run all doctor checks for one model key. Returns (pass, [lines])."""
     lines: list[str] = []
@@ -383,6 +386,7 @@ def _doctor_check_model(key: str) -> tuple[bool, list[str]]:
 
     # Check 2: input_kind is valid
     from wrbench.registry import VALID_INPUT_KINDS
+
     if record.input_kind not in VALID_INPUT_KINDS:
         lines.append(f"  FAIL  input_kind: {record.input_kind!r} is not valid")
         return False, lines
@@ -474,7 +478,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         else:
             failed_keys.append(key)
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Summary: {passed}/{total} passed")
     if failed_keys:
         print(f"Failed:  {', '.join(failed_keys)}")
@@ -486,6 +490,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 # Sub-command: profile
 # ---------------------------------------------------------------------------
+
 
 def _cmd_profile(args: argparse.Namespace) -> int:
     from wrbench.profiling import run_profiled_command
@@ -542,6 +547,7 @@ def _cmd_profile(args: argparse.Namespace) -> int:
 # Sub-command: profile-summary
 # ---------------------------------------------------------------------------
 
+
 def _cmd_profile_summary(args: argparse.Namespace) -> int:
     from wrbench.profiling import format_rows, load_profiles, summarize
 
@@ -558,6 +564,7 @@ def _cmd_profile_summary(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 # Sub-command: prompt
 # ---------------------------------------------------------------------------
+
 
 def _cmd_prompt(args: argparse.Namespace) -> int:
     if args.prompt_command == "camera":
@@ -663,7 +670,10 @@ def _cmd_prompt(args: argparse.Namespace) -> int:
                     print(f"... and {len(variants) - 3} more")
             return 0
 
-        print("prompt task: only --deterministic path is implemented without LLM; use scene+LLM for tier groups", file=sys.stderr)
+        print(
+            "prompt task: only --deterministic path is implemented without LLM; use scene+LLM for tier groups",
+            file=sys.stderr,
+        )
         return 2
 
     print(f"Unknown prompt subcommand: {args.prompt_command}", file=sys.stderr)
@@ -673,6 +683,7 @@ def _cmd_prompt(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 # Sub-command: firstframe
 # ---------------------------------------------------------------------------
+
 
 def _cmd_firstframe(args: argparse.Namespace) -> int:
     from wrbench.firstframe import generate_first_frame, generate_first_frames_from_families, write_manifest
@@ -723,6 +734,7 @@ def _cmd_firstframe(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 # Sub-command: eval (D1-D6)
 # ---------------------------------------------------------------------------
+
 
 def _cmd_eval(args: argparse.Namespace) -> int:
     from pathlib import Path
@@ -853,6 +865,7 @@ def _cmd_eval(args: argparse.Namespace) -> int:
 # Argument parser
 # ---------------------------------------------------------------------------
 
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="wrbench",
@@ -864,36 +877,26 @@ def _build_parser() -> argparse.ArgumentParser:
 
     # models
     p_models = sub.add_parser("models", help="List supported models.")
-    p_models.add_argument(
-        "--json", action="store_true", help="Output full records as a JSON array."
-    )
-    p_models.add_argument(
-        "--deferred", action="store_true", help="Include deferred (not-yet-dispatchable) models."
-    )
+    p_models.add_argument("--json", action="store_true", help="Output full records as a JSON array.")
+    p_models.add_argument("--deferred", action="store_true", help="Include deferred (not-yet-dispatchable) models.")
 
     # presets
     p_presets = sub.add_parser("presets", help="List preset camera motions.")
     p_presets.add_argument("--json", action="store_true", help="Output as JSON.")
 
     # actions
-    p_actions = sub.add_parser(
-        "actions", help="Parse and validate a frame-action camera script."
-    )
+    p_actions = sub.add_parser("actions", help="Parse and validate a frame-action camera script.")
     p_actions.add_argument(
         "--camera",
         required=True,
         metavar="SCRIPT",
         help='Camera script, e.g. "yaw:left:60@40,yaw:right:60@41".',
     )
-    p_actions.add_argument(
-        "--fps", type=int, required=True, metavar="N", help="Frames per second."
-    )
+    p_actions.add_argument("--fps", type=int, required=True, metavar="N", help="Frames per second.")
     p_actions.add_argument("--json", action="store_true", help="Output as JSON.")
 
     # generate
-    p_gen = sub.add_parser(
-        "generate", help="Compile a camera script and write model-native payload sidecars."
-    )
+    p_gen = sub.add_parser("generate", help="Compile a camera script and write model-native payload sidecars.")
     p_gen.add_argument("--model", required=True, metavar="MODEL", help="Target model key.")
     p_gen.add_argument(
         "--camera",
@@ -907,7 +910,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_gen.add_argument("--out", required=True, metavar="PATH", help="Output file path (e.g. out.mp4).")
     p_gen.add_argument("--image", metavar="PATH", help="Input image (required for TI2V models).")
     p_gen.add_argument(
-        "--source-video", metavar="PATH", dest="source_video",
+        "--source-video",
+        metavar="PATH",
+        dest="source_video",
         help="Input source video (required for V2V models).",
     )
     p_gen.add_argument("--prompt", required=True, metavar="TEXT", help="Text prompt.")
@@ -915,8 +920,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p_gen.add_argument("--height", type=int, metavar="N", help="Override model registry frame height.")
     p_gen.add_argument("--fps", type=int, metavar="N", help="Override model registry frames per second.")
     p_gen.add_argument(
-        "--num-frames", type=int, dest="num_frames",
-        metavar="N", help="Override total frame count.",
+        "--num-frames",
+        type=int,
+        dest="num_frames",
+        metavar="N",
+        help="Override total frame count.",
     )
     p_gen.add_argument("--work-dir", metavar="DIR", dest="work_dir", help="Working directory for scratch files.")
     p_gen.add_argument(
@@ -929,22 +937,27 @@ def _build_parser() -> argparse.ArgumentParser:
         "--no-dry-run",
         action="store_true",
         dest="no_dry_run",
-        help=(
-            "Disable dry-run mode and invoke the canonical in-tree WorldFoundry model runner."
-        ),
+        help=("Disable dry-run mode and invoke the canonical in-tree WorldFoundry model runner."),
     )
     # Preset parametrisation flags
     p_gen.add_argument(
-        "--peak-deg", type=float, dest="peak_deg",
-        metavar="DEG", help="Override preset peak_deg (yaw/pitch presets).",
+        "--peak-deg",
+        type=float,
+        dest="peak_deg",
+        metavar="DEG",
+        help="Override preset peak_deg (yaw/pitch presets).",
     )
     p_gen.add_argument(
-        "--amount", type=float,
-        metavar="A", help="Override preset amount (translation presets).",
+        "--amount",
+        type=float,
+        metavar="A",
+        help="Override preset amount (translation presets).",
     )
     p_gen.add_argument(
-        "--frames", type=int,
-        metavar="N", help="Override preset total frame count.",
+        "--frames",
+        type=int,
+        metavar="N",
+        help="Override preset total frame count.",
     )
 
     # profile
@@ -1025,20 +1038,16 @@ def _build_parser() -> argparse.ArgumentParser:
     p_ff.add_argument("--size", required=True, help="T2I output size, provider-specific.")
     p_ff.add_argument("--n", required=True, help="T2I output count, provider-specific.")
     ff_existing = p_ff.add_mutually_exclusive_group(required=True)
-    ff_existing.add_argument("--skip-existing", action="store_true", help="Skip existing PNGs and record them in the manifest.")
+    ff_existing.add_argument(
+        "--skip-existing", action="store_true", help="Skip existing PNGs and record them in the manifest."
+    )
     ff_existing.add_argument("--overwrite-existing", action="store_true", help="Regenerate existing PNGs.")
 
     # doctor
-    p_doc = sub.add_parser(
-        "doctor", help="Validate registry and adapter wiring."
-    )
+    p_doc = sub.add_parser("doctor", help="Validate registry and adapter wiring.")
     model_group = p_doc.add_mutually_exclusive_group()
-    model_group.add_argument(
-        "--model", metavar="MODEL", help="Check a single model."
-    )
-    model_group.add_argument(
-        "--all", action="store_true", help="Check all models including deferred."
-    )
+    model_group.add_argument("--model", metavar="MODEL", help="Check a single model.")
+    model_group.add_argument("--all", action="store_true", help="Check all models including deferred.")
 
     # eval
     p_eval = sub.add_parser(

@@ -255,7 +255,9 @@ def run_batch(args: argparse.Namespace) -> dict[str, Any]:
             with log_path.open("w", encoding="utf-8") as log:
                 proc = subprocess.run(command, cwd=args.cwd, env=env, stdout=log, stderr=subprocess.STDOUT)
             report["returncode"] = proc.returncode
-            report["status"] = "ok" if proc.returncode == 0 and _pose_ok(pose_path, expected_frames=pose_expected_frames) else "error"
+            report["status"] = (
+                "ok" if proc.returncode == 0 and _pose_ok(pose_path, expected_frames=pose_expected_frames) else "error"
+            )
             if report["status"] == "error" and args.stop_on_error:
                 status_counts[report["status"]] += 1
                 row_reports.append(report)
@@ -302,7 +304,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--max-frames", "--max_frames", dest="max_frames", type=int)
     parser.add_argument("--image-resolution", "--image_resolution", dest="image_resolution", type=int, required=True)
-    parser.add_argument("--preprocess-mode", "--preprocess_mode", dest="preprocess_mode", choices=("balanced", "max_size"), required=True)
+    parser.add_argument(
+        "--preprocess-mode",
+        "--preprocess_mode",
+        dest="preprocess_mode",
+        choices=("balanced", "max_size"),
+        required=True,
+    )
     parser.add_argument("--execution-mode", choices=("subprocess", "inprocess"), required=True)
     parser.add_argument("--poses-file", "--poses_file", dest="poses_file", required=True)
     parser.add_argument("--results-jsonl", type=Path)

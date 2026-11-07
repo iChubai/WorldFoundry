@@ -1,8 +1,8 @@
-'''
+"""
 Docstring for problem.problem_filter
 
 这个文件提供一个接口，让VLM来判断这个视频和哪些物理现象有关
-'''
+"""
 
 from problem.problem_set import MECHANICS_QUESTIONS, THERMOTICS_QUESTIONS, MATERIAL_QUESTIONS
 
@@ -31,15 +31,10 @@ def parse_llm_response(response_text: str) -> Dict:
         return json.loads(cleaned)
     except json.JSONDecodeError as e:
         # If parsing fails, return error structure
-        return {
-            "error": "JSON parse failed",
-            "raw_text": response_text,
-            "exception": str(e)
-        }
+        return {"error": "JSON parse failed", "raw_text": response_text, "exception": str(e)}
 
 
-
-def filter_problems_by_physics(video, model_name, video_prompt)-> Dict:
+def filter_problems_by_physics(video, model_name, video_prompt) -> Dict:
     prompt = f"""
     You are a physics-aware problem filter. Given a Video Prompt, Video and the Problem Set, determine if the problem is relevant to the physical phenomena depicted in the video.
 
@@ -73,10 +68,7 @@ def filter_problems_by_physics(video, model_name, video_prompt)-> Dict:
 
     parsed_response = parse_llm_response(result["choices"][0]["message"]["content"])
 
-    
-
     return parsed_response
-
 
 
 if __name__ == "__main__":
@@ -86,17 +78,12 @@ if __name__ == "__main__":
 
     def encode_video_to_base64(video_path):
         with open(video_path, "rb") as video_file:
-            return base64.b64encode(video_file.read()).decode('utf-8')
+            return base64.b64encode(video_file.read()).decode("utf-8")
 
     base64_video = encode_video_to_base64(video_path=video_path)
 
     data_url = f"data:video/mp4;base64,{base64_video}"
-    data_url = {
-        "type": "video_url",
-        "video_url": {
-            "url": data_url
-        }
-    }
+    data_url = {"type": "video_url", "video_url": {"url": data_url}}
 
     result = filter_problems_by_physics(video_path, model_name, video_prompt)
 

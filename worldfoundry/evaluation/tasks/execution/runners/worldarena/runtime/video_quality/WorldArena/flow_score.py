@@ -28,7 +28,7 @@ class FlowScore:
     def _load_model(self):
         self.model = RAFT(self.args)
         ckpt = torch.load(self.args.model, map_location="cpu")
-        new_ckpt = {k.replace('module.', ''): v for k, v in ckpt.items()}
+        new_ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
         self.model.load_state_dict(new_ckpt)
         self.model.to(self.device)
         self.model.eval()
@@ -38,15 +38,8 @@ class FlowScore:
         frame_list = []
 
         if os.path.isdir(video_path):
-            exts = {
-                "jpg", "jpeg", "png", "bmp", "tif", "tiff",
-                "JPG", "JPEG", "PNG", "BMP", "TIF", "TIFF"
-            }
-            imgs = sorted([
-                os.path.join(video_path, p)
-                for p in os.listdir(video_path)
-                if p.split(".")[-1] in exts
-            ])
+            exts = {"jpg", "jpeg", "png", "bmp", "tif", "tiff", "JPG", "JPEG", "PNG", "BMP", "TIF", "TIFF"}
+            imgs = sorted([os.path.join(video_path, p) for p in os.listdir(video_path) if p.split(".")[-1] in exts])
             for img_path in imgs:
                 frame = cv2.imread(img_path, cv2.IMREAD_COLOR)
                 if frame is None:
@@ -95,10 +88,12 @@ def flow_score(flow_scorer, video_list):
 
     for video_path in tqdm(video_list, disable=get_rank() > 0):
         score_per_video = flow_scorer.infer(video_path)
-        video_results.append({
-            'video_path': video_path,
-            'video_results': score_per_video,
-        })
+        video_results.append(
+            {
+                "video_path": video_path,
+                "video_results": score_per_video,
+            }
+        )
         sim.append(score_per_video)
 
     avg_score = float(np.mean(sim)) if len(sim) > 0 else 0.0
@@ -111,20 +106,18 @@ def compute_flow_score(json_dir, submodules_list, **kwargs):
     if model_path is None:
         raise ValueError("flow_score requires raft checkpoint from config")
 
-    args_new = edict({
-        "model": model_path,
-        "small": False,
-        "mixed_precision": False,
-        "alternate_corr": False,
-    })
+    args_new = edict(
+        {
+            "model": model_path,
+            "small": False,
+            "mixed_precision": False,
+            "alternate_corr": False,
+        }
+    )
 
     scorer = FlowScore(args_new, device)
 
-    video_list, _ = load_dimension_info(
-        json_dir,
-        dimension='flow_score',
-        lang='en'
-    )
+    video_list, _ = load_dimension_info(json_dir, dimension="flow_score", lang="en")
 
     video_list = distribute_list_to_rank(video_list)
 
@@ -132,8 +125,6 @@ def compute_flow_score(json_dir, submodules_list, **kwargs):
 
     if get_world_size() > 1:
         video_results = gather_list_of_dict(video_results)
-        all_results = sum(
-            [d['video_results'] for d in video_results]
-        ) / len(video_results)
+        all_results = sum([d["video_results"] for d in video_results]) / len(video_results)
 
     return all_results, video_results

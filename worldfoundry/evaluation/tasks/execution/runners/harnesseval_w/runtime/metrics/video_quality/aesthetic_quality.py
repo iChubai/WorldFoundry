@@ -1,4 +1,5 @@
 """Aesthetic quality metric — LAION aesthetic predictor on CLIP ViT-L/14 features."""
+
 from contextlib import contextmanager
 
 from worldfoundry.base_models.perception_core.general_perception.openai_clip_runtime import clip
@@ -17,7 +18,9 @@ class AestheticQualityMetric(BaseMetric):
     def __init__(self, device="cuda"):
         super().__init__(device)
         clip_dir = get_weights_dir("clip")
-        self.clip_model, self.preprocess = clip.load(get_weight_file("clip", "ViT-L-14.pt"), device=self.device, download_root=clip_dir)
+        self.clip_model, self.preprocess = clip.load(
+            get_weight_file("clip", "ViT-L-14.pt"), device=self.device, download_root=clip_dir
+        )
         self.aesthetic_model = self._get_aesthetic_model()
 
     @property
@@ -48,9 +51,7 @@ class AestheticQualityMetric(BaseMetric):
     def compute_prepared(self, prepared):
         scores = []
         for start in range(0, len(prepared), _GPU_BATCH_SIZE):
-            images = torch.stack(prepared[start : start + _GPU_BATCH_SIZE]).to(
-                self.device
-            )
+            images = torch.stack(prepared[start : start + _GPU_BATCH_SIZE]).to(self.device)
             with torch.no_grad():
                 feats = self.clip_model.encode_image(images).to(torch.float32)
                 feats = F.normalize(feats, dim=-1, p=2)

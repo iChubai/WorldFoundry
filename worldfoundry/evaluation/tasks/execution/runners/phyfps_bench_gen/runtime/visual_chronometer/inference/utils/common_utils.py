@@ -8,7 +8,7 @@ import torch.distributed as dist
 def count_params(model, verbose=False):
     total_params = sum(p.numel() for p in model.parameters())
     if verbose:
-        print(f"{model.__class__.__name__} has {total_params*1.e-6:.2f} M params.")
+        print(f"{model.__class__.__name__} has {total_params * 1.0e-6:.2f} M params.")
     return total_params
 
 
@@ -44,10 +44,7 @@ def get_obj_from_str(string, reload=False):
 
 
 def load_npz_from_dir(data_dir):
-    data = [
-        np.load(os.path.join(data_dir, data_name))["arr_0"]
-        for data_name in os.listdir(data_dir)
-    ]
+    data = [np.load(os.path.join(data_dir, data_name))["arr_0"] for data_name in os.listdir(data_dir)]
     data = np.concatenate(data, axis=0)
     return data
 

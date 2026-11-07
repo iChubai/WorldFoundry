@@ -8,12 +8,13 @@ This script generates frame-level poses by expanding each latent step
 into multiple per-frame motions with the same per-step speeds used by
 HY-WorldPlay-New (forward_speed=0.08, yaw_speed=3°, pitch_speed=3°).
 """
+
 import numpy as np
 import sys
 import os
 
 # Add HY-WorldPlay-New to path
-sys.path.insert(0, '<path_to_your_HY-WorldPlay_repo>/hyvideo')
+sys.path.insert(0, "<path_to_your_HY-WorldPlay_repo>/hyvideo")
 from generate_custom_trajectory import generate_camera_trajectory_local
 
 
@@ -126,7 +127,7 @@ def parse_action_string(action_string):
     return motions, total_latents
 
 
-def convert_action_to_lingbot(action_string, output_dir='./'):
+def convert_action_to_lingbot(action_string, output_dir="./"):
     """
     Convert HY-WorldPlay-New action string to LingBot-World format.
 
@@ -165,8 +166,8 @@ def convert_action_to_lingbot(action_string, output_dir='./'):
 
     # Save
     os.makedirs(output_dir, exist_ok=True)
-    np.save(os.path.join(output_dir, 'poses.npy'), poses_c2w)
-    np.save(os.path.join(output_dir, 'intrinsics.npy'), intrinsics)
+    np.save(os.path.join(output_dir, "poses.npy"), poses_c2w)
+    np.save(os.path.join(output_dir, "intrinsics.npy"), intrinsics)
 
     print(f"\nSaved to {output_dir}:")
     print(f"  poses.npy: shape {poses_c2w.shape}")
@@ -185,11 +186,10 @@ def convert_action_to_lingbot(action_string, output_dir='./'):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Convert HY-WorldPlay-New actions to LingBot-World poses")
-    parser.add_argument("action", nargs="?", default="right-11",
-                        help="Action string (default: 'right-11')")
-    parser.add_argument("--output", default="./examples/hyworld_converted",
-                        help="Output directory")
+    parser.add_argument("action", nargs="?", default="right-11", help="Action string (default: 'right-11')")
+    parser.add_argument("--output", default="./examples/hyworld_converted", help="Output directory")
     args = parser.parse_args()
 
     convert_action_to_lingbot(args.action, output_dir=args.output)

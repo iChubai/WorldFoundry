@@ -4,20 +4,21 @@ from scipy.spatial import distance
 from scipy.signal import medfilt
 from scipy.stats import ttest_ind
 
+
 def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, confidence_threshold=0.3, window_size=1):
     """
     Calculate the normalized motion amplitude for each batch sample
-    
+
     Parameters:
     keypoints: torch.Tensor, shape [batch_size, 49, 792, 2]
     video_width: int, width of the video
     video_height: int, height of the video
-    
+
     Returns:
     motion_amplitudes: torch.Tensor, shape [batch_size], containing the normalized motion amplitude for each batch sample
     """
-    video_keypoints = [instance['instances'][0]['keypoints'] for instance in instance_info]
-    video_keypoint_scores = [instance['instances'][0]['keypoint_scores'] for instance in instance_info]
+    video_keypoints = [instance["instances"][0]["keypoints"] for instance in instance_info]
+    video_keypoint_scores = [instance["instances"][0]["keypoint_scores"] for instance in instance_info]
 
     num_frames = len(video_keypoints)
     if num_frames < window_size:
@@ -28,18 +29,18 @@ def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, co
     half_window = window_size // 2
 
     body_parts = [
-        ('torso', 5, 11),
-        ('left_upper_arm', 5, 7),
-        ('left_forearm', 7, 9),
-        ('right_upper_arm', 6, 8),
-        ('right_forearm', 8, 10),
-        ('left_thigh', 11, 13),
-        ('left_calf', 13, 15),
-        ('right_thigh', 12, 14),
-        ('right_calf', 14, 16),
-        ('shoulder_width', 5, 6),
-        ('hip_width', 11, 12),
-        ('neck', 0, 5),
+        ("torso", 5, 11),
+        ("left_upper_arm", 5, 7),
+        ("left_forearm", 7, 9),
+        ("right_upper_arm", 6, 8),
+        ("right_forearm", 8, 10),
+        ("left_thigh", 11, 13),
+        ("left_calf", 13, 15),
+        ("right_thigh", 12, 14),
+        ("right_calf", 14, 16),
+        ("shoulder_width", 5, 6),
+        ("hip_width", 11, 12),
+        ("neck", 0, 5),
     ]
 
     lengths = {part[0]: [] for part in body_parts}
@@ -52,7 +53,7 @@ def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, co
             end_point = np.array(frame_keypoints[end_idx])
             start_score = frame_scores[start_idx]
             end_score = frame_scores[end_idx]
-            
+
             if start_score > confidence_threshold and end_score > confidence_threshold:
                 length = distance.euclidean(start_point, end_point)
                 lengths[part_name].append(length)
@@ -67,29 +68,33 @@ def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, co
     total_parts = len(body_parts)  # Total number of body parts
 
     for part_name in lengths:
-        valid_lengths = [l for l, v in zip(lengths[part_name], valid_measurements[part_name]) if v and l is not None and l > min_length]
-        
+        valid_lengths = [
+            l
+            for l, v in zip(lengths[part_name], valid_measurements[part_name])
+            if v and l is not None and l > min_length
+        ]
+
         if len(valid_lengths) < num_frames // 2:
             # If there are not enough valid measurements, consider the part to be normal
             normal_parts += 1
             continue
-        
+
         window_averages = []
         for i in range(len(valid_lengths)):
             start = max(0, i - half_window)
             end = min(len(valid_lengths), i + half_window + 1)
             window = valid_lengths[start:end]
             window_averages.append(np.mean(window))
-        
+
         # Calculate relative change between adjacent window averages
         part_normal = True
         for i in range(len(window_averages) - 1):
-            change = abs(window_averages[i+1] - window_averages[i]) / window_averages[i]
+            change = abs(window_averages[i + 1] - window_averages[i]) / window_averages[i]
             if change > threshold:
                 anomalies.append(f"{part_name} shows significant change around frame {i}, change: {change:.2%}")
                 part_normal = False
                 break
-        
+
         if part_normal:
             normal_parts += 1
 
@@ -97,6 +102,7 @@ def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, co
     score = normal_parts / total_parts
 
     return anomalies, score
+
 
 def calculate_angle(point1, point2, point3):
     """Calculate the angle formed by three points"""
@@ -109,9 +115,10 @@ def calculate_angle(point1, point2, point3):
     angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
     return np.degrees(angle)
 
+
 def analyze_joint_angles(instance_info, threshold=30, confidence_threshold=0.3, window_size=1):
-    video_keypoints = [instance['instances'][0]['keypoints'] for instance in instance_info]
-    video_keypoint_scores = [instance['instances'][0]['keypoint_scores'] for instance in instance_info]
+    video_keypoints = [instance["instances"][0]["keypoints"] for instance in instance_info]
+    video_keypoint_scores = [instance["instances"][0]["keypoint_scores"] for instance in instance_info]
 
     num_frames = len(video_keypoints)
     if num_frames < window_size:
@@ -123,14 +130,14 @@ def analyze_joint_angles(instance_info, threshold=30, confidence_threshold=0.3, 
 
     # Define joint angles to analyze
     joint_angles = [
-        ('left_elbow', 5, 7, 9),    # Left shoulder - left elbow - left wrist
-        ('right_elbow', 6, 8, 10),  # Right shoulder - right elbow - right wrist
-        ('left_shoulder', 7, 5, 11), # Left elbow - left shoulder - left hip
-        ('right_shoulder', 8, 6, 12), # Right elbow - right shoulder - right hip
-        ('left_hip', 5, 11, 13),    # Left shoulder - left hip - left knee
-        ('right_hip', 6, 12, 14),   # Right shoulder - right hip - right knee
-        ('left_knee', 11, 13, 15),  # Left hip - left knee - left ankle
-        ('right_knee', 12, 14, 16)  # Right hip - right knee - right ankle
+        ("left_elbow", 5, 7, 9),  # Left shoulder - left elbow - left wrist
+        ("right_elbow", 6, 8, 10),  # Right shoulder - right elbow - right wrist
+        ("left_shoulder", 7, 5, 11),  # Left elbow - left shoulder - left hip
+        ("right_shoulder", 8, 6, 12),  # Right elbow - right shoulder - right hip
+        ("left_hip", 5, 11, 13),  # Left shoulder - left hip - left knee
+        ("right_hip", 6, 12, 14),  # Right shoulder - right hip - right knee
+        ("left_knee", 11, 13, 15),  # Left hip - left knee - left ankle
+        ("right_knee", 12, 14, 16),  # Right hip - right knee - right ankle
     ]
 
     angles = {angle[0]: [] for angle in joint_angles}
@@ -154,28 +161,30 @@ def analyze_joint_angles(instance_info, threshold=30, confidence_threshold=0.3, 
 
     for angle_name in angles:
         valid_angles = [a for a, v in zip(angles[angle_name], valid_measurements[angle_name]) if v and a is not None]
-        
+
         if len(valid_angles) < num_frames // 3:
             # If there are not enough valid measurements, consider the joint to be normal
             normal_joints += 1
             continue
-        
+
         window_averages = []
         for i in range(len(valid_angles)):
             start = max(0, i - half_window)
             end = min(len(valid_angles), i + half_window + 1)
             window = valid_angles[start:end]
             window_averages.append(np.mean(window))
-        
+
         # Calculate changes between adjacent window averages
         changes = np.abs(np.diff(window_averages))
-        
+
         if np.max(changes) <= threshold:
             normal_joints += 1
         else:
             for i, change in enumerate(changes):
                 if change > threshold:
-                    anomalies.append(f"{angle_name} shows significant change around frame {i}, change: {change:.2f} degrees")
+                    anomalies.append(
+                        f"{angle_name} shows significant change around frame {i}, change: {change:.2f} degrees"
+                    )
                     break
 
     # Calculate score

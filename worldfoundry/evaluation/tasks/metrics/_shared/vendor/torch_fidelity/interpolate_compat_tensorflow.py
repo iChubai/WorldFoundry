@@ -55,8 +55,9 @@ def interpolate_bilinear_2d_like_tensorflow1x(input, size=None, scale_factor=Non
             raise ValueError("only one of size or scale_factor should be defined")
         if scale_factor is not None and isinstance(scale_factor, tuple) and len(scale_factor) != dim:
             raise ValueError(
-                "scale_factor shape must match input shape. "
-                "Input is {}D, scale_factor size is {}".format(dim, len(scale_factor))
+                "scale_factor shape must match input shape. Input is {}D, scale_factor size is {}".format(
+                    dim, len(scale_factor)
+                )
             )
 
     is_tracing = torch._C._get_tracing_state()

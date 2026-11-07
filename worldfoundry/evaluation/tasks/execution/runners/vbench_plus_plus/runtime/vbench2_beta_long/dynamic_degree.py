@@ -1,4 +1,3 @@
-
 from vbench.dynamic_degree import compute_dynamic_degree
 from vbench2_beta_long.utils import reorganize_clips_results
 

@@ -42,6 +42,7 @@ _JSON_RE_DOTALL = re.compile(r"\{.*\}", re.DOTALL)
 
 try:
     import json_repair
+
     _HAS_JSON_REPAIR = True
 except ImportError:
     _HAS_JSON_REPAIR = False
@@ -56,7 +57,7 @@ def _extract_balanced_json(text: str) -> str | None:
         if escape:
             escape = False
             continue
-        if ch == '\\' and in_string:
+        if ch == "\\" and in_string:
             escape = True
             continue
         if ch == '"' and not escape:
@@ -64,14 +65,14 @@ def _extract_balanced_json(text: str) -> str | None:
             continue
         if in_string:
             continue
-        if ch == '{':
+        if ch == "{":
             if depth == 0:
                 start = i
             depth += 1
-        elif ch == '}':
+        elif ch == "}":
             depth -= 1
             if depth == 0 and start is not None:
-                return text[start:i + 1]
+                return text[start : i + 1]
             if depth < 0:
                 depth = 0
     return None
@@ -100,7 +101,7 @@ def parse_cot_response(text: str) -> tuple[str, str]:
     m = _THINK_RE.search(text)
     if m:
         rationale = m.group(1).strip()
-    after_think = text[m.end():] if m else text
+    after_think = text[m.end() :] if m else text
     json_str = _extract_balanced_json(after_think)
     if not json_str and rationale:
         json_str = _extract_balanced_json(rationale)
@@ -139,12 +140,14 @@ def save_eval_json(path: str, results: list[dict], *, meta: dict | None = None, 
     out: dict = {}
     if meta is not None:
         out["meta"] = meta
-    out.update({
-        "num_videos": len(results),
-        "general_dimensions": GENERAL_KEYS,
-        "results": results,
-        **extra_fields,
-    })
+    out.update(
+        {
+            "num_videos": len(results),
+            "general_dimensions": GENERAL_KEYS,
+            "results": results,
+            **extra_fields,
+        }
+    )
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         json.dump(out, f, indent=2, ensure_ascii=False)
@@ -157,10 +160,8 @@ def save_eval_json(path: str, results: list[dict], *, meta: dict | None = None, 
 
 
 class VLMBackend(abc.ABC):
-
     @abc.abstractmethod
-    def call(self, video_path: str, prompt_text: str, system_prompt: str | None = None) -> str:
-        ...
+    def call(self, video_path: str, prompt_text: str, system_prompt: str | None = None) -> str: ...
 
     def release_video(self, video_path: str) -> None:
         pass
@@ -195,7 +196,6 @@ def _usage_to_dict(usage: Any) -> dict[str, Any] | None:
 
 
 class GeminiBackend(VLMBackend):
-
     def __init__(
         self,
         model: str = "gemini-3.1-pro-preview",
@@ -216,7 +216,9 @@ class GeminiBackend(VLMBackend):
 
         if vertexai:
             self.client = genai.Client(
-                vertexai=True, project=project, location=location,
+                vertexai=True,
+                project=project,
+                location=location,
                 http_options=http_opts,
             )
             self._use_files_api = False
@@ -227,9 +229,7 @@ class GeminiBackend(VLMBackend):
                 api_key = Path(api_key_file).read_text().strip()
             api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
             if not api_key:
-                raise RuntimeError(
-                    "No Gemini API key. Set GEMINI_API_KEY env var or pass --api_key_file."
-                )
+                raise RuntimeError("No Gemini API key. Set GEMINI_API_KEY env var or pass --api_key_file.")
             self.client = genai.Client(api_key=api_key, http_options=http_opts)
             self._use_files_api = True
 
@@ -254,9 +254,7 @@ class GeminiBackend(VLMBackend):
             video_content: Any = self._get_uploaded(video_path)
         else:
             video_bytes = Path(video_path).read_bytes()
-            video_content = self._types.Part.from_bytes(
-                data=video_bytes, mime_type="video/mp4"
-            )
+            video_content = self._types.Part.from_bytes(data=video_bytes, mime_type="video/mp4")
 
         contents = [video_content, prompt_text]
         generate_kwargs: dict[str, Any] = {"model": self.model, "contents": contents}
@@ -264,9 +262,7 @@ class GeminiBackend(VLMBackend):
         if system_prompt:
             config_kwargs["system_instruction"] = system_prompt
         if self.disable_thinking:
-            config_kwargs["thinking_config"] = self._types.ThinkingConfig(
-                thinking_budget=0
-            )
+            config_kwargs["thinking_config"] = self._types.ThinkingConfig(thinking_budget=0)
         generate_kwargs["config"] = self._types.GenerateContentConfig(**config_kwargs)
 
         resp = self.client.models.generate_content(**generate_kwargs)
@@ -295,12 +291,23 @@ def _downscale_video_to_base64(video_path: str, max_height: int = 360, fps: int 
             vf_filters = f"fps={fps}," + vf_filters
         subprocess.run(
             [
-                "ffmpeg", "-y", "-i", video_path,
-                "-vf", vf_filters,
-                "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "28",
+                "ffmpeg",
+                "-y",
+                "-i",
+                video_path,
+                "-vf",
+                vf_filters,
+                "-an",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-crf",
+                "28",
                 tmp_path,
             ],
-            capture_output=True, check=True,
+            capture_output=True,
+            check=True,
         )
         with open(tmp_path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode()
@@ -335,7 +342,9 @@ class OpenAIBackend(VLMBackend):
     def _get_video_b64(self, video_path: str) -> str:
         if video_path not in self._b64_cache:
             self._b64_cache[video_path] = _downscale_video_to_base64(
-                video_path, self.max_height, fps=self.fps,
+                video_path,
+                self.max_height,
+                fps=self.fps,
             )
         return self._b64_cache[video_path]
 
@@ -435,9 +444,7 @@ def _extract_video_frames_b64(
         img.save(buf, format="JPEG", quality=jpeg_quality)
         data = buf.getvalue()
         if max_frame_bytes is not None and len(data) > max_frame_bytes:
-            raise ValueError(
-                f"Encoded frame is too large ({len(data)} bytes, limit {max_frame_bytes})"
-            )
+            raise ValueError(f"Encoded frame is too large ({len(data)} bytes, limit {max_frame_bytes})")
         sampled.append((timestamp, base64.b64encode(data).decode("utf-8")))
     return sampled
 
@@ -448,7 +455,6 @@ def _extract_video_frames_b64(
 
 
 class GPTBackend(VLMBackend):
-
     def __init__(
         self,
         model: str = "gpt-4o",
@@ -527,15 +533,13 @@ class GPTBackend(VLMBackend):
 
 
 def _build_claude_content(
-    frames_b64: list[tuple[float, str]], prompt_text: str,
+    frames_b64: list[tuple[float, str]],
+    prompt_text: str,
 ) -> list[dict[str, Any]]:
     content: list[dict[str, Any]] = [
         {
             "type": "text",
-            "text": (
-                "Video frames sampled in chronological order. "
-                f"Frame count: {len(frames_b64)}."
-            ),
+            "text": (f"Video frames sampled in chronological order. Frame count: {len(frames_b64)}."),
         }
     ]
     for i, (timestamp, b64) in enumerate(frames_b64, 1):
@@ -602,7 +606,11 @@ class ClaudeVertexBackend(VLMBackend):
 
         logger.info(
             "Claude Vertex AI (project=%s, location=%s, model=%s, fps=%s, num_frames=%s)",
-            self.project, self.location, self.model, self.sample_fps, self.num_frames,
+            self.project,
+            self.location,
+            self.model,
+            self.sample_fps,
+            self.num_frames,
         )
 
     @staticmethod
@@ -616,8 +624,7 @@ class ClaudeVertexBackend(VLMBackend):
         else:
             host = f"{location}-aiplatform.googleapis.com"
         return (
-            f"https://{host}/v1/projects/{project}/locations/{location}"
-            f"/publishers/anthropic/models/{model}:rawPredict"
+            f"https://{host}/v1/projects/{project}/locations/{location}/publishers/anthropic/models/{model}:rawPredict"
         )
 
     def _get_access_token(self) -> str:
@@ -677,9 +684,7 @@ class ClaudeVertexBackend(VLMBackend):
             timeout=self.timeout,
         )
         if response.status_code >= 400:
-            raise RuntimeError(
-                f"Claude Vertex error {response.status_code}: {response.text[:1000]}"
-            )
+            raise RuntimeError(f"Claude Vertex error {response.status_code}: {response.text[:1000]}")
         return self._extract_text(response.json())
 
     def release_video(self, video_path: str) -> None:
@@ -702,19 +707,12 @@ def print_summary(results: list[dict], judge_name: str) -> None:
 
     print("\n--- General Dimensions ---")
     for dim in GENERAL_KEYS:
-        vals = [
-            r[dim]
-            for r in results
-            if r.get(dim) is not None and isinstance(r[dim], (int, float))
-        ]
+        vals = [r[dim] for r in results if r.get(dim) is not None and isinstance(r[dim], (int, float))]
         if vals:
             avg = sum(vals) / len(vals)
             print(f"  {dim:12s}: {avg:.2f}  (n={len(vals)})")
 
-    general_avgs = [
-        r["general_avg"] for r in results
-        if r.get("general_avg") is not None
-    ]
+    general_avgs = [r["general_avg"] for r in results if r.get("general_avg") is not None]
     if general_avgs:
         print(f"  {'OVERALL':12s}: {sum(general_avgs) / len(general_avgs):.2f}  (n={len(general_avgs)})")
 
@@ -723,6 +721,7 @@ def print_summary(results: list[dict], judge_name: str) -> None:
         print("\n--- Physical Scores (per-law) ---")
 
         from collections import defaultdict
+
         law_scores: dict[str, list[float]] = defaultdict(list)
 
         for r in new_results:
@@ -779,14 +778,9 @@ def create_backend(args: argparse.Namespace) -> VLMBackend:
             timeout=getattr(args, "request_timeout", 120),
         )
     if args.backend == "gpt":
-        api_key = (
-            _read_key_file(getattr(args, "api_key_file", None))
-            or os.environ.get("OPENAI_API_KEY", "")
-        )
+        api_key = _read_key_file(getattr(args, "api_key_file", None)) or os.environ.get("OPENAI_API_KEY", "")
         if not api_key:
-            raise RuntimeError(
-                "No OpenAI API key. Set OPENAI_API_KEY env var or pass --api_key_file."
-            )
+            raise RuntimeError("No OpenAI API key. Set OPENAI_API_KEY env var or pass --api_key_file.")
         return GPTBackend(
             model=args.model or "gpt-5.4",
             api_key=api_key,

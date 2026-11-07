@@ -1,4 +1,3 @@
-
 from vbench.object_class import compute_object_class
 from vbench2_beta_long.utils import reorganize_clips_results
 

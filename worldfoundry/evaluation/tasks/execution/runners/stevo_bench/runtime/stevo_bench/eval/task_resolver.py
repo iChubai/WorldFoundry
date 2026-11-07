@@ -12,7 +12,7 @@ Output:
       - evaluation questions from YAML
   - create per-task folders under run_root/per_task to store run
   artifacts for each task (WM video output, final frame, init_frame etc.)
-      
+
 This module also performs "ingredient extraction" (final frame extraction).
 
 Conventions (per task folder):
@@ -30,16 +30,17 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-from benchmark.runners.utils import (
-    load_yaml, resolve_task_paths
-)
+from benchmark.runners.utils import load_yaml, resolve_task_paths
 from eval.utils import (
-    _resolve_video_source, _download, occlusion_base,
+    _resolve_video_source,
+    _download,
+    occlusion_base,
 )
 
 # -----------------------------
 # Data structures
 # -----------------------------
+
 
 @dataclass
 class Question:
@@ -68,9 +69,11 @@ class ResolvedTask:
     questions: List[Question]
     spec_prompt: Optional[str] = None  # evaluation.init2final_edit_prompt (optional)
 
+
 # -----------------------------
 # YAML / task discovery
 # -----------------------------
+
 
 def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]:
     """
@@ -101,17 +104,13 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
             continue
 
         # GT final frame path
-        gt_final_frame = (task_dir / f'{folder_name}_gt_final_frame.png').resolve()
+        gt_final_frame = (task_dir / f"{folder_name}_gt_final_frame.png").resolve()
 
         task = load_yaml(task_yaml)  # your existing YAML loader
         task_id = str(task.get("id") or folder_name)
 
         if task_id in mapping:
-            raise ValueError(
-                f"Duplicate task_id discovered: {task_id}\n"
-                f"  - {task_dir}\n"
-                f"  - {mapping[task_id][0]}"
-            )
+            raise ValueError(f"Duplicate task_id discovered: {task_id}\n  - {task_dir}\n  - {mapping[task_id][0]}")
 
         mapping[task_id] = (task_dir, task_yaml, init_frame, gt_final_frame)
 
@@ -161,9 +160,11 @@ def _load_questions(task_yaml: Path) -> Tuple[List[Question], Optional[str]]:
 
     return questions, spec_prompt
 
+
 # -----------------------------
 # Ingredient extraction (final frame)
 # -----------------------------
+
 
 def extract_final_frame(video_path: Path, out_png: Path) -> Dict[str, Any]:
     """
@@ -213,6 +214,7 @@ def extract_final_frame(video_path: Path, out_png: Path) -> Dict[str, Any]:
         # BGR -> RGB, write PNG
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         from PIL import Image  # type: ignore
+
         Image.fromarray(frame_rgb).save(out_png)
 
         return {
@@ -241,9 +243,11 @@ def extract_final_frame(video_path: Path, out_png: Path) -> Dict[str, Any]:
     #     "backend": "imageio_pyav",
     # }
 
+
 # -----------------------------
 # Main resolver
 # -----------------------------
+
 
 def resolve_one_task(
     *,
@@ -307,9 +311,9 @@ def resolve_one_task(
         task_level=task_level,
         task_dir=task_dir,
         task_yaml=task_yaml,
-        init_frame=init_frame,       # original path
+        init_frame=init_frame,  # original path
         gt_final_frame=gt_final_frame if gt_final_frame.exists() else None,
-        wm_video=wm_video,           # original path (or downloaded)
+        wm_video=wm_video,  # original path (or downloaded)
         final_frame=final_frame,
         questions=questions,
         spec_prompt=spec_prompt,
@@ -377,6 +381,7 @@ def resolve_tasks_from_outputs_json(
         print(f"[WARN] {failed} tasks skipped during resolution")
 
     return resolved
+
 
 # def resolve_tasks_from_outputs_json(
 #     *,

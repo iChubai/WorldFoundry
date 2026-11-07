@@ -10,6 +10,7 @@ References:
     2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition
     https://arxiv.org/abs/1801.03924
 """
+
 from typing import List, Union, Collection
 
 import torch
@@ -23,48 +24,77 @@ from piq.functional import similarity_map, L2Pool2d
 
 # Map VGG names to corresponding number in torchvision layer
 VGG16_LAYERS = {
-    "conv1_1": '0', "relu1_1": '1',
-    "conv1_2": '2', "relu1_2": '3',
-    "pool1": '4',
-    "conv2_1": '5', "relu2_1": '6',
-    "conv2_2": '7', "relu2_2": '8',
-    "pool2": '9',
-    "conv3_1": '10', "relu3_1": '11',
-    "conv3_2": '12', "relu3_2": '13',
-    "conv3_3": '14', "relu3_3": '15',
-    "pool3": '16',
-    "conv4_1": '17', "relu4_1": '18',
-    "conv4_2": '19', "relu4_2": '20',
-    "conv4_3": '21', "relu4_3": '22',
-    "pool4": '23',
-    "conv5_1": '24', "relu5_1": '25',
-    "conv5_2": '26', "relu5_2": '27',
-    "conv5_3": '28', "relu5_3": '29',
-    "pool5": '30',
+    "conv1_1": "0",
+    "relu1_1": "1",
+    "conv1_2": "2",
+    "relu1_2": "3",
+    "pool1": "4",
+    "conv2_1": "5",
+    "relu2_1": "6",
+    "conv2_2": "7",
+    "relu2_2": "8",
+    "pool2": "9",
+    "conv3_1": "10",
+    "relu3_1": "11",
+    "conv3_2": "12",
+    "relu3_2": "13",
+    "conv3_3": "14",
+    "relu3_3": "15",
+    "pool3": "16",
+    "conv4_1": "17",
+    "relu4_1": "18",
+    "conv4_2": "19",
+    "relu4_2": "20",
+    "conv4_3": "21",
+    "relu4_3": "22",
+    "pool4": "23",
+    "conv5_1": "24",
+    "relu5_1": "25",
+    "conv5_2": "26",
+    "relu5_2": "27",
+    "conv5_3": "28",
+    "relu5_3": "29",
+    "pool5": "30",
 }
 
 VGG19_LAYERS = {
-    "conv1_1": '0', "relu1_1": '1',
-    "conv1_2": '2', "relu1_2": '3',
-    "pool1": '4',
-    "conv2_1": '5', "relu2_1": '6',
-    "conv2_2": '7', "relu2_2": '8',
-    "pool2": '9',
-    "conv3_1": '10', "relu3_1": '11',
-    "conv3_2": '12', "relu3_2": '13',
-    "conv3_3": '14', "relu3_3": '15',
-    "conv3_4": '16', "relu3_4": '17',
-    "pool3": '18',
-    "conv4_1": '19', "relu4_1": '20',
-    "conv4_2": '21', "relu4_2": '22',
-    "conv4_3": '23', "relu4_3": '24',
-    "conv4_4": '25', "relu4_4": '26',
-    "pool4": '27',
-    "conv5_1": '28', "relu5_1": '29',
-    "conv5_2": '30', "relu5_2": '31',
-    "conv5_3": '32', "relu5_3": '33',
-    "conv5_4": '34', "relu5_4": '35',
-    "pool5": '36',
+    "conv1_1": "0",
+    "relu1_1": "1",
+    "conv1_2": "2",
+    "relu1_2": "3",
+    "pool1": "4",
+    "conv2_1": "5",
+    "relu2_1": "6",
+    "conv2_2": "7",
+    "relu2_2": "8",
+    "pool2": "9",
+    "conv3_1": "10",
+    "relu3_1": "11",
+    "conv3_2": "12",
+    "relu3_2": "13",
+    "conv3_3": "14",
+    "relu3_3": "15",
+    "conv3_4": "16",
+    "relu3_4": "17",
+    "pool3": "18",
+    "conv4_1": "19",
+    "relu4_1": "20",
+    "conv4_2": "21",
+    "relu4_2": "22",
+    "conv4_3": "23",
+    "relu4_3": "24",
+    "conv4_4": "25",
+    "relu4_4": "26",
+    "pool4": "27",
+    "conv5_1": "28",
+    "relu5_1": "29",
+    "conv5_2": "30",
+    "relu5_2": "31",
+    "conv5_3": "32",
+    "relu5_3": "33",
+    "conv5_4": "34",
+    "relu5_4": "35",
+    "pool5": "36",
 }
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -113,15 +143,23 @@ class ContentLoss(_Loss):
         https://arxiv.org/abs/1801.03924
     """
 
-    def __init__(self, feature_extractor: Union[str, torch.nn.Module] = "vgg16", layers: Collection[str] = ("relu3_3",),
-                 weights: List[Union[float, torch.Tensor]] = [1.], replace_pooling: bool = False,
-                 distance: str = "mse", reduction: str = "mean", mean: List[float] = IMAGENET_MEAN,
-                 std: List[float] = IMAGENET_STD, normalize_features: bool = False,
-                 allow_layers_weights_mismatch: bool = False) -> None:
-
-        assert allow_layers_weights_mismatch or len(layers) == len(weights), \
-            f'Lengths of provided layers and weighs mismatch ({len(weights)} weights and {len(layers)} layers), ' \
-            f'which will cause incorrect results. Please provide weight for each layer.'
+    def __init__(
+        self,
+        feature_extractor: Union[str, torch.nn.Module] = "vgg16",
+        layers: Collection[str] = ("relu3_3",),
+        weights: List[Union[float, torch.Tensor]] = [1.0],
+        replace_pooling: bool = False,
+        distance: str = "mse",
+        reduction: str = "mean",
+        mean: List[float] = IMAGENET_MEAN,
+        std: List[float] = IMAGENET_STD,
+        normalize_features: bool = False,
+        allow_layers_weights_mismatch: bool = False,
+    ) -> None:
+        assert allow_layers_weights_mismatch or len(layers) == len(weights), (
+            f"Lengths of provided layers and weighs mismatch ({len(weights)} weights and {len(layers)} layers), "
+            f"which will cause incorrect results. Please provide weight for each layer."
+        )
 
         super().__init__()
 
@@ -148,7 +186,7 @@ class ContentLoss(_Loss):
         self.distance = {
             "mse": nn.MSELoss,
             "mae": nn.L1Loss,
-        }[distance](reduction='none')
+        }[distance](reduction="none")
 
         self.weights = [torch.tensor(w) if not isinstance(w, torch.Tensor) else w for w in weights]
 
@@ -225,7 +263,7 @@ class ContentLoss(_Loss):
         Returns:
             Normalized input
         """
-        norm_factor = torch.sqrt(torch.sum(x ** 2, dim=1, keepdim=True))
+        norm_factor = torch.sqrt(torch.sum(x**2, dim=1, keepdim=True))
         return x / (norm_factor + EPS)
 
     def replace_pooling(self, module: torch.nn.Module) -> torch.nn.Module:
@@ -359,17 +397,32 @@ class LPIPS(ContentLoss):
         https://arxiv.org/abs/1801.03924
         https://github.com/richzhang/PerceptualSimilarity
     """
-    _weights_url = "https://github.com/photosynthesis-team/" + \
-        "photosynthesis.metrics/releases/download/v0.4.0/lpips_weights.pt"
 
-    def __init__(self, replace_pooling: bool = False, distance: str = "mse", reduction: str = "mean",
-                 mean: List[float] = IMAGENET_MEAN, std: List[float] = IMAGENET_STD,) -> None:
-        lpips_layers = ['relu1_2', 'relu2_2', 'relu3_3', 'relu4_3', 'relu5_3']
+    _weights_url = (
+        "https://github.com/photosynthesis-team/" + "photosynthesis.metrics/releases/download/v0.4.0/lpips_weights.pt"
+    )
+
+    def __init__(
+        self,
+        replace_pooling: bool = False,
+        distance: str = "mse",
+        reduction: str = "mean",
+        mean: List[float] = IMAGENET_MEAN,
+        std: List[float] = IMAGENET_STD,
+    ) -> None:
+        lpips_layers = ["relu1_2", "relu2_2", "relu3_3", "relu4_3", "relu5_3"]
         lpips_weights = torch.hub.load_state_dict_from_url(self._weights_url, progress=False)
-        super().__init__("vgg16", layers=lpips_layers, weights=lpips_weights,
-                         replace_pooling=replace_pooling, distance=distance,
-                         reduction=reduction, mean=mean, std=std,
-                         normalize_features=True)
+        super().__init__(
+            "vgg16",
+            layers=lpips_layers,
+            weights=lpips_weights,
+            replace_pooling=replace_pooling,
+            distance=distance,
+            reduction=reduction,
+            mean=mean,
+            std=std,
+            normalize_features=True,
+        )
 
 
 class DISTS(ContentLoss):
@@ -399,20 +452,30 @@ class DISTS(ContentLoss):
         https://arxiv.org/abs/2004.07728
         https://github.com/dingkeyan93/DISTS
     """
+
     _weights_url = "https://github.com/photosynthesis-team/piq/releases/download/v0.4.1/dists_weights.pt"
 
-    def __init__(self, reduction: str = "mean", mean: List[float] = IMAGENET_MEAN,
-                 std: List[float] = IMAGENET_STD) -> None:
-        dists_layers = ['relu1_2', 'relu2_2', 'relu3_3', 'relu4_3', 'relu5_3']
+    def __init__(
+        self, reduction: str = "mean", mean: List[float] = IMAGENET_MEAN, std: List[float] = IMAGENET_STD
+    ) -> None:
+        dists_layers = ["relu1_2", "relu2_2", "relu3_3", "relu4_3", "relu5_3"]
         channels = [3, 64, 128, 256, 512, 512]
 
         weights = torch.hub.load_state_dict_from_url(self._weights_url, progress=False)
-        dists_weights = list(torch.split(weights['alpha'], channels, dim=1))
-        dists_weights.extend(torch.split(weights['beta'], channels, dim=1))
+        dists_weights = list(torch.split(weights["alpha"], channels, dim=1))
+        dists_weights.extend(torch.split(weights["beta"], channels, dim=1))
 
-        super().__init__("vgg16", layers=dists_layers, weights=dists_weights,
-                         replace_pooling=True, reduction=reduction, mean=mean, std=std,
-                         normalize_features=False, allow_layers_weights_mismatch=True)
+        super().__init__(
+            "vgg16",
+            layers=dists_layers,
+            weights=dists_weights,
+            replace_pooling=True,
+            reduction=reduction,
+            mean=mean,
+            std=std,
+            normalize_features=False,
+            allow_layers_weights_mismatch=True,
+        )
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         r"""
@@ -428,9 +491,11 @@ class DISTS(ContentLoss):
 
         if min(H, W) > 256:
             x = torch.nn.functional.interpolate(
-                x, scale_factor=256 / min(H, W), recompute_scale_factor=False, mode='bilinear')
+                x, scale_factor=256 / min(H, W), recompute_scale_factor=False, mode="bilinear"
+            )
             y = torch.nn.functional.interpolate(
-                y, scale_factor=256 / min(H, W), recompute_scale_factor=False, mode='bilinear')
+                y, scale_factor=256 / min(H, W), recompute_scale_factor=False, mode="bilinear"
+            )
 
         loss = super().forward(x, y)
         return 1 - loss

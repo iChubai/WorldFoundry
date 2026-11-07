@@ -23,7 +23,7 @@ def _ensure_fastvqa_importable() -> str:
 
 
 def sigmoid_rescale(score, model="FasterVQA"):
-    mean, std = mean_stds.get(model, mean_stds["FAST-VQA"]) 
+    mean, std = mean_stds.get(model, mean_stds["FAST-VQA"])
     x = (score - mean) / std
     score = 1 / (1 + np.exp(-x))
     return score
@@ -106,9 +106,7 @@ def _infer_video_score(evaluator, opt: dict, video_path: str, device: str, model
         sampled_video = get_spatial_fragments(video, **sample_args)
         mean = torch.FloatTensor([123.675, 116.28, 103.53])
         std = torch.FloatTensor([58.395, 57.12, 57.375])
-        sampled_video = (
-            (sampled_video.permute(1, 2, 3, 0) - mean) / std
-        ).permute(3, 0, 1, 2)
+        sampled_video = ((sampled_video.permute(1, 2, 3, 0) - mean) / std).permute(3, 0, 1, 2)
 
         sampled_video = sampled_video.reshape(
             sampled_video.shape[0],
@@ -136,12 +134,12 @@ def compute_perceptual_fastvqa(json_dir, device, submodules_dict, **kwargs):
     evaluator, opt = _build_model_and_opts(model_name, device)
 
     # Load videos for this dimension
-    _, prompt_dict_ls = load_dimension_info(json_dir, dimension=dimension_name, lang='en')
+    _, prompt_dict_ls = load_dimension_info(json_dir, dimension=dimension_name, lang="en")
 
     video_results = []
     scores = []
     for prompt_dict in prompt_dict_ls:
-        video_paths = prompt_dict.get('video_list', [])
+        video_paths = prompt_dict.get("video_list", [])
         for video_path in video_paths:
             score = None
             try:
@@ -150,17 +148,19 @@ def compute_perceptual_fastvqa(json_dir, device, submodules_dict, **kwargs):
                 print(f"[fastvqa] Error scoring {video_path}: {e}")
             if score is not None:
                 scores.append(score)
-            video_results.append({
-                'video_path': video_path,
-                'fastvqa_score': None if score is None else float(score),
-            })
+            video_results.append(
+                {
+                    "video_path": video_path,
+                    "fastvqa_score": None if score is None else float(score),
+                }
+            )
 
     avg_score = float(np.mean(scores)) if scores else 0.0
 
     # Save JSON like other metrics
     output_dir = os.path.dirname(json_dir)
     dim_name = os.path.splitext(os.path.basename(json_dir))[0]
-    dataset_base = os.path.splitext(os.path.basename(dataset_json))[0] if dataset_json else 'dataset'
+    dataset_base = os.path.splitext(os.path.basename(dataset_json))[0] if dataset_json else "dataset"
     suffix = f"{dim_name}__{model_name}__{dataset_base}_results.json" if model_name else f"{dim_name}_results.json"
     output_file = os.path.join(output_dir, suffix)
 
@@ -172,7 +172,7 @@ def compute_perceptual_fastvqa(json_dir, device, submodules_dict, **kwargs):
         "video_details": video_results,
     }
     try:
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(detailed_output, f, indent=2, ensure_ascii=False)
         print(f"[fastvqa] Detailed results saved to: {output_file}")
     except Exception as e:

@@ -11,8 +11,7 @@ from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (
 from worldfoundry.evaluation.tasks.metrics._shared.clip_embed import open_clip_bundle
 
 _AESTHETIC_URL = (
-    "https://github.com/christophschuhmann/improved-aesthetic-predictor"
-    "/raw/main/sac+logos+ava1-l14-linearMSE.pth"
+    "https://github.com/christophschuhmann/improved-aesthetic-predictor/raw/main/sac+logos+ava1-l14-linearMSE.pth"
 )
 _AESTHETIC_CACHE = os.path.expanduser("~/.cache/aesthetic_predictor.pth")
 
@@ -80,7 +79,7 @@ def aesthetic_score(frames, sample_step: int = 5, device: str = None) -> float:
 # CLIP-IQA+ via pyiqa; falls back to MUSIQ then Laplacian.
 _iqa_metric = None
 _iqa_device = None
-_iqa_backend = None   # "clipiqa+" | "musiq" | "laplacian"
+_iqa_backend = None  # "clipiqa+" | "musiq" | "laplacian"
 
 
 def _load_iqa(device: str = None):
@@ -90,11 +89,13 @@ def _load_iqa(device: str = None):
 
     if device is None:
         import torch
+
         device = "cuda" if torch.cuda.is_available() else "cpu"
     _iqa_device = device
 
     try:
         import pyiqa
+
         # CLIP-IQA+: CLIP-based perceptual IQA, no-reference, [0, 1]
         _iqa_metric = pyiqa.create_metric("clipiqa+", device=device)
         _iqa_backend = "clipiqa+"
@@ -104,6 +105,7 @@ def _load_iqa(device: str = None):
 
     try:
         import pyiqa
+
         # MUSIQ fallback: multi-scale IQA trained on diverse distortions
         _iqa_metric = pyiqa.create_metric("musiq", device=device)
         _iqa_backend = "musiq"
@@ -124,6 +126,7 @@ def _iqa_single(metric, backend: str, device: str, img: np.ndarray) -> float:
 
     import torch
     from torchvision import transforms
+
     pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     t = transforms.ToTensor()(pil).unsqueeze(0).to(device)
     with torch.no_grad():
@@ -155,7 +158,7 @@ def image_quality_score(frames, sample_step: int = 5, device: str = None) -> flo
 
 _ir_model = None
 _ir_device = None
-_ir_load_error = None   # stores error message on first load failure
+_ir_load_error = None  # stores error message on first load failure
 
 
 def _load_image_reward(device: str = None):
@@ -182,8 +185,7 @@ def _load_image_reward(device: str = None):
     return _ir_model, _ir_device
 
 
-def image_reward_score(frames, prompt: str, n_sample: int = 5,
-                       device: str = None) -> float:
+def image_reward_score(frames, prompt: str, n_sample: int = 5, device: str = None) -> float:
     """
     ImageReward (2023) human-preference score averaged over sampled frames.
 
@@ -205,16 +207,14 @@ def image_reward_score(frames, prompt: str, n_sample: int = 5,
         model, device = _load_image_reward(device)
     except Exception as e:
         import warnings
+
         warnings.warn(f"[ImageReward] {e}")
         return None
 
     N = frames.num_frames
     indices = [int(i * (N - 1) / (n_sample - 1)) for i in range(n_sample)]
 
-    pil_frames = [
-        Image.fromarray(cv2.cvtColor(frames.get(idx), cv2.COLOR_BGR2RGB))
-        for idx in indices
-    ]
+    pil_frames = [Image.fromarray(cv2.cvtColor(frames.get(idx), cv2.COLOR_BGR2RGB)) for idx in indices]
 
     scores = []
     for pil in pil_frames:

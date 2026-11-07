@@ -24,9 +24,7 @@ CONFIG_DIGEST = value_digest(
         },
     }
 )
-METRIC_SAMPLING = {
-    BACKEND_METRICS[component]: SAMPLING[component] for component in COMPONENTS
-}
+METRIC_SAMPLING = {BACKEND_METRICS[component]: SAMPLING[component] for component in COMPONENTS}
 
 __all__ = [
     "BACKEND_ID",

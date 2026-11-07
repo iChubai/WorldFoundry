@@ -54,9 +54,9 @@ class VideoReader:
 
     def __init__(self, video_path: str, max_side: int = 640):
         self.video_path = video_path
-        self.max_side   = max_side
+        self.max_side = max_side
         self._cap = cv2.VideoCapture(video_path)
-        self._n   = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self._n = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self._pos = -1
         if self._n <= 0:
             self._cap.release()

@@ -26,12 +26,7 @@ def background_consistency(clip_model, preprocess, video_list, device, read_fram
     batch_size = resolve_inference_batch_size(32, device=device, scope="worldarena_clip")
     sim = 0.0
     cnt = 0
-    args_new = edict({
-        "model": raft_model_path,
-        "small": False,
-        "mixed_precision": False,
-        "alternate_corr": False
-    })
+    args_new = edict({"model": raft_model_path, "small": False, "mixed_precision": False, "alternate_corr": False})
     dynamic = DynamicDegree(args_new, device)
     video_results = []
     image_transform = clip_transform(224)
@@ -39,7 +34,7 @@ def background_consistency(clip_model, preprocess, video_list, device, read_fram
         video_sim = 0.0
         cnt_per_video = 0
         if read_frame:
-            video_path = video_path[:-4].replace('videos', 'frames').replace(' ', '_')
+            video_path = video_path[:-4].replace("videos", "frames").replace(" ", "_")
             tmp_paths = [os.path.join(video_path, f) for f in sorted(os.listdir(video_path))]
             images = []
             for tmp_path in tmp_paths:
@@ -49,13 +44,15 @@ def background_consistency(clip_model, preprocess, video_list, device, read_fram
             images = load_video(video_path)
             images = image_transform(images)
         if len(images) < 2:
-            video_results.append({
-                'video_path': video_path,
-                'video_results': 0.0,
-                'video_sim': 0.0,
-                'cnt_per_video': 0,
-                'error': 'insufficient_frames',
-            })
+            video_results.append(
+                {
+                    "video_path": video_path,
+                    "video_results": 0.0,
+                    "video_sim": 0.0,
+                    "cnt_per_video": 0,
+                    "error": "insufficient_frames",
+                }
+            )
             continue
         if torch.device(device).type == "cuda":
             images = images.pin_memory()
@@ -77,11 +74,14 @@ def background_consistency(clip_model, preprocess, video_list, device, read_fram
         video_sim = sim_per_image * cnt_per_video
         sim += video_sim
         cnt += cnt_per_video
-        video_results.append({
-            'video_path': video_path, 
-            'video_results': sim_per_image,
-            'video_sim': video_sim,
-            'cnt_per_video': cnt_per_video})
+        video_results.append(
+            {
+                "video_path": video_path,
+                "video_results": sim_per_image,
+                "video_sim": video_sim,
+                "cnt_per_video": cnt_per_video,
+            }
+        )
     # sim_per_video = sim / (len(video_list) - 1)
     sim_per_frame = sim / cnt if cnt else 0.0
     return sim_per_frame, video_results
@@ -89,15 +89,15 @@ def background_consistency(clip_model, preprocess, video_list, device, read_fram
 
 def compute_background_consistency(json_dir, submodules_list, **kwargs):
     device = get_current_torch_device()
-    vit_path = submodules_list.get('clip_model')
-    raft_model_path = submodules_list.get('raft_model')
-    read_frame = submodules_list.get('read_frame', False)
+    vit_path = submodules_list.get("clip_model")
+    raft_model_path = submodules_list.get("raft_model")
+    read_frame = submodules_list.get("read_frame", False)
 
     if vit_path is None or raft_model_path is None:
         raise ValueError("background_consistency requires clip_model and raft_model checkpoints from config")
 
     clip_model, preprocess = clip.load(vit_path, device=device)
-    video_list, _ = load_dimension_info(json_dir, dimension='background_consistency', lang='en')
+    video_list, _ = load_dimension_info(json_dir, dimension="background_consistency", lang="en")
     video_list = distribute_list_to_rank(video_list)
     all_results, video_results = background_consistency(
         clip_model,
@@ -109,7 +109,7 @@ def compute_background_consistency(json_dir, submodules_list, **kwargs):
     )
     if get_world_size() > 1:
         video_results = gather_list_of_dict(video_results)
-        sim = sum([d['video_sim'] for d in video_results])
-        cnt = sum([d['cnt_per_video'] for d in video_results])
+        sim = sum([d["video_sim"] for d in video_results])
+        cnt = sum([d["cnt_per_video"] for d in video_results])
         all_results = sim / cnt if cnt else 0.0
     return all_results, video_results

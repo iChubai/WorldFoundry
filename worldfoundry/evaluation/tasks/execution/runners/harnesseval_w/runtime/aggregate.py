@@ -6,7 +6,6 @@ import math
 from typing import Any, Iterable
 
 
-
 def clean_float(value: Any) -> Any:
     if isinstance(value, float):
         if not math.isfinite(value):

@@ -11,6 +11,7 @@ avoiding payload-too-large issues with many image frames.
 
 Supported models: doubao-seed-2-0-lite-260215, Doubao-Seed-2.0-lite
 """
+
 import base64
 import logging
 import os
@@ -74,7 +75,7 @@ def encode_video_to_b64url(video_path: str, max_short_side: int = 0) -> str:
         out_w = int(w * scale) // 2 * 2
         out_h = int(h * scale) // 2 * 2
 
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
     tmp_path = tmp.name
     tmp.close()
@@ -100,8 +101,7 @@ def encode_video_to_b64url(video_path: str, max_short_side: int = 0) -> str:
             pass
 
 
-def clip_video_to_b64url(video_path: str, start_sec: float, end_sec: float,
-                         max_short_side: int = 0) -> str:
+def clip_video_to_b64url(video_path: str, start_sec: float, end_sec: float, max_short_side: int = 0) -> str:
     """Clip video segment and encode as base64 data URL.
 
     Args:
@@ -112,7 +112,7 @@ def clip_video_to_b64url(video_path: str, start_sec: float, end_sec: float,
     """
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 24.0
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -153,6 +153,7 @@ def clip_video_to_b64url(video_path: str, start_sec: float, end_sec: float,
 @dataclass
 class VLMTask:
     """Single VLM evaluation task."""
+
     dimension: str
     question: str
     images: List[Image.Image] = field(default_factory=list)
@@ -189,10 +190,7 @@ class VLMClient:
         self.request_timeout = request_timeout
 
         if self.model_name not in ALLOWED_MODELS:
-            raise ValueError(
-                f"Unsupported model: '{self.model_name}'. "
-                f"Allowed: {sorted(ALLOWED_MODELS)}"
-            )
+            raise ValueError(f"Unsupported model: '{self.model_name}'. Allowed: {sorted(ALLOWED_MODELS)}")
 
         if not self.api_url:
             logger.warning("VLM API URL not configured. Set VLM_API_URL env var or pass api_url.")
@@ -214,9 +212,15 @@ class VLMClient:
 
     # -- ARK Responses API format ------------------------------------------
 
-    def _call_ark(self, prompt: str, max_retries: int, max_tokens: int,
-                  system_prompt: str = None,
-                  video_url: str = None, images: List[Image.Image] = None) -> str:
+    def _call_ark(
+        self,
+        prompt: str,
+        max_retries: int,
+        max_tokens: int,
+        system_prompt: str = None,
+        video_url: str = None,
+        images: List[Image.Image] = None,
+    ) -> str:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -246,8 +250,7 @@ class VLMClient:
         attempt = 0
         while attempt < max_retries:
             try:
-                resp = requests.post(url, headers=headers, json=payload,
-                                     timeout=self.request_timeout)
+                resp = requests.post(url, headers=headers, json=payload, timeout=self.request_timeout)
                 if resp.status_code == 429:
                     wait = self.RATE_LIMIT_COOLDOWN
                     logger.warning(f"Rate limited (429), cooling down {wait}s...")
@@ -273,9 +276,15 @@ class VLMClient:
 
     # -- OpenAI Chat Completions format ------------------------------------
 
-    def _call_openai(self, prompt: str, max_retries: int, max_tokens: int,
-                     system_prompt: str = None,
-                     video_url: str = None, images: List[Image.Image] = None) -> str:
+    def _call_openai(
+        self,
+        prompt: str,
+        max_retries: int,
+        max_tokens: int,
+        system_prompt: str = None,
+        video_url: str = None,
+        images: List[Image.Image] = None,
+    ) -> str:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -304,8 +313,7 @@ class VLMClient:
         attempt = 0
         while attempt < max_retries:
             try:
-                resp = requests.post(self.api_url, headers=headers, json=payload,
-                                     timeout=self.request_timeout)
+                resp = requests.post(self.api_url, headers=headers, json=payload, timeout=self.request_timeout)
                 if resp.status_code == 429:
                     wait = self.RATE_LIMIT_COOLDOWN
                     logger.warning(f"Rate limited (429), cooling down {wait}s...")
@@ -329,9 +337,15 @@ class VLMClient:
     RETRY_BACKOFF = [3, 8, 15, 25, 40, 60]
     RATE_LIMIT_COOLDOWN = 2
 
-    def ask(self, prompt: str, images: List[Image.Image] = None, max_retries: int = 6,
-            max_tokens: int = 300, system_prompt: str = None,
-            video_url: str = None) -> str:
+    def ask(
+        self,
+        prompt: str,
+        images: List[Image.Image] = None,
+        max_retries: int = 6,
+        max_tokens: int = 300,
+        system_prompt: str = None,
+        video_url: str = None,
+    ) -> str:
         """Ask a question with video or images. Returns raw text response.
 
         Args:
@@ -349,13 +363,13 @@ class VLMClient:
             _request_semaphore.acquire()
         try:
             if self._use_openai_format:
-                return self._call_openai(prompt, max_retries, max_tokens,
-                                         system_prompt=system_prompt,
-                                         video_url=video_url, images=images)
+                return self._call_openai(
+                    prompt, max_retries, max_tokens, system_prompt=system_prompt, video_url=video_url, images=images
+                )
             else:
-                return self._call_ark(prompt, max_retries, max_tokens,
-                                      system_prompt=system_prompt,
-                                      video_url=video_url, images=images)
+                return self._call_ark(
+                    prompt, max_retries, max_tokens, system_prompt=system_prompt, video_url=video_url, images=images
+                )
         except Exception as e:
             logger.error(f"VLM API failed after {max_retries} retries: {e}")
             raise
@@ -363,20 +377,25 @@ class VLMClient:
             if _request_semaphore:
                 _request_semaphore.release()
 
-    def ask_binary(self, question: str, images: List[Image.Image] = None,
-                   max_retries: int = 3, video_url: str = None) -> bool:
+    def ask_binary(
+        self, question: str, images: List[Image.Image] = None, max_retries: int = 3, video_url: str = None
+    ) -> bool:
         """Ask a binary (yes/no) question."""
-        answer_text = self.ask(question + "\nAnswer with 'yes' or 'no' only.",
-                              images, max_retries=max_retries, max_tokens=10,
-                              video_url=video_url)
+        answer_text = self.ask(
+            question + "\nAnswer with 'yes' or 'no' only.",
+            images,
+            max_retries=max_retries,
+            max_tokens=10,
+            video_url=video_url,
+        )
         return "yes" in answer_text.lower()
 
     def evaluate_tasks(self, tasks: List[VLMTask], nproc: int = 4) -> List[VLMTask]:
         """Evaluate multiple VLM tasks concurrently."""
+
         def _run_task(task):
             try:
-                task.answer = self.ask_binary(task.question, task.images,
-                                             video_url=task.video_url)
+                task.answer = self.ask_binary(task.question, task.images, video_url=task.video_url)
             except Exception as e:
                 logger.warning(f"Task failed: {e}")
                 task.answer = None

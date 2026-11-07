@@ -95,9 +95,7 @@ class WorldFoundryPipelineBackend:
             "camera_script": camera_script,
             "camera_payload_type": request.payload.payload_type,
             "camera_payload": WorldFoundryPipelineBackend._json_safe(request.payload.payload),
-            "target_camera_poses": WorldFoundryPipelineBackend._json_safe(
-                request.payload.target_trajectory.to_c2w()
-            ),
+            "target_camera_poses": WorldFoundryPipelineBackend._json_safe(request.payload.target_trajectory.to_c2w()),
         }
         generation_kwargs = WorldFoundryPipelineBackend._json_safe(dict(request.payload.payload))
         generation_kwargs.setdefault("num_frames", request.payload.target_trajectory.frame_count)

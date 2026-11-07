@@ -10,6 +10,7 @@ Method:
 3. per-case: score = 0.0 if has_cut else 1.0 (higher = better)
 4. model-level: overall.score = continuity_rate = fraction without cuts
 """
+
 from __future__ import annotations
 
 import datetime
@@ -95,9 +96,9 @@ def detect_scene_cuts(
     return filtered
 
 
-def compute_case(video_path: str, case_id: str,
-                 threshold: float = DEFAULT_THRESHOLD,
-                 min_scene_len: int = DEFAULT_MIN_SCENE_LEN) -> Dict[str, Any]:
+def compute_case(
+    video_path: str, case_id: str, threshold: float = DEFAULT_THRESHOLD, min_scene_len: int = DEFAULT_MIN_SCENE_LEN
+) -> Dict[str, Any]:
     """Evaluate a single video for segment continuity."""
     try:
         cut_frames = detect_scene_cuts(video_path, threshold, min_scene_len)

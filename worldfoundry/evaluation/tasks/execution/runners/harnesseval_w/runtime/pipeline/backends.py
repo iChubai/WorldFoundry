@@ -58,16 +58,12 @@ def _required(value: Mapping[str, Any], key: str, label: str) -> Any:
     return result
 
 
-def _path(
-    value: Mapping[str, Any], key: str, label: str, config_root: Path
-) -> Path:
+def _path(value: Mapping[str, Any], key: str, label: str, config_root: Path) -> Path:
     path = Path(str(_required(value, key, label))).expanduser()
     return (path if path.is_absolute() else config_root / path).resolve()
 
 
-def _optional_path(
-    value: Mapping[str, Any], key: str, config_root: Path
-) -> Path | None:
+def _optional_path(value: Mapping[str, Any], key: str, config_root: Path) -> Path | None:
     raw = value.get(key)
     if raw is None:
         return None
@@ -75,9 +71,7 @@ def _optional_path(
     return (path if path.is_absolute() else config_root / path).resolve()
 
 
-def _build_observation(
-    skill_id: str, values: Mapping[str, Any], config_root: Path
-) -> Any:
+def _build_observation(skill_id: str, values: Mapping[str, Any], config_root: Path) -> Any:
     module = OBSERVATION_MODULES[skill_id]
     label = f"skills.{skill_id}"
     mode = str(_required(values, "mode", label))
@@ -157,9 +151,7 @@ def build_backends(
 
     def observation(skill_id: str) -> Any:
         if skill_id not in built:
-            built[skill_id] = _build_observation(
-                skill_id, _skill_config(config, skill_id), config_root
-            )
+            built[skill_id] = _build_observation(skill_id, _skill_config(config, skill_id), config_root)
         return built[skill_id]
 
     def clip_backend() -> Any:
@@ -187,9 +179,7 @@ def build_backends(
                 "staged_local": drift_degradation.LocalStagedBackend,
             }.get(mode)
             if backend_type is None:
-                raise ValueError(
-                    "drift_degradation_analyzer mode must be local or staged_local"
-                )
+                raise ValueError("drift_degradation_analyzer mode must be local or staged_local")
             embedder = clip_backend()
             children = (
                 observation("render_quality_inspector"),

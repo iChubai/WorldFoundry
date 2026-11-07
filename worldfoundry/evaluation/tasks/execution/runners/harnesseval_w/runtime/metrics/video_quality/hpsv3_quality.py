@@ -1,4 +1,5 @@
 """HPSv3 human preference score — Qwen2-VL-7B based preference model."""
+
 import os
 import tempfile
 from contextlib import contextmanager
@@ -9,6 +10,7 @@ import torch
 from PIL import Image
 
 from ..base import BaseMetric
+
 
 class HPSv3QualityMetric(BaseMetric):
     def __init__(self, device="cuda"):

@@ -186,9 +186,7 @@ class EmbodiedWorldModelBenchmark(object):
             rows.append(row)
 
         field_list = []
-        for f in ["task_id", "episode_id", "trial_id"] + sorted(
-            all_fields - {"task_id", "episode_id", "trial_id"}
-        ):
+        for f in ["task_id", "episode_id", "trial_id"] + sorted(all_fields - {"task_id", "episode_id", "trial_id"}):
             if any(f in r and r[f] != "" for r in rows):
                 field_list.append(f)
 
@@ -211,7 +209,9 @@ class EmbodiedWorldModelBenchmark(object):
             writer.writerow({})
             writer.writerow(
                 {
-                    non_empty_fields[0]: "# Diversity is calculated based on the generation results of different trails within the same episode. Only shown in trial_id=1. Others are marked with '-'."
+                    non_empty_fields[
+                        0
+                    ]: "# Diversity is calculated based on the generation results of different trails within the same episode. Only shown in trial_id=1. Others are marked with '-'."
                 }
             )
 
@@ -299,9 +299,7 @@ class EmbodiedWorldModelBenchmark(object):
                 elif dimension == "psnr_ssim":
                     from .basic_metrics import compute_basic_metrics
 
-                    results = compute_basic_metrics(
-                        gt_path=gt_path, pd_path=data_base, metric_names=["psnr", "ssim"]
-                    )
+                    results = compute_basic_metrics(gt_path=gt_path, pd_path=data_base, metric_names=["psnr", "ssim"])
 
                 elif dimension == "psnr":
                     from .basic_metrics import compute_basic_metrics

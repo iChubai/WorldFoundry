@@ -14,7 +14,17 @@ from wrbench.trajectory import CameraTrajectory
 class GEN3CAdapter:
     name = "gen3c"
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         target, amp = model_target_trajectory(trajectory, model_name, num_frames)
         payload_type = "gen3c_w2c_intrinsics"
         return CameraPayload(

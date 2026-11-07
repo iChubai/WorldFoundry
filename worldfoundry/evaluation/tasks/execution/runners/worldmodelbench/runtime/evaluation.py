@@ -7,6 +7,7 @@ import os
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+
 # from rich.progress import track
 # from rich import print as rprint
 from rich.progress import Progress, BarColumn, TimeRemainingColumn
@@ -39,12 +40,10 @@ def get_default_prompt_templates() -> Dict[str, str]:
             
             Let's analyze step-by-step and conclude with 'Score: [score]'.
         """.strip(),
-        
         EvaluationType.PHYSICAL_LAWS.value: """
             Watch the video and determine if it shows any '{physical_laws}'
             Let's think step-by-step and conclude with "Yes" or "No".
         """.strip(),
-        
         EvaluationType.COMMON_SENSE.value: """
             Does the video exhibit '{common_sense}'?
             Let's think step-by-step and conclude with "Yes" or "No".
@@ -73,50 +72,51 @@ def get_default_question_pool() -> Dict[str, Optional[List[str]]]:
 @dataclass
 class EvaluationConfig:
     """Configuration for evaluation prompts and scoring criteria."""
+
     PROMPT_TEMPLATES: Dict[str, str] = field(default_factory=get_default_prompt_templates)
     QUESTION_POOL: Dict[str, Optional[List[str]]] = field(default_factory=get_default_question_pool)
 
 
 class ResultsPrinter:
     """Handles formatted output of evaluation results."""
-    
+
     def __init__(self):
         self.console = Console()
-        
+
     def print_header(self, text: str):
         """Print a styled header."""
         self.console.print(f"\n[bold blue]{text}[/bold blue]")
-        
+
     def print_score(self, category: str, score: float, indent: int = 0):
         """Print a score with proper formatting."""
         indent_str = " " * indent
         self.console.print(f"{indent_str}[cyan]{category}:[/cyan] [yellow]{score:.2f}[/yellow]")
-        
+
     def create_results_table(self, category: str, scores: Dict[str, float]) -> Table:
         """Create a rich table for displaying results."""
         table = Table(title=f"{category} Results", show_header=True, header_style="bold magenta")
         table.add_column("Metric", style="cyan")
         table.add_column("Score", justify="right", style="yellow")
-        
+
         for metric, score in scores.items():
             table.add_row(metric, f"{score:.2f}")
-            
+
         return table
-        
+
     def print_summary_panel(self, total_score: float, num_categories: int):
         """Print a panel with summary information."""
         panel = Panel(
             f"[bold green]Total Score: {total_score:.2f}[/bold green]\n",
             # f"[blue]Average per category: {total_score/num_categories:.2f}[/blue]",
             title="Evaluation Summary",
-            border_style="green"
+            border_style="green",
         )
         self.console.print(panel)
 
 
 class WorldModelEvaluator:
     """Evaluates world model benchmark videos using VILA model."""
-    
+
     def __init__(self, judge_path: str, video_dir: str, config: EvaluationConfig):
         self.judge = self._load_judge(judge_path)
         self.video_dir = Path(video_dir)
@@ -145,9 +145,7 @@ class WorldModelEvaluator:
     def evaluate_video(self, video: Video, prompt: str, cot: bool = True) -> str:
         """Generate evaluation content for a video."""
         if not cot:
-            prompt = prompt.replace(
-                "Let's think step-by-step and conclude with", "Answer with"
-            ).replace(
+            prompt = prompt.replace("Let's think step-by-step and conclude with", "Answer with").replace(
                 "Let's analyze step-by-step and conclude with", "Answer with"
             )
         return self.judge.generate_content([video, prompt])
@@ -156,16 +154,13 @@ class WorldModelEvaluator:
         """Process and print evaluation results with rich formatting."""
         num_insts = len(preds)
         total_score = 0
-        
-        category_mapping = {
-            2: [("framewise", "temporal")],
-            5: [("newton", "mass", "fluid", "penetration", "gravity")]
-        }
+
+        category_mapping = {2: [("framewise", "temporal")], 5: [("newton", "mass", "fluid", "penetration", "gravity")]}
 
         for category, scores in accs.items():
             self.printer.print_header(f"{category.replace('_', ' ').title()} Details")
             num_sub = len(scores) // num_insts
-            
+
             if num_sub == 1:
                 overall = np.mean(scores)
                 self.printer.print_score("Overall", overall)
@@ -175,14 +170,11 @@ class WorldModelEvaluator:
                 for i, sub in enumerate(category_mapping[num_sub][0]):
                     sub_mean = np.mean(scores[i::num_sub])
                     sub_scores[sub.title()] = sub_mean
-                
+
                 # Create and display results table
-                table = self.printer.create_results_table(
-                    category.replace('_', ' ').title(),
-                    sub_scores
-                )
+                table = self.printer.create_results_table(category.replace("_", " ").title(), sub_scores)
                 self.printer.console.print(table)
-                
+
                 overall = np.sum(list(sub_scores.values()))
                 self.printer.print_score("Overall", overall, indent=2)
                 total_score += overall
@@ -198,8 +190,10 @@ def save_results(results: Dict, save_path: str):
     dump(results, save_path, indent=4)
     Console().print(f"[green]Results saved to: {save_path}[/green]")
 
+
 class RichLogHandler(logging.Handler):
     """Custom logging handler that uses Rich for formatting."""
+
     def __init__(self):
         super().__init__()
         self.console = Console()
@@ -212,32 +206,31 @@ class RichLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
+
 def main():
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Evaluate World Model Benchmark")
     parser.add_argument("--judge", type=str, required=True, help="Path to judge model checkpoint")
     parser.add_argument("--video_dir", type=str, required=True, help="Path to generated video directory")
     parser.add_argument("--model_name", type=str, required=True, help="Tested model name")
-    parser.add_argument("--save_name", type=str, default="worldmodelbench_results", help="Path to save evaluation results")
+    parser.add_argument(
+        "--save_name", type=str, default="worldmodelbench_results", help="Path to save evaluation results"
+    )
     parser.add_argument("--cot", action="store_true", help="Enable Chain-of-Thought output")
     parser.add_argument("--no-save", action="store_true", help="Disable saving results")
-    
+
     args = parser.parse_args()
-    
+
     # Setup logging with custom Rich handler
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(message)s",
-        handlers=[RichLogHandler()]
-    )
+    logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=[RichLogHandler()])
     logger = logging.getLogger(__name__)
 
     # Initialize evaluator
     config = EvaluationConfig()
     evaluator = WorldModelEvaluator(args.judge, args.video_dir, config)
     printer = ResultsPrinter()
-    
+
     # Load validation set with status message
     printer.console.print("[bold]Loading validation set...[/bold]")
     manifest_path = os.environ.get("WORLDFOUNDRY_WORLDMODELBENCH_MANIFEST")
@@ -245,7 +238,7 @@ def main():
         bundled_manifest = bundled_benchmark_asset("worldmodelbench", "worldmodelbench.json")
         manifest_path = str(bundled_manifest) if bundled_manifest.is_file() else "./worldmodelbench.json"
     validation_set = load(manifest_path)
-    
+
     # Check for existing results
     save_path = f"{args.save_name}_cot.json" if args.cot else f"{args.save_name}.json"
     if os.path.exists(save_path):
@@ -259,14 +252,14 @@ def main():
         printer.console.print("[bold green]Starting new evaluation...[/bold green]")
         preds = {}
         accs = defaultdict(list)
-        
+
         # Create a single progress instance for all operations
         with Progress(
             "[progress.description]{task.description}",
             BarColumn(),
             "[progress.percentage]{task.percentage:>3.0f}%",
             TimeRemainingColumn(),
-            console=printer.console
+            console=printer.console,
         ) as progress:
             # Main task for video processing
             video_task = progress.add_task("Processing videos", total=len(validation_set))
@@ -277,36 +270,30 @@ def main():
                 if not video:
                     progress.advance(video_task)
                     continue
-                
+
                 # Evaluation task
-                eval_task = progress.add_task(
-                    f"Evaluating {video_name}",
-                    total=len(EvaluationType)
-                )
-                
+                eval_task = progress.add_task(f"Evaluating {video_name}", total=len(EvaluationType))
+
                 for eval_type in EvaluationType:
                     preds_i = []
                     prompt_template = config.PROMPT_TEMPLATES[eval_type.value]
                     questions = config.QUESTION_POOL[eval_type.value]
-                    
+
                     if questions:
                         accs_i = []
                         # Questions task
                         question_task = progress.add_task(
-                            f"Processing {eval_type.value} questions",
-                            total=len(questions)
+                            f"Processing {eval_type.value} questions", total=len(questions)
                         )
-                        
+
                         for question in questions:
-                            format_kwargs = {
-                                f"{eval_type.value}": question.lower()
-                            }
+                            format_kwargs = {f"{eval_type.value}": question.lower()}
                             prompt = prompt_template.format(**format_kwargs)
                             pred = evaluator.evaluate_video(video, prompt, args.cot)
                             preds_i.append(pred)
                             accs_i.append("no" in pred.lower())
                             progress.advance(question_task)
-                            
+
                         progress.remove_task(question_task)
                         accs[eval_type.value].extend(accs_i)
                     else:
@@ -319,12 +306,12 @@ def main():
                             logger.warning(f"Could not parse score from prediction: {pred}")
                             score = 0
                         accs[eval_type.value].append(score)
-                    
+
                     if video_name not in preds:
                         preds[video_name] = {}
                     preds[video_name][eval_type.value] = preds_i
                     progress.advance(eval_task)
-                
+
                 progress.remove_task(eval_task)
                 progress.advance(video_task)
 

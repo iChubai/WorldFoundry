@@ -11,7 +11,12 @@ import math
 # from worldfoundry.base_models.perception_core.tracking.dot.utils.options.demo_options import DemoOptions
 from worldfoundry.base_models.perception_core.tracking.dot.utils.options.compbench_demo_options import DemoOptions
 from worldfoundry.base_models.perception_core.tracking.dot.models import create_model
-from worldfoundry.base_models.perception_core.tracking.dot.utils.io import create_folder, write_video, read_video, read_frame
+from worldfoundry.base_models.perception_core.tracking.dot.utils.io import (
+    create_folder,
+    write_video,
+    read_video,
+    read_frame,
+)
 from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import to_device, get_grid
 
 import os
@@ -34,13 +39,13 @@ class Visualizer(nn.Module):
 
     def forward(self, data, mode):
         if "overlay" in mode:
-            video,x_change,y_change = self.plot_overlay(data, mode)
+            video, x_change, y_change = self.plot_overlay(data, mode)
         elif "spaghetti" in mode:
             video = self.plot_spaghetti(data, mode)
         else:
             raise ValueError(f"Unknown mode {mode}")
-        
-        return video,x_change,y_change
+
+        return video, x_change, y_change
 
     def plot_overlay(self, data, mode):
         T, C, H, W = data["video"].shape
@@ -57,17 +62,17 @@ class Visualizer(nn.Module):
         x_change_list = []
         y_change_list = []
         for tgt_step in tqdm(range(T), leave=False, desc="Plot target frame"):
-            tgt_frame = data["video"][tgt_step] 
-            tgt_frame = tgt_frame.permute(1, 2, 0) #[480,856,3]
+            tgt_frame = data["video"][tgt_step]
+            tgt_frame = tgt_frame.permute(1, 2, 0)  # [480,856,3]
 
             # Plot rainbow points
-            tgt_pos = tracks[tgt_step, ..., :2] #[856,480,2]  tracks [16,856,480,3]
-            tgt_vis = tracks[tgt_step, ..., 2]  #[856,480]
+            tgt_pos = tracks[tgt_step, ..., :2]  # [856,480,2]  tracks [16,856,480,3]
+            tgt_vis = tracks[tgt_step, ..., 2]  # [856,480]
             if tracks.ndim == 4:
-                tgt_pos = tgt_pos[mask] #mask [856,480]
+                tgt_pos = tgt_pos[mask]  # mask [856,480]
                 tgt_vis = tgt_vis[mask]
             ##
-            rainbow, alpha, x_change, y_change = draw(tgt_pos, tgt_vis, col, H, W) #col [410880,3]
+            rainbow, alpha, x_change, y_change = draw(tgt_pos, tgt_vis, col, H, W)  # col [410880,3]
             x_change_list.append(x_change)
             y_change_list.append(y_change)
 
@@ -76,7 +81,7 @@ class Visualizer(nn.Module):
                 rainbow_occ, alpha_occ = draw(tgt_pos, 1 - tgt_vis, col, H, W)
                 stripes = torch.arange(H).view(-1, 1) + torch.arange(W).view(1, -1)
                 stripes = stripes % 9 < 3
-                rainbow_occ[stripes] = 1.
+                rainbow_occ[stripes] = 1.0
                 rainbow = alpha * rainbow + (1 - alpha) * rainbow_occ
                 alpha = alpha + (1 - alpha) * alpha_occ
 
@@ -90,17 +95,17 @@ class Visualizer(nn.Module):
         return video, x_change_list, y_change_list
 
     def plot_spaghetti(self, data, mode):
-        bg_color = 1.
+        bg_color = 1.0
         T, C, H, W = data["video"].shape
         G, S, R, L = self.spaghetti_grid, self.spaghetti_scale, self.spaghetti_radius, self.spaghetti_length
         D = self.spaghetti_dropout
 
         # Extract a grid of tracks
         mask = data["mask"] if "mask" in mode else torch.ones_like(data["mask"])
-        mask = mask[G // 2:-G // 2 + 1:G, G // 2:-G // 2 + 1:G]
+        mask = mask[G // 2 : -G // 2 + 1 : G, G // 2 : -G // 2 + 1 : G]
         tracks = data["tracks"]
         if tracks.ndim == 4:
-            tracks = tracks[:, G // 2:-G // 2 + 1:G, G // 2:-G // 2 + 1:G]
+            tracks = tracks[:, G // 2 : -G // 2 + 1 : G, G // 2 : -G // 2 + 1 : G]
             tracks = tracks[:, mask]
         elif D > 0:
             N = tracks.size(1)
@@ -116,8 +121,8 @@ class Visualizer(nn.Module):
         cur_frame = None
         cur_alpha = None
         grid = get_grid(H, W).cuda()
-        grid[..., 0] *= (W - 1)
-        grid[..., 1] *= (H - 1)
+        grid[..., 0] *= W - 1
+        grid[..., 1] *= H - 1
         for tgt_step in tqdm(range(T), leave=False, desc="Plot target frame"):
             for delta in range(L):
                 # Plot rainbow points
@@ -186,7 +191,7 @@ def translation(frame, dx, dy, pad_value):
     grid[..., 0] = grid[..., 0] - (dx / (W - 1))
     grid[..., 1] = grid[..., 1] - (dy / (H - 1))
     frame = frame - pad_value
-    frame = torch.nn.functional.grid_sample(frame[None], grid[None] * 2 - 1, mode='bilinear', align_corners=True)[0]
+    frame = torch.nn.functional.grid_sample(frame[None], grid[None] * 2 - 1, mode="bilinear", align_corners=True)[0]
     frame = frame + pad_value
     return frame
 
@@ -214,14 +219,14 @@ def draw(pos, vis, col, height, width, radius=1):
     H, W = height, width
     frame = torch.zeros(H * W, 4, device=pos.device)
     pos = pos[vis.bool()]
-    
-    if pos.shape[0]!=0:
-        y_change = sum(pos[:,1])/pos.shape[0]
-        x_change = sum(pos[:,0])/pos.shape[0]
+
+    if pos.shape[0] != 0:
+        y_change = sum(pos[:, 1]) / pos.shape[0]
+        x_change = sum(pos[:, 0]) / pos.shape[0]
     else:
         y_change = torch.tensor(-10000)
         x_change = torch.tensor(-10000)
-    
+
     col = col[vis.bool()]
     if radius > 1:
         pos, col = get_radius_neighbors(pos, col, radius)
@@ -270,7 +275,7 @@ def get_radius_neighbors(pos, col, radius):
     nn = torch.arange(-R, R + 1)
     nn = torch.stack([nn[None, :].expand(2 * R + 1, -1), nn[:, None].expand(-1, 2 * R + 1)], dim=-1)
     nn = nn.view(-1, 2).cuda()
-    in_radius = nn[:, 0] ** 2 + nn[:, 1] ** 2 <= radius ** 2
+    in_radius = nn[:, 0] ** 2 + nn[:, 1] ** 2 <= radius**2
     nn = nn[in_radius]
     w = 1 - nn.pow(2).sum(-1).sqrt() / radius + 0.01
     w = w[None].expand(pos.size(0), -1).reshape(-1)
@@ -288,63 +293,58 @@ def project(pos, t, time_steps, heigh, width):
     pos = pos * 0.25
     t = 1 - torch.ones_like(pos[..., :1]) * t / (T - 1)
     pos = torch.cat([pos, t], dim=-1)
-    M = torch.tensor([
-        [0.8, 0, 0.5],
-        [-0.2, 1.0, 0.1],
-        [0.0, 0.0, 0.0]
-    ])
+    M = torch.tensor([[0.8, 0, 0.5], [-0.2, 1.0, 0.1], [0.0, 0.0, 0.0]])
     pos = pos @ M.t().to(pos.device)
     pos = pos[..., :2]
     pos[..., 0] += 0.25
     pos[..., 1] += 0.45
-    pos[..., 0] *= (W - 1)
-    pos[..., 1] *= (H - 1)
+    pos[..., 0] *= W - 1
+    pos[..., 1] *= H - 1
     return pos
 
-def combine_fore_back(foreground,background,output_csv):
+
+def combine_fore_back(foreground, background, output_csv):
     back_x = []
     back_y = []
-    with open(background, 'r') as file2:
+    with open(background, "r") as file2:
         reader2 = csv.reader(file2)
         background_lines = list(reader2)
-        for i in range(len(background_lines)-1):
-            back_x.append(background_lines[i+1][-2])
-            back_y.append(background_lines[i+1][-1])
+        for i in range(len(background_lines) - 1):
+            back_x.append(background_lines[i + 1][-2])
+            back_y.append(background_lines[i + 1][-1])
 
-   
-   
-    with open(output_csv, 'w') as output_file:
+    with open(output_csv, "w") as output_file:
         writer = csv.writer(output_file)
-        writer.writerow(["id","prompt","object_1","d_1","object_2","d_2","obj_net_left","obj_net_up"])
-        
-        with open(foreground, 'r') as file1:
+        writer.writerow(["id", "prompt", "object_1", "d_1", "object_2", "d_2", "obj_net_left", "obj_net_up"])
+
+        with open(foreground, "r") as file1:
             reader1 = csv.reader(file1)
             foreground_lines = list(reader1)
-            
-            for j in range(len(foreground_lines)-1):
-                if foreground_lines[j+1][-2]!='' and foreground_lines[j+1][-1]!='':
-                    fore_x = foreground_lines[j+1][-2]
-                    fore_y = foreground_lines[j+1][-1]
-                    num = math.ceil((j+1)/2)-1
+
+            for j in range(len(foreground_lines) - 1):
+                if foreground_lines[j + 1][-2] != "" and foreground_lines[j + 1][-1] != "":
+                    fore_x = foreground_lines[j + 1][-2]
+                    fore_y = foreground_lines[j + 1][-1]
+                    num = math.ceil((j + 1) / 2) - 1
                     try:
-                        obj_net_left = float(back_x[num])-float(fore_x)
+                        obj_net_left = float(back_x[num]) - float(fore_x)
                         obj_net_up = float(back_y[num]) - float(fore_y)
-                    except: # back_x[num] or fore_x is ''
+                    except:  # back_x[num] or fore_x is ''
                         obj_net_left = 0.0
                         obj_net_up = 0.0
-                    row = foreground_lines[j+1][:6]+[obj_net_left,obj_net_up]
+                    row = foreground_lines[j + 1][:6] + [obj_net_left, obj_net_up]
                     writer.writerow(row)
                     output_file.flush()
-        
-                elif foreground_lines[j+1][-2]=='' and foreground_lines[j+1][-1]=='':
-                    row = foreground_lines[j+1][:6]+["",""]
+
+                elif foreground_lines[j + 1][-2] == "" and foreground_lines[j + 1][-1] == "":
+                    row = foreground_lines[j + 1][:6] + ["", ""]
                     writer.writerow(row)
                     output_file.flush()
                 else:
                     print("no x_change or no y_change")
 
 
-def object_score(obj1_net_left,left_thresh,obj1_net_up,up_thresh,d_1):
+def object_score(obj1_net_left, left_thresh, obj1_net_up, up_thresh, d_1):
     W = 856
     H = 480
     correct_direction = False
@@ -352,208 +352,224 @@ def object_score(obj1_net_left,left_thresh,obj1_net_up,up_thresh,d_1):
     obj1_net_left = float(obj1_net_left)
     obj1_net_up = float(obj1_net_up)
     if d_1 == "left":
-        if obj1_net_left>left_thresh:
+        if obj1_net_left > left_thresh:
             correct_direction = True
-            score_tmp = abs(obj1_net_left)/W
+            score_tmp = abs(obj1_net_left) / W
     elif d_1 == "right":
-        if obj1_net_left<-left_thresh:
+        if obj1_net_left < -left_thresh:
             correct_direction = True
-            score_tmp = abs(obj1_net_left)/W
+            score_tmp = abs(obj1_net_left) / W
     elif d_1 == "up":
-        if obj1_net_up>up_thresh:
+        if obj1_net_up > up_thresh:
             correct_direction = True
-            score_tmp = abs(obj1_net_up)/H
+            score_tmp = abs(obj1_net_up) / H
     elif d_1 == "down":
-        if obj1_net_up<-up_thresh:
+        if obj1_net_up < -up_thresh:
             correct_direction = True
-            score_tmp = abs(obj1_net_up)/H
+            score_tmp = abs(obj1_net_up) / H
     else:
         print("direction not in [left, right, up, down]")
-    return correct_direction,score_tmp
+    return correct_direction, score_tmp
 
-def cal_score(output_csv,score_csv): 
-    #mid point y:240, x:428  height = 480, width = 856
+
+def cal_score(output_csv, score_csv):
+    # mid point y:240, x:428  height = 480, width = 856
     left_thresh = 0
     up_thresh = 0
     id = []
     score = []
-   
-    with open(score_csv, 'w') as score_file:
+
+    with open(score_csv, "w") as score_file:
         writer = csv.writer(score_file)
-        writer.writerow(["id","object_1","d_1","object_2","d_2","Score"])
-        
-        with open(output_csv, 'r') as file1:
+        writer.writerow(["id", "object_1", "d_1", "object_2", "d_2", "Score"])
+
+        with open(output_csv, "r") as file1:
             reader1 = csv.reader(file1)
             lines = list(reader1)
-            vid_num = (len(lines)-1)//2
+            vid_num = (len(lines) - 1) // 2
             for i in range(vid_num):
-                id = lines[i*2+1][0]
-                d_1 = lines[i*2+1][3]
-                d_2 = lines[i*2+2][5]
-                obj1 = lines[i*2+1][2]
-                obj2 = lines[i*2+2][4]
-                obj1_net_left = lines[i*2+1][6]
-                obj1_net_up = lines[i*2+1][7]
-                obj2_net_left = lines[i*2+2][6]
-                obj2_net_up = lines[i*2+2][7]
+                id = lines[i * 2 + 1][0]
+                d_1 = lines[i * 2 + 1][3]
+                d_2 = lines[i * 2 + 2][5]
+                obj1 = lines[i * 2 + 1][2]
+                obj2 = lines[i * 2 + 2][4]
+                obj1_net_left = lines[i * 2 + 1][6]
+                obj1_net_up = lines[i * 2 + 1][7]
+                obj2_net_left = lines[i * 2 + 2][6]
+                obj2_net_up = lines[i * 2 + 2][7]
                 correct_direction = False
                 score_tmp = 0
-                
-                if d_1!="" and d_2=="": #only 1 object
-                    if obj1_net_left != "": #1 object detected
-                        correct_direction,score_tmp = object_score(obj1_net_left,left_thresh,obj1_net_up,up_thresh,d_1)
-                    elif obj1_net_left == "":  #1 object not detected
+
+                if d_1 != "" and d_2 == "":  # only 1 object
+                    if obj1_net_left != "":  # 1 object detected
+                        correct_direction, score_tmp = object_score(
+                            obj1_net_left, left_thresh, obj1_net_up, up_thresh, d_1
+                        )
+                    elif obj1_net_left == "":  # 1 object not detected
                         correct_direction = False
-                        score_tmp=-1
+                        score_tmp = -1
                     else:
                         print("only 1 object detected, error in obj1_net_left")
-                        
-                elif d_1!="" and d_2!="": #2 objects  
-                    if obj1_net_left != "": #1st object detected
-                        correct_direction_1,score_tmp_1 = object_score(obj1_net_left,left_thresh,obj1_net_up,up_thresh,d_1)
-                    elif obj1_net_left == "": #1st object not detected
+
+                elif d_1 != "" and d_2 != "":  # 2 objects
+                    if obj1_net_left != "":  # 1st object detected
+                        correct_direction_1, score_tmp_1 = object_score(
+                            obj1_net_left, left_thresh, obj1_net_up, up_thresh, d_1
+                        )
+                    elif obj1_net_left == "":  # 1st object not detected
                         correct_direction_1 = False
-                        score_tmp_1=-1
+                        score_tmp_1 = -1
                     else:
                         print("2 objects detected, error in obj1_net_left")
-                    
-                    if obj2_net_left != "": #2nd object detected
-                        correct_direction_2,score_tmp_2 = object_score(obj2_net_left,left_thresh,obj2_net_up,up_thresh,d_2)
-                    elif obj2_net_left == "": #2nd object not detected
+
+                    if obj2_net_left != "":  # 2nd object detected
+                        correct_direction_2, score_tmp_2 = object_score(
+                            obj2_net_left, left_thresh, obj2_net_up, up_thresh, d_2
+                        )
+                    elif obj2_net_left == "":  # 2nd object not detected
                         correct_direction_2 = False
-                        score_tmp_2=-1
+                        score_tmp_2 = -1
                     else:
                         print("2 objects detected, error in obj2_net_left")
-                    
-                    if correct_direction_1==True and correct_direction_2==True:
-                        score_tmp = (score_tmp_1 + score_tmp_2)*0.5
-                    elif correct_direction_1==True and correct_direction_2==False:
-                        score_tmp = 0.5*score_tmp_1
-                    elif correct_direction_1==False and correct_direction_2==True:
-                        score_tmp = 0.5*score_tmp_2
-                    elif correct_direction_1==False and correct_direction_2==False:
-                        if score_tmp_1<0 and score_tmp_2<0: #2 object neither detected
+
+                    if correct_direction_1 == True and correct_direction_2 == True:
+                        score_tmp = (score_tmp_1 + score_tmp_2) * 0.5
+                    elif correct_direction_1 == True and correct_direction_2 == False:
+                        score_tmp = 0.5 * score_tmp_1
+                    elif correct_direction_1 == False and correct_direction_2 == True:
+                        score_tmp = 0.5 * score_tmp_2
+                    elif correct_direction_1 == False and correct_direction_2 == False:
+                        if score_tmp_1 < 0 and score_tmp_2 < 0:  # 2 object neither detected
                             score_tmp = -1
                         else:
-                            score_tmp = 0 # 1 or 2 among 2 objects detected, wrong direction/static
+                            score_tmp = 0  # 1 or 2 among 2 objects detected, wrong direction/static
                     else:
                         print("error in direction judgement")
-                    
-                        
+
                 else:
-                    print("wrong record in d_1 or d_2")     
-            
+                    print("wrong record in d_1 or d_2")
+
                 score.append(score_tmp)
-                writer.writerow([id,obj1,d_1,obj2,d_2,score_tmp])
+                writer.writerow([id, obj1, d_1, obj2, d_2, score_tmp])
 
 
 def model_score(csv_path):
     new_csv = []
-    with open(csv_path, 'r') as file:
+    with open(csv_path, "r") as file:
         reader = csv.reader(file)
         lines = list(reader)
-        score = 0   #neither detected: -1, detected: motion score 0~1, total scale: -1 ~ 1
+        score = 0  # neither detected: -1, detected: motion score 0~1, total scale: -1 ~ 1
         cnt = 0
         score_pos = 0
         cnt_pos = 0
-        
+
         new_header = lines[0]
         new_header[-1] = "Score_before_adjust"
         new_header.append("Score")
         new_csv.append(new_header)
-        
+
         for line in lines[1:]:
-            
             score_tmp = float(line[-1])
-            
-            if score_tmp<0:
+
+            if score_tmp < 0:
                 score_tmp = 0
-            elif score_tmp>=0:
+            elif score_tmp >= 0:
                 score_pos += score_tmp
-                score_tmp = (score_tmp*0.8)+0.2
-                cnt_pos+=1
-                
+                score_tmp = (score_tmp * 0.8) + 0.2
+                cnt_pos += 1
+
             new_line = line
             # The above code is a Python comment. Comments in Python start with a hash symbol (#) and
             # are used to provide explanations or notes within the code. In this case, the comment is
             # indicating that the code is creating a new line.
             new_line.append(score_tmp)
-            new_csv.append(new_line) 
-               
-            score+=score_tmp
-            
-            cnt+=1
-        
-        score = score/cnt
-        score_pos = score_pos/cnt_pos
-        print("score: ",score)
-        
-    with open(csv_path, 'w', newline='') as file:
+            new_csv.append(new_line)
+
+            score += score_tmp
+
+            cnt += 1
+
+        score = score / cnt
+        score_pos = score_pos / cnt_pos
+        print("score: ", score)
+
+    with open(csv_path, "w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerows(new_csv)    
-        writer.writerow(["score: ",score])    
-            
+        writer.writerows(new_csv)
+        writer.writerow(["score: ", score])
 
 
 def background(args):
-    output_dir = os.path.join(args.output_dir,args.t2v_model)
+    output_dir = os.path.join(args.output_dir, args.t2v_model)
     output_path = args.output_path
     video_folder = args.video_path
-    mask_folder = os.path.join(args.mask_folder,args.t2v_model)
-    
+    mask_folder = os.path.join(args.mask_folder, args.t2v_model)
+
     os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(output_path,exist_ok=True)
-    
-    with open(args.read_prompt_file,'r') as json_data:
+    os.makedirs(output_path, exist_ok=True)
+
+    with open(args.read_prompt_file, "r") as json_data:
         prompts = json.load(json_data)
-        
+
     model = create_model(args).cuda()
     visualizer = Visualizer(args).cuda()
     resolution = (args.height, args.width)
-    
-    csv_path = f'{output_path}/{args.t2v_model}_background.csv'
+
+    csv_path = f"{output_path}/{args.t2v_model}_background.csv"
     if os.path.exists(csv_path):
-        with open(csv_path, 'r', newline='') as csvreader: 
+        with open(csv_path, "r", newline="") as csvreader:
             reader = csv.reader(csvreader)
             lines = list(reader)  # Read all lines into a list
             line_count = len(lines)  # Count the number of lines
     else:
         line_count = 0
 
-    with open(csv_path, 'a', newline='') as csvfile:
-        
+    with open(csv_path, "a", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
         if line_count == 0:
-            csv_writer.writerow(["id","prompt", 'object_1','d_1','object_2','d_2','mask_name', 'xy_json','change_in_x','change_in_y'])
-            
+            csv_writer.writerow(
+                [
+                    "id",
+                    "prompt",
+                    "object_1",
+                    "d_1",
+                    "object_2",
+                    "d_2",
+                    "mask_name",
+                    "xy_json",
+                    "change_in_x",
+                    "change_in_y",
+                ]
+            )
+
         videos = os.listdir(video_folder)
-        videos.sort(key=lambda x: int(x.split('.')[0]))
-        
-        evaluated = max(line_count - 1,0)
- 
-        for i in range(evaluated,len(videos)):
+        videos.sort(key=lambda x: int(x.split(".")[0]))
+
+        evaluated = max(line_count - 1, 0)
+
+        for i in range(evaluated, len(videos)):
             video_name = videos[i]
-            ind = int(video_name[0:4])-1
+            ind = int(video_name[0:4]) - 1
             vid = video_name
 
-            save_prefix = osp.join(output_dir,vid.split('.')[0])
-            os.makedirs(save_prefix,exist_ok=True)
-            
+            save_prefix = osp.join(output_dir, vid.split(".")[0])
+            os.makedirs(save_prefix, exist_ok=True)
+
             args.result_path = save_prefix
             tracks_path = osp.join(args.result_path, "tracks.pth")
-            
-            this_prompt=prompts[ind]["prompt"]
-            object_1 = prompts[ind]["object_1"] #A is on the left of B
+
+            this_prompt = prompts[ind]["prompt"]
+            object_1 = prompts[ind]["object_1"]  # A is on the left of B
             object_2 = prompts[ind]["object_2"]
             d_1 = prompts[ind]["d_1"]
             d_2 = prompts[ind]["d_2"]
-            directions = ["left","right","up","down",""]
+            directions = ["left", "right", "up", "down", ""]
             if d_1 not in directions[:4] or d_2 not in directions:
-                print(d_1,d_2, " direction not included!!!, index: ", vid)
+                print(d_1, d_2, " direction not included!!!, index: ", vid)
                 break
-           
-            video = read_video(osp.join(video_folder, vid), resolution=resolution).cuda() # , time_steps=20
-      
+
+            video = read_video(osp.join(video_folder, vid), resolution=resolution).cuda()  # , time_steps=20
+
             if not osp.exists(tracks_path) or args.recompute_tracks:
                 with torch.no_grad():
                     pred = model({"video": video[None]}, mode=args.inference_mode, **vars(args))
@@ -563,26 +579,22 @@ def background(args):
             else:
                 tracks = torch.load(tracks_path)
 
-            masks = os.listdir(osp.join(mask_folder,vid.split(".")[0]))
+            masks = os.listdir(osp.join(mask_folder, vid.split(".")[0]))
             real_masks = []
             for file_name in masks:
-                if file_name.split(".")[0] == 'mask_background' and file_name.split(".")[-1]=='jpg':
+                if file_name.split(".")[0] == "mask_background" and file_name.split(".")[-1] == "jpg":
                     real_masks.append(file_name)
             print(real_masks)
-            
-            if len(real_masks)!=0:
+
+            if len(real_masks) != 0:
                 for mask_name in real_masks:
-                    mask_path = osp.join(mask_folder,vid.split('.')[0],mask_name)
+                    mask_path = osp.join(mask_folder, vid.split(".")[0], mask_name)
                     if any(["mask" in mode] for mode in args.visualization_modes) and osp.exists(mask_path):
                         mask = read_frame(mask_path, resolution=resolution)[0] > 0.5
                     else:
                         mask = torch.ones(args.height, args.width).bool()
 
-                    data = {
-                        "video": video,
-                        "tracks": tracks,
-                        "mask": mask
-                    }
+                    data = {"video": video, "tracks": tracks, "mask": mask}
 
                     data = to_device(data, "cuda")
 
@@ -601,103 +613,127 @@ def background(args):
                         data["tracks"] = data["tracks"][:, order]
 
                     for mode in args.visualization_modes:
-                        video,x_change_list,y_change_list = visualizer(data, mode=mode)
-                    
+                        video, x_change_list, y_change_list = visualizer(data, mode=mode)
+
                     for cnt in range(len(x_change_list)):
-                        last_x = x_change_list[-(cnt+1)]
-                        last_y = y_change_list[-(cnt+1)]
-                        if (last_x==-10000 and last_y!=-10000) or (last_y==-10000 and last_x!=-10000):
+                        last_x = x_change_list[-(cnt + 1)]
+                        last_y = y_change_list[-(cnt + 1)]
+                        if (last_x == -10000 and last_y != -10000) or (last_y == -10000 and last_x != -10000):
                             print("NO WAY")
                             break
-                        if last_x != -10000 or last_y != -10000 :
-                            print("last? ",-(cnt+1))
+                        if last_x != -10000 or last_y != -10000:
+                            print("last? ", -(cnt + 1))
                             break
                     change_in_x = last_x - x_change_list[0]
                     change_in_y = last_y - y_change_list[0]
-                    
-                    xy_json = {"x_change_list":x_change_list,
-                            "y_change_list":y_change_list} 
-                    
-                    save_path = osp.join(save_prefix,mask_name.split(".")[0]+".mp4")
+
+                    xy_json = {"x_change_list": x_change_list, "y_change_list": y_change_list}
+
+                    save_path = osp.join(save_prefix, mask_name.split(".")[0] + ".mp4")
                     write_video(video, save_path)
-                    csv_writer.writerow([vid.split('.')[0],this_prompt,object_1,d_1,object_2,d_2, mask_name,xy_json,change_in_x,change_in_y])
+                    csv_writer.writerow(
+                        [
+                            vid.split(".")[0],
+                            this_prompt,
+                            object_1,
+                            d_1,
+                            object_2,
+                            d_2,
+                            mask_name,
+                            xy_json,
+                            change_in_x,
+                            change_in_y,
+                        ]
+                    )
                     csvfile.flush()
             else:
-                    csv_writer.writerow([vid.split('.')[0],this_prompt,object_1,d_1,object_2,d_2,"","","",""])
-                    csvfile.flush()
-                
-    background_csv = f'{output_path}/{args.t2v_model}_background.csv'
+                csv_writer.writerow([vid.split(".")[0], this_prompt, object_1, d_1, object_2, d_2, "", "", "", ""])
+                csvfile.flush()
+
+    background_csv = f"{output_path}/{args.t2v_model}_background.csv"
     return background_csv
-                    
+
+
 def foreground(args):
-    output_dir = os.path.join(args.output_dir,args.t2v_model)
+    output_dir = os.path.join(args.output_dir, args.t2v_model)
     output_path = args.output_path
     video_folder = args.video_path
-    mask_folder = os.path.join(args.mask_folder,args.t2v_model)
-    
+    mask_folder = os.path.join(args.mask_folder, args.t2v_model)
+
     os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(output_path,exist_ok=True)
-    
-    with open(args.read_prompt_file,'r') as json_data:
+    os.makedirs(output_path, exist_ok=True)
+
+    with open(args.read_prompt_file, "r") as json_data:
         prompts = json.load(json_data)
-        
+
     model = create_model(args).cuda()
     visualizer = Visualizer(args).cuda()
     resolution = (args.height, args.width)
-    
-    csv_path = f'{output_path}/{args.t2v_model}_foreground.csv'
+
+    csv_path = f"{output_path}/{args.t2v_model}_foreground.csv"
     if os.path.exists(csv_path):
-        with open(csv_path, 'r', newline='') as csvreader: 
+        with open(csv_path, "r", newline="") as csvreader:
             reader = csv.reader(csvreader)
             lines = list(reader)  # Read all lines into a list
             line_count = len(lines)  # Count the number of lines
     else:
         line_count = 0
-        
-    with open(csv_path, 'a', newline='') as csvfile:
+
+    with open(csv_path, "a", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
         if line_count == 0:
-            csv_writer.writerow(["id","prompt", 'object_1','d_1','object_2','d_2','mask_name', 'xy_json','change_in_x','change_in_y'])
-        
+            csv_writer.writerow(
+                [
+                    "id",
+                    "prompt",
+                    "object_1",
+                    "d_1",
+                    "object_2",
+                    "d_2",
+                    "mask_name",
+                    "xy_json",
+                    "change_in_x",
+                    "change_in_y",
+                ]
+            )
+
         videos = os.listdir(video_folder)
-        videos.sort(key=lambda x: int(x.split('.')[0]))
-        
-        evaluated = max(line_count - 1,0)
-        
-        for i in range(evaluated,len(videos)):
+        videos.sort(key=lambda x: int(x.split(".")[0]))
+
+        evaluated = max(line_count - 1, 0)
+
+        for i in range(evaluated, len(videos)):
             video_name = videos[i]
-            ind = int(video_name[0:4])-1
+            ind = int(video_name[0:4]) - 1
             vid = video_name
-    
-            this_prompt=prompts[ind]["prompt"]
-            object_1 = prompts[ind]["object_1"] #A is on the left of B
+
+            this_prompt = prompts[ind]["prompt"]
+            object_1 = prompts[ind]["object_1"]  # A is on the left of B
             object_2 = prompts[ind]["object_2"]
             d_1 = prompts[ind]["d_1"]
             d_2 = prompts[ind]["d_2"]
-            directions = ["left","right","up","down",""]
+            directions = ["left", "right", "up", "down", ""]
             if d_1 not in directions[:4] or d_2 not in directions:
-                print(d_1,d_2, " direction not included!!!, index: ", vid)
+                print(d_1, d_2, " direction not included!!!, index: ", vid)
                 break
-            
-            
-            masks = os.listdir(osp.join(mask_folder,vid.split(".")[0]))
+
+            masks = os.listdir(osp.join(mask_folder, vid.split(".")[0]))
             real_masks = []
             for file_name in masks:
-                if file_name.split(".")[-1]=='jpg' and file_name.split("_")[1] == 'foreground':
+                if file_name.split(".")[-1] == "jpg" and file_name.split("_")[1] == "foreground":
                     real_masks.append(file_name)
-            
+
             print(real_masks)
-            if len(real_masks)!=0:
+            if len(real_masks) != 0:
                 for mask_name in real_masks:
-            
-                    save_prefix = osp.join(output_dir,vid.split('.')[0])
-                    os.makedirs(save_prefix,exist_ok=True)
-                    
+                    save_prefix = osp.join(output_dir, vid.split(".")[0])
+                    os.makedirs(save_prefix, exist_ok=True)
+
                     args.result_path = save_prefix
                     tracks_path = osp.join(args.result_path, "tracks.pth")
-                    
-                    video = read_video(osp.join(video_folder, vid), resolution=resolution).cuda() # , time_steps=20
-            
+
+                    video = read_video(osp.join(video_folder, vid), resolution=resolution).cuda()  # , time_steps=20
+
                     if not osp.exists(tracks_path) or args.recompute_tracks:
                         with torch.no_grad():
                             pred = model({"video": video[None]}, mode=args.inference_mode, **vars(args))
@@ -707,18 +743,13 @@ def foreground(args):
                     else:
                         tracks = torch.load(tracks_path)
 
-           
-                    mask_path = osp.join(mask_folder,vid.split(".")[0],mask_name)
+                    mask_path = osp.join(mask_folder, vid.split(".")[0], mask_name)
                     if any(["mask" in mode] for mode in args.visualization_modes) and osp.exists(mask_path):
                         mask = read_frame(mask_path, resolution=resolution)[0] > 0.5
                     else:
                         mask = torch.ones(args.height, args.width).bool()
 
-                    data = {
-                        "video": video,
-                        "tracks": tracks,
-                        "mask": mask
-                    }
+                    data = {"video": video, "tracks": tracks, "mask": mask}
 
                     data = to_device(data, "cuda")
 
@@ -737,59 +768,72 @@ def foreground(args):
                         data["tracks"] = data["tracks"][:, order]
 
                     for mode in args.visualization_modes:
-                        video,x_change_list,y_change_list = visualizer(data, mode=mode)
-                        
+                        video, x_change_list, y_change_list = visualizer(data, mode=mode)
+
                     for cnt in range(len(x_change_list)):
-                        last_x = x_change_list[-(cnt+1)]
-                        last_y = y_change_list[-(cnt+1)]
-                        if (last_x==-10000 and last_y!=-10000) or (last_y==-10000 and last_x!=-10000):
+                        last_x = x_change_list[-(cnt + 1)]
+                        last_y = y_change_list[-(cnt + 1)]
+                        if (last_x == -10000 and last_y != -10000) or (last_y == -10000 and last_x != -10000):
                             print("NO WAY")
                             break
-                        if last_x != -10000 or last_y != -10000 :
-                            print("last? ",-(cnt+1))
+                        if last_x != -10000 or last_y != -10000:
+                            print("last? ", -(cnt + 1))
                             break
                     change_in_x = last_x - x_change_list[0]
                     change_in_y = last_y - y_change_list[0]
-                    
-                    xy_json = {"x_change_list":x_change_list,
-                            "y_change_list":y_change_list} 
-                    
-                    save_path = osp.join(save_prefix,mask_name.split(".")[0]+".mp4")
+
+                    xy_json = {"x_change_list": x_change_list, "y_change_list": y_change_list}
+
+                    save_path = osp.join(save_prefix, mask_name.split(".")[0] + ".mp4")
                     write_video(video, save_path)
-                    csv_writer.writerow([vid.split(".")[0],this_prompt,object_1,d_1,object_2,d_2, mask_name,xy_json,change_in_x,change_in_y])
+                    csv_writer.writerow(
+                        [
+                            vid.split(".")[0],
+                            this_prompt,
+                            object_1,
+                            d_1,
+                            object_2,
+                            d_2,
+                            mask_name,
+                            xy_json,
+                            change_in_x,
+                            change_in_y,
+                        ]
+                    )
                     csvfile.flush()
-                    
-                if len(real_masks)==1:
-                    csv_writer.writerow([vid.split('.')[0],this_prompt,object_1,d_1,object_2,d_2,"","","",""]) #the 2nd object
+
+                if len(real_masks) == 1:
+                    csv_writer.writerow(
+                        [vid.split(".")[0], this_prompt, object_1, d_1, object_2, d_2, "", "", "", ""]
+                    )  # the 2nd object
                     csvfile.flush()
-                    
+
             else:
-                    csv_writer.writerow([vid.split('.')[0],this_prompt,object_1,d_1,object_2,d_2,"","","",""])
-                    csvfile.flush()
-                    csv_writer.writerow([vid.split('.')[0],this_prompt,object_1,d_1,object_2,d_2,"","","",""])
-                    csvfile.flush()
-                    
-    foreground_csv = f'{output_path}/{args.t2v_model}_foreground.csv'
+                csv_writer.writerow([vid.split(".")[0], this_prompt, object_1, d_1, object_2, d_2, "", "", "", ""])
+                csvfile.flush()
+                csv_writer.writerow([vid.split(".")[0], this_prompt, object_1, d_1, object_2, d_2, "", "", "", ""])
+                csvfile.flush()
+
+    foreground_csv = f"{output_path}/{args.t2v_model}_foreground.csv"
     return foreground_csv
-     
+
+
 if __name__ == "__main__":
     args = DemoOptions().parse_args()
 
     foreground_csv = foreground(args)
     background_csv = background(args)
-    
 
-    output_csv = os.path.join(args.output_path,f"{args.t2v_model}_motion_back_fore.csv")
-    combine_fore_back(foreground_csv,background_csv,output_csv)
+    output_csv = os.path.join(args.output_path, f"{args.t2v_model}_motion_back_fore.csv")
+    combine_fore_back(foreground_csv, background_csv, output_csv)
 
     # score of each video is recorded in score_csv
-    score_csv = os.path.join(args.output_path,f"{args.t2v_model}_motion_score.csv")
-    cal_score(output_csv,score_csv)
-    
+    score_csv = os.path.join(args.output_path, f"{args.t2v_model}_motion_score.csv")
+    cal_score(output_csv, score_csv)
+
     # final model score printed out and recorded in the last line of score_csv
     model_score(score_csv)
-    
-    
+
     print(foreground_csv)
     print(background_csv)
     print(score_csv)

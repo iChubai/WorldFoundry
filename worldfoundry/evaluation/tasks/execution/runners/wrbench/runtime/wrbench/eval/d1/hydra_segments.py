@@ -122,9 +122,7 @@ def materialize_generated_only_clip(
         writer.release()
         cap.release()
     if written != int(frame_count):
-        raise ValueError(
-            f"expected to write {frame_count} generated frames from {video_path}, wrote {written}"
-        )
+        raise ValueError(f"expected to write {frame_count} generated frames from {video_path}, wrote {written}")
     return out_path
 
 

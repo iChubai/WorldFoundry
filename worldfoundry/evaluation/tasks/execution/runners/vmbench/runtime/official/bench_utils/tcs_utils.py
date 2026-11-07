@@ -81,6 +81,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
 
     return boxes_filt, pred_phrases
 
+
 # Get all suddenly disappeared objects
 def get_disappear_objects(tracking_result):
     result = []
@@ -90,31 +91,29 @@ def get_disappear_objects(tracking_result):
     for i, current_dict in enumerate(tracking_result):
         for key, value in current_dict.items():
             if key not in first_appearances:
-                first_appearances[key] = {
-                    'frame': i,
-                    'mask': np.array(value['mask']) if 'mask' in value else None
-                }
+                first_appearances[key] = {"frame": i, "mask": np.array(value["mask"]) if "mask" in value else None}
 
     # Then iterate through the list again, checking for object disappearances
     for i in range(len(tracking_result) - 1):
         dict1 = tracking_result[i]
         dict2 = tracking_result[i + 1]
-        
+
         # Find disappeared keys
         disappeared_keys = set(dict1.keys()) - set(dict2.keys())
-        
+
         # If there are disappeared keys, record them and their information
         for key in disappeared_keys:
             disappeared_object_info = {
-                'object_id': key,  # Record the ID of the disappeared object
-                'mask': first_appearances[key]['mask'],  # Record the mask when the object first appeared
-                'first_appearance': first_appearances[key]['frame'],  # Record the index when the object first appeared
-                'last_frame': i  # Record the index when the object last appeared
+                "object_id": key,  # Record the ID of the disappeared object
+                "mask": first_appearances[key]["mask"],  # Record the mask when the object first appeared
+                "first_appearance": first_appearances[key]["frame"],  # Record the index when the object first appeared
+                "last_frame": i,  # Record the index when the object last appeared
             }
-            
+
             result.append(disappeared_object_info)
-    
+
     return result
+
 
 def is_edge_vanish(pred_tracks, pred_visibility, start, width=720, height=480, visibility_ratio=0.8, point_ratio=0.5):
     # get the invisible frames
@@ -144,8 +143,17 @@ def is_edge_vanish(pred_tracks, pred_visibility, start, width=720, height=480, v
         # print("Not disappearing from screen edge")
     return edge_vanish
 
-def is_small_vanish(pred_tracks, pred_visibility, start, width=720, height=480, 
-                               visibility_ratio=-1, point_ratio=0.8, size_threshold=0.07):
+
+def is_small_vanish(
+    pred_tracks,
+    pred_visibility,
+    start,
+    width=720,
+    height=480,
+    visibility_ratio=-1,
+    point_ratio=0.8,
+    size_threshold=0.07,
+):
     # get the invisible frames
     false_ratio = (~pred_visibility).float().mean(dim=2).squeeze(0)
     indices = torch.where(false_ratio >= visibility_ratio)[0]
@@ -154,7 +162,7 @@ def is_small_vanish(pred_tracks, pred_visibility, start, width=720, height=480,
     pred_tracks = pred_tracks[0, indices]
     # record small object frames
     small_object_frames = []
-    
+
     for i, frame in enumerate(pred_tracks):
         # Determine if the object is on screen
         left_mask = frame[:, 0] > 0
@@ -162,19 +170,21 @@ def is_small_vanish(pred_tracks, pred_visibility, start, width=720, height=480,
         top_mask = frame[:, 1] > 0
         bottom_mask = frame[:, 1] < height
         in_screen_mask = left_mask & right_mask & top_mask & bottom_mask
-            
+
         # Calculate if the object formed by key points is very small
         valid_points = frame[in_screen_mask]
-        if in_screen_mask.float().mean(dim=0) >= point_ratio and valid_points.shape[0] > 1:  # Ensure at least two points to calculate size
+        if (
+            in_screen_mask.float().mean(dim=0) >= point_ratio and valid_points.shape[0] > 1
+        ):  # Ensure at least two points to calculate size
             q_low = torch.quantile(valid_points, 0.1, dim=0)
             q_high = torch.quantile(valid_points, 0.9, dim=0)
             object_width = (q_high[0] - q_low[0]) / width
             object_height = (q_high[1] - q_low[1]) / height
             object_size = max(object_width, object_height)
-            
+
             if object_size < size_threshold:
                 small_object_frames.append(i)
-    
+
     if len(small_object_frames) > 0:
         small_vanish = True
         # print("Normal disappearance due to being too small")
@@ -182,6 +192,7 @@ def is_small_vanish(pred_tracks, pred_visibility, start, width=720, height=480,
         small_vanish = False
         # print("Not disappearing due to being too small")
     return small_vanish
+
 
 # Determine if there are really invisible frames
 def is_vanish_detect_error(pred_tracks, pred_visibility, start, visibility_ratio=1.0):
@@ -198,6 +209,7 @@ def is_vanish_detect_error(pred_tracks, pred_visibility, start, visibility_ratio
         # print("No error due to detection mistake")
     return detect_error
 
+
 # Get all suddenly appearing objects
 def get_appear_objects(dict_list):
     result = []
@@ -207,30 +219,28 @@ def get_appear_objects(dict_list):
     for i, current_dict in enumerate(dict_list):
         for key, value in current_dict.items():
             if key not in first_appearances:
-                first_appearances[key] = {
-                    'frame': i,
-                    'mask': np.array(value['mask']) if 'mask' in value else None
-                }
+                first_appearances[key] = {"frame": i, "mask": np.array(value["mask"]) if "mask" in value else None}
 
     # Then iterate through the list, checking for object appearances
     for i in range(1, len(dict_list)):
         dict1 = dict_list[i - 1]
         dict2 = dict_list[i]
-        
+
         # Find newly appeared keys
         appeared_keys = set(dict2.keys()) - set(dict1.keys())
-        
+
         # If there are newly appeared keys, record them and their information
         for key in appeared_keys:
             appeared_object_info = {
-                'object_id': key,  # Record the ID of the appeared object
-                'mask': first_appearances[key]['mask'],  # Record the mask when the object first appeared
-                'first_appearance': first_appearances[key]['frame'],  # Record the index when the object first appeared
+                "object_id": key,  # Record the ID of the appeared object
+                "mask": first_appearances[key]["mask"],  # Record the mask when the object first appeared
+                "first_appearance": first_appearances[key]["frame"],  # Record the index when the object first appeared
             }
-            
+
             result.append(appeared_object_info)
-    
+
     return result
+
 
 def is_edge_emerge(pred_tracks, pred_visibility, start, width=720, height=480, visibility_ratio=0.85, point_ratio=0.5):
     # filter object invisible frames
@@ -239,7 +249,7 @@ def is_edge_emerge(pred_tracks, pred_visibility, start, width=720, height=480, v
     # filter the frames before the start
     indices = indices[indices < start]
     selected_frames = pred_tracks[0, indices]  # shape: [len(filtered_indices), 7, 2]
-    
+
     # consider every edges
     left_mask = selected_frames[:, :, 0] < 0
     right_mask = selected_frames[:, :, 0] > width
@@ -263,14 +273,23 @@ def is_edge_emerge(pred_tracks, pred_visibility, start, width=720, height=480, v
 
     return edge_emerge
 
-def is_small_emerge(pred_tracks, pred_visibility, start, width=720, height=480, 
-                               visibility_ratio=-1, point_ratio=0.8, size_threshold=0.03):
+
+def is_small_emerge(
+    pred_tracks,
+    pred_visibility,
+    start,
+    width=720,
+    height=480,
+    visibility_ratio=-1,
+    point_ratio=0.8,
+    size_threshold=0.03,
+):
     false_ratio = (~pred_visibility).float().mean(dim=2).squeeze(0)
     indices = torch.where(false_ratio >= visibility_ratio)[0]
     indices = indices[indices < start]
     pred_tracks = pred_tracks[0, indices]
     small_object_frames = []
-    
+
     for i, frame in enumerate(pred_tracks):
         # Determine if the object is on screen
         left_mask = frame[:, 0] > 0
@@ -278,19 +297,21 @@ def is_small_emerge(pred_tracks, pred_visibility, start, width=720, height=480,
         top_mask = frame[:, 1] > 0
         bottom_mask = frame[:, 1] < height
         in_screen_mask = left_mask & right_mask & top_mask & bottom_mask
-            
+
         # Calculate if the object formed by key points is very small
         valid_points = frame[in_screen_mask]
-        if in_screen_mask.float().mean(dim=0) >= point_ratio and valid_points.shape[0] > 1:  # Ensure at least two points to calculate size
+        if (
+            in_screen_mask.float().mean(dim=0) >= point_ratio and valid_points.shape[0] > 1
+        ):  # Ensure at least two points to calculate size
             q_low = torch.quantile(valid_points, 0.1, dim=0)
             q_high = torch.quantile(valid_points, 0.9, dim=0)
             object_width = (q_high[0] - q_low[0]) / width
             object_height = (q_high[1] - q_low[1]) / height
             object_size = max(object_width, object_height)
-            
+
             if object_size < size_threshold:
                 small_object_frames.append(i)
-        
+
     if len(small_object_frames) > 0:
         small_emerge = True
         # print("Normal appearance from being too small")
@@ -299,6 +320,7 @@ def is_small_emerge(pred_tracks, pred_visibility, start, width=720, height=480,
         # print("Not appearing from being too small")
 
     return small_emerge
+
 
 # Determine if there are really invisible frames
 def is_emerge_detect_error(pred_tracks, pred_visibility, start, visibility_ratio=0.8):

@@ -9,12 +9,14 @@ import cv2
 _dino = None
 _dino_device = None
 
-_DINO_TRANSFORM = T.Compose([
-    T.Resize(256, interpolation=T.InterpolationMode.BICUBIC),
-    T.CenterCrop(224),
-    T.ToTensor(),
-    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
+_DINO_TRANSFORM = T.Compose(
+    [
+        T.Resize(256, interpolation=T.InterpolationMode.BICUBIC),
+        T.CenterCrop(224),
+        T.ToTensor(),
+        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+)
 
 
 def _load_dino(device: str = None) -> tuple:
@@ -27,7 +29,8 @@ def _load_dino(device: str = None) -> tuple:
     _dino_device = device
 
     _dino = torch.hub.load(
-        "facebookresearch/dinov2", "dinov2_vitb14",
+        "facebookresearch/dinov2",
+        "dinov2_vitb14",
         verbose=False,
     )
     _dino = _dino.to(device).eval()
@@ -39,8 +42,8 @@ def _dino_embed(img: np.ndarray, model, device: str) -> torch.Tensor:
     """Extract L2-normalised DINOv2 CLS token from a BGR frame."""
     pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     t = _DINO_TRANSFORM(pil).unsqueeze(0).to(device)
-    feat = model(t)                              # [1, 768]
-    return F.normalize(feat, dim=-1)             # unit sphere
+    feat = model(t)  # [1, 768]
+    return F.normalize(feat, dim=-1)  # unit sphere
 
 
 @torch.no_grad()
@@ -53,9 +56,9 @@ def _dino_patch_embed(img: np.ndarray, model, device: str) -> torch.Tensor:
     """
     pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     t = _DINO_TRANSFORM(pil).unsqueeze(0).to(device)
-    feats = model.forward_features(t)            # dict with 'x_norm_patchtokens'
-    patches = feats["x_norm_patchtokens"]        # [1, N, D]
-    patches = F.normalize(patches[0], dim=-1)    # [N, D] unit norm per patch
+    feats = model.forward_features(t)  # dict with 'x_norm_patchtokens'
+    patches = feats["x_norm_patchtokens"]  # [1, N, D]
+    patches = F.normalize(patches[0], dim=-1)  # [N, D] unit norm per patch
     return patches
 
 
@@ -65,9 +68,7 @@ def _dino_similarity(f0: torch.Tensor, fk: torch.Tensor) -> float:
     return float(np.clip(sim, 0.0, 1.0))
 
 
-def identity_consistency(frames, n_sample: int = 9,
-                         device: str = None,
-                         start: int = 0, end: int = None) -> dict:
+def identity_consistency(frames, n_sample: int = 9, device: str = None, start: int = 0, end: int = None) -> dict:
     """
     Visual identity consistency via DINOv2 CLS token cosine similarity.
 
@@ -87,14 +88,13 @@ def identity_consistency(frames, n_sample: int = 9,
     if end is None:
         end = N - 1
     start = max(0, min(start, N - 1))
-    end   = max(start, min(end, N - 1))
+    end = max(start, min(end, N - 1))
     n_range = end - start + 1
 
     if n_sample <= 1 or n_range <= 1:
         indices = [start]
     else:
-        indices = [start + int(i * (n_range - 1) / (n_sample - 1))
-                   for i in range(n_sample)]
+        indices = [start + int(i * (n_range - 1) / (n_sample - 1)) for i in range(n_sample)]
 
     # Anchor: always frame_0
     f0 = _dino_embed(frames.get(0), model, device)
@@ -108,8 +108,8 @@ def identity_consistency(frames, n_sample: int = 9,
         return {"identity_consistency": 1.0, "min_identity_consistency": 1.0}
 
     return {
-        "identity_consistency":     round(float(np.mean(sims)), 4),
-        "min_identity_consistency": round(float(np.min(sims)),  4),
+        "identity_consistency": round(float(np.mean(sims)), 4),
+        "min_identity_consistency": round(float(np.min(sims)), 4),
     }
 
 
@@ -147,25 +147,24 @@ def object_centric_identity_consistency(
     if end is None:
         end = N - 1
     start = max(0, min(start, N - 1))
-    end   = max(start, min(end, N - 1))
+    end = max(start, min(end, N - 1))
     n_range = end - start + 1
 
     if n_sample <= 1 or n_range <= 1:
         indices = [start]
     else:
-        indices = [start + int(i * (n_range - 1) / (n_sample - 1))
-                   for i in range(n_sample)]
+        indices = [start + int(i * (n_range - 1) / (n_sample - 1)) for i in range(n_sample)]
 
     # Anchor: always frame_0 patch tokens
-    p0 = _dino_patch_embed(frames.get(0), model, device)   # [N_patches, D]
+    p0 = _dino_patch_embed(frames.get(0), model, device)  # [N_patches, D]
     N_patches = p0.shape[0]
     top_k = max(1, int(N_patches * top_k_frac))
 
     mean_sims, min_sims = [], []
     for idx in indices:
-        pk = _dino_patch_embed(frames.get(idx), model, device)   # [N_patches, D]
+        pk = _dino_patch_embed(frames.get(idx), model, device)  # [N_patches, D]
         # Per-patch cosine similarity (both are already L2-normalised)
-        patch_sims = (p0 * pk).sum(dim=-1).clamp(0.0, 1.0)      # [N_patches]
+        patch_sims = (p0 * pk).sum(dim=-1).clamp(0.0, 1.0)  # [N_patches]
         # Focus on top-K most stable patches
         top_vals, _ = patch_sims.topk(top_k)
         mean_sims.append(float(top_vals.mean().item()))
@@ -173,13 +172,13 @@ def object_centric_identity_consistency(
 
     if not mean_sims:
         return {
-            "obj_identity_consistency":     1.0,
+            "obj_identity_consistency": 1.0,
             "obj_min_identity_consistency": 1.0,
         }
 
     return {
-        "obj_identity_consistency":     round(float(np.mean(mean_sims)), 4),
-        "obj_min_identity_consistency": round(float(np.min(min_sims)),   4),
+        "obj_identity_consistency": round(float(np.mean(mean_sims)), 4),
+        "obj_min_identity_consistency": round(float(np.min(min_sims)), 4),
     }
 
 
@@ -198,27 +197,25 @@ def _load_depth_anything(device: str = None):
     _depth_device = device
 
     from transformers import AutoImageProcessor, AutoModelForDepthEstimation
-    _depth_processor = AutoImageProcessor.from_pretrained(
-        "depth-anything/Depth-Anything-V2-Small-hf"
+
+    _depth_processor = AutoImageProcessor.from_pretrained("depth-anything/Depth-Anything-V2-Small-hf")
+    _depth_model = (
+        AutoModelForDepthEstimation.from_pretrained("depth-anything/Depth-Anything-V2-Small-hf").to(device).eval()
     )
-    _depth_model = AutoModelForDepthEstimation.from_pretrained(
-        "depth-anything/Depth-Anything-V2-Small-hf"
-    ).to(device).eval()
 
     return _depth_model, _depth_processor, _depth_device
 
 
 @torch.no_grad()
-def _depth_embed(model, processor, device: str,
-                 img_bgr: np.ndarray) -> torch.Tensor:
+def _depth_embed(model, processor, device: str, img_bgr: np.ndarray) -> torch.Tensor:
     """Estimate depth with Depth Anything V2, min-max normalise, L2-normalise flat vector."""
     pil = Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
     inputs = processor(images=pil, return_tensors="pt")
     inputs = {k: v.to(device) for k, v in inputs.items()}
-    depth = model(**inputs).predicted_depth.squeeze()   # [H, W]
+    depth = model(**inputs).predicted_depth.squeeze()  # [H, W]
     d_min, d_max = depth.min(), depth.max()
-    depth = (depth - d_min) / (d_max - d_min + 1e-8)   # [0, 1]
-    flat = depth.flatten().unsqueeze(0)                  # [1, H*W]
+    depth = (depth - d_min) / (d_max - d_min + 1e-8)  # [0, 1]
+    flat = depth.flatten().unsqueeze(0)  # [1, H*W]
     return F.normalize(flat, dim=-1)
 
 
@@ -228,9 +225,7 @@ def _depth_similarity(d1: torch.Tensor, d2: torch.Tensor) -> float:
     return float(np.clip(sim, 0.0, 1.0))
 
 
-def geometry_3d_consistency(frames, device: str = None,
-                             n_sample: int = 9,
-                             start: int = 0, end: int = None) -> dict:
+def geometry_3d_consistency(frames, device: str = None, n_sample: int = 9, start: int = 0, end: int = None) -> dict:
     """
     Geometric 3D consistency via Depth Anything V2 cosine similarity.
 
@@ -254,14 +249,13 @@ def geometry_3d_consistency(frames, device: str = None,
     if end is None:
         end = N - 1
     start = max(0, min(start, N - 1))
-    end   = max(start, min(end, N - 1))
+    end = max(start, min(end, N - 1))
     n_range = end - start + 1
 
     if n_sample <= 1 or n_range <= 1:
         return {"geo_consistency": 0.0, "min_geo_consistency": 0.0}
 
-    indices = [start + int(i * (n_range - 1) / (n_sample - 1))
-               for i in range(n_sample)]
+    indices = [start + int(i * (n_range - 1) / (n_sample - 1)) for i in range(n_sample)]
 
     sims = []
     for i in range(len(indices) - 1):
@@ -273,6 +267,6 @@ def geometry_3d_consistency(frames, device: str = None,
         return {"geo_consistency": 0.0, "min_geo_consistency": 0.0}
 
     return {
-        "geo_consistency":     round(float(np.mean(sims)), 4),
-        "min_geo_consistency": round(float(np.min(sims)),  4),
+        "geo_consistency": round(float(np.mean(sims)), 4),
+        "min_geo_consistency": round(float(np.min(sims)), 4),
     }

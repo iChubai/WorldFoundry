@@ -102,7 +102,7 @@ def main() -> None:
         chat_qwenvl_call(
             messages=[
                 {"role": "system", "content": "You are a concise assistant."},
-                {"role": "user", "content": "Return JSON: {\"ok\": true}"},
+                {"role": "user", "content": 'Return JSON: {"ok": true}'},
             ],
             model_name=args.model,
             timeout=args.timeout,

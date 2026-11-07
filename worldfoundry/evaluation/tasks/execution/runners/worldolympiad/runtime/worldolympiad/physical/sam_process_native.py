@@ -271,9 +271,7 @@ def _build_sampled_video(
 def _normalize_native_device(device: str) -> int:
     raw = str(device).strip().lower()
     if raw == "cpu":
-        raise ValueError(
-            "The native SAM3 video predictor in this repository is CUDA-only; cpu is not supported."
-        )
+        raise ValueError("The native SAM3 video predictor in this repository is CUDA-only; cpu is not supported.")
     if raw.startswith("cuda:"):
         raw = raw.split(":", 1)[1]
     if raw.isdigit():
@@ -439,15 +437,11 @@ def _apply_outputs_to_overlay_frames(
     mask_frame = cv2.imread(str(mask_frame_path), cv2.IMREAD_COLOR)
     bbox_frame = cv2.imread(str(bbox_frame_path), cv2.IMREAD_COLOR)
     if mask_frame is None or bbox_frame is None:
-        raise RuntimeError(
-            f"Failed to load temporary overlay frames: {mask_frame_path} / {bbox_frame_path}"
-        )
+        raise RuntimeError(f"Failed to load temporary overlay frames: {mask_frame_path} / {bbox_frame_path}")
 
     for mask_index, mask_bool in enumerate(masks):
         if mask_bool.shape != (height, width):
-            raise ValueError(
-                f"Unexpected mask resolution {mask_bool.shape}; expected {(height, width)}"
-            )
+            raise ValueError(f"Unexpected mask resolution {mask_bool.shape}; expected {(height, width)}")
 
         if mask_bool.any():
             overlay = np.zeros_like(mask_frame, dtype=mask_frame.dtype)
@@ -636,8 +630,7 @@ def segment_with_sam3(
                     processed += 1
                     if processed % 20 == 0:
                         print(
-                            f"  Prompt '{prompt}' processed {processed} propagated frames "
-                            f"(current frame {frame_index})"
+                            f"  Prompt '{prompt}' processed {processed} propagated frames (current frame {frame_index})"
                         )
 
                 predictor.handle_request(
@@ -709,10 +702,7 @@ def run_sam_process(
             work_dir=Path(temp_dir),
             max_frames=max_frames,
         )
-        print(
-            f"Processing video source: {sampling_info['source']} "
-            f"({sampling_info['processing_frame_count']} frames)"
-        )
+        print(f"Processing video source: {sampling_info['source']} ({sampling_info['processing_frame_count']} frames)")
 
         print("\nStep 1: Extract moving/deforming objects via VLM...")
         vlm_start = time.perf_counter()
@@ -775,9 +765,7 @@ def run_sam_process(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="VLM-guided native SAM3 segmentation for moving/deforming objects"
-    )
+    parser = argparse.ArgumentParser(description="VLM-guided native SAM3 segmentation for moving/deforming objects")
     parser.add_argument("--video", required=True, help="Path to video file")
     parser.add_argument(
         "--prompt",

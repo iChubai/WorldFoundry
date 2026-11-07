@@ -20,17 +20,13 @@ class GeminiEvidenceEvaluator:
         if api_key is None:
             api_key = os.environ.get("GOOGLE_API_KEY")
             if not api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-3-pro-preview")
         print(f"Using model: gemini-3-pro-preview (evidence-based mode)")
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
         """
         First Gemini call: Given initial image and optional action prompt,
         predict what process should happen.
@@ -246,9 +242,7 @@ EXPLANATION: [List your observations and evidence]"""
         else:
             return "unknown"
 
-    def evaluate_task(
-        self, task_data: Dict
-    ) -> Dict:
+    def evaluate_task(self, task_data: Dict) -> Dict:
         """
         Evaluate a single task with two-step Gemini evaluation.
 
@@ -266,7 +260,7 @@ EXPLANATION: [List your observations and evidence]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process

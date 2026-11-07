@@ -14,6 +14,7 @@ try:
     import matplotlib.pyplot as plt
     from scipy.stats import pearsonr, spearmanr
     from sklearn.linear_model import LinearRegression
+
     PLOTTING_AVAILABLE = True
 except ImportError:
     PLOTTING_AVAILABLE = False
@@ -31,7 +32,7 @@ class ModelWinRateAnalyzer:
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, 'r') as f:
+        with open(results_path, "r") as f:
             return json.load(f)
 
     def load_summary_json(self, run_name: str) -> Dict:
@@ -42,7 +43,7 @@ class ModelWinRateAnalyzer:
             "LingBot_lingbot_run_1": "LingBot_output_map_lingbot_run_1",
             "HY-WorldPlay_hunyuan_run_2": "HY-WorldPlay_output_map_hunyuan_run_2",
             "genie_genie_run_1": "genie",
-            "wan22_wan_run_1": "wan22_wan_run_1"
+            "wan22_wan_run_1": "wan22_wan_run_1",
         }
 
         summary_path_key = run_mapping.get(run_name, run_name)
@@ -51,7 +52,7 @@ class ModelWinRateAnalyzer:
         if not summary_path.exists():
             return {}
 
-        with open(summary_path, 'r') as f:
+        with open(summary_path, "r") as f:
             return json.load(f)
 
     def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
@@ -103,10 +104,7 @@ class ModelWinRateAnalyzer:
 
             gemini_verdict = result["verdict"]
 
-            task_data[task_id][run_name] = {
-                "gemini_verdict": gemini_verdict,
-                "ground_truth": None
-            }
+            task_data[task_id][run_name] = {"gemini_verdict": gemini_verdict, "ground_truth": None}
 
         # Second pass: add ground truth labels
         summaries_cache = {}
@@ -151,7 +149,7 @@ class ModelWinRateAnalyzer:
                 "human_wins": 0,
                 "human_losses": 0,
                 "human_ties": 0,
-                "total_comparisons": 0
+                "total_comparisons": 0,
             }
 
         # For each task, compare all pairs of models
@@ -227,7 +225,7 @@ class ModelWinRateAnalyzer:
             model_win_rates[model] = {
                 "gemini_win_rate": gemini_win_rate,
                 "human_win_rate": human_win_rate,
-                "stats": stats
+                "stats": stats,
             }
 
         return model_win_rates
@@ -258,46 +256,57 @@ class ModelWinRateAnalyzer:
 
         # Create plot
         plt.figure(figsize=(10, 8))
-        plt.scatter(human_scores, gemini_scores, s=200, alpha=0.6, c='blue')
+        plt.scatter(human_scores, gemini_scores, s=200, alpha=0.6, c="blue")
 
         # Add model labels
         for i, model in enumerate(models):
-            plt.annotate(model, (human_scores[i], gemini_scores[i]),
-                        xytext=(5, 5), textcoords='offset points',
-                        fontsize=10, fontweight='bold')
+            plt.annotate(
+                model,
+                (human_scores[i], gemini_scores[i]),
+                xytext=(5, 5),
+                textcoords="offset points",
+                fontsize=10,
+                fontweight="bold",
+            )
 
         # Plot regression line
-        plt.plot(human_scores, y_pred, 'r--', linewidth=2, label='Linear Fit')
+        plt.plot(human_scores, y_pred, "r--", linewidth=2, label="Linear Fit")
 
         # Labels and title
-        plt.xlabel('Human Win Rate (Ground Truth)', fontsize=12, fontweight='bold')
-        plt.ylabel('Gemini Win Rate (Predicted)', fontsize=12, fontweight='bold')
-        plt.title('Model Win Rates: Gemini vs Human Assessment', fontsize=14, fontweight='bold')
+        plt.xlabel("Human Win Rate (Ground Truth)", fontsize=12, fontweight="bold")
+        plt.ylabel("Gemini Win Rate (Predicted)", fontsize=12, fontweight="bold")
+        plt.title("Model Win Rates: Gemini vs Human Assessment", fontsize=14, fontweight="bold")
 
         # Add correlation info
-        textstr = f'Pearson r = {pearson_r:.3f} (p={pearson_p:.4f})\n'
-        textstr += f'Spearman ρ = {spearman_rho:.3f} (p={spearman_p:.4f})\n'
-        textstr += f'R² = {reg.score(X, y):.3f}\n'
-        textstr += f'Slope = {reg.coef_[0]:.3f}'
-        plt.text(0.05, 0.95, textstr, transform=plt.gca().transAxes,
-                fontsize=11, verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        textstr = f"Pearson r = {pearson_r:.3f} (p={pearson_p:.4f})\n"
+        textstr += f"Spearman ρ = {spearman_rho:.3f} (p={spearman_p:.4f})\n"
+        textstr += f"R² = {reg.score(X, y):.3f}\n"
+        textstr += f"Slope = {reg.coef_[0]:.3f}"
+        plt.text(
+            0.05,
+            0.95,
+            textstr,
+            transform=plt.gca().transAxes,
+            fontsize=11,
+            verticalalignment="top",
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        )
 
         # Grid and legend
         plt.grid(True, alpha=0.3)
         plt.legend()
 
         # Equal aspect for better comparison
-        plt.axis('equal')
+        plt.axis("equal")
         plt.xlim(-0.05, max(max(human_scores), max(gemini_scores)) + 0.05)
         plt.ylim(-0.05, max(max(human_scores), max(gemini_scores)) + 0.05)
 
         # Add diagonal reference line (perfect agreement)
         max_val = max(max(human_scores), max(gemini_scores))
-        plt.plot([0, max_val], [0, max_val], 'k:', linewidth=1, alpha=0.3, label='Perfect Agreement')
+        plt.plot([0, max_val], [0, max_val], "k:", linewidth=1, alpha=0.3, label="Perfect Agreement")
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         print(f"\nPlot saved to: {output_path}")
 
         return {
@@ -307,22 +316,20 @@ class ModelWinRateAnalyzer:
             "spearman_p": spearman_p,
             "r_squared": reg.score(X, y),
             "slope": reg.coef_[0],
-            "intercept": reg.intercept_
+            "intercept": reg.intercept_,
         }
 
     def print_win_rates(self, model_win_rates: Dict):
         """Pretty print win rates."""
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("MODEL WIN RATES")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         print(f"\n{'Model':<15} {'Human Win %':<15} {'Gemini Win %':<15} {'Comparisons':<15}")
         print("-" * 70)
 
         # Sort by human win rate
-        sorted_models = sorted(model_win_rates.items(),
-                              key=lambda x: x[1]["human_win_rate"],
-                              reverse=True)
+        sorted_models = sorted(model_win_rates.items(), key=lambda x: x[1]["human_win_rate"], reverse=True)
 
         for model, data in sorted_models:
             human_wr = data["human_win_rate"] * 100
@@ -357,11 +364,15 @@ def main():
     correlation_stats = analyzer.plot_and_analyze(model_win_rates, output_path)
 
     if correlation_stats:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("CORRELATION ANALYSIS")
-        print(f"{'='*70}")
-        print(f"Pearson correlation (r):  {correlation_stats['pearson_r']:.3f} (p={correlation_stats['pearson_p']:.4f})")
-        print(f"Spearman correlation (ρ): {correlation_stats['spearman_rho']:.3f} (p={correlation_stats['spearman_p']:.4f})")
+        print(f"{'=' * 70}")
+        print(
+            f"Pearson correlation (r):  {correlation_stats['pearson_r']:.3f} (p={correlation_stats['pearson_p']:.4f})"
+        )
+        print(
+            f"Spearman correlation (ρ): {correlation_stats['spearman_rho']:.3f} (p={correlation_stats['spearman_p']:.4f})"
+        )
         print(f"R-squared:                {correlation_stats['r_squared']:.3f}")
         print(f"Regression slope:         {correlation_stats['slope']:.3f}")
         print(f"Regression intercept:     {correlation_stats['intercept']:.3f}")
@@ -370,12 +381,9 @@ def main():
     output_file = Path(results_file).stem + "_win_rates.json"
     output_path_json = Path(project_root) / "eval_se" / "results" / output_file
 
-    save_data = {
-        "model_win_rates": model_win_rates,
-        "correlation_stats": correlation_stats
-    }
+    save_data = {"model_win_rates": model_win_rates, "correlation_stats": correlation_stats}
 
-    with open(output_path_json, 'w') as f:
+    with open(output_path_json, "w") as f:
         json.dump(save_data, f, indent=2)
 
     print(f"\nWin rates saved to: {output_path_json}")

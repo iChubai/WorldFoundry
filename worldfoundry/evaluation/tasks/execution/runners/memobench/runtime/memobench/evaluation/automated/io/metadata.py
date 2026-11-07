@@ -47,9 +47,7 @@ def extract_gt_frame_at(gt_video_path: str, frame_idx: int) -> np.ndarray:
     ret, frame = cap.read()
     cap.release()
     if not ret:
-        raise RuntimeError(
-            f"Cannot read frame {frame_idx} from {gt_video_path}"
-        )
+        raise RuntimeError(f"Cannot read frame {frame_idx} from {gt_video_path}")
     return frame
 
 
@@ -85,7 +83,7 @@ def load_intrinsics_json(path: str) -> Dict[str, float]:
     """
     with open(path) as f:
         data = json.load(f)
-    cam = data.get("camera", data)   # handle both nested and flat formats
+    cam = data.get("camera", data)  # handle both nested and flat formats
     return {
         "fx": float(cam["fx"]),
         "fy": float(cam["fy"]),

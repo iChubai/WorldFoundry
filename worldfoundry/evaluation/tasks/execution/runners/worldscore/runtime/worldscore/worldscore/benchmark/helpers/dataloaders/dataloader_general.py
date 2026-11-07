@@ -5,7 +5,9 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloader import generate_prompt_list
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloader import (
+    generate_prompt_list,
+)
 
 
 class dataloader_general:
@@ -24,9 +26,7 @@ class dataloader_general:
         noise = np.clip(noise, 0, 255)
         noise = noise.astype(np.uint8)
 
-        new_image_path = os.path.join(
-            self.root_path, "output", "noisy_images", f"{i:06d}.png"
-        )
+        new_image_path = os.path.join(self.root_path, "output", "noisy_images", f"{i:06d}.png")
         Image.fromarray(noise).save(new_image_path)
         return new_image_path
 
@@ -35,27 +35,19 @@ class dataloader_general:
             data = json.load(f)
 
         if self.evaluation_config["noise"]:
-            os.makedirs(
-                os.path.join(self.root_path, "output", "noisy_images"), exist_ok=True
-            )
+            os.makedirs(os.path.join(self.root_path, "output", "noisy_images"), exist_ok=True)
 
         for i, image_data in enumerate(tqdm(data)):
-            image_path = os.path.join(
-                self.evaluation_config["dataset_root"], image_data["image"]
-            )
+            image_path = os.path.join(self.evaluation_config["dataset_root"], image_data["image"])
             if self.evaluation_config["noise"]:
                 old_image_path = image_path
                 image_path = self.add_noise(image_path, i)
                 if self.evaluation_config["noise_type"] == "comparison":
                     image_path = [old_image_path, image_path]
             if image_data["visual_movement"] == "static":
-                inpainting_prompt_list = generate_prompt_list(
-                    image_data["prompt_list"], image_data["style"]
-                )
+                inpainting_prompt_list = generate_prompt_list(image_data["prompt_list"], image_data["style"])
             elif image_data["visual_movement"] == "dynamic":
-                inpainting_prompt_list = generate_prompt_list(
-                    [image_data["prompt"]], image_data["style"]
-                )
+                inpainting_prompt_list = generate_prompt_list([image_data["prompt"]], image_data["style"])
 
             data_point = {
                 "image_path": image_path,

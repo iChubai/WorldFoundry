@@ -40,10 +40,9 @@ class LingBotRunner(LocalScriptRunner):
         master_port: Optional[int] = None,
     ) -> List[str]:
         """Extend the base daemon command with the LingBot actions root."""
-        return super().build_daemon_cmd(
-            tasks_json_path, nproc_per_node=nproc_per_node, master_port=master_port
-        ) + [
-            "--lingbot_actions_root", str(self._actions_root),
+        return super().build_daemon_cmd(tasks_json_path, nproc_per_node=nproc_per_node, master_port=master_port) + [
+            "--lingbot_actions_root",
+            str(self._actions_root),
         ]
 
     @staticmethod
@@ -82,9 +81,12 @@ class LingBotRunner(LocalScriptRunner):
             return False
 
         cmd = [
-            "bash", str(script_path),
-            "--prompt", prompt,
-            "--output", str(output_path),
+            "bash",
+            str(script_path),
+            "--prompt",
+            prompt,
+            "--output",
+            str(output_path),
         ]
         if init_frame and init_frame.exists():
             cmd += ["--init_frame", str(init_frame)]

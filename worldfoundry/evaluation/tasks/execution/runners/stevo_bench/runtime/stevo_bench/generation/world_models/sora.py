@@ -32,9 +32,7 @@ class SoraRunner(WorldModelRunner):
         api_key_env = config.get("api_key_env", "SORA_API_KEY")
         self.api_key = os.environ.get(api_key_env)
         if not self.api_key:
-            raise EnvironmentError(
-                f"[{name}] Missing required environment variable: {api_key_env}"
-            )
+            raise EnvironmentError(f"[{name}] Missing required environment variable: {api_key_env}")
         self.model_id: str = config.get("model_id", "sora-2")
         self.size: str = config.get("size", "1280x720")
         self.seconds: int = int(config.get("seconds", 8))
@@ -60,7 +58,9 @@ class SoraRunner(WorldModelRunner):
 
             kwargs: dict = dict(
                 model=self.model_id,
-                prompt=prompt if prompt and prompt.strip() else "Camera remains stationary. No cuts, no scene change, do not add new entities.",
+                prompt=prompt
+                if prompt and prompt.strip()
+                else "Camera remains stationary. No cuts, no scene change, do not add new entities.",
                 size=self.size,
                 seconds=self.seconds,
             )
@@ -81,14 +81,9 @@ class SoraRunner(WorldModelRunner):
                 time.sleep(self.poll_interval)
                 elapsed += self.poll_interval
                 video = client.videos.retrieve(video.id)
-                print(
-                    f"[{self.name}] {task_id}: status={video.status} "
-                    f"elapsed={elapsed}s"
-                )
+                print(f"[{self.name}] {task_id}: status={video.status} elapsed={elapsed}s")
                 if elapsed >= self.timeout:
-                    print(
-                        f"[{self.name}] Timeout ({elapsed}s) waiting for task {task_id}"
-                    )
+                    print(f"[{self.name}] Timeout ({elapsed}s) waiting for task {task_id}")
                     return False
 
             if ref_file is not None:
@@ -98,8 +93,7 @@ class SoraRunner(WorldModelRunner):
                 failure_msg = getattr(video, "failure_message", None) or getattr(video, "error", None)
                 print(
                     f"[{self.name}] Generation failed for {task_id}: "
-                    f"status={video.status}"
-                    + (f" | {failure_msg}" if failure_msg else "")
+                    f"status={video.status}" + (f" | {failure_msg}" if failure_msg else "")
                 )
                 return False
 
@@ -138,7 +132,7 @@ class SoraRunner(WorldModelRunner):
             img = img.resize((target_w, target_h), Image.LANCZOS)
 
         buf = io.BytesIO()
-        buf.name = init_frame.stem + ".png"   # name drives MIME detection in SDK
+        buf.name = init_frame.stem + ".png"  # name drives MIME detection in SDK
         img.save(buf, format="PNG")
         buf.seek(0)
         return buf

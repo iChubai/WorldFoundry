@@ -124,7 +124,9 @@ def _cleanup_incremental_jsonl(
     if len(results) != expected_results:
         logger.info(
             "Keeping incremental JSONL %s: results=%d, expected=%d",
-            jsonl_path, len(results), expected_results,
+            jsonl_path,
+            len(results),
+            expected_results,
         )
         return
 
@@ -132,7 +134,9 @@ def _cleanup_incremental_jsonl(
     if line_count != len(results):
         logger.warning(
             "Keeping incremental JSONL %s: line_count=%d, results=%d",
-            jsonl_path, line_count, len(results),
+            jsonl_path,
+            line_count,
+            len(results),
         )
         return
 
@@ -158,7 +162,6 @@ def _score_general_per_metric(
     use_training_prompts: bool = False,
     max_retries: int = 3,
 ) -> tuple[dict[str, int | None], dict[str, str], dict[str, str], dict[str, dict]]:
-
     def _eval_one(metric: str) -> tuple[str, int | None, str, str, dict | None]:
         if use_training_prompts:
             metric_prompt = cfg.build_training_prompt(prompt_text, metric)
@@ -284,7 +287,10 @@ def score_video(
     max_retries: int = 3,
 ) -> dict | None:
     general_scores, raw_generals, rationale_generals, usage_generals = _score_general_per_metric(
-        backend, cfg, video_path, prompt_text,
+        backend,
+        cfg,
+        video_path,
+        prompt_text,
         use_training_prompts=use_training_prompts,
         max_retries=max_retries,
     )
@@ -293,11 +299,16 @@ def score_video(
         return None
 
     law_results, raw_physicals, rationale_physicals, usage_physicals = _score_physical_laws(
-        backend, cfg, video_path, prompt_text, physical_laws,
+        backend,
+        cfg,
+        video_path,
+        prompt_text,
+        physical_laws,
         max_retries=max_retries,
     )
 
     from evals.eval_types import LawScore, PhysicalSummary
+
     law_scores: dict[str, LawScore] = {}
     for law in physical_laws:
         parsed = law_results.get(law)
@@ -336,52 +347,87 @@ def score_video(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Phyground VLM-as-judge evaluation against a vLLM-served judge."
-    )
+    parser = argparse.ArgumentParser(description="Phyground VLM-as-judge evaluation against a vLLM-served judge.")
     parser.add_argument(
-        "--backend", choices=_BACKEND_CHOICES, default="qwen9b",
+        "--backend",
+        choices=_BACKEND_CHOICES,
+        default="qwen9b",
         help="qwen9b/qwen27b = local vLLM; gemini/gpt/claude = cloud APIs.",
     )
     parser.add_argument(
-        "--prompt_config", type=str, default="default.yaml",
+        "--prompt_config",
+        type=str,
+        default="default.yaml",
         help="YAML prompt config bundled under worldfoundry/data/benchmarks/assets/phyground/evals/prompts/.",
     )
     parser.add_argument(
-        "--use_training_prompts", action="store_true",
+        "--use_training_prompts",
+        action="store_true",
         help="REQUIRED for the released phyjudge LoRA — it was fine-tuned with training_prompts.",
     )
     parser.add_argument("--video_dir", type=str, required=True, help="Directory of .mp4 files to score.")
     parser.add_argument(
-        "--prompts_json", type=str, default="data/prompts/phyground.json",
+        "--prompts_json",
+        type=str,
+        default="data/prompts/phyground.json",
         help="Path to the Phyground prompts JSON. Default expects the HF dataset pulled into ./data/.",
     )
-    parser.add_argument("--model", type=str, default=None, help="Override model name sent to the configured vLLM judge.")
-    parser.add_argument("--save_path", type=str, default=None, help="Output JSON path. Defaults to <video_dir>/eval_<ts>.json.")
+    parser.add_argument(
+        "--model", type=str, default=None, help="Override model name sent to the configured vLLM judge."
+    )
+    parser.add_argument(
+        "--save_path", type=str, default=None, help="Output JSON path. Defaults to <video_dir>/eval_<ts>.json."
+    )
     parser.add_argument("--limit", type=int, default=None, help="Score only the first N videos.")
     parser.add_argument("--shard_idx", type=int, default=0)
     parser.add_argument("--shard_total", type=int, default=1)
     parser.add_argument(
-        "--skip_existing_jsonl", type=str, default=None,
+        "--skip_existing_jsonl",
+        type=str,
+        default=None,
         help="Path to a jsonl whose 'video' stems should be skipped before sharding.",
     )
 
-    parser.add_argument("--api_base", type=str, default="http://localhost:29673/v1", help="Used only by qwen9b/qwen27b backends.")
+    parser.add_argument(
+        "--api_base", type=str, default="http://localhost:29673/v1", help="Used only by qwen9b/qwen27b backends."
+    )
     parser.add_argument("--fps", type=int, default=None, help="Resample video frames at this FPS before scoring.")
-    parser.add_argument("--num_frames", type=int, default=0, help="Frame-based backends: sample exactly this many frames (overrides --fps).")
+    parser.add_argument(
+        "--num_frames",
+        type=int,
+        default=0,
+        help="Frame-based backends: sample exactly this many frames (overrides --fps).",
+    )
     parser.add_argument("--max_images", type=int, default=32, help="Max sampled image frames for frame-based backends.")
     parser.add_argument(
-        "--max_tokens", type=int, default=None,
+        "--max_tokens",
+        type=int,
+        default=None,
         help="Max output tokens (default 1024 vLLM / 4096 Claude).",
     )
 
     # Cloud-API credentials and routing (consumed by gemini/gpt/claude backends only).
-    parser.add_argument("--api_key_file", type=str, default=None, help="Path to a file containing a Gemini or OpenAI API key. Falls back to GEMINI_API_KEY / OPENAI_API_KEY env vars. (claude on Vertex AI uses gcloud default credentials.)")
-    parser.add_argument("--vertexai", action="store_true", help="Gemini backend: use Vertex AI instead of AI Studio (requires --project).")
-    parser.add_argument("--project", type=str, default="", help="GCP project id for --vertexai or the claude (Vertex) backend.")
-    parser.add_argument("--location", type=str, default="global", help="GCP location for --vertexai or claude (Vertex) backend.")
+    parser.add_argument(
+        "--api_key_file",
+        type=str,
+        default=None,
+        help="Path to a file containing a Gemini or OpenAI API key. Falls back to GEMINI_API_KEY / OPENAI_API_KEY env vars. (claude on Vertex AI uses gcloud default credentials.)",
+    )
+    parser.add_argument(
+        "--vertexai",
+        action="store_true",
+        help="Gemini backend: use Vertex AI instead of AI Studio (requires --project).",
+    )
+    parser.add_argument(
+        "--project", type=str, default="", help="GCP project id for --vertexai or the claude (Vertex) backend."
+    )
+    parser.add_argument(
+        "--location", type=str, default="global", help="GCP location for --vertexai or claude (Vertex) backend."
+    )
     parser.add_argument("--reasoning_effort", type=str, default=None, help="GPT backend: reasoning effort hint.")
-    parser.add_argument("--request_timeout", type=int, default=120, help="HTTP request timeout in seconds (Gemini and Claude backends).")
+    parser.add_argument(
+        "--request_timeout", type=int, default=120, help="HTTP request timeout in seconds (Gemini and Claude backends)."
+    )
 
     parser.add_argument("--no-thinking", action="store_true")
     parser.add_argument("--max_retries", type=int, default=3)
@@ -404,7 +450,9 @@ def main():
     cfg = PromptConfig.load(args.prompt_config)
     logger.info(
         "Prompt config: %s (scheme=%s, use_training_prompts=%s)",
-        args.prompt_config, cfg.scheme, args.use_training_prompts,
+        args.prompt_config,
+        cfg.scheme,
+        args.use_training_prompts,
     )
 
     backend = create_backend(args)
@@ -416,7 +464,7 @@ def main():
     video_dir = Path(args.video_dir)
     video_files = sorted(video_dir.glob("*.mp4"))
     if args.limit:
-        video_files = video_files[:args.limit]
+        video_files = video_files[: args.limit]
     video_items: list[tuple[Path, PromptEntry]] = []
     for vpath in video_files:
         entry = resolve_video_prompt(vpath.stem, mapping)
@@ -442,17 +490,23 @@ def main():
         video_items = [vi for vi in video_items if vi[0].stem not in skip_stems]
         logger.info(
             "Skipped %d already-done stems from %s; %d/%d remaining",
-            before - len(video_items), skip_path, len(video_items), before,
+            before - len(video_items),
+            skip_path,
+            len(video_items),
+            before,
         )
 
     if args.shard_total > 1:
         if not (0 <= args.shard_idx < args.shard_total):
             parser.error(f"--shard_idx must be in [0, {args.shard_total}), got {args.shard_idx}")
         before = len(video_items)
-        video_items = video_items[args.shard_idx::args.shard_total]
+        video_items = video_items[args.shard_idx :: args.shard_total]
         logger.info(
             "Shard %d/%d: %d/%d videos (strided)",
-            args.shard_idx, args.shard_total, len(video_items), before,
+            args.shard_idx,
+            args.shard_total,
+            len(video_items),
+            before,
         )
 
     if args.save_path is None:
@@ -478,12 +532,20 @@ def main():
 
             logger.info(
                 "[%d/%d] %s | laws=%s | prompt=%s",
-                i, len(video_items), stem, effective_laws, entry.prompt[:60],
+                i,
+                len(video_items),
+                stem,
+                effective_laws,
+                entry.prompt[:60],
             )
 
             try:
                 result = score_video(
-                    backend, cfg, str(vpath), entry.prompt, effective_laws,
+                    backend,
+                    cfg,
+                    str(vpath),
+                    entry.prompt,
+                    effective_laws,
                     use_training_prompts=args.use_training_prompts,
                     max_retries=args.max_retries,
                 )
@@ -507,7 +569,8 @@ def main():
             logger.info(
                 "  -> %s general_avg=%s physical=%s",
                 " ".join(f"{k}={result.get(k)}" for k in cfg.general_keys),
-                result.get("general_avg"), phys_avg,
+                result.get("general_avg"),
+                phys_avg,
             )
 
     logger.info("Incremental results saved to %s", jsonl_path)
@@ -537,7 +600,8 @@ def main():
         "source_filename": Path(args.save_path).name,
     }
     save_eval_json(
-        args.save_path, results,
+        args.save_path,
+        results,
         meta=eval_meta,
         judge=judge_name,
         visual_config=visual_config,

@@ -93,7 +93,17 @@ def _trajectory_to_native_rows(trajectory: CameraTrajectory) -> np.ndarray:
 class MagicWorldAdapter:
     name = "magicworld"
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         canonical_target, amp = model_target_trajectory(trajectory, model_name, num_frames)
         payload_type = "magicworld_action_segments"
         camera_type = _camera_profile_name(str(canonical_target.camera_type or ""))
@@ -106,7 +116,9 @@ class MagicWorldAdapter:
             raise ValueError(
                 f"MagicWorld native trajectory returned {len(native_rows)} rows; expected {int(num_frames) + 1}"
             )
-        target = _native_rows_to_trajectory(native_rows[1 : int(num_frames) + 1], camera_type=camera_type, fps=trajectory.fps)
+        target = _native_rows_to_trajectory(
+            native_rows[1 : int(num_frames) + 1], camera_type=camera_type, fps=trajectory.fps
+        )
         precision = adapter_taxonomy_metadata(
             model_name=model_name,
             amp=amp,
@@ -116,21 +128,21 @@ class MagicWorldAdapter:
             certification_kind="direct_frame_pose_payload",
             model_payload_summary={
                 "action_segments": [
-                    {"action": str(action), "frames": int(frames)}
-                    for action, frames in action_segments
+                    {"action": str(action), "frames": int(frames)} for action, frames in action_segments
                 ],
                 "total_angle_deg": total_angle_deg,
                 "native_trajectory_rows": int(len(native_rows)),
             },
             control_sample_kind="action_matrix_or_pose",
             control_sample_count=len(action_segments),
-            source_frame_indices=[sum(int(frames) for _action, frames in action_segments[:idx]) for idx in range(len(action_segments))],
+            source_frame_indices=[
+                sum(int(frames) for _action, frames in action_segments[:idx]) for idx in range(len(action_segments))
+            ],
             sampling_rule=sampling_rule,
             model_control_extra={
                 "control_contract": "exact_model_action_payload",
                 "action_segments": [
-                    {"action": str(action), "frames": int(frames)}
-                    for action, frames in action_segments
+                    {"action": str(action), "frames": int(frames)} for action, frames in action_segments
                 ],
                 "total_angle_deg": total_angle_deg,
                 "native_trajectory_rows": int(len(native_rows)),

@@ -107,8 +107,12 @@ class SanaWMAdapter:
                     "model_path": require_str(require_mapping(execution, "runtime_parameters"), "model_path"),
                     "benchmark_frame_count": benchmark_frames,
                     "benchmark_fps": benchmark_fps,
-                    "official_quality_frame_count": require_int(require_mapping(execution, "official_quality_profile"), "num_frames"),
-                    "official_softmax_every_n": require_int(require_mapping(execution, "official_config_constraints"), "model.softmax_every_n"),
+                    "official_quality_frame_count": require_int(
+                        require_mapping(execution, "official_quality_profile"), "num_frames"
+                    ),
+                    "official_softmax_every_n": require_int(
+                        require_mapping(execution, "official_config_constraints"), "model.softmax_every_n"
+                    ),
                     "official_runtime": require_mapping(execution, "official_runtime"),
                 },
             ),

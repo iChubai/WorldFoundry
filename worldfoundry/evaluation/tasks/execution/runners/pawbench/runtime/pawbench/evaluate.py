@@ -15,9 +15,7 @@ VIDEO_SUFFIXES = {".mp4", ".mov", ".webm", ".avi"}
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Evaluate a directory of PAWBench video rollouts with PAWEval."
-    )
+    parser = argparse.ArgumentParser(description="Evaluate a directory of PAWBench video rollouts with PAWEval.")
     parser.add_argument("--benchmark", type=Path, required=True, help="Downloaded PAWBench data")
     parser.add_argument(
         "--videos",
@@ -32,9 +30,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Directory for checkpoints, judgment rows, and metrics",
     )
     parser.add_argument("--model", required=True, help="Model name recorded in the results")
-    parser.add_argument(
-        "--vlm-base-url", required=True, help="OpenAI-compatible PAWEval endpoint"
-    )
+    parser.add_argument("--vlm-base-url", required=True, help="OpenAI-compatible PAWEval endpoint")
     parser.add_argument("--vlm-model", required=True, help="VLM used by PAWEval")
     parser.add_argument(
         "--vlm-api-key-env",

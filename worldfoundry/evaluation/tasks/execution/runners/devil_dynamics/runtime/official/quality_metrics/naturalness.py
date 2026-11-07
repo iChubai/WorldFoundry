@@ -10,37 +10,37 @@ from openpyxl import Workbook
 
 def reality_mapping(reality):
     rr = reality.lower()
-    if 'almost' in rr:
+    if "almost" in rr:
         return 1
-    elif 'slightly' in rr:
+    elif "slightly" in rr:
         return 0.75
-    elif 'moderately' in rr:
+    elif "moderately" in rr:
         return 0.5
-    elif 'clearly' in rr:
+    elif "clearly" in rr:
         return 0.25
-    elif 'completely' in rr:
+    elif "completely" in rr:
         return 0.0
     else:
-        print(f'rr: {rr}')
+        print(f"rr: {rr}")
         raise NotImplementedError
 
 
 def read_json_files(file_list):
     combined_dict = {}
     for file_path in file_list:
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             data = json.load(file)
             for key, value in data.items():
                 if key not in combined_dict:  # 只保留第一次出现的键值对
-                    combined_dict[key] = {'naturalness': reality_mapping(value)}
+                    combined_dict[key] = {"naturalness": reality_mapping(value)}
     return combined_dict
 
 
 def parse_txt_file(txt_file_path):
     key_to_video_path = {}
-    with open(txt_file_path, 'r') as file:
+    with open(txt_file_path, "r") as file:
         for line in file:
-            key, video_path = line.strip().split('. ')
+            key, video_path = line.strip().split(". ")
             key_to_video_path[key] = os.path.basename(video_path)  # 获取文件名
     return key_to_video_path
 
@@ -48,9 +48,9 @@ def parse_txt_file(txt_file_path):
 def map_video_paths(combined_dict, key_to_video_path):
     for key in combined_dict.keys():
         if key in key_to_video_path:
-            combined_dict[key]['video_name'] = key_to_video_path[key]
+            combined_dict[key]["video_name"] = key_to_video_path[key]
         else:
-            combined_dict[key]['video_name'] = None  # 如果没有对应的video_path，则设为None
+            combined_dict[key]["video_name"] = None  # 如果没有对应的video_path，则设为None
     return combined_dict
 
 
@@ -58,7 +58,7 @@ def save_to_excel(data, excel_path):
     wb = Workbook()
     ws = wb.active
     # 假设字典中的值是字典类型，我们添加一个标题行，具体列标题可能需要根据实际内容调整
-    headers = ['Key'] + list(next(iter(data.values())).keys())  # 取任意一项的键作为标题
+    headers = ["Key"] + list(next(iter(data.values())).keys())  # 取任意一项的键作为标题
     ws.append(headers)
     for key, value_dict in data.items():
         row = [key] + [value_dict.get(header) for header in headers[1:]]  # 按标题顺序提取值
@@ -77,9 +77,9 @@ def read_paths_and_indices(file_path):
     list of tuples: A list of tuples where each tuple contains an index and a path.
     """
     paths_with_indices = []
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         for line in f:
-            index, path = line.split('. ', 1)
+            index, path = line.split(". ", 1)
             paths_with_indices.append((int(index), path.strip()))
     return paths_with_indices
 
@@ -128,7 +128,7 @@ def judge_reality(index, video_file_path, api_key=None):
     if not text and getattr(response, "candidates", None):
         parts = response.candidates[0].content.parts
         text = "\n".join(part.text for part in parts if getattr(part, "text", None))
-    print(index, ': ', text)
+    print(index, ": ", text)
     result.update({index: text})
     try:
         genai.delete_file(uploaded_file.name)
@@ -143,20 +143,21 @@ def save_naturalness_results(results_json_dir, mp4_file_list_path, excel_output_
     key_to_video_path = parse_txt_file(mp4_file_list_path)
     final_data = map_video_paths(combined_dict, key_to_video_path)
     save_to_excel(final_data, excel_output_path)
-    print(f'Natualness score for each video is saved to {excel_output_path}')
+    print(f"Natualness score for each video is saved to {excel_output_path}")
 
 
 def find_mp4_files(directory, output_file):
-    with open(output_file, 'w') as file:
+    with open(output_file, "w") as file:
         counter = 1  # 初始化文件计数器
         for root, dirs, files in os.walk(directory):
             # 过滤出 .mp4 文件
-            mp4_files = [f for f in files if f.endswith('.mp4') and not f.startswith('.')]
+            mp4_files = [f for f in files if f.endswith(".mp4") and not f.startswith(".")]
             for mp4_file in mp4_files:
                 full_path = os.path.join(root, mp4_file)
                 # 将文件路径和序号写入文件
                 file.write(f"{counter}. {full_path}\n")
                 counter += 1  # 更新序号
+
 
 def process_video(args):
     path, api_key = args
@@ -164,7 +165,7 @@ def process_video(args):
     result = dict()
     repeat_times = 0
     sleep_time = 5
-    
+
     while True:
         try:
             result = judge_reality(index, video_path, api_key=api_key)
@@ -172,66 +173,65 @@ def process_video(args):
             break
         except BaseException as e:
             print(f"Error processing video {index}: {e}")
-            print(f'Retry Times: {repeat_times}, Retrying...')
+            print(f"Retry Times: {repeat_times}, Retrying...")
             time.sleep(sleep_time)
             repeat_times += 1
             sleep_time += 10
             sleep_time = min(sleep_time, 100)
-            
+
     return result
+
 
 def get_naturalness_gemini_parallel(mp4_file_list_path, api_key, results_save_dir, num_processes=20):
     paths_with_indices = read_paths_and_indices(mp4_file_list_path)
-    
+
     # Create argument tuples for each process
     process_args = [(path, api_key) for path in paths_with_indices]
-    
+
     reality_results = {}
-    
+
     with Pool(processes=num_processes) as pool:
         # Use tqdm to show progress
-        for result in tqdm.tqdm(pool.imap_unordered(process_video, process_args), 
-                              total=len(process_args)):
+        for result in tqdm.tqdm(pool.imap_unordered(process_video, process_args), total=len(process_args)):
             reality_results.update(result)
             # Save intermediate results
-            with open(results_save_dir, 'w') as f:
+            with open(results_save_dir, "w") as f:
                 json.dump(reality_results, f)
-    
+
     return reality_results
 
+
 def calculate_naturalness_score(mp4_dir, save_dir, api_key=None, num_processes=20):
-    assert api_key is not None, 'Please get your gemini at https://ai.google.dev/gemini-api/docs/api-key'
-    
-    mp4_file_list_path = os.path.join(save_dir, '.tmp_naturalness', 'mp4_files.txt')
-    results_json_dir = os.path.join(save_dir, '.tmp_naturalness', 'naturalness_results.json')
-    excel_output_path = os.path.join(save_dir, 'naturalness_results.xlsx')
-    
+    assert api_key is not None, "Please get your gemini at https://ai.google.dev/gemini-api/docs/api-key"
+
+    mp4_file_list_path = os.path.join(save_dir, ".tmp_naturalness", "mp4_files.txt")
+    results_json_dir = os.path.join(save_dir, ".tmp_naturalness", "naturalness_results.json")
+    excel_output_path = os.path.join(save_dir, "naturalness_results.xlsx")
+
     os.makedirs(os.path.dirname(mp4_file_list_path), exist_ok=True)
-    
+
     # Generate list of MP4 files
     find_mp4_files(mp4_dir, mp4_file_list_path)
-    
+
     # Process videos in parallel
     get_naturalness_gemini_parallel(mp4_file_list_path, api_key, results_json_dir, num_processes)
-    
+
     # Save results to Excel
     save_naturalness_results([results_json_dir], mp4_file_list_path, excel_output_path)
-    
+
     return excel_output_path
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gemini_api_key', type=str, required=True)
-    parser.add_argument('--video_dir', type=str, help='Directory where MP4 files are placed.')
-    parser.add_argument('--save_dir', type=str, default='Results', help='Directory to save mp4 file list.')
-    parser.add_argument('--excel_output_name', type=str, default='naturalness_output.xlsx')
+    parser.add_argument("--gemini_api_key", type=str, required=True)
+    parser.add_argument("--video_dir", type=str, help="Directory where MP4 files are placed.")
+    parser.add_argument("--save_dir", type=str, default="Results", help="Directory to save mp4 file list.")
+    parser.add_argument("--excel_output_name", type=str, default="naturalness_output.xlsx")
     args = parser.parse_args()
-    
-    mp4_file_list_path = os.path.join(args.save_dir, '.tmp/mp4_files.txt')
-    results_json_dir = os.path.join(args.save_dir, '.tmp/naturalness_results.json')
-    excel_output_path = os.path.join(args.save_dir, args.excel_output_name) # Output directory of xlsx file
+
+    mp4_file_list_path = os.path.join(args.save_dir, ".tmp/mp4_files.txt")
+    results_json_dir = os.path.join(args.save_dir, ".tmp/naturalness_results.json")
+    excel_output_path = os.path.join(args.save_dir, args.excel_output_name)  # Output directory of xlsx file
     # Please paste your Gemini API key here.
     calculate_naturalness_score(args.video_dir, args.save_dir, args.gemini_api_key)
-
-    

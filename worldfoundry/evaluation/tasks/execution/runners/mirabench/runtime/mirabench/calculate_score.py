@@ -82,9 +82,7 @@ def write_video_scores(path, samples, metrics, values):
             writer = csv.writer(handle)
             writer.writerow(["video_id", *metrics])
             for sample_index, sample in enumerate(samples):
-                writer.writerow(
-                    [sample["video_id"], *(values[metric][sample_index] for metric in metrics)]
-                )
+                writer.writerow([sample["video_id"], *(values[metric][sample_index] for metric in metrics)])
         os.replace(temporary_path, path)
     finally:
         if os.path.exists(temporary_path):
@@ -103,73 +101,77 @@ def write_average_score(path, payload):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--meta_file", type=str,default="data/evaluation_example/meta_generated.csv")
-parser.add_argument("--frame_dir", type=str,default="data/evaluation_example/frames_generated")
-parser.add_argument("--gt_meta_file", type=str,default="data/evaluation_example/meta_gt.csv")
-parser.add_argument("--gt_frame_dir", type=str,default="data/evaluation_example/frames_gt")
-parser.add_argument("--output_folder", type=str,default="data/evaluation_example/results")
-parser.add_argument("--ckpt_path", type=str,default="data/ckpt")
-parser.add_argument("--device", type=str,default="cuda")
-parser.add_argument("--metrics", type=str,nargs='+',default=[
+parser.add_argument("--meta_file", type=str, default="data/evaluation_example/meta_generated.csv")
+parser.add_argument("--frame_dir", type=str, default="data/evaluation_example/frames_generated")
+parser.add_argument("--gt_meta_file", type=str, default="data/evaluation_example/meta_gt.csv")
+parser.add_argument("--gt_frame_dir", type=str, default="data/evaluation_example/frames_gt")
+parser.add_argument("--output_folder", type=str, default="data/evaluation_example/results")
+parser.add_argument("--ckpt_path", type=str, default="data/ckpt")
+parser.add_argument("--device", type=str, default="cuda")
+parser.add_argument(
+    "--metrics",
+    type=str,
+    nargs="+",
+    default=[
         # temporal consistency
-    'temporal_dino_consistency', # ↑
-    'temporal_clip_consistency', # ↑
-    'temporal_motion_smoothness', # ↑
+        "temporal_dino_consistency",  # ↑
+        "temporal_clip_consistency",  # ↑
+        "temporal_motion_smoothness",  # ↑
         # temporal motion strength
-    'dynamic_degree', # ↑
-    'tracking_strength', # ↑
+        "dynamic_degree",  # ↑
+        "tracking_strength",  # ↑
         # 3D consistency
-    '3D_consistency_num_pts', # ↑
-    '3D_consistency_num_inliers_F', # ↑
-    '3D_consistency_keep_ratio', # ↑
-    '3D_consistency_mean_err', # ↓
-    '3D_consistency_rmse', # ↓
+        "3D_consistency_num_pts",  # ↑
+        "3D_consistency_num_inliers_F",  # ↑
+        "3D_consistency_keep_ratio",  # ↑
+        "3D_consistency_mean_err",  # ↓
+        "3D_consistency_rmse",  # ↓
         # video frame quality
-    'aesthetic_quality', # ↑
-    'imaging_quality', # ↑
+        "aesthetic_quality",  # ↑
+        "imaging_quality",  # ↑
         # text-video alignment
-    'camera_alignment', # ↑
-    'main_object_alignment', # ↑
-    'background_alignment', # ↑
-    'style_alignment', # ↑
-    'overall_consistency', # ↑
+        "camera_alignment",  # ↑
+        "main_object_alignment",  # ↑
+        "background_alignment",  # ↑
+        "style_alignment",  # ↑
+        "overall_consistency",  # ↑
         # distribution consistency
-    'fvd&kvd', # ↓
-    'fid&kid', # ↓
-
-])
+        "fvd&kvd",  # ↓
+        "fid&kid",  # ↓
+    ],
+)
 
 args = parser.parse_args()
-meta_file=args.meta_file
-frame_dir=args.frame_dir
-output_folder=args.output_folder
-metrics=args.metrics
-device=args.device
-gt_meta_file=args.gt_meta_file
-ckpt_path=args.ckpt_path
-gt_frame_dir=args.gt_frame_dir
+meta_file = args.meta_file
+frame_dir = args.frame_dir
+output_folder = args.output_folder
+metrics = args.metrics
+device = args.device
+gt_meta_file = args.gt_meta_file
+ckpt_path = args.ckpt_path
+gt_frame_dir = args.gt_frame_dir
 
-meta_info=pd.read_csv(meta_file)
+meta_info = pd.read_csv(meta_file)
 
 if "fid&kid" in metrics:
-    calculate_fid=True
+    calculate_fid = True
     metrics.remove("fid&kid")
 else:
-    calculate_fid=False
+    calculate_fid = False
 
 if "fvd&kvd" in metrics:
-    calculate_fvd=True
+    calculate_fvd = True
     metrics.remove("fvd&kvd")
 else:
-    calculate_fvd=False
+    calculate_fvd = False
 
 os.makedirs(output_folder, exist_ok=True)
-video_score_path=os.path.join(output_folder,"video_score.csv")
+video_score_path = os.path.join(output_folder, "video_score.csv")
 
-samples=[]
+samples = []
 for row_idx in range(meta_info.shape[0]):
-    present_test_case=meta_info.iloc[row_idx]
-    video_idx=present_test_case["video_idx"]
+    present_test_case = meta_info.iloc[row_idx]
+    video_idx = present_test_case["video_idx"]
     samples.append(
         {
             "video_id": video_idx,
@@ -189,11 +191,11 @@ with ThreadPoolExecutor(max_workers=frame_worker_count(len(samples))) as executo
     list(executor.map(lambda sample: extract_frames(sample["video_path"], sample["frame_dir"]), samples))
 print("Finished extracting frames")
 
-metric_values={metric: [None] * len(samples) for metric in metrics}
+metric_values = {metric: [None] * len(samples) for metric in metrics}
 write_video_scores(video_score_path, samples, metrics, metric_values)
 for group in metric_groups(metrics):
     print(f"================ Calculating metric group: {', '.join(group)} ================")
-    calculator=metrics_calculator(list(group),ckpt_path=ckpt_path,device=device)
+    calculator = metrics_calculator(list(group), ckpt_path=ckpt_path, device=device)
     try:
         for sample_index, sample in enumerate(tqdm(samples)):
             for metric in group:
@@ -219,22 +221,22 @@ for group in metric_groups(metrics):
     write_video_scores(video_score_path, samples, metrics, metric_values)
     print(f"Saved metric-group checkpoint in {video_score_path}")
 
-metrics_result_pd=pd.DataFrame(metric_values)
-mean_metrics_result_dict={
+metrics_result_pd = pd.DataFrame(metric_values)
+mean_metrics_result_dict = {
     metric: None if pd.isna(value) else float(value)
     for metric, value in metrics_result_pd.apply(pd.to_numeric, errors="coerce").mean().items()
 }
 
-average_score_path=os.path.join(output_folder,"average_score.csv")
+average_score_path = os.path.join(output_folder, "average_score.csv")
 write_average_score(average_score_path, mean_metrics_result_dict)
-print(f'Saved average score in {average_score_path}')
+print(f"Saved average score in {average_score_path}")
 
 if calculate_fvd or calculate_fid:
-    gt_meta_info=pd.read_csv(gt_meta_file)
-    gt_samples=[]
+    gt_meta_info = pd.read_csv(gt_meta_file)
+    gt_samples = []
     for row_idx in range(gt_meta_info.shape[0]):
-        present_test_case=gt_meta_info.iloc[row_idx]
-        video_idx=present_test_case["video_idx"]
+        present_test_case = gt_meta_info.iloc[row_idx]
+        video_idx = present_test_case["video_idx"]
         gt_samples.append(
             {
                 "video_path": present_test_case["video_path"],
@@ -255,7 +257,10 @@ if calculate_fvd:
     try:
         print(f"calculating metrics fvd kvd")
         from evaluation.fvd import EvaluateFVD
-        mean_metrics_result_dict["fvd"], mean_metrics_result_dict["kvd"]=EvaluateFVD(frame_dir,gt_frame_dir, ckpt_path, device)
+
+        mean_metrics_result_dict["fvd"], mean_metrics_result_dict["kvd"] = EvaluateFVD(
+            frame_dir, gt_frame_dir, ckpt_path, device
+        )
     except Exception as exc:
         print(f"Error in calculating metrics fvd kvd: {exc}")
     finally:
@@ -263,13 +268,16 @@ if calculate_fvd:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
     write_average_score(average_score_path, mean_metrics_result_dict)
-    print(f'Saved average score in {average_score_path}')
+    print(f"Saved average score in {average_score_path}")
 
 if calculate_fid:
     try:
         print(f"calculating metrics fid kid")
         from evaluation.fid import EvaluateFID
-        mean_metrics_result_dict["fid"], mean_metrics_result_dict["kid"]=EvaluateFID(frame_dir, gt_frame_dir, ckpt_path, device)
+
+        mean_metrics_result_dict["fid"], mean_metrics_result_dict["kid"] = EvaluateFID(
+            frame_dir, gt_frame_dir, ckpt_path, device
+        )
     except Exception as exc:
         print(f"Error in calculating metrics fid kid: {exc}")
     finally:
@@ -277,6 +285,6 @@ if calculate_fid:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
     write_average_score(average_score_path, mean_metrics_result_dict)
-    print(f'Saved average score in {average_score_path}')
+    print(f"Saved average score in {average_score_path}")
 
 print("Finish")

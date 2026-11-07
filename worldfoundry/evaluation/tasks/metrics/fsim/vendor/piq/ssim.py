@@ -1,4 +1,4 @@
-r""" This module implements Structural Similarity (SSIM) index in PyTorch.
+r"""This module implements Structural Similarity (SSIM) index in PyTorch.
 
 Implementation of classes and functions from this module are inspired by Gongfan Fang's (@VainF) implementation:
 https://github.com/VainF/pytorch-msssim
@@ -17,9 +17,18 @@ from piq.utils import _validate_input, _reduce
 from piq.functional import gaussian_filter
 
 
-def ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, kernel_sigma: float = 1.5,
-         data_range: Union[int, float] = 1., reduction: str = 'mean', full: bool = False,
-         downsample: bool = True, k1: float = 0.01, k2: float = 0.03) -> List[torch.Tensor]:
+def ssim(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    kernel_size: int = 11,
+    kernel_sigma: float = 1.5,
+    data_range: Union[int, float] = 1.0,
+    reduction: str = "mean",
+    full: bool = False,
+    downsample: bool = True,
+    k1: float = 0.01,
+    k2: float = 0.03,
+) -> List[torch.Tensor]:
     r"""Interface of Structural Similarity (SSIM) index.
     Inputs supposed to be in range ``[0, data_range]``.
     To match performance with skimage and tensorflow set ``'downsample' = True``.
@@ -49,7 +58,7 @@ def ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, kernel_sigma: 
         https://ece.uwaterloo.ca/~z70wang/publications/ssim.pdf,
         DOI: `10.1109/TIP.2003.819861`
     """
-    assert kernel_size % 2 == 1, f'Kernel size must be odd, got [{kernel_size}]'
+    assert kernel_size % 2 == 1, f"Kernel size must be odd, got [{kernel_size}]"
     _validate_input([x, y], dim_range=(4, 5), data_range=(0, data_range))
 
     x = x / float(data_range)
@@ -131,10 +140,19 @@ class SSIMLoss(_Loss):
         https://ece.uwaterloo.ca/~z70wang/publications/ssim.pdf,
         DOI:`10.1109/TIP.2003.819861`
     """
-    __constants__ = ['kernel_size', 'k1', 'k2', 'sigma', 'kernel', 'reduction']
 
-    def __init__(self, kernel_size: int = 11, kernel_sigma: float = 1.5, k1: float = 0.01, k2: float = 0.03,
-                 downsample: bool = True, reduction: str = 'mean', data_range: Union[int, float] = 1.) -> None:
+    __constants__ = ["kernel_size", "k1", "k2", "sigma", "kernel", "reduction"]
+
+    def __init__(
+        self,
+        kernel_size: int = 11,
+        kernel_sigma: float = 1.5,
+        k1: float = 0.01,
+        k2: float = 0.03,
+        downsample: bool = True,
+        reduction: str = "mean",
+        data_range: Union[int, float] = 1.0,
+    ) -> None:
         super().__init__()
 
         # Generic loss parameters.
@@ -145,7 +163,7 @@ class SSIMLoss(_Loss):
 
         # This check might look redundant because kernel size is checked within the ssim function anyway.
         # However, this check allows to fail fast when the loss is being initialised and training has not been started.
-        assert kernel_size % 2 == 1, f'Kernel size must be odd, got [{kernel_size}]'
+        assert kernel_size % 2 == 1, f"Kernel size must be odd, got [{kernel_size}]"
         self.kernel_sigma = kernel_sigma
         self.k1 = k1
         self.k2 = k2
@@ -164,14 +182,29 @@ class SSIMLoss(_Loss):
             complex value is returned as a tensor of size 2.
         """
 
-        score = ssim(x=x, y=y, kernel_size=self.kernel_size, kernel_sigma=self.kernel_sigma, downsample=self.downsample,
-                     data_range=self.data_range, reduction=self.reduction, full=False, k1=self.k1, k2=self.k2)
+        score = ssim(
+            x=x,
+            y=y,
+            kernel_size=self.kernel_size,
+            kernel_sigma=self.kernel_sigma,
+            downsample=self.downsample,
+            data_range=self.data_range,
+            reduction=self.reduction,
+            full=False,
+            k1=self.k1,
+            k2=self.k2,
+        )
         return torch.ones_like(score) - score
 
 
-def _ssim_per_channel(x: torch.Tensor, y: torch.Tensor, kernel: torch.Tensor,
-                      data_range: Union[float, int] = 1., k1: float = 0.01,
-                      k2: float = 0.03) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+def _ssim_per_channel(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    kernel: torch.Tensor,
+    data_range: Union[float, int] = 1.0,
+    k1: float = 0.01,
+    k2: float = 0.03,
+) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
     r"""Calculate Structural Similarity (SSIM) index for X and Y per channel.
 
     Args:
@@ -187,37 +220,43 @@ def _ssim_per_channel(x: torch.Tensor, y: torch.Tensor, kernel: torch.Tensor,
         Full Value of Structural Similarity (SSIM) index.
     """
     if x.size(-1) < kernel.size(-1) or x.size(-2) < kernel.size(-2):
-        raise ValueError(f'Kernel size can\'t be greater than actual input size. '
-                         f'Input size: {x.size()}. Kernel size: {kernel.size()}')
+        raise ValueError(
+            f"Kernel size can't be greater than actual input size. Input size: {x.size()}. Kernel size: {kernel.size()}"
+        )
 
-    c1 = k1 ** 2
-    c2 = k2 ** 2
+    c1 = k1**2
+    c2 = k2**2
     n_channels = x.size(1)
     mu_x = F.conv2d(x, weight=kernel, stride=1, padding=0, groups=n_channels)
     mu_y = F.conv2d(y, weight=kernel, stride=1, padding=0, groups=n_channels)
 
-    mu_xx = mu_x ** 2
-    mu_yy = mu_y ** 2
+    mu_xx = mu_x**2
+    mu_yy = mu_y**2
     mu_xy = mu_x * mu_y
 
-    sigma_xx = F.conv2d(x ** 2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_xx
-    sigma_yy = F.conv2d(y ** 2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_yy
+    sigma_xx = F.conv2d(x**2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_xx
+    sigma_yy = F.conv2d(y**2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_yy
     sigma_xy = F.conv2d(x * y, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_xy
 
     # Contrast sensitivity (CS) with alpha = beta = gamma = 1.
-    cs = (2. * sigma_xy + c2) / (sigma_xx + sigma_yy + c2)
+    cs = (2.0 * sigma_xy + c2) / (sigma_xx + sigma_yy + c2)
 
     # Structural similarity (SSIM)
-    ss = (2. * mu_xy + c1) / (mu_xx + mu_yy + c1) * cs
+    ss = (2.0 * mu_xy + c1) / (mu_xx + mu_yy + c1) * cs
 
     ssim_val = ss.mean(dim=(-1, -2))
     cs = cs.mean(dim=(-1, -2))
     return ssim_val, cs
 
 
-def _ssim_per_channel_complex(x: torch.Tensor, y: torch.Tensor, kernel: torch.Tensor,
-                              data_range: Union[float, int] = 1., k1: float = 0.01,
-                              k2: float = 0.03) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+def _ssim_per_channel_complex(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    kernel: torch.Tensor,
+    data_range: Union[float, int] = 1.0,
+    k1: float = 0.01,
+    k2: float = 0.03,
+) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
     r"""Calculate Structural Similarity (SSIM) index for Complex X and Y per channel.
 
     Args:
@@ -234,11 +273,12 @@ def _ssim_per_channel_complex(x: torch.Tensor, y: torch.Tensor, kernel: torch.Te
     """
     n_channels = x.size(1)
     if x.size(-2) < kernel.size(-1) or x.size(-3) < kernel.size(-2):
-        raise ValueError(f'Kernel size can\'t be greater than actual input size. Input size: {x.size()}. '
-                         f'Kernel size: {kernel.size()}')
+        raise ValueError(
+            f"Kernel size can't be greater than actual input size. Input size: {x.size()}. Kernel size: {kernel.size()}"
+        )
 
-    c1 = k1 ** 2
-    c2 = k2 ** 2
+    c1 = k1**2
+    c2 = k2**2
 
     x_real = x[..., 0]
     x_imag = x[..., 1]

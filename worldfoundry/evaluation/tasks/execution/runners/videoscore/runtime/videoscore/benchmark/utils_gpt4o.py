@@ -7,15 +7,18 @@ import os
 
 from sqlalchemy import null
 
+
 def get_api_key(file_path):
     # Read the API key from the first line of the file
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         return file.readline().strip()
+
 
 # Function to encode the image
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
 
 def pick_next_item(current_item, item_list):
     if current_item not in item_list:
@@ -25,18 +28,19 @@ def pick_next_item(current_item, item_list):
 
     return item_list[next_index]
 
+
 # Function to encode a PIL image
 def encode_pil_image(pil_image):
     # Create an in-memory binary stream
     image_stream = BytesIO()
-    
+
     # Save the PIL image to the binary stream in JPEG format (you can change the format if needed)
-    pil_image.save(image_stream, format='JPEG')
-    
+    pil_image.save(image_stream, format="JPEG")
+
     # Get the binary data from the stream and encode it as base64
     image_data = image_stream.getvalue()
-    base64_image = base64.b64encode(image_data).decode('utf-8')
-    
+    base64_image = base64.b64encode(image_data).decode("utf-8")
+
     return base64_image
 
 
@@ -72,12 +76,13 @@ def load_image(image: Union[str, Image.Image], format: str = "RGB", size: Option
         )
     image = ImageOps.exif_transpose(image)
     image = image.convert(format)
-    if (size != None):
+    if size != None:
         image = image.resize(size, Image.LANCZOS)
     return image
 
-class GPT4v():
-    def __init__(self, api_key_path='aside/gpt4v_key.env', are_images_encoded=False, model_name="gpt-4-vision-preview"):
+
+class GPT4v:
+    def __init__(self, api_key_path="aside/gpt4v_key.env", are_images_encoded=False, model_name="gpt-4-vision-preview"):
         """OpenAI GPT-4-vision model wrapper
         Args:
             api_key_path (str): Path to the API key file. Defaults to 'keys/secret.env'.
@@ -92,9 +97,9 @@ class GPT4v():
             # self.api_key = get_api_key(self.current_key_file)
             self.multiple_api_keys = True
         else:
-            __=None
+            __ = None
             # self.api_key = get_api_key(api_key_path)
-        
+
         # if not self.api_key:
         #     print("API key not found.")
         #     exit(1)
@@ -105,10 +110,7 @@ class GPT4v():
 
     def prepare_prompt(self, image_links: List = [], text_prompt: str = ""):
         prompt_content = []
-        text_dict = {
-                    "type": "text",
-                    "text": text_prompt
-                }
+        text_dict = {"type": "text", "text": text_prompt}
         prompt_content.append(text_dict)
 
         if isinstance(image_links, str):
@@ -117,18 +119,15 @@ class GPT4v():
             image = load_image(image_link)
             if self.use_encode == True:
                 visual_dict = {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{encode_pil_image(image)}"}
-                    }
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{encode_pil_image(image)}"},
+                }
             else:
-                visual_dict = {
-                        "type": "image_url",
-                        "image_url": {"url": image_link}
-                    }
+                visual_dict = {"type": "image_url", "image_url": {"url": image_link}}
             prompt_content.append(visual_dict)
         return prompt_content
 
 
 class GPT4o(GPT4v):
-    def __init__(self, api_key_path='aside/gpt4v_4o_key.env', are_images_encoded=False, model_name="gpt-4o-2024-05-13"):
+    def __init__(self, api_key_path="aside/gpt4v_4o_key.env", are_images_encoded=False, model_name="gpt-4o-2024-05-13"):
         super().__init__(api_key_path, are_images_encoded, model_name)

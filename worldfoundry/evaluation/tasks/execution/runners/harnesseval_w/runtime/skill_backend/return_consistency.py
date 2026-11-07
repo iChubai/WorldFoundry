@@ -48,9 +48,7 @@ class LocalClipEmbedder:
     """Lazy in-process OpenAI CLIP adapter."""
 
     model_name = "ViT-B/32"
-    model_fingerprint = (
-        "sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af"
-    )
+    model_fingerprint = "sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af"
 
     def __init__(
         self,
@@ -132,9 +130,7 @@ def _decode_samples(video_path: Path, indices: list[int]) -> list[dict[str, Any]
         cursor += 1
     cap.release()
     if wanted or len(output) != len(indices):
-        raise RuntimeError(
-            f"video did not yield planned Return frames: {sorted(wanted)}"
-        )
+        raise RuntimeError(f"video did not yield planned Return frames: {sorted(wanted)}")
     return output
 
 
@@ -149,9 +145,7 @@ def _frame_components(
 
     width, height = SAMPLING["comparison_size"]
     gray_left = cv2.resize(left["gray"], (width, height), interpolation=cv2.INTER_AREA)
-    gray_right = cv2.resize(
-        right["gray"], (width, height), interpolation=cv2.INTER_AREA
-    )
+    gray_right = cv2.resize(right["gray"], (width, height), interpolation=cv2.INTER_AREA)
     rgb_left = cv2.resize(left["rgb"], (width, height), interpolation=cv2.INTER_AREA)
     rgb_right = cv2.resize(right["rgb"], (width, height), interpolation=cv2.INTER_AREA)
     af = gray_left.astype(np.float32)
@@ -159,30 +153,17 @@ def _frame_components(
     centered_left = af - float(np.mean(af))
     centered_right = bf - float(np.mean(bf))
     denominator = float(np.linalg.norm(centered_left) * np.linalg.norm(centered_right))
-    ncc = (
-        float(np.sum(centered_left * centered_right) / denominator)
-        if denominator > 1e-9
-        else 0.0
-    )
+    ncc = float(np.sum(centered_left * centered_right) / denominator) if denominator > 1e-9 else 0.0
     histogram_left = cv2.calcHist([gray_left], [0], None, [32], [0, 256])
     histogram_right = cv2.calcHist([gray_right], [0], None, [32], [0, 256])
     cv2.normalize(histogram_left, histogram_left)
     cv2.normalize(histogram_right, histogram_right)
-    histogram = float(
-        cv2.compareHist(histogram_left, histogram_right, cv2.HISTCMP_CORREL)
-    )
+    histogram = float(cv2.compareHist(histogram_left, histogram_right, cv2.HISTCMP_CORREL))
     edge_left = cv2.Canny(gray_left, 60, 140) > 0
     edge_right = cv2.Canny(gray_right, 60, 140) > 0
     union = np.logical_or(edge_left, edge_right)
-    edge_iou = (
-        float(np.logical_and(edge_left, edge_right).sum() / union.sum())
-        if union.any()
-        else 1.0
-    )
-    rgb_diff = float(
-        np.mean(np.abs(rgb_left.astype(np.float32) - rgb_right.astype(np.float32)))
-        / 255.0
-    )
+    edge_iou = float(np.logical_and(edge_left, edge_right).sum() / union.sum()) if union.any() else 1.0
+    rgb_diff = float(np.mean(np.abs(rgb_left.astype(np.float32) - rgb_right.astype(np.float32))) / 255.0)
     return {
         "ncc_score": clip01((ncc + 1.0) / 2.0),
         "histogram_score": clip01((histogram + 1.0) / 2.0),
@@ -202,9 +183,7 @@ class _Backend:
         self.clip_embedder = clip_embedder
         self.backend_id = BACKEND_ID
         self.version = BACKEND_VERSION
-        self.config_digest = backend_config_digest(
-            clip_embedder.model_name, clip_embedder.model_fingerprint
-        )
+        self.config_digest = backend_config_digest(clip_embedder.model_name, clip_embedder.model_fingerprint)
 
     def ensure_ready(self) -> None:
         ready = getattr(self.clip_embedder, "ensure_ready", None)
@@ -226,15 +205,10 @@ class _Backend:
         width, height = SAMPLING["comparison_size"]
         images = []
         for position, sample in enumerate(samples):
-            resized = cv2.resize(
-                sample["rgb"], (width, height), interpolation=cv2.INTER_AREA
-            )
+            resized = cv2.resize(sample["rgb"], (width, height), interpolation=cv2.INTER_AREA)
             images.append((f"return-f{indices[position]:09d}", _encode_png(resized)))
         by_id = self.clip_embedder.embed(images)
-        embeddings = [
-            _normalized([float(value) for value in by_id[image_id]])
-            for image_id, _ in images
-        ]
+        embeddings = [_normalized([float(value) for value in by_id[image_id]]) for image_id, _ in images]
 
         evidence_pairs = []
         for pair in sample_plan["pairs"]:
@@ -261,15 +235,7 @@ class _Backend:
                 }
             )
         diffs = [
-            float(
-                np.mean(
-                    np.abs(
-                        right["gray"].astype(np.float32)
-                        - left["gray"].astype(np.float32)
-                    )
-                )
-                / 255.0
-            )
+            float(np.mean(np.abs(right["gray"].astype(np.float32) - left["gray"].astype(np.float32))) / 255.0)
             for left, right in zip(samples[:-1], samples[1:])
         ]
         if not diffs:

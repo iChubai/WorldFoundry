@@ -1,4 +1,3 @@
-
 from vbench.temporal_style import compute_temporal_style
 from vbench2_beta_long.utils import reorganize_clips_results
 

@@ -11,6 +11,7 @@ One sub-folder is created per unique pose string (including the model default),
 named by sanitizing the pose string (', ' → '_', ' ' → '_').
 Each folder contains poses.npy and intrinsics.npy for the LingBot run script.
 """
+
 import argparse
 import os
 import sys
@@ -46,19 +47,23 @@ def main() -> int:
         description="Pre-compute LingBot action folders for all unique pose strings in task YAMLs."
     )
     parser.add_argument(
-        "--tasks_root", default="benchmark/tasks_v2",
+        "--tasks_root",
+        default="benchmark/tasks_v2",
         help="Root directory of task YAML folders.",
     )
     parser.add_argument(
-        "--output_dir", default="generation/world_models/lingbot_actions",
+        "--output_dir",
+        default="generation/world_models/lingbot_actions",
         help="Directory to write action sub-folders into.",
     )
     parser.add_argument(
-        "--model_default", default="s-3, right-10, left-20, right-10",
+        "--model_default",
+        default="s-3, right-10, left-20, right-10",
         help="The camera_control_default from models.yaml (always pre-computed).",
     )
     parser.add_argument(
-        "--hyworld_repo", default="<path_to_your_HY-WorldPlay_repo>/hyvideo",
+        "--hyworld_repo",
+        default="<path_to_your_HY-WorldPlay_repo>/hyvideo",
         help="Path to HY-WorldPlay-New hyvideo package (added to sys.path).",
     )
     args = parser.parse_args()

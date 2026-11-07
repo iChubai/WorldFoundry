@@ -63,9 +63,7 @@ class LocalClipEmbedder:
     """Lazy in-process OpenAI CLIP adapter."""
 
     model_name = "ViT-B/32"
-    model_fingerprint = (
-        "sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af"
-    )
+    model_fingerprint = "sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af"
 
     def __init__(
         self,
@@ -188,9 +186,7 @@ def _video_for_chunk(chunk: Mapping[str, Any]) -> Iterator[Path]:
     with tempfile.TemporaryDirectory(prefix="harnesseval-drift-") as directory:
         output = Path(directory) / "chunk.mkv"
         cap.set(cv2.CAP_PROP_POS_FRAMES, start)
-        writer = cv2.VideoWriter(
-            str(output), cv2.VideoWriter_fourcc(*"FFV1"), fps, (width, height)
-        )
+        writer = cv2.VideoWriter(str(output), cv2.VideoWriter_fourcc(*"FFV1"), fps, (width, height))
         if not writer.isOpened():
             cap.release()
             raise RuntimeError("OpenCV cannot create a temporary lossless Drift chunk")
@@ -204,9 +200,7 @@ def _video_for_chunk(chunk: Mapping[str, Any]) -> Iterator[Path]:
         writer.release()
         cap.release()
         if written != end - start:
-            raise RuntimeError(
-                f"decoded {written} of {end - start} requested Drift frames"
-            )
+            raise RuntimeError(f"decoded {written} of {end - start} requested Drift frames")
         yield output
 
 
@@ -240,9 +234,7 @@ class _CompositeBackend:
 
     def _identity(self, backend: ObservationBackend) -> dict[str, str]:
         if backend.execution_mode != self.execution_mode:
-            raise ValueError(
-                f"{backend.backend_id} must use {self.execution_mode} execution for this backend"
-            )
+            raise ValueError(f"{backend.backend_id} must use {self.execution_mode} execution for this backend")
         return {
             "backend_id": backend.backend_id,
             "version": backend.version,
@@ -262,9 +254,7 @@ class _CompositeBackend:
         if ready is not None:
             ready()
 
-    def _clip_evidence(
-        self, chunk: Mapping[str, Any]
-    ) -> tuple[float, list[float], int]:
+    def _clip_evidence(self, chunk: Mapping[str, Any]) -> tuple[float, list[float], int]:
         samples = _sample_chunk(chunk)
         prefix = value_digest(
             {
@@ -276,15 +266,9 @@ class _CompositeBackend:
         )[:16]
         images = [(f"{prefix}-f{index:09d}", content) for index, content in samples]
         by_id = self.clip_embedder.embed(images)
-        embeddings = [
-            _normalized([float(value) for value in by_id[image_id]])
-            for image_id, _ in images
-        ]
+        embeddings = [_normalized([float(value) for value in by_id[image_id]]) for image_id, _ in images]
         mean_embedding = _normalized(
-            [
-                sum(vector[index] for vector in embeddings) / len(embeddings)
-                for index in range(len(embeddings[0]))
-            ]
+            [sum(vector[index] for vector in embeddings) / len(embeddings) for index in range(len(embeddings[0]))]
         )
         return _background_score(embeddings), mean_embedding, len(samples)
 
@@ -304,9 +288,7 @@ class _CompositeBackend:
                 fingerprint = file_fingerprint(inference_video)
                 render_raw = self.render_backend.evaluate(inference_video, fingerprint)
                 motion_raw = self.motion_backend.evaluate(inference_video, fingerprint)
-                physical_raw = self.physical_backend.evaluate(
-                    inference_video, fingerprint
-                )
+                physical_raw = self.physical_backend.evaluate(inference_video, fingerprint)
             render = normalize_render(render_raw)
             motion = normalize_motion(motion_raw)
             physical = normalize_physical(physical_raw)
@@ -371,9 +353,7 @@ class StagedBackend(_CompositeBackend):
             clip_embedder,
         )
         self.stage_cache_root = cache_root.resolve() / "artifacts" / "drift_stages"
-        self.stage_cache_overlay_root = (
-            cache_root.resolve() / "artifacts" / "drift_stages_local_overlay"
-        )
+        self.stage_cache_overlay_root = cache_root.resolve() / "artifacts" / "drift_stages_local_overlay"
 
     def ensure_ready(self) -> None:
         return
@@ -412,12 +392,7 @@ class StagedBackend(_CompositeBackend):
         return self.stage_cache_root / stage / digest[:2] / f"{digest}.json"
 
     def _overlay_stage_path(self, stage: str, digest: str) -> Path:
-        return (
-            self.stage_cache_overlay_root
-            / stage
-            / digest[:2]
-            / f"{digest}.json"
-        )
+        return self.stage_cache_overlay_root / stage / digest[:2] / f"{digest}.json"
 
     @staticmethod
     def _can_create(path: Path) -> bool:
@@ -429,16 +404,12 @@ class StagedBackend(_CompositeBackend):
     def _write_stage_path(self, stage: str, digest: str) -> Path:
         official = self._stage_path(stage, digest)
         lock = official.parent / ".locks" / f"{official.name}.lock"
-        lock_usable = (
-            lock.is_file() and os.access(lock, os.R_OK)
-        ) or self._can_create(lock)
+        lock_usable = (lock.is_file() and os.access(lock, os.R_OK)) or self._can_create(lock)
         if self._can_create(official) and lock_usable:
             return official
         return self._overlay_stage_path(stage, digest)
 
-    def _read_stage(
-        self, stage: str, chunk: Mapping[str, Any]
-    ) -> tuple[Path, Mapping[str, Any] | None]:
+    def _read_stage(self, stage: str, chunk: Mapping[str, Any]) -> tuple[Path, Mapping[str, Any] | None]:
         digest = self._stage_digest(stage, chunk)
         for path in (
             self._stage_path(stage, digest),
@@ -460,9 +431,7 @@ class StagedBackend(_CompositeBackend):
             return path, payload["evidence"]
         return self._write_stage_path(stage, digest), None
 
-    def _compute_stage(
-        self, stage: str, chunk: Mapping[str, Any]
-    ) -> Mapping[str, Any]:
+    def _compute_stage(self, stage: str, chunk: Mapping[str, Any]) -> Mapping[str, Any]:
         if stage == "clip":
             background, embedding, sampled_frames = self._clip_evidence(chunk)
             return {

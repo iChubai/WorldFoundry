@@ -49,6 +49,7 @@ from eval.utils import _path_to_rel
 # Result dataclass
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PhysicsJudgeResult:
     task_id: str
@@ -65,6 +66,7 @@ class PhysicsJudgeResult:
 # ---------------------------------------------------------------------------
 # Prompt builder
 # ---------------------------------------------------------------------------
+
 
 def _load_init2final_edit_prompt(task_yaml_path: Path) -> str:
     """Return init2final_edit_prompt from the task YAML; raises if missing or empty."""
@@ -87,16 +89,14 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
     if has_occlusion:
         occlusion_note = (
             f"OCCLUSION CONTEXT: This task intentionally hides the scene via:\n"
-            f"  \"{occ}\"\n\n"
+            f'  "{occ}"\n\n'
             f"CRITICAL: Do NOT evaluate anything that happens DURING the occlusion —\n"
             f"that hidden period is assessed by a separate metric. Only evaluate\n"
             f"what is directly visible BEFORE and AFTER the occlusion.\n"
             f"Do NOT flag the occlusion mechanism itself as a physical inaccuracy.\n\n"
         )
     else:
-        occlusion_note = (
-            "OCCLUSION CONTEXT: None. The scene should be fully visible throughout.\n\n"
-        )
+        occlusion_note = "OCCLUSION CONTEXT: None. The scene should be fully visible throughout.\n\n"
 
     # State-evolution note: the intended change not happening is NOT physical_inaccuracy.
     edit = (init2final_edit_prompt or "").strip()
@@ -104,9 +104,9 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
         state_evol_note = (
             f"INTENDED STATE EVOLUTION: The following describes the physical change\n"
             f"that was supposed to occur in this scene:\n"
-            f"  \"{edit}\"\n\n"
+            f'  "{edit}"\n\n'
             f"Before judging, extract a one-sentence plain-language summary of this\n"
-            f"intended change and record it as \"intended_state_evolution\" in your JSON.\n\n"
+            f'intended change and record it as "intended_state_evolution" in your JSON.\n\n'
             f"CRITICAL DISTINCTION — physical inaccuracy vs. state evolution failure:\n"
             f"  PHYSICAL INACCURACY: something WRONG actively happens — the video shows\n"
             f"    an event that is physically impossible or that indicates the video was\n"
@@ -115,25 +115,19 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
             f"    the scene looks frozen or nothing moves. → evaluated separately;\n"
             f"    do NOT flag here.\n\n"
         )
-        intended_se_field = (
-            "  \"intended_state_evolution\": \"one-sentence summary of the intended physical change\",\n"
-        )
+        intended_se_field = '  "intended_state_evolution": "one-sentence summary of the intended physical change",\n'
     else:
         state_evol_note = ""
         intended_se_field = ""
 
     return (
         "You are evaluating a generated video for PHYSICAL INACCURACY.\n\n"
-
         "A PHYSICAL INACCURACY is any event in the VISIBLE portions of the video that\n"
         "violates the laws of physics or indicates the video was not a genuine,\n"
         "continuous, uninterrupted recording of a single physical scene.\n\n"
-
         + occlusion_note
-        + state_evol_note +
-
-        "Evaluate ONLY what is directly visible. There are three types:\n\n"
-
+        + state_evol_note
+        + "Evaluate ONLY what is directly visible. There are three types:\n\n"
         "TYPE 1 — Instantaneous violation  (single frame or very short moment)\n"
         "Something is physically wrong at a moment in time, independent of what came\n"
         "before or after.\n"
@@ -144,7 +138,6 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
         "  - An object teleports: its position jumps discontinuously with no continuous\n"
         "    motion visible between the two locations\n"
         "  - An object floats in mid-air against gravity with no support or attachment\n\n"
-
         "TYPE 2 — Dynamic violation  (cause is shown; wrong effect follows)\n"
         "Individual frames look plausible but the evolution over the VISIBLE portion\n"
         "defies physics. The cause must be clearly visible in the video.\n"
@@ -154,7 +147,6 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
         "  - An object is clearly pushed but accelerates in the opposite direction\n\n"
         "IMPORTANT: If the cause happened DURING the occlusion (not visible), do NOT\n"
         "flag the effect as a TYPE 2 violation — you cannot assess a hidden cause.\n\n"
-
         "TYPE 3 — Continuity violation  (impossible scene change)\n"
         "The background or setting changes in a way that is physically impossible for\n"
         "a genuine single-take recording.\n"
@@ -165,7 +157,6 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
         "    positions or states, with no physical explanation for the change\n"
         "    (a blackout that corresponds to the INTENDED OCCLUSION and resumes the\n"
         "    same scene is NOT a violation — only flag unexpected resets)\n\n"
-
         "SEVERITY THRESHOLD: Flag only violations that a casual viewer would find\n"
         "clearly jarring and impossible. Do NOT flag:\n"
         "  - The intended change not happening (state evolution failure — separate metric)\n"
@@ -174,18 +165,14 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
         "  - Small quantitative discrepancies (smoke a bit faster, water a bit slower)\n"
         "  - Video quality issues (blur, noise, compression artifacts)\n"
         "  - Any event that, while imperfect, is physically plausible in direction\n\n"
-
         "General guidance:\n"
         "  - Watch the full video before judging.\n"
         "  - Flag only CLEAR, VISUALLY JARRING violations.\n"
         "  - Use only visual evidence. Ignore timestamps, watermarks, UI overlays.\n\n"
-
         "Return ONLY valid JSON in this exact format (no markdown, no commentary):\n"
-        "{\n"
-        + intended_se_field +
-        "  \"physical_inaccuracy\": true/false,\n"
-        "  \"violation_type\": \"instantaneous\" | \"dynamic\" | \"continuity\" | \"none\",\n"
-        "  \"notes\": \"brief description of what was observed and why it is or is not a physical inaccuracy\"\n"
+        "{\n" + intended_se_field + '  "physical_inaccuracy": true/false,\n'
+        '  "violation_type": "instantaneous" | "dynamic" | "continuity" | "none",\n'
+        '  "notes": "brief description of what was observed and why it is or is not a physical inaccuracy"\n'
         "}\n"
     )
 
@@ -194,14 +181,17 @@ def build_physics_judge_prompt(requested_occlusion: str, init2final_edit_prompt:
 # Robust JSON parsing
 # ---------------------------------------------------------------------------
 
+
 def _unwrap_full_fence(s: str) -> str:
     s = (s or "").strip()
     m = re.match(r"^```(?:json)?\s*(.*?)\s*```$", s, flags=re.DOTALL | re.IGNORECASE)
     return m.group(1).strip() if m else s
 
+
 def _extract_first_object(s: str) -> Optional[str]:
     m = re.search(r"\{.*\}", s or "", flags=re.DOTALL)
     return m.group(0).strip() if m else None
+
 
 def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
     try:
@@ -209,6 +199,7 @@ def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
         return obj if isinstance(obj, dict) else None
     except Exception:
         return None
+
 
 def _parse_judge_output(raw_text: str) -> Dict[str, Any]:
     raw = (raw_text or "").strip()
@@ -227,6 +218,7 @@ def _parse_judge_output(raw_text: str) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Per-task evaluator
 # ---------------------------------------------------------------------------
+
 
 def evaluate_physics_one_task(
     task: ResolvedTask,
@@ -256,11 +248,11 @@ def evaluate_physics_one_task(
         raw = client.judge(prompt=prompt, video_path=Path(task.wm_video))
         parsed = _parse_judge_output(raw)
         return {
-            "physical_inaccuracy":    bool(parsed.get("physical_inaccuracy", False)),
-            "violation_type":         str(parsed.get("violation_type", "none")).strip(),
+            "physical_inaccuracy": bool(parsed.get("physical_inaccuracy", False)),
+            "violation_type": str(parsed.get("violation_type", "none")).strip(),
             "intended_state_evolution": str(parsed.get("intended_state_evolution", "")).strip(),
-            "notes":                  str(parsed.get("notes", "")).strip(),
-            "raw_text":               raw,
+            "notes": str(parsed.get("notes", "")).strip(),
+            "raw_text": raw,
         }
 
     n = max(1, ensemble_size)
@@ -295,19 +287,19 @@ def evaluate_physics_one_task(
         notes = responses[0]["notes"] if responses else ""
 
     payload: Dict[str, Any] = {
-        "task_id":                   task.task_id,
-        "provider":                  client.provider,
-        "model":                     model,
-        "wm_video":                  _path_to_rel(task.wm_video),
-        "requested_occlusion":       requested_occlusion,
-        "init2final_edit_prompt":    init2final,
-        "ensemble_size":             n,
-        "ensemble_mode":             ensemble_mode,
-        "intended_state_evolution":  intended_state_evolution,
-        "physical_inaccuracy":       physical_inaccuracy,
-        "notes":                     notes,
-        "prompt":                    prompt,
-        "raw_text":                  responses[0]["raw_text"],
+        "task_id": task.task_id,
+        "provider": client.provider,
+        "model": model,
+        "wm_video": _path_to_rel(task.wm_video),
+        "requested_occlusion": requested_occlusion,
+        "init2final_edit_prompt": init2final,
+        "ensemble_size": n,
+        "ensemble_mode": ensemble_mode,
+        "intended_state_evolution": intended_state_evolution,
+        "physical_inaccuracy": physical_inaccuracy,
+        "notes": notes,
+        "prompt": prompt,
+        "raw_text": responses[0]["raw_text"],
     }
     if n > 1:
         payload["votes_physical_inaccuracy"] = votes_inaccurate
@@ -355,6 +347,7 @@ def evaluate_physics_all_tasks(
 # Summary aggregation
 # ---------------------------------------------------------------------------
 
+
 def append_physics_results_to_summary(
     tasks: List[ResolvedTask],
     *,
@@ -392,6 +385,4 @@ def append_physics_results_to_summary(
         ev = task_entries[task.task_id].setdefault("llm_evals", {}).setdefault(judge_slug, {})
         ev["physical_inaccuracy"] = bool(data.get("physical_inaccuracy", False))
 
-    summary_path.write_text(
-        json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")

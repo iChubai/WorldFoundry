@@ -35,15 +35,9 @@ OOV_GAP_BOOL_CLEAN_SCHEMA_VERSION = "qwen3vl_oov_gate_v6_clean_oov_gap_bool_v1"
 OOV_GAP_SCAN_CLEAN_SCHEMA_VERSION = "qwen3vl_oov_gate_v7_clean_visibility_scan_v2"
 OOV_GAP_TRIPLET_CLEAN_SCHEMA_VERSION = "qwen3vl_oov_gate_v8_clean_triplet_v1"
 OOV_GAP_TRIPLET_SHEET_CLEAN_SCHEMA_VERSION = "qwen3vl_oov_gate_v11_clean_triplet_sheet_v3"
-OOV_GAP_PER_SECOND_AUDIT_BOOL_CLEAN_SCHEMA_VERSION = (
-    "qwen3vl_oov_gate_v5_clean_per_second_audit_bool_v1"
-)
-OOV_GAP_PER_SECOND_STRICT_COLLAPSE_SCHEMA_VERSION = (
-    "qwen3vl_oov_gate_v6_clean_per_second_strict_collapse_v1"
-)
-OOV_SUBJECT_RESULT_INTEGRITY_SCHEMA_VERSION = (
-    "qwen3vl_oov_gate_v8_subject_result_integrity_capped_v1"
-)
+OOV_GAP_PER_SECOND_AUDIT_BOOL_CLEAN_SCHEMA_VERSION = "qwen3vl_oov_gate_v5_clean_per_second_audit_bool_v1"
+OOV_GAP_PER_SECOND_STRICT_COLLAPSE_SCHEMA_VERSION = "qwen3vl_oov_gate_v6_clean_per_second_strict_collapse_v1"
+OOV_SUBJECT_RESULT_INTEGRITY_SCHEMA_VERSION = "qwen3vl_oov_gate_v8_subject_result_integrity_capped_v1"
 SCHEMA_VERSION = SUBJECT_SCHEMA_VERSION
 PROMPT_SCHEMA_SUBJECT = "subject_judgeability_v1"
 PROMPT_SCHEMA_OBJECT = "object_judgeability_v2"
@@ -902,17 +896,11 @@ def build_judgeability_prompt(
     prompt_schema: str = PROMPT_SCHEMA_SUBJECT,
 ) -> str:
     if prompt_schema == PROMPT_SCHEMA_OOV_SUBJECT_RESULT_INTEGRITY:
-        return OOV_SUBJECT_RESULT_INTEGRITY_PROMPT_TEMPLATE.format(
-            world_state_prompt=world_state_prompt
-        )
+        return OOV_SUBJECT_RESULT_INTEGRITY_PROMPT_TEMPLATE.format(world_state_prompt=world_state_prompt)
     if prompt_schema == PROMPT_SCHEMA_OOV_GAP_PER_SECOND_STRICT_COLLAPSE:
-        return OOV_GAP_PER_SECOND_STRICT_COLLAPSE_PROMPT_TEMPLATE.format(
-            world_state_prompt=world_state_prompt
-        )
+        return OOV_GAP_PER_SECOND_STRICT_COLLAPSE_PROMPT_TEMPLATE.format(world_state_prompt=world_state_prompt)
     if prompt_schema == PROMPT_SCHEMA_OOV_GAP_PER_SECOND_AUDIT_BOOL_CLEAN:
-        return OOV_GAP_PER_SECOND_AUDIT_BOOL_CLEAN_PROMPT_TEMPLATE.format(
-            world_state_prompt=world_state_prompt
-        )
+        return OOV_GAP_PER_SECOND_AUDIT_BOOL_CLEAN_PROMPT_TEMPLATE.format(world_state_prompt=world_state_prompt)
     if prompt_schema == PROMPT_SCHEMA_OOV_GAP_TRIPLET_SHEET_CLEAN:
         return OOV_GAP_TRIPLET_SHEET_CLEAN_PROMPT_TEMPLATE.format(world_state_prompt=world_state_prompt)
     if prompt_schema == PROMPT_SCHEMA_OOV_GAP_TRIPLET_CLEAN:
@@ -1094,8 +1082,7 @@ def _derive_temporal_oov_gate(
                 break
         oov_interval = {"start_sec": start_sec, "end_sec": end_sec, "status": "present"}
         return_judgeable = any(
-            str(entry.get(judgeable_key) or "") == "yes"
-            for entry in normalized_rows[first_gap_index + 1 :]
+            str(entry.get(judgeable_key) or "") == "yes" for entry in normalized_rows[first_gap_index + 1 :]
         )
         na_reason = None if return_judgeable else "no_return"
     else:
@@ -1186,11 +1173,7 @@ def _derive_direct3q_oov_gate(
     before_gap_evidence: str | None,
     after_return_evidence: str | None,
 ) -> dict[str, Any]:
-    if (
-        gap_observed == "yes"
-        and after_return_clear_enough == "yes"
-        and too_unclear_after_return != "yes"
-    ):
+    if gap_observed == "yes" and after_return_clear_enough == "yes" and too_unclear_after_return != "yes":
         return {"applicable": True, "na_reason": None}
     if gap_observed == "no":
         if before_gap_evidence is None:
@@ -1491,9 +1474,7 @@ def validate_judgeability_payload(
             payload = dict(payload)
             payload["video_id"] = expected_video_id
         if payload.get("video_id") != expected_video_id:
-            errors.append(
-                f"video_id mismatch: expected {expected_video_id!r}, got {payload.get('video_id')!r}"
-            )
+            errors.append(f"video_id mismatch: expected {expected_video_id!r}, got {payload.get('video_id')!r}")
 
     _require_type(errors, payload, "main_subject", str)
     _require_type(errors, payload, "per_second", list)
@@ -1566,9 +1547,7 @@ def validate_object_judgeability_payload(
         payload = dict(payload)
         payload["video_id"] = expected_video_id
     if payload.get("video_id") != expected_video_id:
-        errors.append(
-            f"video_id mismatch: expected {expected_video_id!r}, got {payload.get('video_id')!r}"
-        )
+        errors.append(f"video_id mismatch: expected {expected_video_id!r}, got {payload.get('video_id')!r}")
 
     _require_type(errors, payload, "prompt_critical_object", str)
     _require_type(errors, payload, "expected_motion_or_state", str)
@@ -1590,9 +1569,7 @@ def validate_object_judgeability_payload(
             sec = index
         object_judgeable = str(entry.get("object_judgeable") or "").strip()
         if object_judgeable not in JUDGEABILITY_VALUES:
-            errors.append(
-                f"per_second[{index}].object_judgeable invalid: {entry.get('object_judgeable')!r}"
-            )
+            errors.append(f"per_second[{index}].object_judgeable invalid: {entry.get('object_judgeable')!r}")
         note = entry.get("observed_motion_or_state")
         if not isinstance(note, str):
             errors.append(f"per_second[{index}].observed_motion_or_state must be string")
@@ -1675,9 +1652,7 @@ def validate_guarded_teacher_gate_payload(
             payload = dict(payload)
             payload["video_id"] = expected_video_id
         if payload.get("video_id") != expected_video_id:
-            errors.append(
-                f"video_id mismatch: expected {expected_video_id!r}, got {payload.get('video_id')!r}"
-            )
+            errors.append(f"video_id mismatch: expected {expected_video_id!r}, got {payload.get('video_id')!r}")
 
     _require_type(errors, payload, "prompt_critical_evidence", str)
     _require_type(errors, payload, "expected_motion_or_state", str)
@@ -2259,9 +2234,7 @@ def _derive_per_second_strict_collapse_pattern(normalized_rows: list[dict[str, A
             "applicable": True,
             "na_reason": None,
             "positive_reason": (
-                "broken_scene_after_visible"
-                if first_problem_status == "broken_scene"
-                else "collapse_after_visible"
+                "broken_scene_after_visible" if first_problem_status == "broken_scene" else "collapse_after_visible"
             ),
             "first_reference_index": first_reference_index,
             "first_problem_index": first_problem_index,
@@ -2506,7 +2479,11 @@ def _per_second_audit_conflict_types(
 
     if raw_app and derived_pattern.get("first_unjudgeable_index") is None:
         conflicts.append("raw_true_scan_no_unjudgeable")
-    if raw_app and derived_pattern.get("first_unjudgeable_index") is not None and derived_pattern.get("later_clear_index") is None:
+    if (
+        raw_app
+        and derived_pattern.get("first_unjudgeable_index") is not None
+        and derived_pattern.get("later_clear_index") is None
+    ):
         conflicts.append("raw_true_scan_no_later_clear")
         later_rows = normalized_rows[int(derived_pattern["first_unjudgeable_index"]) + 1 :]
         if any(str(row.get("status") or "") == "unrelated" for row in later_rows):
@@ -2528,9 +2505,7 @@ def validate_oov_gap_per_second_audit_bool_payload(
     errors: list[str] = []
     tracked_key = "look_for" if "look_for" in payload else "tracked_visual"
     final_key = (
-        "can_judge_after_gap"
-        if "can_judge_after_gap" in payload
-        else "has_after_interruption_judgeable_evidence"
+        "can_judge_after_gap" if "can_judge_after_gap" in payload else "has_after_interruption_judgeable_evidence"
     )
     required_keys = [
         tracked_key,
@@ -2606,24 +2581,18 @@ def validate_oov_gap_per_second_audit_bool_payload(
         derived_pattern=derived_pattern,
     )
     shared_reason = None if raw_app else reason_code
-    oov_interval = derived_pattern["oov_interval"] if raw_app else {"start_sec": None, "end_sec": None, "status": "unclear"}
+    oov_interval = (
+        derived_pattern["oov_interval"] if raw_app else {"start_sec": None, "end_sec": None, "status": "unclear"}
+    )
     segments = [
         {
             "start_sec": float(row.get("sec", index)),
             "end_sec": float(row.get("sec", index)) + 1.0,
             "visible_subject": (
-                "yes"
-                if row["status"] == "visible"
-                else "no"
-                if row["status"] == "not_visible"
-                else "unclear"
+                "yes" if row["status"] == "visible" else "no" if row["status"] == "not_visible" else "unclear"
             ),
             "prompt_critical_judgeable": (
-                "yes"
-                if row["status"] == "visible"
-                else "no"
-                if row["status"] == "not_visible"
-                else "unclear"
+                "yes" if row["status"] == "visible" else "no" if row["status"] == "not_visible" else "unclear"
             ),
             "note": row["note"],
         }
@@ -2735,9 +2704,7 @@ def validate_oov_gap_per_second_strict_collapse_payload(
     shared_reason = None if derived_app else _string_or_none(derived_pattern["na_reason"])
     positive_reason = _string_or_none(derived_pattern.get("positive_reason"))
     oov_interval = (
-        derived_pattern["oov_interval"]
-        if derived_app
-        else {"start_sec": None, "end_sec": None, "status": "unclear"}
+        derived_pattern["oov_interval"] if derived_app else {"start_sec": None, "end_sec": None, "status": "unclear"}
     )
     segments = [
         {
@@ -2875,36 +2842,24 @@ def validate_oov_subject_result_integrity_payload(
     shared_reason = None if derived_app else str(derived_pattern.get("na_reason") or "unclear")
     positive_reason = _string_or_none(derived_pattern.get("positive_reason"))
     oov_interval = (
-        derived_pattern["oov_interval"]
-        if derived_app
-        else {"start_sec": None, "end_sec": None, "status": "unclear"}
+        derived_pattern["oov_interval"] if derived_app else {"start_sec": None, "end_sec": None, "status": "unclear"}
     )
     segments = [
         {
             "start_sec": float(row.get("sec", index)),
             "end_sec": float(row.get("sec", index)) + 1.0,
             "visible_subject": (
-                "yes"
-                if row["judgeable"] == "yes"
-                else "no"
-                if row["judgeable"] == "no"
-                else "unclear"
+                "yes" if row["judgeable"] == "yes" else "no" if row["judgeable"] == "no" else "unclear"
             ),
             "prompt_critical_judgeable": (
-                "yes"
-                if row["judgeable"] == "yes"
-                else "no"
-                if row["judgeable"] == "no"
-                else "unclear"
+                "yes" if row["judgeable"] == "yes" else "no" if row["judgeable"] == "no" else "unclear"
             ),
             "note": row["note"],
         }
         for index, row in enumerate(subject_rows)
     ]
     scene_break_present = any(row["status"] == "broken" for row in scene_rows)
-    return_judgeable = bool(
-        positive_reason in {"subject_return_after_gap", "result_evidence_after_subject_gap"}
-    )
+    return_judgeable = bool(positive_reason in {"subject_return_after_gap", "result_evidence_after_subject_gap"})
 
     parsed = {
         "video_id": expected_video_id,
@@ -3324,9 +3279,7 @@ class LocalQwen3VLVideoEvidenceRunner:
         from transformers import AutoModelForImageTextToText, AutoProcessor  # type: ignore
 
         dtype_obj = {"bfloat16": torch.bfloat16}[dtype]
-        self.processor = AutoProcessor.from_pretrained(
-            str(model_path), trust_remote_code=True, local_files_only=True
-        )
+        self.processor = AutoProcessor.from_pretrained(str(model_path), trust_remote_code=True, local_files_only=True)
         video_backend = os.environ["WORLD_STATE_VIDEO_BACKEND"].strip()
         if not video_backend:
             raise RuntimeError("WORLD_STATE_VIDEO_BACKEND is required")
@@ -3568,9 +3521,7 @@ def build_run_config(
         "attn_implementation": args.attn_implementation,
         "max_new_tokens": int(args.max_new_tokens),
         "video_sampling_policy": (
-            "processor_default_not_all_source_frames"
-            if str(args.fps) == "full"
-            else "processor_kwargs_fps"
+            "processor_default_not_all_source_frames" if str(args.fps) == "full" else "processor_kwargs_fps"
         ),
         "device_map": {"": int(local_rank)},
         "local_rank": int(local_rank),
@@ -3617,7 +3568,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Local Qwen3-VL structured subject judgeability evidence runner")
     parser.add_argument("--manifest-path", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--model-path", type=Path, required=True, help="Local Qwen3-VL model directory (set via wrbench.runtime.json eval.scorers.qwen3vl_model).")
+    parser.add_argument(
+        "--model-path",
+        type=Path,
+        required=True,
+        help="Local Qwen3-VL model directory (set via wrbench.runtime.json eval.scorers.qwen3vl_model).",
+    )
     parser.add_argument("--fps", required=True)
     parser.add_argument("--max-videos", type=int, required=True)
     parser.add_argument("--skip-existing", action="store_true")
@@ -3686,8 +3642,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.max_videos:
         shard_items = shard_items[: args.max_videos]
 
-    raw_path = args.output_dir / (RAW_FILENAME if args.num_shards == 1 else f"raw_qwen3vl_judgeability_evidence_shard_{args.shard_id}.jsonl")
-    parsed_path = args.output_dir / (PARSED_FILENAME if args.num_shards == 1 else f"parsed_qwen3vl_judgeability_evidence_shard_{args.shard_id}.jsonl")
+    raw_path = args.output_dir / (
+        RAW_FILENAME if args.num_shards == 1 else f"raw_qwen3vl_judgeability_evidence_shard_{args.shard_id}.jsonl"
+    )
+    parsed_path = args.output_dir / (
+        PARSED_FILENAME if args.num_shards == 1 else f"parsed_qwen3vl_judgeability_evidence_shard_{args.shard_id}.jsonl"
+    )
     existing_raw = load_jsonl(raw_path) if args.skip_existing else []
     existing_parsed = load_jsonl(parsed_path) if args.skip_existing else []
     existing_raw_by_id = id_map(existing_raw, label="existing raw rows")
@@ -3716,7 +3676,9 @@ def main(argv: list[str] | None = None) -> int:
     raw_by_id = id_map(existing_raw + new_raw, label="raw rows")
     parsed_by_id = id_map(existing_parsed + new_parsed, label="parsed rows")
     ordered_raw = [raw_by_id[str(item["video_id"])] for item in shard_items if str(item.get("video_id")) in raw_by_id]
-    ordered_parsed = [parsed_by_id[str(item["video_id"])] for item in shard_items if str(item.get("video_id")) in parsed_by_id]
+    ordered_parsed = [
+        parsed_by_id[str(item["video_id"])] for item in shard_items if str(item.get("video_id")) in parsed_by_id
+    ]
     write_jsonl(raw_path, ordered_raw)
     write_jsonl(parsed_path, ordered_parsed)
     if args.num_shards == 1:
@@ -3735,7 +3697,9 @@ def main(argv: list[str] | None = None) -> int:
         args.output_dir / ("run_config.json" if args.num_shards == 1 else f"run_config_shard_{args.shard_id}.json"),
         config,
     )
-    (args.output_dir / ("stage_result.md" if args.num_shards == 1 else f"stage_result_shard_{args.shard_id}.md")).write_text(
+    (
+        args.output_dir / ("stage_result.md" if args.num_shards == 1 else f"stage_result_shard_{args.shard_id}.md")
+    ).write_text(
         stage_result_text(config=config),
         encoding="utf-8",
     )

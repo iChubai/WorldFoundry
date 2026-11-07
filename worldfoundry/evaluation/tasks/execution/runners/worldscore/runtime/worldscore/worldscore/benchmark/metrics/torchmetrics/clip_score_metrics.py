@@ -4,8 +4,12 @@ import os
 import torch
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import BaseMetric
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import handle_module_not_found_error
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    BaseMetric,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import (
+    handle_module_not_found_error,
+)
 
 try:
     from torchmetrics.multimodal.clip_score import CLIPScore
@@ -34,9 +38,7 @@ class CLIPScoreMetric(BaseMetric):
         )
         self._metric = CLIPScore(model_name_or_path=model_name_or_path).to(self._device)
 
-    def _compute_scores(
-        self, rendered_images: List[Union[str, Image.Image]], text_prompt: str
-    ) -> float:
+    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]], text_prompt: str) -> float:
         imgs = self._process_image(rendered_images)
 
         imgs = (imgs * 255).to(torch.uint8)

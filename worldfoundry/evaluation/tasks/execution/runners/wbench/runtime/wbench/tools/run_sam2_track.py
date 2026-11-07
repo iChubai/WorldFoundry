@@ -17,6 +17,7 @@ Usage:
 Output:
     {output_dir}/{frame_id:05d}.png — per-frame binary masks (0/255)
 """
+
 import argparse
 import glob
 import json
@@ -81,8 +82,9 @@ def extract_frames_to_dir(video_path, output_dir, target_fps=5.0):
     return frame_indices, native_fps
 
 
-def track_video(predictor, video_path, init_mask_path, output_dir,
-                device="cuda", target_fps=5.0, initial_image_path=None):
+def track_video(
+    predictor, video_path, init_mask_path, output_dir, device="cuda", target_fps=5.0, initial_image_path=None
+):
     """Track subject mask through video using native SAM2 API."""
     os.makedirs(output_dir, exist_ok=True)
     t0 = time.time()
@@ -101,7 +103,7 @@ def track_video(predictor, video_path, init_mask_path, output_dir,
             for i in range(n_frames - 1, -1, -1):
                 os.rename(
                     os.path.join(frames_dir, f"{i:05d}.jpg"),
-                    os.path.join(frames_dir, f"{i+1:05d}.jpg"),
+                    os.path.join(frames_dir, f"{i + 1:05d}.jpg"),
                 )
             # Read video frame size for resizing
             sample = Image.open(os.path.join(frames_dir, "00001.jpg"))
@@ -120,9 +122,7 @@ def track_video(predictor, video_path, init_mask_path, output_dir,
         # Resize mask to video size
         mask_h, mask_w = init_mask.shape
         if mask_h != video_h or mask_w != video_w:
-            mask_2d = np.array(
-                Image.fromarray(init_mask * 255).resize((video_w, video_h), Image.NEAREST)
-            ) > 127
+            mask_2d = np.array(Image.fromarray(init_mask * 255).resize((video_w, video_h), Image.NEAREST)) > 127
         else:
             mask_2d = init_mask > 0
 
@@ -148,13 +148,11 @@ def track_video(predictor, video_path, init_mask_path, output_dir,
             for sam_idx_offset, orig_fid in enumerate(frame_indices):
                 sam_idx = sam_idx_offset + 1
                 mask = frame_masks.get(sam_idx, np.zeros((video_h, video_w), dtype=np.uint8))
-                Image.fromarray(mask * 255, mode="L").save(
-                    os.path.join(output_dir, f"{orig_fid:05d}.png"))
+                Image.fromarray(mask * 255, mode="L").save(os.path.join(output_dir, f"{orig_fid:05d}.png"))
         else:
             for sam_idx, orig_fid in enumerate(frame_indices):
                 mask = frame_masks.get(sam_idx, np.zeros((video_h, video_w), dtype=np.uint8))
-                Image.fromarray(mask * 255, mode="L").save(
-                    os.path.join(output_dir, f"{orig_fid:05d}.png"))
+                Image.fromarray(mask * 255, mode="L").save(os.path.join(output_dir, f"{orig_fid:05d}.png"))
 
         predictor.reset_state(inference_state)
 
@@ -174,7 +172,7 @@ def _gpu_worker(gpu_id, worker_idx, n_workers, task_list, output_base, fps):
     n_cores = max(1, total_cpus // n_workers)
     n_threads = max(1, total_cpus // (2 * n_workers))
     start = worker_idx * n_cores
-    cpu_ids = available[start:start + n_cores]
+    cpu_ids = available[start : start + n_cores]
 
     try:
         os.sched_setaffinity(0, cpu_ids)
@@ -186,24 +184,27 @@ def _gpu_worker(gpu_id, worker_idx, n_workers, task_list, output_base, fps):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
     import torch
+
     torch.set_num_threads(n_threads)
 
     device = "cuda:0"
     tag = f"[GPU{gpu_id}]"
-    logger.info(f"{tag} Worker {worker_idx} started: {len(task_list)} cases, "
-                f"threads={n_threads}, cpus={cpu_ids[0]}-{cpu_ids[-1]}")
+    logger.info(
+        f"{tag} Worker {worker_idx} started: {len(task_list)} cases, "
+        f"threads={n_threads}, cpus={cpu_ids[0]}-{cpu_ids[-1]}"
+    )
 
     predictor = build_predictor(device)
 
     n_total = len(task_list)
     done, fail = 0, 0
     for i, (case_id, mask_path, video_path, image_path) in enumerate(task_list):
-        logger.info(f"{tag} [{i+1}/{n_total}] case_{case_id}")
+        logger.info(f"{tag} [{i + 1}/{n_total}] case_{case_id}")
         out_dir = os.path.join(output_base, f"case_{case_id}")
         try:
-            track_video(predictor, video_path, mask_path, out_dir,
-                        device=device, target_fps=fps,
-                        initial_image_path=image_path)
+            track_video(
+                predictor, video_path, mask_path, out_dir, device=device, target_fps=fps, initial_image_path=image_path
+            )
             done += 1
         except Exception as e:
             logger.error(f"{tag} case_{case_id}: {e}")
@@ -251,8 +252,7 @@ def main():
     parser.add_argument("--mask_dir", type=str, help="Batch: initial mask directory")
     parser.add_argument("--output_base", type=str, help="Batch: output base directory")
     parser.add_argument("--device", type=str, default="cuda:0")
-    parser.add_argument("--gpus", type=str, default=None,
-                        help="Multi-GPU: comma-separated GPU IDs (e.g. 0,1,2,3)")
+    parser.add_argument("--gpus", type=str, default=None, help="Multi-GPU: comma-separated GPU IDs (e.g. 0,1,2,3)")
     parser.add_argument("--fps", type=float, default=5.0)
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
@@ -261,16 +261,21 @@ def main():
     if args.video and args.mask:
         predictor = build_predictor(args.device)
         output_dir = args.output_dir or "masks_output"
-        track_video(predictor, args.video, args.mask, output_dir,
-                    device=args.device, target_fps=args.fps,
-                    initial_image_path=args.initial_image)
+        track_video(
+            predictor,
+            args.video,
+            args.mask,
+            output_dir,
+            device=args.device,
+            target_fps=args.fps,
+            initial_image_path=args.initial_image,
+        )
         return
 
     # ── Batch mode ──
     if args.video_dir and args.case_dir and args.mask_dir:
         output_base = args.output_base or os.path.join(os.path.dirname(args.video_dir), "masks")
-        tasks, skipped = _collect_tasks(args.case_dir, args.mask_dir, args.video_dir,
-                                         output_base, args.force)
+        tasks, skipped = _collect_tasks(args.case_dir, args.mask_dir, args.video_dir, output_base, args.force)
 
         logger.info(f"Tasks: {len(tasks)}, Skipped: {skipped}")
 
@@ -281,6 +286,7 @@ def main():
         # Multi-GPU mode
         if args.gpus:
             import multiprocessing as mp
+
             mp.set_start_method("spawn", force=True)
 
             gpu_ids = [int(g) for g in args.gpus.split(",")]
@@ -313,9 +319,15 @@ def main():
             for case_id, mask_path, video_path, image_path in tasks:
                 out_dir = os.path.join(output_base, f"case_{case_id}")
                 try:
-                    track_video(predictor, video_path, mask_path, out_dir,
-                                device=args.device, target_fps=args.fps,
-                                initial_image_path=image_path)
+                    track_video(
+                        predictor,
+                        video_path,
+                        mask_path,
+                        out_dir,
+                        device=args.device,
+                        target_fps=args.fps,
+                        initial_image_path=image_path,
+                    )
                     done += 1
                 except Exception as e:
                     logger.error(f"case_{case_id}: {e}")

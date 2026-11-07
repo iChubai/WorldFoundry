@@ -81,8 +81,8 @@ RELEVANCE_SYSTEM_PROMPT_TEMPLATE = (
     "could reveal whether an object or material stays rigid, bends, dents, scatters, compresses, breaks, or resists shape "
     "change; do not require obvious cutting or breakage. For color mixing or solubility, visible colored substances, liquids, powders, dyes, or materials entering liquid are enough for related=true. For combustibility, flame, smoke, char, glowing, sparks, or heat-damaged material are enough. Look for visual "
     "evidence that forces or contact reveal material traits (rigid vs soft, breaks vs stays "
-    "intact, scatters vs stays solid, mixes vs stays separate, burns vs remains unchanged). Return JSON: {\"related\": true|false, "
-    "\"confidence\": 0-1, \"reason\": \"short\"}."
+    'intact, scatters vs stays solid, mixes vs stays separate, burns vs remains unchanged). Return JSON: {"related": true|false, '
+    '"confidence": 0-1, "reason": "short"}.'
 )
 
 RELEVANCE_USER_PROMPT_TEMPLATE = """Video description: {video_prompt}

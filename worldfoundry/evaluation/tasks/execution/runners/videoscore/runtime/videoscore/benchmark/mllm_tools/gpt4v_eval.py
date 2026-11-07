@@ -7,11 +7,11 @@ from transformers.image_utils import load_image
 from easy_openai import openai_completions
 
 
-
-class GPT4V():
+class GPT4V:
     support_multi_image = True
     merged_image_files = []
-    def __init__(self, model_path:str="gpt-4v") -> None:
+
+    def __init__(self, model_path: str = "gpt-4v") -> None:
         """Llava model wrapper
 
         Args:
@@ -19,7 +19,6 @@ class GPT4V():
         """
         self.model_path = model_path
 
-        
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -46,39 +45,18 @@ class GPT4V():
                 {
                     "role": "system",
                     "content": [
-                        {
-                            "type": "text",
-                            "text": "You are an AI assistant that helps people find information."
-                        }
-                    ]
+                        {"type": "text", "text": "You are an AI assistant that helps people find information."}
+                    ],
                 }
             ]
-            messages += [
-                {
-                    "role": "user",
-                    "content": []
-                }
-            ]
+            messages += [{"role": "user", "content": []}]
             for message in inputs:
                 if message["type"] == "image":
-                    messages[-1]["content"].append(
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": message["content"]
-                            }
-                        }
-                    )
+                    messages[-1]["content"].append({"type": "image_url", "image_url": {"url": message["content"]}})
                 elif message["type"] == "text":
-                    messages[-1]["content"].append(
-                        {
-                            "type": "text",
-                            "text": message["content"]
-                        }
-                    )
+                    messages[-1]["content"].append({"type": "text", "text": message["content"]})
                 else:
                     raise NotImplementedError
-                
 
             results = openai_completions(
                 [messages],
@@ -86,12 +64,12 @@ class GPT4V():
                 temperature=0.0,
                 top_p=1.0,
             )
-            response = results['completions'][0]
+            response = results["completions"][0]
 
             return response
         else:
             raise NotImplementedError
-        
+
     def __del__(self):
         for image_file in self.merged_image_files:
             if os.path.exists(image_file):
@@ -104,73 +82,52 @@ if __name__ == "__main__":
     zero_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 1 shot
     one_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 2 shot
     two_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A black cat."
-        },
+        {"type": "text", "content": "What is in the image? A black cat."},
         {
             "type": "image",
-            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*"
+            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # difference
     difference_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is difference between two images?"
-        },
+        {"type": "text", "content": "What is difference between two images?"},
     ]
     # print("### 0 shot")
     # print(model(zero_shot_exs))
@@ -189,4 +146,3 @@ if __name__ == "__main__":
     ### 2 shot
     A black cat.
     """
-    

@@ -1,4 +1,3 @@
-
 from vbench.scene import compute_scene
 from vbench2_beta_long.utils import reorganize_clips_results
 

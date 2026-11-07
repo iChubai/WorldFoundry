@@ -131,6 +131,4 @@ def get_question_by_id(qid: str) -> Optional[PhysicsQuestion]:
 
 
 # Combine all questions
-ALL_QUESTIONS: List[PhysicsQuestion] = (
-    MECHANICS_QUESTIONS + THERMOTICS_QUESTIONS + MATERIAL_QUESTIONS
-)
+ALL_QUESTIONS: List[PhysicsQuestion] = MECHANICS_QUESTIONS + THERMOTICS_QUESTIONS + MATERIAL_QUESTIONS

@@ -2,6 +2,7 @@
 Unified video quality evaluator.
 Automatically selects appropriate frame sampling strategy per metric (VBench-aligned).
 """
+
 import time
 import torch
 import torchvision.transforms as T
@@ -10,16 +11,19 @@ from PIL import Image
 
 from src.utils.video_utils import load_video_frames
 
-_SHARED_RESIZE_CROP_CPU = T.Compose([
-    T.Resize(224, interpolation=T.InterpolationMode.BICUBIC),
-    T.CenterCrop(224),
-    T.ToTensor(),
-])
+_SHARED_RESIZE_CROP_CPU = T.Compose(
+    [
+        T.Resize(224, interpolation=T.InterpolationMode.BICUBIC),
+        T.CenterCrop(224),
+        T.ToTensor(),
+    ]
+)
 
 
 def _shared_preprocess_gpu(frames, device="cuda"):
     """GPU-accelerated batch preprocessing: PIL → tensor (N, 3, 224, 224)."""
     import numpy as np
+
     arrays = np.stack([np.array(f) for f in frames])
     batch = torch.from_numpy(arrays).permute(0, 3, 1, 2).float().div_(255.0)
     batch = batch.to(device)
@@ -80,6 +84,7 @@ class VideoQualityEvaluator:
         if self._all_frames is not None:
             return
         import cv2
+
         cap = cv2.VideoCapture(video_path)
         self._video_fps = cap.get(cv2.CAP_PROP_FPS) or 24.0
         frames = []
@@ -110,14 +115,14 @@ class VideoQualityEvaluator:
             return all_frames
         else:
             import numpy as np
+
             indices = np.linspace(0, vlen - 1, sampling_cfg, dtype=int).tolist()
 
         sampled = [all_frames[i] for i in indices]
         self._sampled_cache[cache_key] = sampled
         return sampled
 
-    def evaluate(self, video_path: str, metrics: Optional[List[str]] = None,
-                 verbose: bool = True) -> Dict[str, Any]:
+    def evaluate(self, video_path: str, metrics: Optional[List[str]] = None, verbose: bool = True) -> Dict[str, Any]:
         """Evaluate video quality across all configured metrics."""
         metrics_to_eval = metrics or self.metrics
         results = {"video_path": video_path, "metrics": {}, "summary": {}}
@@ -142,8 +147,10 @@ class VideoQualityEvaluator:
 
                 score = result.get(f"{name}_score", None)
                 results["metrics"][name] = {
-                    "score": score, "time": round(elapsed, 2),
-                    "num_frames": len(frames), "details": result,
+                    "score": score,
+                    "time": round(elapsed, 2),
+                    "num_frames": len(frames),
+                    "details": result,
                 }
                 results["summary"][name] = score
 

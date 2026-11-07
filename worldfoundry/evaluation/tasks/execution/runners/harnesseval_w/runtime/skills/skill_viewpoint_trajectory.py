@@ -117,15 +117,9 @@ def _text_navigation_action(text: str) -> str | None:
         )
     )
     up = bool(re.search(r"\b(?:look|tilt|pitch)\b[^.;]{0,32}\bup(?:ward)?\b", text))
-    down = bool(
-        re.search(r"\b(?:look|tilt|pitch)\b[^.;]{0,32}\bdown(?:ward)?\b", text)
-    )
-    strafe_left = bool(
-        re.search(r"\b(?:strafe|slide|step)\b[^.;]{0,32}\b(?:left|leftward)\b", text)
-    )
-    strafe_right = bool(
-        re.search(r"\b(?:strafe|slide|step)\b[^.;]{0,32}\b(?:right|rightward)\b", text)
-    )
+    down = bool(re.search(r"\b(?:look|tilt|pitch)\b[^.;]{0,32}\bdown(?:ward)?\b", text))
+    strafe_left = bool(re.search(r"\b(?:strafe|slide|step)\b[^.;]{0,32}\b(?:left|leftward)\b", text))
+    strafe_right = bool(re.search(r"\b(?:strafe|slide|step)\b[^.;]{0,32}\b(?:right|rightward)\b", text))
 
     if forward and left:
         return "W+left"
@@ -176,9 +170,7 @@ def navigation_case_data(case: Mapping[str, Any]) -> dict[str, Any]:
                     }
                 )
     if not interactions and action.get("action") is not None:
-        interactions.append(
-            {"type": str(action.get("type") or ""), "action": str(action["action"])}
-        )
+        interactions.append({"type": str(action.get("type") or ""), "action": str(action["action"])})
     if not interactions:
         raise ValueError("viewpoint case has no action turns")
     world = case.get("world") or {}
@@ -282,22 +274,28 @@ def score_pose(path: Path, case_data: Mapping[str, Any]) -> Mapping[str, Any]:
     from ..metrics.navigation_trajectory import evaluate_navigation
 
     navigation_actions = {
-        "W", "A", "S", "D", "left", "right", "up", "down",
-        "W+A", "W+D", "S+D", "W+left", "W+right", "W+up", "W+down",
+        "W",
+        "A",
+        "S",
+        "D",
+        "left",
+        "right",
+        "up",
+        "down",
+        "W+A",
+        "W+D",
+        "S+D",
+        "W+left",
+        "W+right",
+        "W+up",
+        "W+down",
     }
     with np.load(path, allow_pickle=False) as payload:
         poses = payload["cam_c2w"]
     actions = [turn["action"] for turn in case_data["interactions"]]
     per_turn = len(poses) // len(actions)
-    bounds = [
-        (index * per_turn, min((index + 1) * per_turn, len(poses)))
-        for index in range(len(actions))
-    ]
-    selected = [
-        (action, bound)
-        for action, bound in zip(actions, bounds, strict=True)
-        if action in navigation_actions
-    ]
+    bounds = [(index * per_turn, min((index + 1) * per_turn, len(poses))) for index in range(len(actions))]
+    selected = [(action, bound) for action, bound in zip(actions, bounds, strict=True) if action in navigation_actions]
     if not selected:
         return {"NavScore": None, "error": "no navigation actions"}
     nav_actions, nav_bounds = zip(*selected, strict=True)

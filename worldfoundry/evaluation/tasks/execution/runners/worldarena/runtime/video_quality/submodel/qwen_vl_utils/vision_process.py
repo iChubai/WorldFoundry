@@ -21,7 +21,6 @@ from typing import Optional
 import numpy as np
 
 
-
 logger = logging.getLogger(__name__)
 
 IMAGE_FACTOR = 28
@@ -39,7 +38,7 @@ FPS_MAX_FRAMES = 768
 # Set the maximum number of video token inputs.
 # Here, 128K represents the maximum number of input tokens for the VLLM model.
 # Remember to adjust it according to your own configuration.
-VIDEO_TOTAL_PIXELS = int(float(os.environ.get('VIDEO_MAX_PIXELS', 128000 * 28 * 28 * 0.9)))
+VIDEO_TOTAL_PIXELS = int(float(os.environ.get("VIDEO_MAX_PIXELS", 128000 * 28 * 28 * 0.9)))
 logger.info(f"set VIDEO_TOTAL_PIXELS: {VIDEO_TOTAL_PIXELS}")
 
 
@@ -88,12 +87,12 @@ def smart_resize(
 
 
 def to_rgb(pil_image: Image.Image) -> Image.Image:
-      if pil_image.mode == 'RGBA':
-          white_background = Image.new("RGB", pil_image.size, (255, 255, 255))
-          white_background.paste(pil_image, mask=pil_image.split()[3])  # Use alpha channel as mask
-          return white_background
-      else:
-          return pil_image.convert("RGB")
+    if pil_image.mode == "RGBA":
+        white_background = Image.new("RGB", pil_image.size, (255, 255, 255))
+        white_background.paste(pil_image, mask=pil_image.split()[3])  # Use alpha channel as mask
+        return white_background
+    else:
+        return pil_image.convert("RGB")
 
 
 def fetch_image(ele: dict[str, str | Image.Image], size_factor: int = IMAGE_FACTOR) -> Image.Image:
@@ -240,11 +239,12 @@ def _read_video_decord(
         torch.Tensor: the video tensor with shape (T, C, H, W).
     """
     import decord
+
     video_path = ele["video"]
     st = time.time()
     vr = decord.VideoReader(video_path)
     # TODO: support start_pts and end_pts
-    if 'video_start' in ele or 'video_end' in ele:
+    if "video_start" in ele or "video_end" in ele:
         raise NotImplementedError("not support start_pts and end_pts in decord for now.")
     total_frames, video_fps = len(vr), vr.get_avg_fps()
     logger.info(f"decord:  {video_path=}, {total_frames=}, {video_fps=}, time={time.time() - st:.3f}s")
@@ -255,14 +255,12 @@ def _read_video_decord(
     sample_fps = nframes / max(total_frames, 1e-6) * video_fps
     return video, sample_fps
 
+
 def _read_video_from_folder(ele: dict) -> (torch.Tensor, float):
     folder = ele["video"]
     video_fps = 30
 
-    image_files = sorted([
-        f for f in os.listdir(folder)
-        if f.lower().endswith((".jpg", ".jpeg", ".png"))
-    ])
+    image_files = sorted([f for f in os.listdir(folder) if f.lower().endswith((".jpg", ".jpeg", ".png"))])
 
     if not image_files:
         raise ValueError(f"No images found in folder: {folder}")
@@ -284,10 +282,11 @@ def _read_video_from_folder(ele: dict) -> (torch.Tensor, float):
 
     return video, video_fps
 
+
 VIDEO_READER_BACKENDS = {
     "decord": _read_video_decord,
     "torchvision": _read_video_torchvision,
-    "folder": _read_video_from_folder
+    "folder": _read_video_from_folder,
 }
 
 FORCE_QWENVL_VIDEO_READER = os.getenv("FORCE_QWENVL_VIDEO_READER", None)
@@ -305,17 +304,15 @@ def get_video_reader_backend() -> str:
     return video_reader_backend
 
 
-
-
-def fetch_video(ele: dict, image_factor: int = IMAGE_FACTOR, return_video_sample_fps: bool = False) -> torch.Tensor | list[Image.Image]:
+def fetch_video(
+    ele: dict, image_factor: int = IMAGE_FACTOR, return_video_sample_fps: bool = False
+) -> torch.Tensor | list[Image.Image]:
     if isinstance(ele["video"], str):
-
         if os.path.isdir(ele["video"]):
-
             video_reader_backend = "folder"
         else:
             video_reader_backend = get_video_reader_backend()
-        
+
         try:
             video, sample_fps = VIDEO_READER_BACKENDS[video_reader_backend](ele)
         except Exception as e:
@@ -392,7 +389,6 @@ def process_vision_info(
     conversations: list[dict] | list[list[dict]],
     return_video_kwargs: bool = False,
 ) -> tuple[list[Image.Image] | None, list[torch.Tensor | list[Image.Image]] | None, Optional[dict]]:
-
     vision_infos = extract_vision_info(conversations)
     ## Read images or videos
     image_inputs = []
@@ -412,5 +408,5 @@ def process_vision_info(
     if len(video_inputs) == 0:
         video_inputs = None
     if return_video_kwargs:
-        return image_inputs, video_inputs, {'fps': video_sample_fps_list}
+        return image_inputs, video_inputs, {"fps": video_sample_fps_list}
     return image_inputs, video_inputs

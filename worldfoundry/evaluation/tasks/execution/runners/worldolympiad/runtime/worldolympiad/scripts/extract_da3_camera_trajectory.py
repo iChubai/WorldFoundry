@@ -41,10 +41,7 @@ def sample_indices(total_frames: int, max_frames: int | None) -> list[int]:
         return list(range(total_frames))
     if max_frames == 1:
         return [0]
-    return [
-        int(round(i * (total_frames - 1) / (max_frames - 1)))
-        for i in range(max_frames)
-    ]
+    return [int(round(i * (total_frames - 1) / (max_frames - 1))) for i in range(max_frames)]
 
 
 def load_video_frames(video_path: str | os.PathLike[str], max_frames: int | None) -> tuple[list[np.ndarray], list[int]]:
@@ -80,10 +77,7 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
     candidate = Path(model_name).expanduser()
 
     looks_like_path = (
-        candidate.is_absolute()
-        or model_name.startswith(".")
-        or model_name.startswith("~")
-        or candidate.exists()
+        candidate.is_absolute() or model_name.startswith(".") or model_name.startswith("~") or candidate.exists()
     )
     if not looks_like_path:
         return model_name
@@ -101,9 +95,7 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
     required_files = ("config.json", "model.safetensors")
     missing_files = [name for name in required_files if not (candidate / name).exists()]
     if missing_files:
-        raise FileNotFoundError(
-            f"Local DA3 model directory is missing required files {missing_files}: {candidate}"
-        )
+        raise FileNotFoundError(f"Local DA3 model directory is missing required files {missing_files}: {candidate}")
 
     return str(candidate)
 
@@ -161,10 +153,7 @@ def extract_camera_trajectory(
     extrinsics = as_homogeneous(np.asarray(prediction.extrinsics, dtype=np.float32))
     poses_c2w = affine_inverse_np(extrinsics)
 
-    trajectory = {
-        f"frame{frame_idx}": pose.tolist()
-        for frame_idx, pose in zip(frame_indices, poses_c2w)
-    }
+    trajectory = {f"frame{frame_idx}": pose.tolist() for frame_idx, pose in zip(frame_indices, poses_c2w)}
 
     resolved_output_path.write_text(
         json.dumps(trajectory, ensure_ascii=False, indent=2) + "\n",

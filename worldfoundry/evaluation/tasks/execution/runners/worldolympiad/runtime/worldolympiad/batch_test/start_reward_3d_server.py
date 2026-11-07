@@ -44,8 +44,12 @@ def main() -> None:
     parser.add_argument("--vlm-backend", default="qwenvl_server", help="VLM backend for GS/meta scoring")
     parser.add_argument("--vlm-model", default=None, help="VLM model for GS/meta scoring")
     parser.add_argument("--qwen-server-url", default="", help="QwenVL service URL used by 3D VLM scoring")
-    parser.add_argument("--lpips", dest="lpips", action="store_true", help="Default to LPIPS GS scoring when requests omit use_lpips")
-    parser.add_argument("--no-lpips", dest="lpips", action="store_false", help="Default to VLM GS scoring when requests omit use_lpips")
+    parser.add_argument(
+        "--lpips", dest="lpips", action="store_true", help="Default to LPIPS GS scoring when requests omit use_lpips"
+    )
+    parser.add_argument(
+        "--no-lpips", dest="lpips", action="store_false", help="Default to VLM GS scoring when requests omit use_lpips"
+    )
     parser.set_defaults(lpips=False)
     args = parser.parse_args()
 

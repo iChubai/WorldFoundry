@@ -68,8 +68,8 @@ RELEVANCE_SYSTEM_PROMPT_TEMPLATE = (
     "Decide if the described video contains enough evidence to evaluate this phase transition, even if the transition is subtle, partial, implied by context, or only visible through secondary cues. "
     "Relevant thermal cues include heat sources, flames, glowing objects, steam, vapor, smoke-like gas, fog, condensation droplets, frost/ice/crystals, bubbling, boiling, evaporation, wet/dry surface changes, melting/softening, shrinking solids, growing liquid pools, disappearing liquid, or temperature-driven state changes. "
     "Use related=true when the phase transition can be judged from visible material state over time or from clear prompt/video evidence; use related=false for purely mechanical motion with no heat, cold, gas, liquid, ice, vapor, flame, or state-change cue. "
-    "Respond with strict JSON: {\"related\": true|false, \"confidence\": 0-1, "
-    "\"reason\": \"short\"}."
+    'Respond with strict JSON: {"related": true|false, "confidence": 0-1, '
+    '"reason": "short"}.'
 )
 
 RELEVANCE_USER_PROMPT_TEMPLATE = """Video description: {video_prompt}
@@ -87,8 +87,8 @@ COMPLIANCE_SYSTEM_PROMPT_TEMPLATE = (
     "Common violations: {violations}\n"
     "Judge both direct transitions and secondary visual evidence such as steam, fog, droplets, bubbles, wet/dry changes, frost, crystals, softening, shrinking, liquid pooling, or disappearance. "
     "Compare temporal order and continuity against the reference: state changes should be gradual unless the reference shows a sudden event, and material identity should remain consistent instead of morphing into unrelated objects. "
-    "Return strict JSON: {{\"compliant\": true|false, \"confidence\": 0-1, "
-    "\"explanation\": \"3-5 sentences\", \"observations\": \"specific thermal/state-change evidence\"}}."
+    'Return strict JSON: {{"compliant": true|false, "confidence": 0-1, '
+    '"explanation": "3-5 sentences", "observations": "specific thermal/state-change evidence"}}.'
 )
 
 COMPLIANCE_USER_PROMPT_TEMPLATE = """You will see two videos:

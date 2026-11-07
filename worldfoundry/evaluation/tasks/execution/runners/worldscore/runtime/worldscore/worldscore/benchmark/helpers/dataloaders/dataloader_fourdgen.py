@@ -3,7 +3,9 @@ import os
 
 from tqdm import tqdm
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloader import DataLoader
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloader import (
+    DataLoader,
+)
 
 
 class dataloader_fourdgen(DataLoader):

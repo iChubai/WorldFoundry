@@ -34,10 +34,7 @@ def build_runner(name: str, config: dict) -> WorldModelRunner:
         provider = config.get("provider", "")
         cls = _API_PROVIDERS.get(provider)
         if cls is None:
-            raise ValueError(
-                f"Unknown API provider '{provider}' for model '{name}'. "
-                f"Available: {list(_API_PROVIDERS)}"
-            )
+            raise ValueError(f"Unknown API provider '{provider}' for model '{name}'. Available: {list(_API_PROVIDERS)}")
         return cls(name, config)
 
     if model_type == "local":
@@ -46,16 +43,12 @@ def build_runner(name: str, config: dict) -> WorldModelRunner:
             cls = _LOCAL_RUNNERS.get(runner_class)
             if cls is None:
                 raise ValueError(
-                    f"Unknown runner_class '{runner_class}' for model '{name}'. "
-                    f"Available: {list(_LOCAL_RUNNERS)}"
+                    f"Unknown runner_class '{runner_class}' for model '{name}'. Available: {list(_LOCAL_RUNNERS)}"
                 )
             return cls(name, config)
         return LocalScriptRunner(name, config)
 
-    raise ValueError(
-        f"Unknown model type '{model_type}' for model '{name}'. "
-        f"Expected 'api' or 'local'."
-    )
+    raise ValueError(f"Unknown model type '{model_type}' for model '{name}'. Expected 'api' or 'local'.")
 
 
 __all__ = ["WorldModelRunner", "VeoRunner", "LocalScriptRunner", "SoraRunner", "LingBotRunner", "build_runner"]

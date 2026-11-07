@@ -103,9 +103,7 @@ def _parse_segment_kwargs(frames: int, kwargs: dict[str, float]) -> list[FrameAc
     for key, value in kwargs.items():
         sep_idx = key.index("_") if "_" in key else -1
         if sep_idx < 1:
-            raise ValueError(
-                f"segment kwarg {key!r} must be kind_direction (e.g. yaw_left=60, dolly_forward=1.0)"
-            )
+            raise ValueError(f"segment kwarg {key!r} must be kind_direction (e.g. yaw_left=60, dolly_forward=1.0)")
         kind = key[:sep_idx]
         direction = key[sep_idx + 1 :]
         if kind in ROTATION_KINDS:

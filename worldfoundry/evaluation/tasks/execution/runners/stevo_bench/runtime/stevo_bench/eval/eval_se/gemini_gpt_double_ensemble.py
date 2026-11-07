@@ -19,8 +19,8 @@ from collections import Counter
 import cv2
 
 # Suppress gRPC fork warnings when using parallel execution
-os.environ['GRPC_VERBOSITY'] = 'ERROR'
-os.environ['GLOG_minloglevel'] = '2'
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"
 
 import google.generativeai as genai
 from PIL import Image
@@ -34,9 +34,7 @@ class GeminiGPTDoubleEnsemble:
         if gemini_api_key is None:
             gemini_api_key = os.environ.get("GOOGLE_API_KEY")
             if not gemini_api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         genai.configure(api_key=gemini_api_key)
         self.gemini_model = genai.GenerativeModel("gemini-3-pro-preview")
@@ -45,9 +43,7 @@ class GeminiGPTDoubleEnsemble:
         if openai_api_key is None:
             openai_api_key = os.environ.get("OPENAI_API_KEY")
             if not openai_api_key:
-                raise ValueError(
-                    "OPENAI_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("OPENAI_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         self.gpt_model = "gpt-5.2"
 
@@ -59,7 +55,7 @@ class GeminiGPTDoubleEnsemble:
     def _encode_image(self, image_path: str) -> str:
         """Encode image to base64 for OpenAI API."""
         with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+            return base64.b64encode(image_file.read()).decode("utf-8")
 
     def _extract_frames(self, video_path: str, frame_interval: int = 5) -> List[str]:
         """Extract frames from video at regular intervals."""
@@ -91,9 +87,7 @@ class GeminiGPTDoubleEnsemble:
 
         return frame_paths
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
         """Use Gemini to predict expected process (single call, not ensemble)."""
         start_time = time.time()
 
@@ -155,9 +149,7 @@ Process: [concise one-sentence description of the expected evolution]"""
         print("    Warning: Could not find 'Process:' line, using full response")
         return response_text
 
-    def _get_verification_prompts(
-        self, expected_process: str, model_type: str
-    ) -> List[str]:
+    def _get_verification_prompts(self, expected_process: str, model_type: str) -> List[str]:
         """Generate 3 different prompt variations for ensemble voting."""
         # Determine occlusion question based on model type
         if model_type in ["veo", "sora"]:
@@ -287,24 +279,21 @@ EXPLANATION: [Your analysis]"""
                 verify_time = time.time() - verify_start
 
                 verdict = self._parse_verdict(response_text)
-                results.append({
-                    "prompt_id": i,
-                    "response": response_text,
-                    "verdict": verdict,
-                    "time": verify_time
-                })
+                results.append({"prompt_id": i, "response": response_text, "verdict": verdict, "time": verify_time})
                 verdicts.append(verdict)
 
                 print(f"      Verdict {i}: {'PASS' if verdict else 'FAIL'} ({verify_time:.1f}s)")
 
             except Exception as e:
                 print(f"      ERROR in prompt {i}: {e}")
-                results.append({
-                    "prompt_id": i,
-                    "response": f"ERROR: {str(e)}",
-                    "verdict": None,
-                    "time": time.time() - verify_start
-                })
+                results.append(
+                    {
+                        "prompt_id": i,
+                        "response": f"ERROR: {str(e)}",
+                        "verdict": None,
+                        "time": time.time() - verify_start,
+                    }
+                )
 
         # Majority voting
         valid_verdicts = [v for v in verdicts if v is not None]
@@ -323,7 +312,7 @@ EXPLANATION: [Your analysis]"""
             "individual_results": results,
             "verdicts": verdicts,
             "final_verdict": final_verdict,
-            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {}
+            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {},
         }, final_verdict
 
     def _verify_with_gpt_ensemble(
@@ -346,46 +335,43 @@ EXPLANATION: [Your analysis]"""
                 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
                 # Build message content with frames
-                content = [{"type": "text", "text": f"{prompt}\n\nYou are given a sequence of frames from the video (every 5th frame). Watch the progression carefully."}]
+                content = [
+                    {
+                        "type": "text",
+                        "text": f"{prompt}\n\nYou are given a sequence of frames from the video (every 5th frame). Watch the progression carefully.",
+                    }
+                ]
 
                 for frame_path in frame_paths:
                     base64_frame = self._encode_image(frame_path)
-                    content.append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_frame}"
-                        }
-                    })
+                    content.append(
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_frame}"}}
+                    )
 
                 # Call GPT
                 response = client.chat.completions.create(
-                    model=self.gpt_model,
-                    messages=[{"role": "user", "content": content}],
-                    max_completion_tokens=1000
+                    model=self.gpt_model, messages=[{"role": "user", "content": content}], max_completion_tokens=1000
                 )
 
                 response_text = response.choices[0].message.content
                 verify_time = time.time() - verify_start
 
                 verdict = self._parse_verdict(response_text)
-                results.append({
-                    "prompt_id": i,
-                    "response": response_text,
-                    "verdict": verdict,
-                    "time": verify_time
-                })
+                results.append({"prompt_id": i, "response": response_text, "verdict": verdict, "time": verify_time})
                 verdicts.append(verdict)
 
                 print(f"      Verdict {i}: {'PASS' if verdict else 'FAIL'} ({verify_time:.1f}s)")
 
             except Exception as e:
                 print(f"      ERROR in prompt {i}: {e}")
-                results.append({
-                    "prompt_id": i,
-                    "response": f"ERROR: {str(e)}",
-                    "verdict": None,
-                    "time": time.time() - verify_start
-                })
+                results.append(
+                    {
+                        "prompt_id": i,
+                        "response": f"ERROR: {str(e)}",
+                        "verdict": None,
+                        "time": time.time() - verify_start,
+                    }
+                )
 
         # Majority voting
         valid_verdicts = [v for v in verdicts if v is not None]
@@ -404,7 +390,7 @@ EXPLANATION: [Your analysis]"""
             "individual_results": results,
             "verdicts": verdicts,
             "final_verdict": final_verdict,
-            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {}
+            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {},
         }, final_verdict
 
     def verify_process_in_video_double_ensemble(
@@ -425,12 +411,8 @@ EXPLANATION: [Your analysis]"""
         print(f"    Running both model ensembles (in parallel)...")
 
         with ThreadPoolExecutor(max_workers=2) as executor:
-            gemini_future = executor.submit(
-                self._verify_with_gemini_ensemble, video_path, expected_process, model_type
-            )
-            gpt_future = executor.submit(
-                self._verify_with_gpt_ensemble, frame_paths, expected_process, model_type
-            )
+            gemini_future = executor.submit(self._verify_with_gemini_ensemble, video_path, expected_process, model_type)
+            gpt_future = executor.submit(self._verify_with_gpt_ensemble, frame_paths, expected_process, model_type)
 
             # Collect results
             gemini_results, gemini_verdict = gemini_future.result()
@@ -452,14 +434,16 @@ EXPLANATION: [Your analysis]"""
         # Final unanimous voting
         consensus_verdict = gemini_verdict and gpt_verdict
 
-        print(f"    FINAL CONSENSUS: Gemini={'PASS' if gemini_verdict else 'FAIL'}, GPT={'PASS' if gpt_verdict else 'FAIL'} → {'PASS' if consensus_verdict else 'FAIL'}")
+        print(
+            f"    FINAL CONSENSUS: Gemini={'PASS' if gemini_verdict else 'FAIL'}, GPT={'PASS' if gpt_verdict else 'FAIL'} → {'PASS' if consensus_verdict else 'FAIL'}"
+        )
 
         return {
             "gemini_ensemble": gemini_results,
             "gpt_ensemble": gpt_results,
             "gemini_verdict": gemini_verdict,
             "gpt_verdict": gpt_verdict,
-            "consensus_verdict": consensus_verdict
+            "consensus_verdict": consensus_verdict,
         }, consensus_verdict
 
     def _parse_verdict(self, response_text: str) -> bool:
@@ -513,7 +497,7 @@ EXPLANATION: [Your analysis]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process

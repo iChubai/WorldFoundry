@@ -135,9 +135,7 @@ def validate_axis_payload(*, axis: str, payload: dict[str, Any], scene_id: str) 
     if axis == "trustworthiness_audit":
         result = validate_trustworthiness_response(payload)
         if result.status == "valid" and payload.get("scene_id") != scene_id:
-            return [
-                f"scene_id {payload.get('scene_id')!r} does not match expected scene_id {scene_id!r}"
-            ]
+            return [f"scene_id {payload.get('scene_id')!r} does not match expected scene_id {scene_id!r}"]
         if result.status == "valid":
             return []
         return list(result.errors) or [result.status]

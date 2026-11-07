@@ -37,6 +37,7 @@ try:
 except Exception:
     anthropic = None
 
+
 # -----------------------------
 # Frame extraction
 # -----------------------------
@@ -44,13 +45,17 @@ def _require_pillow():
     if Image is None:
         raise RuntimeError("Pillow is required. Install via `pip install Pillow`.")
 
+
 def _image_to_b64(img: "Image.Image", jpeg_quality: int = 80) -> str:
     _require_pillow()
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=jpeg_quality)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
-def _extract_frames_cv2(path: str, max_frames: int = 24, fps: Optional[float] = None) -> List[Tuple[float, "Image.Image"]]:
+
+def _extract_frames_cv2(
+    path: str, max_frames: int = 24, fps: Optional[float] = None
+) -> List[Tuple[float, "Image.Image"]]:
     if not path:
         return []
     if cv2 is None:
@@ -77,11 +82,13 @@ def _extract_frames_cv2(path: str, max_frames: int = 24, fps: Optional[float] = 
             continue
         rgb = cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)
         from PIL import Image as _PIL
+
         frames.append((t_s, _PIL.fromarray(rgb)))
         if len(frames) >= max_frames:
             break
     cap.release()
     return frames
+
 
 def _extract_frames_ffmpeg(path: str, max_frames: int = 24) -> List[Tuple[float, "Image.Image"]]:
     if not path:
@@ -90,9 +97,19 @@ def _extract_frames_ffmpeg(path: str, max_frames: int = 24) -> List[Tuple[float,
         return []
     # probe duration
     probe = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1", path],
-        capture_output=True, text=True, check=True
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            path,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     duration = float((probe.stdout or "0").strip() or 0.0)
     if not duration or duration <= 0.0:
@@ -104,19 +121,20 @@ def _extract_frames_ffmpeg(path: str, max_frames: int = 24) -> List[Tuple[float,
     out_frames: List[Tuple[float, "Image.Image"]] = []
     for t_s in times:
         out = subprocess.run(
-            ["ffmpeg", "-ss", str(t_s), "-i", path, "-frames:v", "1",
-                "-f", "image2pipe", "-vcodec", "mjpeg", "-"],
-            capture_output=True, check=True
+            ["ffmpeg", "-ss", str(t_s), "-i", path, "-frames:v", "1", "-f", "image2pipe", "-vcodec", "mjpeg", "-"],
+            capture_output=True,
+            check=True,
         )
         img = Image.open(io.BytesIO(out.stdout)).convert("RGB")
         out_frames.append((t_s, img))
 
     return out_frames
 
+
 def extract_frames(path: str, max_frames: int = 24, fps: Optional[float] = None) -> List[Tuple[float, "Image.Image"]]:
     if not path:
         return []
-    
+
     suffix = Path(path).suffix.lower()
     if suffix in {".jpg", ".jpeg", ".png", ".webp"}:
         _require_pillow()
@@ -166,8 +184,8 @@ class OpenAIVLMAPI(_BaseVLM):
 
         # Fallback: responses[].content[].text
         chunks = []
-        for item in (resp.get("output") or []):
-            for c in (item.get("content") or []):
+        for item in resp.get("output") or []:
+            for c in item.get("content") or []:
                 if isinstance(c, dict):
                     t = c.get("text")
                     if isinstance(t, str):
@@ -208,7 +226,7 @@ class OpenAIVLMAPI(_BaseVLM):
                 content.append({"type": "input_text", "text": f"Reference frame t={ts:.1f}s"})
 
         payload = {
-            "model": model, 
+            "model": model,
             "input": [{"role": "user", "content": content}],
             "max_output_tokens": int(extra.get("max_output_tokens", 20480)),
         }
@@ -233,7 +251,6 @@ class OpenAIVLMAPI(_BaseVLM):
             },
             "raw": resp,
         }
-
 
 
 # -----------------------------
@@ -296,13 +313,16 @@ class GeminiVLMAPI(_BaseVLM):
         text = getattr(resp, "text", None)
         if not text and getattr(resp, "candidates", None):
             text = resp.candidates[0].content.parts[0].text
-                
+
         return {
             "provider": "gemini",
             "model": model,
             "output_text": text or "",
             "output_mime": "application/json",
-            "evidence": {"candidate_frames": ["uploaded:file"], "reference_frames": ["uploaded:file"] if ref_file else []},
+            "evidence": {
+                "candidate_frames": ["uploaded:file"],
+                "reference_frames": ["uploaded:file"] if ref_file else [],
+            },
             "raw": resp.to_dict() if hasattr(resp, "to_dict") else str(resp),
         }
 

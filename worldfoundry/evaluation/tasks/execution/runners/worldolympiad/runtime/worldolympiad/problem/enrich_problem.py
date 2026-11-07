@@ -1,8 +1,8 @@
-'''
+"""
 Docstring for problem.problem_filter
 
 这个文件提供一个接口，让VLM来提出具体的物理现象相关的问题，具体到物体和内容
-'''
+"""
 
 from problem.problem_set import MECHANICS_QUESTIONS, THERMOTICS_QUESTIONS, MATERIAL_QUESTIONS, get_question_by_id
 
@@ -53,20 +53,16 @@ if __name__ == "__main__":
     video_path = "runs/segment/predict/buoyancy_self_forcing_2.mp4"
     model_name = "google/gemini-2.5-flash"
     video_prompt = "A slice of fresh lemon is dropped into a glass of sparkling water. The lemon submerged initially but quickly floats back to the top, swaying slightly amongst the rising bubbles."
-    related_problem = {'mechanics': ['gravity', 'buoyancy'], 'thermotics': [], 'material': []}
+    related_problem = {"mechanics": ["gravity", "buoyancy"], "thermotics": [], "material": []}
+
     def encode_video_to_base64(video_path):
         with open(video_path, "rb") as video_file:
-            return base64.b64encode(video_file.read()).decode('utf-8')
+            return base64.b64encode(video_file.read()).decode("utf-8")
 
     base64_video = encode_video_to_base64(video_path=video_path)
 
     data_url = f"data:video/mp4;base64,{base64_video}"
-    data_url = {
-        "type": "video_url",
-        "video_url": {
-            "url": data_url
-        }
-    }
+    data_url = {"type": "video_url", "video_url": {"url": data_url}}
 
     result = enrich_problems(video_path, model_name, video_prompt, related_problem)
 

@@ -223,8 +223,7 @@ class Reward3DHandler(BaseHTTPRequestHandler):
             415,
             {
                 "error": (
-                    "Pickle-over-HTTP scoring is disabled. POST JSON to "
-                    "/score_file or /extract_trajectory instead."
+                    "Pickle-over-HTTP scoring is disabled. POST JSON to /score_file or /extract_trajectory instead."
                 )
             },
             headers={"Connection": "close"},
@@ -291,9 +290,7 @@ class Reward3DHandler(BaseHTTPRequestHandler):
                 resolved_dynamic_mask_video_path = _resolve_input_file(
                     dynamic_mask_video_path, input_roots, field="dynamic_mask_video_path"
                 )
-                dynamic_masks = load_dynamic_masks(
-                    str(resolved_dynamic_mask_video_path), max_frames=max_frames
-                )
+                dynamic_masks = load_dynamic_masks(str(resolved_dynamic_mask_video_path), max_frames=max_frames)
                 if len(dynamic_masks) != len(frames):
                     raise RequestError(
                         400,
@@ -310,9 +307,7 @@ class Reward3DHandler(BaseHTTPRequestHandler):
                     use_lpips=data.get("use_lpips"),
                 )
 
-            if not reward_3d_manager.last_results or not reward_3d_manager.last_results[
-                "per_video_results"
-            ]:
+            if not reward_3d_manager.last_results or not reward_3d_manager.last_results["per_video_results"]:
                 raise RuntimeError("3D reward backend did not return any per-video result.")
 
             result = dict(reward_3d_manager.last_results["per_video_results"][0])
@@ -323,9 +318,7 @@ class Reward3DHandler(BaseHTTPRequestHandler):
             result["num_workers"] = reward_3d_manager.num_workers
             result["max_frames"] = len(frames)
             result["dynamic_mask_video_path"] = (
-                None
-                if resolved_dynamic_mask_video_path is None
-                else str(resolved_dynamic_mask_video_path)
+                None if resolved_dynamic_mask_video_path is None else str(resolved_dynamic_mask_video_path)
             )
             result["batch_dir"] = reward_3d_manager.last_results["batch_dir"]
             result["reward_3d_server"] = {
@@ -349,10 +342,7 @@ class Reward3DHandler(BaseHTTPRequestHandler):
             )
             output_path = _resolve_output_file(
                 data.get("output_path"),
-                default=(
-                    resolved_video_path.parent
-                    / f"{resolved_video_path.stem}_da3_camera_trajectory.json"
-                ),
+                default=(resolved_video_path.parent / f"{resolved_video_path.stem}_da3_camera_trajectory.json"),
                 output_root=getattr(self.server, "output_root"),
             )
 
@@ -360,18 +350,12 @@ class Reward3DHandler(BaseHTTPRequestHandler):
 
             max_frames = data.get("max_frames")
             process_res = int(data.get("process_res") or 504)
-            frames, frame_indices = load_video_frames_as_jpeg_with_indices(
-                resolved_video_path, max_frames=max_frames
-            )
+            frames, frame_indices = load_video_frames_as_jpeg_with_indices(resolved_video_path, max_frames=max_frames)
             with self.server.inference_lock:
-                trajectory = reward_3d_manager.extract_camera_trajectory(
-                    frames, frame_indices, process_res=process_res
-                )
+                trajectory = reward_3d_manager.extract_camera_trajectory(frames, frame_indices, process_res=process_res)
 
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(
-                json.dumps(trajectory, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-            )
+            output_path.write_text(json.dumps(trajectory, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             self._write_json(
                 200,
                 {
@@ -379,10 +363,7 @@ class Reward3DHandler(BaseHTTPRequestHandler):
                     "path": str(output_path),
                     "frame_indices": frame_indices,
                     "reward_3d_server": {
-                        "url": (
-                            f"http://{self.server.server_address[0]}:"
-                            f"{self.server.server_address[1]}"
-                        ),
+                        "url": (f"http://{self.server.server_address[0]}:{self.server.server_address[1]}"),
                         "model_name": getattr(self.server, "model_name", None),
                     },
                 },
@@ -453,10 +434,7 @@ def main():
     )
     parser.add_argument("--lpips", dest="lpips", action="store_true")
     parser.add_argument("--no-lpips", dest="lpips", action="store_false")
-    parser.set_defaults(
-        lpips=os.getenv("REWARD_3D_USE_LPIPS", "1").strip().lower()
-        not in {"0", "false", "no"}
-    )
+    parser.set_defaults(lpips=os.getenv("REWARD_3D_USE_LPIPS", "1").strip().lower() not in {"0", "false", "no"})
     args = parser.parse_args()
     args.scorer = resolve_vlm_backend(args.scorer)
     args.scoring_model = resolve_model_name(args.scoring_model, args.scorer)
@@ -464,9 +442,7 @@ def main():
 
     if args.max_body_bytes <= 0:
         parser.error("--max-body-bytes must be positive")
-    input_roots = _resolve_roots(
-        args.input_root or _env_path_list("REWARD_3D_INPUT_ROOTS") or [str(Path.cwd())]
-    )
+    input_roots = _resolve_roots(args.input_root or _env_path_list("REWARD_3D_INPUT_ROOTS") or [str(Path.cwd())])
     output_root = _resolve_roots([args.output_root])[0]
 
     is_loopback = _is_loopback_host(args.host)
@@ -482,10 +458,7 @@ def main():
             "Set REWARD_3D_ALLOW_NON_LOOPBACK=1 only on a trusted network."
         )
     if not is_loopback and (auth_token is None or len(auth_token) < 16):
-        raise SystemExit(
-            "A non-loopback 3D reward server requires REWARD_3D_AUTH_TOKEN "
-            "with at least 16 characters."
-        )
+        raise SystemExit("A non-loopback 3D reward server requires REWARD_3D_AUTH_TOKEN with at least 16 characters.")
 
     if args.gpus:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus

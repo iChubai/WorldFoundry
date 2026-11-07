@@ -11,6 +11,7 @@ from tqdm import tqdm
 # SE(3) helpers
 # -----------------------------
 
+
 def quat_to_R_wxyz(qw: float, qx: float, qy: float, qz: float) -> np.ndarray:
     q = np.array([qw, qx, qy, qz], dtype=np.float64)
     n = np.linalg.norm(q)
@@ -18,17 +19,22 @@ def quat_to_R_wxyz(qw: float, qx: float, qy: float, qz: float) -> np.ndarray:
         return np.eye(3, dtype=np.float64)
     q /= n
     w, x, y, z = q
-    return np.array([
-        [1 - 2*(y*y + z*z),     2*(x*y - w*z),     2*(x*z + w*y)],
-        [    2*(x*y + w*z), 1 - 2*(x*x + z*z),     2*(y*z - w*x)],
-        [    2*(x*z - w*y),     2*(y*z + w*x), 1 - 2*(x*x + y*y)],
-    ], dtype=np.float64)
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+        ],
+        dtype=np.float64,
+    )
+
 
 def make_T(R_wc: np.ndarray, t_wc: np.ndarray) -> np.ndarray:
     T = np.eye(4, dtype=np.float64)
     T[:3, :3] = R_wc
     T[:3, 3] = t_wc
     return T
+
 
 def inv_T(T: np.ndarray) -> np.ndarray:
     R = T[:3, :3]
@@ -38,15 +44,18 @@ def inv_T(T: np.ndarray) -> np.ndarray:
     Ti[:3, 3] = -R.T @ t
     return Ti
 
+
 def rot_angle_deg(R: np.ndarray) -> float:
     tr = np.trace(R)
     cos = (tr - 1.0) / 2.0
     cos = float(np.clip(cos, -1.0, 1.0))
     return float(np.degrees(np.arccos(cos)))
 
+
 # -----------------------------
 # Sim(3) Umeyama alignment
 # -----------------------------
+
 
 def umeyama_sim3(X: np.ndarray, Y: np.ndarray) -> Tuple[float, np.ndarray, np.ndarray]:
     """
@@ -73,6 +82,7 @@ def umeyama_sim3(X: np.ndarray, Y: np.ndarray) -> Tuple[float, np.ndarray, np.nd
     t = muY - s * (R @ muX)
     return s, R, t
 
+
 def apply_sim3_to_poses(Ts: np.ndarray, s: float, R: np.ndarray, t: np.ndarray) -> np.ndarray:
     """
     Apply Sim(3) to camera->world SE(3) poses:
@@ -84,9 +94,11 @@ def apply_sim3_to_poses(Ts: np.ndarray, s: float, R: np.ndarray, t: np.ndarray) 
     out[:, :3, 3] = (s * (R @ out[:, :3, 3].T)).T + t[None, :]
     return out
 
+
 # -----------------------------
 # RPE
 # -----------------------------
+
 
 def compute_rpe(gt_T: np.ndarray, est_T: np.ndarray, delta: int = 1) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -112,11 +124,14 @@ def compute_rpe(gt_T: np.ndarray, est_T: np.ndarray, delta: int = 1) -> Tuple[np
         rotdeg[i] = rot_angle_deg(E[:3, :3])
     return trans, rotdeg
 
+
 def _sha1(s: str) -> str:
     return hashlib.sha1(s.encode("utf-8")).hexdigest()[:12]
 
 
-def run_cmd(cmd: List[str], cwd: Optional[Path] = None, quiet: bool = False, env: Optional[Dict[str, str]] = None) -> None:
+def run_cmd(
+    cmd: List[str], cwd: Optional[Path] = None, quiet: bool = False, env: Optional[Dict[str, str]] = None
+) -> None:
     """
     Run a shell command.
 
@@ -135,12 +150,16 @@ def run_cmd(cmd: List[str], cwd: Optional[Path] = None, quiet: bool = False, env
         proc_env.update(env)
 
     if quiet:
-        p = subprocess.run(cmd, cwd=str(cwd) if cwd else None,
-                          stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-                          text=True, env=proc_env)
+        p = subprocess.run(
+            cmd,
+            cwd=str(cwd) if cwd else None,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=proc_env,
+        )
     else:
-        p = subprocess.run(cmd, cwd=str(cwd) if cwd else None,
-                          stderr=subprocess.PIPE, text=True, env=proc_env)
+        p = subprocess.run(cmd, cwd=str(cwd) if cwd else None, stderr=subprocess.PIPE, text=True, env=proc_env)
 
     if p.returncode != 0:
         error_msg = f"Command failed: {' '.join(cmd)}"
@@ -153,7 +172,7 @@ def find_images_txt(root: Path) -> Optional[Path]:
     for dp, _, fns in os.walk(root):
         for fn in fns:
             if fn == "images.txt":
-                return (Path(dp) / fn)
+                return Path(dp) / fn
 
 
 def vipe_to_colmap(out_dir: Path, vipe_repo: Path, gpu_id: int = 0) -> None:
@@ -205,8 +224,16 @@ def parse_colmap_images_txt(images_txt: Path) -> Tuple[np.ndarray, int]:
     poses = np.stack([e[1] for e in entries], axis=0)
     return poses, len(entries)
 
-def extract_traj(video: Path, cache_dir: Path, pipeline: str = "default", gt_cache_path: Path = None,
-                 expected_frames: int = 97, verbose_prefix: str = "", gpu_id: int = 0) -> np.ndarray:
+
+def extract_traj(
+    video: Path,
+    cache_dir: Path,
+    pipeline: str = "default",
+    gt_cache_path: Path = None,
+    expected_frames: int = 97,
+    verbose_prefix: str = "",
+    gpu_id: int = 0,
+) -> np.ndarray:
     """
     Extract camera trajectory from video using ViPE.
 
@@ -233,9 +260,13 @@ def extract_traj(video: Path, cache_dir: Path, pipeline: str = "default", gt_cac
         if cached_images_txt.exists():
             poses, num_images = parse_colmap_images_txt(cached_images_txt)
             if num_images < expected_frames:
-                tqdm.write(f"{verbose_prefix}  Cache validation failed: expected {expected_frames} frames, got {num_images}. Re-running ViPE...")
+                tqdm.write(
+                    f"{verbose_prefix}  Cache validation failed: expected {expected_frames} frames, got {num_images}. Re-running ViPE..."
+                )
             else:
-                tqdm.write(f"{verbose_prefix}  Using cached GT trajectory: {cached_images_txt.name}, num_images:{num_images}, expected:{expected_frames}")
+                tqdm.write(
+                    f"{verbose_prefix}  Using cached GT trajectory: {cached_images_txt.name}, num_images:{num_images}, expected:{expected_frames}"
+                )
                 return poses[:expected_frames]
 
     # Run ViPE inference (quietly)
@@ -243,8 +274,11 @@ def extract_traj(video: Path, cache_dir: Path, pipeline: str = "default", gt_cac
     out_dir = cache_dir / "vipe" / key
     out_dir.mkdir(parents=True, exist_ok=True)
     tqdm.write(f"{verbose_prefix}  Running ViPE inference: {video.name} -> {out_dir.name}...")
-    run_cmd(["vipe", "infer", str(video), "--output", str(out_dir), "--pipeline", pipeline],
-            quiet=True, env={"CUDA_VISIBLE_DEVICES": str(gpu_id)})
+    run_cmd(
+        ["vipe", "infer", str(video), "--output", str(out_dir), "--pipeline", pipeline],
+        quiet=True,
+        env={"CUDA_VISIBLE_DEVICES": str(gpu_id)},
+    )
 
     tqdm.write(f"{verbose_prefix}  Converting to COLMAP format...")
     vipe_to_colmap(out_dir, Path("vipe"), gpu_id=gpu_id)
@@ -263,6 +297,7 @@ def extract_traj(video: Path, cache_dir: Path, pipeline: str = "default", gt_cac
         gt_cache_path.mkdir(parents=True, exist_ok=True)
         cached_images_txt = gt_cache_path / "images.txt"
         import shutil
+
         shutil.copy2(images_txt, cached_images_txt)
         tqdm.write(f"{verbose_prefix}  Cached GT trajectory to: {cached_images_txt.name}")
 
@@ -270,11 +305,11 @@ def extract_traj(video: Path, cache_dir: Path, pipeline: str = "default", gt_cac
     tqdm.write(f"{verbose_prefix}  Extracted {num_images} poses")
     return poses
 
+
 def bucket_for_action(a: str) -> str:
     a = a.lower()
     if a in {"w", "a", "s", "d", "forward", "backward", "left", "right"}:
         return "translation"
-    if a in {"cam_left", "cam_right", "cam_up", "cam_down",
-             "yaw_left", "yaw_right", "pitch_up", "pitch_down"}:
+    if a in {"cam_left", "cam_right", "cam_up", "cam_down", "yaw_left", "yaw_right", "pitch_up", "pitch_down"}:
         return "rotation"
     return "other"

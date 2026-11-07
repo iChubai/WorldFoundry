@@ -28,14 +28,13 @@ def _embed(img: np.ndarray, device: str = None) -> np.ndarray:
 def _phase_indices(start: int, end: int, n: int, total: int) -> list:
     """Uniformly spaced indices in [start, end], clamped to [0, total-1]."""
     start = max(0, min(start, total - 1))
-    end   = max(start, min(end, total - 1))
+    end = max(start, min(end, total - 1))
     if n <= 1 or start == end:
         return [start]
     return [start + int(i * (end - start) / (n - 1)) for i in range(n)]
 
 
-def scene_consistency_score(frames, n_sample: int = 9, device: str = None,
-                             start: int = 0, end: int = None) -> dict:
+def scene_consistency_score(frames, n_sample: int = 9, device: str = None, start: int = 0, end: int = None) -> dict:
     """
     Mean CLIP cosine similarity between consecutive sampled frames within
     [start, end]. Catches sudden scene identity shifts or jump cuts.
@@ -59,13 +58,12 @@ def scene_consistency_score(frames, n_sample: int = 9, device: str = None,
     consecutive_sims = [float(np.dot(embs[i], embs[i + 1])) for i in range(len(embs) - 1)]
 
     return {
-        "scene_consistency":   round(float(np.mean(consecutive_sims)), 4),
-        "min_consecutive_sim": round(float(np.min(consecutive_sims)),  4),
+        "scene_consistency": round(float(np.mean(consecutive_sims)), 4),
+        "min_consecutive_sim": round(float(np.min(consecutive_sims)), 4),
     }
 
 
-def revisit_metrics(frames, h_start: int, r_start: int,
-                    n_sample: int = 6, device: str = None) -> dict:
+def revisit_metrics(frames, h_start: int, r_start: int, n_sample: int = 6, device: str = None) -> dict:
     """
     Phase-aware V-D-R metrics using CLIP similarity vs frame_0 as the anchor.
 
@@ -118,7 +116,7 @@ def revisit_metrics(frames, h_start: int, r_start: int,
         recovery = float(np.clip((s_R - s_H) / drop, 0.0, 1.0))
 
     # RevisitBridge: continuity at the D→R boundary
-    emb_h_end   = _embed(frames.get(h), device)
+    emb_h_end = _embed(frames.get(h), device)
     emb_r_start = _embed(frames.get(r), device)
     bridge = float(np.dot(emb_h_end, emb_r_start))
 
@@ -127,17 +125,16 @@ def revisit_metrics(frames, h_start: int, r_start: int,
     occlusion_drop = float(np.clip((s_O - s_H) / (s_O + 1e-6), 0.0, 1.0))
 
     return {
-        "revisit_recovery": round(recovery,       4),
-        "revisit_bridge":   round(bridge,         4),
-        "occlusion_drop":   round(occlusion_drop, 4),
-        "s_O":              round(s_O, 4),
-        "s_H":              round(s_H, 4),
-        "s_R":              round(s_R, 4),
+        "revisit_recovery": round(recovery, 4),
+        "revisit_bridge": round(bridge, 4),
+        "occlusion_drop": round(occlusion_drop, 4),
+        "s_O": round(s_O, 4),
+        "s_H": round(s_H, 4),
+        "s_R": round(s_R, 4),
     }
 
 
-def prompt_alignment_score(frames, prompt: str, n_sample: int = 5,
-                           device: str = None) -> float:
+def prompt_alignment_score(frames, prompt: str, n_sample: int = 5, device: str = None) -> float:
     """
     CLIP text-image cosine similarity between the text prompt and sampled frames.
     Measures how well the generated video follows the input instruction.
@@ -153,8 +150,7 @@ def prompt_alignment_score(frames, prompt: str, n_sample: int = 5,
     return round(float(np.mean(sims)), 4)
 
 
-def clip_frame_similarity(img_a: np.ndarray, img_b: np.ndarray,
-                           device: str = None) -> float:
+def clip_frame_similarity(img_a: np.ndarray, img_b: np.ndarray, device: str = None) -> float:
     """
     CLIP cosine similarity between two BGR frames.
     Used for GT-grounded R-phase comparison: generated frame vs GT frame.

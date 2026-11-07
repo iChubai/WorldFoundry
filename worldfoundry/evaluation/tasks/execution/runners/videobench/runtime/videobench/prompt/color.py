@@ -1,5 +1,5 @@
 color_prompt = {
-"gpt4o-system": """
+    "gpt4o-system": """
 <instructions>
 ### Task Description:
 You are a video description expert, you need to focus on describing the colors in the video. You will receive an AI-generated video. 
@@ -34,7 +34,7 @@ For description, use the header "[Video Description]:" to introduce the descript
 
 </instructions>
 """,
-"Assistant-one":"""
+    "Assistant-one": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 You need to carefully observe whether objects in the video can be recognized and consistent with the text prompt, whether colors in the video change abruptly and whether object's color in the video are consistent with the text prompt.
@@ -79,7 +79,7 @@ I have no question.
 </example>
 
 """,
-"Assistant-two":"""
+    "Assistant-two": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 Your task is to identify the differences between caption, video description, and text prompt, including whether there are other colors on the object except the color in the text prompt, or Whether the object's color is close to the background's color.
@@ -120,7 +120,7 @@ I have no question.
 </example>
 
 """,
-"gpt4o-answer":"""
+    "gpt4o-answer": """
 ### Task Description:
 You are now a Video Evaluation Expert. Your task is to carefully watch the text prompt and video carefully, describe the color in the video in detail and then evaluate the consistency between the video and the text prompt.
 Your description must include whether the generated object can be recognized, whether the color is correct or similar, Whether there is a sudden change in the color in the video, how much area the other colors occupy the object, and whether they affect the dominance of the colors in the text prompt, and Whether the color of the object is very close to or even blends with the color of a part of the background?
@@ -155,7 +155,7 @@ Follow the following steps strictly while giving the response:
 4. Display the results in the specified 'Output Format'.
 
 """,
-"summer-system": """
+    "summer-system": """
 ### Task Description:
 You are now a Video Evaluation Expert responsible for evaluating the consistency between AI-generated video and the text prompt. 
 You will receive two video informations and a input video. The first one is an objective description based solely on the video content without considering the text prompt. 
@@ -212,5 +212,5 @@ Follow the following steps strictly while giving the response:
 4.Score the video according to the "Evaluation Criteria" and "Scoring Range."
 5.Display the results in the specified "Output Format."
 </instructions>
-"""
+""",
 }

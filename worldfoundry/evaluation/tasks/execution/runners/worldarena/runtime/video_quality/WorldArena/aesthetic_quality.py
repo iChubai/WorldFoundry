@@ -39,7 +39,7 @@ def laion_aesthetic(aesthetic_model, clip_model, video_list, device):
 
         aesthetic_scores_list = []
         for i in range(0, len(images), batch_size):
-            image_batch = images[i:i + batch_size]
+            image_batch = images[i : i + batch_size]
             image_batch = image_transform(image_batch)
             image_batch = image_batch.to(device)
 
@@ -55,7 +55,7 @@ def laion_aesthetic(aesthetic_model, clip_model, video_list, device):
         cur_avg = torch.mean(normalized_aesthetic_scores, dim=0, keepdim=True)
         aesthetic_avg += cur_avg.item()
         num += 1
-        video_results.append({'video_path': video_path, 'video_results': cur_avg.item()})
+        video_results.append({"video_path": video_path, "video_results": cur_avg.item()})
 
     aesthetic_avg /= num
     return aesthetic_avg, video_results
@@ -63,8 +63,8 @@ def laion_aesthetic(aesthetic_model, clip_model, video_list, device):
 
 def compute_aesthetic_quality(json_dir, submodules_list, **kwargs):
     device = get_current_torch_device()
-    vit_path = submodules_list.get('clip_model')
-    aes_path = submodules_list.get('aesthetic_head')
+    vit_path = submodules_list.get("clip_model")
+    aes_path = submodules_list.get("aesthetic_head")
     if vit_path is None or aes_path is None:
         raise ValueError("aesthetic_quality requires clip_model and aesthetic_head checkpoints from config")
     if get_rank() == 0:
@@ -74,10 +74,10 @@ def compute_aesthetic_quality(json_dir, submodules_list, **kwargs):
         barrier()
         aesthetic_model = get_aesthetic_model(aes_path).to(device)
     clip_model, preprocess = clip.load(vit_path, device=device)
-    video_list, _ = load_dimension_info(json_dir, dimension='aesthetic_quality', lang='en')
+    video_list, _ = load_dimension_info(json_dir, dimension="aesthetic_quality", lang="en")
     video_list = distribute_list_to_rank(video_list)
     all_results, video_results = laion_aesthetic(aesthetic_model, clip_model, video_list, device)
     if get_world_size() > 1:
         video_results = gather_list_of_dict(video_results)
-        all_results = sum([d['video_results'] for d in video_results]) / len(video_results)
+        all_results = sum([d["video_results"] for d in video_results]) / len(video_results)
     return all_results, video_results

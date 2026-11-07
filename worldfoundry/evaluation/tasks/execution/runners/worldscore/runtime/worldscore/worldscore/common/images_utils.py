@@ -1,11 +1,17 @@
 import requests
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import handle_module_not_found_error
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.general import is_url
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import (
+    handle_module_not_found_error,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.general import (
+    is_url,
+)
+
 try:
     from PIL import Image
 except ModuleNotFoundError as e:
     handle_module_not_found_error(e, ["images"])
+
 
 def open_image(image_location: str) -> Image.Image:
     """

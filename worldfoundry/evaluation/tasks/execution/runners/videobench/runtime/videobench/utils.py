@@ -1,6 +1,6 @@
 import os
 import re
-from pathlib import Path    
+from pathlib import Path
 import json
 import cv2
 import time
@@ -8,20 +8,21 @@ import base64
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
+
 class Video_Dataset:
     def __init__(self, cur_full_info_path):
         self.json_path = cur_full_info_path
         self.annotations = self.load_annotations()
 
     def load_annotations(self):
-        with open(self.json_path, 'r') as f:
+        with open(self.json_path, "r") as f:
             return json.load(f)
 
     def extract_frames(self, video_path, extract_frames_persecond, resize_fx, resize_fy):
         """Extract frames from a video file"""
         frames = []
         video = cv2.VideoCapture(video_path)
-        
+
         if not video.isOpened():
             print(f"Error: Cannot open video file {video_path}")
             return frames
@@ -32,7 +33,7 @@ class Video_Dataset:
 
         curr_frame = 1
         end_frame = total_frames - 1
-        
+
         while curr_frame < total_frames - 1:
             video.set(cv2.CAP_PROP_POS_FRAMES, curr_frame)
             success, frame = video.read()
@@ -59,7 +60,7 @@ class Video_Dataset:
         """Process videos from a dictionary of model:path pairs"""
         # 只为videos_dict中存在的模型创建条目
         base64Frames = {model: [] for model in videos_dict.keys()}
-        
+
         # Process each video in the dictionary
         for model_name, video_path in videos_dict.items():
             frames = self.extract_frames(video_path, extract_frames_persecond, resize_fx, resize_fy)
@@ -97,7 +98,7 @@ class Video_Dataset:
                     grid_image = np.zeros((height, extract_frames_persecond * width, 3))
 
                     for j in range(extract_frames_persecond):
-                        grid_image[0:height, j * width:(j + 1) * width] = frames[j]
+                        grid_image[0:height, j * width : (j + 1) * width] = frames[j]
 
                     _, buffer = cv2.imencode(".jpg", grid_image)
                     base64Frames[model_name].append(base64.b64encode(buffer).decode("utf-8"))
@@ -108,10 +109,8 @@ class Video_Dataset:
         with ThreadPoolExecutor() as executor:
             futures = []
             for model_name, video_path in videos_dict.items():
-                futures.append(
-                    executor.submit(process_video, model_name, video_path)
-                )
-            
+                futures.append(executor.submit(process_video, model_name, video_path))
+
             for future in futures:
                 future.result()
 
@@ -122,21 +121,18 @@ class Video_Dataset:
 
     def __getitem__(self, idx):
         """Get item from dataset
-        
+
         Returns:
             dict: Contains frames, grid_frames and prompt for the video
         """
         annotation = self.annotations[idx]
-        
+
         # Process videos using the videos dictionary
-        frames = self.process_video(annotation['videos'], 2)
-        grid_frames = self.process_video2gridview(annotation['videos'], 8)
-        
-        return {
-            'frames': frames,
-            'grid_frames': grid_frames,
-            'prompt': annotation['prompt_en']
-        }
+        frames = self.process_video(annotation["videos"], 2)
+        grid_frames = self.process_video2gridview(annotation["videos"], 8)
+
+        return {"frames": frames, "grid_frames": grid_frames, "prompt": annotation["prompt_en"]}
+
 
 def get_prompt_from_filename(path: str):
     """
@@ -144,24 +140,26 @@ def get_prompt_from_filename(path: str):
     2. prompt.suffix -> prompt
     """
     prompt = Path(path).stem
-    number_ending = r'-\d+$' # checks ending with -<number>
+    number_ending = r"-\d+$"  # checks ending with -<number>
     if re.search(number_ending, prompt):
-        return re.sub(number_ending, '', prompt)
+        return re.sub(number_ending, "", prompt)
     return prompt
 
+
 def save_json(data, path, indent=4):
-    with open(path, 'w', encoding='utf-8') as f:
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=indent)
+
 
 def load_json(path):
     """
     Load a JSON file from the given file path.
-    
+
     Parameters:
     - file_path (str): The path to the JSON file.
-    
+
     Returns:
     - data (dict or list): The data loaded from the JSON file, which could be a dictionary or a list.
     """
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)

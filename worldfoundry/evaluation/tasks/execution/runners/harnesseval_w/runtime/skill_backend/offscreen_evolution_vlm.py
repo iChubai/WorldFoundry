@@ -29,9 +29,7 @@ def _responses_input(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             if item.get("type") == "text":
                 content.append({"type": "input_text", "text": item.get("text", "")})
             elif item.get("type") == "image_url":
-                content.append(
-                    {"type": "input_image", "image_url": item.get("image_url")}
-                )
+                content.append({"type": "input_image", "image_url": item.get("image_url")})
         converted.append({"role": role, "content": content})
     return converted
 
@@ -131,16 +129,10 @@ class OpenAICompatibleBackend:
             raise ValueError(f"unsupported VLM wire API: {wire_api}")
         self.version = self.model
         if self.wire_api in {"responses", "response"}:
-            endpoint = (
-                self.base_url
-                if self.base_url.endswith("/responses")
-                else f"{self.base_url}/responses"
-            )
+            endpoint = self.base_url if self.base_url.endswith("/responses") else f"{self.base_url}/responses"
         else:
             endpoint = (
-                self.base_url
-                if self.base_url.endswith("/chat/completions")
-                else f"{self.base_url}/chat/completions"
+                self.base_url if self.base_url.endswith("/chat/completions") else f"{self.base_url}/chat/completions"
             )
         self.config_digest = value_digest(
             {
@@ -153,9 +145,7 @@ class OpenAICompatibleBackend:
             }
         )
 
-    def _targets_and_body(
-        self, messages: list[dict[str, Any]]
-    ) -> tuple[list[str], dict[str, Any]]:
+    def _targets_and_body(self, messages: list[dict[str, Any]]) -> tuple[list[str], dict[str, Any]]:
         if self.wire_api in {"responses", "response"}:
             urls = (
                 [self.base_url]
@@ -242,9 +232,7 @@ class OpenAICompatibleBackend:
                 if status is not None and status not in retryable:
                     break
                 if attempt <= self.retries:
-                    time.sleep(
-                        min(0.5 * (2 ** (attempt - 1)), 8.0) + random.uniform(0.0, 0.25)
-                    )
+                    time.sleep(min(0.5 * (2 ** (attempt - 1)), 8.0) + random.uniform(0.0, 0.25))
             if response is not None:
                 break
             if attempts and attempts[-1]["status_code"] not in {404, 405}:

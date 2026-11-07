@@ -63,10 +63,10 @@ def _sampling_text(*, fps: str | None, frames_used: int | None) -> str:
 
 
 def _is_native_d3d4_score(probe: Any) -> bool:
-    return (
-        str(getattr(probe, "role", "")) == "score"
-        and str(getattr(probe, "dimension", "")) in {"spatial_fidelity", "state_fidelity"}
-    )
+    return str(getattr(probe, "role", "")) == "score" and str(getattr(probe, "dimension", "")) in {
+        "spatial_fidelity",
+        "state_fidelity",
+    }
 
 
 def _is_spatial_fidelity(probe: Any) -> bool:

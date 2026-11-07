@@ -39,11 +39,7 @@ def compute_packet_statistics(
         if isinstance(img_batch, list):
             img_batch = img_batch[0]
         img_batch = img_batch.to(device)
-        packets.append(
-            forward_wavelet_packet_transform(
-                img_batch, wavelet, max_level, log_scale
-            ).cpu()
-        )
+        packets.append(forward_wavelet_packet_transform(img_batch, wavelet, max_level, log_scale).cpu())
     packet_tensor = th.cat(packets, dim=0)
     packet_tensor = th.permute(packet_tensor, (1, 0, 2, 3, 4))
     P, BS, C, H, W = packet_tensor.shape
@@ -54,9 +50,7 @@ def compute_packet_statistics(
     def gpu_cov(tensor_):
         return th.cov(tensor_.T).cpu()
 
-    sigma = th.stack(
-        [gpu_cov(packet_tensor[p, :, :].to(device)) for p in range(P)], dim=0
-    ).numpy()
+    sigma = th.stack([gpu_cov(packet_tensor[p, :, :].to(device)) for p in range(P)], dim=0).numpy()
     return mu, sigma
 
 
@@ -91,9 +85,7 @@ def calculate_path_statistics(
             sigma = fp["sigma"][:]
     else:
         posfix_path = pathlib.Path(path)
-        img_names = sorted(
-            [name for ext in IMAGE_EXTS for name in posfix_path.glob(f"*.{ext}")]
-        )
+        img_names = sorted([name for ext in IMAGE_EXTS for name in posfix_path.glob(f"*.{ext}")])
         transfs_list = []
         if resize is not None:
             print(f"Resizing images to {(resize, resize)} resolution")
@@ -161,13 +153,9 @@ def compute_fwd(
             raise RuntimeError(f"Invalid path: {path}")
 
     print(f"Computing stats for path: {paths[0]}")
-    mu_1, sigma_1 = calculate_path_statistics(
-        paths[0], wavelet, max_level, log_scale, batch_size, resize
-    )
+    mu_1, sigma_1 = calculate_path_statistics(paths[0], wavelet, max_level, log_scale, batch_size, resize)
     print(f"Computing stats for path: {paths[1]}")
-    mu_2, sigma_2 = calculate_path_statistics(
-        paths[1], wavelet, max_level, log_scale, batch_size, resize
-    )
+    mu_2, sigma_2 = calculate_path_statistics(paths[1], wavelet, max_level, log_scale, batch_size, resize)
 
     print("Computing Frechet distances for each packet.")
     return _compute_avg_frechet_distance(mu_1, mu_2, sigma_1, sigma_2)
@@ -202,9 +190,7 @@ def _save_packets(
         raise RuntimeError(f"Stats file already exists at the given path: {paths[1]}")
 
     print(f"Computing stats for path: {paths[0]}")
-    mu_1, sigma_1 = calculate_path_statistics(
-        paths[0], wavelet, max_level, log_scale, batch_size, resize
-    )
+    mu_1, sigma_1 = calculate_path_statistics(paths[0], wavelet, max_level, log_scale, batch_size, resize)
     np.savez_compressed(paths[1], mu=mu_1, sigma=sigma_1)
 
 

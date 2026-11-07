@@ -19,6 +19,7 @@ def _load_raft(device: str = None):
     _raft_device = device
 
     from torchvision.models.optical_flow import raft_large, Raft_Large_Weights
+
     _raft = raft_large(weights=Raft_Large_Weights.DEFAULT).to(device).eval()
     return _raft, _raft_device
 
@@ -30,8 +31,7 @@ def _to_tensor(img_bgr: np.ndarray, device: str) -> torch.Tensor:
 
 
 @torch.no_grad()
-def _warp_error(model, device: str,
-                img1: np.ndarray, img2: np.ndarray) -> float:
+def _warp_error(model, device: str, img1: np.ndarray, img2: np.ndarray) -> float:
     """
     RAFT flow img1→img2, warp img1, return mean L1 photometric error.
     Frames are padded to the next multiple of 8 as required by RAFT,
@@ -52,27 +52,25 @@ def _warp_error(model, device: str,
         t1_in, t2_in = t1, t2
 
     # RAFT returns a list of refinements; the last is the finest estimate
-    flow = model(t1_in, t2_in)[-1]   # [1, 2, H', W']
+    flow = model(t1_in, t2_in)[-1]  # [1, 2, H', W']
 
     # Crop flow back to original spatial size before computing warp
-    flow = flow[:, :, :H, :W]        # [1, 2, H, W]
+    flow = flow[:, :, :H, :W]  # [1, 2, H, W]
 
     gy, gx = torch.meshgrid(
         torch.arange(H, dtype=torch.float32, device=device),
         torch.arange(W, dtype=torch.float32, device=device),
         indexing="ij",
     )
-    wx = (gx + flow[0, 0]) / (W - 1) * 2.0 - 1.0   # normalised to [-1, 1]
+    wx = (gx + flow[0, 0]) / (W - 1) * 2.0 - 1.0  # normalised to [-1, 1]
     wy = (gy + flow[0, 1]) / (H - 1) * 2.0 - 1.0
     grid = torch.stack([wx, wy], dim=-1).unsqueeze(0)  # [1, H, W, 2]
 
-    warped = F.grid_sample(t1, grid, mode="bilinear",
-                           padding_mode="border", align_corners=True)
+    warped = F.grid_sample(t1, grid, mode="bilinear", padding_mode="border", align_corners=True)
     return float((warped - t2).abs().mean().item())
 
 
-def temporal_flow_score(frames, start: int, end: int,
-                        sample_step: int = 4, device: str = None) -> float:
+def temporal_flow_score(frames, start: int, end: int, sample_step: int = 4, device: str = None) -> float:
     """
     Motion smoothness via RAFT optical-flow warp error (VBench formulation).
 
@@ -91,9 +89,6 @@ def temporal_flow_score(frames, start: int, end: int,
     if len(idxs) < 3:
         return 0.0
 
-    errs = [
-        _warp_error(model, device, frames.get(idxs[i]), frames.get(idxs[i + 1]))
-        for i in range(len(idxs) - 1)
-    ]
+    errs = [_warp_error(model, device, frames.get(idxs[i]), frames.get(idxs[i + 1])) for i in range(len(idxs) - 1)]
     mean_err = float(np.mean(errs)) if errs else 1.0
     return float(np.exp(-mean_err / 0.15))

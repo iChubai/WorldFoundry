@@ -1,4 +1,5 @@
 r"""Custom layers used in metrics computations"""
+
 import torch
 from typing import Optional
 
@@ -9,6 +10,7 @@ class L2Pool2d(torch.nn.Module):
     r"""Applies L2 pooling with Hann window of size 3x3
     Args:
         x: Tensor with shape (N, C, H, W)"""
+
     EPS = 1e-12
 
     def __init__(self, kernel_size: int = 3, stride: int = 2, padding=1) -> None:
@@ -24,10 +26,5 @@ class L2Pool2d(torch.nn.Module):
             C = x.size(1)
             self.kernel = hann_filter(self.kernel_size).repeat((C, 1, 1, 1)).to(x)
 
-        out = torch.nn.functional.conv2d(
-            x ** 2, self.kernel,
-            stride=self.stride,
-            padding=self.padding,
-            groups=x.shape[1]
-        )
+        out = torch.nn.functional.conv2d(x**2, self.kernel, stride=self.stride, padding=self.padding, groups=x.shape[1])
         return (out + self.EPS).sqrt()

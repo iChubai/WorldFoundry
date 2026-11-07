@@ -15,7 +15,8 @@ from pathlib import Path
 import os
 
 
-BACKGROUND_CLASS = ['wall', 'floor', 'ceiling', 'carpet', 'door', 'rug', 'bath mat']
+BACKGROUND_CLASS = ["wall", "floor", "ceiling", "carpet", "door", "rug", "bath mat"]
+
 
 def get_indoor_classes(type):
     if type == "scannet200":
@@ -83,9 +84,8 @@ class ARDataset(TaskDataset):
         self,
         subset=None,
         debug_len=2000,
-        data_dir="data/WIW_datasets/eval_datasets/AR/", # as default
+        data_dir="data/WIW_datasets/eval_datasets/AR/",  # as default
     ):
-
         self.data = []
         self.mp3d_dir = "data/scene_datasets/mp3d"
         exclude_scenes, exclude_ep = set(), dict()
@@ -116,11 +116,7 @@ class ARDataset(TaskDataset):
                         self.data.append(episode)
 
         if subset is not None:
-            self.data = [
-                x
-                for x in self.data
-                if x["difficulty"] == self.DIFFICULTYS.index(subset)
-            ]
+            self.data = [x for x in self.data if x["difficulty"] == self.DIFFICULTYS.index(subset)]
         if debug_len is not None:
             self.data = self.data[:debug_len]
 
@@ -136,9 +132,7 @@ class ARDataset(TaskDataset):
 
     def get_stats(self):
         return {
-            diff_name: len(
-                self.filter_by_lambda(lambda x: x["difficulty"] == diff_value)
-            )
+            diff_name: len(self.filter_by_lambda(lambda x: x["difficulty"] == diff_value))
             for diff_value, diff_name in enumerate(self.DIFFICULTYS)
         }
 
@@ -147,7 +141,7 @@ class ARDataset(TaskDataset):
         return osp.join(
             x["scene_id"],
             "images",
-            f'{x["target_categrory"]}_{x["target_id"]}_000***.png',
+            f"{x['target_categrory']}_{x['target_id']}_000***.png",
         )
 
 
@@ -220,9 +214,7 @@ class AEQADataset(TaskDataset):
         self.frame_dir = osp.join(data_dir, "frames")
         for qa_datum in self.qa_data:
             # * get the first frame
-            pkl_path = osp.join(
-                self.frame_dir, qa_datum["episode_history"], "00000.pkl"
-            )
+            pkl_path = osp.join(self.frame_dir, qa_datum["episode_history"], "00000.pkl")
             with open(pkl_path, "rb") as f:
                 pkl_data = pickle.load(f)
                 agent_state = pkl_data["agent_state"]
@@ -267,4 +259,3 @@ class AEQADataset(TaskDataset):
         if self.reverse_order:
             idx = len(self.data) - 1 - idx
         return self.data[idx]
-

@@ -83,6 +83,7 @@ Answer: {CHOICE_EXAMPLES[choice_format]}
     else:
         raise ValueError(f"Invalid output type: {output_type}")
 
+
 surround_keys = [f"rgb_surround_{view}" for view in VIEW_ORDER]
 
 
@@ -117,6 +118,7 @@ HIGH_LEVEL_PLANNER_PROMPT = dict(
 )
 # fmt: on
 
+
 def get_task_prompt(
     task_type,
     task_stage,
@@ -132,6 +134,7 @@ def get_task_prompt(
         ]
     )
 
+
 def get_answerer_type_prompt(choice_format, task, choice_texts):
     assert choice_texts is not None
     task_name = task.split("_")[0]
@@ -146,6 +149,7 @@ def get_answerer_type_prompt(choice_format, task, choice_texts):
         output_space=output_space,
         output_format=output_format,
     )
+
 
 def get_planner_N_type_prompt(choice_format, task, add_stop):
     task_name = task.split("_")[0]
@@ -164,7 +168,6 @@ def get_planner_N_type_prompt(choice_format, task, add_stop):
 
 
 class PromptMixin:
-
     # ------------------------------------------------------------------ #
     # Message-building helpers (public because users may call them)
     # ------------------------------------------------------------------ #
@@ -180,7 +183,6 @@ class PromptMixin:
         if prompt:
             content.append({"type": "text", "text": str(prompt)})
 
-
         for p in image_paths:
             ext = os.path.splitext(p)[1].lower()
             media_content = {
@@ -190,16 +192,20 @@ class PromptMixin:
             }
             if ext in VIDEO_EXTS:
                 # vLLM video input: {"type": "video_url", "video_url": {"url": ...}}
-                content.append({
-                    "type": "video_url",
-                    "video_url": media_content,
-                })
+                content.append(
+                    {
+                        "type": "video_url",
+                        "video_url": media_content,
+                    }
+                )
             else:
                 # Image path (existing behavior)
-                content.append({
-                    "type": "image_url",
-                    "image_url": media_content,
-                })
+                content.append(
+                    {
+                        "type": "image_url",
+                        "image_url": media_content,
+                    }
+                )
 
         return {"role": "user", "content": content}
 
@@ -298,9 +304,7 @@ class VLM(LMClassifier, PromptMixin):
         "vln_planner_N_action",
         "objnav_planner_N_action",
     }
-    _LOWLEVEL_PLANNER_TASKS_NO_STOP: set[str] = (
-        _LOWLEVEL_PLANNER_TASKS - _LOWLEVEL_PLANNER_TASKS_WITH_STOP
-    )
+    _LOWLEVEL_PLANNER_TASKS_NO_STOP: set[str] = _LOWLEVEL_PLANNER_TASKS - _LOWLEVEL_PLANNER_TASKS_WITH_STOP
     _HIGHLEVEL_PLANNER_TASKS: set[str] = {
         "aeqa_highlevel_planner",
         "vln_highlevel_planner",
@@ -377,7 +381,7 @@ class VLM(LMClassifier, PromptMixin):
         assert self.query_task in self._LOWLEVEL_PLANNER_TASKS, f"Invalid task: {self.query_task}"
         if "ignav" in self.query_task:
             # if act_seq_len == self.look_ahead_action_num: # for internvl3
-            if act_seq_len <= self.look_ahead_action_num: # for qwen2.5vl
+            if act_seq_len <= self.look_ahead_action_num:  # for qwen2.5vl
                 is_valid = True
         elif "aeqa" in self.query_task or "ar" in self.query_task:
             if act_seq_len <= self.look_ahead_action_num:
@@ -398,7 +402,9 @@ class VLM(LMClassifier, PromptMixin):
 
             elif self.query_task in self._HIGHLEVEL_PLANNER_TASKS:
                 response = self._query_next_instruction(
-                    messages, N=query_num, input=tobe_filled,
+                    messages,
+                    N=query_num,
+                    input=tobe_filled,
                 )
 
         return response
@@ -411,15 +417,11 @@ class VLM(LMClassifier, PromptMixin):
         """
         if self.classify_method == "classify_plain":
             assert task in self._ANSWERER_TASKS
-            template = get_answerer_type_prompt(
-                self.choice_format, task, self.categories
-            )
+            template = get_answerer_type_prompt(self.choice_format, task, self.categories)
         elif self.classify_method is None:
             if task in self._LOWLEVEL_PLANNER_TASKS:
                 add_stop = task in self._LOWLEVEL_PLANNER_TASKS_WITH_STOP
-                template = get_planner_N_type_prompt(
-                    self.choice_format, task, add_stop
-                )
+                template = get_planner_N_type_prompt(self.choice_format, task, add_stop)
             elif task in self._HIGHLEVEL_PLANNER_TASKS:
                 template = HIGH_LEVEL_PLANNER_PROMPT[task]
             else:
@@ -443,5 +445,3 @@ class VLM(LMClassifier, PromptMixin):
         else:
             raise KeyError(f"Unknown auxiliary task: {task}")
         return prompt
-
-

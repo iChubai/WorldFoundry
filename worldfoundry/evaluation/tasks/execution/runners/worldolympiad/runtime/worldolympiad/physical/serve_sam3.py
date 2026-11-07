@@ -73,9 +73,7 @@ class SAM3RequestHandler(BaseHTTPRequestHandler):
                     "torch_cuda_available": torch.cuda.is_available(),
                     "torch_current_device": torch.cuda.current_device() if torch.cuda.is_available() else None,
                     "torch_device_name": (
-                        torch.cuda.get_device_name(torch.cuda.current_device())
-                        if torch.cuda.is_available()
-                        else None
+                        torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else None
                     ),
                     "torch_device_count": torch.cuda.device_count(),
                 }
@@ -113,7 +111,9 @@ class SAM3RequestHandler(BaseHTTPRequestHandler):
                 raise ValueError("Request JSON must contain 'video_path'.")
 
             backend = resolve_vlm_backend(payload.get("backend") or getattr(self.server, "vlm_backend", None))
-            model_name = resolve_model_name(payload.get("model_name") or getattr(self.server, "vlm_model", None), backend)
+            model_name = resolve_model_name(
+                payload.get("model_name") or getattr(self.server, "vlm_model", None), backend
+            )
             max_frames = int(payload.get("max_frames") or getattr(self.server, "max_frames", DEFAULT_MAX_FRAMES))
             min_mask_area_ratio = float(
                 payload.get("min_mask_area_ratio")
@@ -162,9 +162,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run a persistent SAM3 segmentation service")
     parser.add_argument("--host", default=os.getenv("SAM3_HOST", "127.0.0.1"), help="Bind host")
     parser.add_argument("--port", type=int, default=int(os.getenv("SAM3_PORT", "8090")), help="Bind port")
-    parser.add_argument("--model", default=os.getenv("SAM3_MODEL", "worldeval/weights/sam3/sam3.pt"), help="SAM3 weights path")
+    parser.add_argument(
+        "--model", default=os.getenv("SAM3_MODEL", "worldeval/weights/sam3/sam3.pt"), help="SAM3 weights path"
+    )
     parser.add_argument("--device", default=os.getenv("SAM3_DEVICE", "cuda:0"), help="SAM3 device inside this process")
-    parser.add_argument("--vlm-backend", default=os.getenv("VLM_BACKEND"), help="Default VLM backend for object extraction")
+    parser.add_argument(
+        "--vlm-backend", default=os.getenv("VLM_BACKEND"), help="Default VLM backend for object extraction"
+    )
     parser.add_argument("--vlm-model", default=os.getenv("VLM_MODEL"), help="Default VLM model for object extraction")
     parser.add_argument("--max-frames", type=int, default=DEFAULT_MAX_FRAMES)
     parser.add_argument("--conf", type=float, default=DEFAULT_SAM_CONF)

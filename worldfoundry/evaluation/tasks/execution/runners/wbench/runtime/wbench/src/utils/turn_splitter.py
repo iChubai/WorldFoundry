@@ -15,6 +15,7 @@ Usage:
     bounds = split_turns("unknown", total_frames=484, chunk_lengths=[4,4,4,4])
     # [(0, 121), (121, 242), (242, 363), (363, 484)]
 """
+
 import math
 import os
 from dataclasses import dataclass, field
@@ -34,6 +35,7 @@ def _split_equal(total_frames: int, n_turns: int) -> List[Tuple[int, int]]:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Model-specific splitting formulas
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _split_model_a(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
     """Model A: 15fps, first segment int(s*15)+1, continuation int(s*15)+1-13 (overlap 13)"""
@@ -145,7 +147,10 @@ _SPLITTER_REGISTRY = {
 }
 
 _EQUAL_SPLIT_MODELS = {
-    "i2v_model_1", "i2v_model_2", "i2v_model_3", "i2v_model_4",
+    "i2v_model_1",
+    "i2v_model_2",
+    "i2v_model_3",
+    "i2v_model_4",
 }
 
 
@@ -188,6 +193,7 @@ def split_turns(
 @dataclass
 class TurnInfo:
     """Parsed result for one turn."""
+
     index: int
     clip_path: Optional[str] = None
     start_frame: int = 0
@@ -201,6 +207,7 @@ class TurnInfo:
 @dataclass
 class ResolvedTurns:
     """Return value of resolve_turns."""
+
     source: str
     video_path: str
     turns: List[TurnInfo] = field(default_factory=list)
@@ -236,21 +243,23 @@ def resolve_turns(
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
 
-    chunk_lengths = [
-        inter.get("chunk_length", 4) for inter in interactions
-    ] if interactions else None
-    bounds = split_turns(model, total_frames, chunk_lengths=chunk_lengths,
-                         n_turns=n_turns, case_id=case_id)
+    chunk_lengths = [inter.get("chunk_length", 4) for inter in interactions] if interactions else None
+    bounds = split_turns(model, total_frames, chunk_lengths=chunk_lengths, n_turns=n_turns, case_id=case_id)
 
     turns = []
     for i, (s, e) in enumerate(bounds):
-        turns.append(TurnInfo(
-            index=i,
-            clip_path=clip_paths[i] if clips_exist else None,
-            start_frame=s, end_frame=e,
-        ))
+        turns.append(
+            TurnInfo(
+                index=i,
+                clip_path=clip_paths[i] if clips_exist else None,
+                start_frame=s,
+                end_frame=e,
+            )
+        )
 
     return ResolvedTurns(
         source="clips" if clips_exist else "bounds",
-        video_path=video_path, turns=turns, n_turns=n_turns,
+        video_path=video_path,
+        turns=turns,
+        n_turns=n_turns,
     )

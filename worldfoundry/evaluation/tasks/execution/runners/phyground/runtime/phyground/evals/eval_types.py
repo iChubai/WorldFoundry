@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 # PromptEntry — parsed from prompts JSON at the boundary
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class PromptEntry:
     """A parsed, validated prompt entry for evaluation.
@@ -24,6 +25,7 @@ class PromptEntry:
     physical_laws: None means the field was absent (skip physical eval),
                    [] means explicitly empty.
     """
+
     prompt: str
     physical_laws: list[str] | None = None
     domain: str = ""
@@ -84,6 +86,7 @@ _VALID_STATUSES = frozenset({SCORED, NOT_OBSERVED, FAILED})
 @dataclass(frozen=True)
 class LawScore:
     """Result of scoring one physical law on one video."""
+
     law: str
     score: int | None
     status: str  # SCORED | NOT_OBSERVED | FAILED
@@ -91,9 +94,7 @@ class LawScore:
 
     def __post_init__(self):
         if self.status not in _VALID_STATUSES:
-            raise ValueError(
-                f"LawScore.status must be one of {_VALID_STATUSES}, got {self.status!r}"
-            )
+            raise ValueError(f"LawScore.status must be one of {_VALID_STATUSES}, got {self.status!r}")
         if self.status == SCORED and self.score is None:
             raise ValueError(f"LawScore({self.law!r}): status='scored' but score is None")
 
@@ -120,9 +121,11 @@ class LawScore:
 # PhysicalSummary — aggregated physical results for one video
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PhysicalSummary:
     """Aggregated physical evaluation for one video."""
+
     laws: dict[str, LawScore]
     missing_laws: list[str]
     coverage: float
@@ -130,11 +133,11 @@ class PhysicalSummary:
 
     @classmethod
     def from_law_scores(
-        cls, law_scores: dict[str, LawScore], total_laws: int,
+        cls,
+        law_scores: dict[str, LawScore],
+        total_laws: int,
     ) -> PhysicalSummary:
-        scored_values = [
-            ls.score for ls in law_scores.values() if ls.status == SCORED
-        ]
+        scored_values = [ls.score for ls in law_scores.values() if ls.status == SCORED]
         missing = [name for name, ls in law_scores.items() if ls.status == FAILED]
         coverage = len(scored_values) / total_laws if total_laws else 0
         avg = sum(scored_values) / len(scored_values) if scored_values else None

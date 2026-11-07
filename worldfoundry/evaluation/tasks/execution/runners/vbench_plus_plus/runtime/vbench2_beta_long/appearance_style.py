@@ -1,4 +1,3 @@
-
 from vbench.appearance_style import compute_appearance_style
 from vbench2_beta_long.utils import reorganize_clips_results
 

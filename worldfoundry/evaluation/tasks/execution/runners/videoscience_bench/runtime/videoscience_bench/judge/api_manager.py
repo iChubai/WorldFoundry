@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Dict, Any, Optional
+
 try:
     from .api_providers import (
         OpenAIVLMAPI,
@@ -32,12 +33,13 @@ SCHEMA_HINT = (
     '    "immutability":1-4,\n'
     '    "dynamism":1-4,\n'
     '    "coherence":1-4\n'
-    '  },\n'
+    "  },\n"
     '  "explanations": {"summary": string, "issues": [string]},\n'
     '  "evidence": {"candidate": [{"t":"0.0s","observation":""}],'
     '               "reference": [{"t":"0.0s","observation":""}]}\n'
-    '}\n'
+    "}\n"
 )
+
 
 def _build_prompt(
     phenomenon: str,
@@ -46,16 +48,18 @@ def _build_prompt(
     cv_metrics: Optional[Dict[str, Any]] = None,
 ) -> str:
     base = (
-        RUBRIC_TEXT + "\n" +
-        SCHEMA_HINT + "\n" +
-        f"Ground-truth phenomenon: {phenomenon}\n\n" +
-        "Ground-truth description (authoritative):\n" +
-        gt_description.strip()
+        RUBRIC_TEXT
+        + "\n"
+        + SCHEMA_HINT
+        + "\n"
+        + f"Ground-truth phenomenon: {phenomenon}\n\n"
+        + "Ground-truth description (authoritative):\n"
+        + gt_description.strip()
     )
 
     if checklist:
         base += "\n\n" + _format_checklist_for_prompt(checklist)
-    
+
     if cv_metrics:
         base += "\n\n" + _format_cv_metrics_for_prompt(cv_metrics)
 
@@ -98,6 +102,7 @@ def _format_checklist_for_prompt(checklist: Dict[str, Any]) -> str:
 
     return "\n".join(lines)
 
+
 def _format_cv_metrics_for_prompt(cv_metrics: Dict[str, Any]) -> str:
     """
     Take CV metrics JSON (from cv_tools/cv_metrics.py) and format a concise,
@@ -129,9 +134,7 @@ def _format_cv_metrics_for_prompt(cv_metrics: Dict[str, Any]) -> str:
     if isinstance(gd, dict):
         ratio = _safe_float(gd, "frames_with_any_detection_ratio")
         if ratio is not None:
-            lines.append(
-                f"- GroundingDINO: target entities detected in ~{ratio * 100:.1f}% of analyzed frames."
-            )
+            lines.append(f"- GroundingDINO: target entities detected in ~{ratio * 100:.1f}% of analyzed frames.")
 
     # ByteTrack – coherence of tracked identities
     bt = results.get("bytetrack")
@@ -212,11 +215,11 @@ def judge_experiment(
     The frontend is responsible for parsing/normalization/scoring.
     """
     extra = dict(extra or {})
-    
+
     # Pull out optional checklist so we don't accidentally pass it to providers
     checklist = extra.pop("checklist", None)
     cv_metrics = extra.pop("cv_metrics", None)
-    
+
     extra["judge_prompt"] = _build_prompt(phenomenon, gt_description, checklist, cv_metrics)
 
     p = (provider or "").lower()

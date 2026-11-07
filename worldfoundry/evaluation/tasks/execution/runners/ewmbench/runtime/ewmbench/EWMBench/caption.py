@@ -56,9 +56,7 @@ def inference(
             outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
 
         generated_ids = [output_ids[len(input_ids) :] for input_ids, output_ids in zip(inputs.input_ids, outputs)]
-        output_text = processor.batch_decode(
-            generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
-        )
+        output_text = processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
 
     except Exception as e:
         print(f"Error: {str(e)}")

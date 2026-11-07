@@ -36,10 +36,10 @@ def _bootstrap_paths_and_aliases():
             _metric = importlib.import_module("metric")
         sys.modules["metric"] = _metric
         sys.modules["vbench2"] = _metric
-        if hasattr(_metric, 'utils'):
-            sys.modules['utils'] = _metric.utils
-        if hasattr(_metric, 'distributed'):
-            sys.modules['vbench2.distributed'] = _metric.distributed
+        if hasattr(_metric, "utils"):
+            sys.modules["utils"] = _metric.utils
+        if hasattr(_metric, "distributed"):
+            sys.modules["vbench2.distributed"] = _metric.distributed
     except Exception:
         pass
 
@@ -105,32 +105,34 @@ def read_dataset_json(path: str) -> List[Dict[str, Any]]:
     }
     Return a flattened list of items with keys: model, dimension, video_list, prompt, auxiliary_info(optional)
     """
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         root = json.load(f)
 
     items: List[Dict[str, Any]] = []
-    models = root.get('models', []) if isinstance(root, dict) else []
+    models = root.get("models", []) if isinstance(root, dict) else []
     for m in models:
-        model_name = m.get('model_name')
-        for cond in m.get('conditions', []) or []:
-            dim_raw = cond.get('condition_meta_info', '')
-            dim_norm = _normalize_dim_name(dim_raw) if dim_raw else ''
-            for p in cond.get('prompts', []) or []:
-                videos = p.get('generated_videos', []) or []
+        model_name = m.get("model_name")
+        for cond in m.get("conditions", []) or []:
+            dim_raw = cond.get("condition_meta_info", "")
+            dim_norm = _normalize_dim_name(dim_raw) if dim_raw else ""
+            for p in cond.get("prompts", []) or []:
+                videos = p.get("generated_videos", []) or []
                 videos = _resolve_dataset_video_paths(path, root, videos)
-                prompt_text = p.get('condition_caption') or ''
-                items.append({
-                    'model': model_name,
-                    'dimension': dim_norm,
-                    'video_list': videos,
-                    'prompt': prompt_text,
-                    'auxiliary_info': p.get('auxiliary_info', []),
-                })
+                prompt_text = p.get("condition_caption") or ""
+                items.append(
+                    {
+                        "model": model_name,
+                        "dimension": dim_norm,
+                        "video_list": videos,
+                        "prompt": prompt_text,
+                        "auxiliary_info": p.get("auxiliary_info", []),
+                    }
+                )
     return items
 
 
 def _normalize_dim_name(name: str) -> str:
-    return name.strip().replace(' ', '_').replace('-', '_').lower()
+    return name.strip().replace(" ", "_").replace("-", "_").lower()
 
 
 DIMENSION_ALIASES = {
@@ -176,9 +178,7 @@ DIMENSION_MODULES = {
     "consistency_style": "consistency_style",
 }
 
-OFFICIAL_DIMENSION_ALIASES = {
-    value: {value} for value in DIMENSION_MODULES
-}
+OFFICIAL_DIMENSION_ALIASES = {value: {value} for value in DIMENSION_MODULES}
 for alias, canonical in DIMENSION_ALIASES.items():
     OFFICIAL_DIMENSION_ALIASES.setdefault(canonical, {canonical}).add(alias)
 
@@ -203,7 +203,9 @@ def _item_matches_dimension(item: Dict[str, Any], requested_dimension: str) -> b
     return item_dimension in _dimension_filter_keys(requested_dimension)
 
 
-def build_model_items(items: List[Dict[str, Any]], model_name: str, dimension: str | None = None) -> List[Dict[str, Any]]:
+def build_model_items(
+    items: List[Dict[str, Any]], model_name: str, dimension: str | None = None
+) -> List[Dict[str, Any]]:
     """
     Filter items by model name and, when possible, by the requested dimension.
 
@@ -212,7 +214,7 @@ def build_model_items(items: List[Dict[str, Any]], model_name: str, dimension: s
     requested dimension has matching rows and fall back to the official behavior
     of using all model rows when no dimension match exists.
     """
-    model_items = [it for it in items if model_name and it.get('model') == model_name]
+    model_items = [it for it in items if model_name and it.get("model") == model_name]
     if not dimension:
         return model_items
     dimension_items = [it for it in model_items if _item_matches_dimension(it, dimension)]
@@ -224,11 +226,11 @@ def create_single_video_item(model_name: str, video_path: str, prompt: str = "")
     Create a single item for evaluating a specific video
     """
     return {
-        'model': model_name,
-        'dimension': 'single_video',  # placeholder dimension
-        'video_list': [video_path],
-        'prompt': prompt or f"Evaluate video: {video_path}",
-        'auxiliary_info': [],
+        "model": model_name,
+        "dimension": "single_video",  # placeholder dimension
+        "video_list": [video_path],
+        "prompt": prompt or f"Evaluate video: {video_path}",
+        "auxiliary_info": [],
     }
 
 
@@ -236,11 +238,7 @@ def validate_video_inputs(model_items: List[Dict[str, Any]]) -> None:
     """Fail closed when a declared benchmark video cannot yield one frame."""
     import cv2
 
-    video_paths = [
-        str(video_path)
-        for item in model_items
-        for video_path in (item.get("video_list", []) or [])
-    ]
+    video_paths = [str(video_path) for item in model_items for video_path in (item.get("video_list", []) or [])]
     if not video_paths:
         raise ValueError("4DWorldBench input contains no generated videos")
     for video_path in video_paths:
@@ -298,7 +296,7 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
         if not os.path.exists(json_file_path):
             print(f"JSON file does not exist: {json_file_path}")
             return False
-        with open(json_file_path, 'r', encoding='utf-8') as f:
+        with open(json_file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
     except Exception as e:
         print(f"Error during automatic question generation (failed to read file): {e}")
@@ -319,7 +317,7 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
 
     targets = []
     for idx, item in enumerate(items):
-        aux = item.get('auxiliary_info', [])
+        aux = item.get("auxiliary_info", [])
         if not aux or len(aux) == 0:
             targets.append(idx)
 
@@ -374,8 +372,8 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
                 if i_ret != idx:
                     i_ret = idx
                 # Only write if originally empty, avoid overwriting existing content
-                if aux_new and not items[i_ret].get('auxiliary_info'):
-                    items[i_ret]['auxiliary_info'] = aux_new
+                if aux_new and not items[i_ret].get("auxiliary_info"):
+                    items[i_ret]["auxiliary_info"] = aux_new
                     changed = True
             except Exception:
                 # Ignore single task failure
@@ -410,7 +408,14 @@ def dynamic_import_dimension(dimension_name: str):
     return importlib.import_module(module_name)
 
 
-def run_dimension(dimension: str, dim_items: List[Dict[str, Any]], json_dir: str, device: str = "cuda:0", model: str = "", dataset_json: str = "") -> Dict[str, Any]:
+def run_dimension(
+    dimension: str,
+    dim_items: List[Dict[str, Any]],
+    json_dir: str,
+    device: str = "cuda:0",
+    model: str = "",
+    dataset_json: str = "",
+) -> Dict[str, Any]:
     mod = dynamic_import_dimension(dimension)
     # dimension module should expose a compute_<dimension>(json_dir, device, submodules_dict, **kwargs)
     func_name = f"compute_{_normalize_dim_name(dimension)}"
@@ -428,14 +433,16 @@ def write_dimension_json(json_dir_root: str, dimension: str, model_items: List[D
     # Transform to VBench-style list of dicts with keys: dimension, video_list, prompt_en, auxiliary_info
     out_items: List[Dict[str, Any]] = []
     for it in model_items:
-        out_items.append({
-            "dimension": [dimension],
-            "video_list": it.get("video_list", []),
-            "prompt_en": it.get("prompt", ""),
-            "auxiliary_info": it.get("auxiliary_info", []),
-        })
+        out_items.append(
+            {
+                "dimension": [dimension],
+                "video_list": it.get("video_list", []),
+                "prompt_en": it.get("prompt", ""),
+                "auxiliary_info": it.get("auxiliary_info", []),
+            }
+        )
     out_path = os.path.join(json_dir_root, f"{dimension}.json")
-    with open(out_path, 'w', encoding='utf-8') as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(out_items, f, indent=2, ensure_ascii=False)
     return out_path
 
@@ -443,9 +450,15 @@ def write_dimension_json(json_dir_root: str, dimension: str, model_items: List[D
 def main():
     _bootstrap_paths_and_aliases()
     parser = argparse.ArgumentParser(description="4DWorldBench in-tree official runtime")
-    parser.add_argument("--dataset_json", help="Path to dataset JSON, e.g., condition_to_4D/text-to-any/text_to_3d_dataset.json")
+    parser.add_argument(
+        "--dataset_json", help="Path to dataset JSON, e.g., condition_to_4D/text-to-any/text_to_3d_dataset.json"
+    )
     parser.add_argument("--model", required=True, help="Model name to filter items")
-    parser.add_argument("--dimension", required=True, help="Dimension/metric script to run (e.g., dynamic_attribute, camera_motion, etc.)")
+    parser.add_argument(
+        "--dimension",
+        required=True,
+        help="Dimension/metric script to run (e.g., dynamic_attribute, camera_motion, etc.)",
+    )
     parser.add_argument("--prompt", default="", help="Optional single prompt override for the specified dimension.")
     parser.add_argument("--video_path", help="Optional path to a single video file for evaluation")
     parser.add_argument("--device", default="cuda:0")
@@ -467,22 +480,22 @@ def main():
         if not os.path.exists(args.video_path):
             print(f"Error: Video file '{args.video_path}' does not exist.")
             return 2
-        
+
         model_items = [create_single_video_item(args.model, args.video_path, args.prompt)]
         print("[4dworldbench] Single video evaluation mode")
         print(f"  - Model: {args.model}")
         print(f"  - Video: {args.video_path}")
         print(f"  - Dimension: {args.dimension}")
-        
+
     else:
         # Dataset evaluation mode
         if not args.dataset_json:
             print("Error: Either --dataset_json or --video_path must be specified.")
             return 2
-            
+
         items = read_dataset_json(args.dataset_json)
         model_items = build_model_items(items, args.model, args.dimension)
-        
+
         if not model_items:
             print(f"No items found for model '{args.model}' in the dataset.")
             return 2
@@ -499,23 +512,32 @@ def main():
     # Use the canonical metric id for module dispatch and normalized outputs.
     requested_dimension = args.dimension
     dimension = canonical_dimension_name(requested_dimension)
-    
+
     # Write dimension JSON
     dim_json_path = write_dimension_json(args.json_out_dir, dimension, model_items)
-    
+
     # Automatically detect and generate questions (if needed)
-    questions_generated = False if args.skip_question_generation else auto_generate_questions_if_needed(dim_json_path, dimension)
+    questions_generated = (
+        False if args.skip_question_generation else auto_generate_questions_if_needed(dim_json_path, dimension)
+    )
     if questions_generated:
         print(f"Automatically generated evaluation questions for dimension '{dimension}'")
-    
+
     # Ensure questions if needed
     ensure_questions_for_dimension(dimension, args.qa_dir, dim_json_path)
     # Run evaluation
     print(f"[4dwordbench] Running dimension '{dimension}' with {len(model_items)} items from model '{args.model}'...")
     start = time.time()
-    
-    #try:
-    result = run_dimension(dimension, model_items, dim_json_path, device=args.device, model=args.model, dataset_json=args.dataset_json or "")
+
+    # try:
+    result = run_dimension(
+        dimension,
+        model_items,
+        dim_json_path,
+        device=args.device,
+        model=args.model,
+        dataset_json=args.dataset_json or "",
+    )
     result["elapsed_sec"] = time.time() - start
     result["model"] = args.model
     if requested_dimension != dimension:
@@ -525,15 +547,20 @@ def main():
     result["dimension_json"] = dim_json_path
     result["question_generation"] = {"attempted": not args.skip_question_generation, "generated": questions_generated}
 
-    result_json = Path(args.result_json) if args.result_json else Path(args.output_dir or ".") / "4dworldbench_results.json"
+    result_json = (
+        Path(args.result_json) if args.result_json else Path(args.output_dir or ".") / "4dworldbench_results.json"
+    )
     result_json.parent.mkdir(parents=True, exist_ok=True)
     result_json.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-    
+
     # Print summary
     print("\n=== 4DWorldBench Summary ===")
-    print(f"- {result['dimension']}: {result['score']:.4f} (items: {len(model_items)}, elapsed: {result['elapsed_sec']:.2f}s)")
+    print(
+        f"- {result['dimension']}: {result['score']:.4f} (items: {len(model_items)}, elapsed: {result['elapsed_sec']:.2f}s)"
+    )
     print(f"- result_json: {result_json}")
     return 0
-    
+
+
 if __name__ == "__main__":
     raise SystemExit(main())

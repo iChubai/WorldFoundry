@@ -17,6 +17,7 @@ import argparse
 import torch.nn as nn
 from easydict import EasyDict as edict
 import warnings
+
 warnings.filterwarnings("ignore")
 import timm
 import time
@@ -80,23 +81,51 @@ def set_seed(seed=42):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Distributed inference with a pretrained DINO model on DiDemo dataset.")
-    parser.add_argument('--local-rank', type=int, default=-1)
-    parser.add_argument('--local_rank', type=int, default=-1)
-    parser.add_argument('--video_dir', type=str, required=True,
-                        help='Directory containing video files.')
-    parser.add_argument('--save_dir', type=str, required=True,
-                        help='Directory to save extracted features.')
-    parser.add_argument('--dynamic_score_save_name', type=str, default='dynamics_merged_results.xlsx')
-    parser.add_argument('--regress_model_weight_path', type=str, default=_first_env('WORLDFOUNDRY_DEVIL_REGRESSION_CKPT', 'WORLDFOUNDRY_DEVIL_LINEAR_REGRESSION_CKPT', 'WORLDFOUNDRY_DEVIL_LINEAR_REGRESS_MODEL'))
-    parser.add_argument('--raft_model_path', type=str, default=_first_env('WORLDFOUNDRY_DEVIL_RAFT_CKPT', 'WORLDFOUNDRY_RAFT_THINGS_CKPT'))
-    parser.add_argument('--clip_model_path', type=str, default=_first_env('WORLDFOUNDRY_DEVIL_CLIP_VIT_L14_PT', 'WORLDFOUNDRY_VBENCH_CLIP_VIT_L14_PT'))
-    parser.add_argument('--viclip_model_path', type=str, default=_first_env('WORLDFOUNDRY_DEVIL_VICLIP_CKPT', 'WORLDFOUNDRY_VBENCH_VICLIP_CKPT'))
-    parser.add_argument('--dinov2_model_path', type=str, default=_first_env('WORLDFOUNDRY_DEVIL_DINOV2_VITL14_CKPT', 'WORLDFOUNDRY_WBENCH_MEGASAM_DINOV2_CKPT'))
-    parser.add_argument('--timm_dino_model_name', type=str, default=os.environ.get('WORLDFOUNDRY_DEVIL_TIMM_DINO_MODEL_NAME', 'vit_small_patch16_224_dino'))
-    parser.add_argument('--timm_dino_model_path', type=str, default=_first_env('WORLDFOUNDRY_DEVIL_TIMM_DINO_CKPT'))
-    parser.add_argument('--temporal_info_script', type=str, default=str(RUNTIME_ROOT / 'cal_temporal_info.sh'))
-    
+    parser = argparse.ArgumentParser(
+        description="Distributed inference with a pretrained DINO model on DiDemo dataset."
+    )
+    parser.add_argument("--local-rank", type=int, default=-1)
+    parser.add_argument("--local_rank", type=int, default=-1)
+    parser.add_argument("--video_dir", type=str, required=True, help="Directory containing video files.")
+    parser.add_argument("--save_dir", type=str, required=True, help="Directory to save extracted features.")
+    parser.add_argument("--dynamic_score_save_name", type=str, default="dynamics_merged_results.xlsx")
+    parser.add_argument(
+        "--regress_model_weight_path",
+        type=str,
+        default=_first_env(
+            "WORLDFOUNDRY_DEVIL_REGRESSION_CKPT",
+            "WORLDFOUNDRY_DEVIL_LINEAR_REGRESSION_CKPT",
+            "WORLDFOUNDRY_DEVIL_LINEAR_REGRESS_MODEL",
+        ),
+    )
+    parser.add_argument(
+        "--raft_model_path",
+        type=str,
+        default=_first_env("WORLDFOUNDRY_DEVIL_RAFT_CKPT", "WORLDFOUNDRY_RAFT_THINGS_CKPT"),
+    )
+    parser.add_argument(
+        "--clip_model_path",
+        type=str,
+        default=_first_env("WORLDFOUNDRY_DEVIL_CLIP_VIT_L14_PT", "WORLDFOUNDRY_VBENCH_CLIP_VIT_L14_PT"),
+    )
+    parser.add_argument(
+        "--viclip_model_path",
+        type=str,
+        default=_first_env("WORLDFOUNDRY_DEVIL_VICLIP_CKPT", "WORLDFOUNDRY_VBENCH_VICLIP_CKPT"),
+    )
+    parser.add_argument(
+        "--dinov2_model_path",
+        type=str,
+        default=_first_env("WORLDFOUNDRY_DEVIL_DINOV2_VITL14_CKPT", "WORLDFOUNDRY_WBENCH_MEGASAM_DINOV2_CKPT"),
+    )
+    parser.add_argument(
+        "--timm_dino_model_name",
+        type=str,
+        default=os.environ.get("WORLDFOUNDRY_DEVIL_TIMM_DINO_MODEL_NAME", "vit_small_patch16_224_dino"),
+    )
+    parser.add_argument("--timm_dino_model_path", type=str, default=_first_env("WORLDFOUNDRY_DEVIL_TIMM_DINO_CKPT"))
+    parser.add_argument("--temporal_info_script", type=str, default=str(RUNTIME_ROOT / "cal_temporal_info.sh"))
+
     return parser.parse_args()
 
 
@@ -114,12 +143,12 @@ class RegressionModel:
     def __init__(self, model_path):
         # Load models from a .pth file
         self.models = _load_torch_payload(model_path)
-    
+
     def predict(self, input_inter_frame, input_inter_segment, input_video_level):
         # Predict using the loaded models and clamp the values
-        prediction_inter_frame = np.clip(self.models['inter_frame'].predict(input_inter_frame), 0, 1)
-        prediction_inter_segment = np.clip(self.models['inter_segment'].predict(input_inter_segment), 0, 1)
-        prediction_video_level = np.clip(self.models['video_level'].predict(input_video_level), 0, 1)
+        prediction_inter_frame = np.clip(self.models["inter_frame"].predict(input_inter_frame), 0, 1)
+        prediction_inter_segment = np.clip(self.models["inter_segment"].predict(input_inter_segment), 0, 1)
+        prediction_video_level = np.clip(self.models["video_level"].predict(input_video_level), 0, 1)
         # Calculate the mean of predictions for each entry
         return np.mean([prediction_inter_frame, prediction_inter_segment, prediction_video_level], axis=0)
 
@@ -128,8 +157,9 @@ def json_to_xlsx(json_file, xlsx_file):
     # 读取 JSON 数据
     df = pd.read_json(json_file)  # 假设 JSON 文件每行一个 JSON 对象
     # 将 DataFrame 保存到 XLSX 文件
-    with pd.ExcelWriter(xlsx_file, engine='openpyxl') as writer:
+    with pd.ExcelWriter(xlsx_file, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)  # 不保存行索引
+
 
 def save_dicts_to_excel(dicts, filename):
     # 获取所有字典中的所有键
@@ -146,35 +176,41 @@ def load_and_merge(pth_folder, save_folder, dynamic_score_save_name):
     for file in os.listdir(pth_folder):
         if file.endswith(".pth"):
             path = os.path.join(pth_folder, file)
-            all_datas.extend(torch.load(path, map_location='cpu'))
+            all_datas.extend(torch.load(path, map_location="cpu"))
     save_dicts_to_excel(all_datas, os.path.join(save_folder, dynamic_score_save_name))
 
 
 def cal_info_variance(model, video_data, video_lengths):
     features = model(video_data)
     # 处理提取的特征,例如保存到文件或进一步处理
-    
+
     features = F.normalize(features, dim=-1, p=2)
     features = features.split(video_lengths)
     features_mean = [feat.mean(axis=0, keepdim=True) for feat in features]
     # features_normed = features - features_mean
-    distances = [(1 - F.cosine_similarity(feat_mean[:, None], feat[None], dim=-1)).mean(1).item() for feat, feat_mean in zip(features, features_mean)]
+    distances = [
+        (1 - F.cosine_similarity(feat_mean[:, None], feat[None], dim=-1)).mean(1).item()
+        for feat, feat_mean in zip(features, features_mean)
+    ]
 
     return distances, features
 
+
 # def cal_clip_info()
 
+
 def build_raft(model_path, rank):
-    args_new = edict({"model":model_path, "small":False, "mixed_precision":False, "alternate_corr":False})
+    args_new = edict({"model": model_path, "small": False, "mixed_precision": False, "alternate_corr": False})
     model = RAFT(args_new)
-    state_dict = torch.load(model_path, map_location=torch.device('cpu'))
+    state_dict = torch.load(model_path, map_location=torch.device("cpu"))
     new_state_dict = dict()
     for key in state_dict:
-        new_state_dict[key.replace('module.', '')] = state_dict[key]
+        new_state_dict[key.replace("module.", "")] = state_dict[key]
     model.load_state_dict(new_state_dict)
     model = nn.parallel.DistributedDataParallel(model.to(rank), device_ids=[rank])
     model.eval()
     return model
+
 
 def build_dino(model_name, rank, args):
     model = timm.create_model(model_name, pretrained=args.timm_dino_model_path is None)
@@ -185,8 +221,9 @@ def build_dino(model_name, rank, args):
     model.eval()
     return model
 
+
 def build_dinov2(model_name, rank, args):
-    if model_name != 'dinov2_vitl14':
+    if model_name != "dinov2_vitl14":
         raise ValueError(f"unsupported DEVIL DINOv2 model: {model_name}")
     if not args.dinov2_model_path:
         raise ValueError("DINOv2 ViT-L/14 checkpoint is required; set WORLDFOUNDRY_DEVIL_DINOV2_VITL14_CKPT")
@@ -197,15 +234,16 @@ def build_dinov2(model_name, rank, args):
     model.eval()
     return model
 
+
 def build_viclip(model_name, rank, args):
     model_cfgs = {
-        'viclip-l-internvid-10m-flt': {
-            'size': 'l',
-            'pretrained': args.viclip_model_path,
+        "viclip-l-internvid-10m-flt": {
+            "size": "l",
+            "pretrained": args.viclip_model_path,
         },
     }
     cfg = model_cfgs[model_name]
-    viclip = get_viclip(cfg['size'], cfg['pretrained'])['viclip']
+    viclip = get_viclip(cfg["size"], cfg["pretrained"])["viclip"]
     viclip = viclip.to(rank)
     viclip = nn.parallel.DistributedDataParallel(viclip, device_ids=[rank])
     viclip.eval()
@@ -236,8 +274,8 @@ def cal_flow_strength_batch(model, video_data, video_lengths, video_names, max_b
         iter_n = int(math.ceil(image1s.shape[0] / max_batch))
         flow_ups = []
         for bidx in range(iter_n):
-            image1 = image1s[bidx * max_batch: (bidx + 1) * max_batch]
-            image2 = image2s[bidx * max_batch: (bidx + 1) * max_batch]
+            image1 = image1s[bidx * max_batch : (bidx + 1) * max_batch]
+            image2 = image2s[bidx * max_batch : (bidx + 1) * max_batch]
             _, flow_up = model(image1.contiguous(), image2.contiguous(), iters=20, test_mode=True)
             flow_ups.append(flow_up)
 
@@ -250,13 +288,14 @@ def cal_flow_strength_batch(model, video_data, video_lengths, video_names, max_b
         results.append(static_score)
     return results
 
-def get_score(img, flo, only_top=False):
-    flo = flo[0].permute(1,2,0).cpu().numpy()
 
-    u = flo[:,:,0]
-    v = flo[:,:,1]
+def get_score(img, flo, only_top=False):
+    flo = flo[0].permute(1, 2, 0).cpu().numpy()
+
+    u = flo[:, :, 0]
+    v = flo[:, :, 1]
     rad = np.sqrt(np.square(u) + np.square(v))
-    
+
     h, w = rad.shape
     rad_flat = rad.flatten()
 
@@ -267,6 +306,7 @@ def get_score(img, flo, only_top=False):
         max_rad = np.mean(abs(np.sort(-rad_flat)))
 
     return max_rad.item()
+
 
 def build_clip(model_name, rank, args):
     model_clip, process_clip = clip.load(args.clip_model_path, device=rank)
@@ -322,7 +362,7 @@ def cal_dino_segment_dist_chunk(model, video_data, video_lengths, max_frames=100
 
         # Concatenate all features for the current video segment
         all_features = torch.cat(all_features, dim=0)
-        
+
         # Calculate ACF based on all features of the segment
         acfs = [calc_acf(all_features, k) for k in range(all_features.shape[0] // 8, all_features.shape[0])]
         if acfs:
@@ -330,7 +370,7 @@ def cal_dino_segment_dist_chunk(model, video_data, video_lengths, max_frames=100
             distances.append(segment_acf)
 
         start = segment_end
-    
+
     return distances
 
 
@@ -339,21 +379,22 @@ def get_segments(video, block_ratio):
     segment_length = int(total_frames * block_ratio)
 
     num_segments = int((total_frames + segment_length - 1) // segment_length)
-    
+
     segments = []
-    
+
     for i in range(num_segments):
         start = i * segment_length
         end = min(start + segment_length, total_frames)
         segment = video[start:end]
-        
+
         if segment.size(0) < segment_length:
             repeats = segment_length // segment.size(0) + 1
             segment = torch.repeat_interleave(segment, repeats=repeats, dim=0)[:segment_length]
-        
+
         segments.append(segment)
-    
+
     return torch.stack(segments)
+
 
 def to_same_size(segments, target_size=8):
     batch_size, segment_length, *rest_dims = segments.size()
@@ -371,6 +412,7 @@ def to_same_size(segments, target_size=8):
 
     return resized_segments
 
+
 def cal_segment_dist(features):
     features = F.normalize(features, dim=-1, p=2)
     sims = features @ features.T
@@ -381,19 +423,22 @@ def cal_segment_dist(features):
     sims = torch.masked_select(sims, mask)
     return sims.mean()
 
+
 def calc_acf(features, k):
     acf = features[:-k] * features[k:]
     acf = acf.sum(-1).mean()
-    return (1-acf).abs().item()
+    return (1 - acf).abs().item()
+
 
 def cal_frechet(block_stats):
     # 计算块之间的 Frechet 距离
     distances = []
-    for i in range(len(block_stats)-1):
-        dist = frechet_distance(*block_stats[i], *block_stats[i+1])
+    for i in range(len(block_stats) - 1):
+        dist = frechet_distance(*block_stats[i], *block_stats[i + 1])
         distances.append(dist.item())
     return sum(distances) / len(distances)
-    
+
+
 def cal_frechet_distance(model, video_data, video_lengths, block_lengths_ratio, features=None):
     if features is None:
         features = model(video_data)
@@ -408,6 +453,7 @@ def cal_frechet_distance(model, video_data, video_lengths, block_lengths_ratio, 
             distance.append(cal_frechet(stats))
         distances.append(sum(distance) / len(distance))
     return distances
+
 
 def process_blocks(features, block_lengths):
     # 计算块的数量]
@@ -424,11 +470,12 @@ def process_blocks(features, block_lengths):
         results.append(block_stats)
     return results
 
+
 def calculate_covariance_matrix(features):
     """计算特征向量的协方差矩阵。
     参数:
     features (torch.Tensor): 形状为 (n_samples, n_features) 的张量。
-    
+
     返回:
     torch.Tensor: 协方差矩阵，形状为 (n_features, n_features)。
     """
@@ -437,7 +484,7 @@ def calculate_covariance_matrix(features):
 
     # 计算协方差矩阵
     cov_matrix = mean_centered.T @ mean_centered / (features.size(0) - 1)
-    
+
     return cov_matrix
 
 
@@ -445,6 +492,7 @@ def calculate_statistics(features):
     mu = torch.mean(features, axis=0)
     sigma = calculate_covariance_matrix(features)
     return mu, sigma
+
 
 def matrix_sqrt(matrix):
     """使用SVD计算矩阵的平方根，返回平方根矩阵"""
@@ -457,18 +505,19 @@ def frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     diff = mu1 - mu2
     term1 = diff.dot(diff)
     term2 = torch.trace(sigma1 + sigma2 - 2 * matrix_sqrt(sigma1 @ sigma2))
-    
+
     return term1 + term2
+
 
 def cal_temporal_entropy(video_paths, output_folder, temporal_info_script):
     os.makedirs(output_folder, exist_ok=True)
     results = []
     for video_path in video_paths:
         args = [video_path, output_folder]
-        if output_folder == '/' or output_folder.startswith('/ '):
-            print(f'***************output_folder: {output_folder}***************')
+        if output_folder == "/" or output_folder.startswith("/ "):
+            print(f"***************output_folder: {output_folder}***************")
             exit(0)
-        result = subprocess.run(['bash', temporal_info_script] + args, stdout=subprocess.PIPE, text=True, check=True)
+        result = subprocess.run(["bash", temporal_info_script] + args, stdout=subprocess.PIPE, text=True, check=True)
         results.append(float(result.stdout.strip()))
         # print(f'{output_folder} done.')
         shutil.rmtree(output_folder)
@@ -484,38 +533,43 @@ def clear_folder(folder):
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)  # 删除文件夹
         except Exception as e:
-            print(f'Failed to delete {file_path}. Reason: {e}')
+            print(f"Failed to delete {file_path}. Reason: {e}")
+
 
 def cal_dynamics_scores(args):
     # 初始化分布式环境
-    dist.init_process_group(backend='nccl')
+    dist.init_process_group(backend="nccl")
     rank = dist.get_rank()
-    args.rank =  rank
+    args.rank = rank
     world_size = dist.get_world_size()
     torch.cuda.set_device(rank)
-    output_file = f'{args.save_dir}/.tmp/results_{rank}.pth'
+    output_file = f"{args.save_dir}/.tmp/results_{rank}.pth"
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     clear_folder(os.path.dirname(output_file))
-    with open(output_file, 'w') as file:
-        file.write('')  # 清空文件内容
+    with open(output_file, "w") as file:
+        file.write("")  # 清空文件内容
 
     # 加载预训练的模型
     model_dino = build_dino(args.timm_dino_model_name, rank, args)
-    model_dino_v2 = build_dinov2('dinov2_vitl14', rank, args)
-    model_clip, process_clip = build_clip('ViT-L/14', rank, args)
-    model_viclip = build_viclip('viclip-l-internvid-10m-flt', rank, args)
-    process_clip.transforms =  process_clip.transforms[:2] + process_clip.transforms[-1:]
+    model_dino_v2 = build_dinov2("dinov2_vitl14", rank, args)
+    model_clip, process_clip = build_clip("ViT-L/14", rank, args)
+    model_viclip = build_viclip("viclip-l-internvid-10m-flt", rank, args)
+    process_clip.transforms = process_clip.transforms[:2] + process_clip.transforms[-1:]
     process_clip.transforms[0] = Resize((336, 336))
     model_flow = build_raft(args.raft_model_path, rank)
 
-    transform = Compose([
-        Resize((224, 224)),  # 调整图像大小以匹配模型
-        Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+    transform = Compose(
+        [
+            Resize((224, 224)),  # 调整图像大小以匹配模型
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
 
-    transform_no_resize = Compose([
-        Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+    transform_no_resize = Compose(
+        [
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
 
     dataset = StandardVidoDataset(
         video_dir=args.video_dir,
@@ -524,40 +578,51 @@ def cal_dynamics_scores(args):
     )
 
     sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, sampler=sampler, num_workers=5, collate_fn=standard_collate_fn)
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=1, sampler=sampler, num_workers=5, collate_fn=standard_collate_fn
+    )
 
     if rank == 0:
         progress_bar = tqdm.tqdm(total=len(dataloader), position=0, leave=True)
     results = []
     with torch.no_grad():
         for frames in dataloader:
-            org_videos = frames['org_videos']
+            org_videos = frames["org_videos"]
 
-            video_data = frames['videos'].to(rank)
-            video_no_resize = [f.to(rank) for f in frames['videos_no_resize']]
-            video_names = frames['video_names']
-            video_lengths = frames['video_lengths']
-            video_paths = frames['video_paths']
+            video_data = frames["videos"].to(rank)
+            video_no_resize = [f.to(rank) for f in frames["videos_no_resize"]]
+            video_names = frames["video_names"]
+            video_lengths = frames["video_lengths"]
+            video_paths = frames["video_paths"]
             # # Inter-frame level metrics
             flow_strength = cal_flow_strength_batch(model_flow, video_no_resize, video_lengths, video_names)
             ssim_dists, phash_dists = cal_ssim_dist(video_no_resize, org_videos, video_names)
-            dino_segment_dist = cal_dino_segment_dist(model_dino_v2, video_data, video_lengths, )
+            dino_segment_dist = cal_dino_segment_dist(
+                model_dino_v2,
+                video_data,
+                video_lengths,
+            )
             viclip_segment_dist = cal_viclip_segment_dist(model_viclip, video_data, video_lengths, [0.25])
 
             # # Video level metrics
-            temporal_info = cal_temporal_entropy(video_paths, f'{args.save_dir}/.tmp-rank-{rank}', args.temporal_info_script)
+            temporal_info = cal_temporal_entropy(
+                video_paths, f"{args.save_dir}/.tmp-rank-{rank}", args.temporal_info_script
+            )
             dino_var_dist, dino_features = cal_info_variance(model_dino, video_data, video_lengths)
 
-            res = [{
-                "video_name": video_names[i],
-                "ssim": ssim_dists[i],
-                "phash": phash_dists[i],
-                "flow": flow_strength[i],
-                "dino_segm_dist": dino_segment_dist[i],
-                "viclip_segm_dist": viclip_segment_dist[i],
-                "info_dino": dino_var_dist[i],
-                "temporal_entropy": temporal_info[i],
-            } for i in range(len(video_lengths))]
+            res = [
+                {
+                    "video_name": video_names[i],
+                    "ssim": ssim_dists[i],
+                    "phash": phash_dists[i],
+                    "flow": flow_strength[i],
+                    "dino_segm_dist": dino_segment_dist[i],
+                    "viclip_segm_dist": viclip_segment_dist[i],
+                    "info_dino": dino_var_dist[i],
+                    "temporal_entropy": temporal_info[i],
+                }
+                for i in range(len(video_lengths))
+            ]
             results.extend(res)
             if rank == 0:
                 progress_bar.update(1)
@@ -570,30 +635,34 @@ def cal_dynamics_scores(args):
     dist.barrier()
 
     if rank == 0:
-        load_and_merge(f'{args.save_dir}/.tmp', args.save_dir, args.dynamic_score_save_name)
-        shutil.rmtree(f'{args.save_dir}/.tmp')
+        load_and_merge(f"{args.save_dir}/.tmp", args.save_dir, args.dynamic_score_save_name)
+        shutil.rmtree(f"{args.save_dir}/.tmp")
 
     dist.destroy_process_group()
 
 
-def get_prompt_dynamic_grades(Video_names, col_name='video_name'):
-
+def get_prompt_dynamic_grades(Video_names, col_name="video_name"):
     results = np.zeros(len(Video_names), dtype=int)
 
-    keywords = ['static', 'low', 'medium', 'very_high', 'high']
-    
-    values = [0, 1, 2, 4, 3,]
+    keywords = ["static", "low", "medium", "very_high", "high"]
+
+    values = [
+        0,
+        1,
+        2,
+        4,
+        3,
+    ]
     for i, name in enumerate(Video_names[col_name]):
         for keyword, value in zip(keywords, values):
             if keyword in name.lower():
                 results[i] = value
-                break 
+                break
 
     return results
 
 
 def cal_controllability_winning_rate(prompt_dynamics, video_dynamics):
-
     video_dynamics = np.array(video_dynamics)
     prompt_dynamics = np.array(prompt_dynamics)
     x_degree_other = dict()
@@ -615,15 +684,16 @@ def cal_controllability_winning_rate(prompt_dynamics, video_dynamics):
 def cal_dynamics_range(dynamics_scores):
     return cal_p99_1(dynamics_scores)
 
+
 def cal_dynamics_controllability(video_names, dynamics_scores):
     prompt_dynamics = get_prompt_dynamic_grades(video_names)
     return cal_controllability_winning_rate(prompt_dynamics, dynamics_scores)
 
 
 def get_overall_dynamic_scores(dynamics_scores, regress_models):
-    inter_frame = np.stack([dynamics_scores['flow'], dynamics_scores['ssim'], dynamics_scores['phash']], axis=1)
-    inter_segme = np.stack([dynamics_scores['dino_segm_dist'], dynamics_scores['viclip_segm_dist']], axis=1)
-    video_level = np.stack([dynamics_scores['info_dino'], dynamics_scores['temporal_entropy']], axis=1)
+    inter_frame = np.stack([dynamics_scores["flow"], dynamics_scores["ssim"], dynamics_scores["phash"]], axis=1)
+    inter_segme = np.stack([dynamics_scores["dino_segm_dist"], dynamics_scores["viclip_segm_dist"]], axis=1)
+    video_level = np.stack([dynamics_scores["info_dino"], dynamics_scores["temporal_entropy"]], axis=1)
     return regress_models.predict(inter_frame, inter_segme, video_level)
 
 
@@ -632,17 +702,20 @@ def cal_dynamics_metircs(args):
     dynamic_scores_path = os.path.join(args.save_dir, args.dynamic_score_save_name)
     dynamics_scores = pd.read_excel(dynamic_scores_path)
     overall_dynamics_scores = get_overall_dynamic_scores(dynamics_scores, regress_models)
-    dynamics_scores['Overall_dynamics_scores'] = overall_dynamics_scores
+    dynamics_scores["Overall_dynamics_scores"] = overall_dynamics_scores
     dynamics_range = cal_dynamics_range(overall_dynamics_scores)
     dynamics_controllability = cal_dynamics_controllability(dynamics_scores, overall_dynamics_scores)
     dynamics_scores.to_excel(dynamic_scores_path, index=False)
 
     return dynamics_scores, dynamics_range, dynamics_controllability
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = parse_args()
     set_seed()
     cal_dynamics_scores(args)
     if args.rank == 0:
         dynamics_scores, dynamics_range, dynamics_controllability = cal_dynamics_metircs(args)
-        print(f'Method:{os.path.basename(args.video_dir)}, Dyanmics Range: {dynamics_range}, Dynamics Controllability: {dynamics_controllability}')
+        print(
+            f"Method:{os.path.basename(args.video_dir)}, Dyanmics Range: {dynamics_range}, Dynamics Controllability: {dynamics_controllability}"
+        )

@@ -17,6 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 try:
     from batch_test.test_bench import PIPELINE_BY_ALIAS, PIPELINE_SPECS, sanitize_filename_part
 except Exception:
+
     @dataclass(frozen=True)
     class PipelineSpec:
         name: str
@@ -24,21 +25,23 @@ except Exception:
         aliases: tuple[str, ...]
 
     PIPELINE_SPECS = (
-        PipelineSpec("cosmos-predict", "cosmos", ("cosmos", "cosmos-predict", "cosmos_predict", "cosmos-predict2p5", "cosmos_predict2p5")),
+        PipelineSpec(
+            "cosmos-predict",
+            "cosmos",
+            ("cosmos", "cosmos-predict", "cosmos_predict", "cosmos-predict2p5", "cosmos_predict2p5"),
+        ),
         PipelineSpec("hunyuan-gamecraft", "hunyuan_gamecraft", ("hunyuan-gamecraft", "hunyuan_gamecraft", "gamecraft")),
         PipelineSpec("hunyuan-worldplay", "hunyuan_worldplay", ("hunyuan-worldplay", "hunyuan_worldplay", "worldplay")),
         PipelineSpec("lingbot-world", "lingbot_world", ("lingbot-world", "lingbot_world", "lingbot")),
         PipelineSpec("longlive", "longlive", ("longlive",)),
-        PipelineSpec("matrix-game2", "matrix_game2", ("matrix-game2", "matrix_game2", "matrix", "matrix-game-2", "matrix_game_2")),
+        PipelineSpec(
+            "matrix-game2", "matrix_game2", ("matrix-game2", "matrix_game2", "matrix", "matrix-game-2", "matrix_game_2")
+        ),
         PipelineSpec("rolling-forcing", "rolling_forcing", ("rolling-forcing", "rolling_forcing")),
         PipelineSpec("wow", "wow", ("wow",)),
         PipelineSpec("yume1p5", "yume1p5", ("yume1p5", "yume-1p5", "yume_1p5", "yume")),
     )
-    PIPELINE_BY_ALIAS = {
-        alias: spec
-        for spec in PIPELINE_SPECS
-        for alias in (spec.name, *spec.aliases)
-    }
+    PIPELINE_BY_ALIAS = {alias: spec for spec in PIPELINE_SPECS for alias in (spec.name, *spec.aliases)}
 
     def sanitize_filename_part(value: str) -> str:
         import os
@@ -132,7 +135,9 @@ def resolve_pipeline(pipeline: str | None, pipeline_output_prefix: str | None) -
     return pipeline_name, sanitize_filename_part(output_prefix)
 
 
-def default_patterns(output_prefix: str | None, gen_pattern: str | None, chunk_pattern: str | None) -> tuple[str, str | None]:
+def default_patterns(
+    output_prefix: str | None, gen_pattern: str | None, chunk_pattern: str | None
+) -> tuple[str, str | None]:
     if gen_pattern:
         resolved_gen_pattern = gen_pattern
     elif output_prefix:
@@ -170,7 +175,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Create batch JSONL manifest from case directories")
     parser.add_argument("--root", help="Directory containing per-video case directories")
     parser.add_argument("--output", help="Output JSONL manifest path")
-    parser.add_argument("--list-pipelines", action="store_true", help="Print pipeline aliases from batch_test/test_bench.py and exit")
+    parser.add_argument(
+        "--list-pipelines", action="store_true", help="Print pipeline aliases from batch_test/test_bench.py and exit"
+    )
     parser.add_argument(
         "--pipeline",
         choices=sorted(PIPELINE_BY_ALIAS),

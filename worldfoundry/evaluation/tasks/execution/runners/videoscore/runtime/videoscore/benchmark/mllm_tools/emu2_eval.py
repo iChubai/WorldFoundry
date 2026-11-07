@@ -7,27 +7,29 @@ from accelerate import infer_auto_device_map, load_checkpoint_and_dispatch
 from accelerate.big_modeling import dispatch_model, get_balanced_memory
 
 
-class Emu2():
+class Emu2:
     support_multi_image = True
     merged_image_files = []
-    def __init__(self, model_path:str="BAAI/Emu2-Chat") -> None:
+
+    def __init__(self, model_path: str = "BAAI/Emu2-Chat") -> None:
         """Llava model wrapper
 
         Args:
             model_path (str): model name
         """
-        self.model = AutoModelForCausalLM.from_pretrained(model_path, load_in_4bit=True, trust_remote_code=True, bnb_4bit_compute_dtype=torch.float16).eval()
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_path, load_in_4bit=True, trust_remote_code=True, bnb_4bit_compute_dtype=torch.float16
+        ).eval()
         self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        
-        # device_map = infer_auto_device_map(self.model, max_memory={0:'38GiB',1:'38GiB',}, no_split_module_classes=['Block','LlamaDecoderLayer'])  
+
+        # device_map = infer_auto_device_map(self.model, max_memory={0:'38GiB',1:'38GiB',}, no_split_module_classes=['Block','LlamaDecoderLayer'])
         # # input and output logits should be on same device
         # device_map["model.decoder.lm.lm_head"] = 0
 
         # self.model = load_checkpoint_and_dispatch(
-        #     self.model, 
+        #     self.model,
         #     device_map=device_map).eval()
 
-        
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -50,7 +52,7 @@ class Emu2():
         image_links = [x["content"] for x in inputs if x["type"] == "image"]
         if self.support_multi_image:
             images = [load_image(image_link) for image_link in image_links]
-            
+
             # if len(images) > 2:
             #     return ""
             query = ""
@@ -58,32 +60,31 @@ class Emu2():
                 if _input["type"] == "image":
                     query += f"[<IMG_PLH>]"
                 elif _input["type"] == "text":
-                    query += ("\n" + _input['content'])
-            
-            inputs = self.model.build_input_ids(
-                text=[query],
-                tokenizer=self.tokenizer,
-                image=images
-            )
-            
+                    query += "\n" + _input["content"]
+
+            inputs = self.model.build_input_ids(text=[query], tokenizer=self.tokenizer, image=images)
+
             generate_ids = self.model.generate(
                 input_ids=inputs["input_ids"],
                 attention_mask=inputs["attention_mask"],
                 image=inputs["image"].to(torch.float16),
                 max_new_tokens=64,
-                length_penalty=-1)
-            generated_text = self.tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-                
+                length_penalty=-1,
+            )
+            generated_text = self.tokenizer.batch_decode(
+                generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
+            )[0]
+
             return generated_text
         else:
             raise NotImplementedError
-        
+
     def __del__(self):
         for image_file in self.merged_image_files:
             if os.path.exists(image_file):
                 os.remove(image_file)
-                
-                
+
+
 # def load_checkpoint_and_dispatch(
 #     model: nn.Module,
 #     device_map: Optional[Union[str, Dict[str, Union[int, str, torch.device]]]] = None,
@@ -203,58 +204,40 @@ if __name__ == "__main__":
     zero_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 1 shot
     one_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 2 shot
     two_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A black cat."
-        },
+        {"type": "text", "content": "What is in the image? A black cat."},
         {
             "type": "image",
-            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*"
+            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     print("### 0 shot")
     print(model(zero_shot_exs))
@@ -271,4 +254,3 @@ if __name__ == "__main__":
     ### 2 shot
     A black cat.
     """
-    

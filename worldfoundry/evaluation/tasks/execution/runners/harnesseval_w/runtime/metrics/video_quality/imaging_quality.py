@@ -1,4 +1,5 @@
 """Imaging quality metric — MUSIQ (via pyiqa)."""
+
 import numpy as np
 import torch
 import torchvision.transforms as T
@@ -27,9 +28,10 @@ class ImagingQualityMetric(BaseMetric):
         setup_torch_hub_dir()
         import pyiqa
         import pyiqa.utils.download_util as _dl
+
         # Redirect pyiqa cache to local weights/pyiqa/
         _dl.DEFAULT_CACHE_DIR = get_weights_dir("pyiqa")
-        self.model = pyiqa.create_metric('musiq', device=self.device)
+        self.model = pyiqa.create_metric("musiq", device=self.device)
 
     @property
     def name(self):
@@ -46,28 +48,21 @@ class ImagingQualityMetric(BaseMetric):
     @contextmanager
     def prepare_cpu(self, frames, *, executor=None):
         to_tensor = T.PILToTensor()
+
         def prepare(frame):
             return self._prepare_frame(frame, to_tensor)
 
-        prepared = (
-            list(executor.map(prepare, frames))
-            if executor is not None
-            else [prepare(frame) for frame in frames]
-        )
+        prepared = list(executor.map(prepare, frames)) if executor is not None else [prepare(frame) for frame in frames]
         yield prepared
 
     def compute_prepared(self, prepared):
         scores = []
         for start in range(0, len(prepared), _GPU_BATCH_SIZE):
-            batch = torch.stack(prepared[start : start + _GPU_BATCH_SIZE]).to(
-                self.device
-            )
+            batch = torch.stack(prepared[start : start + _GPU_BATCH_SIZE]).to(self.device)
             with torch.no_grad():
                 batch_scores = self.model(batch).reshape(-1)
             expected = len(batch)
             if batch_scores.numel() != expected:
-                raise RuntimeError(
-                    f"MUSIQ returned {batch_scores.numel()} scores for {expected} frames"
-                )
+                raise RuntimeError(f"MUSIQ returned {batch_scores.numel()} scores for {expected} frames")
             scores.extend((batch_scores / 100.0).cpu().tolist())
         return {f"{self.name}_score": float(np.mean(scores))}

@@ -86,7 +86,7 @@ def extract_segments(video_path, clip_length=30, stride=4, resolution=216):
 
     segments = []
     for start in range(0, len(frames) - clip_length + 1, stride):
-        clip = np.stack(frames[start:start + clip_length])
+        clip = np.stack(frames[start : start + clip_length])
         clip = clip.astype(np.float32) / 127.5 - 1.0  # normalize to [-1, 1]
         clip = torch.from_numpy(clip).permute(3, 0, 1, 2)  # [C, T, H, W]
         segments.append((start, clip))
@@ -105,12 +105,14 @@ def predict_video(model, video_path, device, clip_length=30, stride=4, resolutio
         pred_log_fps = model(clip)
         fps = torch.exp(pred_log_fps).item()
         mid_frame = start_frame + clip_length // 2
-        results.append({
-            "start_frame": start_frame,
-            "mid_frame": mid_frame,
-            "end_frame": start_frame + clip_length - 1,
-            "predicted_phyfps": round(fps, 1),
-        })
+        results.append(
+            {
+                "start_frame": start_frame,
+                "mid_frame": mid_frame,
+                "end_frame": start_frame + clip_length - 1,
+                "predicted_phyfps": round(fps, 1),
+            }
+        )
 
     avg_fps = np.mean([r["predicted_phyfps"] for r in results])
     return results, round(avg_fps, 1), total_frames
@@ -118,15 +120,17 @@ def predict_video(model, video_path, device, clip_length=30, stride=4, resolutio
 
 def print_table(video_name, results, avg_fps, stride=4):
     """Print a formatted table of per-segment PhyFPS predictions."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  Video: {video_name}")
     print(f"  Average PhyFPS: {avg_fps}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  {'Segment':>8}  {'Frames':>12}  {'Mid Frame':>10}  {'PhyFPS':>8}")
-    print(f"  {'-'*8}  {'-'*12}  {'-'*10}  {'-'*8}")
+    print(f"  {'-' * 8}  {'-' * 12}  {'-' * 10}  {'-' * 8}")
     for i, r in enumerate(results):
-        print(f"  {i:>8d}  {r['start_frame']:>5d}-{r['end_frame']:<5d}  {r['mid_frame']:>10d}  {r['predicted_phyfps']:>8.1f}")
-    print(f"  {'-'*8}  {'-'*12}  {'-'*10}  {'-'*8}")
+        print(
+            f"  {i:>8d}  {r['start_frame']:>5d}-{r['end_frame']:<5d}  {r['mid_frame']:>10d}  {r['predicted_phyfps']:>8.1f}"
+        )
+    print(f"  {'-' * 8}  {'-' * 12}  {'-' * 10}  {'-' * 8}")
     print(f"  {'AVG':>8}  {'':>12}  {'':>10}  {avg_fps:>8.1f}")
     print()
 
@@ -168,7 +172,9 @@ def main():
                 model, vpath, args.device, args.clip_length, args.stride, args.resolution
             )
             print_table(vname, results, avg_fps, args.stride)
-            all_results.append({"video": vname, "avg_phyfps": avg_fps, "segments": results, "total_frames": total_frames})
+            all_results.append(
+                {"video": vname, "avg_phyfps": avg_fps, "segments": results, "total_frames": total_frames}
+            )
         except Exception as e:
             print(f"  Error processing {vname}: {e}")
 
@@ -178,7 +184,16 @@ def main():
             writer.writerow(["video", "segment", "start_frame", "mid_frame", "end_frame", "predicted_phyfps"])
             for entry in all_results:
                 for i, seg in enumerate(entry["segments"]):
-                    writer.writerow([entry["video"], i, seg["start_frame"], seg["mid_frame"], seg["end_frame"], seg["predicted_phyfps"]])
+                    writer.writerow(
+                        [
+                            entry["video"],
+                            i,
+                            seg["start_frame"],
+                            seg["mid_frame"],
+                            seg["end_frame"],
+                            seg["predicted_phyfps"],
+                        ]
+                    )
                 writer.writerow([entry["video"], "AVG", "", "", "", entry["avg_phyfps"]])
         print(f"Results saved to {args.output_csv}")
 

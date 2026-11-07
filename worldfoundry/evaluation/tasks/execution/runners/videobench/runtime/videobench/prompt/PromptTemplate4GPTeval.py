@@ -52,8 +52,7 @@ Prompt4AestheticQuality = """
 """
 
 
-
-Prompt4MotionEffects="""
+Prompt4MotionEffects = """
 <instructions>
             ### Task Description:
             You are now an Video Evaluation Expert in evaluating generated videos.
@@ -112,7 +111,7 @@ Prompt4MotionEffects="""
 </instructions>
 """
 
-Prompt4TemporalConsistency="""
+Prompt4TemporalConsistency = """
 <instructions>
             ### Task Description:
             You are now an Video Evaluation Expert in evaluating generated videos and have super power to perceive the changes between frames.

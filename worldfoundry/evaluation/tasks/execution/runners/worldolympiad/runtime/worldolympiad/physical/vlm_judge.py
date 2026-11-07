@@ -11,9 +11,9 @@ Prompts borrow the domain phrasing from:
 - material/vlm_judge.py
 - mechanics/vlm_judge.py
 
- python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/zip_bag_longlive_bbox_h264.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4 
+ python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/zip_bag_longlive_bbox_h264.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4
 
-python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/output.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4 
+python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/output.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4
 """
 
 from __future__ import annotations
@@ -243,7 +243,9 @@ def evaluate_video(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="VLM judge comparing generated video vs ground-truth across all physics questions")
+    parser = argparse.ArgumentParser(
+        description="VLM judge comparing generated video vs ground-truth across all physics questions"
+    )
     parser.add_argument("--gen-video", required=True, help="Path to generated/candidate video")
     parser.add_argument("--gt-video", required=True, help="Path to ground-truth reference video")
     parser.add_argument(

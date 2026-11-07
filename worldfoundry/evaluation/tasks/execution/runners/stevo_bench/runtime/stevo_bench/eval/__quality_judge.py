@@ -47,11 +47,11 @@ def _ensemble_decide(votes_true: int, n: int, mode: str) -> bool:
                             conclude the negative outcome (e.g. coherence=False).
     """
     if mode == "unanimous_true":
-        return votes_true > 0          # False only if every member voted False
+        return votes_true > 0  # False only if every member voted False
     elif mode == "unanimous":
-        return votes_true == n         # True only if every member voted True
-    else:                              # majority
-        return votes_true * 2 > n     # strict majority; ties → False
+        return votes_true == n  # True only if every member voted True
+    else:  # majority
+        return votes_true * 2 > n  # strict majority; ties → False
 
 
 def _load_init2final_edit_prompt(task_yaml_path: Path) -> str:
@@ -69,6 +69,7 @@ def _load_init2final_edit_prompt(task_yaml_path: Path) -> str:
 # ---------------------------------------------------------------------------
 # Result dataclasses
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ArtifactJudgeResult:
@@ -99,6 +100,7 @@ class CoherenceJudgeResult:
 # Prompts
 # ---------------------------------------------------------------------------
 
+
 def build_artifact_judge_prompt(requested_occlusion: str, init2final_edit_prompt: str) -> str:
     # Occlusion context note — identical logic to coherence judge
     occ = (requested_occlusion or "").strip()
@@ -106,7 +108,7 @@ def build_artifact_judge_prompt(requested_occlusion: str, init2final_edit_prompt
     if has_occlusion:
         occlusion_note = (
             f"INTENDED OCCLUSION CONTEXT: This task intentionally includes the\n"
-            f"following occlusion: \"{occ}\". Any scene darkening, blackout, or\n"
+            f'following occlusion: "{occ}". Any scene darkening, blackout, or\n'
             f"view obstruction that corresponds to this description is expected\n"
             f"behaviour and must NOT be flagged as an artifact.\n"
             f"Do NOT flag any irregularities related to the intended occlusion as artifacts.\n"
@@ -126,10 +128,10 @@ def build_artifact_judge_prompt(requested_occlusion: str, init2final_edit_prompt
         state_evol_note = (
             f"INTENDED STATE EVOLUTION: The following image-edit prompt describes the\n"
             f"main physical change that was intended to occur in the scene:\n"
-            f"\"{edit}\"\n\n"
+            f'"{edit}"\n\n'
             f"Before judging artifacts, extract a one-sentence plain-language summary\n"
-            f"of this intended change (e.g. \"the block slides to the bottom of the ramp\")\n"
-            f"and record it as \"intended_state_evolution\" in your JSON response.\n\n"
+            f'of this intended change (e.g. "the block slides to the bottom of the ramp")\n'
+            f'and record it as "intended_state_evolution" in your JSON response.\n\n'
             f"CRITICAL DISTINCTION — artifact vs. state evolution failure:\n"
             f"  - ARTIFACT: something WRONG actively happens (a physically impossible\n"
             f"    event occurs, e.g. an object deforms with no force, two solids pass\n"
@@ -144,16 +146,13 @@ def build_artifact_judge_prompt(requested_occlusion: str, init2final_edit_prompt
         state_evol_note = ""
 
     intended_se_field = (
-        "  \"intended_state_evolution\": \"one-sentence summary of the intended physical change\",\n"
-        if edit else ""
+        '  "intended_state_evolution": "one-sentence summary of the intended physical change",\n' if edit else ""
     )
 
     return (
         "You are evaluating a generated video for physical plausibility.\n\n"
-
         "An ARTIFACT is any event or behavior in the video that actively violates the\n"
         "laws of physics or is otherwise physically impossible. There are two types:\n\n"
-
         "TYPE 1 — Instantaneous violations\n"
         "Something is physically wrong in a single frame or very short moment,\n"
         "independent of what came before or after.\n"
@@ -165,7 +164,6 @@ def build_artifact_judge_prompt(requested_occlusion: str, init2final_edit_prompt
         "  - An object abruptly moves or changes velocity with no visible contact,\n"
         "    force, or physical cause\n"
         "  - An object floats in mid-air against gravity, without support or attachment"
-
         "TYPE 2 — Dynamic violations\n"
         "Individual frames look plausible, but the evolution of the scene over time\n"
         "violates physics. The cause is shown, but the WRONG effect follows.\n"
@@ -174,16 +172,13 @@ def build_artifact_judge_prompt(requested_occlusion: str, init2final_edit_prompt
         "    flat (the wrong direction of change given the cause).\n"
         "  - A block slides down a ramp but then reverses upward with no visible push.\n"
         "  - An object is set in motion but accelerates with no driving force.\n\n"
-
         "For TYPE 2, ask yourself: a cause is clearly shown — does the effect that\n"
         "follows actively defy physics? If yes, that is an artifact. If instead the\n"
         "scene simply does not change much (the cause has no visible effect), that is\n"
         "a state evolution failure, not an artifact — do NOT flag it here.\n\n"
-
         + occlusion_note
-        + state_evol_note +
-
-        "SEVERITY THRESHOLD: Only flag violations that a casual viewer would find\n"
+        + state_evol_note
+        + "SEVERITY THRESHOLD: Only flag violations that a casual viewer would find\n"
         "clearly jarring and physically impossible. Do NOT flag:\n"
         "  - Subtle rendering imperfections (slightly uneven textures, minor flickering)\n"
         "  - Small quantitative discrepancies (smoke that diffuses slightly faster than\n"
@@ -191,18 +186,14 @@ def build_artifact_judge_prompt(requested_occlusion: str, init2final_edit_prompt
         "  - Sand or granular material appearing or clumping in plausible ways\n"
         "  - Any effect that, while imperfect, is physically plausible\n"
         "  - Video quality issues such as blurriness or noise\n\n"
-
         "General guidance:\n"
         "- Watch the full video before making a judgment.\n"
         "- Flag only CLEAR, VISUALLY JARRING violations that a layperson would\n"
         "  immediately notice as impossible.\n"
         "- Use only visual evidence. Ignore timestamps, watermarks, and UI overlays.\n\n"
-
         "Return ONLY valid JSON in this exact format (no markdown, no commentary):\n"
-        "{\n"
-        + intended_se_field +
-        "  \"artifact\": true/false,\n"
-        "  \"notes\": \"brief description of what was observed and why it is or is not an artifact\"\n"
+        "{\n" + intended_se_field + '  "artifact": true/false,\n'
+        '  "notes": "brief description of what was observed and why it is or is not an artifact"\n'
         "}\n"
     )
 
@@ -217,13 +208,11 @@ def build_coherence_judge_prompt(requested_occlusion: str) -> str:
             "INTENDED OCCLUSION: This task uses a CAMERA PAN to hide the subject.\n"
             "The camera sweeps the subject out of frame, then pans back to reveal it.\n"
             "This is intentional and expected behaviour.\n\n"
-
             "OCCLUSION vs. DISAPPEARANCE for camera pan:\n"
             "  - Subject leaving the frame because the camera panned away = OCCLUSION.\n"
             "    Mark subject_disappears = false in this case.\n"
             "  - Only mark subject_disappears = true if the subject vanishes while\n"
             "    still within the camera's field of view, with no physical cause.\n\n"
-
             "Camera pan vs. scene cut:\n"
             "  A pan has continuous intermediate frames of spatial motion connecting\n"
             "  the two viewpoints. A cut jumps INSTANTANEOUSLY with zero transitional\n"
@@ -239,10 +228,9 @@ def build_coherence_judge_prompt(requested_occlusion: str) -> str:
     elif has_occlusion:
         occlusion_context = (
             f"INTENDED OCCLUSION: This task intentionally includes the following:\n"
-            f"  \"{occ}\"\n"
+            f'  "{occ}"\n'
             "The subject becoming hidden by this mechanism (lights off, curtain drawn,\n"
             "smoke filling the frame, object placed in front, etc.) is expected.\n\n"
-
             "OCCLUSION vs. DISAPPEARANCE:\n"
             "  - Subject hidden by the intended occlusion mechanism = OCCLUSION.\n"
             "    Mark subject_disappears = false in this case.\n"
@@ -261,7 +249,6 @@ def build_coherence_judge_prompt(requested_occlusion: str) -> str:
         occlusion_context = (
             "INTENDED OCCLUSION: None. The scene should remain continuously visible\n"
             "with no intentional hiding of the subject.\n\n"
-
             "OCCLUSION vs. DISAPPEARANCE:\n"
             "  Since no occlusion is intended, any disappearance of the main subject\n"
             "  without a visible physical cause should be marked subject_disappears = true.\n\n"
@@ -270,15 +257,11 @@ def build_coherence_judge_prompt(requested_occlusion: str) -> str:
 
     return (
         "You are evaluating a generated video for temporal and scene coherence.\n\n"
-
         "A COHERENCE FAILURE means the video does not appear to be a single,\n"
         "continuous, uninterrupted recording of one scene.\n\n"
-
-        + occlusion_context +
-
-        "STEP 1 — Identify the main subject.\n"
+        + occlusion_context
+        + "STEP 1 — Identify the main subject.\n"
         "Identify the primary object or entity the video is about. Record it as main_subject.\n\n"
-
         "STEP 2 — Occlusion vs. disappearance.\n"
         "For this task, determine whether any disappearance of the main subject\n"
         "is explained by the INTENDED OCCLUSION described above.\n"
@@ -287,62 +270,50 @@ def build_coherence_judge_prompt(requested_occlusion: str) -> str:
         "    The subject is still physically present — just hidden. NOT a failure.\n"
         "  DISAPPEARANCE: subject is simply absent with no physical or occlusion cause.\n"
         "    This IS a coherence failure.\n\n"
-
         "STEP 3 — Fill in the checklist.\n"
         "Answer each item true or false based only on visual evidence:\n\n"
-
         "  subject_disappears — Did the main subject vanish from the scene with NO\n"
         "    physical explanation and NO correspondence to the intended occlusion?\n"
         "    (If the intended occlusion accounts for the disappearance, mark false.)\n\n"
-
         "  subject_reappears — After the subject was hidden by occlusion, did it\n"
         "    reappear in a state or position that cannot be explained by the visible\n"
         "    process? (A normal reveal after intended occlusion is fine — flag only\n"
         "    unexpected discontinuous jumps upon reappearance.)\n\n"
-
         "  background_cut — Did the background or environment change INSTANTANEOUSLY\n"
         "    (zero transitional frames), implying a hidden edit or scene cut?\n"
         "    Example: table surface or wall color abruptly changes; a window switches\n"
         "    sides. A camera pan has continuous motion — it is NOT a cut.\n\n"
-
         "  state_jump — Did the main subject's state change discontinuously, with no\n"
         "    visible transition? Example: a full glass is suddenly empty; an intact ice\n"
         "    cube is suddenly fully melted, with the melting process entirely skipped.\n\n"
-
         "  blackout_reset — Did the scene briefly black out and then resume in a visibly\n"
         "    different configuration (objects repositioned or in different states) with\n"
         "    no physical explanation? (A blackout matching the intended occlusion that\n"
         "    resumes the same scene is NOT a reset.)\n\n"
-
         "  teleport — Did any object's position jump discontinuously between frames,\n"
         "    with no continuous motion connecting the two locations?\n"
         "    Example: a block on the left of a ramp is suddenly at the bottom right.\n\n"
-
         "COHERENCE RULE:\n"
         "  coherence = false  if ANY checklist item above is true.\n"
         "  coherence = true   if ALL checklist items are false.\n\n"
-
         "Do NOT flag:\n"
         "  - Normal continuous physical processes, even surprising or fast ones.\n"
-        "  - Video quality issues such as blurriness or noise.\n"
-        + no_flag_list + "\n"
-
+        "  - Video quality issues such as blurriness or noise.\n" + no_flag_list + "\n"
         "General guidance:\n"
         "  - Watch the full video before filling the checklist.\n"
         "  - Flag only CLEAR failures. Unusual but continuous events are not failures.\n"
         "  - Use only visual evidence. Ignore timestamps, watermarks, and UI overlays.\n\n"
-
         "Return ONLY valid JSON in this exact format (no markdown, no commentary):\n"
         "{\n"
-        "  \"main_subject\": \"<primary object or entity in the video>\",\n"
-        "  \"subject_disappears\": true/false,\n"
-        "  \"subject_reappears\": true/false,\n"
-        "  \"background_cut\": true/false,\n"
-        "  \"state_jump\": true/false,\n"
-        "  \"blackout_reset\": true/false,\n"
-        "  \"teleport\": true/false,\n"
-        "  \"coherence\": true/false,\n"
-        "  \"notes\": \"brief explanation referencing specific observations\"\n"
+        '  "main_subject": "<primary object or entity in the video>",\n'
+        '  "subject_disappears": true/false,\n'
+        '  "subject_reappears": true/false,\n'
+        '  "background_cut": true/false,\n'
+        '  "state_jump": true/false,\n'
+        '  "blackout_reset": true/false,\n'
+        '  "teleport": true/false,\n'
+        '  "coherence": true/false,\n'
+        '  "notes": "brief explanation referencing specific observations"\n'
         "}\n"
         "(coherence: true = video IS coherent — all checklist items false;\n"
         " coherence: false = a coherence failure was detected.)\n"
@@ -353,14 +324,17 @@ def build_coherence_judge_prompt(requested_occlusion: str) -> str:
 # Robust JSON parsing (handles reasoning / fenced blocks / pure JSON)
 # ---------------------------------------------------------------------------
 
+
 def _unwrap_full_fence(s: str) -> str:
     s = (s or "").strip()
     m = re.match(r"^```(?:json)?\s*(.*?)\s*```$", s, flags=re.DOTALL | re.IGNORECASE)
     return m.group(1).strip() if m else s
 
+
 def _extract_first_object(s: str) -> Optional[str]:
     m = re.search(r"\{.*\}", s or "", flags=re.DOTALL)
     return m.group(0).strip() if m else None
+
 
 def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
     try:
@@ -368,6 +342,7 @@ def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
         return obj if isinstance(obj, dict) else None
     except Exception:
         return None
+
 
 def _parse_judge_output(raw_text: str, judge_name: str) -> Dict[str, Any]:
     raw = (raw_text or "").strip()
@@ -379,15 +354,14 @@ def _parse_judge_output(raw_text: str, judge_name: str) -> Dict[str, Any]:
         if obj:
             data = _try_load_json(_unwrap_full_fence(obj))
     if data is None:
-        raise ValueError(
-            f"Could not parse {judge_name} JSON. Raw (truncated):\n{raw[:2000]}"
-        )
+        raise ValueError(f"Could not parse {judge_name} JSON. Raw (truncated):\n{raw[:2000]}")
     return data
 
 
 # ---------------------------------------------------------------------------
 # Artifact judge (one Gemini query per task)
 # ---------------------------------------------------------------------------
+
 
 def evaluate_artifact_one_task(
     task: ResolvedTask,
@@ -535,14 +509,13 @@ def append_artifact_results_to_summary(
         ev = task_entries[task.task_id].setdefault("llm_evals", {}).setdefault(judge_slug, {})
         ev["artifact"] = bool(data.get("artifact", False))
 
-    summary_path.write_text(
-        json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
 # Coherence judge
 # ---------------------------------------------------------------------------
+
 
 def evaluate_coherence_one_task(
     task: ResolvedTask,
@@ -568,16 +541,16 @@ def evaluate_coherence_one_task(
         parsed = _parse_judge_output(raw, "coherence")
         # coherence: true = video IS coherent (default True if model omits the key)
         return {
-            "main_subject":       str(parsed.get("main_subject", "")).strip(),
+            "main_subject": str(parsed.get("main_subject", "")).strip(),
             "subject_disappears": bool(parsed.get("subject_disappears", False)),
-            "subject_reappears":  bool(parsed.get("subject_reappears", False)),
-            "background_cut":     bool(parsed.get("background_cut", False)),
-            "state_jump":         bool(parsed.get("state_jump", False)),
-            "blackout_reset":     bool(parsed.get("blackout_reset", False)),
-            "teleport":           bool(parsed.get("teleport", False)),
-            "coherence":          bool(parsed.get("coherence", True)),
-            "notes":              str(parsed.get("notes", "")).strip(),
-            "raw_text":           raw,
+            "subject_reappears": bool(parsed.get("subject_reappears", False)),
+            "background_cut": bool(parsed.get("background_cut", False)),
+            "state_jump": bool(parsed.get("state_jump", False)),
+            "blackout_reset": bool(parsed.get("blackout_reset", False)),
+            "teleport": bool(parsed.get("teleport", False)),
+            "coherence": bool(parsed.get("coherence", True)),
+            "notes": str(parsed.get("notes", "")).strip(),
+            "raw_text": raw,
         }
 
     n = max(1, ensemble_size)
@@ -616,11 +589,11 @@ def evaluate_coherence_one_task(
     if n == 1:
         r0 = responses[0]
         payload["subject_disappears"] = r0["subject_disappears"]
-        payload["subject_reappears"]  = r0["subject_reappears"]
-        payload["background_cut"]     = r0["background_cut"]
-        payload["state_jump"]         = r0["state_jump"]
-        payload["blackout_reset"]     = r0["blackout_reset"]
-        payload["teleport"]           = r0["teleport"]
+        payload["subject_reappears"] = r0["subject_reappears"]
+        payload["background_cut"] = r0["background_cut"]
+        payload["state_jump"] = r0["state_jump"]
+        payload["blackout_reset"] = r0["blackout_reset"]
+        payload["teleport"] = r0["teleport"]
     if n > 1:
         payload["votes_coherent"] = votes_coherent
         payload["responses"] = responses
@@ -699,6 +672,4 @@ def append_coherence_results_to_summary(
         ev = task_entries[task.task_id].setdefault("llm_evals", {}).setdefault(judge_slug, {})
         ev["coherence"] = bool(data.get("coherence", True))
 
-    summary_path.write_text(
-        json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")

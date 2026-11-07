@@ -5,6 +5,7 @@ References:
     (2018). PieAPP: Perceptual Image-Error Assessment through Pairwise Preference
     https://arxiv.org/abs/1806.02067
 """
+
 import warnings
 from typing import Union, Tuple
 
@@ -18,7 +19,8 @@ from piq.functional import crop_patches
 
 
 class PieAPPModel(nn.Module):
-    r""" Model used for PieAPP score computation """
+    r"""Model used for PieAPP score computation"""
+
     # Base feature size, which is multiplied by 2 every 2 blocks
     FEATURES = 64
 
@@ -61,10 +63,17 @@ class PieAPPModel(nn.Module):
             features: Concatenation of model features from different scales
             x11: Outputs of the last convolutional layer used as weights
         """
-        _validate_input([x, ], dim_range=(4, 4), data_range=(0, -1))
+        _validate_input(
+            [
+                x,
+            ],
+            dim_range=(4, 4),
+            data_range=(0, -1),
+        )
 
-        assert x.shape[2] == x.shape[3] == self.FEATURES, \
+        assert x.shape[2] == x.shape[3] == self.FEATURES, (
             f"Expected square input with shape {self.FEATURES, self.FEATURES}, got {x.shape}"
+        )
 
         # conv1 -> relu -> conv2 -> relu -> pool -> conv3 -> relu
         x3 = F.relu(self.conv3(self.pool(F.relu(self.conv2(F.relu(self.conv1(x)))))))
@@ -80,8 +89,9 @@ class PieAPPModel(nn.Module):
         features = torch.cat((self.flatten(x3), self.flatten(x5), self.flatten(x7), self.flatten(x9), x11), dim=1)
         return features, x11
 
-    def compute_difference(self, features_diff: torch.Tensor, weights_diff: torch.Tensor) \
-            -> Tuple[torch.Tensor, torch.Tensor]:
+    def compute_difference(
+        self, features_diff: torch.Tensor, weights_diff: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         r"""
         Args:
             features_diff: Tensor. Shape :math:`(N, C_1)`
@@ -129,16 +139,18 @@ class PieAPP(_Loss):
         https://github.com/prashnani/PerceptualImageError
 
     """
+
     _weights_url = "https://github.com/photosynthesis-team/piq/releases/download/v0.5.4/PieAPPv0.1.pth"
 
-    def __init__(self, reduction: str = "mean", data_range: Union[int, float] = 1.0, stride: int = 27,
-                 enable_grad: bool = False) -> None:
+    def __init__(
+        self, reduction: str = "mean", data_range: Union[int, float] = 1.0, stride: int = 27, enable_grad: bool = False
+    ) -> None:
         super().__init__()
 
         # Load weights and initialize model
         weights = torch.hub.load_state_dict_from_url(self._weights_url, progress=False)
         # Fix small bug in original weights
-        weights['ref_score_subtract.weight'] = weights['ref_score_subtract.weight'].unsqueeze(1)
+        weights["ref_score_subtract.weight"] = weights["ref_score_subtract.weight"].unsqueeze(1)
         self.model = PieAPPModel()
         self.model.load_state_dict(weights)
 
@@ -168,17 +180,16 @@ class PieAPP(_Loss):
         if C == 1:
             x = x.repeat(1, 3, 1, 1)
             y = y.repeat(1, 3, 1, 1)
-            warnings.warn('The original PieAPP supports only RGB images.'
-                          'The input images were converted to RGB by copying the grey channel 3 times.')
+            warnings.warn(
+                "The original PieAPP supports only RGB images."
+                "The input images were converted to RGB by copying the grey channel 3 times."
+            )
 
         self.model.to(device=x.device)
         x_features, x_weights = self.get_features(x)
         y_features, y_weights = self.get_features(y)
 
-        distances, weights = self.model.compute_difference(
-            y_features - x_features,
-            y_weights - x_weights
-        )
+        distances, weights = self.model.compute_difference(y_features - x_features, y_weights - x_weights)
 
         distances = distances.reshape(N, -1)
         weights = weights.reshape(N, -1)

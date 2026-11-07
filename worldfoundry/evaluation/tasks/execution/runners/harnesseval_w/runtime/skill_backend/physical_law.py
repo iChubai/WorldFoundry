@@ -129,27 +129,17 @@ class LocalBackend:
             left_weight = float(left_magnitude.sum())
             right_weight = float(right_magnitude.sum())
             if left_weight > 1e-6:
-                left_vy[index] = float(
-                    (vertical[:, : ANALYSIS_WIDTH // 2] * left_magnitude).sum()
-                    / left_weight
-                )
+                left_vy[index] = float((vertical[:, : ANALYSIS_WIDTH // 2] * left_magnitude).sum() / left_weight)
             if right_weight > 1e-6:
-                right_vy[index] = float(
-                    (vertical[:, ANALYSIS_WIDTH // 2 :] * right_magnitude).sum()
-                    / right_weight
-                )
+                right_vy[index] = float((vertical[:, ANALYSIS_WIDTH // 2 :] * right_magnitude).sum() / right_weight)
 
             for cell_index in range(SPATIAL_CELLS):
-                column = magnitude[
-                    :, cell_index * column_width : (cell_index + 1) * column_width
-                ]
+                column = magnitude[:, cell_index * column_width : (cell_index + 1) * column_width]
                 if column.mean() > ACTIVITY_THRESHOLD:
                     active_cols[cell_index] += 1
                     if np.isnan(onset_col[cell_index]):
                         onset_col[cell_index] = index / pair_count
-                row = magnitude[
-                    cell_index * row_height : (cell_index + 1) * row_height, :
-                ]
+                row = magnitude[cell_index * row_height : (cell_index + 1) * row_height, :]
                 if row.mean() > ACTIVITY_THRESHOLD and np.isnan(onset_row[cell_index]):
                     onset_row[cell_index] = index / pair_count
 

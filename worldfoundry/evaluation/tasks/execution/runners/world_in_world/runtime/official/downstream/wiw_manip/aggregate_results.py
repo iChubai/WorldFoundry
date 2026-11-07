@@ -14,6 +14,7 @@ Usage
 python wiw_manip/aggregate_results.py \
        running/vlm-base/Qwen2.5-VL-72B-Instruct-AWQ/06.28_igen_q3_step5
 """
+
 import argparse
 import glob
 import json
@@ -21,7 +22,7 @@ import os
 import statistics
 from typing import List, Dict, Any
 
-from tabulate import tabulate      # pip install tabulate
+from tabulate import tabulate  # pip install tabulate
 
 
 # --------------------------------------------------------------------------- #
@@ -57,20 +58,19 @@ def aggregate(summaries: List[dict]) -> Dict[str, Any]:
             # because episode ids are globally unique. Change if needed.
             merged_details[ep_id] = ep_info
 
-    merged_missing = sorted(set(merged_missing))        # de-duplicate
+    merged_missing = sorted(set(merged_missing))  # de-duplicate
 
     # ----- global numbers ---------------------------------------------------
-    total_tasks         = sum(r["total_num_tasks"]     for r in summaries)
-    total_success       = sum(r["num_success"]         for r in summaries)
-    total_planner_steps = sum(r["avg_planner_steps"] *
-                              r["total_num_tasks"]     for r in summaries)
+    total_tasks = sum(r["total_num_tasks"] for r in summaries)
+    total_success = sum(r["num_success"] for r in summaries)
+    total_planner_steps = sum(r["avg_planner_steps"] * r["total_num_tasks"] for r in summaries)
     total_output_errors = sum(r["output_format_error"] for r in summaries)
 
-    overall_sr   = total_success       / total_tasks if total_tasks else float("nan")
-    overall_eps  = total_planner_steps / total_tasks if total_tasks else float("nan")
+    overall_sr = total_success / total_tasks if total_tasks else float("nan")
+    overall_eps = total_planner_steps / total_tasks if total_tasks else float("nan")
 
-    per_run_sr   = [r["success_rate"]      for r in summaries]
-    per_run_eps  = [r["avg_planner_steps"] for r in summaries]
+    per_run_sr = [r["success_rate"] for r in summaries]
+    per_run_eps = [r["avg_planner_steps"] for r in summaries]
 
     summary = dict(
         num_runs=len(summaries),
@@ -96,26 +96,26 @@ def aggregate(summaries: List[dict]) -> Dict[str, Any]:
 # Pretty printing
 # --------------------------------------------------------------------------- #
 def print_report(overall: Dict[str, Any]) -> None:
-    summary   = overall["summary"]
-    missing   = overall["missing_ep_paths"]
+    summary = overall["summary"]
+    missing = overall["missing_ep_paths"]
 
     # ------------- global table --------------------------------------------
     rows_global = [
-        ["Total tasks",                 summary["total_num_tasks"]],
-        ["Total successes",             summary["num_success"]],
-        ["Success rate",               f"{summary['success_rate']:.3%}"],
-        ["Avg planner steps",          f"{summary['avg_planner_steps']:.3f}"],
-        ["Output-format errors",        summary["output_format_error"]],
-        ["Missing episodes (count)",    summary["missing_ep_count"]],
+        ["Total tasks", summary["total_num_tasks"]],
+        ["Total successes", summary["num_success"]],
+        ["Success rate", f"{summary['success_rate']:.3%}"],
+        ["Avg planner steps", f"{summary['avg_planner_steps']:.3f}"],
+        ["Output-format errors", summary["output_format_error"]],
+        ["Missing episodes (count)", summary["missing_ep_count"]],
     ]
     print(tabulate(rows_global, headers=["Metric", "Value"], tablefmt="github"))
     print()
 
     # ------------- per-run table -------------------------------------------
     rows_run = [
-        ["Mean success rate / run",   f"{summary['mean_success_rate_per_run']:.3%}"],
+        ["Mean success rate / run", f"{summary['mean_success_rate_per_run']:.3%}"],
         ["Median success rate / run", f"{summary['median_success_rate_per_run']:.3%}"],
-        ["Mean avg steps   / run",    f"{summary['mean_avg_planner_steps_per_run']:.3f}"],
+        ["Mean avg steps   / run", f"{summary['mean_avg_planner_steps_per_run']:.3f}"],
     ]
     # print(tabulate(rows_run, headers=["Per-run statistic", "Value"], tablefmt="github"))
 
@@ -130,9 +130,7 @@ def print_report(overall: Dict[str, Any]) -> None:
 # Main CLI
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Aggregate all summary.json files and write summary_overall.json"
-    )
+    parser = argparse.ArgumentParser(description="Aggregate all summary.json files and write summary_overall.json")
     parser.add_argument(
         "result_path",
         help="Directory that contains (possibly nested) summary.json files.",

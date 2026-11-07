@@ -12,6 +12,7 @@ Requires:
 - Split character prompt data (appearance_part + action_part per case)
 - VLM API endpoint (OpenAI-compatible)
 """
+
 from __future__ import annotations
 
 import json
@@ -114,6 +115,7 @@ def evaluate_case(
 def _parse_json_response(raw: str) -> Dict:
     """Parse JSON from VLM response, handling markdown code blocks, extra text, and trailing commas."""
     import re
+
     raw = raw.strip()
     if raw.startswith("```"):
         lines = raw.split("\n")
@@ -171,10 +173,14 @@ def summarize_model_results(case_records: List[Dict[str, Any]]) -> Dict[str, Any
     if not valid:
         return {"score": 0.0, "n_cases": 0}
     scores = [r["score"] for r in valid]
-    maintenances = [r["details"]["maintenance_score"] for r in valid
-                    if r.get("details") and r["details"].get("maintenance_score") is not None]
-    actions = [r["details"]["action_score"] for r in valid
-               if r.get("details") and r["details"].get("action_score") is not None]
+    maintenances = [
+        r["details"]["maintenance_score"]
+        for r in valid
+        if r.get("details") and r["details"].get("maintenance_score") is not None
+    ]
+    actions = [
+        r["details"]["action_score"] for r in valid if r.get("details") and r["details"].get("action_score") is not None
+    ]
     return {
         "score": round(float(np.mean(scores)), 4),
         "maintenance_mean": round(float(np.mean(maintenances)), 2) if maintenances else None,

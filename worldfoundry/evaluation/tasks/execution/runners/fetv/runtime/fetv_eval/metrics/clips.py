@@ -1,8 +1,9 @@
 """
-    mid.metric 
-    Copyright (c) 2022-present NAVER Corp.
-    Apache-2.0
+mid.metric
+Copyright (c) 2022-present NAVER Corp.
+Apache-2.0
 """
+
 from typing import *
 import random
 
@@ -15,7 +16,7 @@ from torchmetrics.utilities import rank_zero_info
 
 class ClipScore(Metric):
     r"""
-    Calculates CLIP-S which is used to assess the alignment between the 
+    Calculates CLIP-S which is used to assess the alignment between the
     conditional texts and the generated images.
 
     Args:
@@ -24,11 +25,13 @@ class ClipScore(Metric):
         kwargs:
             Additional keyword arguments, see :ref:`Metric kwargs` for more info.
     """
+
     higher_is_better: bool = True
     full_state_update: bool = False
 
-    def __init__(self, feature: int = 512, limit: int = 30000, avg_first: bool = True, weight = 1.,
-                 **kwargs: Dict[str, Any]) -> None:
+    def __init__(
+        self, feature: int = 512, limit: int = 30000, avg_first: bool = True, weight=1.0, **kwargs: Dict[str, Any]
+    ) -> None:
         super().__init__(**kwargs)
 
         self.limit = limit
@@ -37,14 +40,14 @@ class ClipScore(Metric):
         self.name = "CLIPScore"
         self.weight = weight
 
-        for k in ['x', 'y', 'x0']:  # x: real, y: text, x0: fake
+        for k in ["x", "y", "x0"]:  # x: real, y: text, x0: fake
             self.add_state(f"{k}_feat", [], dist_reduce_fx=None)
 
     def update(self, x: Tensor, y: Tensor, x0: Tensor) -> None:
         r"""
-        Update the state with extracted features in double precision. This 
-        method changes the precision of features into double-precision before 
-        saving the features. 
+        Update the state with extracted features in double precision. This
+        method changes the precision of features into double-precision before
+        saving the features.
 
         Args:
             x (Tensor): tensor with the extracted real image features
@@ -65,7 +68,7 @@ class ClipScore(Metric):
 
         Arg:
             mode (str): if `mode` is "real", it measure the real's score, if
-                `mode` is "shuffle", deliberately break the alignmnet with 
+                `mode` is "shuffle", deliberately break the alignmnet with
                 the condition by randomly-shuffling their counterparts.
         """
         if "real" == mode:
@@ -78,8 +81,7 @@ class ClipScore(Metric):
         r"""
         Calculate the CLIP-S score based on accumulated extracted features.
         """
-        feats = [torch.cat(getattr(self, f"{k}_feat"), dim=0)
-                 for k in ['y', 'x0']]
+        feats = [torch.cat(getattr(self, f"{k}_feat"), dim=0) for k in ["y", "x0"]]
 
         return self._compute(*feats, reduction).to(self.orig_dtype)
 
@@ -90,7 +92,7 @@ class ClipScore(Metric):
         excess = Z.shape[0] - self.limit
         if 0 < excess:
             Y, Z = [x[:-excess] for x in [Y, Z]]
-            
+
         scores = dot(Z, Y)
 
         if reduction:

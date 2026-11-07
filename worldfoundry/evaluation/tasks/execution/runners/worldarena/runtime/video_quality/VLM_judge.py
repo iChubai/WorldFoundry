@@ -157,10 +157,12 @@ Now evaluate the provided video frames based on the above criteria.
 
 
 def run_qwen_vl(model, processor, prompt, images):
-    messages = [{
-        "role": "user",
-        "content": [*[{"type": "image", "image": img} for img in images], {"type": "text", "text": prompt}],
-    }]
+    messages = [
+        {
+            "role": "user",
+            "content": [*[{"type": "image", "image": img} for img in images], {"type": "text", "text": prompt}],
+        }
+    ]
 
     inputs = processor.apply_chat_template(
         messages,
@@ -217,15 +219,15 @@ def normalize_metrics(parsed):
     return metrics
 
 
-def vlm_judge(model_name, video_dir, summary_json, output_root, tmp_root, metrics_filter, num_frames=16, model_path=None):
+def vlm_judge(
+    model_name, video_dir, summary_json, output_root, tmp_root, metrics_filter, num_frames=16, model_path=None
+):
     os.makedirs(output_root, exist_ok=True)
     tmp_dir = os.path.join(tmp_root, model_name)
     os.makedirs(tmp_dir, exist_ok=True)
 
     model_path = model_path or DEFAULT_MODEL_PATH
-    model = Qwen3VLForConditionalGeneration.from_pretrained(
-        model_path, torch_dtype="auto", device_map="auto"
-    ).eval()
+    model = Qwen3VLForConditionalGeneration.from_pretrained(model_path, torch_dtype="auto", device_map="auto").eval()
     processor = AutoProcessor.from_pretrained(model_path)
 
     instruction_map, valid_names = load_instruction_json(summary_json)

@@ -23,9 +23,7 @@ class GPTEvaluator:
         if api_key is None:
             api_key = os.environ.get("OPENAI_API_KEY")
             if not api_key:
-                raise ValueError(
-                    "OPENAI_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("OPENAI_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         self.client = OpenAI(api_key=api_key)
         self.model = "gpt-5.2"
@@ -34,7 +32,7 @@ class GPTEvaluator:
     def _encode_image(self, image_path: str) -> str:
         """Encode image to base64 for OpenAI API."""
         with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+            return base64.b64encode(image_file.read()).decode("utf-8")
 
     def _extract_frames(self, video_path: str, frame_interval: int = 5) -> List[str]:
         """
@@ -76,9 +74,7 @@ class GPTEvaluator:
         print(f"    Extracted {extracted_count} frames from {frame_count} total frames")
         return frame_paths
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
         """
         First GPT call: Given initial image and optional action prompt,
         predict what process should happen.
@@ -135,16 +131,11 @@ Process: [concise one-sentence description of the expected evolution]"""
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                }
-                            }
-                        ]
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
+                        ],
                     }
                 ],
-                max_completion_tokens=500
+                max_completion_tokens=500,
             )
             elapsed = time.time() - start_time
             print(f"    Process prediction took {elapsed:.1f}s")
@@ -236,21 +227,14 @@ EXPLANATION: [Your detailed explanation]"""
 
         for frame_path in frame_paths:
             base64_frame = self._encode_image(frame_path)
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{base64_frame}"
-                }
-            })
+            content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_frame}"}})
 
         # Make API call
         print(f"    Calling GPT API for video verification ({len(frame_paths)} frames)...")
         verify_start = time.time()
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": content}],
-                max_completion_tokens=1000
+                model=self.model, messages=[{"role": "user", "content": content}], max_completion_tokens=1000
             )
             response_text = response.choices[0].message.content
             verify_time = time.time() - verify_start
@@ -346,7 +330,7 @@ EXPLANATION: [Your detailed explanation]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process

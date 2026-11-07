@@ -187,10 +187,7 @@ def sample_video_frames(
     elif count == 1:
         sample_times = [(start_sec + end_sec) / 2.0]
     else:
-        sample_times = [
-            start_sec + (end_sec - start_sec) * idx / float(count - 1)
-            for idx in range(count)
-        ]
+        sample_times = [start_sec + (end_sec - start_sec) * idx / float(count - 1) for idx in range(count)]
 
     output_paths: List[Path] = []
     output_root = Path(output_dir)
@@ -533,7 +530,9 @@ def main() -> None:
     parser.add_argument("--output", help="Optional path to save JSON results")
     parser.add_argument("--chunk-frames", type=int, default=4, help="Frames sampled per generated chunk")
     parser.add_argument("--ref-frames", type=int, default=4, help="Reference context frames")
-    parser.add_argument("--transition-side-frames", type=int, default=3, help="Frames sampled on each side of a chunk boundary")
+    parser.add_argument(
+        "--transition-side-frames", type=int, default=3, help="Frames sampled on each side of a chunk boundary"
+    )
     parser.add_argument("--global-frames", type=int, default=12, help="Frames sampled from the full generated video")
     parser.add_argument("--skip-chunk", action="store_true", help="Skip per-chunk scoring")
     parser.add_argument("--skip-transition", action="store_true", help="Skip adjacent-transition scoring")

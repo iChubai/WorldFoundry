@@ -62,7 +62,6 @@ MODEL_CONFIGS = {
 }
 
 
-
 def find_frames_dir(search_dirs, folder):
     """
     Search all given directories recursively for a subfolder named `folder`,
@@ -151,7 +150,6 @@ def frames_to_video(frames_dir, fps=16):
         writer.release()
 
 
-
 def extract_json(text):
     """Parse JSON from Gemini response — handles ```json...``` or plain JSON."""
     text = text.strip()
@@ -161,7 +159,6 @@ def extract_json(text):
         end = text.rfind("```")
         text = text[start:end].strip()
     return json.loads(text)
-
 
 
 def upload_and_wait(file_path, kind="file"):
@@ -177,7 +174,6 @@ def upload_and_wait(file_path, kind="file"):
             raise RuntimeError(f"Gemini {kind} processing failed for {file_path}")
         print(".", end="", flush=True)
         time.sleep(5)
-
 
 
 def generate_questions(img_path, generation_prompt):
@@ -213,7 +209,6 @@ JSON only — columns: [ID, Dimension, Dimension Polarity, Question]
         contents=[img_file, prompt],
     )
     return response.text
-
 
 
 def evaluate_video(video_path, questions):
@@ -314,43 +309,40 @@ def compute_scores(evaluation_json, questions_json=None):
     return {dim: round(score[dim] / count[dim], 4) for dim in score}
 
 
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Run VQA evaluation for a given model (handles both synthetic and real)."
     )
     parser.add_argument(
-        "--model-name", required=True,
+        "--model-name",
+        required=True,
         choices=list(MODEL_CONFIGS.keys()),
-        help=f"Model to evaluate. Choices: {list(MODEL_CONFIGS.keys())}"
+        help=f"Model to evaluate. Choices: {list(MODEL_CONFIGS.keys())}",
     )
     parser.add_argument(
-        "--video-dirs", nargs="+", default=None,
+        "--video-dirs",
+        nargs="+",
+        default=None,
         help="Override default video directories for this model (space-separated). "
-             "If not set, uses the built-in config for --model-name."
+        "If not set, uses the built-in config for --model-name.",
     )
     parser.add_argument(
-        "--output-dir", default="vqa_results",
-        help="Root output directory. Scores saved to {output_dir}/{model_name}/."
+        "--output-dir", default="vqa_results", help="Root output directory. Scores saved to {output_dir}/{model_name}/."
     )
     parser.add_argument(
         "--cases-csv",
         default=str(bundled_benchmark_asset("memobench", "data", "vqa_questions", "failure-cases.csv")),
-        help="Path to cases CSV."
+        help="Path to cases CSV.",
     )
     parser.add_argument(
         "--questions-dir",
         default=str(bundled_benchmark_asset("memobench", "data", "vqa_questions")),
-        help="Directory containing per-clip question CSVs."
+        help="Directory containing per-clip question CSVs.",
     )
     parser.add_argument(
-        "--skip-existing", action="store_true",
-        help="Skip clips that already have a score file (resume mode)."
+        "--skip-existing", action="store_true", help="Skip clips that already have a score file (resume mode)."
     )
-    parser.add_argument(
-        "--model-id", default=MODEL_ID,
-        help=f"Gemini model ID to use. Default: {MODEL_ID}"
-    )
+    parser.add_argument("--model-id", default=MODEL_ID, help=f"Gemini model ID to use. Default: {MODEL_ID}")
     return parser.parse_args()
 
 
@@ -367,7 +359,7 @@ if __name__ == "__main__":
     print(f"Output dir:  {score_dir}")
 
     # Load clip list
-    with open(args.cases_csv, newline='', encoding='utf-8') as f:
+    with open(args.cases_csv, newline="", encoding="utf-8") as f:
         cases = list(csv.DictReader(f))
     print(f"Loaded {len(cases)} clips from {args.cases_csv}\n")
 
@@ -375,10 +367,10 @@ if __name__ == "__main__":
     skipped = failed = 0
 
     for case in tqdm(cases, desc=args.model_name, unit="clip"):
-        scene    = case["scene"]
+        scene = case["scene"]
         video_id = case["video_id"]
-        folder   = case["folder"]
-        clip_id  = f"{scene}-{video_id}"
+        folder = case["folder"]
+        clip_id = f"{scene}-{video_id}"
 
         # Skip if already done
         out_path = os.path.join(score_dir, f"{clip_id}.csv")
@@ -387,11 +379,11 @@ if __name__ == "__main__":
             skipped += 1
             continue
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"[{clip_id}]  folder={folder}")
 
         # Find frames dir or direct mp4
-        tmp_video = None       # temp file to clean up after use
+        tmp_video = None  # temp file to clean up after use
         video_for_eval = None  # path passed to Gemini
 
         frames_dir = find_frames_dir(search_dirs, folder)
@@ -421,7 +413,7 @@ if __name__ == "__main__":
                 print(f"[WARN] Questions not found: {q_path} — skipping")
                 failed += 1
                 continue
-            with open(q_path, newline='', encoding='utf-8') as f:
+            with open(q_path, newline="", encoding="utf-8") as f:
                 q_rows = list(csv.DictReader(f))
             if not q_rows or not q_rows[0].get("Final questions"):
                 print(f"[WARN] No 'Final questions' in {q_path} — skipping")
@@ -441,8 +433,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     err_str = str(e)
                     is_transient = any(
-                        k in err_str
-                        for k in ["503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "high demand"]
+                        k in err_str for k in ["503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "high demand"]
                     )
                     if is_transient and attempt < max_retries:
                         wait = 30 * attempt  # 30s, 60s, 90s, 120s
@@ -468,13 +459,13 @@ if __name__ == "__main__":
 
         # Save per-clip CSV
         row = {
-            "scene":      scene,
-            "video_id":   video_id,
-            "folder":     folder,
+            "scene": scene,
+            "video_id": video_id,
+            "folder": folder,
             "Evaluation": json.dumps(evaluation_json),
-            "score":      json.dumps(score),
+            "score": json.dumps(score),
         }
-        with open(out_path, 'w', newline='', encoding='utf-8') as f:
+        with open(out_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=row.keys())
             writer.writeheader()
             writer.writerow(row)
@@ -488,7 +479,7 @@ if __name__ == "__main__":
             s = json.loads(row["score"])
             summary_rows.append({"scene": row["scene"], "video_id": row["video_id"], **s})
         overall_path = os.path.join(score_dir, "overall.csv")
-        with open(overall_path, 'w', newline='', encoding='utf-8') as f:
+        with open(overall_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=summary_rows[0].keys())
             writer.writeheader()
             writer.writerows(summary_rows)

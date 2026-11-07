@@ -28,7 +28,9 @@ def run_metric_eval(metric, gen_strings, gt_strings, metric_type):
             return metric(gen_strings, gt_strings).detach().cpu().numpy()
         raise ValueError("Invalid metric type")
     except Exception as e:
-        print(f"Error in computing {metric_type} score with generated string: {gen_strings} and ground-truth string: {gt_strings}")
+        print(
+            f"Error in computing {metric_type} score with generated string: {gen_strings} and ground-truth string: {gt_strings}"
+        )
         print(e)
         return 0.0
 
@@ -60,9 +62,7 @@ def compute_metric_scores(semantics_model, metric_type, list_gen_strings, list_g
 
     scores = [
         run_metric_eval(metric, gen_strings, gt_strings, metric_type)
-        for gen_strings, gt_strings in tqdm(
-            list(zip(list_gen_strings, list_gt_strings)), desc="Compute metric scores"
-        )
+        for gen_strings, gt_strings in tqdm(list(zip(list_gen_strings, list_gt_strings)), desc="Compute metric scores")
     ]
     return scores
 

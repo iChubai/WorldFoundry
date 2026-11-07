@@ -1,4 +1,5 @@
 """Dynamic degree — VBench-aligned RAFT optical flow with Farneback fallback."""
+
 import logging
 import cv2
 import numpy as np
@@ -94,7 +95,7 @@ class DynamicDegreeMetric(BaseMetric):
             curr_gray = cv2.cvtColor(np.array(frames[i]), cv2.COLOR_RGB2GRAY)
             flow = cv2.calcOpticalFlowFarneback(prev_gray, curr_gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
             mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-            top_mag = np.mean(np.sort(mag.flatten())[-int(mag.size * 0.05):])
+            top_mag = np.mean(np.sort(mag.flatten())[-int(mag.size * 0.05) :])
             if top_mag > thres:
                 move_count += 1
             if move_count >= count_num:

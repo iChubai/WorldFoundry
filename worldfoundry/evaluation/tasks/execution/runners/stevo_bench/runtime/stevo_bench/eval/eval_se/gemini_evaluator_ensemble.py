@@ -18,17 +18,13 @@ class GeminiEnsembleEvaluator:
         if api_key is None:
             api_key = os.environ.get("GOOGLE_API_KEY")
             if not api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-3-pro-preview")
         print(f"Using model: gemini-3-pro-preview (ensemble mode)")
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
         """
         First Gemini call: Given initial image and optional action prompt,
         predict what process should happen.
@@ -109,9 +105,7 @@ Process: [concise one-sentence description of the expected evolution]"""
         print("    Warning: Could not find 'Process:' line, using full response")
         return response_text
 
-    def _get_verification_prompts(
-        self, expected_process: str, model_type: str
-    ) -> List[str]:
+    def _get_verification_prompts(self, expected_process: str, model_type: str) -> List[str]:
         """
         Generate 3 different prompt variations for ensemble voting.
 
@@ -263,12 +257,7 @@ EXPLANATION: [Your analysis]"""
                 # Parse verdict
                 verdict = self._parse_verdict(response_text)
 
-                results.append({
-                    "prompt_id": i,
-                    "response": response_text,
-                    "verdict": verdict,
-                    "time": verify_time
-                })
+                results.append({"prompt_id": i, "response": response_text, "verdict": verdict, "time": verify_time})
                 verdicts.append(verdict)
 
                 print(f"    Verdict {i}: {'PASS' if verdict else 'FAIL'}")
@@ -276,12 +265,14 @@ EXPLANATION: [Your analysis]"""
             except Exception as e:
                 print(f"    ERROR in verification {i}: {e}")
                 # Continue with other prompts even if one fails
-                results.append({
-                    "prompt_id": i,
-                    "response": f"ERROR: {str(e)}",
-                    "verdict": None,
-                    "time": time.time() - verify_start
-                })
+                results.append(
+                    {
+                        "prompt_id": i,
+                        "response": f"ERROR: {str(e)}",
+                        "verdict": None,
+                        "time": time.time() - verify_start,
+                    }
+                )
 
         # Unanimous voting: all 3 judges must agree (exclude None values from failed calls)
         valid_verdicts = [v for v in verdicts if v is not None]
@@ -296,13 +287,15 @@ EXPLANATION: [Your analysis]"""
             # Print voting summary
             yes_votes = sum(1 for v in valid_verdicts if v)
             no_votes = sum(1 for v in valid_verdicts if not v)
-            print(f"    Ensemble vote (UNANIMOUS): Yes={yes_votes}, No={no_votes} -> Final: {'PASS' if final_verdict else 'FAIL'}")
+            print(
+                f"    Ensemble vote (UNANIMOUS): Yes={yes_votes}, No={no_votes} -> Final: {'PASS' if final_verdict else 'FAIL'}"
+            )
 
         detailed_results = {
             "individual_results": results,
             "verdicts": verdicts,
             "final_verdict": final_verdict,
-            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {}
+            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {},
         }
 
         return detailed_results, final_verdict
@@ -369,7 +362,7 @@ EXPLANATION: [Your analysis]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process

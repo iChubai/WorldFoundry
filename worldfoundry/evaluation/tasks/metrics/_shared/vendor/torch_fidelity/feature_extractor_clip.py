@@ -58,7 +58,7 @@ MODEL_METADATA = {
         "filename": "ViT-L-14-336px",
     },
 }
-MODEL_URLS = {k: f'{MODEL_BASE_URL}/{v["hash"]}/{v["filename"]}.pt' for k, v in MODEL_METADATA.items()}
+MODEL_URLS = {k: f"{MODEL_BASE_URL}/{v['hash']}/{v['filename']}.pt" for k, v in MODEL_METADATA.items()}
 
 
 class Bottleneck(nn.Module):
@@ -476,7 +476,7 @@ class FeatureExtractorCLIP(FeatureExtractorBase):
                             map_location="cpu",
                             progress=verbose,
                             check_hash=True,
-                            file_name=f'{name}-{MODEL_METADATA[name]["hash"]}.pt',
+                            file_name=f"{name}-{MODEL_METADATA[name]['hash']}.pt",
                         )
                         break
                     except RuntimeError as e:

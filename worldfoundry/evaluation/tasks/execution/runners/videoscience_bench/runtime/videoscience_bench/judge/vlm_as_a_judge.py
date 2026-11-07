@@ -17,11 +17,11 @@ except ImportError:
 
 # ---------- scoring weighting (all 1–4) ----------
 WEIGHTS = {
-    "prompt_consistency":  0.20,
+    "prompt_consistency": 0.20,
     "expected_phenomenon": 0.30,  # emphasize scientific reasoning
-    "coherence":           0.20,
-    "immutability":        0.15,
-    "dynamism":            0.15,
+    "coherence": 0.20,
+    "immutability": 0.15,
+    "dynamism": 0.15,
 }
 
 REPORT_MD = """# VLM Judge Report
@@ -45,9 +45,11 @@ REPORT_MD = """# VLM Judge Report
 {ref_section}
 """
 
+
 # ---------- Parsing helpers ----------
 def _try_json_loads(blob: str) -> Dict[str, Any]:
     return json.loads(blob)
+
 
 def _extract_json_from_text(text: str) -> Dict[str, Any]:
     """
@@ -80,11 +82,14 @@ def _extract_json_from_text(text: str) -> Dict[str, Any]:
 
     return {}
 
+
 def _clamp(v: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, v))
 
+
 def _to_float(x: Any) -> float | None:
     return float(x)
+
 
 def _normalize_1to4(v: Any) -> float:
     """
@@ -102,14 +107,16 @@ def _normalize_1to4(v: Any) -> float:
         return 1.0 + 3.0 * (f / 100.0)
     return _clamp(f, 1.0, 4.0)
 
+
 def _compute_overall_1to4(r: Dict[str, Any], w: Dict[str, float]) -> float:
     return (
-        w["prompt_consistency"]  * _normalize_1to4(r.get("prompt_consistency"))
-      + w["expected_phenomenon"] * _normalize_1to4(r.get("expected_phenomenon"))
-      + w["immutability"]        * _normalize_1to4(r.get("immutability"))
-      + w["dynamism"]            * _normalize_1to4(r.get("dynamism"))
-      + w["coherence"]           * _normalize_1to4(r.get("coherence"))
+        w["prompt_consistency"] * _normalize_1to4(r.get("prompt_consistency"))
+        + w["expected_phenomenon"] * _normalize_1to4(r.get("expected_phenomenon"))
+        + w["immutability"] * _normalize_1to4(r.get("immutability"))
+        + w["dynamism"] * _normalize_1to4(r.get("dynamism"))
+        + w["coherence"] * _normalize_1to4(r.get("coherence"))
     )
+
 
 def _parse_output_text(output_text: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
@@ -137,7 +144,9 @@ def _parse_output_text(output_text: str) -> Tuple[Dict[str, Any], Dict[str, Any]
         "expected_phenomenon": scores.get("expected_phenomenon") or scores.get("Expected phenomenon"),
         "immutability": scores.get("immutability") or scores.get("Immutability"),
         "dynamism": scores.get("dynamism") or scores.get("Correct Dynamism") or scores.get("dynamism_other_laws"),
-        "coherence": scores.get("coherence") or scores.get("Spatio-Temporal Continuity") or scores.get("spatio_temporal_continuity"),
+        "coherence": scores.get("coherence")
+        or scores.get("Spatio-Temporal Continuity")
+        or scores.get("spatio_temporal_continuity"),
     }
 
     # Normalize to 1–4
@@ -153,6 +162,7 @@ def _parse_output_text(output_text: str) -> Tuple[Dict[str, Any], Dict[str, Any]
 
     return norm, {"summary": str(summary), "issues": [str(x) for x in issues]}
 
+
 def _format_rubric_section(r: dict, overall: float) -> str:
     if not r:
         return ""
@@ -167,6 +177,7 @@ def _format_rubric_section(r: dict, overall: float) -> str:
     ]
     return "\n".join(lines) + "\n\n"
 
+
 # add somewhere above main()
 def _is_remote_or_missing(p: str | None) -> bool:
     if not p:
@@ -176,6 +187,7 @@ def _is_remote_or_missing(p: str | None) -> bool:
         return True
 
     return not Path(p).exists()
+
 
 def _load_checklist(path: str | None) -> Dict[str, Any]:
     """
@@ -203,6 +215,7 @@ def _load_checklist(path: str | None) -> Dict[str, Any]:
 
     return {}
 
+
 def _load_cv_metrics(path: str | None) -> Dict[str, Any]:
     """
     Load CV-based metrics JSON produced by cv_metrics.py (optional).
@@ -219,10 +232,15 @@ def _load_cv_metrics(path: str | None) -> Dict[str, Any]:
     print(f"[vlm_as_a_judge] CV metrics JSON at {path} is not an object; ignoring.", file=sys.stderr)
     return {}
 
+
 def main():
     ap = argparse.ArgumentParser(description="Judge science experiment video quality with a VLM.")
     ap.add_argument("--provider", required=True, help="openai | gemini | anthropic")
-    ap.add_argument("--model", required=True, help="e.g., gpt-5-pro-2025-10-06, gpt-4o-2024-08-06, gemini-2.5-flash, claude-3-7-sonnet")
+    ap.add_argument(
+        "--model",
+        required=True,
+        help="e.g., gpt-5-pro-2025-10-06, gpt-4o-2024-08-06, gemini-2.5-flash, claude-3-7-sonnet",
+    )
     ap.add_argument("--video", required=True, help="Path to candidate video (or image)")
     ap.add_argument("--phenomenon", required=True, help="Ground-truth phenomenon name")
     ap.add_argument("--description", required=True, help="Authoritative description of expected behavior")
@@ -233,9 +251,7 @@ def main():
     ap.add_argument("--json_out", default=None, help="Where to write full JSON result")
     ap.add_argument("--md_out", default=None, help="Where to write a Markdown report")
     ap.add_argument(
-        "--checklist_json",
-        default=None,
-        help="Optional checklist JSON file with expected visual items per category"
+        "--checklist_json", default=None, help="Optional checklist JSON file with expected visual items per category"
     )
     ap.add_argument(
         "--cv_json",
@@ -256,14 +272,14 @@ def main():
 
     checklist = _load_checklist(args.checklist_json)
     cv_metrics = _load_cv_metrics(args.cv_json)
-    
+
     # Build extra payload
     extra: Dict[str, Any] = {}
     if checklist:
         extra["checklist"] = checklist
     if cv_metrics:
         extra["cv_metrics"] = cv_metrics
-    
+
     # Call provider via manager (returns raw output_text + evidence)
     res = judge_experiment(
         provider=args.provider,
@@ -301,7 +317,7 @@ def main():
             "reference_frames": evidence.get("reference_frames", []),
         },
         "rubric": {
-            **rubric_scores,           # all 1–4
+            **rubric_scores,  # all 1–4
             "overall_weighted": overall,
             "weights": dict(WEIGHTS),
         },
@@ -327,7 +343,9 @@ def main():
         summary=explanations.get("summary", "") or "(no summary parsed)",
         issues="\n".join(f"- {s}" for s in (explanations.get("issues") or [])) or "- (none reported)",
         cand_frames=", ".join(evidence.get("candidate_frames", [])) or "(frames hidden)",
-        ref_section=("- Reference: " + ", ".join(evidence.get("reference_frames", []))) if evidence.get("reference_frames") else "",
+        ref_section=("- Reference: " + ", ".join(evidence.get("reference_frames", [])))
+        if evidence.get("reference_frames")
+        else "",
     )
 
     if args.md_out:
@@ -335,6 +353,7 @@ def main():
         print(f"Wrote report --> {args.md_out}")
     else:
         print(md)
+
 
 if __name__ == "__main__":
     main()

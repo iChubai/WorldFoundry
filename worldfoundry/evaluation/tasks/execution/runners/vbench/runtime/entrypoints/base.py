@@ -25,7 +25,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dimension", nargs="+", required=True)
     parser.add_argument("--load_ckpt_from_local", type=_str_bool, default=False)
     parser.add_argument("--read_frame", type=_str_bool, default=False)
-    parser.add_argument("--mode", choices=["custom_input", "vbench_standard", "vbench_category"], default="vbench_standard")
+    parser.add_argument(
+        "--mode", choices=["custom_input", "vbench_standard", "vbench_category"], default="vbench_standard"
+    )
     parser.add_argument("--prompt", default="None")
     parser.add_argument("--prompt_file")
     parser.add_argument("--category")

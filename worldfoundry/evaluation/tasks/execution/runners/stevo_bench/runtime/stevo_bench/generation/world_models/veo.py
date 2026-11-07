@@ -26,9 +26,7 @@ class VeoRunner(WorldModelRunner):
         api_key_env = config.get("api_key_env", "GOOGLE_API_KEY")
         self.api_key = os.environ.get(api_key_env)
         if not self.api_key:
-            raise EnvironmentError(
-                f"[{name}] Missing required environment variable: {api_key_env}"
-            )
+            raise EnvironmentError(f"[{name}] Missing required environment variable: {api_key_env}")
         self.model_id: str = config.get("model_id", "veo-3.1-fast-generate-preview")
         self.poll_interval: int = int(config.get("poll_interval", 10))
         self.timeout: int = int(config.get("timeout", 600))
@@ -51,9 +49,7 @@ class VeoRunner(WorldModelRunner):
             # Build optional conditioning image
             image = None
             if init_frame and init_frame.exists():
-                mime_type = (
-                    "image/png" if init_frame.suffix.lower() == ".png" else "image/jpeg"
-                )
+                mime_type = "image/png" if init_frame.suffix.lower() == ".png" else "image/jpeg"
                 image = types.Image(
                     image_bytes=init_frame.read_bytes(),
                     mime_type=mime_type,
@@ -79,28 +75,17 @@ class VeoRunner(WorldModelRunner):
                 elapsed += self.poll_interval
                 operation = client.operations.get(operation)
                 if elapsed >= self.timeout:
-                    print(
-                        f"[{self.name}] Timeout ({elapsed}s) waiting for task {task_id}"
-                    )
+                    print(f"[{self.name}] Timeout ({elapsed}s) waiting for task {task_id}")
                     return False
 
             # Check for an API-level error (content policy rejection, bad params, etc.)
             if operation.error:
-                print(
-                    f"[{self.name}] Generation failed for {task_id}: {operation.error}"
-                )
+                print(f"[{self.name}] Generation failed for {task_id}: {operation.error}")
                 return False
 
-            videos = (
-                operation.response.generated_videos
-                if operation.response
-                else None
-            )
+            videos = operation.response.generated_videos if operation.response else None
             if not videos:
-                print(
-                    f"[{self.name}] No videos returned for {task_id} "
-                    f"(response: {operation.response})"
-                )
+                print(f"[{self.name}] No videos returned for {task_id} (response: {operation.response})")
                 return False
 
             generated_video = videos[0]

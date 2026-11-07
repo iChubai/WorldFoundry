@@ -165,9 +165,7 @@ def install_p22_overlay(repo_root: Path) -> None:
             )
 
         context_text = prompts.format_task_context(task_context)
-        evidence_text = prompts.format_evidence_context(
-            evidence_context, evidence_context_mode=evidence_context_mode
-        )
+        evidence_text = prompts.format_evidence_context(evidence_context, evidence_context_mode=evidence_context_mode)
         extra_context_block = ""
         if context_text.strip() not in {"", "{}", "- none"} or evidence_text.strip():
             extra_context_block = f"""
@@ -202,9 +200,7 @@ Answer exactly one token: Yes or No."""
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Run Qwen3.5 probe scorer with P22 native D5/D6 score prompts"
-    )
+    parser = argparse.ArgumentParser(description="Run Qwen3.5 probe scorer with P22 native D5/D6 score prompts")
     parser.add_argument("--repo-root", type=Path, required=True)
     parser.add_argument("runner_args", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)

@@ -25,7 +25,7 @@ def recompute_with_unanimous(results_file: str, project_root: str) -> Dict:
     if not results_path.is_absolute():
         results_path = Path(project_root) / "eval_se" / "results" / results_file
 
-    with open(results_path, 'r') as f:
+    with open(results_path, "r") as f:
         eval_results = json.load(f)
 
     # Check if this is ensemble results
@@ -79,15 +79,17 @@ def recompute_with_unanimous(results_file: str, project_root: str) -> Dict:
             yes_votes = sum(1 for v in valid_verdicts if v)
             no_votes = sum(1 for v in valid_verdicts if not v)
 
-            changes.append({
-                "task_id": task_id,
-                "run_name": run_name,
-                "majority_verdict": original_verdict,
-                "unanimous_verdict": unanimous_verdict,
-                "individual_verdicts": verdicts,
-                "yes_votes": yes_votes,
-                "no_votes": no_votes
-            })
+            changes.append(
+                {
+                    "task_id": task_id,
+                    "run_name": run_name,
+                    "majority_verdict": original_verdict,
+                    "unanimous_verdict": unanimous_verdict,
+                    "individual_verdicts": verdicts,
+                    "yes_votes": yes_votes,
+                    "no_votes": no_votes,
+                }
+            )
 
     # Create new results file
     new_eval_results = eval_results.copy()
@@ -104,8 +106,8 @@ def recompute_with_unanimous(results_file: str, project_root: str) -> Dict:
             "unanimous_passes": unanimous_passes,
             "changed_verdicts": len(changes),
             "majority_pass_rate": majority_passes / len(eval_results["results"]),
-            "unanimous_pass_rate": unanimous_passes / len(eval_results["results"])
-        }
+            "unanimous_pass_rate": unanimous_passes / len(eval_results["results"]),
+        },
     }
 
 
@@ -124,18 +126,18 @@ def main():
     stats = recomputed["stats"]
     changes = recomputed["changes"]
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("UNANIMOUS VOTING RECOMPUTATION")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"Total tasks evaluated: {stats['total_tasks']}")
-    print(f"Majority voting passes: {stats['majority_passes']} ({stats['majority_pass_rate']*100:.1f}%)")
-    print(f"Unanimous voting passes: {stats['unanimous_passes']} ({stats['unanimous_pass_rate']*100:.1f}%)")
+    print(f"Majority voting passes: {stats['majority_passes']} ({stats['majority_pass_rate'] * 100:.1f}%)")
+    print(f"Unanimous voting passes: {stats['unanimous_passes']} ({stats['unanimous_pass_rate'] * 100:.1f}%)")
     print(f"Changed verdicts: {stats['changed_verdicts']}")
 
     if changes:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"CHANGED VERDICTS ({len(changes)} tasks)")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         # Group by change type
         majority_to_fail = [c for c in changes if c["majority_verdict"] and not c["unanimous_verdict"]]
@@ -160,10 +162,10 @@ def main():
     output_file = f"{input_stem}_unanimous.json"
     output_path = Path(project_root) / "eval_se" / "results" / output_file
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(recomputed["new_results"], f, indent=2)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Recomputed results saved to: {output_path}")
     print(f"\nYou can now analyze this with:")
     print(f"  python eval_se/analyze_results.py {output_file}")

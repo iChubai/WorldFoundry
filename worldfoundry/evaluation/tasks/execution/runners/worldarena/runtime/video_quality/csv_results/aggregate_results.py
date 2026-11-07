@@ -61,7 +61,7 @@ def _parse_video_id_from_path(path: str) -> str:
     def _normalize_episode_token(token: str) -> str:
         lower = token.lower()
         if lower.startswith("episode"):
-            rest = token[len("episode"):].lstrip("._")
+            rest = token[len("episode") :].lstrip("._")
             if rest:
                 return f"episode{rest}"
             return "episode"
@@ -82,7 +82,7 @@ def _parse_video_id_from_path(path: str) -> str:
                 episode = _normalize_episode_token(episode_raw)
                 # Avoid duplicating "episode" prefix
                 if episode.lower().startswith("episode"):
-                    suffix = episode[len("episode"):]
+                    suffix = episode[len("episode") :]
                     video_id = f"{task}_episode{suffix}"
                 else:
                     video_id = f"{task}_{episode}"
@@ -239,8 +239,10 @@ if __name__ == "__main__":
     parser.add_argument("--base_dir", default=os.path.dirname(__file__), help="Path to video_quality directory")
     parser.add_argument("--model_name", required=True, help="Model name for the CSV column and VLM folder")
     parser.add_argument("--csv_name", default="aggregated_results.csv", help="Output CSV file name")
-    parser.add_argument("--vlm_model_dir", default=None, help="Override VLM output folder name if different from model name")
-    parser.add_argument("--jepa_result_path", default=None, help="Optional path to JEPA result JSON {\"score\": float}")
+    parser.add_argument(
+        "--vlm_model_dir", default=None, help="Override VLM output folder name if different from model name"
+    )
+    parser.add_argument("--jepa_result_path", default=None, help='Optional path to JEPA result JSON {"score": float}')
     args = parser.parse_args()
 
     csv_path = aggregate_results(

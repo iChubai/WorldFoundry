@@ -18,9 +18,7 @@ T2V_GATE_NAMES = (
     "camera_amplitude_ok",
 )
 
-_EVENT_PRONOUN_START_RE = re.compile(
-    r"(?<=\.\s)(He|She|It)\b|^(He|She|It)\b|(?<=\,\s)(he|she|it)\b"
-)
+_EVENT_PRONOUN_START_RE = re.compile(r"(?<=\.\s)(He|She|It)\b|^(He|She|It)\b|(?<=\,\s)(he|she|it)\b")
 
 
 def validate_subject_anchored_prompt(prompt: str) -> bool:

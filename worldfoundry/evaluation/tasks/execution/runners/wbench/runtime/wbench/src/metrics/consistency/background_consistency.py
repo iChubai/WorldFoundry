@@ -1,4 +1,5 @@
 """Background consistency — VBench-aligned CLIP feature similarity."""
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -21,10 +22,14 @@ class BackgroundConsistencyMetric(BaseMetric):
             mean=[0.48145466, 0.4578275, 0.40821073],
             std=[0.26862954, 0.26130258, 0.27577711],
         )
-        self.transform = T.Compose([
-            T.Resize(224, interpolation=T.InterpolationMode.BICUBIC),
-            T.CenterCrop(224), T.ToTensor(), self.normalize,
-        ])
+        self.transform = T.Compose(
+            [
+                T.Resize(224, interpolation=T.InterpolationMode.BICUBIC),
+                T.CenterCrop(224),
+                T.ToTensor(),
+                self.normalize,
+            ]
+        )
 
     @property
     def name(self):
@@ -35,13 +40,13 @@ class BackgroundConsistencyMetric(BaseMetric):
         all_feats = []
         if preprocessed_tensors is not None:
             for start in range(0, len(preprocessed_tensors), self.batch_size):
-                batch = preprocessed_tensors[start:start + self.batch_size]
+                batch = preprocessed_tensors[start : start + self.batch_size]
                 batch = self.normalize(batch).to(self.device)
                 features = self.model.encode_image(batch)
                 all_feats.append(F.normalize(features.float(), dim=-1, p=2))
         else:
             for start in range(0, len(frames), self.batch_size):
-                imgs = frames[start:start + self.batch_size]
+                imgs = frames[start : start + self.batch_size]
                 tensors = torch.stack([self.transform(img) for img in imgs]).to(self.device)
                 features = self.model.encode_image(tensors)
                 all_feats.append(F.normalize(features.float(), dim=-1, p=2))
@@ -56,7 +61,7 @@ class BackgroundConsistencyMetric(BaseMetric):
         first_feat = all_feats[0:1]
         similarities = []
         for i in range(1, len(all_feats)):
-            sim_pre = max(0.0, F.cosine_similarity(all_feats[i-1:i], all_feats[i:i+1]).item())
-            sim_fir = max(0.0, F.cosine_similarity(first_feat, all_feats[i:i+1]).item())
+            sim_pre = max(0.0, F.cosine_similarity(all_feats[i - 1 : i], all_feats[i : i + 1]).item())
+            sim_fir = max(0.0, F.cosine_similarity(first_feat, all_feats[i : i + 1]).item())
             similarities.append((sim_pre + sim_fir) / 2)
         return {f"{self.name}_score": float(np.mean(similarities))}

@@ -8,19 +8,20 @@
 import numpy as np
 import cv2
 
+
 def EvaluateErrBetweenTwoImage(left_img, right_img, ransac_th):
-    left_img = left_img.permute(1, 2, 0) 
+    left_img = left_img.permute(1, 2, 0)
     left_img = left_img.numpy().astype(np.uint8)
     img1 = cv2.cvtColor(left_img, cv2.COLOR_RGB2BGR)
-    
-    right_img = right_img.permute(1, 2, 0) 
+
+    right_img = right_img.permute(1, 2, 0)
     right_img = right_img.numpy().astype(np.uint8)
     img2 = cv2.cvtColor(right_img, cv2.COLOR_RGB2BGR)
 
     #  align the size the all picture
     img1 = cv2.resize(img1, (854, 480))
     img2 = cv2.resize(img2, (854, 480))
-    
+
     # 创建SIFT特征点检测器
     num_corners = 40000
     sift = cv2.SIFT_create(num_corners)
@@ -28,10 +29,10 @@ def EvaluateErrBetweenTwoImage(left_img, right_img, ransac_th):
     # 在两张图片上检测SIFT特征点和描述符
     kp1, des1 = sift.detectAndCompute(img1, None)
     kp2, des2 = sift.detectAndCompute(img2, None)
-    k=2
+    k = 2
     if des1 is None or des2 is None:
         return 0
-    if len(des1)<k or len(des2)<k:
+    if len(des1) < k or len(des2) < k:
         return 0
     # 使用FLANN算法匹配特征点
     flann = cv2.FlannBasedMatcher()
@@ -51,11 +52,11 @@ def EvaluateErrBetweenTwoImage(left_img, right_img, ransac_th):
 
     # 匹配点对数
     num_pts = len(src_pts)
-    
+
     # 使用基础矩阵RANSAC去除误匹配
     F, inliers_F = cv2.findFundamentalMat(src_pts, dst_pts, cv2.RANSAC, ransac_th)
     if inliers_F is None:
         return 0
     num_inliers_F = np.sum(inliers_F)
-    
+
     return num_inliers_F

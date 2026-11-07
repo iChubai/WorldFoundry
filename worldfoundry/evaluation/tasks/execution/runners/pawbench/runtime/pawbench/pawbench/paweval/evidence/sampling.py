@@ -31,6 +31,7 @@ class FrameSamplingSpec:
                 raise ValueError("sampling max_frames must be >= 3 when provided for PAWEval")
             object.__setattr__(self, "max_frames", int(self.max_frames))
 
+
 def sampling_spec_from_value(value: float | int | Mapping[str, Any] | FrameSamplingSpec | None) -> FrameSamplingSpec:
     if value is None:
         return FrameSamplingSpec()

@@ -2,7 +2,9 @@ from typing import List, Union
 
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import IQAPytorchMetric
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    IQAPytorchMetric,
+)
 
 
 class CLIPScoreMetric(IQAPytorchMetric):
@@ -40,9 +42,7 @@ class CLIPScoreMetric(IQAPytorchMetric):
 
         scores = []
         for img in imgs:
-            score: float = self._metric(
-                img.unsqueeze(0), caption_list=caption_list
-            ).item()
+            score: float = self._metric(img.unsqueeze(0), caption_list=caption_list).item()
             scores.append(score)
 
         score = sum(scores) / len(scores)

@@ -85,9 +85,16 @@ def calculate_ppl(input_id, **kwargs):
 
     distances = []
 
-    with tqdm(
-        disable=not verbose, leave=False, unit="samples", total=input_model_num_samples, desc="Perceptual Path Length"
-    ) as t, torch.no_grad():
+    with (
+        tqdm(
+            disable=not verbose,
+            leave=False,
+            unit="samples",
+            total=input_model_num_samples,
+            desc="Perceptual Path Length",
+        ) as t,
+        torch.no_grad(),
+    ):
         for begin_id in range(0, input_model_num_samples, batch_size):
             end_id = min(begin_id + batch_size, input_model_num_samples)
             batch_sz = end_id - begin_id

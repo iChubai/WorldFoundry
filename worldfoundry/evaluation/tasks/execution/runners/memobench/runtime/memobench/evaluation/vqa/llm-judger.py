@@ -9,6 +9,7 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 MODEL_ID = "gemini-3-flash-preview"
 
+
 def extract_json_from_md(md_string):
     start_index = md_string.find("json") + len("json")
     end_index = md_string.find("```", start_index)
@@ -37,7 +38,7 @@ def generate_questions(img_path, generation_prompt):
             break
         elif img_file.state == "FAILED":
             raise Exception("Image processing failed in the Gemini API.")
-        
+
         print(".", end="", flush=True)
         time.sleep(5)
     prompt = f"""
@@ -72,10 +73,7 @@ def generate_questions(img_path, generation_prompt):
 
     response = client.models.generate_content(
         model=MODEL_ID,
-        contents=[
-            img_file,
-            prompt
-        ],
+        contents=[img_file, prompt],
     )
 
     return response.text
@@ -94,7 +92,7 @@ def evaluate_video(video_path, questions):
             break
         elif video_file.state == "FAILED":
             raise Exception("Video processing failed in the Gemini API.")
-        
+
         print(".", end="", flush=True)
         time.sleep(5)
     prompt = f"""
@@ -119,10 +117,7 @@ def evaluate_video(video_path, questions):
 
     response = client.models.generate_content(
         model=MODEL_ID,
-        contents=[
-            video_file,
-            prompt
-        ],
+        contents=[video_file, prompt],
     )
 
     return response.text
@@ -141,7 +136,7 @@ def evaluate_video_with_hint(video_path, questions, hint):
             break
         elif video_file.state == "FAILED":
             raise Exception("Video processing failed in the Gemini API.")
-        
+
         print(".", end="", flush=True)
         time.sleep(5)
     prompt = f"""
@@ -168,10 +163,7 @@ def evaluate_video_with_hint(video_path, questions, hint):
 
     response = client.models.generate_content(
         model=MODEL_ID,
-        contents=[
-            video_file,
-            prompt
-        ],
+        contents=[video_file, prompt],
     )
 
     return response.text
@@ -179,14 +171,14 @@ def evaluate_video_with_hint(video_path, questions, hint):
 
 if __name__ == "__main__":
     inputs = []
-    with open("failure-cases.csv", mode='r', newline='', encoding='utf-8') as csv_file:
+    with open("failure-cases.csv", mode="r", newline="", encoding="utf-8") as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             inputs.append(row)
     print(inputs)
 
     outputs = []
-    output_file_path = f'questions-{time.time}.csv'
+    output_file_path = f"questions-{time.time}.csv"
 
     for input_config in inputs:
         if input_config["Finished"] != "No":
@@ -211,27 +203,48 @@ if __name__ == "__main__":
             evaluation_gt_json_filtered = [eval_gt for eval_gt in evaluation_gt_json if eval_gt["Verdict"] == "Pass"]
             questions_gt_filtered = filter_from_json(evaluation_gt_json_filtered)
             fields_to_keep = ["ID", "Dimension", "Question"]
-            questions_gt_filtered = [{field: eval_gt[field] for field in fields_to_keep if field in eval_gt} for eval_gt in evaluation_gt_json_filtered]
-            
+            questions_gt_filtered = [
+                {field: eval_gt[field] for field in fields_to_keep if field in eval_gt}
+                for eval_gt in evaluation_gt_json_filtered
+            ]
+
             last_occurrence_index = input_config["folder"].rfind("_")
-            failure_filename = input_config["folder"][:last_occurrence_index] + "_Failure_" + input_config["folder"][last_occurrence_index+1:]
+            failure_filename = (
+                input_config["folder"][:last_occurrence_index]
+                + "_Failure_"
+                + input_config["folder"][last_occurrence_index + 1 :]
+            )
             # failure_filename = input_config["folder"].replace("_", "_Failure_")
             evaluation_failure = evaluate_video(f"failure/{failure_filename}.mp4", json.dumps(questions_gt_filtered))
             print("Evaluation for failure:\n", evaluation_failure)
             evaluation_failure_json = extract_json_from_md(evaluation_failure)
             output["Evaluation on failure"] = json.dumps(evaluation_failure_json)
-            
-            evaluation_failure_revised = evaluate_video_with_hint(f"failure/{failure_filename}.mp4", json.dumps(questions_gt_filtered), input_config["hint"])
+
+            evaluation_failure_revised = evaluate_video_with_hint(
+                f"failure/{failure_filename}.mp4", json.dumps(questions_gt_filtered), input_config["hint"]
+            )
             print("Revised evaluation for failure:\n", evaluation_failure_revised)
             evaluation_failure_revised_json = extract_json_from_md(evaluation_failure_revised)
             output["Revised Evaluation on failure"] = json.dumps(evaluation_failure_revised_json)
 
-            evaluation_revised = [eval_failure for eval_failure, eval_failure_revised in zip(evaluation_failure_json, evaluation_failure_revised_json) if eval_failure["Verdict"] == eval_failure_revised["Verdict"]]
-            final_questions = [{field: eval_revised[field] for field in fields_to_keep if field in eval_revised} for eval_revised in evaluation_revised]
+            evaluation_revised = [
+                eval_failure
+                for eval_failure, eval_failure_revised in zip(evaluation_failure_json, evaluation_failure_revised_json)
+                if eval_failure["Verdict"] == eval_failure_revised["Verdict"]
+            ]
+            final_questions = [
+                {field: eval_revised[field] for field in fields_to_keep if field in eval_revised}
+                for eval_revised in evaluation_revised
+            ]
             print("Final question:\n", json.dumps(final_questions, indent=4))
             output["Final questions"] = json.dumps(final_questions)
 
-            dimension_count = {"Instruction Following (Positive Polarity)": 0, "Object and Background (Negative Polarity)": 0, "Continuity of Memory (Positive Polarity)": 0, "Physics Adherence (Negative Polarity)": 0}
+            dimension_count = {
+                "Instruction Following (Positive Polarity)": 0,
+                "Object and Background (Negative Polarity)": 0,
+                "Continuity of Memory (Positive Polarity)": 0,
+                "Physics Adherence (Negative Polarity)": 0,
+            }
             for question in final_questions:
                 dimension_count[question["Dimension"]] += 1
             success = True
@@ -242,21 +255,18 @@ if __name__ == "__main__":
             if success:
                 fieldnames = output.keys()
                 output_file_path = "-".join([input_config["scene"], input_config["video_id"], "questions"]) + ".csv"
-                with open(output_file_path, 'w', newline='', encoding='utf-8') as output_file:
+                with open(output_file_path, "w", newline="", encoding="utf-8") as output_file:
                     dict_writer = csv.DictWriter(output_file, fieldnames=fieldnames)
                     dict_writer.writeheader()
                     dict_writer.writerows([output])
 
                 outputs.append(output)
                 break
-        
+
     fieldnames = outputs[0].keys()
-    with open(output_file_path, 'w', newline='', encoding='utf-8') as output_file:
+    with open(output_file_path, "w", newline="", encoding="utf-8") as output_file:
         dict_writer = csv.DictWriter(output_file, fieldnames=fieldnames)
 
         dict_writer.writeheader()
 
         dict_writer.writerows(outputs)
-        
-                    
-

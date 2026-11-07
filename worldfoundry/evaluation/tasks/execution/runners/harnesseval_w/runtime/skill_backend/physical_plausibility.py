@@ -90,9 +90,7 @@ class LocalBackend:
                     result = score_prepared(prepared)
             else:
                 with self._inference_lock:
-                    result = self._evaluator.score_video(
-                        str(video_path), fps=SAMPLING["fps"]
-                    )
+                    result = self._evaluator.score_video(str(video_path), fps=SAMPLING["fps"])
         except Exception as exc:  # Match the official evaluator's failure payload.
             result = {"raw_score": None, "score": None, "error": str(exc)}
         raw = None if isinstance(result.get("raw_score"), bool) else numeric(result.get("raw_score"))

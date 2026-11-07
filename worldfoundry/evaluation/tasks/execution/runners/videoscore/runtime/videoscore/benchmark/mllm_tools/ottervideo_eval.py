@@ -4,18 +4,21 @@ from typing import List
 from .mllm_utils import load_images
 from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterVideo as OtterVideoModel
 
+
 class MyOtterVideoModel(OtterVideoModel):
-    def __init__(self, model_path:str="luodian/OTTER-Video-LLaMA7B-DenseCaption") -> None:
+    def __init__(self, model_path: str = "luodian/OTTER-Video-LLaMA7B-DenseCaption") -> None:
         super().__init__(model_path=model_path)
-        
+
     def eval_forward(self, text_prompt: str, image_path: str):
         # Similar to the Idefics' eval_forward but adapted for Fuyu
         pass
 
-class OtterVideo():
+
+class OtterVideo:
     support_multi_image = True
     merged_image_files = []
-    def __init__(self, model_path:str="luodian/OTTER-Video-LLaMA7B-DenseCaption") -> None:
+
+    def __init__(self, model_path: str = "luodian/OTTER-Video-LLaMA7B-DenseCaption") -> None:
         """Llava model wrapper
 
         Args:
@@ -23,7 +26,6 @@ class OtterVideo():
         """
         self.model = MyOtterVideoModel(model_path=model_path)
 
-        
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -47,13 +49,13 @@ class OtterVideo():
         if self.support_multi_image:
             images = load_images(image_links)
             text_prompt = "\n".join([x["content"] for x in inputs if x["type"] == "text"])
-            
+
             generated_text = self.model.get_response(images, text_prompt)
             return generated_text
-                    
+
         else:
             raise NotImplementedError
-        
+
     def __del__(self):
         for image_file in self.merged_image_files:
             if os.path.exists(image_file):

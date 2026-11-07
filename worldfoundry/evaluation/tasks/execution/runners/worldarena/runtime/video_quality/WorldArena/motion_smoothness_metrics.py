@@ -19,13 +19,11 @@ from worldfoundry.core.distributed.collectives.evaluation import (
     gather_list_of_dict,
 )
 
-'''==========Model setting=========='''
+"""==========Model setting=========="""
 TTA = True
-cfg.MODEL_CONFIG['LOGNAME'] = 'VFIMamba'
-cfg.MODEL_CONFIG['MODEL_ARCH'] = cfg.init_model_config(
-    F = 32,
-    depth = [2, 2, 2, 3, 3]
-)
+cfg.MODEL_CONFIG["LOGNAME"] = "VFIMamba"
+cfg.MODEL_CONFIG["MODEL_ARCH"] = cfg.init_model_config(F=32, depth=[2, 2, 2, 3, 3])
+
 
 class MotionSmoothnessMetric:
     """Motion smoothness via VFI model with SSIM weighting."""
@@ -54,7 +52,7 @@ class MotionSmoothnessMetric:
 
         self._ssim_metric = StructuralSimilarityIndexMeasure().to(self._device)
         # self._psnr_metric = PeakSignalNoiseRatioMetric()
-        
+
     def _compute_scores(self, rendered_images: List[np.ndarray]) -> float:
         even_images = rendered_images[::2]
         odd_images = rendered_images[1::2]
@@ -77,8 +75,8 @@ class MotionSmoothnessMetric:
             if raw_diff < 1.0:
                 continue
 
-            I0_ = (torch.tensor(I0.transpose(2, 0, 1), device=self._device).float() / 255.).unsqueeze(0)
-            I2_ = (torch.tensor(I2.transpose(2, 0, 1), device=self._device).float() / 255.).unsqueeze(0)
+            I0_ = (torch.tensor(I0.transpose(2, 0, 1), device=self._device).float() / 255.0).unsqueeze(0)
+            I2_ = (torch.tensor(I2.transpose(2, 0, 1), device=self._device).float() / 255.0).unsqueeze(0)
             padder = InputPadder(I0_.shape, divisor=32)
             I0_, I2_ = padder.pad(I0_, I2_)
             mid_pred_t = self._model.inference(I0_, I2_, True, TTA=TTA, fast_TTA=TTA, scale=0.0)
@@ -104,11 +102,7 @@ def compute_motion_smoothness(json_dir, submodules_list, **kwargs):
 
     metric = MotionSmoothnessMetric(model_path, device=device)
 
-    video_list, _ = load_dimension_info(
-        json_dir,
-        dimension='motion_smoothness',
-        lang='en'
-    )
+    video_list, _ = load_dimension_info(json_dir, dimension="motion_smoothness", lang="en")
 
     video_list = distribute_list_to_rank(video_list)
 
@@ -118,24 +112,28 @@ def compute_motion_smoothness(json_dir, submodules_list, **kwargs):
     for video_path in tqdm(video_list, disable=get_rank() > 0):
         frames = read_video_frames_cv2(video_path)
         if len(frames) < 3:
-            video_results.append({
-                'video_path': video_path,
-                'video_results': 0.0,
-                'error': 'insufficient_frames',
-            })
+            video_results.append(
+                {
+                    "video_path": video_path,
+                    "video_results": 0.0,
+                    "error": "insufficient_frames",
+                }
+            )
             continue
 
         score = metric._compute_scores(frames)
-        video_results.append({
-            'video_path': video_path,
-            'video_results': score,
-        })
+        video_results.append(
+            {
+                "video_path": video_path,
+                "video_results": score,
+            }
+        )
         scores.append(score)
 
     avg_score = float(np.mean(scores)) if len(scores) > 0 else 0.0
 
     if get_world_size() > 1:
         video_results = gather_list_of_dict(video_results)
-        avg_score = sum([d['video_results'] for d in video_results]) / len(video_results) if video_results else 0.0
+        avg_score = sum([d["video_results"] for d in video_results]) / len(video_results) if video_results else 0.0
 
     return avg_score, video_results

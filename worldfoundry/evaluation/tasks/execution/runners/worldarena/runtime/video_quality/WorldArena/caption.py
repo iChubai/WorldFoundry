@@ -2,7 +2,7 @@ import torch
 import sys
 
 import os
-from  tqdm import tqdm
+from tqdm import tqdm
 import hashlib
 import requests
 
@@ -15,6 +15,7 @@ from .utils import load_dimension_info
 
 import time
 import json
+
 try:
     import json_repair
 except ImportError:
@@ -31,20 +32,25 @@ def _loads_jsonish(text):
     return json.loads(text)
 
 
-def inference(model, processor ,video_path, prompt, max_new_tokens=None, total_pixels=20480 * 28 * 28, min_pixels=16 * 28 * 28):
+def inference(
+    model, processor, video_path, prompt, max_new_tokens=None, total_pixels=20480 * 28 * 28, min_pixels=16 * 28 * 28
+):
     from submodel.qwen_vl_utils import process_vision_info  # local import to avoid heavy deps when caption is unused
+
     messages = [
         {"role": "system", "content": "You are a helpful assistant in analyzing videos."},
-        {"role": "user", "content": [
+        {
+            "role": "user",
+            "content": [
                 {"type": "text", "text": prompt},
                 {"video": video_path, "total_pixels": total_pixels, "min_pixels": min_pixels},
-            ]
+            ],
         },
     ]
     text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     image_inputs, video_inputs, video_kwargs = process_vision_info([messages], return_video_kwargs=True)
-    fps_inputs = video_kwargs['fps']
+    fps_inputs = video_kwargs["fps"]
     # transformers processor expects a scalar fps; process_vision_info returns a list like [30]
     if isinstance(fps_inputs, (list, tuple)):
         fps_inputs = fps_inputs[0] if len(fps_inputs) > 0 else None
@@ -54,28 +60,27 @@ def inference(model, processor ,video_path, prompt, max_new_tokens=None, total_p
     start_time = time.time()
     # adding timeout to avoid long waiting time
     try:
-        
-
-        inputs = processor(text=[text], images=image_inputs, videos=video_inputs, fps=fps_inputs, padding=True, return_tensors="pt")
+        inputs = processor(
+            text=[text], images=image_inputs, videos=video_inputs, fps=fps_inputs, padding=True, return_tensors="pt"
+        )
         inputs = inputs.to(model.device)
 
         with torch.inference_mode():
             outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
 
-        generated_ids = [output_ids[len(input_ids):] for input_ids, output_ids in zip(inputs.input_ids, outputs)]
+        generated_ids = [output_ids[len(input_ids) :] for input_ids, output_ids in zip(inputs.input_ids, outputs)]
         output_text = processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-        
+
     except Exception as e:
         print(f"Error: {str(e)}")
         output_text = ["Error: " + str(e)]
-    
+
     end_time = time.time()
     return output_text[0]
 
 
 def prepare_prompt(video_path):
-   
-   prompt = """
+    prompt = """
    Analyze the video captured by the overhead camera mounted on a robotic and perform the following tasks:
    
    NOTED: There should be **no human hands** in the video. These are often wrongly generated from the robot's gripper. If human hands appear, note them as **abnormal** and a **violation of logical constraints**.
@@ -104,22 +109,16 @@ def prepare_prompt(video_path):
 
    """
 
-   return prompt
+    return prompt
 
 
-
-def caption_reference(
-                        model_name,
-                        model_path,
-                        video_folder_root,
-                        save_path,
-                        **kwargs
-                        ):
-
+def caption_reference(model_name, model_path, video_folder_root, save_path, **kwargs):
     # Delay heavy imports so other dimensions can run without Qwen dependencies
     from transformers import AutoProcessor, AutoModelForCausalLM
+
     try:
         from transformers import Qwen2_5_VLForConditionalGeneration as QwenVLClass
+
         qwen_cls = QwenVLClass
         qwen_kwargs = {}
     except ImportError:
@@ -141,18 +140,14 @@ def caption_reference(
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-
     json_file_name = f"{model_name}_caption_responses.json"
     json_file_name = os.path.join(save_path, json_file_name)
 
     if not os.path.exists(json_file_name):
-
-        all_mp4_files = load_dimension_info(video_folder_root, dimension='semantic_alignment')
-
+        all_mp4_files = load_dimension_info(video_folder_root, dimension="semantic_alignment")
 
         all_responses = {}
         for mp4_file in tqdm(all_mp4_files):
-
             prompt = prepare_prompt(mp4_file)
             try:
                 response = _loads_jsonish(inference(model, processor, mp4_file, prompt))
@@ -160,20 +155,20 @@ def caption_reference(
                 print(f"Error: {str(e)}")
                 response = "Error: " + str(e)
 
-            parts = mp4_file.split('/')
+            parts = mp4_file.split("/")
             model_dataset = f"{model_name}_dataset"
             try:
-                start_index = parts.index(model_dataset)+1
-                video_index = parts.index('video')
+                start_index = parts.index(model_dataset) + 1
+                video_index = parts.index("video")
                 selected_parts = parts[start_index:video_index]
                 mp4_file_name = "_".join([model_dataset] + selected_parts)
             except ValueError:
                 mp4_file_name = "error_in_filename_construction"
 
             all_responses[mp4_file_name] = response
-            
+
         # save to json file
-        with open(json_file_name, 'w') as f:
+        with open(json_file_name, "w") as f:
             json.dump(all_responses, f, indent=4)
 
     else:

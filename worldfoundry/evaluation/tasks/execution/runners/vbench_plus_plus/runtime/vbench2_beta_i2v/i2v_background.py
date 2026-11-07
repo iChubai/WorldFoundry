@@ -14,8 +14,10 @@ import torchvision.transforms as transforms
 from dreamsim import dreamsim
 from vbench2_beta_i2v.utils import load_video, load_i2v_dimension_info, dreamsim_transform, dreamsim_transform_Image
 import logging
-logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def i2v_background(dream_model, video_pair_list, device):
     video_results = []
@@ -56,21 +58,22 @@ def i2v_background(dream_model, video_pair_list, device):
                 conformity_scores.append(sim_to_input)
                 former_image_features = image_features
 
-        video_score = max_weight * np.max(conformity_scores) + \
-            mean_weight * np.mean(consec_scores) + \
-            min_weight * np.min(consec_scores)
+        video_score = (
+            max_weight * np.max(conformity_scores)
+            + mean_weight * np.mean(consec_scores)
+            + min_weight * np.min(consec_scores)
+        )
 
         sim_list.append(video_score)
-        video_results.append({'image_path': image_path, 'video_path': video_path, 'video_results': video_score})
+        video_results.append({"image_path": image_path, "video_path": video_path, "video_results": video_score})
     return np.mean(sim_list), video_results
 
 
 def compute_i2v_background(json_dir, device, submodules_list, **kwargs):
-    
     dream_model, preprocess = dreamsim(pretrained=True)
-    resolution = submodules_list['resolution']
+    resolution = submodules_list["resolution"]
     logger.info("Initialize DreamSim success")
-    
-    video_pair_list, _ = load_i2v_dimension_info(json_dir, dimension='i2v_background', lang='en', resolution=resolution)
+
+    video_pair_list, _ = load_i2v_dimension_info(json_dir, dimension="i2v_background", lang="en", resolution=resolution)
     all_results, video_results = i2v_background(dream_model, video_pair_list, device)
     return all_results, video_results

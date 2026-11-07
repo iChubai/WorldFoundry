@@ -47,10 +47,7 @@ class PromptConfig:
         """Load evals/prompts/{name}; name must be a YAML filename."""
         raw_path = Path(name)
         if raw_path.name != name or raw_path.suffix != ".yaml":
-            raise ValueError(
-                "prompt config must be a YAML filename under evals/prompts, "
-                f"got {name!r}"
-            )
+            raise ValueError(f"prompt config must be a YAML filename under evals/prompts, got {name!r}")
         path = _PROMPTS_DIR / name
         with open(path) as f:
             data = yaml.safe_load(f)
@@ -64,25 +61,17 @@ class PromptConfig:
             template = raw["template"]
             considerations = raw.get("considerations")
             if considerations and "{considerations}" in template:
-                block = "\n".join(
-                    f"{i}. {c}" for i, c in enumerate(considerations, 1)
-                )
+                block = "\n".join(f"{i}. {c}" for i, c in enumerate(considerations, 1))
                 template = template.replace("{considerations}", block)
             return template
 
         return cls(
             name=data.get("name", ""),
             scheme=data.get("scheme", "plain"),
-            system_prompt=data.get(
-                "system_prompt", "You are a strict video evaluation model."
-            ),
+            system_prompt=data.get("system_prompt", "You are a strict video evaluation model."),
             general_keys=data.get("general_keys", ["SA", "PTV", "persistence"]),
-            eval_prompts={
-                k: _resolve(v) for k, v in data.get("eval_prompts", {}).items()
-            },
-            training_prompts={
-                k: _resolve(v) for k, v in data.get("training_prompts", {}).items()
-            },
+            eval_prompts={k: _resolve(v) for k, v in data.get("eval_prompts", {}).items()},
+            training_prompts={k: _resolve(v) for k, v in data.get("training_prompts", {}).items()},
             physical_template=data.get("physical_template", data.get("physical_training_template", "")),
             physical_sub_questions=bool(data.get("physical_sub_questions", False)),
             sub_questions=data.get("sub_questions"),
@@ -95,10 +84,15 @@ class PromptConfig:
         return None
 
     def build_eval_prompt(
-        self, prompt_text: str, metric: str, *, answers_block: str = "",
+        self,
+        prompt_text: str,
+        metric: str,
+        *,
+        answers_block: str = "",
     ) -> str:
         questions_block, question_keys_str = build_general_questions_block(
-            metric, self._answer_format,
+            metric,
+            self._answer_format,
         )
         return self.eval_prompts[metric].format(
             prompt=prompt_text,
@@ -108,11 +102,16 @@ class PromptConfig:
         )
 
     def build_training_prompt(
-        self, prompt_text: str, dim: str, *, answers_block: str = "",
+        self,
+        prompt_text: str,
+        dim: str,
+        *,
+        answers_block: str = "",
     ) -> str:
         prompts = self.training_prompts or self.eval_prompts
         questions_block, question_keys_str = build_general_questions_block(
-            dim, self._answer_format,
+            dim,
+            self._answer_format,
         )
         return prompts[dim].format(
             prompt=prompt_text,
@@ -122,12 +121,18 @@ class PromptConfig:
         )
 
     def build_physical_prompt(
-        self, prompt_text: str, law: str, criteria: str,
-        *, answers_block: str = "",
+        self,
+        prompt_text: str,
+        law: str,
+        criteria: str,
+        *,
+        answers_block: str = "",
     ) -> str:
         if self.physical_sub_questions:
             questions_block, question_keys_str = build_physical_questions_block(
-                law, criteria, self._answer_format,
+                law,
+                criteria,
+                self._answer_format,
             )
         else:
             questions_block = ""
@@ -140,8 +145,6 @@ class PromptConfig:
             question_keys_str=question_keys_str,
             answers_block=answers_block,
         )
-
-
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -179,7 +182,8 @@ _ANSWER_FORMAT_SUFFIX = {
 
 
 def _format_questions_block(
-    questions: list[str], answer_format: str | None = None,
+    questions: list[str],
+    answer_format: str | None = None,
 ) -> tuple[str, str]:
     keys: list[str] = []
     lines: list[str] = []
@@ -194,7 +198,8 @@ def _format_questions_block(
 
 
 def build_general_questions_block(
-    dim: str, answer_format: str | None = None,
+    dim: str,
+    answer_format: str | None = None,
 ) -> tuple[str, str]:
     questions = GENERAL_SUB_QUESTIONS.get(dim)
     if not questions:
@@ -203,7 +208,9 @@ def build_general_questions_block(
 
 
 def build_physical_questions_block(
-    law: str, criteria: str, answer_format: str | None = None,
+    law: str,
+    criteria: str,
+    answer_format: str | None = None,
 ) -> tuple[str, str]:
     sub_qs = SUB_QUESTIONS.get(law)
     if not sub_qs:

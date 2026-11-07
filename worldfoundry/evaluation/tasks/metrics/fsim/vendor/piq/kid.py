@@ -6,8 +6,9 @@ from piq.base import BaseFeatureMetric
 from piq.utils import _validate_input
 
 
-def _polynomial_kernel(X: torch.Tensor, Y: torch.Tensor = None, degree: int = 3, gamma: Optional[float] = None,
-                       coef0: float = 1.) -> torch.Tensor:
+def _polynomial_kernel(
+    X: torch.Tensor, Y: torch.Tensor = None, degree: int = 3, gamma: Optional[float] = None, coef0: float = 1.0
+) -> torch.Tensor:
     """
     Compute the polynomial kernel between x and y
     K(X, Y) = (gamma <X, Y> + coef0)^degree
@@ -39,9 +40,15 @@ def _polynomial_kernel(X: torch.Tensor, Y: torch.Tensor = None, degree: int = 3,
     return K
 
 
-def _mmd2_and_variance(K_XX: torch.Tensor, K_XY: torch.Tensor, K_YY: torch.Tensor, unit_diagonal: bool = False,
-                       mmd_est: str = 'unbiased', var_at_m: Optional[int] = None, ret_var: bool = False) \
-        -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+def _mmd2_and_variance(
+    K_XX: torch.Tensor,
+    K_XY: torch.Tensor,
+    K_YY: torch.Tensor,
+    unit_diagonal: bool = False,
+    mmd_est: str = "unbiased",
+    var_at_m: Optional[int] = None,
+    ret_var: bool = False,
+) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
     # based on
     # https://github.com/dougalsutherland/opt-mmd/blob/master/two_sample/mmd.py
     # but changed to not compute the full kernel matrix at once
@@ -77,12 +84,12 @@ def _mmd2_and_variance(K_XX: torch.Tensor, K_XY: torch.Tensor, K_YY: torch.Tenso
     Kt_YY_sum = Kt_YY_sums.sum()
     K_XY_sum = K_XY_sums_0.sum()
 
-    if mmd_est == 'biased':
-        mmd2 = ((Kt_XX_sum + sum_diag_X) / (m * m) + (Kt_YY_sum + sum_diag_Y) / (m * m) - 2 * K_XY_sum / (m * m))
+    if mmd_est == "biased":
+        mmd2 = (Kt_XX_sum + sum_diag_X) / (m * m) + (Kt_YY_sum + sum_diag_Y) / (m * m) - 2 * K_XY_sum / (m * m)
     else:
-        assert mmd_est in {'unbiased', 'u-statistic'}
+        assert mmd_est in {"unbiased", "u-statistic"}
         mmd2 = (Kt_XX_sum + Kt_YY_sum) / (m * (m - 1))
-        if mmd_est == 'unbiased':
+        if mmd_est == "unbiased":
             mmd2 -= 2 * K_XY_sum / (m * m)
         else:
             mmd2 -= 2 * (K_XY_sum - torch.trace(K_XY)) / (m * (m - 1))
@@ -100,25 +107,22 @@ def _mmd2_and_variance(K_XX: torch.Tensor, K_XY: torch.Tensor, K_YY: torch.Tenso
     m1 = m - 1
     m2 = m - 2
     zeta1_est = (
-            1 / (m * m1 * m2) *
-            (_sqn(Kt_XX_sums) - Kt_XX_2_sum + _sqn(Kt_YY_sums) - Kt_YY_2_sum)
-            - 1 / (m * m1) ** 2 * (Kt_XX_sum ** 2 + Kt_YY_sum ** 2)
-            + 1 / (m * m * m1) * (
-                    _sqn(K_XY_sums_1) + _sqn(K_XY_sums_0) - 2 * K_XY_2_sum)
-            - 2 / m ** 4 * K_XY_sum ** 2
-            - 2 / (m * m * m1) * (dot_XX_XY + dot_YY_YX)
-            + 2 / (m ** 3 * m1) * (Kt_XX_sum + Kt_YY_sum) * K_XY_sum
+        1 / (m * m1 * m2) * (_sqn(Kt_XX_sums) - Kt_XX_2_sum + _sqn(Kt_YY_sums) - Kt_YY_2_sum)
+        - 1 / (m * m1) ** 2 * (Kt_XX_sum**2 + Kt_YY_sum**2)
+        + 1 / (m * m * m1) * (_sqn(K_XY_sums_1) + _sqn(K_XY_sums_0) - 2 * K_XY_2_sum)
+        - 2 / m**4 * K_XY_sum**2
+        - 2 / (m * m * m1) * (dot_XX_XY + dot_YY_YX)
+        + 2 / (m**3 * m1) * (Kt_XX_sum + Kt_YY_sum) * K_XY_sum
     )
     zeta2_est = (
-            1 / (m * m1) * (Kt_XX_2_sum + Kt_YY_2_sum)
-            - 1 / (m * m1) ** 2 * (Kt_XX_sum ** 2 + Kt_YY_sum ** 2)
-            + 2 / (m * m) * K_XY_2_sum
-            - 2 / m ** 4 * K_XY_sum ** 2
-            - 4 / (m * m * m1) * (dot_XX_XY + dot_YY_YX)
-            + 4 / (m ** 3 * m1) * (Kt_XX_sum + Kt_YY_sum) * K_XY_sum
+        1 / (m * m1) * (Kt_XX_2_sum + Kt_YY_2_sum)
+        - 1 / (m * m1) ** 2 * (Kt_XX_sum**2 + Kt_YY_sum**2)
+        + 2 / (m * m) * K_XY_2_sum
+        - 2 / m**4 * K_XY_sum**2
+        - 4 / (m * m * m1) * (dot_XX_XY + dot_YY_YX)
+        + 4 / (m**3 * m1) * (Kt_XX_sum + Kt_YY_sum) * K_XY_sum
     )
-    var_est = (4 * (var_at_m - 2) / (var_at_m * (var_at_m - 1)) * zeta1_est
-               + 2 / (var_at_m * (var_at_m - 1)) * zeta2_est)
+    var_est = 4 * (var_at_m - 2) / (var_at_m * (var_at_m - 1)) * zeta1_est + 2 / (var_at_m * (var_at_m - 1)) * zeta2_est
 
     return mmd2, var_est
 
@@ -155,9 +159,17 @@ class KID(BaseFeatureMetric):
         Demystifying MMD GANs https://arxiv.org/abs/1801.01401
     """
 
-    def __init__(self, degree: int = 3, gamma: Optional[float] = None, coef0: int = 1, var_at_m: Optional[int] = None,
-                 average: bool = False, n_subsets: int = 50, subset_size: Optional[int] = 1000, ret_var: bool = False
-                 ) -> None:
+    def __init__(
+        self,
+        degree: int = 3,
+        gamma: Optional[float] = None,
+        coef0: int = 1,
+        var_at_m: Optional[int] = None,
+        average: bool = False,
+        n_subsets: int = 50,
+        subset_size: Optional[int] = 1000,
+        ret_var: bool = False,
+    ) -> None:
         super().__init__()
 
         self.degree = degree
@@ -171,8 +183,9 @@ class KID(BaseFeatureMetric):
             self.n_subsets = 1
             self.subset_size = None
 
-    def compute_metric(self, x_features: torch.Tensor, y_features: torch.Tensor) \
-            -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def compute_metric(
+        self, x_features: torch.Tensor, y_features: torch.Tensor
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """Computes KID (polynomial MMD) for given sets of features, obtained from Inception net
         or any other feature extractor.
         Samples must be in range [0, 1].
@@ -198,24 +211,9 @@ class KID(BaseFeatureMetric):
 
             # use  k(x, y) = (gamma <x, y> + coef0)^degree
             # default gamma is 1 / dim
-            K_XX = _polynomial_kernel(
-                x_subset,
-                None,
-                degree=self.degree,
-                gamma=self.gamma,
-                coef0=self.coef0)
-            K_YY = _polynomial_kernel(
-                y_subset,
-                None,
-                degree=self.degree,
-                gamma=self.gamma,
-                coef0=self.coef0)
-            K_XY = _polynomial_kernel(
-                x_subset,
-                y_subset,
-                degree=self.degree,
-                gamma=self.gamma,
-                coef0=self.coef0)
+            K_XX = _polynomial_kernel(x_subset, None, degree=self.degree, gamma=self.gamma, coef0=self.coef0)
+            K_YY = _polynomial_kernel(y_subset, None, degree=self.degree, gamma=self.gamma, coef0=self.coef0)
+            K_XY = _polynomial_kernel(x_subset, y_subset, degree=self.degree, gamma=self.gamma, coef0=self.coef0)
 
             out = _mmd2_and_variance(K_XX, K_XY, K_YY, var_at_m=var_at_m, ret_var=self.ret_var)
             results.append(out)

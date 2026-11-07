@@ -17,7 +17,7 @@ def background_consistency(clip_model, preprocess, video_path, device, read_fram
     image_transform = clip_transform(224)
     video_sim = 0.0
     if read_frame:
-        video_path = video_path[:-4].replace('videos', 'frames').replace(' ', '_')
+        video_path = video_path[:-4].replace("videos", "frames").replace(" ", "_")
         tmp_paths = [os.path.join(video_path, f) for f in sorted(os.listdir(video_path))]
         images = []
         for tmp_path in tmp_paths:

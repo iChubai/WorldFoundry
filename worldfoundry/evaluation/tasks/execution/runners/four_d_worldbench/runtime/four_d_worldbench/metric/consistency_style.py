@@ -12,23 +12,29 @@ from torchvision.models import vgg19, VGG19_Weights
 from .base_metrics import BaseMetric
 from .utils import load_dimension_info
 import json
+
 # desired size of the output image
 imsize = 512 if torch.cuda.is_available() else 128  # use small size if no GPU
 normalization_mean = torch.tensor([0.485, 0.456, 0.406])
 normalization_std = torch.tensor([0.229, 0.224, 0.225])
 
 # desired depth layers to compute style/content losses :
-style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
-        
-loader = transforms.Compose([
-    transforms.Resize(imsize),  # scale imported image
-    transforms.ToTensor()])  # transform it into a torch tensor
+style_layers_default = ["conv_1", "conv_2", "conv_3", "conv_4", "conv_5"]
+
+loader = transforms.Compose(
+    [
+        transforms.Resize(imsize),  # scale imported image
+        transforms.ToTensor(),
+    ]
+)  # transform it into a torch tensor
+
 
 def image_loader(image_name, device):
     image = Image.open(image_name)
     # fake batch dimension required to fit network's input dimensions
     image = loader(image).unsqueeze(0)
     return image.to(device, torch.float)
+
 
 def gram_matrix(input):
     a, b, c, d = input.size()  # a=batch size(=1)
@@ -43,8 +49,8 @@ def gram_matrix(input):
     # by dividing by the number of element in each feature maps.
     return G.div(c * d)
 
-class StyleLoss(nn.Module):
 
+class StyleLoss(nn.Module):
     def __init__(self, target_feature):
         super(StyleLoss, self).__init__()
         self.target = gram_matrix(target_feature).detach()
@@ -53,6 +59,7 @@ class StyleLoss(nn.Module):
         G = gram_matrix(input)
         self.loss = F.mse_loss(G, self.target)
         return input
+
 
 # create a module to normalize input image so we can easily put it in a
 # ``nn.Sequential``
@@ -69,9 +76,8 @@ class Normalization(nn.Module):
         # normalize ``img``
         return (img - self.mean) / self.std
 
-def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
-                               style_img, content_img,
-                               style_layers):
+
+def get_style_model_and_losses(cnn, normalization_mean, normalization_std, style_img, content_img, style_layers):
     # normalization module
     normalization = Normalization(normalization_mean, normalization_std)
 
@@ -87,16 +93,16 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
     for layer in cnn.children():
         if isinstance(layer, nn.Conv2d):
             i += 1
-            name = 'conv_{}'.format(i)
+            name = "conv_{}".format(i)
         elif isinstance(layer, nn.ReLU):
-            name = 'relu_{}'.format(i)
+            name = "relu_{}".format(i)
             layer = nn.ReLU(inplace=False)
         elif isinstance(layer, nn.MaxPool2d):
-            name = 'pool_{}'.format(i)
+            name = "pool_{}".format(i)
         elif isinstance(layer, nn.BatchNorm2d):
-            name = 'bn_{}'.format(i)
+            name = "bn_{}".format(i)
         else:
-            raise RuntimeError('Unrecognized layer: {}'.format(layer.__class__.__name__))
+            raise RuntimeError("Unrecognized layer: {}".format(layer.__class__.__name__))
 
         model.add_module(name, layer)
 
@@ -112,15 +118,16 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
         if isinstance(model[i], StyleLoss):
             break
 
-    model = model[:(i + 1)]
+    model = model[: (i + 1)]
 
     return model, style_losses
+
 
 class GramMatrixMetric(BaseMetric):
     """
     TODO: add description
     """
-    
+
     def __init__(self) -> None:
         super().__init__()
         self._model = vgg19(weights=VGG19_Weights.DEFAULT).features.to(self._device).eval()
@@ -129,36 +136,37 @@ class GramMatrixMetric(BaseMetric):
         self._style_layers_default = style_layers_default
 
     def _compute_scores(
-        self, 
+        self,
         reference_image: str,
         rendered_images: List[str],
     ) -> float:
-
         img1 = image_loader(reference_image, self._device)
         style_scores = []
         for rendered_image in rendered_images:
             img2 = image_loader(rendered_image, self._device)
 
-            model, style_losses = get_style_model_and_losses(self._model, self._normalization_mean, self._normalization_std, img1, img2, self._style_layers_default)
+            model, style_losses = get_style_model_and_losses(
+                self._model, self._normalization_mean, self._normalization_std, img1, img2, self._style_layers_default
+            )
             input_img = img2.clone()
             model(input_img)
             style_score = 0
             for sl in style_losses:
                 style_score += sl.loss
             style_scores.append(style_score.item())
-        
+
         return sum(style_scores) / len(style_scores)
 
 
 def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64) -> List[str]:
     os.makedirs(out_root, exist_ok=True)
-    
+
     # Use full path with replaced separators to create unique directory
-    safe_path = video_path.replace('/', '_').replace('\\', '_').replace(':', '_')
+    safe_path = video_path.replace("/", "_").replace("\\", "_").replace(":", "_")
     out_dir = os.path.join(out_root, safe_path)
     os.makedirs(out_dir, exist_ok=True)
 
-    existing = sorted([os.path.join(out_dir, f) for f in os.listdir(out_dir) if f.endswith('.png')])
+    existing = sorted([os.path.join(out_dir, f) for f in os.listdir(out_dir) if f.endswith(".png")])
     if existing:
         return existing
 
@@ -189,32 +197,32 @@ def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64)
 
 def compute_consistency_style(json_dir, device, submodules_dict, **kwargs):
     dimension = os.path.splitext(os.path.basename(json_dir))[0]
-    _, prompt_dict_ls = load_dimension_info(json_dir, dimension=dimension, lang='en')
+    _, prompt_dict_ls = load_dimension_info(json_dir, dimension=dimension, lang="en")
 
-    dataset_json = kwargs.get('dataset_json', '')
-    dataset_base_dir = os.environ.get('DATASET_BASE_DIR', '')
+    dataset_json = kwargs.get("dataset_json", "")
+    dataset_base_dir = os.environ.get("DATASET_BASE_DIR", "")
     if not dataset_base_dir and dataset_json:
-        parts = dataset_json.split('/condition_to_4D/')
+        parts = dataset_json.split("/condition_to_4D/")
         if len(parts) > 1:
             dataset_base_dir = parts[0]
     if dataset_base_dir:
         for item in prompt_dict_ls:
             resolved = []
-            for vp in item.get('video_list', []):
+            for vp in item.get("video_list", []):
                 if not os.path.isabs(vp) and not os.path.exists(vp):
                     full = os.path.join(dataset_base_dir, vp)
                     resolved.append(full)
                 else:
                     resolved.append(vp)
-            item['video_list'] = resolved
+            item["video_list"] = resolved
 
     metric = GramMatrixMetric()
     details = []
     scores: List[float] = []
-    out_root = os.path.join(os.path.dirname(json_dir), 'frames_cache')
+    out_root = os.path.join(os.path.dirname(json_dir), "frames_cache")
 
     for item in prompt_dict_ls:
-        for video_path in item.get('video_list', []) or []:
+        for video_path in item.get("video_list", []) or []:
             frames = _extract_frames_to_dir(video_path, out_root)
             if len(frames) < 2:
                 continue
@@ -235,42 +243,45 @@ def compute_consistency_style(json_dir, device, submodules_dict, **kwargs):
             for start in segment_starts:
                 end = start + segment_size
                 reference_frame = frames[start]
-                segment_rendered = frames[start + 1:end]
+                segment_rendered = frames[start + 1 : end]
                 if not segment_rendered:
                     continue
 
                 segment_score = metric._compute_scores(reference_frame, segment_rendered)
                 segment_scores.append(float(segment_score))
-                segment_details.append({
-                    'reference_frame': reference_frame,
-                    'start_index': start,
-                    'frame_count': segment_size,
-                    'style_consistency': float(segment_score),
-                })
+                segment_details.append(
+                    {
+                        "reference_frame": reference_frame,
+                        "start_index": start,
+                        "frame_count": segment_size,
+                        "style_consistency": float(segment_score),
+                    }
+                )
 
             if not segment_scores:
                 continue
 
             video_score = sum(segment_scores) / len(segment_scores)
             scores.append(float(video_score))
-            details.append({
-                'video_path': video_path,
-                'num_frames': len(frames),
-                'reference_frame': segment_details[0]['reference_frame'] if segment_details else None,
-                'style_consistency': float(video_score),
-                'segment_scores': segment_details,
-            })
+            details.append(
+                {
+                    "video_path": video_path,
+                    "num_frames": len(frames),
+                    "reference_frame": segment_details[0]["reference_frame"] if segment_details else None,
+                    "style_consistency": float(video_score),
+                    "segment_scores": segment_details,
+                }
+            )
 
     final = float(sum(scores) / len(scores)) if scores else 0.0
 
-    
     # Save detailed results JSON
     try:
         output_dir = os.path.dirname(json_dir)
         dim_name = os.path.splitext(os.path.basename(json_dir))[0]
-        model = kwargs.get('model', '')
-        dataset_json = kwargs.get('dataset_json', '')
-        dataset_base = os.path.splitext(os.path.basename(dataset_json))[0] if dataset_json else 'dataset'
+        model = kwargs.get("model", "")
+        dataset_json = kwargs.get("dataset_json", "")
+        dataset_base = os.path.splitext(os.path.basename(dataset_json))[0] if dataset_json else "dataset"
         suffix = f"{dim_name}__{model}__{dataset_base}_results.json" if model else f"{dim_name}_results.json"
         output_file = os.path.join(output_dir, suffix)
         detailed_output = {
@@ -280,12 +291,10 @@ def compute_consistency_style(json_dir, device, submodules_dict, **kwargs):
             },
             "video_details": details,
         }
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(detailed_output, f, indent=2, ensure_ascii=False)
         print(f"\nDetailed results saved to: {output_file}")
     except Exception as e:
         print(f"Error saving JSON file: {str(e)}")
 
     return final, details
-
-

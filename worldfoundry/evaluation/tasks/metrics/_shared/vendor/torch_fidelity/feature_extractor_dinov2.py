@@ -62,11 +62,17 @@ class FeatureExtractorDinoV2(FeatureExtractorBase):
         os.environ["XFORMERS_DISABLED"] = "1"
 
         with redirect_stdout(sys.stderr):
-            with CleanStderr([
-                "xFormers not available",
-                "xFormers is disabled",
-                "Using cache found in",
-            ], sys.stderr), warnings.catch_warnings():
+            with (
+                CleanStderr(
+                    [
+                        "xFormers not available",
+                        "xFormers is disabled",
+                        "Using cache found in",
+                    ],
+                    sys.stderr,
+                ),
+                warnings.catch_warnings(),
+            ):
                 warnings.filterwarnings("ignore", message="xFormers is not available")
                 warnings.filterwarnings("ignore", message="xFormers is disabled")
                 if feature_extractor_weights_path is None:

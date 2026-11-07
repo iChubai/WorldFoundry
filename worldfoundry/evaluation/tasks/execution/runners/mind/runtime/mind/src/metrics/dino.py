@@ -1,6 +1,7 @@
 from utils.dino_utils import load_dinov3_model, extract_dinov3_features
 
-def dino_mse_metric(pred_frames, gt_frames, dino_model=None, dino_processor=None, device='cuda:0', batch_size=8):
+
+def dino_mse_metric(pred_frames, gt_frames, dino_model=None, dino_processor=None, device="cuda:0", batch_size=8):
     """
     计算DINOv3特征的MSE指标
 
@@ -19,28 +20,21 @@ def dino_mse_metric(pred_frames, gt_frames, dino_model=None, dino_processor=None
 
     # 提取GT帧的DINOv3特征
     gt_features = extract_dinov3_features(
-        gt_frames,
-        model=dino_model,
-        processor=dino_processor,
-        device=device,
-        batch_size=batch_size
+        gt_frames, model=dino_model, processor=dino_processor, device=device, batch_size=batch_size
     )  # [f, 196, 768]
 
     # 提取预测帧的DINOv3特征
     pred_features = extract_dinov3_features(
-        pred_frames,
-        model=dino_model,
-        processor=dino_processor,
-        device=device,
-        batch_size=batch_size
+        pred_frames, model=dino_model, processor=dino_processor, device=device, batch_size=batch_size
     )  # [f, 196, 768]
 
     mse_per_frame = ((pred_features - gt_features) ** 2).reshape(pred_features.shape[0], -1).mean(dim=1)
 
-    result_dict['dino_mse'] = mse_per_frame.cpu().tolist()
-    result_dict['avg_dino_mse'] = float(mse_per_frame.mean().cpu())
+    result_dict["dino_mse"] = mse_per_frame.cpu().tolist()
+    result_dict["avg_dino_mse"] = float(mse_per_frame.mean().cpu())
 
     return result_dict
+
 
 def merge_dino_results(result_dict, new_result):
     """合并两个dino结果字典"""
@@ -49,6 +43,6 @@ def merge_dino_results(result_dict, new_result):
     if new_result is None:
         return result_dict
 
-    result_dict['dino_mse'].extend(new_result['dino_mse'])
-    result_dict['avg_dino_mse'] = sum(result_dict['dino_mse']) / len(result_dict['dino_mse'])
+    result_dict["dino_mse"].extend(new_result["dino_mse"])
+    result_dict["avg_dino_mse"] = sum(result_dict["dino_mse"]) / len(result_dict["dino_mse"])
     return result_dict

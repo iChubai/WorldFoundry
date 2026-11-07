@@ -79,6 +79,7 @@ def _dedup_for_camera_model(
 # RPM limiter
 # ---------------------------------------------------------------------------
 
+
 class RpmLimiter:
     """Sliding-window rate limiter. Thread-safe.
 
@@ -110,6 +111,7 @@ class RpmLimiter:
 # ---------------------------------------------------------------------------
 # Task discovery
 # ---------------------------------------------------------------------------
+
 
 def discover_tasks(tasks_root: Path) -> List[Tuple[str, dict, Optional[Path]]]:
     """Walk tasks_root recursively and return one entry per valid task directory.
@@ -150,6 +152,7 @@ def discover_tasks(tasks_root: Path) -> List[Tuple[str, dict, Optional[Path]]]:
 # Output map helpers — written incrementally, thread-safe
 # ---------------------------------------------------------------------------
 
+
 def _update_map(map_path: Path, task_id: str, filename: str, lock: Lock) -> None:
     """Atomically add/update one entry in the JSON output map.
 
@@ -158,7 +161,7 @@ def _update_map(map_path: Path, task_id: str, filename: str, lock: Lock) -> None
     from separate terminals are safe.
     """
     lock_path = map_path.with_suffix(".lock")
-    with lock:                          # serialise threads within this process
+    with lock:  # serialise threads within this process
         with FileLock(str(lock_path)):  # serialise across processes
             data: dict = {}
             if map_path.exists():
@@ -170,6 +173,7 @@ def _update_map(map_path: Path, task_id: str, filename: str, lock: Lock) -> None
 # ---------------------------------------------------------------------------
 # Per-task work unit
 # ---------------------------------------------------------------------------
+
 
 def _run_one(
     runner: WorldModelRunner,
@@ -200,6 +204,7 @@ def _run_one(
 # ---------------------------------------------------------------------------
 # Daemon batch execution (local models only — loads weights once)
 # ---------------------------------------------------------------------------
+
 
 def _num_frames_from_pose(pose_string: str) -> int:
     """Compute the number of video frames from a camera pose string.
@@ -248,14 +253,16 @@ def _build_daemon_task_list(
             except Exception as e:
                 print(f"[{runner.name}] WARN: could not compute num_frames for '{effective_cc}': {e}")
 
-        tasks_for_daemon.append({
-            "task_id": task_id,
-            "prompt": prompt,
-            "image": str(init_frame) if (init_frame and init_frame.exists()) else "",
-            "output": str(out_path),
-            "camera_control": effective_cc,
-            "num_frames": num_frames,
-        })
+        tasks_for_daemon.append(
+            {
+                "task_id": task_id,
+                "prompt": prompt,
+                "image": str(init_frame) if (init_frame and init_frame.exists()) else "",
+                "output": str(out_path),
+                "camera_control": effective_cc,
+                "num_frames": num_frames,
+            }
+        )
     return tasks_for_daemon
 
 
@@ -295,7 +302,10 @@ def _run_batch_daemon(
 
     if gpu_per_task is not None and total_gpus > gpu_per_task:
         return _run_batch_daemon_task_parallel(
-            runner, work_queue, map_path, map_lock,
+            runner,
+            work_queue,
+            map_path,
+            map_lock,
             gpu_per_task=gpu_per_task,
             n_workers=total_gpus // gpu_per_task,
         )
@@ -303,9 +313,7 @@ def _run_batch_daemon(
     # ── Single-daemon path (original behaviour) ──────────────────────────────
     tasks_for_daemon = _build_daemon_task_list(runner, work_queue)
 
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".json", delete=False, encoding="utf-8"
-    ) as tmp:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as tmp:
         json.dump(tasks_for_daemon, tmp, indent=2)
         tasks_json_path = tmp.name
 
@@ -347,7 +355,7 @@ def _run_batch_daemon_task_parallel(
     """
     # Round-robin partition
     chunks = [work_queue[i::n_workers] for i in range(n_workers)]
-    chunks = [c for c in chunks if c]   # drop empty tail slots
+    chunks = [c for c in chunks if c]  # drop empty tail slots
     actual_workers = len(chunks)
 
     print(
@@ -363,9 +371,7 @@ def _run_batch_daemon_task_parallel(
         gpu_ids = ",".join(str(g) for g in range(gpu_start, gpu_start + gpu_per_task))
 
         task_list = _build_daemon_task_list(runner, chunk)
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False, encoding="utf-8"
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as tmp:
             json.dump(task_list, tmp, indent=2)
             tmp_path = tmp.name
         tmp_files.append(tmp_path)
@@ -409,10 +415,7 @@ def _run_batch_daemon_task_parallel(
                 # Kill any still-running sibling workers to free GPU memory.
                 for other_proc, _, other_gpus, other_idx in procs:
                     if other_proc.poll() is None:
-                        print(
-                            f"[{runner.name}] Killing worker {other_idx} "
-                            f"(GPU={other_gpus}) due to sibling failure."
-                        )
+                        print(f"[{runner.name}] Killing worker {other_idx} (GPU={other_gpus}) due to sibling failure.")
                         other_proc.kill()
 
     for f in tmp_files:
@@ -424,6 +427,7 @@ def _run_batch_daemon_task_parallel(
 # ---------------------------------------------------------------------------
 # Per-model run loop
 # ---------------------------------------------------------------------------
+
 
 def run_model(
     *,
@@ -500,57 +504,71 @@ def run_model(
 # CLI entry point
 # ---------------------------------------------------------------------------
 
+
 def _load_models_config(config_path: Path) -> dict:
     with config_path.open(encoding="utf-8") as f:
         return yaml.safe_load(f).get("models", {})
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Run benchmark tasks through world models and collect video outputs."
-    )
+    parser = argparse.ArgumentParser(description="Run benchmark tasks through world models and collect video outputs.")
     parser.add_argument(
-        "--models", nargs="+", required=True, metavar="MODEL",
+        "--models",
+        nargs="+",
+        required=True,
+        metavar="MODEL",
         help="Model name(s) defined in configs/models.yaml, or 'all' to run every model.",
     )
     parser.add_argument(
-        "--tasks_root", default="benchmark/tasks/",
+        "--tasks_root",
+        default="benchmark/tasks/",
         help="Root directory of task YAML folders (default: benchmark/tasks/).",
     )
     parser.add_argument(
-        "--pattern", default=None, metavar="GLOB",
+        "--pattern",
+        default=None,
+        metavar="GLOB",
         help="Glob pattern to filter task IDs, e.g. 'pouring_water_into_cup*'. "
-             "If omitted, all tasks under tasks_root are processed.",
+        "If omitted, all tasks under tasks_root are processed.",
     )
     parser.add_argument(
-        "--output_root", default="outputs/",
+        "--output_root",
+        default="outputs/",
         help="Root directory for model output folders (default: outputs/).",
     )
     parser.add_argument(
-        "--run_name", required=True,
+        "--run_name",
+        required=True,
         help="Label appended to each output folder, e.g. 'test_2' → outputs/veo_test_2/.",
     )
     parser.add_argument(
-        "--workers", type=int, default=1,
+        "--workers",
+        type=int,
+        default=1,
         help=(
             "Number of parallel workers for API models (default: 1). "
             "Local models always run sequentially regardless of this setting."
         ),
     )
     parser.add_argument(
-        "--overwrite", action="store_true",
+        "--overwrite",
+        action="store_true",
         help="Re-generate videos that already exist on disk.",
     )
     parser.add_argument(
-        "--n_gpu", type=int, default=None,
+        "--n_gpu",
+        type=int,
+        default=None,
         help="Override the n_gpu value from the model config for all local models.",
     )
     parser.add_argument(
-        "--verbose", action="store_true",
+        "--verbose",
+        action="store_true",
         help="Stream script stdout/stderr live to the terminal (local models only).",
     )
     parser.add_argument(
-        "--config", default="generation/configs/models.yaml",
+        "--config",
+        default="generation/configs/models.yaml",
         help="Path to the model registry YAML (default: generation/configs/models.yaml).",
     )
     args = parser.parse_args()
@@ -568,8 +586,7 @@ def main() -> int:
     for name in requested:
         if name not in models_config:
             print(
-                f"[ERROR] Unknown model '{name}'. "
-                f"Available: {list(models_config)}",
+                f"[ERROR] Unknown model '{name}'. Available: {list(models_config)}",
                 file=sys.stderr,
             )
             return 1

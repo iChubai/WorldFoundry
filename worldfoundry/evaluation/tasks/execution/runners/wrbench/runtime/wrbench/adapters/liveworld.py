@@ -49,8 +49,7 @@ class LiveWorldAdapter:
                 depth_arr = np.asarray(template[depth_key])
                 if len(depth_arr) != len(composed_poses):
                     raise ValueError(
-                        f"LiveWorld template depth length {len(depth_arr)} "
-                        f"!= pose count {len(composed_poses)}"
+                        f"LiveWorld template depth length {len(depth_arr)} != pose count {len(composed_poses)}"
                     )
             payload_npz = {key: template[key] for key in template}
             payload_npz["poses_c2w"] = composed_poses.astype(np.float32)

@@ -1,10 +1,10 @@
 """Dynamic degree — VBench-aligned RAFT optical flow."""
+
 import numpy as np
 import torch
 
 from ..base import BaseMetric
 from ..weight_utils import get_weight_file
-
 
 
 def _load_raft(device):

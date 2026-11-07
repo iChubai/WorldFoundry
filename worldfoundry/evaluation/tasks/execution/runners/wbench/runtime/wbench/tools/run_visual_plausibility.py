@@ -5,6 +5,7 @@ Usage:
     CUDA_VISIBLE_DEVICES=0 python tools/run_visual_plausibility.py --model hunyuan
     CUDA_VISIBLE_DEVICES=0 python tools/run_visual_plausibility.py --model hunyuan --force
 """
+
 import sys
 import os
 import json
@@ -61,7 +62,7 @@ def main():
     print(f"Loading model from {model_path}...")
     t0 = time.time()
     evaluator = PhysicalPlausibilityEvaluator(model_path=model_path)
-    print(f"Model loaded in {time.time()-t0:.1f}s\n")
+    print(f"Model loaded in {time.time() - t0:.1f}s\n")
 
     scores = []
     errors = 0
@@ -99,7 +100,7 @@ def main():
         eta = avg_per_video * (len(videos) - i - 1)
         score_str = f"{result['raw_score']:.3f}" if result["raw_score"] else "ERR"
         print(
-            f"[{i+1}/{len(videos)}] case_{case_id}: {score_str} "
+            f"[{i + 1}/{len(videos)}] case_{case_id}: {score_str} "
             f"({elapsed:.1f}s) | avg={avg_per_video:.1f}s/video | ETA={eta:.0f}s",
             flush=True,
         )
@@ -123,10 +124,10 @@ def main():
         json.dump(report, f, indent=2, ensure_ascii=False)
 
     total_time = time.time() - start_time
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Done! {len(scores)} videos scored, {errors} errors")
-    print(f"Mean score: {mean_score:.4f} (raw: {mean_score*5:.4f})")
-    print(f"Total time: {total_time:.0f}s ({total_time/60:.1f}min)")
+    print(f"Mean score: {mean_score:.4f} (raw: {mean_score * 5:.4f})")
+    print(f"Total time: {total_time:.0f}s ({total_time / 60:.1f}min)")
     print(f"Report: {report_path}")
 
 

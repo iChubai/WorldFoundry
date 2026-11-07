@@ -64,24 +64,23 @@ import pandas as pd
 # METRICS = ["state_evol", "physical_inaccuracy", "task_success",
 #            "occlusion_done", "trigger_applied", "control_success"]
 
-METRICS = ["physical_inaccuracy",]
+METRICS = [
+    "physical_inaccuracy",
+]
 
 # ---------------------------------------------------------------------------
 # Value extraction
 # ---------------------------------------------------------------------------
 
+
 def _get_rater_value(task: dict, rater: str, metric: str) -> Optional[int]:
     """Return 0, 1, or None for one rater × one metric on one task."""
     if rater == "human_aggregate":
-        votes = [
-            int(bool(ann[metric]))
-            for ann in task.get("annotations", {}).values()
-            if metric in ann
-        ]
+        votes = [int(bool(ann[metric])) for ann in task.get("annotations", {}).values() if metric in ann]
         if not votes:
             return None
         s, n = sum(votes), len(votes)
-        if s * 2 == n:   # exact tie — excluded
+        if s * 2 == n:  # exact tie — excluded
             return None
         return int(s * 2 > n)  # strict majority
     if rater == "llm":
@@ -102,6 +101,7 @@ def _get_rater_value(task: dict, rater: str, metric: str) -> Optional[int]:
 # Data loading
 # ---------------------------------------------------------------------------
 
+
 def load_data(summary_path: Path, raters: list) -> tuple:
     """Return (data, task_counts, tie_counts, task_ids).
 
@@ -113,19 +113,15 @@ def load_data(summary_path: Path, raters: list) -> tuple:
     tasks = json.loads(summary_path.read_text(encoding="utf-8"))["tasks"]
     data = {m: {r: [] for r in raters} for m in METRICS}
     task_counts = {m: 0 for m in METRICS}
-    tie_counts  = {m: 0 for m in METRICS}
-    task_ids    = {m: [] for m in METRICS}
+    tie_counts = {m: 0 for m in METRICS}
+    task_ids = {m: [] for m in METRICS}
     has_aggregate = "human_aggregate" in raters
 
     for task in tasks:
         for metric in METRICS:
             # Detect and count human_aggregate ties before computing other values.
             if has_aggregate:
-                votes = [
-                    int(bool(ann[metric]))
-                    for ann in task.get("annotations", {}).values()
-                    if metric in ann
-                ]
+                votes = [int(bool(ann[metric])) for ann in task.get("annotations", {}).values() if metric in ann]
                 if votes and sum(votes) * 2 == len(votes):
                     tie_counts[metric] += 1
                     continue
@@ -144,6 +140,7 @@ def load_data(summary_path: Path, raters: list) -> tuple:
 # ---------------------------------------------------------------------------
 # Agreement metric
 # ---------------------------------------------------------------------------
+
 
 def pairwise_agreement(a: list, b: list) -> float:
     """Fraction of tasks where rater A and rater B gave the same label."""
@@ -199,6 +196,7 @@ def _avg_roc_auc_symmetric(data_m: dict, human_pairs: list) -> float:
 # Main computation
 # ---------------------------------------------------------------------------
 
+
 def compute_agreement(summary_path: Path, raters: list) -> tuple:
     """Return (df, tie_counts, disagreements, distributions).
 
@@ -217,33 +215,21 @@ def compute_agreement(summary_path: Path, raters: list) -> tuple:
     if not has_llm:
         # Pairwise mode (human-only or VLM-only).
         pairs = list(combinations(humans, 2))
-        rows["pairwise - percent"] = {
-            m: _avg_agreement(data[m], pairs) for m in METRICS
-        }
-        rows["pairwise - ROC/AUC"] = {
-            m: _avg_roc_auc_symmetric(data[m], pairs) for m in METRICS
-        }
+        rows["pairwise - percent"] = {m: _avg_agreement(data[m], pairs) for m in METRICS}
+        rows["pairwise - ROC/AUC"] = {m: _avg_roc_auc_symmetric(data[m], pairs) for m in METRICS}
     else:
         # LLM-included mode: full table.
         rows["n_tasks"] = {m: task_counts[m] for m in METRICS}
 
         if humans:
             llm_human_pairs = [("llm", h) for h in humans]
-            rows["llm_vs_human - percent"] = {
-                m: _avg_agreement(data[m], llm_human_pairs) for m in METRICS
-            }
-            rows["llm_vs_human - ROC/AUC"] = {
-                m: _avg_roc_auc(data[m], llm_human_pairs) for m in METRICS
-            }
+            rows["llm_vs_human - percent"] = {m: _avg_agreement(data[m], llm_human_pairs) for m in METRICS}
+            rows["llm_vs_human - ROC/AUC"] = {m: _avg_roc_auc(data[m], llm_human_pairs) for m in METRICS}
 
         if len(humans) >= 2:
             human_pairs = list(combinations(humans, 2))
-            rows["human_vs_human - percent"] = {
-                m: _avg_agreement(data[m], human_pairs) for m in METRICS
-            }
-            rows["human_vs_human - ROC/AUC"] = {
-                m: _avg_roc_auc_symmetric(data[m], human_pairs) for m in METRICS
-            }
+            rows["human_vs_human - percent"] = {m: _avg_agreement(data[m], human_pairs) for m in METRICS}
+            rows["human_vs_human - ROC/AUC"] = {m: _avg_roc_auc_symmetric(data[m], human_pairs) for m in METRICS}
 
     # Disagreements: tasks where not all raters gave the same label.
     disagreements: dict = {}
@@ -261,9 +247,7 @@ def compute_agreement(summary_path: Path, raters: list) -> tuple:
         distributions[metric] = {}
         n = task_counts[metric]
         for r in raters:
-            distributions[metric][r] = (
-                sum(data[metric][r]) / n if n > 0 else float("nan")
-            )
+            distributions[metric][r] = sum(data[metric][r]) / n if n > 0 else float("nan")
 
     return pd.DataFrame(rows).T[METRICS], tie_counts, disagreements, distributions
 
@@ -271,6 +255,7 @@ def compute_agreement(summary_path: Path, raters: list) -> tuple:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -280,7 +265,10 @@ def main() -> None:
     )
     parser.add_argument("run_dir", type=Path, help="Run folder containing summary.json")
     parser.add_argument(
-        "--raters", nargs="+", required=True, metavar="NAME",
+        "--raters",
+        nargs="+",
+        required=True,
+        metavar="NAME",
         help="Annotator names, e.g.  --raters llm rater1 rater2",
     )
     args = parser.parse_args()
@@ -321,9 +309,7 @@ def main() -> None:
             print()
             print(f"Disagreements on {metric} ({len(disag)} / {sum(len(v) for v in [disag])} tasks):")
             for tid, vals in disag:
-                parts = ", ".join(
-                    f"{r}={'True' if v else 'False'}" for r, v in vals.items()
-                )
+                parts = ", ".join(f"{r}={'True' if v else 'False'}" for r, v in vals.items())
                 print(f"  {tid}: {parts}")
         else:
             print()

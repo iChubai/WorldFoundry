@@ -187,8 +187,7 @@ def sample_chunk_frames(
         sample_times = [(start_sec + end_sec) / 2.0]
     else:
         sample_times = [
-            start_sec + (end_sec - start_sec) * idx / float(frames_per_chunk - 1)
-            for idx in range(frames_per_chunk)
+            start_sec + (end_sec - start_sec) * idx / float(frames_per_chunk - 1) for idx in range(frames_per_chunk)
         ]
 
     images: List[Image.Image] = []

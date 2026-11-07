@@ -30,8 +30,7 @@ class CameraAdapter(Protocol):
         num_frames: int,
         work_dir: str | Path | None = None,
         device: str | None = None,
-    ) -> CameraPayload:
-        ...
+    ) -> CameraPayload: ...
 
 
 _REGISTRY: dict[str, CameraAdapter] = {}

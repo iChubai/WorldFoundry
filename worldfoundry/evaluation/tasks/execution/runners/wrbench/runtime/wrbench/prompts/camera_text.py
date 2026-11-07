@@ -85,9 +85,7 @@ _HAILUO_RETURN_CLAUSES = {
     "yaw_RL": "then [Pan left] back to the original framing.",
 }
 
-_HAILUO_FIRST_FRAME_PRESERVATION = (
-    "Preserve the first-frame scene layout, subject identity, and object placement."
-)
+_HAILUO_FIRST_FRAME_PRESERVATION = "Preserve the first-frame scene layout, subject identity, and object placement."
 
 _SOURCE_GAPS = ("none", *API_CAMERA_MOTIONS)
 _REQUIRED_SOURCE_FIELDS = ("variant_id", "family_id", "reasoning_tier", "oov_gap", "ti2v_prompt")
@@ -231,9 +229,7 @@ def _require_source_row(row: dict[str, Any]) -> dict[str, Any]:
     tier = _tier_key(row)
     expected_variant_id = f"{family_id}__{tier}__{gap}"
     if str(row["variant_id"]).strip() != expected_variant_id:
-        raise ValueError(
-            f"Source row variant_id mismatch: expected {expected_variant_id}, got {row['variant_id']}"
-        )
+        raise ValueError(f"Source row variant_id mismatch: expected {expected_variant_id}, got {row['variant_id']}")
     return row
 
 
@@ -259,9 +255,7 @@ def get_model_prompt_build_method(model: str) -> str:
     if not build_method:
         raise ValueError(f"API prompt preview model has no prompt build method: {model}")
     if build_method not in SUPPORTED_PROMPT_BUILD_METHODS:
-        raise ValueError(
-            f"API prompt preview model has unsupported prompt build method: {model} -> {build_method}"
-        )
+        raise ValueError(f"API prompt preview model has unsupported prompt build method: {model} -> {build_method}")
     return build_method
 
 

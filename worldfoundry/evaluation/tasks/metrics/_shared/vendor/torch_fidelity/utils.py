@@ -71,8 +71,7 @@ def glob_samples_paths(path, samples_find_deep, samples_find_ext, samples_ext_lo
     files = sorted(files)
     vprint(
         verbose,
-        f"Found {len(files)} samples"
-        f'{", some are lossy-compressed - this may affect metrics" if have_lossy else ""}',
+        f"Found {len(files)} samples{', some are lossy-compressed - this may affect metrics' if have_lossy else ''}",
     )
     return files
 
@@ -141,9 +140,10 @@ def get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_
 
     out = None
 
-    with tqdm(
-        disable=not verbose, leave=False, unit="samples", total=len(input), desc="Processing samples"
-    ) as t, torch.no_grad():
+    with (
+        tqdm(disable=not verbose, leave=False, unit="samples", total=len(input), desc="Processing samples") as t,
+        torch.no_grad(),
+    ):
         for bid, batch in enumerate(dataloader):
             if cuda:
                 batch = batch.cuda(non_blocking=True)
@@ -181,9 +181,10 @@ def get_featuresdict_from_generative_model(gen_model, feat_extractor, num_sample
     if cuda:
         gen_model.cuda()
 
-    with tqdm(
-        disable=not verbose, leave=False, unit="samples", total=num_samples, desc="Processing samples"
-    ) as t, torch.no_grad():
+    with (
+        tqdm(disable=not verbose, leave=False, unit="samples", total=num_samples, desc="Processing samples") as t,
+        torch.no_grad(),
+    ):
         for sample_start in range(0, num_samples, batch_size):
             sample_end = min(sample_start + batch_size, num_samples)
             sz = sample_end - sample_start
@@ -303,7 +304,7 @@ def prepare_input_from_descriptor(input_desc, **kwargs):
     vassert(
         not bad_input,
         f'Input descriptor "input" field can be either an instance of Dataset, GenerativeModelBase class, or a string, '
-        f'such as a path to a name of a registered dataset ({", ".join(DATASETS_REGISTRY.keys())}), a directory with '
+        f"such as a path to a name of a registered dataset ({', '.join(DATASETS_REGISTRY.keys())}), a directory with "
         f"file samples, or a path to an ONNX or PTH (JIT) module",
     )
     return input

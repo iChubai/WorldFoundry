@@ -18,5 +18,5 @@ prompt = {
     "imaging_quality": Prompt4ImagingQuality,
     "aesthetic_quality": Prompt4AestheticQuality,
     "temporal_consistency": Prompt4TemporalConsistency,
-    "motion_effects": Prompt4MotionEffects
- }
+    "motion_effects": Prompt4MotionEffects,
+}

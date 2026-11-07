@@ -62,9 +62,7 @@ def atomic_write_json(path: Path, value: Any) -> None:
 
 
 @contextmanager
-def exclusive_lock(
-    path: Path, owner: dict[str, Any], *, wait: bool = False
-) -> Iterator[None]:
+def exclusive_lock(path: Path, owner: dict[str, Any], *, wait: bool = False) -> Iterator[None]:
     """Acquire a process lock and leave useful owner metadata."""
 
     path.parent.mkdir(parents=True, exist_ok=True)

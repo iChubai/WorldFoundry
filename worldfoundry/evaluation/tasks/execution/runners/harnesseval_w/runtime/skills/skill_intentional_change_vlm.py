@@ -104,7 +104,7 @@ def _chunk_controls(chunk: Mapping[str, Any]) -> list[dict[str, Any]]:
 def canonical_spec(case: Mapping[str, Any]) -> dict[str, Any]:
     """Build the authoritative intentional-transition specification from the case."""
 
-    action = ((case.get("interaction") or {}).get("action") or {})
+    action = (case.get("interaction") or {}).get("action") or {}
     non_model = case.get("non_model_facing") or {}
     initial = (case.get("world") or {}).get("initial_observation")
     chunks = []
@@ -130,7 +130,9 @@ def canonical_spec(case: Mapping[str, Any]) -> dict[str, Any]:
             "initial_observation_type": (
                 initial.get("type")
                 if isinstance(initial, Mapping)
-                else type(initial).__name__ if initial is not None else None
+                else type(initial).__name__
+                if initial is not None
+                else None
             ),
         }
     )
@@ -148,9 +150,7 @@ def _jpeg_data_url_from_rgb(frame: Any, max_side: int = 512, quality: int = 76) 
             interpolation=cv2.INTER_AREA,
         )
     bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    ok, encoded = cv2.imencode(
-        ".jpg", bgr, [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)]
-    )
+    ok, encoded = cv2.imencode(".jpg", bgr, [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)])
     if not ok:
         raise RuntimeError("failed to encode sampled frame")
     payload = base64.b64encode(encoded.tobytes()).decode("ascii")
@@ -178,11 +178,7 @@ def _sample_video(video_path: Path) -> tuple[list[Any], dict[str, Any]]:
         cap.release()
         raise RuntimeError(f"video has no frames: {video_path}")
     count = min(int(SAMPLING["max_frames"]), frame_count)
-    indices = (
-        [0]
-        if count == 1
-        else [int(index * (frame_count - 1) / (count - 1)) for index in range(count)]
-    )
+    indices = [0] if count == 1 else [int(index * (frame_count - 1) / (count - 1)) for index in range(count)]
     frames = []
     wanted = set(indices)
     cursor = 0
@@ -195,9 +191,7 @@ def _sample_video(video_path: Path) -> tuple[list[Any], dict[str, Any]]:
         cursor += 1
     cap.release()
     if len(frames) != len(indices):
-        raise RuntimeError(
-            f"decoded {len(frames)} of {len(indices)} requested sample frames"
-        )
+        raise RuntimeError(f"decoded {len(frames)} of {len(indices)} requested sample frames")
     return frames, {
         **SAMPLING,
         "source_frame_count": frame_count,
@@ -206,9 +200,7 @@ def _sample_video(video_path: Path) -> tuple[list[Any], dict[str, Any]]:
     }
 
 
-def expected_spec_messages(
-    spec: Mapping[str, Any], initial_observation_path: Path
-) -> list[dict[str, Any]]:
+def expected_spec_messages(spec: Mapping[str, Any], initial_observation_path: Path) -> list[dict[str, Any]]:
     action_view = {
         "action_text": spec.get("action_text"),
         "chunks": spec.get("chunks"),
@@ -295,9 +287,7 @@ def video_judge_messages(
         },
     ]
     for index, frame in enumerate(frames):
-        content.append(
-            {"type": "text", "text": f"Generated video sample {index:02d}:"}
-        )
+        content.append({"type": "text", "text": f"Generated video sample {index:02d}:"})
         content.append({"type": "image_url", "image_url": _jpeg_data_url_from_rgb(frame)})
     return [
         {
@@ -347,11 +337,7 @@ def normalize_q_scores(judgment: Mapping[str, Any]) -> dict[str, float | None]:
 
 
 def _weighted_mean(values: Mapping[str, Any], weights: Mapping[str, float]) -> float | None:
-    valid = [
-        (float(values[key]), weight)
-        for key, weight in weights.items()
-        if numeric(values.get(key)) is not None
-    ]
+    valid = [(float(values[key]), weight) for key, weight in weights.items() if numeric(values.get(key)) is not None]
     total_weight = sum(weight for _, weight in valid)
     if not total_weight:
         return None
@@ -411,11 +397,7 @@ def _text_tokens(value: Any) -> set[str]:
         value = " ".join(str(item) for item in value)
     elif isinstance(value, Mapping):
         value = json.dumps(value, ensure_ascii=False)
-    return {
-        token
-        for token in re.findall(r"[a-zA-Z0-9_]+", str(value or "").lower())
-        if len(token) >= 4
-    }
+    return {token for token in re.findall(r"[a-zA-Z0-9_]+", str(value or "").lower()) if len(token) >= 4}
 
 
 def _overlap(reference: Any, candidate: Any) -> float | None:
@@ -426,9 +408,7 @@ def _overlap(reference: Any, candidate: Any) -> float | None:
     return round(len(reference_tokens & candidate_tokens) / len(reference_tokens), 6)
 
 
-def case_audit(
-    spec: Mapping[str, Any], expected_spec: Mapping[str, Any]
-) -> dict[str, Any]:
+def case_audit(spec: Mapping[str, Any], expected_spec: Mapping[str, Any]) -> dict[str, Any]:
     target = _overlap(
         [spec.get("action_text"), spec.get("expected_outcome")],
         [expected_spec.get("target"), expected_spec.get("initial_state")],
@@ -437,9 +417,7 @@ def case_audit(
         [spec.get("action_text"), spec.get("expected_outcome")],
         [expected_spec.get("intended_change"), expected_spec.get("change_type")],
     )
-    anchors = _overlap(
-        spec.get("protected_anchors"), expected_spec.get("protected_anchors")
-    )
+    anchors = _overlap(spec.get("protected_anchors"), expected_spec.get("protected_anchors"))
     overall = mean_valid((target, change, anchors))
     warning = overall is None or overall < 0.35
     return {
@@ -478,19 +456,13 @@ def result_from_judgment(
     )
 
 
-def cache_paths(
-    video_path: Path, case_id: str, cache_root: Path | None = None
-) -> dict[str, Path]:
-    result = skill_cache_path(
-        video_path, "intentional_change/results", cache_root
-    )
+def cache_paths(video_path: Path, case_id: str, cache_root: Path | None = None) -> dict[str, Path]:
+    result = skill_cache_path(video_path, "intentional_change/results", cache_root)
     skill_root = result.parents[3]
     model_id, family = result.parents[1].name, result.parent.name
     return {
         "analyze_agent": skill_root / "analyze_agent" / f"{case_id}.json",
-        "verify_agent": (
-            skill_root / "verify_agent" / model_id / family / f"{case_id}.json"
-        ),
+        "verify_agent": (skill_root / "verify_agent" / model_id / family / f"{case_id}.json"),
         "result": result,
     }
 
@@ -581,9 +553,7 @@ def _agent_payload(
     return payload
 
 
-def _result_response(
-    paths: Mapping[str, Path], payload: Mapping[str, Any], cache_hit: bool
-) -> dict[str, Any]:
+def _result_response(paths: Mapping[str, Path], payload: Mapping[str, Any], cache_hit: bool) -> dict[str, Any]:
     return {
         "cache_hit": cache_hit,
         "cache_path": str(paths["result"]),
@@ -633,12 +603,8 @@ def evaluate(
         "initial_observation": initial,
         "backend": identity,
     }
-    analyze_agent_digest = value_digest(
-        {**common_input, "schema": ANALYZE_AGENT_CACHE_SCHEMA}
-    )
-    analyze_agent = _load_cache(
-        paths["analyze_agent"], ANALYZE_AGENT_CACHE_SCHEMA, analyze_agent_digest
-    )
+    analyze_agent_digest = value_digest({**common_input, "schema": ANALYZE_AGENT_CACHE_SCHEMA})
+    analyze_agent = _load_cache(paths["analyze_agent"], ANALYZE_AGENT_CACHE_SCHEMA, analyze_agent_digest)
     analyze_agent_hit = analyze_agent is not None
     if analyze_agent is None:
         messages = expected_spec_messages(spec, initial_observation_path)
@@ -667,15 +633,11 @@ def evaluate(
             "analyze_agent_evidence_digest": analyze_agent.get("evidence_digest"),
         }
     )
-    verify_agent = _load_cache(
-        paths["verify_agent"], VERIFY_AGENT_CACHE_SCHEMA, verify_agent_digest
-    )
+    verify_agent = _load_cache(paths["verify_agent"], VERIFY_AGENT_CACHE_SCHEMA, verify_agent_digest)
     verify_agent_hit = verify_agent is not None
     if verify_agent is None:
         frames, sampling = _sample_video(video_path)
-        messages = video_judge_messages(
-            spec, expected_spec, initial_observation_path, frames
-        )
+        messages = video_judge_messages(spec, expected_spec, initial_observation_path, frames)
         output = _backend_output(backend.infer(messages))
         verify_agent = _agent_payload(
             schema=VERIFY_AGENT_CACHE_SCHEMA,

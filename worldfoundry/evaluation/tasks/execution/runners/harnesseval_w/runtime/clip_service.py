@@ -25,9 +25,7 @@ class OpenAIClipBackend:
         import torch
 
         self.model_name = model_name
-        self.model_fingerprint = OFFICIAL_MODEL_FINGERPRINTS.get(
-            model_name, f"openai-clip:{model_name}"
-        )
+        self.model_fingerprint = OFFICIAL_MODEL_FINGERPRINTS.get(model_name, f"openai-clip:{model_name}")
         self.device = device
         self._torch = torch
         self._image = __import__("PIL.Image", fromlist=["Image"])

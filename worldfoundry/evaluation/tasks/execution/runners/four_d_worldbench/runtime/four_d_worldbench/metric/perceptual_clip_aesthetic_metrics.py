@@ -39,7 +39,7 @@ def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64)
     out_dir = os.path.join(out_root, base)
     os.makedirs(out_dir, exist_ok=True)
 
-    existing = sorted([os.path.join(out_dir, f) for f in os.listdir(out_dir) if f.endswith('.png')])
+    existing = sorted([os.path.join(out_dir, f) for f in os.listdir(out_dir) if f.endswith(".png")])
     if existing:
         return existing
 
@@ -71,38 +71,40 @@ def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64)
 def compute_perceptual_clip_aesthetic_metrics(json_dir, device, submodules_dict, **kwargs):
     """
     Compute CLIP Aesthetic Score metrics for videos.
-    
+
     Args:
         json_dir: Path to the dimension JSON file
         device: Device to run the model on (e.g., 'cuda:0')
         submodules_dict: Dictionary of submodules (not used currently)
         **kwargs: Additional arguments (model, dataset_json, etc.)
-    
+
     Returns:
         tuple: (final_score, details_list)
     """
     dimension = os.path.splitext(os.path.basename(json_dir))[0]
-    _, prompt_dict_ls = load_dimension_info(json_dir, dimension=dimension, lang='en')
+    _, prompt_dict_ls = load_dimension_info(json_dir, dimension=dimension, lang="en")
 
     metric = CLIPAestheticScoreMetric()
     details = []
     scores: List[float] = []
-    out_root = os.path.join(os.path.dirname(json_dir), 'frames_cache')
+    out_root = os.path.join(os.path.dirname(json_dir), "frames_cache")
 
     for item in prompt_dict_ls:
-        for video_path in item.get('video_list', []) or []:
+        for video_path in item.get("video_list", []) or []:
             frames = _extract_frames_to_dir(video_path, out_root)
             if len(frames) == 0:
                 continue
-            
+
             # Compute aesthetic score for all frames
             score = metric._compute_scores(frames)
             scores.append(float(score))
-            details.append({
-                'video_path': video_path,
-                'num_frames': len(frames),
-                'aesthetic_score': float(score),
-            })
+            details.append(
+                {
+                    "video_path": video_path,
+                    "num_frames": len(frames),
+                    "aesthetic_score": float(score),
+                }
+            )
 
     final = float(sum(scores) / len(scores)) if scores else 0.0
 
@@ -110,9 +112,9 @@ def compute_perceptual_clip_aesthetic_metrics(json_dir, device, submodules_dict,
     try:
         output_dir = os.path.dirname(json_dir)
         dim_name = os.path.splitext(os.path.basename(json_dir))[0]
-        model = kwargs.get('model', '')
-        dataset_json = kwargs.get('dataset_json', '')
-        dataset_base = os.path.splitext(os.path.basename(dataset_json))[0] if dataset_json else 'dataset'
+        model = kwargs.get("model", "")
+        dataset_json = kwargs.get("dataset_json", "")
+        dataset_base = os.path.splitext(os.path.basename(dataset_json))[0] if dataset_json else "dataset"
         suffix = f"{dim_name}__{model}__{dataset_base}_results.json" if model else f"{dim_name}_results.json"
         output_file = os.path.join(output_dir, suffix)
         detailed_output = {
@@ -122,7 +124,7 @@ def compute_perceptual_clip_aesthetic_metrics(json_dir, device, submodules_dict,
             },
             "video_details": details,
         }
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(detailed_output, f, indent=2, ensure_ascii=False)
         print(f"\nDetailed results saved to: {output_file}")
     except Exception as e:

@@ -69,7 +69,7 @@ def process_deprecations(cfg):
         new_k = depr["new_name"]
         cfg[new_k] = v
         warnings.warn(
-            f"Argument \"{k}\" is deprecated since {depr['since']}; use \"{new_k}\" instead. Reason: {depr['reason']}",
+            f'Argument "{k}" is deprecated since {depr["since"]}; use "{new_k}" instead. Reason: {depr["reason"]}',
             FutureWarning,
             stacklevel=2,
         )

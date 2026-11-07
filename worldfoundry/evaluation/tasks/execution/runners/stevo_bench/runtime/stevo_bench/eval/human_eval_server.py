@@ -40,11 +40,13 @@ except ImportError:
     def load_yaml(path):  # type: ignore
         return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
 
+
 try:
     from eval.control_judge import (
         _load_task_fields as _ctrl_load_task_fields,
         _compute_requested_fields,
     )
+
     _HAS_CONTROL_JUDGE = True
 except ImportError:
     _HAS_CONTROL_JUDGE = False
@@ -52,15 +54,19 @@ except ImportError:
 try:
     from eval.utils import _path_from_rel, occlusion_base
 except ImportError:
+
     def occlusion_base(task_id):  # type: ignore
         for s in ("_cardboard", "_curtain", "_lightoff"):
             if task_id.endswith(s):
                 return task_id[: -len(s)]
         return task_id
+
     def _path_from_rel(s, base=None):  # type: ignore
         from pathlib import Path as _P
+
         p = _P(s)
         return p if p.is_absolute() else ((_P.cwd() if base is None else base) / p).resolve()
+
 
 # Run-name substrings that identify camera-controlled models (same logic as eval_cli.py)
 _CAMERA_CONTROLLED_NAMES = {"hy", "genie", "lingbot"}
@@ -102,6 +108,7 @@ def _build_yaml_map() -> None:
 # Path encoding helpers
 # ---------------------------------------------------------------------------
 
+
 def _enc(p: str) -> str:
     return base64.urlsafe_b64encode(p.encode("utf-8")).decode("ascii")
 
@@ -114,13 +121,11 @@ def _dec(s: str) -> Path:
 # Data helpers
 # ---------------------------------------------------------------------------
 
+
 def _list_runs() -> List[str]:
     if not RUNS_DIR.exists():
         return []
-    return sorted(
-        d.name for d in RUNS_DIR.iterdir()
-        if d.is_dir() and (d / "per_task").exists()
-    )
+    return sorted(d.name for d in RUNS_DIR.iterdir() if d.is_dir() and (d / "per_task").exists())
 
 
 def _list_task_ids(run_name: str) -> List[str]:
@@ -128,12 +133,10 @@ def _list_task_ids(run_name: str) -> List[str]:
     if not pt.exists():
         return []
     return sorted(
-        d.name for d in pt.iterdir()
+        d.name
+        for d in pt.iterdir()
         if d.is_dir()
-        and (
-            any(d.glob("control_report*.json")) or
-            any(d.glob("se_report*.json"))
-        )
+        and (any(d.glob("control_report*.json")) or any(d.glob("se_report*.json")))
         and not (EXCLUDE_BASELINE and d.name.endswith("_00"))
     )
 
@@ -196,8 +199,8 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
     pt_dir = RUNS_DIR / run_name / "per_task" / task_id
 
     # LLM reports — prefer judge-tagged files, fall back to legacy/stub names.
-    cr   = _load_llm_report(pt_dir, "control_report")
-    se   = _load_llm_report(pt_dir, "se_report")
+    cr = _load_llm_report(pt_dir, "control_report")
+    se = _load_llm_report(pt_dir, "se_report")
     phys = _load_llm_report(pt_dir, "physics_report")
 
     if not cr and not se:
@@ -221,7 +224,7 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
 
     # WM prompts and requested fields from YAML
     video_wm_prompt: str = ""
-    requested_trigger   = cr.get("requested_trigger",   "")
+    requested_trigger = cr.get("requested_trigger", "")
     requested_occlusion = cr.get("requested_occlusion", "")
     if _HAS_CONTROL_JUDGE and yaml_path:
         try:
@@ -243,27 +246,27 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
 
     llm_control = {
         "requested_occlusion": requested_occlusion,
-        "requested_trigger":   requested_trigger,
-        "occlusion_done":      cr.get("occlusion_done"),
-        "trigger_applied":     cr.get("trigger_applied"),
-        "state_evol":          se.get("llm_state_evol"),
+        "requested_trigger": requested_trigger,
+        "occlusion_done": cr.get("occlusion_done"),
+        "trigger_applied": cr.get("trigger_applied"),
+        "state_evol": se.get("llm_state_evol"),
         "physical_inaccuracy": phys.get("physical_inaccuracy"),
-        "notes":               cr.get("notes", ""),
-        "occlusion_prompt":    cr.get("occlusion_prompt", ""),
-        "trigger_prompt":      cr.get("trigger_prompt", ""),
-        "se_prompt":           se.get("filled_prompt1", ""),
-        "physics_prompt":      phys.get("prompt", ""),
+        "notes": cr.get("notes", ""),
+        "occlusion_prompt": cr.get("occlusion_prompt", ""),
+        "trigger_prompt": cr.get("trigger_prompt", ""),
+        "se_prompt": se.get("filled_prompt1", ""),
+        "physics_prompt": phys.get("prompt", ""),
     }
 
     base: Dict[str, Any] = {
-        "task_id":         task_id,
-        "task_level":      task_level,
-        "run_name":        run_name,
-        "init_frame_url":  furl(init_frame_path),
+        "task_id": task_id,
+        "task_level": task_level,
+        "run_name": run_name,
+        "init_frame_url": furl(init_frame_path),
         "final_frame_url": furl(final_frame_path),
-        "video_url":       furl(str(_path_from_rel(cr["wm_video"])) if cr.get("wm_video") else ""),
+        "video_url": furl(str(_path_from_rel(cr["wm_video"])) if cr.get("wm_video") else ""),
         "video_wm_prompt": video_wm_prompt,
-        "llm_control":     llm_control,
+        "llm_control": llm_control,
     }
 
     if annotator:
@@ -271,11 +274,7 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
         # This is the primary persistence mechanism — the file is written by api_answer
         # and re-read every time the annotator loads a task, restoring their prior choices.
         rep = _load_annotator_report(pt_dir, annotator)
-        human_control = {
-            k: rep[k]
-            for k in ("occlusion_done", "trigger_applied", "physical_inaccuracy")
-            if k in rep
-        }
+        human_control = {k: rep[k] for k in ("occlusion_done", "trigger_applied", "physical_inaccuracy") if k in rep}
         base["mode"] = "annotator"
         base["annotator"] = annotator
         base["human_control"] = human_control
@@ -306,6 +305,7 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
 # Range-aware file serving (required for video seeking in the browser)
 # ---------------------------------------------------------------------------
 
+
 def _serve_range(path: Path) -> Response:
     file_size = path.stat().st_size
     mime = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
@@ -321,9 +321,9 @@ def _serve_range(path: Path) -> Response:
 
     spec = rng[6:].strip()
     start_s, _, end_s = spec.partition("-")
-    start  = int(start_s) if start_s else 0
-    end    = int(end_s)   if end_s   else file_size - 1
-    end    = min(end, file_size - 1)
+    start = int(start_s) if start_s else 0
+    end = int(end_s) if end_s else file_size - 1
+    end = min(end, file_size - 1)
     length = end - start + 1
 
     with open(path, "rb") as f:
@@ -331,15 +331,16 @@ def _serve_range(path: Path) -> Response:
         data = f.read(length)
 
     r = Response(data, status=206, mimetype=mime)
-    r.headers["Content-Range"]  = f"bytes {start}-{end}/{file_size}"
+    r.headers["Content-Range"] = f"bytes {start}-{end}/{file_size}"
     r.headers["Content-Length"] = str(length)
-    r.headers["Accept-Ranges"]  = "bytes"
+    r.headers["Accept-Ranges"] = "bytes"
     return r
 
 
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
 
 @app.route("/")
 def index():
@@ -429,9 +430,7 @@ def api_answer(run_name: str, task_id: str):
                             ann_entry[field] = ctrl[field]
                     if has_se:
                         ann_entry["state_evol"] = state_evol
-                    summary_path.write_text(
-                        json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-                    )
+                    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
             except Exception:
                 pass  # summary update is best-effort
 
@@ -1243,20 +1242,25 @@ function esc(s) {
 # Entry point
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     global RUNS_DIR, TASKS_ROOT, EXCLUDE_BASELINE
 
     parser = argparse.ArgumentParser(description="STEVO-Bench Human Eval UI")
-    parser.add_argument("--runs_dir",         default="runs",            help="Path to runs directory (default: runs/)")
-    parser.add_argument("--tasks_dir",        default="benchmark/tasks_v4/", help="Path to benchmark tasks root (default: benchmark/tasks/)")
-    parser.add_argument("--host",             default="0.0.0.0",         help="Host to bind (default: 0.0.0.0 — all interfaces)")
-    parser.add_argument("--port",             default=7860, type=int,    help="Port to listen on (default: 7860)")
-    parser.add_argument("--exclude_baseline", action="store_true",       help="Hide tasks ending in _00 (baseline variants) from all views")
+    parser.add_argument("--runs_dir", default="runs", help="Path to runs directory (default: runs/)")
+    parser.add_argument(
+        "--tasks_dir", default="benchmark/tasks_v4/", help="Path to benchmark tasks root (default: benchmark/tasks/)"
+    )
+    parser.add_argument("--host", default="0.0.0.0", help="Host to bind (default: 0.0.0.0 — all interfaces)")
+    parser.add_argument("--port", default=7860, type=int, help="Port to listen on (default: 7860)")
+    parser.add_argument(
+        "--exclude_baseline", action="store_true", help="Hide tasks ending in _00 (baseline variants) from all views"
+    )
     args = parser.parse_args()
 
-    RUNS_DIR          = Path(args.runs_dir).expanduser().resolve()
-    TASKS_ROOT        = Path(args.tasks_dir).expanduser().resolve()
-    EXCLUDE_BASELINE  = args.exclude_baseline
+    RUNS_DIR = Path(args.runs_dir).expanduser().resolve()
+    TASKS_ROOT = Path(args.tasks_dir).expanduser().resolve()
+    EXCLUDE_BASELINE = args.exclude_baseline
 
     print("STEVO-Bench Human Eval UI")
     print(f"  Runs dir  : {RUNS_DIR}")

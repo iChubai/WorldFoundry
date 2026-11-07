@@ -28,16 +28,15 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc
 
 
 # segment anything
-from worldfoundry.base_models.perception_core.segment.sam_v1 import (
-    sam_model_registry,
-    SamPredictor
-)
+from worldfoundry.base_models.perception_core.segment.sam_v1 import sam_model_registry, SamPredictor
 from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_checkpoint_path
 
 
 # Co-Tracker
 from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
-from worldfoundry.base_models.perception_core.tracking.cotracker.paths import checkpoint_path as cotracker_checkpoint_path
+from worldfoundry.base_models.perception_core.tracking.cotracker.paths import (
+    checkpoint_path as cotracker_checkpoint_path,
+)
 from worldfoundry.base_models.perception_core.tracking.cotracker.visualizer import read_video_from_path
 
 
@@ -72,7 +71,7 @@ def load_video(video_path):
         ]
     )
     image, _ = transform(image_pil, None)
-    
+
     return image_pil, image, frame_rgb, np.stack(frames)
 
 
@@ -127,43 +126,47 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
 def calculate_motion_degree(keypoints, video_width, video_height):
     """
     Calculate the normalized motion amplitude for each batch sample
-    
+
     Parameters:
     keypoints: torch.Tensor, shape [batch_size, 49, 792, 2]
     video_width: int, width of the video
     video_height: int, height of the video
-    
+
     Returns:
     motion_amplitudes: torch.Tensor, shape [batch_size], containing the normalized motion amplitude for each batch sample
     """
 
     # Calculate the length of the video diagonal
     diagonal = torch.sqrt(torch.tensor(video_width**2 + video_height**2, dtype=torch.float32))
-    
+
     # Compute the Euclidean distance between adjacent frames
     distances = torch.norm(keypoints[:, 1:] - keypoints[:, :-1], dim=3)  # shape [batch_size, 48, 792]
-    
+
     # Normalize the distances (divide by the diagonal length)
     normalized_distances = distances / diagonal
-    
+
     # Sum the normalized distances to get the total normalized motion distance for each keypoint
     total_normalized_distances = torch.sum(normalized_distances, dim=1)  # shape [batch_size, 792]
-    
+
     # Compute the normalized motion amplitude for each batch sample (mean of total normalized motion distance for all points)
     motion_amplitudes = torch.mean(total_normalized_distances, dim=1)  # shape [batch_size]
-    
+
     return motion_amplitudes
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser("Grounded-Segment-Anything Demo", add_help=True)
     parser.add_argument("--meta_info_path", type=str, required=True, help="path to meta info json")
-    parser.add_argument("--text_prompt", type=str, required=False, help="text prompt", 
-            default="person. dog. cat. horse. car. ball. robot. bird. bicycle. motorcycle. surfboard. skateboard. bucket. bat. basketball. " \
-              "racket. kitten. puppy. fish. laptop. umbrella. wheelchair. drone. scooter. rollerblades. truck. bus. skier. snowboard. " \
-              "sled. kayak. canoe. sailboat. guitar. piano. drum. violin. trumpet. saxophone. clarinet. flute. accordion. telescope. " \
-              "microscope. treadmill. rope. ladder. swing. tugboat. train.")
+    parser.add_argument(
+        "--text_prompt",
+        type=str,
+        required=False,
+        help="text prompt",
+        default="person. dog. cat. horse. car. ball. robot. bird. bicycle. motorcycle. surfboard. skateboard. bucket. bat. basketball. "
+        "racket. kitten. puppy. fish. laptop. umbrella. wheelchair. drone. scooter. rollerblades. truck. bus. skier. snowboard. "
+        "sled. kayak. canoe. sailboat. guitar. piano. drum. violin. trumpet. saxophone. clarinet. flute. accordion. telescope. "
+        "microscope. treadmill. rope. ladder. swing. tugboat. train.",
+    )
     parser.add_argument("--box_threshold", type=float, default=0.3, help="box threshold")
     parser.add_argument("--text_threshold", type=float, default=0.25, help="text threshold")
     parser.add_argument("--grid_size", type=int, default=30, help="Regular grid size")
@@ -172,8 +175,12 @@ if __name__ == "__main__":
 
     # model cfg
     config_file = os.environ.get("WORLDFOUNDRY_VMBENCH_GROUNDING_DINO_CONFIG", str(grounding_dino_config_path()))
-    grounded_checkpoint = os.environ.get("WORLDFOUNDRY_VMBENCH_GROUNDING_DINO_CKPT", str(grounding_dino_checkpoint_path()))
-    bert_base_uncased_path = os.environ.get("WORLDFOUNDRY_GROUNDING_DINO_BERT_BASE_UNCASED", ".cache/google-bert/bert-base-uncased")
+    grounded_checkpoint = os.environ.get(
+        "WORLDFOUNDRY_VMBENCH_GROUNDING_DINO_CKPT", str(grounding_dino_checkpoint_path())
+    )
+    bert_base_uncased_path = os.environ.get(
+        "WORLDFOUNDRY_GROUNDING_DINO_BERT_BASE_UNCASED", ".cache/google-bert/bert-base-uncased"
+    )
     sam_version = "vit_h"
     sam_checkpoint = os.environ.get("WORLDFOUNDRY_SAM_VIT_H_CKPT", str(sam_checkpoint_path("vit_h")))
     cotracker_checkpoint = os.environ.get("WORLDFOUNDRY_COTRACKER2_CKPT", str(cotracker_checkpoint_path()))
@@ -200,13 +207,13 @@ if __name__ == "__main__":
     ).to(device)
 
     # load meta info json
-    with open(args.meta_info_path, 'r') as f:
+    with open(args.meta_info_path, "r") as f:
         meta_infos = json.load(f)
-    
-    for meta_info in tqdm(meta_infos, desc="Motion Degree: Grounded SAM Segmentation"):
-        image_pil, image, image_array, video = load_video(meta_info['filepath'])
 
-        text_prompt = meta_info['subject_noun'] + '.'
+    for meta_info in tqdm(meta_infos, desc="Motion Degree: Grounded SAM Segmentation"):
+        image_pil, image, image_array, video = load_video(meta_info["filepath"])
+
+        text_prompt = meta_info["subject_noun"] + "."
 
         # run grounding dino model
         boxes_filt, pred_phrases = get_grounding_output(
@@ -232,10 +239,10 @@ if __name__ == "__main__":
 
             # run sam model
             masks, _, _ = sam_predictor.predict_torch(
-                point_coords = None,
-                point_labels = None,
-                boxes = transformed_boxes.to(device),
-                multimask_output = False,
+                point_coords=None,
+                point_labels=None,
+                boxes=transformed_boxes.to(device),
+                multimask_output=False,
             )
 
         # load the input video frame by frame
@@ -251,13 +258,9 @@ if __name__ == "__main__":
         # eval background (camera) motion degree
         background_mask = background_mask.unsqueeze(0)
         pred_tracks, pred_visibility = cotracker_model(
-            video,
-            grid_size=grid_size,
-            grid_query_frame=0,
-            backward_tracking=True,
-            segm_mask=background_mask
+            video, grid_size=grid_size, grid_query_frame=0, backward_tracking=True, segm_mask=background_mask
         )
-        
+
         background_motion_degree = calculate_motion_degree(pred_tracks, video_width, video_height).item()
         # meta_info['motion_amplitude']['camera'] = background_motion_degree.item()
 
@@ -266,24 +269,20 @@ if __name__ == "__main__":
             # eval subject motion degree
             subject_mask = subject_mask.unsqueeze(0)
             pred_tracks, pred_visibility = cotracker_model(
-                video,
-                grid_size=grid_size,
-                grid_query_frame=0,
-                backward_tracking=True,
-                segm_mask=subject_mask
+                video, grid_size=grid_size, grid_query_frame=0, backward_tracking=True, segm_mask=subject_mask
             )
-            
+
             subject_motion_degree = calculate_motion_degree(pred_tracks, video_width, video_height).item()
             # subject_motion_degree = subject_motion_degree.item()
             if subject_motion_degree > background_motion_degree:
                 subject_motion_degree = subject_motion_degree - background_motion_degree
             if not np.isnan(subject_motion_degree):
-                meta_info['perceptible_amplitude_score'] = subject_motion_degree
+                meta_info["perceptible_amplitude_score"] = subject_motion_degree
             else:
-                meta_info['perceptible_amplitude_score'] = background_motion_degree
+                meta_info["perceptible_amplitude_score"] = background_motion_degree
         else:
-            meta_info['perceptible_amplitude_score'] = background_motion_degree
+            meta_info["perceptible_amplitude_score"] = background_motion_degree
 
         # save meta info per video
-        with open(args.meta_info_path, 'w') as f:
+        with open(args.meta_info_path, "w") as f:
             json.dump(meta_infos, f, indent=4)

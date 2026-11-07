@@ -37,9 +37,7 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def shard_skill_tasks(
-    tasks: Iterable[SkillTask], shard_count: int, shard_index: int
-) -> list[SkillTask]:
+def shard_skill_tasks(tasks: Iterable[SkillTask], shard_count: int, shard_index: int) -> list[SkillTask]:
     """Balance cases within every skill/family without splitting their models."""
 
     if shard_count <= 0:
@@ -56,11 +54,7 @@ def shard_skill_tasks(
         offset = int.from_bytes(hashlib.sha256(seed).digest()[:8], "big") % shard_count
         for position, case_id in enumerate(sorted(case_ids)):
             owners[(*group, case_id)] = (offset + position) % shard_count
-    return [
-        task
-        for task in tasks
-        if owners[(task.skill_id, task.probe_family, task.case_id)] == shard_index
-    ]
+    return [task for task in tasks if owners[(task.skill_id, task.probe_family, task.case_id)] == shard_index]
 
 
 @dataclass(frozen=True)
@@ -92,11 +86,7 @@ class SkillTask:
             "plan_role": self.selection.get("role"),
             "video": str(self.video_path),
             "metadata": str(self.metadata_path),
-            "initial_observation": (
-                str(self.initial_observation_path)
-                if self.initial_observation_path
-                else None
-            ),
+            "initial_observation": (str(self.initial_observation_path) if self.initial_observation_path else None),
             "plan": str(self.plan_path),
             "bundle": str(self.bundle_path),
         }
@@ -124,10 +114,7 @@ def _plan_index(plan_root: Path) -> dict[str, tuple[Path, dict[str, Any]]]:
         if case_id in index:
             raise ValueError(f"duplicate plan for case {case_id}")
         validation = plan.get("validation") or {}
-        if (
-            validation.get("status") != "ok"
-            or validation.get("selection_modified") is not False
-        ):
+        if validation.get("status") != "ok" or validation.get("selection_modified") is not False:
             raise ValueError(f"plan is not a valid unmodified LLM selection: {path}")
         index[case_id] = (path.resolve(), plan)
     return index
@@ -211,13 +198,7 @@ def plan_skill_tasks(
                     video_path=video,
                     metadata_path=metadata,
                     initial_observation_path=initial,
-                    bundle_path=(
-                        cache_root
-                        / "bundles"
-                        / model_id
-                        / family
-                        / f"{case_id}.metrics.json"
-                    ),
+                    bundle_path=(cache_root / "bundles" / model_id / family / f"{case_id}.metrics.json"),
                 )
             )
     sharded = shard_skill_tasks(tasks, shard_count, shard_index)
@@ -231,15 +212,11 @@ def task_summary(tasks: Iterable[SkillTask], *, details: bool = False) -> dict[s
     result: dict[str, Any] = {
         "schema_version": "harnesseval.skill_run_plan",
         "task_count": len(tasks),
-        "rollout_count": len(
-            {(task.model_id, task.probe_family, task.case_id) for task in tasks}
-        ),
+        "rollout_count": len({(task.model_id, task.probe_family, task.case_id) for task in tasks}),
         "case_count": len({task.case_id for task in tasks}),
         "skill_counts": dict(sorted(by_skill.items())),
         "family_counts": dict(sorted(by_family.items())),
-        "shared_analyze_task_count": sum(
-            task.skill_id in SHARED_ANALYZE_SKILLS for task in tasks
-        ),
+        "shared_analyze_task_count": sum(task.skill_id in SHARED_ANALYZE_SKILLS for task in tasks),
     }
     if details:
         result["tasks"] = [task.to_dict() for task in tasks]
@@ -254,8 +231,7 @@ def _base_bundle(task: SkillTask) -> dict[str, Any]:
             str(existing.get("case_id")) != task.case_id
             or str(existing.get("model_id")) != task.model_id
             or str(existing.get("probe_family")) != task.probe_family
-            or Path(str(expected_video.get("path") or "")).resolve()
-            != task.video_path
+            or Path(str(expected_video.get("path") or "")).resolve() != task.video_path
         ):
             raise ValueError(f"bundle identity mismatch: {task.bundle_path}")
         if existing.get("schema_version") != BUNDLE_SCHEMA:
@@ -304,24 +280,15 @@ def publish_skill_result(task: SkillTask, response: Mapping[str, Any]) -> None:
         wait=True,
     ):
         bundle = _base_bundle(task)
-        selected_ids = {
-            str(item.get("skill_id"))
-            for item in read_json(task.plan_path).get("selected_skills") or ()
-        }
+        selected_ids = {str(item.get("skill_id")) for item in read_json(task.plan_path).get("selected_skills") or ()}
         by_id = {
             str(item.get("skill_id")): dict(item)
             for item in bundle.get("skill_results") or ()
             if isinstance(item, Mapping) and str(item.get("skill_id")) in selected_ids
         }
         by_id[task.skill_id] = dict(result)
-        bundle["skill_results"] = [
-            by_id[skill_id] for skill_id in SKILLS if skill_id in by_id
-        ]
-        skill_runs = {
-            key: value
-            for key, value in (bundle.get("skill_runs") or {}).items()
-            if key in selected_ids
-        }
+        bundle["skill_results"] = [by_id[skill_id] for skill_id in SKILLS if skill_id in by_id]
+        skill_runs = {key: value for key, value in (bundle.get("skill_runs") or {}).items() if key in selected_ids}
         skill_runs[task.skill_id] = {
             "cache_path": response.get("cache_path"),
             "cache_hit": bool(response.get("cache_hit")),
@@ -397,16 +364,8 @@ def _run_skill_group(
     first = [sorted(items, key=lambda item: item.model_id)[0] for items in by_case.values()]
     first_keys = {task.key() for task in first}
     first_outcomes = _run_phase(first, backend, cache_root, analyze_workers)
-    passed_cases = {
-        str(outcome["case_id"])
-        for outcome in first_outcomes
-        if outcome["status"] == "ok"
-    }
-    remaining = [
-        task
-        for task in tasks
-        if task.key() not in first_keys and task.case_id in passed_cases
-    ]
+    passed_cases = {str(outcome["case_id"]) for outcome in first_outcomes if outcome["status"] == "ok"}
+    remaining = [task for task in tasks if task.key() not in first_keys and task.case_id in passed_cases]
     blocked = [
         {
             **task.to_dict(),
@@ -471,13 +430,9 @@ def execute_skill_tasks(
 
     outcomes.sort(key=lambda item: (item["skill_id"], item["case_id"], item["model_id"]))
     status_counts = Counter(item["status"] for item in outcomes)
-    skill_status_counts = Counter(
-        (item["skill_id"], item["status"]) for item in outcomes
-    )
+    skill_status_counts = Counter((item["skill_id"], item["status"]) for item in outcomes)
     scores = [
-        float(item["score"])
-        for item in outcomes
-        if item["status"] == "ok" and numeric(item.get("score")) is not None
+        float(item["score"]) for item in outcomes if item["status"] == "ok" and numeric(item.get("score")) is not None
     ]
     audit = {
         "schema_version": "harnesseval.skill_run_audit",
@@ -488,8 +443,7 @@ def execute_skill_tasks(
         "status": "passed" if status_counts == {"ok": len(tasks)} else "failed",
         "status_counts": dict(sorted(status_counts.items())),
         "skill_status_counts": {
-            f"{skill_id}/{status}": count
-            for (skill_id, status), count in sorted(skill_status_counts.items())
+            f"{skill_id}/{status}": count for (skill_id, status), count in sorted(skill_status_counts.items())
         },
         "backends": {
             skill_id: {
@@ -504,10 +458,7 @@ def execute_skill_tasks(
             if skill_id in required
         },
         "cache_hits": sum(bool(item.get("cache_hit")) for item in outcomes),
-        "cache_misses": sum(
-            item["status"] == "ok" and not item.get("cache_hit")
-            for item in outcomes
-        ),
+        "cache_misses": sum(item["status"] == "ok" and not item.get("cache_hit") for item in outcomes),
         "score_min": min(scores) if scores else None,
         "score_max": max(scores) if scores else None,
         "outcomes": outcomes,

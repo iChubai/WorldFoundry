@@ -29,9 +29,7 @@ class AutoencoderKL(torch.nn.Module):
         assert ddconfig["double_z"]
 
         if use_quant_conv:
-            self.quant_conv = torch.nn.Conv2d(
-                2 * ddconfig["z_channels"], 2 * embed_dim, 1
-            )
+            self.quant_conv = torch.nn.Conv2d(2 * ddconfig["z_channels"], 2 * embed_dim, 1)
             self.post_quant_conv = torch.nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
             self.embed_dim = embed_dim
 
@@ -80,7 +78,6 @@ class AutoencoderKL(torch.nn.Module):
         print(f"Restored from {path}")
 
     def encode(self, x, **kwargs):
-
         h = self.encoder(x)
         moments = h
         if self.use_quant_conv:

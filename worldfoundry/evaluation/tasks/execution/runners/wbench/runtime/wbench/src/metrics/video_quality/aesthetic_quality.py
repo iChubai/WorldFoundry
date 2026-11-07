@@ -1,4 +1,5 @@
 """Aesthetic quality metric — LAION aesthetic predictor on CLIP ViT-L/14 features."""
+
 import numpy as np
 import torch
 import torch.nn.functional as F

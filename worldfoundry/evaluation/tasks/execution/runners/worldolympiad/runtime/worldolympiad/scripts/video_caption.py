@@ -47,12 +47,7 @@ def encode_video_to_data_url(video_path: str) -> Dict:
     if not path.exists():
         raise FileNotFoundError(f"Video not found: {video_path}")
     encoded = base64.b64encode(path.read_bytes()).decode("ascii")
-    return {
-        "type": "video_url",
-        "video_url": {
-            "url": f"data:video/mp4;base64,{encoded}"
-        }
-    }
+    return {"type": "video_url", "video_url": {"url": f"data:video/mp4;base64,{encoded}"}}
 
 
 def build_user_prompt(num_segments: int) -> str:
@@ -138,9 +133,7 @@ def generate_captions(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate video captions in the scripts/example.jsonl format"
-    )
+    parser = argparse.ArgumentParser(description="Generate video captions in the scripts/example.jsonl format")
     parser.add_argument("--video", required=True, help="Path to the input video file")
     parser.add_argument(
         "--segments",

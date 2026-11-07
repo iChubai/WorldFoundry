@@ -25,9 +25,7 @@ def _require_httpx():
     try:
         import httpx  # noqa: F401
     except ImportError as exc:
-        raise ImportError(
-            "LLM prompt generation requires httpx. Install with: pip install 'wrbench[prompts]'"
-        ) from exc
+        raise ImportError("LLM prompt generation requires httpx. Install with: pip install 'wrbench[prompts]'") from exc
 
 
 def _require_config_value(value: str | None, *, label: str) -> str:

@@ -19,6 +19,7 @@ sys.path.insert(0, dir_path)
 import transformers
 from transformers.models.llama.modeling_llama import *
 
+
 def _get_unpad_data(attention_mask):
     seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
     indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
@@ -38,20 +39,19 @@ from .modeling_attn_mask_utils import _prepare_4d_causal_attention_mask
 from transformers.modeling_attn_mask_utils import _prepare_4d_causal_attention_mask_for_sdpa
 from .configuration_mplug_owl2 import LlamaConfig
 
-class MultiwayNetwork(nn.Module):
 
+class MultiwayNetwork(nn.Module):
     def __init__(self, module_provider, num_multiway=2):
         super(MultiwayNetwork, self).__init__()
 
         self.multiway = torch.nn.ModuleList([module_provider() for _ in range(num_multiway)])
-    
-    def forward(self, hidden_states, multiway_indices):
 
+    def forward(self, hidden_states, multiway_indices):
         if len(self.multiway) == 1:
             return self.multiway[0](hidden_states)
 
         output_hidden_states = torch.empty_like(hidden_states)
-        
+
         for idx, subway in enumerate(self.multiway):
             local_indices = multiway_indices.eq(idx).nonzero(as_tuple=True)
             hidden = hidden_states[local_indices].unsqueeze(1).contiguous()
@@ -61,9 +61,9 @@ class MultiwayNetwork(nn.Module):
                     output = output[0]
                 output = output.squeeze(1)
                 output_hidden_states[local_indices] = output
-        
+
         return output_hidden_states.contiguous()
-    
+
 
 class LlamaAttention(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
@@ -78,7 +78,7 @@ class LlamaAttention(nn.Module):
                 "to errors during the forward call, if caching is used. Please make sure to provide a `layer_idx` "
                 "when creating this class."
             )
-            
+
         self.attention_dropout = config.attention_dropout
         self.hidden_size = config.hidden_size
         self.num_heads = config.num_attention_heads
@@ -95,11 +95,21 @@ class LlamaAttention(nn.Module):
                 f" and `num_heads`: {self.num_heads})."
             )
         self.q_proj = nn.Linear(self.hidden_size, self.num_heads * self.head_dim, bias=config.attention_bias)
-        self.k_proj = MultiwayNetwork(module_provider=partial(
-            nn.Linear, in_features=self.hidden_size, out_features=self.num_key_value_heads * self.head_dim, bias=config.attention_bias)
+        self.k_proj = MultiwayNetwork(
+            module_provider=partial(
+                nn.Linear,
+                in_features=self.hidden_size,
+                out_features=self.num_key_value_heads * self.head_dim,
+                bias=config.attention_bias,
+            )
         )
-        self.v_proj = MultiwayNetwork(module_provider=partial(
-            nn.Linear, in_features=self.hidden_size, out_features=self.num_key_value_heads * self.head_dim, bias=config.attention_bias)
+        self.v_proj = MultiwayNetwork(
+            module_provider=partial(
+                nn.Linear,
+                in_features=self.hidden_size,
+                out_features=self.num_key_value_heads * self.head_dim,
+                bias=config.attention_bias,
+            )
         )
         self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=config.attention_bias)
         self._init_rope()
@@ -147,7 +157,9 @@ class LlamaAttention(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         bsz, q_len, _ = hidden_states.size()
 
-        query_states = self.q_proj(hidden_states, )
+        query_states = self.q_proj(
+            hidden_states,
+        )
         key_states = self.k_proj(hidden_states, modality_indicators)
         value_states = self.v_proj(hidden_states, modality_indicators)
 
@@ -206,7 +218,7 @@ class LlamaAttention(nn.Module):
             attn_weights = None
 
         return attn_output, attn_weights, past_key_value
-    
+
 
 class LlamaFlashAttention2(LlamaAttention):
     """
@@ -501,12 +513,12 @@ class LlamaSdpaAttention(LlamaAttention):
         return attn_output, None, past_key_value
 
 
-
 LLAMA_ATTENTION_CLASSES = {
     "eager": LlamaAttention,
     "flash_attention_2": LlamaFlashAttention2,
     "sdpa": LlamaSdpaAttention,
 }
+
 
 class LlamaDecoderLayer(nn.Module):
     def __init__(self, config: LlamaConfig, layer_idx):
@@ -515,12 +527,12 @@ class LlamaDecoderLayer(nn.Module):
         self.self_attn = LlamaAttention(config=config)
         self.self_attn = LLAMA_ATTENTION_CLASSES[config._attn_implementation](config=config, layer_idx=layer_idx)
         self.mlp = LlamaMLP(config)
-        self.input_layernorm = MultiwayNetwork(module_provider=partial(
-            LlamaRMSNorm, hidden_size=config.hidden_size, eps=config.rms_norm_eps
-        ))
-        self.post_attention_layernorm = MultiwayNetwork(module_provider=partial(
-            LlamaRMSNorm, hidden_size=config.hidden_size, eps=config.rms_norm_eps
-        ))
+        self.input_layernorm = MultiwayNetwork(
+            module_provider=partial(LlamaRMSNorm, hidden_size=config.hidden_size, eps=config.rms_norm_eps)
+        )
+        self.post_attention_layernorm = MultiwayNetwork(
+            module_provider=partial(LlamaRMSNorm, hidden_size=config.hidden_size, eps=config.rms_norm_eps)
+        )
 
     def forward(
         self,
@@ -609,7 +621,7 @@ def model_forward(
         batch_size, seq_length, _ = inputs_embeds.shape
     else:
         raise ValueError("You have to specify either decoder_input_ids or decoder_inputs_embeds")
-    
+
     seq_length_with_past = seq_length
     past_key_values_length = 0
 
@@ -630,27 +642,25 @@ def model_forward(
         inputs_embeds = self.embed_tokens(input_ids)
     # embed positions
     if attention_mask is None:
-        attention_mask = torch.ones(
-            (batch_size, seq_length_with_past), dtype=torch.bool, device=inputs_embeds.device
-        )
-        
+        attention_mask = torch.ones((batch_size, seq_length_with_past), dtype=torch.bool, device=inputs_embeds.device)
+
     if self._use_flash_attention_2:
-            # 2d mask is passed through the layers
-            attention_mask = attention_mask if (attention_mask is not None and 0 in attention_mask) else None
+        # 2d mask is passed through the layers
+        attention_mask = attention_mask if (attention_mask is not None and 0 in attention_mask) else None
     elif self._use_sdpa and not output_attentions:
-            # output_attentions=True can not be supported when using SDPA, and we fall back on
-            # the manual implementation that requires a 4D causal mask in all cases.
-            attention_mask = _prepare_4d_causal_attention_mask_for_sdpa(
-                attention_mask,
-                (batch_size, seq_length),
-                inputs_embeds,
-                past_key_values_length,
-            )
+        # output_attentions=True can not be supported when using SDPA, and we fall back on
+        # the manual implementation that requires a 4D causal mask in all cases.
+        attention_mask = _prepare_4d_causal_attention_mask_for_sdpa(
+            attention_mask,
+            (batch_size, seq_length),
+            inputs_embeds,
+            past_key_values_length,
+        )
     else:
-            # 4d mask is passed through the layers
-            attention_mask = _prepare_4d_causal_attention_mask(
-                attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
-            )
+        # 4d mask is passed through the layers
+        attention_mask = _prepare_4d_causal_attention_mask(
+            attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
+        )
 
     hidden_states = inputs_embeds
 
@@ -818,6 +828,7 @@ def causal_model_forward(
         attentions=outputs.attentions,
     )
 
+
 def replace_llama_modality_adaptive():
     transformers.models.llama.configuration_llama.LlamaConfig = LlamaConfig
     transformers.models.llama.modeling_llama.LlamaAttention = LlamaAttention
@@ -827,7 +838,7 @@ def replace_llama_modality_adaptive():
     transformers.models.llama.modeling_llama.LlamaModel.forward = model_forward
     transformers.models.llama.modeling_llama.LlamaForCausalLM.forward = causal_model_forward
 
-    
+
 if __name__ == "__main__":
     replace_llama_modality_adaptive()
     config_name = os.environ.get("WORLDFOUNDRY_VMBENCH_LLAMA_CONFIG", "lmsys/vicuna-7b-v1.5")

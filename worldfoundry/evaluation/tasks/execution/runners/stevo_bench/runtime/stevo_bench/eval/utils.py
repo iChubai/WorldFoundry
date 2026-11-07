@@ -24,9 +24,11 @@ def occlusion_base(task_id: str) -> str:
             return task_id[: -len(s)]
     return task_id
 
+
 # -----------------------------
 # Output links / paths
 # -----------------------------
+
 
 def _is_url(s: str) -> bool:
     try:
@@ -64,6 +66,7 @@ def _resolve_video_source(link: str, outputs_json_path: Path) -> Tuple[str, Path
 #         # symlink by default (fast)
 #         dst.symlink_to(src)
 
+
 def _copy_or_symlink(src: Path, dst: Path, *, mode: str = "symlink") -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
     if dst.exists() or dst.is_symlink():
@@ -87,6 +90,7 @@ def _copy_or_symlink(src: Path, dst: Path, *, mode: str = "symlink") -> None:
 # -----------------------------
 # Portable path helpers
 # -----------------------------
+
 
 def _path_to_rel(path: Path, base: Optional[Path] = None) -> str:
     """

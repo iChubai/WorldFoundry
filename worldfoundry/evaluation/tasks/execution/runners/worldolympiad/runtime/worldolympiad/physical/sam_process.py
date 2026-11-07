@@ -58,9 +58,7 @@ from model.vlm import (
 try:
     from ultralytics.models.sam import SAM3VideoSemanticPredictor
 except ImportError as exc:  # pragma: no cover - depends on optional package
-    raise ImportError(
-        "ultralytics with SAM3 support is required. Install with: pip install ultralytics"
-    ) from exc
+    raise ImportError("ultralytics with SAM3 support is required. Install with: pip install ultralytics") from exc
 
 # ── Monkey-patch Results.verbose() so it never crashes on missing/mistyped names ──
 try:
@@ -75,6 +73,7 @@ try:
             # Fallback: build a safe string ourselves
             try:
                 import numpy as _np
+
                 if self.boxes is None or self.boxes.cls is None:
                     return ""
                 counts = _np.bincount(
@@ -128,6 +127,7 @@ def _make_safe_names(text_prompts: List[str]) -> defaultdict:
     This prevents KeyError in ultralytics verbose() regardless of the
     class indices returned by the model.
     """
+
     class _SafeNames(defaultdict):
         def __missing__(self, key):
             try:
@@ -395,10 +395,7 @@ def _inpaint_video_background(
 
     inpainted_frames: List[np.ndarray] = []
     frame_count = len(frames)
-    valid_source_masks = [
-        (~mask) & ~((frame <= 8).all(axis=2))
-        for frame, mask in zip(frames, dynamic_masks)
-    ]
+    valid_source_masks = [(~mask) & ~((frame <= 8).all(axis=2)) for frame, mask in zip(frames, dynamic_masks)]
 
     for frame_idx, (frame, dynamic_mask) in enumerate(zip(frames, dynamic_masks)):
         output_frame = frame.copy()
@@ -417,7 +414,7 @@ def _inpaint_video_background(
                     break
 
         if remaining_mask.any():
-            mask_uint8 = (remaining_mask.astype(np.uint8) * 255)
+            mask_uint8 = remaining_mask.astype(np.uint8) * 255
             output_frame = cv2.inpaint(output_frame, mask_uint8, inpaintRadius=3, flags=cv2.INPAINT_TELEA)
 
         inpainted_frames.append(output_frame)
@@ -538,9 +535,7 @@ def segment_with_sam3(
                 )
 
             large_candidates = [
-                candidate
-                for candidate in raw_candidates
-                if float(candidate["area_ratio"]) >= min_mask_area_ratio
+                candidate for candidate in raw_candidates if float(candidate["area_ratio"]) >= min_mask_area_ratio
             ]
             used_small_fallback = bool(raw_candidates) and not large_candidates
             candidates = large_candidates if large_candidates else raw_candidates
@@ -608,12 +603,9 @@ def segment_with_sam3(
 
     def remux_h264(src: str, dst: str):
         ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-        subprocess.run([
-            ffmpeg_exe, "-y", "-i", src,
-            "-c:v", "libx264", "-crf", "18",
-            "-pix_fmt", "yuv420p", dst
-        ], check=True)
-
+        subprocess.run(
+            [ffmpeg_exe, "-y", "-i", src, "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", dst], check=True
+        )
 
     mask_mp4_path = str(_mask_path(video_path, output_video_path=output_video_path))
     bbox_mp4_path = str(_bbox_path(video_path, output_video_path=output_video_path))
@@ -623,7 +615,6 @@ def segment_with_sam3(
     bbox_final = bbox_mp4_path.replace(".mp4", "_h264.mp4")
     binary_mask_final = binary_mask_mp4_path.replace(".mp4", "_h264.mp4")
     masked_final = masked_mp4_path.replace(".mp4", "_h264.mp4")
-
 
     non_h264_outputs = [
         mask_mp4_path,
@@ -673,10 +664,7 @@ def run_sam_process(
             work_dir=Path(temp_dir),
             max_frames=max_frames,
         )
-        print(
-            f"Processing video source: {sampling_info['source']} "
-            f"({sampling_info['processing_frame_count']} frames)"
-        )
+        print(f"Processing video source: {sampling_info['source']} ({sampling_info['processing_frame_count']} frames)")
 
         print("\nStep 1: Extract moving/deforming objects via VLM...")
         vlm_start = time.perf_counter()

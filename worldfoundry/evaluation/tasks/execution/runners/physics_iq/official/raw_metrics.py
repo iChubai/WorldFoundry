@@ -65,9 +65,7 @@ class ViewFrames:
     mask_generated: np.ndarray  # bool in [0,1] shape (n_frames, h, w)
 
 
-def load_and_resize_video(
-    filepath, start_frame, end_frame, target_size=None, normalize=True
-) -> np.ndarray:
+def load_and_resize_video(filepath, start_frame, end_frame, target_size=None, normalize=True) -> np.ndarray:
     """Load and resize a video.
 
     Args:
@@ -103,9 +101,7 @@ def load_and_resize_video(
 def spatial_binary_masks(mask_frames: np.ndarray) -> np.ndarray:
     """Collapse the time dimension: True where any frame has a mask pixel."""
     if mask_frames.shape[0] == 0:
-        print(
-            "Warning: Received empty mask_frames for spatial binary mask calculation."
-        )
+        print("Warning: Received empty mask_frames for spatial binary mask calculation.")
         return np.zeros((1, 1), dtype=bool)
     return mask_frames.any(axis=0)
 
@@ -143,9 +139,7 @@ def compute_weighted_spatial_iou(weighted_spatial_1, weighted_spatial_2):
     return np.sum(intersection[valid_pixels]) / np.sum(union[valid_pixels])
 
 
-def load_view(
-    paths: ViewPaths, start_frame: int, end_frame: int, consider_frames: int
-) -> ViewFrames | None:
+def load_view(paths: ViewPaths, start_frame: int, end_frame: int, consider_frames: int) -> ViewFrames | None:
     """Load and prepare all frames for one view from disk.
 
     Returns None if real_v1 has no frames (signals a missing video).
@@ -158,26 +152,11 @@ def load_view(
 
     real_v1 = load_and_resize_video(paths.real_v1, 0, consider_frames, target_size)
     real_v2 = load_and_resize_video(paths.real_v2, 0, consider_frames, target_size)
-    generated = load_and_resize_video(
-        paths.generated, start_frame, end_frame, target_size
-    )
-    mask_v1 = (
-        load_and_resize_video(
-            paths.mask_v1, 0, consider_frames, target_size, normalize=False
-        )[:, :, :, 0]
-        > 127
-    )
-    mask_v2 = (
-        load_and_resize_video(
-            paths.mask_v2, 0, consider_frames, target_size, normalize=False
-        )[:, :, :, 0]
-        > 127
-    )
+    generated = load_and_resize_video(paths.generated, start_frame, end_frame, target_size)
+    mask_v1 = load_and_resize_video(paths.mask_v1, 0, consider_frames, target_size, normalize=False)[:, :, :, 0] > 127
+    mask_v2 = load_and_resize_video(paths.mask_v2, 0, consider_frames, target_size, normalize=False)[:, :, :, 0] > 127
     mask_generated = (
-        load_and_resize_video(
-            paths.mask_generated, 0, consider_frames, target_size, normalize=False
-        )[:, :, :, 0]
-        > 127
+        load_and_resize_video(paths.mask_generated, 0, consider_frames, target_size, normalize=False)[:, :, :, 0] > 127
     )
 
     vid_shape = real_v1.shape
@@ -188,9 +167,7 @@ def load_view(
         or mask_shape != mask_v2.shape
         or mask_shape != mask_generated.shape
     ):
-        raise ValueError(
-            "Frames are or shapes are inconistent across generated videos"
-        )
+        raise ValueError("Frames are or shapes are inconistent across generated videos")
 
     return ViewFrames(
         real_v1=real_v1,
@@ -207,43 +184,25 @@ def compute_view_metrics(frames: ViewFrames) -> dict:
 
     Returns a dict with neutral keys (no view suffix).
     """
-    spatiotemporal_iou_v1 = spatiotemporal_iou_per_frame(
-        frames.mask_v1, frames.mask_generated
-    )
-    spatiotemporal_iou_v2 = spatiotemporal_iou_per_frame(
-        frames.mask_v2, frames.mask_generated
-    )
-    variance_spatiotemporal_iou = spatiotemporal_iou_per_frame(
-        frames.mask_v1, frames.mask_v2
-    )
+    spatiotemporal_iou_v1 = spatiotemporal_iou_per_frame(frames.mask_v1, frames.mask_generated)
+    spatiotemporal_iou_v2 = spatiotemporal_iou_per_frame(frames.mask_v2, frames.mask_generated)
+    variance_spatiotemporal_iou = spatiotemporal_iou_per_frame(frames.mask_v1, frames.mask_v2)
 
     spatial_v1 = spatial_binary_masks(frames.mask_v1)
     spatial_v2 = spatial_binary_masks(frames.mask_v2)
     spatial_generated = spatial_binary_masks(frames.mask_generated)
 
-    iou_v1_spatial = spatiotemporal_iou_per_frame(
-        spatial_v1[np.newaxis], spatial_generated[np.newaxis]
-    )[0]
-    iou_v2_spatial = spatiotemporal_iou_per_frame(
-        spatial_v2[np.newaxis], spatial_generated[np.newaxis]
-    )[0]
-    variance_spatial = spatiotemporal_iou_per_frame(
-        spatial_v1[np.newaxis], spatial_v2[np.newaxis]
-    )[0]
+    iou_v1_spatial = spatiotemporal_iou_per_frame(spatial_v1[np.newaxis], spatial_generated[np.newaxis])[0]
+    iou_v2_spatial = spatiotemporal_iou_per_frame(spatial_v2[np.newaxis], spatial_generated[np.newaxis])[0]
+    variance_spatial = spatiotemporal_iou_per_frame(spatial_v1[np.newaxis], spatial_v2[np.newaxis])[0]
 
     weighted_spatial_v1 = weighted_spatial_mask(frames.mask_v1)
     weighted_spatial_v2 = weighted_spatial_mask(frames.mask_v2)
     weighted_spatial_generated = weighted_spatial_mask(frames.mask_generated)
 
-    iou_v1_weighted_spatial = compute_weighted_spatial_iou(
-        weighted_spatial_v1, weighted_spatial_generated
-    )
-    iou_v2_weighted_spatial = compute_weighted_spatial_iou(
-        weighted_spatial_v2, weighted_spatial_generated
-    )
-    variance_weighted_spatial = compute_weighted_spatial_iou(
-        weighted_spatial_v1, weighted_spatial_v2
-    )
+    iou_v1_weighted_spatial = compute_weighted_spatial_iou(weighted_spatial_v1, weighted_spatial_generated)
+    iou_v2_weighted_spatial = compute_weighted_spatial_iou(weighted_spatial_v2, weighted_spatial_generated)
+    variance_weighted_spatial = compute_weighted_spatial_iou(weighted_spatial_v1, weighted_spatial_v2)
 
     return {
         "spatiotemporal_iou_v1": spatiotemporal_iou_v1,
@@ -261,9 +220,7 @@ def compute_view_metrics(frames: ViewFrames) -> dict:
     }
 
 
-def process_view(
-    paths: ViewPaths, view: str, start_frame: int, end_frame: int, consider_frames: int
-) -> dict | None:
+def process_view(paths: ViewPaths, view: str, start_frame: int, end_frame: int, consider_frames: int) -> dict | None:
     """Load frames and compute metrics for one view; keys are suffixed with the view name."""
     frames = load_view(paths, start_frame, end_frame, consider_frames)
     if frames is None:
@@ -398,13 +355,10 @@ def process_videos(
         missing_scenarios = selected_scenarios - set(scenario_info)
         if missing_scenarios:
             raise ValueError(
-                "Selected Physics-IQ scenarios are missing from the reference assets: "
-                f"{sorted(missing_scenarios)[:3]}."
+                f"Selected Physics-IQ scenarios are missing from the reference assets: {sorted(missing_scenarios)[:3]}."
             )
         scenario_info = {
-            scenario_name: ids
-            for scenario_name, ids in scenario_info.items()
-            if scenario_name in selected_scenarios
+            scenario_name: ids for scenario_name, ids in scenario_info.items() if scenario_name in selected_scenarios
         }
 
     progress_bar = tqdm.tqdm(total=len(scenario_info), desc="Processing scenarios")
@@ -461,22 +415,16 @@ def process_videos(
                 process_view(paths, view, start_frame, end_frame, consider_frames),
             )
     else:
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=n_processes
-        ) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=n_processes) as executor:
             future_to_scenario = {
-                executor.submit(
-                    process_view, paths, view, start_frame, end_frame, consider_frames
-                ): scenario_name
+                executor.submit(process_view, paths, view, start_frame, end_frame, consider_frames): scenario_name
                 for scenario_name, view, paths in tasks
             }
             for future in concurrent.futures.as_completed(future_to_scenario):
                 _store(future_to_scenario[future], future.result())
 
     for scenario_name in scenario_info:
-        scenario_data.append(
-            {"scenario": scenario_name, **view_results_by_scenario[scenario_name]}
-        )
+        scenario_data.append({"scenario": scenario_name, **view_results_by_scenario[scenario_name]})
 
     if scenario_data:
         df = pd.DataFrame(scenario_data)

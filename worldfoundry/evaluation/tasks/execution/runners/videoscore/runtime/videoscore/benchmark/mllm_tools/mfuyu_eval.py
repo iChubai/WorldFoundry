@@ -1,28 +1,31 @@
 import torch
 from mantis.models.mfuyu import MFuyuForCausalLM, MFuyuProcessor, chat_mfuyu
 from typing import List
-from .mllm_utils import load_images 
+from .mllm_utils import load_images
 
-class MFuyu():
+
+class MFuyu:
     support_multi_image = True
-    def __init__(self, model_id:str="Mantis-VL/mfuyu_v2_8192_720p-5500") -> None:
+
+    def __init__(self, model_id: str = "Mantis-VL/mfuyu_v2_8192_720p-5500") -> None:
         """
         Args:
             model_id (str): Fuyu model name, e.g. "adept/fuyu-8b"
         """
         self.model_id = model_id
         self.processor = MFuyuProcessor.from_pretrained(model_id)
-        self.model = MFuyuForCausalLM.from_pretrained(model_id, device_map="auto", torch_dtype=torch.bfloat16, attn_implementation="flash_attention_2")
-        if '480p' in model_id:
+        self.model = MFuyuForCausalLM.from_pretrained(
+            model_id, device_map="auto", torch_dtype=torch.bfloat16, attn_implementation="flash_attention_2"
+        )
+        if "480p" in model_id:
             self.processor.image_processor.size = {"height": 480, "width": 660}
-        elif '720p' in model_id:
+        elif "720p" in model_id:
             self.processor.image_processor.size = {"height": 720, "width": 1290}
-        elif '1080p' in model_id:
+        elif "1080p" in model_id:
             self.processor.image_processor.size = {"height": 1080, "width": 1920}
         else:
             self.processor.image_processor.size = {"height": 1080, "width": 1920}
-            
-    
+
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -60,7 +63,7 @@ class MFuyu():
             "images": images,
         }
         return inputs
-    
+
     def get_parsed_output(self, inputs):
         generation_kwargs = {
             "max_new_tokens": 4096,
@@ -68,9 +71,12 @@ class MFuyu():
             "do_sample": False,
             "pad_token_id": self.processor.tokenizer.eos_token_id,
         }
-        generated_text, _ = chat_mfuyu(inputs["text"], inputs["images"], self.model, self.processor, **generation_kwargs)
+        generated_text, _ = chat_mfuyu(
+            inputs["text"], inputs["images"], self.model, self.processor, **generation_kwargs
+        )
         return generated_text
-    
+
+
 if __name__ == "__main__":
     model = MFuyu()
     # 0 shot
@@ -78,58 +84,40 @@ if __name__ == "__main__":
     zero_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 1 shot
     one_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 2 shot
     two_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A black cat."
-        },
+        {"type": "text", "content": "What is in the image? A black cat."},
         {
             "type": "image",
-            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*"
+            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     print("### 0 shot")
     print(model(zero_shot_exs))
@@ -146,4 +134,3 @@ if __name__ == "__main__":
     ### 2 shot
     A zebra and a cat.
     """
-    

@@ -302,10 +302,7 @@ def _sample_frame_indices(total_frames: int, max_frames: int) -> List[int]:
     if total_frames <= max_frames:
         return list(range(total_frames))
 
-    positions = [
-        int(round(index * (total_frames - 1) / float(max_frames - 1)))
-        for index in range(max_frames)
-    ]
+    positions = [int(round(index * (total_frames - 1) / float(max_frames - 1))) for index in range(max_frames)]
 
     deduplicated: List[int] = []
     seen = set()
@@ -570,8 +567,7 @@ def chat_qwenvl_call(
                 generated_ids = model.generate(**inputs, **_generation_kwargs())
 
             generated_ids_trimmed = [
-                output_ids[len(input_row):]
-                for input_row, output_ids in zip(input_ids, generated_ids)
+                output_ids[len(input_row) :] for input_row, output_ids in zip(input_ids, generated_ids)
             ]
             output_text = processor.batch_decode(
                 generated_ids_trimmed,

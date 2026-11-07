@@ -48,7 +48,7 @@ def probe_video(video_path: Path, full_decode: bool = False) -> dict[str, Any]:
     completed = subprocess.run(command, capture_output=True, text=True, timeout=120)
     if completed.returncode:
         raise RuntimeError(completed.stderr.strip() or "ffprobe failed")
-    streams = (json.loads(completed.stdout).get("streams") or [])
+    streams = json.loads(completed.stdout).get("streams") or []
     if not streams:
         raise RuntimeError("video has no readable video stream")
     stream = streams[0]
@@ -268,10 +268,7 @@ def build_inventory(
             )
         )
 
-    expected = {
-        (row["primary_axis"], row["probe_family"], row["model_id"], row["case_id"])
-        for row in rows
-    }
+    expected = {(row["primary_axis"], row["probe_family"], row["model_id"], row["case_id"]) for row in rows}
     actual = set()
     outputs_root = generation_root / "outputs"
     if outputs_root.is_dir():

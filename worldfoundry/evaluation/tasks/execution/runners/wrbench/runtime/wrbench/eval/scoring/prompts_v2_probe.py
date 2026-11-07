@@ -19,37 +19,17 @@ PROMPT_MODE_P2_EVIDENCE_BOUNDARY = "runtime_v2_probe_logprob_p2_evidence_boundar
 PROMPT_MODE_P3_ANCHOR_IDENTITY_LIGHT = "runtime_v2_probe_logprob_p3_anchor_identity_light"
 PROMPT_MODE_P4_D5_LOCATION_STRICT = "runtime_v2_probe_logprob_p4_d5_location_strict"
 PROMPT_MODE_P5_D5_RETURN_GATE_SOFT = "runtime_v2_probe_logprob_p5_d5_return_gate_soft"
-PROMPT_MODE_P6_D5_WORLD_REGION_CONTINUITY = (
-    "runtime_v2_probe_logprob_p6_d5_world_region_continuity"
-)
-PROMPT_MODE_P6C_D5_RETURN_POSITION_REJECT_RELIEF = (
-    "runtime_v2_probe_logprob_p6c_d5_return_position_reject_relief"
-)
+PROMPT_MODE_P6_D5_WORLD_REGION_CONTINUITY = "runtime_v2_probe_logprob_p6_d5_world_region_continuity"
+PROMPT_MODE_P6C_D5_RETURN_POSITION_REJECT_RELIEF = "runtime_v2_probe_logprob_p6c_d5_return_position_reject_relief"
 PROMPT_MODE_P7_D3_RELATION_SPLIT = "runtime_v2_probe_logprob_p7_d3_relation_split"
-PROMPT_MODE_P8_D4_SUBJECT_CAUSAL_RESULT = (
-    "runtime_v2_probe_logprob_p8_d4_subject_causal_result"
-)
-PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED = (
-    "runtime_v2_probe_logprob_p9_d4_p8_d5_p6_combined"
-)
-PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY = (
-    "runtime_v2_probe_logprob_p10_shared_oov_judgeability"
-)
-PROMPT_MODE_P11_SHARED_GATE_D6_STATE_CONTINUITY = (
-    "runtime_v2_probe_logprob_p11_shared_gate_d6_state_continuity"
-)
-PROMPT_MODE_P12_QWEN3VL_EVIDENCE_CONDITIONED = (
-    "runtime_v2_probe_logprob_p12_qwen3vl_evidence_conditioned"
-)
-PROMPT_MODE_P13_QWEN3VL_SUBQUESTION_CONDITIONED = (
-    "runtime_v2_probe_logprob_p13_qwen3vl_subquestion_conditioned"
-)
-PROMPT_MODE_QWEN36_35B_P9_SCORE = (
-    "runtime_v2_probe_logprob_qwen36_35b_p9_score"
-)
-PROMPT_MODE_QWEN36_35B_SHARED_OOV_GATE = (
-    "runtime_v2_probe_logprob_qwen36_35b_shared_oov_gate"
-)
+PROMPT_MODE_P8_D4_SUBJECT_CAUSAL_RESULT = "runtime_v2_probe_logprob_p8_d4_subject_causal_result"
+PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED = "runtime_v2_probe_logprob_p9_d4_p8_d5_p6_combined"
+PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY = "runtime_v2_probe_logprob_p10_shared_oov_judgeability"
+PROMPT_MODE_P11_SHARED_GATE_D6_STATE_CONTINUITY = "runtime_v2_probe_logprob_p11_shared_gate_d6_state_continuity"
+PROMPT_MODE_P12_QWEN3VL_EVIDENCE_CONDITIONED = "runtime_v2_probe_logprob_p12_qwen3vl_evidence_conditioned"
+PROMPT_MODE_P13_QWEN3VL_SUBQUESTION_CONDITIONED = "runtime_v2_probe_logprob_p13_qwen3vl_subquestion_conditioned"
+PROMPT_MODE_QWEN36_35B_P9_SCORE = "runtime_v2_probe_logprob_qwen36_35b_p9_score"
+PROMPT_MODE_QWEN36_35B_SHARED_OOV_GATE = "runtime_v2_probe_logprob_qwen36_35b_shared_oov_gate"
 SUPPORTED_PROMPT_MODES = {
     DEFAULT_PROMPT_MODE,
     PROMPT_MODE_V3_MINIMAL_WORLD_STATE,
@@ -322,8 +302,7 @@ V3_QUESTION_OVERRIDES: dict[str, str] = {
         "relevant interval?"
     ),
     "D5_GATE_RETURN": (
-        "After that interval, does the subject, target, or expected world region "
-        "become spatially inspectable again?"
+        "After that interval, does the subject, target, or expected world region become spatially inspectable again?"
     ),
     "D5_GATE_UNIDENTIFIABLE": (
         "After the later view returns, is the subject or target so unidentifiable "
@@ -344,8 +323,7 @@ V3_QUESTION_OVERRIDES: dict[str, str] = {
         "state-unjudgeable for a relevant interval?"
     ),
     "D6_GATE_RETURN": (
-        "After that interval, does later evidence make the action, pose, result, "
-        "or state inspectable again?"
+        "After that interval, does later evidence make the action, pose, result, or state inspectable again?"
     ),
     "D6_GATE_UNIDENTIFIABLE": (
         "After later evidence returns, is the subject, target, action, or result "
@@ -454,10 +432,7 @@ P3_QUESTION_OVERRIDES: dict[str, str] = {
         "Does the prompt-critical subject or target become out of view, occluded, "
         "or otherwise not directly judgeable for a relevant interval?"
     ),
-    "D5_GATE_RETURN": (
-        "After that interval, does later evidence make the subject or target "
-        "judgeable again?"
-    ),
+    "D5_GATE_RETURN": ("After that interval, does later evidence make the subject or target judgeable again?"),
     "D5_GATE_UNIDENTIFIABLE": (
         "After later evidence returns, is the subject or target so changed or "
         "unclear that no spatial continuity judgment can be made at all?"
@@ -477,8 +452,7 @@ P3_QUESTION_OVERRIDES: dict[str, str] = {
         "not directly judgeable for a relevant interval?"
     ),
     "D6_GATE_RETURN": (
-        "After that interval, does later evidence make the action, pose, result, "
-        "or state judgeable again?"
+        "After that interval, does later evidence make the action, pose, result, or state judgeable again?"
     ),
     "D6_GATE_UNIDENTIFIABLE": (
         "After later evidence returns, is the subject, target, action, or result "
@@ -649,10 +623,7 @@ P11_D6_QUESTION_OVERRIDES: dict[str, str] = {
 
 def validate_prompt_mode(prompt_mode: str) -> str:
     if prompt_mode not in SUPPORTED_PROMPT_MODES:
-        raise ValueError(
-            f"unsupported prompt_mode: {prompt_mode}; "
-            f"expected one of {sorted(SUPPORTED_PROMPT_MODES)}"
-        )
+        raise ValueError(f"unsupported prompt_mode: {prompt_mode}; expected one of {sorted(SUPPORTED_PROMPT_MODES)}")
     return prompt_mode
 
 

@@ -369,10 +369,7 @@ def main() -> int:
         domain_roots = [(args.domain_name, project_path(project_root, args.root))]
     else:
         output_root = project_path(project_root, args.output_root)
-        domain_roots = [
-            (domain, output_root / domain)
-            for domain in split_values(args.domains, DEFAULT_DOMAINS)
-        ]
+        domain_roots = [(domain, output_root / domain) for domain in split_values(args.domains, DEFAULT_DOMAINS)]
 
     print(f"Project root: {project_root}")
     print(f"WorldEval root: {worldeval_root}")

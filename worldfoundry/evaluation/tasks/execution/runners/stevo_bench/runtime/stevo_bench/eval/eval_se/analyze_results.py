@@ -8,8 +8,10 @@ import sys
 from pathlib import Path
 from typing import Dict, List
 import numpy as np
+
 try:
     from sklearn.metrics import roc_auc_score, roc_curve
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -27,7 +29,7 @@ class ResultsAnalyzer:
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, 'r') as f:
+        with open(results_path, "r") as f:
             return json.load(f)
 
     def load_summary_json(self, run_name: str) -> Dict:
@@ -39,7 +41,7 @@ class ResultsAnalyzer:
             "LingBot_lingbot_run_1": "LingBot_output_map_lingbot_run_1",
             "HY-WorldPlay_hunyuan_run_2": "HY-WorldPlay_output_map_hunyuan_run_2",
             "genie_genie_run_1": "genie",
-            "wan22_wan_run_1": "wan22_wan_run_1"
+            "wan22_wan_run_1": "wan22_wan_run_1",
         }
 
         summary_path_key = run_mapping.get(run_name, run_name)
@@ -49,7 +51,7 @@ class ResultsAnalyzer:
             print(f"Warning: Could not find summary.json at {summary_path}")
             return {}
 
-        with open(summary_path, 'r') as f:
+        with open(summary_path, "r") as f:
             return json.load(f)
 
     def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
@@ -90,7 +92,10 @@ class ResultsAnalyzer:
                 is_ensemble = True
             elif "verification_results" in first_result:
                 # Check if it's cross-model (has both gemini_verdict and gpt_verdict)
-                if "gemini_verdict" in first_result["verification_results"] and "gpt_verdict" in first_result["verification_results"]:
+                if (
+                    "gemini_verdict" in first_result["verification_results"]
+                    and "gpt_verdict" in first_result["verification_results"]
+                ):
                     is_cross_model = True
 
         # Initialize confusion matrix
@@ -187,14 +192,16 @@ class ResultsAnalyzer:
                     false_negatives += 1
                     outcome = "FN"
 
-                detailed_results.append({
-                    "task_id": task_id,
-                    "run_name": run_name,
-                    "gemini_verdict": gemini_verdict,
-                    "ground_truth": ground_truth,
-                    "outcome": outcome,
-                    "score": score
-                })
+                detailed_results.append(
+                    {
+                        "task_id": task_id,
+                        "run_name": run_name,
+                        "gemini_verdict": gemini_verdict,
+                        "ground_truth": ground_truth,
+                        "outcome": outcome,
+                        "score": score,
+                    }
+                )
 
         # Calculate metrics
         total = true_positives + false_positives + true_negatives + false_negatives
@@ -211,11 +218,7 @@ class ResultsAnalyzer:
             try:
                 roc_auc = roc_auc_score(y_true, y_scores)
                 fpr, tpr, thresholds = roc_curve(y_true, y_scores)
-                roc_curve_data = {
-                    "fpr": fpr.tolist(),
-                    "tpr": tpr.tolist(),
-                    "thresholds": thresholds.tolist()
-                }
+                roc_curve_data = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "thresholds": thresholds.tolist()}
             except Exception as e:
                 print(f"Warning: Could not calculate ROC AUC: {e}")
 
@@ -227,16 +230,11 @@ class ResultsAnalyzer:
                 "true_positives": true_positives,
                 "false_positives": false_positives,
                 "true_negatives": true_negatives,
-                "false_negatives": false_negatives
+                "false_negatives": false_negatives,
             },
-            "metrics": {
-                "accuracy": accuracy,
-                "precision": precision,
-                "recall": recall,
-                "f1_score": f1
-            },
+            "metrics": {"accuracy": accuracy, "precision": precision, "recall": recall, "f1_score": f1},
             "total_evaluated": total,
-            "detailed_results": detailed_results
+            "detailed_results": detailed_results,
         }
 
         if roc_auc is not None:
@@ -250,9 +248,9 @@ class ResultsAnalyzer:
         cm = analysis["confusion_matrix"]
         metrics = analysis["metrics"]
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("CONFUSION MATRIX ANALYSIS")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Ground truth field used: {analysis['ground_truth_field']}")
         print(f"Total evaluated: {analysis['total_evaluated']}")
         if analysis.get("is_cross_model"):
@@ -274,7 +272,7 @@ class ResultsAnalyzer:
 
         # Print metrics
         print("Metrics:")
-        print(f"  Accuracy:  {metrics['accuracy']:.3f} ({metrics['accuracy']*100:.1f}%)")
+        print(f"  Accuracy:  {metrics['accuracy']:.3f} ({metrics['accuracy'] * 100:.1f}%)")
         print(f"  Precision: {metrics['precision']:.3f}")
         print(f"  Recall:    {metrics['recall']:.3f}")
         print(f"  F1 Score:  {metrics['f1_score']:.3f}")
@@ -309,7 +307,7 @@ class ResultsAnalyzer:
                 score_counts = {
                     1.0: sum(1 for s in scores if s == 1.0),
                     0.5: sum(1 for s in scores if s == 0.5),
-                    0.0: sum(1 for s in scores if s == 0.0)
+                    0.0: sum(1 for s in scores if s == 0.0),
                 }
                 print("\nModel Agreement Distribution:")
                 print(f"  Both agree (Yes):  {score_counts[1.0]} (score=1.0)")
@@ -349,7 +347,7 @@ def main():
     output_file = Path(results_file).stem + "_analysis.json"
     output_path = Path(project_root) / "eval_se" / "results" / output_file
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(analysis, f, indent=2)
 
     print(f"\nAnalysis saved to: {output_path}")

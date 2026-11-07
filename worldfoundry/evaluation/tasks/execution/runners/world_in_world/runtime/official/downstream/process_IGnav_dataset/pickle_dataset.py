@@ -113,6 +113,7 @@ class IGDatasetPortable(IGDataset):
 
         print("IGDataset")
         print(f"Total kept   : {len(self.data)}")
+
     # __len__ and __getitem__ inherited from IGDataset
 
 
@@ -145,14 +146,12 @@ def decode_png_bytes(png_bytes: bytes) -> Image.Image:
     return Image.open(io.BytesIO(png_bytes)).convert("RGB")
 
 
-
 def load_igdataset_from_zip(
     zip_path: str,
     pkl_path: str,
     remote_hm3d_root: str = "data/scene_datasets/hm3d/val",
     remote_img_folder: str = "goal_imgs_unzipped",
 ) -> IGDatasetPortable:
-
     remote_img_path = osp.join(osp.dirname(zip_path), remote_img_folder)
     # unzip once
     if not osp.exists(remote_img_path):

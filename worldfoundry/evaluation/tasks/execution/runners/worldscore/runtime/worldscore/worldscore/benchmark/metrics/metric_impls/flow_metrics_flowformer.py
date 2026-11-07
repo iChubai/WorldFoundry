@@ -11,7 +11,9 @@ from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus im
 from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils import frame_utils
 from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils.utils import InputPadder
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import BaseMetric
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    BaseMetric,
+)
 
 TRAIN_SIZE = [432, 960]
 
@@ -19,7 +21,7 @@ TRAIN_SIZE = [432, 960]
 def compute_adaptive_image_size(image_size):
     target_size = TRAIN_SIZE
     scale0 = target_size[0] / image_size[0]
-    scale1 = target_size[1] / image_size[1] 
+    scale1 = target_size[1] / image_size[1]
 
     if scale0 > scale1:
         scale = scale0
@@ -29,6 +31,7 @@ def compute_adaptive_image_size(image_size):
     image_size = (int(image_size[1] * scale), int(image_size[0] * scale))
 
     return image_size
+
 
 def prepare_image(fn1, fn2, keep_size):
     print(f"preparing image...")
@@ -47,6 +50,7 @@ def prepare_image(fn1, fn2, keep_size):
 
     return image1, image2
 
+
 def build_model():
     print(f"building  model...")
     cfg = get_cfg()
@@ -59,21 +63,22 @@ def build_model():
 
     return model
 
+
 def generate_pairs(img_list):
     img_pairs = []
     seq_len = len(img_list)
     for idx in range(seq_len - 1):
         img1 = img_list[idx]
-        img2 = img_list[idx+1]
+        img2 = img_list[idx + 1]
         img_pairs.append((img1, img2))
     return img_pairs
 
-   
+
 class OpticalFlowMetric(BaseMetric):
     """
-    
+
     Using the median of estimated optical-flow to measure the motion magnitude.
-    
+
     Optical-flow estimation -- FlowFormer++, proposed by
 
     FlowFormer++: Masked Cost Volume Autoencoding for Pretraining Optical Flow Estimation.
@@ -81,19 +86,19 @@ class OpticalFlowMetric(BaseMetric):
     CVPR 2023.
 
     Ref url: https://github.com/XiaoyuShi97/FlowFormerPlusPlus
-    
+
     RANGE: [0, ~] higher the better
     """
-    
+
     def __init__(self) -> None:
         super().__init__()
         model = build_model()
-        self._model = model.to(self._device)      
-    
+        self._model = model.to(self._device)
+
     def _compute_flow(self, image1, image2):
         print(f"computing flow...")
         image1, image2 = image1[None].to(self._device), image2[None].to(self._device)
-        
+
         padder = InputPadder(image1.shape)
         image1, image2 = padder.pad(image1, image2)
 
@@ -104,15 +109,14 @@ class OpticalFlowMetric(BaseMetric):
         flow = flow_pre[0].permute(1, 2, 0).cpu().numpy()
 
         return flow
-            
+
     def _compute_scores(
-        self, 
+        self,
         rendered_images: List[str],
     ) -> float:
-
         img_pairs = generate_pairs(rendered_images)
         scores = []
-        
+
         with torch.no_grad():
             for img_pair in img_pairs:
                 fn1, fn2 = img_pair
@@ -122,6 +126,6 @@ class OpticalFlowMetric(BaseMetric):
                 flow_magnitude = np.sqrt((flow[..., 0] ** 2 + flow[..., 1] ** 2))
                 median_flow = float(torch.from_numpy(flow_magnitude).median().item())
                 scores.append(median_flow)
-            
+
         score = sum(scores) / len(scores)
         return score

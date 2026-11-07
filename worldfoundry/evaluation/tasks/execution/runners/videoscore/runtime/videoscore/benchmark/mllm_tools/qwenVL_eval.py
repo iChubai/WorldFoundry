@@ -3,9 +3,12 @@ import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from PIL import Image
 from typing import List
-class QwenVL():
+
+
+class QwenVL:
     support_multi_image = False
-    def __init__(self, model_id:str="Qwen/Qwen-VL-Chat") -> None:
+
+    def __init__(self, model_id: str = "Qwen/Qwen-VL-Chat") -> None:
         """
         Args:
             model_id (str): Qwen model name, e.g. "Qwen/Qwen-VL-Chat"
@@ -13,8 +16,10 @@ class QwenVL():
         self.model_id = model_id
         self.merged_image_files = []
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-        self.model = AutoModelForCausalLM.from_pretrained(model_id, device_map="auto", trust_remote_code=True, bf16=True).eval()
-    
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_id, device_map="auto", trust_remote_code=True, bf16=True
+        ).eval()
+
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -44,7 +49,7 @@ class QwenVL():
                 return self.get_parsed_output(inputs)
             finally:
                 self.close()
-    
+
     def prepare_prompt(self, image_links: List = [], text_prompt: str = ""):
         if type(image_links) == str:
             image_links = [image_links]
@@ -63,11 +68,10 @@ class QwenVL():
         image_links = true_image_links
         input_list = []
         for i, image_link in enumerate(image_links):
-            input_list.append({'image': image_link})
-        input_list.append({'text': text_prompt})
+            input_list.append({"image": image_link})
+        input_list.append({"text": text_prompt})
         query = self.tokenizer.from_list_format(input_list)
         return query
-    
 
     def get_parsed_output(self, query):
         response, history = self.model.chat(self.tokenizer, query=query, history=None)
@@ -84,7 +88,8 @@ class QwenVL():
 
     def __del__(self):
         self.close()
-    
+
+
 if __name__ == "__main__":
     model = QwenVL()
     # 0 shot
@@ -92,58 +97,40 @@ if __name__ == "__main__":
     zero_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 1 shot
     one_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 2 shot
     two_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A black cat."
-        },
+        {"type": "text", "content": "What is in the image? A black cat."},
         {
             "type": "image",
-            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*"
+            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     print("### 0 shot")
     print(model(zero_shot_exs))
@@ -160,4 +147,3 @@ if __name__ == "__main__":
     ### 2 shot
     A white rabbit.
     """
-    

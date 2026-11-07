@@ -10,6 +10,7 @@ Method:
 3. Gate by minimum similarity during trajectory (penalizes static videos)
 4. Final score = ret_sim * gate, where gate = min(1, (1-min_sim)/tau)
 """
+
 from __future__ import annotations
 
 import json
@@ -27,14 +28,30 @@ N_SAMPLE_FRAMES = 10
 METRIC_NAME = "spatial_consistency"
 
 NAVI_ACTIONS = {
-    "W", "A", "S", "D", "left", "right", "up", "down",
-    "W+up", "W+down", "W+A", "W+D", "W+left", "W+right",
+    "W",
+    "A",
+    "S",
+    "D",
+    "left",
+    "right",
+    "up",
+    "down",
+    "W+up",
+    "W+down",
+    "W+A",
+    "W+D",
+    "W+left",
+    "W+right",
 }
 SYMMETRIC_PAIRS = {
-    ("left", "right"), ("right", "left"),
-    ("A", "D"), ("D", "A"),
-    ("W", "S"), ("S", "W"),
-    ("up", "down"), ("down", "up"),
+    ("left", "right"),
+    ("right", "left"),
+    ("A", "D"),
+    ("D", "A"),
+    ("W", "S"),
+    ("S", "W"),
+    ("up", "down"),
+    ("down", "up"),
 }
 
 
@@ -50,10 +67,7 @@ def find_loop_cases(cases_dir: str) -> List[Tuple[str, dict]]:
         n = len(actions)
         if n < 2:
             continue
-        is_loop = all(
-            (actions[i], actions[n - 1 - i]) in SYMMETRIC_PAIRS
-            for i in range(n // 2)
-        )
+        is_loop = all((actions[i], actions[n - 1 - i]) in SYMMETRIC_PAIRS for i in range(n // 2))
         if is_loop:
             loop_cases.append((str(case_data["id"]), case_data))
     return loop_cases

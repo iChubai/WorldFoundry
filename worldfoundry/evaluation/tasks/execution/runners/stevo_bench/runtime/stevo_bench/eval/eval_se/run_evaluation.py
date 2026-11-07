@@ -22,9 +22,17 @@ from gemini_gpt_double_ensemble import GeminiGPTDoubleEnsemble
 
 
 class EvaluationRunner:
-    def __init__(self, project_root: str, output_dir: str = "eval_se/results",
-                 use_ensemble: bool = False, use_evidence: bool = False, use_cross_model: bool = False,
-                 use_gpt: bool = False, use_double_ensemble: bool = False, task_dir: str = "benchmark/tasks_v4"):
+    def __init__(
+        self,
+        project_root: str,
+        output_dir: str = "eval_se/results",
+        use_ensemble: bool = False,
+        use_evidence: bool = False,
+        use_cross_model: bool = False,
+        use_gpt: bool = False,
+        use_double_ensemble: bool = False,
+        task_dir: str = "benchmark/tasks_v4",
+    ):
         self.project_root = Path(project_root)
         self.output_dir = self.project_root / output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -62,9 +70,9 @@ class EvaluationRunner:
 
     def _evaluate_single_task(self, task_data: Dict, task_num: int, total_tasks: int) -> Dict:
         """Evaluate a single task (used for parallel execution)."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Task {task_num}/{total_tasks}: {task_data['task_id']}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         try:
             result = self.evaluator.evaluate_task(task_data)
@@ -127,7 +135,7 @@ class EvaluationRunner:
                     "results": results,
                 }
 
-                with open(output_path, 'w') as f:
+                with open(output_path, "w") as f:
                     json.dump(evaluation_results, f, indent=2)
 
                 print(f"\n  [{completed_count[0]}/{len(tasks)}] Progress saved to: {output_path}")
@@ -217,9 +225,9 @@ class EvaluationRunner:
         with open(output_path, "w") as f:
             json.dump(evaluation_results, f, indent=2)
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Final results saved to: {output_path}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         return output_path
 
@@ -227,9 +235,9 @@ class EvaluationRunner:
         """Print summary of evaluation results."""
         summary = evaluation_results["summary"]
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("EVALUATION SUMMARY")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Total tasks: {summary['total']}")
         print(f"Passed: {summary['passed']} ({summary['pass_rate']:.1%})")
         print(f"Failed: {summary['failed']}")
@@ -243,9 +251,7 @@ class EvaluationRunner:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Run Gemini-based state evolution evaluation"
-    )
+    parser = argparse.ArgumentParser(description="Run Gemini-based state evolution evaluation")
     parser.add_argument(
         "--project-root",
         type=str,
@@ -328,13 +334,9 @@ def main():
         use_cross_model=args.cross_model,
         use_gpt=args.gpt,
         use_double_ensemble=args.double_ensemble,
-        task_dir=args.task_dir
+        task_dir=args.task_dir,
     )
-    results = runner.run_evaluation(
-        limit=args.limit,
-        output_filename=args.output,
-        max_workers=args.workers
-    )
+    results = runner.run_evaluation(limit=args.limit, output_filename=args.output, max_workers=args.workers)
 
     # Final save (already done incrementally, but update one more time)
     output_path = runner.save_results(results, filename=args.output)

@@ -23,39 +23,27 @@ class TaskDataCollector:
             {
                 "run_name": "sora_pro_sora_pro_subset_run_3",
                 "summary_path": "sora_pro_output_map_sora_pro_subset_run_3",
-                "output_path": "sora_pro_sora_pro_subset_run_3"
+                "output_path": "sora_pro_sora_pro_subset_run_3",
             },
-            {
-                "run_name": "veo_veo_run_6",
-                "summary_path": "veo_output_map_veo_run_6",
-                "output_path": "veo_veo_run_6"
-            },
+            {"run_name": "veo_veo_run_6", "summary_path": "veo_output_map_veo_run_6", "output_path": "veo_veo_run_6"},
             {
                 "run_name": "LingBot_lingbot_run_1",
                 "summary_path": "LingBot_output_map_lingbot_run_1",
-                "output_path": "LingBot_lingbot_run_1"
+                "output_path": "LingBot_lingbot_run_1",
             },
             {
                 "run_name": "HY-WorldPlay_hunyuan_run_2",
                 "summary_path": "HY-WorldPlay_output_map_hunyuan_run_2",
-                "output_path": "HY-WorldPlay_hunyuan_run_2"
+                "output_path": "HY-WorldPlay_hunyuan_run_2",
             },
-            {
-                "run_name": "genie_genie_run_1",
-                "summary_path": "genie",
-                "output_path": "genie_genie_run_1"
-            },
-            {
-                "run_name": "wan22_wan_run_1",
-                "summary_path": "wan22_wan_run_1",
-                "output_path": "wan22_wan_run_1"
-            }
+            {"run_name": "genie_genie_run_1", "summary_path": "genie", "output_path": "genie_genie_run_1"},
+            {"run_name": "wan22_wan_run_1", "summary_path": "wan22_wan_run_1", "output_path": "wan22_wan_run_1"},
         ]
 
     def load_summary(self, run_config: Dict[str, str]) -> Dict:
         """Load summary.json for a run."""
         summary_path = self.runs_dir / run_config["summary_path"] / "summary.json"
-        with open(summary_path, 'r') as f:
+        with open(summary_path, "r") as f:
             return json.load(f)
 
     def filter_tasks(self, summary: Dict) -> List[Dict]:
@@ -97,7 +85,7 @@ class TaskDataCollector:
 
     def load_task_yaml(self, yaml_path: Path) -> Dict:
         """Load and parse task YAML file."""
-        with open(yaml_path, 'r') as f:
+        with open(yaml_path, "r") as f:
             return yaml.safe_load(f)
 
     def collect_task_data(self, run_config: Dict[str, str], task_info: Dict) -> Optional[Dict]:
@@ -132,7 +120,7 @@ class TaskDataCollector:
             "init_image_path": str(init_image),
             "video_path": str(video_path),
             "action_prompt": camera_wm,
-            "yaml_data": yaml_data
+            "yaml_data": yaml_data,
         }
 
     def collect_all_tasks(self) -> List[Dict]:
@@ -164,9 +152,9 @@ if __name__ == "__main__":
     collector = TaskDataCollector(".")
     tasks = collector.collect_all_tasks()
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Total tasks collected: {len(tasks)}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Show sample
     if tasks:

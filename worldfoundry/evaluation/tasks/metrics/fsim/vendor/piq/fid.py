@@ -34,7 +34,7 @@ def _sqrtm_newton_schulz(matrix: torch.Tensor, num_iters: int = 100) -> Tuple[to
         Error
     """
     dim = matrix.size(0)
-    norm_of_matrix = matrix.norm(p='fro')
+    norm_of_matrix = matrix.norm(p="fro")
     Y = matrix.div(norm_of_matrix)
     I = torch.eye(dim, dim, device=matrix.device, dtype=matrix.dtype)
     Z = torch.eye(dim, dim, device=matrix.device, dtype=matrix.dtype)
@@ -49,14 +49,15 @@ def _sqrtm_newton_schulz(matrix: torch.Tensor, num_iters: int = 100) -> Tuple[to
 
         s_matrix = Y * torch.sqrt(norm_of_matrix)
         error = _approximation_error(matrix, s_matrix)
-        if torch.isclose(error, torch.tensor([0.], device=error.device, dtype=error.dtype), atol=1e-5):
+        if torch.isclose(error, torch.tensor([0.0], device=error.device, dtype=error.dtype), atol=1e-5):
             break
 
     return s_matrix, error
 
 
-def _compute_fid(mu1: torch.Tensor, sigma1: torch.Tensor, mu2: torch.Tensor, sigma2: torch.Tensor,
-                 eps=1e-6) -> torch.Tensor:
+def _compute_fid(
+    mu1: torch.Tensor, sigma1: torch.Tensor, mu2: torch.Tensor, sigma2: torch.Tensor, eps=1e-6
+) -> torch.Tensor:
     r"""
     The Frechet Inception Distance between two multivariate Gaussians X_x ~ N(mu_1, sigm_1)
     and X_y ~ N(mu_2, sigm_2) is
@@ -77,7 +78,7 @@ def _compute_fid(mu1: torch.Tensor, sigma1: torch.Tensor, mu2: torch.Tensor, sig
 
     # Product might be almost singular
     if not torch.isfinite(covmean).all():
-        print(f'FID calculation produces singular product; adding {eps} to diagonal of cov estimates')
+        print(f"FID calculation produces singular product; adding {eps} to diagonal of cov estimates")
         offset = torch.eye(sigma1.size(0), device=mu1.device, dtype=mu1.dtype) * eps
         covmean, _ = _sqrtm_newton_schulz((sigma1 + offset).mm(sigma2 + offset))
 

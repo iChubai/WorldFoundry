@@ -6,12 +6,12 @@ import torch
 from worldfoundry.base_models.perception_core.optical_flow.raft import InputPadder, RAFT
 from worldfoundry.core.io import list_numbered_frame_paths
 
+
 class DynamicDegree:
     def __init__(self, args, device):
         self.args = args
         self.device = device
         self.load_model()
-    
 
     def load_model(self):
         self.model = torch.nn.DataParallel(RAFT(self.args))
@@ -21,8 +21,6 @@ class DynamicDegree:
         self.model.to(self.device)
         self.model.eval()
 
-
-
     def get_score(self, img, flo):
         del img
         magnitude = torch.linalg.vector_norm(flo[0].float(), dim=0).flatten()
@@ -31,21 +29,19 @@ class DynamicDegree:
             return magnitude.new_tensor(float("nan"))
         return magnitude.topk(cut_index, sorted=False).values.mean()
 
-
     # def set_params(self, frame, count):
     #     scale = min(list(frame.shape)[-2:])
     #     self.params = {"thres":6.0*(scale/256.0), "count_num":round(4*(count/16.0))}
 
-
-    def infer(self, video_path,frame_interval):
+    def infer(self, video_path, frame_interval):
         with torch.inference_mode():
-            if video_path.endswith('.mp4'):
+            if video_path.endswith(".mp4"):
                 frames = self.get_frames(video_path)
             elif os.path.isdir(video_path):
                 frames = self.get_frames_from_img_folder(video_path)
             else:
                 raise NotImplementedError
-            frames=frames[::frame_interval]
+            frames = frames[::frame_interval]
             if len(frames) < 2:
                 return float("nan")
             frame_batch = torch.stack(frames, dim=0)
@@ -70,8 +66,8 @@ class DynamicDegree:
     def get_frames(self, video_path):
         frame_list = []
         video = cv2.VideoCapture(video_path)
-        fps = video.get(cv2.CAP_PROP_FPS) # get fps
-        interval = max(round(fps/8), 1)
+        fps = video.get(cv2.CAP_PROP_FPS)  # get fps
+        interval = max(round(fps / 8), 1)
         while video.isOpened():
             success, frame = video.read()
             if success:
@@ -83,15 +79,13 @@ class DynamicDegree:
         video.release()
         assert frame_list != []
         frame_list = self.extract_frame(frame_list, interval)
-        return frame_list 
-    
-    
+        return frame_list
+
     def extract_frame(self, frame_list, interval=1):
         extract = []
         for i in range(0, len(frame_list), interval):
             extract.append(frame_list[i])
         return extract
-
 
     def get_frames_from_img_folder(self, img_folder):
         frame_list = []
@@ -107,7 +101,6 @@ class DynamicDegree:
         return frame_list
 
 
-
-def EvaluateDynamicDegree(dynamic, store_image_folder,dynamic_degree_frame_interval):
+def EvaluateDynamicDegree(dynamic, store_image_folder, dynamic_degree_frame_interval):
     with torch.inference_mode():
-        return dynamic.infer(store_image_folder,dynamic_degree_frame_interval)
+        return dynamic.infer(store_image_folder, dynamic_degree_frame_interval)

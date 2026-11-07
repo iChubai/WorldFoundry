@@ -21,21 +21,17 @@ def compute_ar_eval_metrics(gts, preds, traj_lens):
 
     return acc, mean_traj_len
 
+
 def compute_aeqa_eval_metrics(scores, traj_lens, demo_lens):
-    assert None not in scores, [
-        i for i, score in enumerate(scores) if score is None
-    ]
+    assert None not in scores, [i for i, score in enumerate(scores) if score is None]
     mean_score = np.mean([(sigma - 1) * 25 for sigma in scores])
     mean_traj_len = np.mean([p for p in traj_lens if p is not None])
     mean_efficiency = np.mean(
-        [
-            (sigma - 1) * 25 * l / max(p, l)
-            for sigma, p, l in zip(scores, traj_lens, demo_lens)
-            if p is not None
-        ]
+        [(sigma - 1) * 25 * l / max(p, l) for sigma, p, l in zip(scores, traj_lens, demo_lens) if p is not None]
     )
 
     return mean_score, mean_traj_len, mean_efficiency
+
 
 def compute_vln_eval_metrics(s, p, l):
     """
@@ -48,6 +44,7 @@ def compute_vln_eval_metrics(s, p, l):
     l = np.array(l)
     spl = s * l / np.maximum(p, l)
     return s.mean(), spl.mean()
+
 
 def load_aeqa_demo_trajlens(full_demo_lens_path="downstream/others/gt_path_length.json"):
     with open(full_demo_lens_path, "r") as f:
@@ -98,15 +95,15 @@ class Evaluator:
         elif saver_args["task"] == "AEQA":
             self.dataset = AEQADataset(
                 subset_size=int(dataset_args),
-                saved_episodes_path="data/WIW_datasets/eval_datasets/AEQA/episodes_AEQA.json.gz"
+                saved_episodes_path="data/WIW_datasets/eval_datasets/AEQA/episodes_AEQA.json.gz",
             )
             self.scorer = partial(get_llm_match_score, **scorer_args)
             self.full_demo_lens = load_aeqa_demo_trajlens()
         elif saver_args["task"] == "IGNav":
             self.dataset = load_igdataset_from_zip(
-            "data/WIW_datasets/eval_datasets/IGNav/igdataset_goal_imgs.zip",
-            "data/WIW_datasets/eval_datasets/IGNav/episodes_IGNav.json.gz",
-        )
+                "data/WIW_datasets/eval_datasets/IGNav/igdataset_goal_imgs.zip",
+                "data/WIW_datasets/eval_datasets/IGNav/episodes_IGNav.json.gz",
+            )
         else:
             raise ValueError(f"Task {saver_args['task']} not supported")
         self.task = saver_args["task"]
@@ -118,9 +115,7 @@ class Evaluator:
 
         # if blind_result_path is not empty, we use blind LLMs to get score_with_blind
         if blind_result_path and saver_args["task"] == "AEQA":
-            self.blind_result = json.load(
-                open(blind_result_path, "r", encoding="utf-8")
-            )
+            self.blind_result = json.load(open(blind_result_path, "r", encoding="utf-8"))
         else:
             self.blind_result = None
         self.eval_blind = eval_blind
@@ -171,15 +166,17 @@ class Evaluator:
             print(tabulate([row], headers=headers, tablefmt="github"))
 
         elif self.task == "AR":
-            result = self.calculate_summary_ar(self.result,)
+            result = self.calculate_summary_ar(
+                self.result,
+            )
             with open(self.result_path, "w") as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
 
             headers = ["Metric", "Value"]
             rows = [
                 ["Total samples", result["summary"]["total_size"]],
-                ["Correct",       result["summary"]["correct"]],
-                ["Accuracy",      f"{result['summary']['accuracy']:.4f}"],
+                ["Correct", result["summary"]["correct"]],
+                ["Accuracy", f"{result['summary']['accuracy']:.4f}"],
                 ["Mean traj len", f"{result['summary']['mean_traj_len']:.3f}"],
             ]
             print(tabulate(rows, headers=headers, tablefmt="github"))
@@ -242,18 +239,14 @@ class Evaluator:
             result["details"][datum["question_id"]]["score"] = score
             result["details"][datum["question_id"]]["traj_len"] = traj_len
             result["details"][datum["question_id"]]["traj_dist"] = traj_dist
-            result["details"][datum["question_id"]]["demo_len"] = (
-                self.full_demo_lens.get(datum["question_id"], None)
-            )
+            result["details"][datum["question_id"]]["demo_len"] = self.full_demo_lens.get(datum["question_id"], None)
             result["details"][datum["question_id"]]["QA"] = {
                 # "question": datum["question"],
                 "pred": pred,
                 "gt": datum["answer"],
             }
             if self.task == "AEQA":
-                result["details"][datum["question_id"]]["QA"]["question"] = datum[
-                    "question"
-                ]
+                result["details"][datum["question_id"]]["QA"]["question"] = datum["question"]
         elif self.task == "VLN":
             raise NotImplementedError()
         else:
@@ -290,9 +283,10 @@ class Evaluator:
         valid_scores = [score for score in scores if not isinstance(score, str)]
         demo_dist = [info["demo_len"] for info in result_var["details"].values()]
         traj_dist = [info["traj_dist"] for info in result_var["details"].values()]
-        (mean_score,
-         mean_traj_len,
-         mean_efficiency,
+        (
+            mean_score,
+            mean_traj_len,
+            mean_efficiency,
         ) = compute_aeqa_eval_metrics(
             scores=scores,
             traj_lens=traj_dist,
@@ -389,10 +383,14 @@ def parse_args():
     parser.add_argument("exp_id")
     parser.add_argument("--task", default="AEQA")  # * ["AEQA", "AR", "VLN", "ObjNav", "IGNav"]
     parser.add_argument("--openai_key", default="XXXXX")
-    parser.add_argument("--openai_model", default="gpt-4o")   # or Qwen/Qwen2.5-VL-72B-Instruct-AWQ
-    parser.add_argument("--openai_service", default="openai") # or openai
+    parser.add_argument("--openai_model", default="gpt-4o")  # or Qwen/Qwen2.5-VL-72B-Instruct-AWQ
+    parser.add_argument("--openai_service", default="openai")  # or openai
     parser.add_argument("--scorer_host", type=str, default="localhost:8000")
-    parser.add_argument("--blind_result_path", type=str, default="subtrees/open-eqa/data/results/AEQA_blind/open-eqa-184-Qwen--Qwen2.5-VL-72B-Instruct-AWQ-1234.json")
+    parser.add_argument(
+        "--blind_result_path",
+        type=str,
+        default="subtrees/open-eqa/data/results/AEQA_blind/open-eqa-184-Qwen--Qwen2.5-VL-72B-Instruct-AWQ-1234.json",
+    )
     parser.add_argument("--parallel_ith", default=None)
     parser.add_argument("--parallel_total", default=None)
     parser.add_argument("--dataset_args", type=str, default=None)
@@ -403,9 +401,9 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     SERVICE_TO_BASE_URL = dict(
-    vllm=f"http://{args.scorer_host}/v1",
-    sglang=f"http://{args.scorer_host}/v1",
-    openai="https://api.openai.com/v1",
+        vllm=f"http://{args.scorer_host}/v1",
+        sglang=f"http://{args.scorer_host}/v1",
+        openai="https://api.openai.com/v1",
     )
     BASE_URL_TO_SERVICE = {v: k for k, v in SERVICE_TO_BASE_URL.items()}
 

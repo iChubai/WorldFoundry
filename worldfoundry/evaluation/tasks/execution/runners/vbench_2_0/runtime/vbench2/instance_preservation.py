@@ -1,5 +1,6 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import json
 import cv2
 import torch
@@ -11,10 +12,11 @@ from worldfoundry.base_models.llm_mllm_core.mllm.instance_anomaly_detector impor
 
 import logging
 
-logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-            
+
+
 def compute_instance_preservation(json_dir, device, submodules_dict, **kwargs):
-    _, prompt_dict_ls = load_dimension_info(json_dir, dimension='instance_preservation', lang='en')
+    _, prompt_dict_ls = load_dimension_info(json_dir, dimension="instance_preservation", lang="en")
     all_results, video_results = compute_anomaly(prompt_dict_ls, device, submodules_dict)
     return all_results, video_results

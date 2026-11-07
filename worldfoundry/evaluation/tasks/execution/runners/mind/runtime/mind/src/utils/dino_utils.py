@@ -1,8 +1,9 @@
 import torch
 from transformers import AutoModel, AutoImageProcessor
 
+
 # 全局变量保存模型和processor
-def load_dinov3_model(model_path, device='cuda:0'):
+def load_dinov3_model(model_path, device="cuda:0"):
     dino_processor = AutoImageProcessor.from_pretrained(model_path)
     dino_model = AutoModel.from_pretrained(model_path)
     dino_model = dino_model.to(device)
@@ -10,7 +11,10 @@ def load_dinov3_model(model_path, device='cuda:0'):
 
     return dino_model, dino_processor
 
-def extract_dinov3_features(frames: torch.Tensor, model=None, processor=None, device='cuda:0', batch_size=8) -> torch.Tensor:
+
+def extract_dinov3_features(
+    frames: torch.Tensor, model=None, processor=None, device="cuda:0", batch_size=8
+) -> torch.Tensor:
     """
     从视频帧中提取DINOv3特征
 
@@ -34,7 +38,7 @@ def extract_dinov3_features(frames: torch.Tensor, model=None, processor=None, de
 
     with torch.inference_mode():
         for i in range(0, f, batch_size):
-            batch_frames = frames[i:i+batch_size].to(device)  # [batch, c, h, w]
+            batch_frames = frames[i : i + batch_size].to(device)  # [batch, c, h, w]
 
             # 直接使用tensor，processor会自动处理归一化
             inputs = processor(images=batch_frames, return_tensors="pt").to(device)

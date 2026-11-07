@@ -16,20 +16,21 @@ except ImportError:
     os.system("pip install huggingface_hub")
     from huggingface_hub import snapshot_download
 
+
 def main():
     repo_id = "syCen/Videos4CameraBench"
     output_dir = "data/videos"
-    
+
     print("Downloading CameraBench videos...")
     print(f"Repository: {repo_id}")
     print(f"Output directory: {output_dir}")
-    
+
     # Create output directory
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    
+
     max_retries = 3
     base_delay = 2  # Base delay in seconds
-    
+
     for attempt in range(max_retries):
         try:
             print(f"Download attempt {attempt + 1}/{max_retries}...")
@@ -45,19 +46,19 @@ def main():
                 local_dir="data/videos",
                 # allow_patterns="videos/*",
                 tqdm_class=None,  # Disable individual file progress bars
-                max_workers=1,    # Use single thread to avoid overwhelming the server
-                token=None        # Use default token handling
+                max_workers=1,  # Use single thread to avoid overwhelming the server
+                token=None,  # Use default token handling
             )
-            
+
             print(f"Videos downloaded successfully to ./{output_dir}/")
             print("\nNext steps:")
             print("1. Go to data/cam_motion directory")
             print(f"2. Update video paths to point to ./videos/")
             return  # Success, exit the function
-            
+
         except Exception as e:
             print(f"Download attempt {attempt + 1} failed: {e}")
-            
+
             if attempt < max_retries - 1:
                 print("This might be due to rate limiting. Retrying with delay...")
             else:
@@ -67,6 +68,7 @@ def main():
                 print("2. Try running the script again later")
                 print("3. Check your internet connection")
                 print("4. Consider downloading in smaller batches if the issue persists")
+
 
 if __name__ == "__main__":
     main()

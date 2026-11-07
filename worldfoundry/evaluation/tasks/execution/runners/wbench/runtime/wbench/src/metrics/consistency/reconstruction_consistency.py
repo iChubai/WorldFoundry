@@ -7,6 +7,7 @@ Two sub-metrics:
 
 Requires pre-computed DA3 cache (depth.npy, extrinsics.npy, intrinsics.npy).
 """
+
 from __future__ import annotations
 
 import os
@@ -65,15 +66,15 @@ def compute_case(
         frames_resized = frames_resized[:N]
 
         world_pts, colors, source_ids = _build_point_cloud(
-            depth, extrinsics, intrinsics, frames_resized,
-            device=device, max_pts_per_frame=max_pts_per_frame)
+            depth, extrinsics, intrinsics, frames_resized, device=device, max_pts_per_frame=max_pts_per_frame
+        )
 
         if world_pts is None:
             return {"score": None, "error": "Point cloud construction failed"}
 
         geo_result, photo_result = _compute_metrics(
-            world_pts, colors, source_ids,
-            depth, extrinsics, intrinsics, frames_resized, device)
+            world_pts, colors, source_ids, depth, extrinsics, intrinsics, frames_resized, device
+        )
 
         geo_score = geo_result.get("geometric_consistency", 0.0)
         psnr = photo_result.get("photo_mean_psnr", 0.0)
@@ -87,8 +88,7 @@ def compute_case(
                 "psnr_score_100": round(min(100.0, max(0.0, (psnr - 10) / 15 * 100)), 2),
                 "num_frames": N,
             },
-            "params": {"fps": fps, "method": "da3_depth_reprojection",
-                       "max_pts_per_frame": max_pts_per_frame},
+            "params": {"fps": fps, "method": "da3_depth_reprojection", "max_pts_per_frame": max_pts_per_frame},
             "error": None,
         }
     except Exception as e:
@@ -127,8 +127,9 @@ def _extract_frames_resized(video_path: str, depth_shape, fps: float) -> Optiona
     return np.array(frames, dtype=np.uint8)
 
 
-def _build_point_cloud(depth, extrinsics, intrinsics, frames_resized,
-                       device="cuda", max_pts_per_frame=5000, conf=None, conf_threshold=0.5):
+def _build_point_cloud(
+    depth, extrinsics, intrinsics, frames_resized, device="cuda", max_pts_per_frame=5000, conf=None, conf_threshold=0.5
+):
     """Build world-space point cloud from depth maps."""
     N, H, W = depth.shape
     all_pts, all_colors, all_ids = [], [], []
@@ -154,10 +155,9 @@ def _build_point_cloud(depth, extrinsics, intrinsics, frames_resized,
             idx = torch.randperm(len(ds), device=device)[:max_pts_per_frame]
             xs, ys, ds = xs[idx], ys[idx], ds[idx]
 
-        pixels_h = torch.stack([
-            xs.double(), ys.double(),
-            torch.ones_like(xs, dtype=torch.float64, device=device)
-        ], dim=0)
+        pixels_h = torch.stack(
+            [xs.double(), ys.double(), torch.ones_like(xs, dtype=torch.float64, device=device)], dim=0
+        )
 
         K_inv = torch.linalg.inv(K)
         cam_pts = ds.unsqueeze(0) * (K_inv @ pixels_h)
@@ -173,8 +173,7 @@ def _build_point_cloud(depth, extrinsics, intrinsics, frames_resized,
     return torch.cat(all_pts), torch.cat(all_colors), torch.cat(all_ids)
 
 
-def _compute_metrics(world_pts, colors, source_ids,
-                     depth, extrinsics, intrinsics, frames_resized, device="cuda"):
+def _compute_metrics(world_pts, colors, source_ids, depth, extrinsics, intrinsics, frames_resized, device="cuda"):
     """Compute geometric + photometric consistency via cross-frame reprojection."""
     N, H, W = depth.shape
     depth_t = torch.from_numpy(depth).float().to(device)
@@ -192,7 +191,7 @@ def _compute_metrics(world_pts, colors, source_ids,
         col_other = colors[other_mask]
 
         if pts_other.shape[0] == 0:
-            geo_errors.append(float('inf'))
+            geo_errors.append(float("inf"))
             photo_psnrs.append(0.0)
             continue
 
@@ -202,7 +201,7 @@ def _compute_metrics(world_pts, colors, source_ids,
         cam_f, col_f = cam[:, front], col_other[front]
 
         if cam_f.shape[1] == 0:
-            geo_errors.append(float('inf'))
+            geo_errors.append(float("inf"))
             photo_psnrs.append(0.0)
             continue
 
@@ -215,7 +214,7 @@ def _compute_metrics(world_pts, colors, source_ids,
         u_v, v_v, z_v, c_v = u[valid], v[valid], z[valid], col_f[valid]
 
         if u_v.shape[0] == 0:
-            geo_errors.append(float('inf'))
+            geo_errors.append(float("inf"))
             photo_psnrs.append(0.0)
             continue
 
@@ -229,22 +228,22 @@ def _compute_metrics(world_pts, colors, source_ids,
             rel_err = (z_v[d_valid] - d_pred[d_valid]).abs() / d_pred[d_valid]
             geo_errors.append(float(rel_err.median()))
         else:
-            geo_errors.append(float('inf'))
+            geo_errors.append(float("inf"))
 
         # Photometric: pixel reprojection
         sort_idx = z_v.argsort(descending=True)
         rendered = torch.zeros(H, W, 3, device=device)
-        z_buf = torch.full((H, W), float('inf'), device=device)
+        z_buf = torch.full((H, W), float("inf"), device=device)
         rendered[v_int[sort_idx], u_int[sort_idx]] = c_v[sort_idx].float()
         z_buf[v_int[sort_idx], u_int[sort_idx]] = z_v[sort_idx]
 
-        has_render = z_buf < float('inf')
+        has_render = z_buf < float("inf")
         if has_render.sum() < 100:
             photo_psnrs.append(0.0)
             continue
 
         diff = (rendered[has_render] - frames_t[i][has_render]) / 255.0
-        mse = float((diff ** 2).mean())
+        mse = float((diff**2).mean())
         photo_psnrs.append(float(-10 * np.log10(mse + 1e-10)))
 
     # Aggregate

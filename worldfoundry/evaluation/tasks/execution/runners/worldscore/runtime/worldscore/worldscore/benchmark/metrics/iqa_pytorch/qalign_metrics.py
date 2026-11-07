@@ -2,7 +2,9 @@ from typing import List, Union
 
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import IQAPytorchMetric
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    IQAPytorchMetric,
+)
 
 
 class QAlignMetric(IQAPytorchMetric):

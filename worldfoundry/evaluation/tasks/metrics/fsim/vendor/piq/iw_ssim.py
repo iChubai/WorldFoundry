@@ -1,4 +1,4 @@
-r""" Implementation of Information Content Weighted Structural Similarity Index (IW-SSIM).
+r"""Implementation of Information Content Weighted Structural Similarity Index (IW-SSIM).
 
 Information Content Weighted Structural Similarity Index (IW-SSIM) [1] is an extension of
 the structural similarity (SSIM). IW-SSIM uses the idea of information content weighted pooling for similarity
@@ -24,11 +24,20 @@ from typing import Union, Optional, Tuple
 import math
 
 
-def information_weighted_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float] = 1.,
-                              kernel_size: int = 11, kernel_sigma: float = 1.5, k1: float = 0.01, k2: float = 0.03,
-                              parent: bool = True, blk_size: int = 3, sigma_nsq: float = 0.4,
-                              scale_weights: Optional[torch.Tensor] = None,
-                              reduction: str = 'mean') -> torch.Tensor:
+def information_weighted_ssim(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    data_range: Union[int, float] = 1.0,
+    kernel_size: int = 11,
+    kernel_sigma: float = 1.5,
+    k1: float = 0.01,
+    k2: float = 0.03,
+    parent: bool = True,
+    blk_size: int = 3,
+    sigma_nsq: float = 0.4,
+    scale_weights: Optional[torch.Tensor] = None,
+    reduction: str = "mean",
+) -> torch.Tensor:
     r"""Interface of Information Content Weighted Structural Similarity (IW-SSIM) index.
     Inputs supposed to be in range ``[0, data_range]``.
 
@@ -61,9 +70,9 @@ def information_weighted_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Unio
         Lack of content in target image could lead to RuntimeError due to singular information content matrix,
         which cannot be inverted.
     """
-    assert kernel_size % 2 == 1, f'Kernel size must be odd, got [{kernel_size}]'
+    assert kernel_size % 2 == 1, f"Kernel size must be odd, got [{kernel_size}]"
 
-    _validate_input(tensors=[x, y], dim_range=(4, 4), data_range=(0., data_range))
+    _validate_input(tensors=[x, y], dim_range=(4, 4), data_range=(0.0, data_range))
 
     x = x / float(data_range) * 255
     y = y / float(data_range) * 255
@@ -76,13 +85,13 @@ def information_weighted_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Unio
         scale_weights = torch.tensor([0.0448, 0.2856, 0.3001, 0.2363, 0.1333], dtype=x.dtype, device=x.device)
     scale_weights = scale_weights / scale_weights.sum()
     if scale_weights.size(0) != scale_weights.numel():
-        raise ValueError(f'Expected a vector of weights, got {scale_weights.dim()}D tensor')
+        raise ValueError(f"Expected a vector of weights, got {scale_weights.dim()}D tensor")
 
     levels = scale_weights.size(0)
 
     min_size = (kernel_size - 1) * 2 ** (levels - 1) + 1
     if x.size(-1) < min_size or x.size(-2) < min_size:
-        raise ValueError(f'Invalid size of the input images, expected at least {min_size}x{min_size}.')
+        raise ValueError(f"Invalid size of the input images, expected at least {min_size}x{min_size}.")
 
     blur_pad = math.ceil((kernel_size - 1) / 2)  # Ceil
     iw_pad = blur_pad - math.floor((blk_size - 1) / 2)  # floor
@@ -90,7 +99,7 @@ def information_weighted_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Unio
 
     # Size of the kernel size to build Laplacian pyramid
     pyramid_kernel_size = 5
-    bin_filter = binomial_filter1d(kernel_size=pyramid_kernel_size, device=x.device, dtype=x.dtype) * 2 ** 0.5
+    bin_filter = binomial_filter1d(kernel_size=pyramid_kernel_size, device=x.device, dtype=x.dtype) * 2**0.5
 
     lo_x, x_diff_old = _pyr_step(x, bin_filter)
     lo_y, y_diff_old = _pyr_step(y, bin_filter)
@@ -110,12 +119,14 @@ def information_weighted_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Unio
             x_diff = x
             y_diff = y
 
-        ssim_map, cs_map = _ssim_per_channel(x=x_diff_old, y=y_diff_old, kernel=gauss_kernel, data_range=255,
-                                             k1=k1, k2=k2)
+        ssim_map, cs_map = _ssim_per_channel(
+            x=x_diff_old, y=y_diff_old, kernel=gauss_kernel, data_range=255, k1=k1, k2=k2
+        )
 
         if parent and i < levels - 2:
-            iw_map = _information_content(x=x_diff_old, y=y_diff_old, y_parent=y_diff, kernel_size=blk_size,
-                                          sigma_nsq=sigma_nsq)
+            iw_map = _information_content(
+                x=x_diff_old, y=y_diff_old, y_parent=y_diff, kernel_size=blk_size, sigma_nsq=sigma_nsq
+            )
 
             iw_map = iw_map[:, :, iw_pad:-iw_pad, iw_pad:-iw_pad]
 
@@ -124,8 +135,9 @@ def information_weighted_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Unio
             cs_map = ssim_map
 
         else:
-            iw_map = _information_content(x=x_diff_old, y=y_diff_old, y_parent=None, kernel_size=blk_size,
-                                          sigma_nsq=sigma_nsq)
+            iw_map = _information_content(
+                x=x_diff_old, y=y_diff_old, y_parent=None, kernel_size=blk_size, sigma_nsq=sigma_nsq
+            )
             iw_map = iw_map[:, :, iw_pad:-iw_pad, iw_pad:-iw_pad]
 
         wmcs.append(torch.sum(cs_map * iw_map, dim=(-2, -1)) / torch.sum(iw_map, dim=(-2, -1)))
@@ -184,9 +196,19 @@ class InformationWeightedSSIMLoss(_Loss):
 
     """
 
-    def __init__(self, data_range: Union[int, float] = 1., kernel_size: int = 11, kernel_sigma: float = 1.5,
-                 k1: float = 0.01, k2: float = 0.03, parent: bool = True, blk_size: int = 3, sigma_nsq: float = 0.4,
-                 scale_weights: Optional[torch.Tensor] = None, reduction: str = 'mean'):
+    def __init__(
+        self,
+        data_range: Union[int, float] = 1.0,
+        kernel_size: int = 11,
+        kernel_sigma: float = 1.5,
+        k1: float = 0.01,
+        k2: float = 0.03,
+        parent: bool = True,
+        blk_size: int = 3,
+        sigma_nsq: float = 0.4,
+        scale_weights: Optional[torch.Tensor] = None,
+        reduction: str = "mean",
+    ):
         super().__init__()
         self.data_range = data_range
         self.kernel_size = kernel_size
@@ -210,15 +232,25 @@ class InformationWeightedSSIMLoss(_Loss):
         Returns:
             Value of IW-SSIM loss to be minimized, i.e. ``1 - information_weighted_ssim`` in [0, 1] range.
         """
-        score = information_weighted_ssim(x=x, y=y, data_range=self.data_range, kernel_size=self.kernel_size,
-                                          kernel_sigma=self.kernel_sigma, k1=self.k1, k2=self.k2,
-                                          parent=self.parent, blk_size=self.blk_size, sigma_nsq=self.sigma_nsq,
-                                          scale_weights=self.scale_weights, reduction=self.reduction)
+        score = information_weighted_ssim(
+            x=x,
+            y=y,
+            data_range=self.data_range,
+            kernel_size=self.kernel_size,
+            kernel_sigma=self.kernel_sigma,
+            k1=self.k1,
+            k2=self.k2,
+            parent=self.parent,
+            blk_size=self.blk_size,
+            sigma_nsq=self.sigma_nsq,
+            scale_weights=self.scale_weights,
+            reduction=self.reduction,
+        )
         return torch.ones_like(score) - score
 
 
 def _pyr_step(x: torch.Tensor, kernel: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-    r""" Computes one step of Laplacian pyramid generation.
+    r"""Computes one step of Laplacian pyramid generation.
 
     Args:
         x: An input tensor. Shape :math:`(N, C, H, W)`.
@@ -233,10 +265,10 @@ def _pyr_step(x: torch.Tensor, kernel: torch.Tensor) -> Tuple[torch.Tensor, torc
     kernel_t = kernel.transpose(-2, -1)
     lo_x = x
     if x.size(-1) > 1:
-        lo_x = F.pad(lo_x, pad=[up_pad, down_pad, 0, 0], mode='reflect')
+        lo_x = F.pad(lo_x, pad=[up_pad, down_pad, 0, 0], mode="reflect")
         lo_x = F.conv2d(input=lo_x, weight=kernel.unsqueeze(0), padding=0)[:, :, :, ::2]
     if x.size(-2) > 1:
-        lo_x = F.pad(lo_x, pad=[0, 0, up_pad, down_pad], mode='reflect')
+        lo_x = F.pad(lo_x, pad=[0, 0, up_pad, down_pad], mode="reflect")
         lo_x = F.conv2d(input=lo_x, weight=kernel_t.unsqueeze(0), padding=0)[:, :, ::2, :]
 
     # Upsampling and Blur
@@ -245,23 +277,28 @@ def _pyr_step(x: torch.Tensor, kernel: torch.Tensor) -> Tuple[torch.Tensor, torc
     hi_x = lo_x
 
     if x.size(-1) > 1:
-        upsampling_kernel = torch.tensor([[[[1., 0.]]]], dtype=x.dtype, device=x.device)
+        upsampling_kernel = torch.tensor([[[[1.0, 0.0]]]], dtype=x.dtype, device=x.device)
         hi_x = F.conv_transpose2d(input=hi_x, weight=upsampling_kernel, stride=(1, 2), padding=0)
-        hi_x = F.pad(hi_x, pad=[up_pad, down_pad, 0, 0], mode='reflect')
-        hi_x = F.conv2d(input=hi_x, weight=kernel.unsqueeze(0), padding=0)[:, :, :, :x.size(-1)]
+        hi_x = F.pad(hi_x, pad=[up_pad, down_pad, 0, 0], mode="reflect")
+        hi_x = F.conv2d(input=hi_x, weight=kernel.unsqueeze(0), padding=0)[:, :, :, : x.size(-1)]
     if x.size(-2) > 1:
-        upsampling_kernel = torch.tensor([[[[1.], [0.]]]], dtype=x.dtype, device=x.device)
+        upsampling_kernel = torch.tensor([[[[1.0], [0.0]]]], dtype=x.dtype, device=x.device)
         hi_x = F.conv_transpose2d(input=hi_x, weight=upsampling_kernel, stride=(2, 1), padding=0)
-        hi_x = F.pad(hi_x, pad=[0, 0, up_pad, down_pad], mode='reflect')
-        hi_x = F.conv2d(input=hi_x, weight=kernel_t.unsqueeze(0), padding=0)[:, :, :x.size(-2), :]
+        hi_x = F.pad(hi_x, pad=[0, 0, up_pad, down_pad], mode="reflect")
+        hi_x = F.conv2d(input=hi_x, weight=kernel_t.unsqueeze(0), padding=0)[:, :, : x.size(-2), :]
 
     hi_x = x - hi_x
     return lo_x, hi_x
 
 
-def _ssim_per_channel(x: torch.Tensor, y: torch.Tensor, kernel: torch.Tensor,
-                      data_range: Union[float, int] = 1., k1: float = 0.01,
-                      k2: float = 0.03) -> Tuple[torch.Tensor, torch.Tensor]:
+def _ssim_per_channel(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    kernel: torch.Tensor,
+    data_range: Union[float, int] = 1.0,
+    k1: float = 0.01,
+    k2: float = 0.03,
+) -> Tuple[torch.Tensor, torch.Tensor]:
     r"""Computes Structural Similarity (SSIM) index for X and Y per channel.
 
     Args:
@@ -282,28 +319,29 @@ def _ssim_per_channel(x: torch.Tensor, y: torch.Tensor, kernel: torch.Tensor,
     mu_x = F.conv2d(x, weight=kernel, stride=1, padding=0, groups=n_channels)
     mu_y = F.conv2d(y, weight=kernel, stride=1, padding=0, groups=n_channels)
 
-    mu_xx = mu_x ** 2
-    mu_yy = mu_y ** 2
+    mu_xx = mu_x**2
+    mu_yy = mu_y**2
     mu_xy = mu_x * mu_y
 
-    sigma_xx = F.conv2d(x ** 2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_xx
-    sigma_yy = F.conv2d(y ** 2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_yy
+    sigma_xx = F.conv2d(x**2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_xx
+    sigma_yy = F.conv2d(y**2, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_yy
     sigma_xy = F.conv2d(x * y, weight=kernel, stride=1, padding=0, groups=n_channels) - mu_xy
 
     sigma_xx = F.relu(sigma_xx)
     sigma_yy = F.relu(sigma_yy)
 
     # Contrast sensitivity (CS) with alpha = beta = gamma = 1.
-    cs_map = (2. * sigma_xy + c2) / (sigma_xx + sigma_yy + c2)
+    cs_map = (2.0 * sigma_xy + c2) / (sigma_xx + sigma_yy + c2)
 
     # Structural similarity (SSIM)
-    ss_map = (2. * mu_xy + c1) / (mu_xx + mu_yy + c1) * cs_map
+    ss_map = (2.0 * mu_xy + c1) / (mu_xx + mu_yy + c1) * cs_map
 
     return ss_map, cs_map
 
 
-def _information_content(x: torch.Tensor, y: torch.Tensor, y_parent: torch.Tensor = None,
-                         kernel_size: int = 3, sigma_nsq: float = 0.4) -> torch.Tensor:
+def _information_content(
+    x: torch.Tensor, y: torch.Tensor, y_parent: torch.Tensor = None, kernel_size: int = 3, sigma_nsq: float = 0.4
+) -> torch.Tensor:
     r"""Computes Information Content Map for weighting the Structural Similarity.
 
     Args:
@@ -323,21 +361,53 @@ def _information_content(x: torch.Tensor, y: torch.Tensor, y_parent: torch.Tenso
     padding_up = kernel.size(-1) // 2
     padding_down = kernel.size(-1) - padding_up
 
-    mu_x = F.conv2d(input=F.pad(x, pad=[padding_up, padding_down, padding_up, padding_down]), weight=kernel, padding=0,
-                    groups=n_channels)
-    mu_y = F.conv2d(input=F.pad(y, pad=[padding_up, padding_down, padding_up, padding_down]), weight=kernel, padding=0,
-                    groups=n_channels)
+    mu_x = F.conv2d(
+        input=F.pad(x, pad=[padding_up, padding_down, padding_up, padding_down]),
+        weight=kernel,
+        padding=0,
+        groups=n_channels,
+    )
+    mu_y = F.conv2d(
+        input=F.pad(y, pad=[padding_up, padding_down, padding_up, padding_down]),
+        weight=kernel,
+        padding=0,
+        groups=n_channels,
+    )
 
-    mu_xx = mu_x ** 2
-    mu_yy = mu_y ** 2
+    mu_xx = mu_x**2
+    mu_yy = mu_y**2
     mu_xy = mu_x * mu_y
 
-    sigma_xx = F.conv2d(F.pad(x ** 2, pad=[padding_up, padding_down, padding_up, padding_down]), weight=kernel,
-                        stride=1, padding=0, groups=n_channels) - mu_xx
-    sigma_yy = F.conv2d(F.pad(y ** 2, pad=[padding_up, padding_down, padding_up, padding_down]), weight=kernel,
-                        stride=1, padding=0, groups=n_channels) - mu_yy
-    sigma_xy = F.conv2d(F.pad(x * y, pad=[padding_up, padding_down, padding_up, padding_down]), weight=kernel,
-                        stride=1, padding=0, groups=n_channels) - mu_xy
+    sigma_xx = (
+        F.conv2d(
+            F.pad(x**2, pad=[padding_up, padding_down, padding_up, padding_down]),
+            weight=kernel,
+            stride=1,
+            padding=0,
+            groups=n_channels,
+        )
+        - mu_xx
+    )
+    sigma_yy = (
+        F.conv2d(
+            F.pad(y**2, pad=[padding_up, padding_down, padding_up, padding_down]),
+            weight=kernel,
+            stride=1,
+            padding=0,
+            groups=n_channels,
+        )
+        - mu_yy
+    )
+    sigma_xy = (
+        F.conv2d(
+            F.pad(x * y, pad=[padding_up, padding_down, padding_up, padding_down]),
+            weight=kernel,
+            stride=1,
+            padding=0,
+            groups=n_channels,
+        )
+        - mu_xy
+    )
 
     sigma_xx = F.relu(sigma_xx)
     sigma_yy = F.relu(sigma_yy)
@@ -356,7 +426,7 @@ def _information_content(x: torch.Tensor, y: torch.Tensor, y_parent: torch.Tenso
     nexp = nblv * nblh
     N = block[0] * block[1]
 
-    assert block[0] % 2 == 1 and block[1] % 2 == 1, f'Expected odd block dimensions, got {block}'
+    assert block[0] % 2 == 1 and block[1] % 2 == 1, f"Expected odd block dimensions, got {block}"
 
     Ly = (block[0] - 1) // 2
     Lx = (block[1] - 1) // 2
@@ -364,7 +434,7 @@ def _information_content(x: torch.Tensor, y: torch.Tensor, y_parent: torch.Tenso
     if y_parent is not None:
         # upscale y_parent and cut to the size of y
 
-        y_parent_up = _image_enlarge(y_parent)[:, :, :y.size(-2), :y.size(-1)]
+        y_parent_up = _image_enlarge(y_parent)[:, :, : y.size(-2), : y.size(-1)]
         N = N + 1
 
     Y = torch.zeros(y.size(0), y.size(1), nexp, N, dtype=y.dtype, device=y.device)
@@ -374,13 +444,13 @@ def _information_content(x: torch.Tensor, y: torch.Tensor, y_parent: torch.Tenso
         for nx in range(-Lx, Lx + 1):
             n = n + 1
             foo = _shift(y, [ny, nx])
-            foo = foo[:, :, Ly:Ly + nblv, Lx:Lx + nblh]
+            foo = foo[:, :, Ly : Ly + nblv, Lx : Lx + nblh]
             Y[..., n] = foo.flatten(start_dim=-2, end_dim=-1)
 
     if y_parent is not None:
         n = n + 1
         foo = y_parent_up
-        foo = foo[:, :, Ly:Ly + nblv, Lx:Lx + nblh]
+        foo = foo[:, :, Ly : Ly + nblv, Lx : Lx + nblh]
         Y[..., n] = foo.flatten(start_dim=-2, end_dim=-1)
 
     C_u = torch.matmul(Y.transpose(-2, -1), Y) / nexp
@@ -400,15 +470,25 @@ def _information_content(x: torch.Tensor, y: torch.Tensor, y_parent: torch.Tenso
     ss = torch.matmul(Y, C_u_inv) * Y / N
     ss = torch.sum(ss, dim=-1, keepdim=True)
     ss = ss.view(y.size(0), y.size(1), nblv, nblh)
-    g = g[:, :, Ly: Ly + nblv, Lx: Lx + nblh]
-    vv = vv[:, :, Ly: Ly + nblv, Lx: Lx + nblh]
+    g = g[:, :, Ly : Ly + nblv, Lx : Lx + nblh]
+    vv = vv[:, :, Ly : Ly + nblv, Lx : Lx + nblh]
 
     # Calculate mutual information
     scaled_eig_values = torch.diagonal(L, offset=0, dim1=-2, dim2=-1).unsqueeze(2).unsqueeze(3)
 
-    iw_map = torch.sum(torch.log2(1 + ((vv.unsqueeze(-1) + (1 + g.unsqueeze(-1) * g.unsqueeze(-1)) * sigma_nsq)
-                                       * ss.unsqueeze(-1) * scaled_eig_values + sigma_nsq * vv.unsqueeze(-1)) / (
-                                              sigma_nsq * sigma_nsq)), dim=-1)
+    iw_map = torch.sum(
+        torch.log2(
+            1
+            + (
+                (vv.unsqueeze(-1) + (1 + g.unsqueeze(-1) * g.unsqueeze(-1)) * sigma_nsq)
+                * ss.unsqueeze(-1)
+                * scaled_eig_values
+                + sigma_nsq * vv.unsqueeze(-1)
+            )
+            / (sigma_nsq * sigma_nsq)
+        ),
+        dim=-1,
+    )
 
     iw_map[iw_map < EPS] = 0
 
@@ -426,9 +506,9 @@ def _image_enlarge(x: torch.Tensor) -> torch.Tensor:
     Returns:
         Upscaled tensor.
     """
-    t1 = F.interpolate(x, size=(int(4 * x.size(-2) - 3), int(4 * x.size(-1) - 3)), mode='bilinear', align_corners=False)
+    t1 = F.interpolate(x, size=(int(4 * x.size(-2) - 3), int(4 * x.size(-1) - 3)), mode="bilinear", align_corners=False)
     t2 = torch.zeros([x.size(0), 1, 4 * x.size(-2) - 1, 4 * x.size(-1) - 1], device=x.device, dtype=x.dtype)
-    t2[:, :, 1: -1, 1:-1] = t1
+    t2[:, :, 1:-1, 1:-1] = t1
     t2[:, :, 0, :] = 2 * t2[:, :, 1, :] - t2[:, :, 2, :]
     t2[:, :, -1, :] = 2 * t2[:, :, -2, :] - t2[:, :, -3, :]
     t2[:, :, :, 0] = 2 * t2[:, :, :, 1] - t2[:, :, :, 2]
@@ -438,7 +518,7 @@ def _image_enlarge(x: torch.Tensor) -> torch.Tensor:
 
 
 def _shift(x: torch.Tensor, shift: list) -> torch.Tensor:
-    r""" Circular shift 2D matrix samples by OFFSET (a [Y,X] 2-vector), such that  RES(POS) = MTX(POS-OFFSET).
+    r"""Circular shift 2D matrix samples by OFFSET (a [Y,X] 2-vector), such that  RES(POS) = MTX(POS-OFFSET).
 
     Args:
         x: An input tensor. Shape :math:`(N, C, H, W)`.
@@ -447,6 +527,6 @@ def _shift(x: torch.Tensor, shift: list) -> torch.Tensor:
     Returns:
         The circular shiftet tensor.
     """
-    x_shifted = torch.cat((x[..., -shift[0]:, :], x[..., :-shift[0], :]), dim=-2)
-    x_shifted = torch.cat((x_shifted[..., -shift[1]:], x_shifted[..., :-shift[1]]), dim=-1)
+    x_shifted = torch.cat((x[..., -shift[0] :, :], x[..., : -shift[0], :]), dim=-2)
+    x_shifted = torch.cat((x_shifted[..., -shift[1] :], x_shifted[..., : -shift[1]]), dim=-1)
     return x_shifted

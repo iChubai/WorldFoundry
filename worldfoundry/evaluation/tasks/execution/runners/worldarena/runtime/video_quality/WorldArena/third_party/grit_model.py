@@ -21,4 +21,5 @@ class DenseCaptioning:
     def __getattr__(self, name: str) -> Any:
         return getattr(self._impl, name)
 
+
 __all__ = ["DenseCaptioning"]

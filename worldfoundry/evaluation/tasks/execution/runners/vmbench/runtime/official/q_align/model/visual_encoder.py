@@ -1,7 +1,11 @@
 import math
 from typing import Any, Optional, Tuple, Union
 
-from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling, BaseModelOutputWithPastAndCrossAttentions
+from transformers.modeling_outputs import (
+    BaseModelOutput,
+    BaseModelOutputWithPooling,
+    BaseModelOutputWithPastAndCrossAttentions,
+)
 from transformers.modeling_utils import PreTrainedModel
 from transformers.pytorch_utils import find_pruneable_heads_and_indices, prune_linear_layer
 
@@ -10,6 +14,7 @@ import torch
 import torch.nn as nn
 import torch.utils.checkpoint
 from icecream import ic
+
 
 def get_abs_pos(abs_pos, tgt_size):
     # abs_pos: L, C
@@ -20,14 +25,20 @@ def get_abs_pos(abs_pos, tgt_size):
     dtype = abs_pos.dtype
 
     if src_size != tgt_size:
-        return F.interpolate(
-            abs_pos.float().reshape(1, src_size, src_size, -1).permute(0, 3, 1, 2),
-            size=(tgt_size, tgt_size),
-            mode="bicubic",
-            align_corners=False,
-        ).permute(0, 2, 3, 1).flatten(0, 2).to(dtype=dtype)
+        return (
+            F.interpolate(
+                abs_pos.float().reshape(1, src_size, src_size, -1).permute(0, 3, 1, 2),
+                size=(tgt_size, tgt_size),
+                mode="bicubic",
+                align_corners=False,
+            )
+            .permute(0, 2, 3, 1)
+            .flatten(0, 2)
+            .to(dtype=dtype)
+        )
     else:
         return abs_pos
+
 
 # https://github.com/facebookresearch/mae/blob/efb2a8062c206524e35e47d04501ed4f544c0ae8/util/pos_embed.py#L20
 def get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False):
@@ -55,7 +66,7 @@ def get_2d_sincos_pos_embed_from_grid(embed_dim, grid):
     emb_h = get_1d_sincos_pos_embed_from_grid(embed_dim // 2, grid[0])  # (H*W, D/2)
     emb_w = get_1d_sincos_pos_embed_from_grid(embed_dim // 2, grid[1])  # (H*W, D/2)
 
-    emb = np.concatenate([emb_h, emb_w], axis=1) # (H*W, D)
+    emb = np.concatenate([emb_h, emb_w], axis=1)  # (H*W, D)
     return emb
 
 
@@ -67,18 +78,17 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
     """
     assert embed_dim % 2 == 0
     omega = np.arange(embed_dim // 2, dtype=np.float32)
-    omega /= embed_dim / 2.
-    omega = 1. / 10000**omega  # (D/2,)
+    omega /= embed_dim / 2.0
+    omega = 1.0 / 10000**omega  # (D/2,)
 
     pos = pos.reshape(-1)  # (M,)
-    out = np.einsum('m,d->md', pos, omega)  # (M, D/2), outer product
+    out = np.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
 
-    emb_sin = np.sin(out) # (M, D/2)
-    emb_cos = np.cos(out) # (M, D/2)
+    emb_sin = np.sin(out)  # (M, D/2)
+    emb_cos = np.cos(out)  # (M, D/2)
 
     emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
     return emb
-
 
 
 class MplugOwlVisionEmbeddings(nn.Module):
@@ -115,7 +125,6 @@ class MplugOwlVisionEmbeddings(nn.Module):
         embeddings = embeddings + self.position_embedding[:, : embeddings.size(1)].to(image_embeds.dtype)
         embeddings = self.pre_layernorm(embeddings)
         return embeddings
-
 
 
 class MplugOwlVisionAttention(nn.Module):
@@ -287,8 +296,8 @@ class MplugOwlVisionEncoderLayer(nn.Module):
             outputs += (attn_weights,)
 
         return outputs
-    
-    
+
+
 class MplugOwlVisionEncoder(nn.Module):
     """
     Transformer encoder consisting of `config.num_hidden_layers` self attention layers. Each layer is a
@@ -376,9 +385,7 @@ class MplugOwlVisionEncoder(nn.Module):
 
         if not return_dict:
             return tuple(v for v in [hidden_states, encoder_states, all_attentions] if v is not None)
-        return BaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=encoder_states, attentions=all_attentions
-        )
+        return BaseModelOutput(last_hidden_state=hidden_states, hidden_states=encoder_states, attentions=all_attentions)
 
 
 class MplugOwlVisionModel(PreTrainedModel):
@@ -395,7 +402,6 @@ class MplugOwlVisionModel(PreTrainedModel):
         self.post_layernorm = nn.LayerNorm(self.hidden_size, eps=config.layer_norm_eps)
 
         self.post_init()
-
 
     def forward(
         self,
@@ -485,24 +491,26 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
 
         self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
         self.save_attention = False
-        
-#         self.q_pos_embed = nn.Parameter(
-#             torch.from_numpy(get_1d_sincos_pos_embed_from_grid(config.hidden_size, np.arange(config.num_learnable_queries, dtype=np.float32))).float()
-#         ).requires_grad_(False)
-#         grids = config.grid_size
-#         self.k_pos_embed = nn.Parameter(
-#             torch.from_numpy(get_2d_sincos_pos_embed(config.hidden_size, grids, cls_token=True)).float()
-#         ).requires_grad_(False)
+
+        #         self.q_pos_embed = nn.Parameter(
+        #             torch.from_numpy(get_1d_sincos_pos_embed_from_grid(config.hidden_size, np.arange(config.num_learnable_queries, dtype=np.float32))).float()
+        #         ).requires_grad_(False)
+        #         grids = config.grid_size
+        #         self.k_pos_embed = nn.Parameter(
+        #             torch.from_numpy(get_2d_sincos_pos_embed(config.hidden_size, grids, cls_token=True)).float()
+        #         ).requires_grad_(False)
         grids = config.grid_size
         self.register_buffer(
-            'q_pos_embed', 
-            torch.from_numpy(get_1d_sincos_pos_embed_from_grid(config.hidden_size, np.arange(config.num_learnable_queries, dtype=np.float32))).float()
+            "q_pos_embed",
+            torch.from_numpy(
+                get_1d_sincos_pos_embed_from_grid(
+                    config.hidden_size, np.arange(config.num_learnable_queries, dtype=np.float32)
+                )
+            ).float(),
         )
         self.register_buffer(
-            'k_pos_embed', 
-            torch.from_numpy(get_2d_sincos_pos_embed(config.hidden_size, grids, cls_token=True)).float()
+            "k_pos_embed", torch.from_numpy(get_2d_sincos_pos_embed(config.hidden_size, grids, cls_token=True)).float()
         )
-        
 
     def save_attn_gradients(self, attn_gradients):
         self.attn_gradients = attn_gradients
@@ -534,9 +542,9 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
         # If this is instantiated as a cross-attention module, the keys
         # and values come from an encoder; the attention mask needs to be
         # such that the encoder's padding tokens are not attended to.
-        
-        qk_pos_embed = torch.cat([self.q_pos_embed, self.k_pos_embed], dim = 0).unsqueeze(0).to(dtype=hidden_states.dtype)
-        
+
+        qk_pos_embed = torch.cat([self.q_pos_embed, self.k_pos_embed], dim=0).unsqueeze(0).to(dtype=hidden_states.dtype)
+
         key_layer = self.transpose_for_scores(self.key(encoder_hidden_states + qk_pos_embed))
         value_layer = self.transpose_for_scores(self.value(encoder_hidden_states))
         attention_mask = encoder_attention_mask
@@ -756,6 +764,7 @@ class MplugOwlVisualAbstractorEncoder(nn.Module):
 
 class MplugOwlVisualAbstractorModel(PreTrainedModel):
     _no_split_modules = ["MplugOwlVisualAbstractorLayer"]
+
     def __init__(self, config, language_hidden_size):
         super().__init__(config)
         self.config = config
@@ -851,7 +860,7 @@ class MplugOwlVisualAbstractorModel(PreTrainedModel):
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        
+
         query_embeds = self.query_embeds.repeat(encoder_hidden_states.shape[0], 1, 1)
         embedding_output = query_embeds
         input_shape = embedding_output.size()[:-1]
@@ -918,5 +927,3 @@ class MplugOwlVisualAbstractorModel(PreTrainedModel):
             pooler_output=pooled_output,
             hidden_states=encoder_outputs.hidden_states,
         )
-    
-    

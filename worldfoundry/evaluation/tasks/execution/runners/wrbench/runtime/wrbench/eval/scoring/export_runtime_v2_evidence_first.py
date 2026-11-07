@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Export score-probe and evidence-gate-masked Runtime V2 smoke score files."""
+
 from __future__ import annotations
 
 import argparse
@@ -153,7 +154,11 @@ def attach_evidence(row: dict[str, Any], evidence: dict[str, Any] | None, *, pol
         applicable_key="evidence_d6_applicable",
         reason_key="evidence_d6_na_reason",
     )
-    if evidence is not None and "evidence_shared_oov_applicable" not in evidence and "shared_oov_applicable" not in evidence:
+    if (
+        evidence is not None
+        and "evidence_shared_oov_applicable" not in evidence
+        and "shared_oov_applicable" not in evidence
+    ):
         shared_app = bool(d5_app and d6_app)
         shared_reason = None if shared_app else d5_reason or d6_reason or "unclear"
     if _manifest_declares_no_oov(out):
@@ -174,7 +179,9 @@ def attach_evidence(row: dict[str, Any], evidence: dict[str, Any] | None, *, pol
     out["runtime_v2_evidence_d6_applicable"] = d6_app
     out["runtime_v2_evidence_d5_na_reason"] = d5_reason
     out["runtime_v2_evidence_d6_na_reason"] = d6_reason
-    out["runtime_v2_evidence_confidence"] = _evidence_value(evidence, "evidence_confidence", _evidence_value(evidence, "confidence"))
+    out["runtime_v2_evidence_confidence"] = _evidence_value(
+        evidence, "evidence_confidence", _evidence_value(evidence, "confidence")
+    )
 
     if policy == EVIDENCE_GATE_MASKED_POLICY:
         out.setdefault("vlm_dimension_applicable", {})
@@ -215,10 +222,7 @@ def attach_manifest_metadata(
             out[key] = value
     if conflicts:
         video_id = row.get("video_id") or manifest_row.get("video_id")
-        raise ValueError(
-            "manifest metadata conflict for "
-            f"video_id={video_id}: fields={conflicts[:10]}"
-        )
+        raise ValueError(f"manifest metadata conflict for video_id={video_id}: fields={conflicts[:10]}")
     return out
 
 

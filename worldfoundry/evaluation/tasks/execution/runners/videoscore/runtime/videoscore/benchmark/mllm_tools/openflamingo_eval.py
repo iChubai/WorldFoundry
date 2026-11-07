@@ -5,7 +5,8 @@ from typing import List
 from mantis.mllm_tools.mllm_utils import merge_images, load_images
 from huggingface_hub import hf_hub_download
 
-class OpenFlamingo():
+
+class OpenFlamingo:
     support_multi_image = True
     xatten_map = {
         "anas-awadalla/mpt-1b-redpajama-200b": 1,
@@ -28,6 +29,7 @@ class OpenFlamingo():
         "openflamingo/OpenFlamingo-4B-vitl-rpj3b-langinstruct": "togethercomputer/RedPajama-INCITE-Instruct-3B-v1",
         "openflamingo/OpenFlamingo-9B-vitl-mpt7b": "mosaicml/mpt-7b",
     }
+
     def __init__(self, model_id="openflamingo/OpenFlamingo-9B-vitl-mpt7b", input_type="pretrained") -> None:
         model, image_processor, tokenizer = create_model_and_transforms(
             clip_vision_encoder_path="ViT-L-14",
@@ -50,13 +52,12 @@ class OpenFlamingo():
             checkpoint_path = hf_hub_download(model_id, "pytorch_model.bin")
         model.load_state_dict(torch.load(checkpoint_path), strict=False)
         self.model.eval()
-        
+
         assert input_type in ["pretrained", "chat"], "input_type should be either pretrained or chat"
         self.input_type = input_type
         self.image_token = "<image>"
         self.processor = OpenFlamingoProcessor(self.image_processor, self.tokenizer)
-        
-    
+
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -78,17 +79,16 @@ class OpenFlamingo():
         """
         if self.support_multi_image:
             if self.input_type == "pretrained":
-                
                 # add one shot for multi choice question eval
                 one_shot_inputs = [
                     {
                         "type": "image",
-                        "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+                        "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
                     },
                     {
                         "type": "text",
-                        "content": "What is in the image?\n (A) a tiger\n (B) a zebra\n (C) a cat\n (D) a dog \n Answer: B"
-                    }
+                        "content": "What is in the image?\n (A) a tiger\n (B) a zebra\n (C) a cat\n (D) a dog \n Answer: B",
+                    },
                 ]
                 inputs = one_shot_inputs + inputs
                 image_links = []
@@ -130,26 +130,28 @@ class OpenFlamingo():
                     max_new_tokens=512,
                     num_beams=3,
                 )
-                generated_text = self.tokenizer.decode(output_ids[0, inputs["input_ids"].shape[1]:], skip_special_tokens=True)
-                return generated_text.strip(' \n')
+                generated_text = self.tokenizer.decode(
+                    output_ids[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True
+                )
+                return generated_text.strip(" \n")
         else:
             raise NotImplementedError
-    
-    def prepare_prompt(self, image_links:List[List[str]], text_prompt: List[str]):
+
+    def prepare_prompt(self, image_links: List[List[str]], text_prompt: List[str]):
         if type(image_links) == str:
             image_links = [[image_links]]
         if isinstance(text_prompt, str):
             text_prompt = [text_prompt]
-            
+
         assert len(image_links) == len(text_prompt), "Number of images and text prompts should be the same"
         merged_images = [load_images(_image_links) for _image_links in image_links]
         prompt = ""
         for i in range(len(text_prompt)):
             if merged_images[i]:
-                prompt += "<image>"*len(merged_images[i]) + text_prompt[i]
+                prompt += "<image>" * len(merged_images[i]) + text_prompt[i]
             else:
                 prompt += " " + text_prompt[i]
-        prompt = prompt.strip(' \n')
+        prompt = prompt.strip(" \n")
         all_images = [image for images in merged_images for image in images if image is not None]
         vision_x = [self.image_processor(image).unsqueeze(0) for image in all_images]
         vision_x = torch.cat(vision_x, dim=0)
@@ -168,10 +170,12 @@ class OpenFlamingo():
             max_new_tokens=16,
             num_beams=3,
         )
-        decoded_text = self.tokenizer.decode(generated_text[0][input_ids["input_ids"].shape[1]:], skip_special_tokens=True)
-        return decoded_text.strip(' \n')
-    
-    
+        decoded_text = self.tokenizer.decode(
+            generated_text[0][input_ids["input_ids"].shape[1] :], skip_special_tokens=True
+        )
+        return decoded_text.strip(" \n")
+
+
 if __name__ == "__main__":
     model = OpenFlamingo("Mantis-VL/Mantis-9b-openflamingo_2048", input_type="chat")
     # 0 shot
@@ -179,58 +183,40 @@ if __name__ == "__main__":
     zero_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 1 shot
     one_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 2 shot
     two_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A black cat."
-        },
+        {"type": "text", "content": "What is in the image? A black cat."},
         {
             "type": "image",
-            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*"
+            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     print("### 0 shot")
     print(model(zero_shot_exs))
@@ -247,4 +233,3 @@ if __name__ == "__main__":
     ### 2 shot
     A rabbit.
     """
-    

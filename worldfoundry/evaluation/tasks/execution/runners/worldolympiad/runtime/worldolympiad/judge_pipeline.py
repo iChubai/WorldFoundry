@@ -1,4 +1,4 @@
-'''
+"""
 Video Physics LLM Judge Pipeline
 
 基于 PhyGenBench 的提示词工程实践，实现单次调用的视频物理评估系统。
@@ -12,7 +12,7 @@ Video Physics LLM Judge Pipeline
 
 python ./judge_pipeline.py path/to/video.mp4
 
-'''
+"""
 
 from __future__ import annotations
 
@@ -99,9 +99,11 @@ Output your response in the required JSON format (no markdown, just pure JSON)."
 # Judge Pipeline Implementation
 # ============================================================================
 
+
 @dataclass
 class JudgeResult:
     """Single question evaluation result"""
+
     qid: str
     dimension: str
     question: str
@@ -123,6 +125,7 @@ class JudgeResult:
 @dataclass
 class VideoJudgeResult:
     """Complete video evaluation result"""
+
     answers: List[JudgeResult]
     overall_physics_score: float
     overall_assessment: str
@@ -182,11 +185,7 @@ def parse_llm_response(response_text: str) -> Dict:
         return json.loads(cleaned)
     except json.JSONDecodeError as e:
         # If parsing fails, return error structure
-        return {
-            "error": "JSON parse failed",
-            "raw_text": response_text,
-            "exception": str(e)
-        }
+        return {"error": "JSON parse failed", "raw_text": response_text, "exception": str(e)}
 
 
 def judge_single_question(
@@ -313,6 +312,7 @@ def judge_video_physics(
 # Specialized Judge Functions
 # ============================================================================
 
+
 def judge_mechanics(video_url: str) -> VideoJudgeResult:
     """Evaluate only mechanics questions"""
     return judge_video_physics(video_url, questions=MECHANICS_QUESTIONS)
@@ -331,6 +331,7 @@ def judge_materials(video_url: str) -> VideoJudgeResult:
 # ============================================================================
 # Utility Functions
 # ============================================================================
+
 
 def print_judge_report(result: VideoJudgeResult, verbose: bool = True):
     """Pretty print judge results"""
@@ -364,7 +365,7 @@ def print_judge_report(result: VideoJudgeResult, verbose: bool = True):
 
 def save_judge_result(result: VideoJudgeResult, output_path: str):
     """Save result to JSON file"""
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result.to_dict(), f, indent=2, ensure_ascii=False)
     print(f"Results saved to: {output_path}")
 
@@ -374,12 +375,13 @@ def save_judge_result(result: VideoJudgeResult, output_path: str):
 # ============================================================================
 
 
-def get_frames_from_video(video_path: str, num_frames: int=8) -> List[str]:
+def get_frames_from_video(video_path: str, num_frames: int = 8) -> List[str]:
     """
     Placeholder function to extract frames from video.
     In a real implementation, this would extract frames and return their URLs or base64 data.
     """
     import cv2
+
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
         raise RuntimeError(f"Unable to open video: {video_path}")
@@ -406,13 +408,18 @@ def get_frames_from_video(video_path: str, num_frames: int=8) -> List[str]:
     capture.release()
     return encoded_frames
 
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Video Physics LLM Judge")
     parser.add_argument("video_url", help="Path or URL to video file")
-    parser.add_argument("--dimension", choices=["all", "mechanics", "thermotics", "material"],
-                        default="all", help="Physics dimension to evaluate")
+    parser.add_argument(
+        "--dimension",
+        choices=["all", "mechanics", "thermotics", "material"],
+        default="all",
+        help="Physics dimension to evaluate",
+    )
     parser.add_argument("--output", "-o", help="Output JSON file path")
     parser.add_argument("--quiet", "-q", action="store_true", help="Suppress detailed output")
 
@@ -421,19 +428,15 @@ if __name__ == "__main__":
     use_video = True
 
     if use_video:
+
         def encode_video_to_base64(video_path):
             with open(video_path, "rb") as video_file:
-                return base64.b64encode(video_file.read()).decode('utf-8')
+                return base64.b64encode(video_file.read()).decode("utf-8")
 
         base64_video = encode_video_to_base64(args.video_url)
 
         data_url = f"data:video/mp4;base64,{base64_video}"
-        data_url = {
-            "type": "video_url",
-            "video_url": {
-                "url": data_url
-            }
-        }
+        data_url = {"type": "video_url", "video_url": {"url": data_url}}
     else:
         # get the frames from the video
         data_url = args.video_url
@@ -441,14 +444,8 @@ if __name__ == "__main__":
         target = []
         for frame in data_url:
             frame = f"data:image/jpg;base64,{frame}"
-            target.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": frame
-                }
-            })
+            target.append({"type": "image_url", "image_url": {"url": frame}})
         data_url = target
-
 
     # Select evaluation function
     if args.dimension == "mechanics":

@@ -7,6 +7,7 @@ Reference:
     [2] Code from authors on MATLAB and Python
         https://github.com/rgcda/haarpsi
 """
+
 import functools
 from typing import Optional, Union
 
@@ -18,9 +19,16 @@ from piq.utils import _validate_input, _reduce
 from piq.functional import similarity_map, rgb2yiq, haar_filter
 
 
-def haarpsi(x: torch.Tensor, y: torch.Tensor, reduction: str = 'mean',
-            data_range: Union[int, float] = 1., scales: int = 3, subsample: bool = True,
-            c: float = 30.0, alpha: float = 4.2) -> torch.Tensor:
+def haarpsi(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    reduction: str = "mean",
+    data_range: Union[int, float] = 1.0,
+    scales: int = 3,
+    subsample: bool = True,
+    c: float = 30.0,
+    alpha: float = 4.2,
+) -> torch.Tensor:
     r"""Compute Haar Wavelet-Based Perceptual Similarity
     Inputs supposed to be in range ``[0, data_range]`` with RGB channels order for colour images.
 
@@ -51,8 +59,9 @@ def haarpsi(x: torch.Tensor, y: torch.Tensor, reduction: str = 'mean',
     # Assert minimal image size
     kernel_size = 2 ** (scales + 1)
     if x.size(-1) < kernel_size or x.size(-2) < kernel_size:
-        raise ValueError(f'Kernel size can\'t be greater than actual input size. Input size: {x.size()}. '
-                         f'Kernel size: {kernel_size}')
+        raise ValueError(
+            f"Kernel size can't be greater than actual input size. Input size: {x.size()}. Kernel size: {kernel_size}"
+        )
 
     # Rescale images
     x = x / float(data_range) * 255
@@ -89,8 +98,8 @@ def haarpsi(x: torch.Tensor, y: torch.Tensor, reduction: str = 'mean',
         upper_pad = kernel_size // 2 - 1
         bottom_pad = kernel_size // 2
         pad_to_use = [upper_pad, bottom_pad, upper_pad, bottom_pad]
-        coeff_x = torch.nn.functional.conv2d(F.pad(x_yiq[:, : 1], pad=pad_to_use, mode='constant'), kernels)
-        coeff_y = torch.nn.functional.conv2d(F.pad(y_yiq[:, : 1], pad=pad_to_use, mode='constant'), kernels)
+        coeff_x = torch.nn.functional.conv2d(F.pad(x_yiq[:, :1], pad=pad_to_use, mode="constant"), kernels)
+        coeff_y = torch.nn.functional.conv2d(F.pad(y_yiq[:, :1], pad=pad_to_use, mode="constant"), kernels)
 
         coefficients_x.append(coeff_x)
         coefficients_y.append(coeff_y)
@@ -119,15 +128,15 @@ def haarpsi(x: torch.Tensor, y: torch.Tensor, reduction: str = 'mean',
 
         # Compute weights and simmilarity
         weights = torch.cat([weights, weights.mean(dim=1, keepdims=True)], dim=1)
-        sim_map.append(
-            similarity_map(coefficients_x_iq, coefficients_y_iq, constant=c).sum(dim=1, keepdims=True) / 2)
+        sim_map.append(similarity_map(coefficients_x_iq, coefficients_y_iq, constant=c).sum(dim=1, keepdims=True) / 2)
 
     sim_map = torch.cat(sim_map, dim=1)
 
     # Calculate the final score
     eps = torch.finfo(sim_map.dtype).eps
-    score = (((sim_map * alpha).sigmoid() * weights).sum(dim=[1, 2, 3]) + eps) /\
-        (torch.sum(weights, dim=[1, 2, 3]) + eps)
+    score = (((sim_map * alpha).sigmoid() * weights).sum(dim=[1, 2, 3]) + eps) / (
+        torch.sum(weights, dim=[1, 2, 3]) + eps
+    )
     # Logit of score
     score = (torch.log(score / (1 - score)) / alpha) ** 2
 
@@ -163,15 +172,23 @@ class HaarPSILoss(_Loss):
         'A Haar Wavelet-Based Perceptual Similarity Index for Image Quality Assessment'
         http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf
     """
-    def __init__(self, reduction: Optional[str] = 'mean', data_range: Union[int, float] = 1.,
-                 scales: int = 3, subsample: bool = True, c: float = 30.0, alpha: float = 4.2) -> None:
+
+    def __init__(
+        self,
+        reduction: Optional[str] = "mean",
+        data_range: Union[int, float] = 1.0,
+        scales: int = 3,
+        subsample: bool = True,
+        c: float = 30.0,
+        alpha: float = 4.2,
+    ) -> None:
         super().__init__()
         self.reduction = reduction
         self.data_range = data_range
 
         self.haarpsi = functools.partial(
-            haarpsi, scales=scales, subsample=subsample, c=c, alpha=alpha,
-            data_range=data_range, reduction=reduction)
+            haarpsi, scales=scales, subsample=subsample, c=c, alpha=alpha, data_range=data_range, reduction=reduction
+        )
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         r"""Computation of HaarPSI as a loss function.
@@ -184,4 +201,4 @@ class HaarPSILoss(_Loss):
             Value of HaarPSI loss to be minimized in [0, 1] range.
         """
 
-        return 1. - self.haarpsi(x=x, y=y)
+        return 1.0 - self.haarpsi(x=x, y=y)

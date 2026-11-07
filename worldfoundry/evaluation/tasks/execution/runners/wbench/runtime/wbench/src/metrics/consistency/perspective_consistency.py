@@ -16,6 +16,7 @@ Algorithm:
      depth_stability    = max(0, 1 - d_cv  / 0.5) * presence  (computed but not used in final score)
 4. Final score = centroid_stability
 """
+
 import os
 from typing import Dict, Any, Optional
 
@@ -40,8 +41,7 @@ def compute_case(mask_dir: str, depth_path: str) -> Optional[Dict[str, Any]]:
     if not os.path.isdir(mask_dir) or not os.path.exists(depth_path):
         return None
 
-    params = {"c_std_thresh": C_STD_THRESH, "d_cv_thresh": D_CV_THRESH,
-              "min_mask_area_px": MIN_MASK_AREA_PX}
+    params = {"c_std_thresh": C_STD_THRESH, "d_cv_thresh": D_CV_THRESH, "min_mask_area_px": MIN_MASK_AREA_PX}
 
     try:
         depth = np.load(depth_path, mmap_mode="r")
@@ -80,9 +80,15 @@ def compute_case(mask_dir: str, depth_path: str) -> Optional[Dict[str, Any]]:
         if valid < 2:
             return {
                 "score": 0.0,
-                "details": {"presence": round(presence, 4), "valid_frames": valid,
-                            "total_frames": total, "centroid_stability": 0.0, "depth_stability": 0.0},
-                "params": params, "error": None,
+                "details": {
+                    "presence": round(presence, 4),
+                    "valid_frames": valid,
+                    "total_frames": total,
+                    "centroid_stability": 0.0,
+                    "depth_stability": 0.0,
+                },
+                "params": params,
+                "error": None,
             }
 
         c_std = float(np.sqrt(np.std(cx_l) ** 2 + np.std(cy_l) ** 2))
@@ -96,11 +102,16 @@ def compute_case(mask_dir: str, depth_path: str) -> Optional[Dict[str, Any]]:
         return {
             "score": round(overall, 4),
             "details": {
-                "presence": round(presence, 4), "valid_frames": valid, "total_frames": total,
-                "centroid_std": round(c_std, 4), "depth_cv": round(d_cv, 4),
-                "centroid_stability": round(centroid_stab, 4), "depth_stability": round(depth_stab, 4),
+                "presence": round(presence, 4),
+                "valid_frames": valid,
+                "total_frames": total,
+                "centroid_std": round(c_std, 4),
+                "depth_cv": round(d_cv, 4),
+                "centroid_stability": round(centroid_stab, 4),
+                "depth_stability": round(depth_stab, 4),
             },
-            "params": params, "error": None,
+            "params": params,
+            "error": None,
         }
     except Exception as e:
         return {"score": None, "details": None, "params": params, "error": f"{type(e).__name__}: {e}"}

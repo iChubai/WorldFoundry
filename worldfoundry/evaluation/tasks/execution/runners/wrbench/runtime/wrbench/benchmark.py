@@ -94,7 +94,9 @@ def _scope_camera_spec(row: dict[str, Any], *, index: int) -> Natural25CameraSpe
             raise ValueError(f"camera scope entry {index} yaw stress requires yaw camera_type and stress_yaw_deg")
     elif stress_axis == "static":
         if camera_type != "static" or stress_yaw_deg is not None:
-            raise ValueError(f"camera scope entry {index} static stress requires static camera_type and null stress_yaw_deg")
+            raise ValueError(
+                f"camera scope entry {index} static stress requires static camera_type and null stress_yaw_deg"
+            )
     else:
         raise ValueError(f"camera scope entry {index} has unsupported stress_axis {stress_axis!r}")
     return Natural25CameraSpec(
@@ -117,10 +119,7 @@ def load_natural25_camera_scope(path: str | Path) -> Natural25CameraScope:
     variant_filter = payload["variant_filter"]
     if set(variant_filter) != {"oov_gap"}:
         raise ValueError("camera scope variant_filter must contain exactly oov_gap")
-    cameras = tuple(
-        _scope_camera_spec(row, index=index)
-        for index, row in enumerate(payload["cameras"])
-    )
+    cameras = tuple(_scope_camera_spec(row, index=index) for index, row in enumerate(payload["cameras"]))
     labels = [camera.label for camera in cameras]
     if len(labels) != len(set(labels)):
         raise ValueError(f"camera scope has duplicate labels: {labels}")
@@ -155,14 +154,10 @@ def _natural25_camera_tasks_for_specs(
     path = Path(variants_path) if variants_path is not None else natural25_variants_path()
     prompt_profile_id = resolve_variant_prompt_profile(prompt_profile)
     layout_anchors = (
-        load_natural25_t2v_layout_anchors()
-        if prompt_profile_id == PROMPT_PROFILE_T2V_LAYOUT_ANCHOR
-        else None
+        load_natural25_t2v_layout_anchors() if prompt_profile_id == PROMPT_PROFILE_T2V_LAYOUT_ANCHOR else None
     )
     t2v_event_tails = (
-        load_natural25_t2v_event_tails()
-        if prompt_profile_id == PROMPT_PROFILE_T2V_LAYOUT_ANCHOR
-        else None
+        load_natural25_t2v_event_tails() if prompt_profile_id == PROMPT_PROFILE_T2V_LAYOUT_ANCHOR else None
     )
     tasks: list[Natural25CameraTask] = []
     for row in load_jsonl(path):

@@ -12,55 +12,55 @@ from tqdm import tqdm
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
-os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '1'
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 # Add SAM-3 to path — update to your SAM-3 installation directory
 sys.path.insert(0, os.environ.get("SAM3_DIR", "third_party/sam3"))
 import cv2
 
-GT_SYNTHETIC       = "data/Synthetic_processed"
-GT_REAL            = "data/Real_Raw"
-KF_SYN_XLS         = "data/Synthetic_processed/Synthetic_ExitReenter.xlsx"
-KF_REAL_XLS        = "data/Real_Raw/Real_ExitReenter.xlsx"
-SAM3_OUT_SYN       = "data/sam3_output/synthetic"
-SAM3_OUT_REAL      = "data/sam3_output/real"
-SAM3_DATA          = os.environ.get(
+GT_SYNTHETIC = "data/Synthetic_processed"
+GT_REAL = "data/Real_Raw"
+KF_SYN_XLS = "data/Synthetic_processed/Synthetic_ExitReenter.xlsx"
+KF_REAL_XLS = "data/Real_Raw/Real_ExitReenter.xlsx"
+SAM3_OUT_SYN = "data/sam3_output/synthetic"
+SAM3_OUT_REAL = "data/sam3_output/real"
+SAM3_DATA = os.environ.get(
     "WORLDFOUNDRY_MEMOBENCH_SAM3_METADATA_DIR",
     str(bundled_benchmark_asset("memobench", "data", "sam3_metadata")),
 )
-OUTPUT_DIR         = "ors_results"
+OUTPUT_DIR = "ors_results"
 
 MODEL_CONFIGS = {
     "LingBot-World": {
         "synthetic": ["output/lingbot-world/Synthetic"],
-        "real":      ["output/lingbot-world/Real"],
+        "real": ["output/lingbot-world/Real"],
     },
     "Wan2.2": {
         "synthetic": ["output/wan2.2/Synthetic"],
-        "real":      ["output/wan2.2/Real"],
+        "real": ["output/wan2.2/Real"],
     },
     "FantasyWorld": {
         "synthetic": ["output/fantasyworld/Synthetic"],
-        "real":      ["output/fantasyworld/Real"],
+        "real": ["output/fantasyworld/Real"],
     },
     "Open-SoRA": {
         "synthetic": ["output/open-sora/Synthetic"],
-        "real":      ["output/open-sora/Real"],
+        "real": ["output/open-sora/Real"],
     },
     "LTX-Video": {
         "synthetic": ["output/ltx-video/Synthetic"],
-        "real":      ["output/ltx-video/Real"],
+        "real": ["output/ltx-video/Real"],
     },
     "CogVideoX": {
         "synthetic": ["output/cogvideox/Synthetic"],
-        "real":      ["output/cogvideox/Real"],
+        "real": ["output/cogvideox/Real"],
     },
     "Matrix-Game2": {
         "synthetic": ["output/matrix-game2/Synthetic"],
-        "real":      ["output/matrix-game2/Real"],
+        "real": ["output/matrix-game2/Real"],
     },
     "StableVirtualCamera": {
         "synthetic": ["output/stable-virtual-camera/Synthetic"],
-        "real":      ["output/stable-virtual-camera/Real"],
+        "real": ["output/stable-virtual-camera/Real"],
     },
 }
 
@@ -140,8 +140,8 @@ def load_sam3_metadata():
             mask_path = os.path.join(SAM3_OUT_SYN, scene, f"video{vid}_mask.png")
             syn_meta[clip_id] = {
                 "subject": row["subject"],
-                "prompt":  row.get("prompt", ""),
-                "mask":    mask_path,
+                "prompt": row.get("prompt", ""),
+                "mask": mask_path,
             }
 
     real_csv = os.path.join(SAM3_DATA, "real_metadata.csv")
@@ -151,8 +151,8 @@ def load_sam3_metadata():
             mask_path = os.path.join(SAM3_OUT_REAL, clip_id, "frame_mask.png")
             real_meta[clip_id] = {
                 "subject": row["subject"],
-                "prompt":  row.get("prompt", ""),
-                "mask":    mask_path,
+                "prompt": row.get("prompt", ""),
+                "mask": mask_path,
             }
 
     return syn_meta, real_meta
@@ -160,9 +160,9 @@ def load_sam3_metadata():
 
 def extract_subject_phrase(prompt_text):
     """Extract 'sees [text](subject) ...' for SAM-3 context."""
-    m = re.search(r'sees (.*?\(subject\)[^.,]*)', prompt_text, re.IGNORECASE)
+    m = re.search(r"sees (.*?\(subject\)[^.,]*)", prompt_text, re.IGNORECASE)
     if m:
-        return m.group(1).strip().rstrip('.,')
+        return m.group(1).strip().rstrip(".,")
     return None
 
 
@@ -276,6 +276,7 @@ def find_gen_mp4_real(search_dirs, clip_id):
 def init_sam3():
     from sam3.model_builder import build_sam3_image_model
     from sam3.model.sam3_image_processor import Sam3Processor
+
     model = build_sam3_image_model()
     processor = Sam3Processor(model)
     return processor
@@ -295,8 +296,8 @@ def run_sam3_on_frame(processor, frame_bgr, prompt_str):
     state = processor.set_image(image)
     state = processor.set_text_prompt(prompt_str, state)
 
-    masks = state.get('masks', [])
-    scores = state.get('scores', [])
+    masks = state.get("masks", [])
+    scores = state.get("scores", [])
     if len(masks) == 0:
         return False, 0.0
 
@@ -320,8 +321,7 @@ def run_sam3_on_frame(processor, frame_bgr, prompt_str):
     return True, best_score
 
 
-def compute_ors_for_clip(processor, frame_paths_or_arrays, r_start,
-                          prompt_str, is_bgr_arrays=False):
+def compute_ors_for_clip(processor, frame_paths_or_arrays, r_start, prompt_str, is_bgr_arrays=False):
     """
     Detection-based ORS for a single clip.
 
@@ -342,8 +342,7 @@ def compute_ors_for_clip(processor, frame_paths_or_arrays, r_start,
     r_frames_indices = list(range(r_start, n_total))
 
     if not r_frames_indices:
-        return {"ors": 0.0, "detection_rate": 0.0, "mean_confidence": 0.0,
-                "n_r_frames": 0, "n_detected": 0}
+        return {"ors": 0.0, "detection_rate": 0.0, "mean_confidence": 0.0, "n_r_frames": 0, "n_detected": 0}
 
     n_detected = 0
     confidences = []
@@ -367,28 +366,25 @@ def compute_ors_for_clip(processor, frame_paths_or_arrays, r_start,
     ors = detection_rate * mean_conf
 
     return {
-        "ors":              round(ors, 4),
-        "detection_rate":   round(detection_rate, 4),
-        "mean_confidence":  round(mean_conf, 4),
-        "n_r_frames":       n_r,
-        "n_detected":       n_detected,
+        "ors": round(ors, 4),
+        "detection_rate": round(detection_rate, 4),
+        "mean_confidence": round(mean_conf, 4),
+        "n_r_frames": n_r,
+        "n_detected": n_detected,
     }
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Compute Object Revisit Score (ORS)")
     parser.add_argument(
-        "--model-name", required=True,
+        "--model-name",
+        required=True,
         choices=list(MODEL_CONFIGS.keys()) + ["all"],
-        help="Model to evaluate, or 'all' for all models."
+        help="Model to evaluate, or 'all' for all models.",
     )
+    parser.add_argument("--output-dir", default=OUTPUT_DIR, help=f"Output directory. Default: {OUTPUT_DIR}")
     parser.add_argument(
-        "--output-dir", default=OUTPUT_DIR,
-        help=f"Output directory. Default: {OUTPUT_DIR}"
-    )
-    parser.add_argument(
-        "--skip-existing", action="store_true",
-        help="Skip clips that already have a score in the output CSV."
+        "--skip-existing", action="store_true", help="Skip clips that already have a score in the output CSV."
     )
     return parser.parse_args()
 
@@ -445,16 +441,22 @@ def run_model(model_name, processor, syn_meta, real_meta, kf_syn, kf_real, args)
         phrase = extract_subject_phrase(meta["prompt"])
         prompt = phrase if phrase else meta["subject"]
 
-        ors = compute_ors_for_clip(processor, frame_paths, r_start,
-                                    prompt, is_bgr_arrays=is_bgr)
+        ors = compute_ors_for_clip(processor, frame_paths, r_start, prompt, is_bgr_arrays=is_bgr)
 
-        results.append({
-            "clip_id": clip_id, "data_type": "synthetic", "scene": scene,
-            "n_gen": n_gen, "r_start": r_start,
-            "ors": ors["ors"], "detection_rate": ors["detection_rate"],
-            "mean_confidence": ors["mean_confidence"],
-            "n_r_frames": ors["n_r_frames"], "n_detected": ors["n_detected"],
-        })
+        results.append(
+            {
+                "clip_id": clip_id,
+                "data_type": "synthetic",
+                "scene": scene,
+                "n_gen": n_gen,
+                "r_start": r_start,
+                "ors": ors["ors"],
+                "detection_rate": ors["detection_rate"],
+                "mean_confidence": ors["mean_confidence"],
+                "n_r_frames": ors["n_r_frames"],
+                "n_detected": ors["n_detected"],
+            }
+        )
 
     real_items = sorted(real_meta.items())
     for clip_id, meta in tqdm(real_items, desc=f"[{model_name}] Real", unit="clip"):
@@ -487,26 +489,32 @@ def run_model(model_name, processor, syn_meta, real_meta, kf_syn, kf_real, args)
 
         prompt = meta["subject"]
 
-        ors = compute_ors_for_clip(processor, frame_paths, r_start,
-                                    prompt, is_bgr_arrays=is_bgr)
+        ors = compute_ors_for_clip(processor, frame_paths, r_start, prompt, is_bgr_arrays=is_bgr)
 
-        results.append({
-            "clip_id": clip_id, "data_type": "real", "scene": "real",
-            "n_gen": n_gen, "r_start": r_start,
-            "ors": ors["ors"], "detection_rate": ors["detection_rate"],
-            "mean_confidence": ors["mean_confidence"],
-            "n_r_frames": ors["n_r_frames"], "n_detected": ors["n_detected"],
-        })
+        results.append(
+            {
+                "clip_id": clip_id,
+                "data_type": "real",
+                "scene": "real",
+                "n_gen": n_gen,
+                "r_start": r_start,
+                "ors": ors["ors"],
+                "detection_rate": ors["detection_rate"],
+                "mean_confidence": ors["mean_confidence"],
+                "n_r_frames": ors["n_r_frames"],
+                "n_detected": ors["n_detected"],
+            }
+        )
 
     if results:
         fieldnames = results[0].keys()
 
         if args.skip_existing and os.path.exists(out_csv):
-            with open(out_csv, 'a', newline='') as f:
+            with open(out_csv, "a", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writerows(results)
         else:
-            with open(out_csv, 'w', newline='') as f:
+            with open(out_csv, "w", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
                 writer.writerows(results)
@@ -515,7 +523,7 @@ def run_model(model_name, processor, syn_meta, real_meta, kf_syn, kf_real, args)
         syn_scores = [r["ors"] for r in results if r["data_type"] == "synthetic"]
         real_scores = [r["ors"] for r in results if r["data_type"] == "real"]
         all_scores = [r["ors"] for r in results]
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"[{model_name}] SUMMARY")
         if syn_scores:
             print(f"  Synthetic  ORS mean: {np.mean(syn_scores):.4f}  ({len(syn_scores)} clips)")
@@ -548,9 +556,9 @@ def main():
         models = [args.model_name]
 
     for model in models:
-        print(f"\n{'#'*60}")
+        print(f"\n{'#' * 60}")
         print(f"# MODEL: {model}")
-        print(f"{'#'*60}")
+        print(f"{'#' * 60}")
         run_model(model, processor, syn_meta, real_meta, kf_syn, kf_real, args)
 
     print("\nAll done.")

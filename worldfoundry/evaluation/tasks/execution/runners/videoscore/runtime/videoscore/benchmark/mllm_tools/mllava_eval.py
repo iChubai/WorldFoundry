@@ -5,10 +5,12 @@ from mantis.models.mllava import MLlavaProcessor, LlavaForConditionalGeneration,
 from typing import List
 from transformers.utils import is_flash_attn_2_available
 
-class MLlava():
+
+class MLlava:
     support_multi_image = True
     merged_image_files = []
-    def __init__(self, model_path:str="Mantis-VL/mllava_nlvr2_4096") -> None:
+
+    def __init__(self, model_path: str = "Mantis-VL/mllava_nlvr2_4096") -> None:
         """Llava model wrapper
 
         Args:
@@ -19,13 +21,17 @@ class MLlava():
         print(f"Using {attn_implementation} for attention implementation")
         if "llava_next" in model_path:
             from mantis.models.mllava_next import MLlavaNextProcessor, LlavaNextForConditionalGeneration
-            self.model = LlavaNextForConditionalGeneration.from_pretrained(model_path, device_map="cuda", torch_dtype=torch.float16, attn_implementation=attn_implementation).eval()
+
+            self.model = LlavaNextForConditionalGeneration.from_pretrained(
+                model_path, device_map="cuda", torch_dtype=torch.float16, attn_implementation=attn_implementation
+            ).eval()
             self.processor = MLlavaNextProcessor.from_pretrained(model_path)
         else:
-            self.model = LlavaForConditionalGeneration.from_pretrained(model_path, device_map="cuda", torch_dtype=torch.float16, attn_implementation=attn_implementation).eval()
+            self.model = LlavaForConditionalGeneration.from_pretrained(
+                model_path, device_map="cuda", torch_dtype=torch.float16, attn_implementation=attn_implementation
+            ).eval()
             self.processor = MLlavaProcessor.from_pretrained(model_path)
 
-        
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -59,7 +65,9 @@ class MLlava():
                 elif message["type"] == "image":
                     text_prompt += f"<image> "
             images = load_images(image_links)
-            return chat_mllava(text=text_prompt, images=images, model=self.model, processor=self.processor, **generation_kwargs)[0]
+            return chat_mllava(
+                text=text_prompt, images=images, model=self.model, processor=self.processor, **generation_kwargs
+            )[0]
         else:
             merged_image = merge_images(image_links)
             text_prompt = "\n".join([x["content"] for x in inputs if x["type"] == "text"])
@@ -68,72 +76,59 @@ class MLlava():
             inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
             # Generate
             generate_ids = self.model.generate(**inputs, **generation_kwargs)
-            generated_text = self.processor.batch_decode(generate_ids[:, inputs['input_ids'].shape[1]:], skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+            generated_text = self.processor.batch_decode(
+                generate_ids[:, inputs["input_ids"].shape[1] :],
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=False,
+            )[0]
             return generated_text
-        
+
     def __del__(self):
         for image_file in self.merged_image_files:
             if os.path.exists(image_file):
                 os.remove(image_file)
-    
+
+
 if __name__ == "__main__":
     model = MLlava()
     # 0 shot
     zero_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 1 shot
     one_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 2 shot
     two_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A black cat."
-        },
+        {"type": "text", "content": "What is in the image? A black cat."},
         {
             "type": "image",
-            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*"
+            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     print("### 0 shot")
     print(model(zero_shot_exs))
@@ -150,4 +145,3 @@ if __name__ == "__main__":
     ### 2 shot
     A black cat.
     """
-    

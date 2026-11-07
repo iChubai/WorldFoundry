@@ -11,10 +11,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 
-from vbench2_beta_i2v.utils import load_video, load_i2v_dimension_info, dino_transform_internet, dino_transform_Image_internet
+from vbench2_beta_i2v.utils import (
+    load_video,
+    load_i2v_dimension_info,
+    dino_transform_internet,
+    dino_transform_Image_internet,
+)
 import logging
-logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 def i2v_subject(model, video_pair_list, device):
     video_results = []
@@ -55,19 +62,21 @@ def i2v_subject(model, video_pair_list, device):
                 conformity_scores.append(sim_to_input)
                 former_image_features = image_features
 
-        video_score = max_weight * np.max(conformity_scores) + \
-            mean_weight * np.mean(consec_scores) + \
-            min_weight * np.min(consec_scores)
+        video_score = (
+            max_weight * np.max(conformity_scores)
+            + mean_weight * np.mean(consec_scores)
+            + min_weight * np.min(consec_scores)
+        )
 
         sim_list.append(video_score)
-        video_results.append({'image_path': image_path, 'video_path': video_path, 'video_results': video_score})
+        video_results.append({"image_path": image_path, "video_path": video_path, "video_results": video_score})
     return np.mean(sim_list), video_results
 
 
 def compute_i2v_subject(json_dir, device, submodules_list, **kwargs):
     dino_model = torch.hub.load(**submodules_list).to(device)
-    resolution = submodules_list['resolution']
+    resolution = submodules_list["resolution"]
     logger.info("Initialize DINO success")
-    video_pair_list, _ = load_i2v_dimension_info(json_dir, dimension='i2v_subject', lang='en', resolution=resolution)
+    video_pair_list, _ = load_i2v_dimension_info(json_dir, dimension="i2v_subject", lang="en", resolution=resolution)
     all_results, video_results = i2v_subject(dino_model, video_pair_list, device)
     return all_results, video_results

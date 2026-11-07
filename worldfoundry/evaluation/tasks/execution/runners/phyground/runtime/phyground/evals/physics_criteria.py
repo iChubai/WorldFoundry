@@ -58,28 +58,35 @@ from dataclasses import dataclass, field
 @dataclass
 class HumanCriterion:
     """A single criterion in the human-eval rating instrument."""
-    key: str                    # e.g. "gravity"
-    code: str                   # e.g. "A1"
-    domain: str                 # e.g. "Solid-Body Mechanics"
-    name: str                   # e.g. "Gravity"
-    question: str               # Full question text
-    note: str = ""              # Optional guidance note
-    name_zh: str = ""           # Chinese name
-    question_zh: str = ""       # Chinese question text
-    note_zh: str = ""           # Chinese guidance note
+
+    key: str  # e.g. "gravity"
+    code: str  # e.g. "A1"
+    domain: str  # e.g. "Solid-Body Mechanics"
+    name: str  # e.g. "Gravity"
+    question: str  # Full question text
+    note: str = ""  # Optional guidance note
+    name_zh: str = ""  # Chinese name
+    question_zh: str = ""  # Chinese question text
+    note_zh: str = ""  # Chinese guidance note
     scale: list[int | str] = field(default_factory=lambda: [1, 2, 3, 4, 5, "N/A"])
 
 
 HUMAN_CRITERIA: list[HumanCriterion] = [
     # ── G. General ───────────────────────────────────────────────────────────
     HumanCriterion(
-        key="persistence", code="G1", domain="General", name="Object Persistence",
+        key="persistence",
+        code="G1",
+        domain="General",
+        name="Object Persistence",
         question="To what extent do objects maintain consistent appearance, shape, and existence throughout the video?",
         name_zh="物体持久性",
         question_zh="物体在整个视频中在多大程度上保持了一致的外观、形状和存在？",
     ),
     HumanCriterion(
-        key="PTV", code="G2", domain="General", name="Temporal Coherence",
+        key="PTV",
+        code="G2",
+        domain="General",
+        name="Temporal Coherence",
         question="To what extent does the temporal sequence of physical events follow a physically plausible order?",
         note="Evaluate whether event ordering is logically consistent (e.g., objects break before scattering, liquid is poured before it flows).",
         name_zh="时序连贯性",
@@ -87,7 +94,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="例如，物体先碎裂再散开，液体先被倒出再流动。",
     ),
     HumanCriterion(
-        key="SA", code="G3", domain="General", name="Prompt Alignment",
+        key="SA",
+        code="G3",
+        domain="General",
+        name="Prompt Alignment",
         question="To what extent does the video content align with the text prompt?",
         note="Evaluate whether the depicted scene, objects, actions, and overall narrative correspond to the prompt description.",
         name_zh="提示词对齐",
@@ -96,7 +106,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
     ),
     # ── A. Solid-Body Mechanics ──────────────────────────────────────────────
     HumanCriterion(
-        key="gravity", code="A1", domain="Solid-Body Mechanics", name="Gravity",
+        key="gravity",
+        code="A1",
+        domain="Solid-Body Mechanics",
+        name="Gravity",
         question="To what extent do objects and liquids move in accordance with gravity?",
         note="e.g., unsupported objects fall downward, projectiles follow curved trajectories, poured liquids descend.",
         name_zh="重力",
@@ -104,7 +117,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="例如，无支撑的物体向下掉落，抛射物沿弧线轨迹运动，倾倒的液体向下流。",
     ),
     HumanCriterion(
-        key="inertia", code="A2", domain="Solid-Body Mechanics", name="Inertia",
+        key="inertia",
+        code="A2",
+        domain="Solid-Body Mechanics",
+        name="Inertia",
         question="To what extent do objects maintain their state of motion — remaining stationary or continuing to move — in the absence of a plausible external force?",
         note="Penalise significant spontaneous motion or unexplained stopping with no identifiable cause.",
         name_zh="惯性",
@@ -112,7 +128,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="对无明确原因的显著自发运动或无故停止予以扣分。",
     ),
     HumanCriterion(
-        key="momentum", code="A3", domain="Solid-Body Mechanics", name="Momentum",
+        key="momentum",
+        code="A3",
+        domain="Solid-Body Mechanics",
+        name="Momentum",
         question="To what extent are post-collision directions of motion physically plausible?",
         note="Evaluate direction only; ignore speed magnitude.",
         name_zh="动量",
@@ -120,13 +139,19 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="仅评估方向；忽略速度大小。",
     ),
     HumanCriterion(
-        key="impenetrability", code="A4", domain="Solid-Body Mechanics", name="Impenetrability",
+        key="impenetrability",
+        code="A4",
+        domain="Solid-Body Mechanics",
+        name="Impenetrability",
         question="To what extent do solid objects maintain impenetrability, avoiding passage through one another?",
         name_zh="不可穿透性",
         question_zh="固体物体在多大程度上保持不可穿透，避免相互穿过？",
     ),
     HumanCriterion(
-        key="collision", code="A5", domain="Solid-Body Mechanics", name="Collision Response",
+        key="collision",
+        code="A5",
+        domain="Solid-Body Mechanics",
+        name="Collision Response",
         question="To what extent do objects exhibit physically plausible responses to impact, proportional to the applied force?",
         note="e.g., bouncing, shattering, deforming.",
         name_zh="碰撞响应",
@@ -134,7 +159,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="例如，弹跳、碎裂、变形。",
     ),
     HumanCriterion(
-        key="material", code="A6", domain="Solid-Body Mechanics", name="Material Properties",
+        key="material",
+        code="A6",
+        domain="Solid-Body Mechanics",
+        name="Material Properties",
         question="To what extent do objects respond in ways consistent with their apparent material properties?",
         note="e.g., glass shatters, rubber bounces, metal dents, fabric drapes.",
         name_zh="材料属性",
@@ -143,13 +171,19 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
     ),
     # ── B. Fluid Dynamics ────────────────────────────────────────────────────
     HumanCriterion(
-        key="buoyancy", code="B1", domain="Fluid Dynamics", name="Buoyancy",
+        key="buoyancy",
+        code="B1",
+        domain="Fluid Dynamics",
+        name="Buoyancy",
         question="To what extent do objects sink or float in a manner consistent with their apparent density?",
         name_zh="浮力",
         question_zh="物体在多大程度上以符合其表观密度的方式下沉或漂浮？",
     ),
     HumanCriterion(
-        key="displacement", code="B2", domain="Fluid Dynamics", name="Displacement",
+        key="displacement",
+        code="B2",
+        domain="Fluid Dynamics",
+        name="Displacement",
         question="When volume is added or an object is submerged, to what extent does the liquid level rise in a physically plausible manner?",
         note="e.g., level rises proportionally; container overflows when full.",
         name_zh="液面变化",
@@ -157,7 +191,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="例如，液面按比例上升；容器满时溢出。",
     ),
     HumanCriterion(
-        key="flow_dynamics", code="B3", domain="Fluid Dynamics", name="Flow Dynamics",
+        key="flow_dynamics",
+        code="B3",
+        domain="Fluid Dynamics",
+        name="Flow Dynamics",
         question="To what extent does liquid flow along surfaces, spread, and drain in a physically plausible manner?",
         note="Ignore brief splash details. Penalise unphysical acceleration, sudden stops, or unsupported uphill flow.",
         name_zh="流体动力学",
@@ -165,7 +202,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="忽略短暂飞溅细节。对非物理的加速、突然停止或无支撑的上坡流动予以扣分。",
     ),
     HumanCriterion(
-        key="boundary_interaction", code="B4", domain="Fluid Dynamics", name="Boundary Interaction",
+        key="boundary_interaction",
+        code="B4",
+        domain="Fluid Dynamics",
+        name="Boundary Interaction",
         question="To what extent does liquid splash, rebound, or split in a physically plausible manner when hitting a boundary?",
         note="e.g., container walls, rock faces, floors.",
         name_zh="边界交互",
@@ -173,7 +213,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="例如，容器壁、岩面、地面。",
     ),
     HumanCriterion(
-        key="fluid_continuity", code="B5", domain="Fluid Dynamics", name="Fluid Continuity",
+        key="fluid_continuity",
+        code="B5",
+        domain="Fluid Dynamics",
+        name="Fluid Continuity",
         question="Does the liquid avoid disappearing or appearing out of nowhere?",
         note="Small splashes that briefly break apart are okay.",
         name_zh="流体连续性",
@@ -182,7 +225,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
     ),
     # ── C. Optical Physics ───────────────────────────────────────────────────
     HumanCriterion(
-        key="reflection", code="C1", domain="Optical Physics", name="Reflection",
+        key="reflection",
+        code="C1",
+        domain="Optical Physics",
+        name="Reflection",
         question="To what extent do reflective surfaces display content that is physically plausible given the surrounding scene?",
         note="Evaluate whether reflected objects and colours broadly correspond to the scene. Do not require precise geometric mirroring.",
         name_zh="反射",
@@ -190,7 +236,10 @@ HUMAN_CRITERIA: list[HumanCriterion] = [
         note_zh="评估反射的物体和颜色是否大致对应场景。不要求精确的几何镜像。",
     ),
     HumanCriterion(
-        key="shadow", code="C2", domain="Optical Physics", name="Shadow",
+        key="shadow",
+        code="C2",
+        domain="Optical Physics",
+        name="Shadow",
         question="To what extent are shadows physically plausible in their direction, placement, and movement relative to light sources and objects?",
         name_zh="阴影",
         question_zh="阴影的方向、位置和运动在多大程度上相对于光源和物体是物理合理的？",
@@ -211,6 +260,7 @@ def get_criteria_text(law_name: str) -> str:
         return text
     return CRITERIA.get(law_name, "")
 
+
 #: Domain grouping for human-eval criteria.
 HUMAN_DOMAINS: dict[str, list[HumanCriterion]] = {}
 for _c in HUMAN_CRITERIA:
@@ -223,18 +273,19 @@ ALL_LAWS: list[str] = list(CRITERIA_EN.keys())
 # Domain → criteria-key groupings
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def _subs(keys: list[str]) -> list[tuple[str, str]]:
     """Return list of (key, bilingual_description) tuples for the given keys."""
     return [(k, CRITERIA[k]) for k in keys]
 
+
 #: "fluid" domain covers liquid behaviour only (not smoke, steam, or other gases).
 #: Maps each physical domain to its list of (law_key, description) pairs.
 DOMAIN_SUBSCORES: dict[str, list[tuple[str, str]]] = {
-    "mechanics":      _subs(["gravity", "inertia", "momentum", "impenetrability", "collision", "material"]),
-    "collision":      _subs(["collision", "impenetrability", "momentum", "material"]),
-    "gravity":        _subs(["gravity", "inertia"]),
-    "buoyancy":       _subs(["buoyancy", "displacement"]),
-    "fluid":          _subs(["flow_dynamics", "boundary_interaction", "fluid_continuity"]),
-    "lighting":       _subs(["reflection", "shadow"]),
+    "mechanics": _subs(["gravity", "inertia", "momentum", "impenetrability", "collision", "material"]),
+    "collision": _subs(["collision", "impenetrability", "momentum", "material"]),
+    "gravity": _subs(["gravity", "inertia"]),
+    "buoyancy": _subs(["buoyancy", "displacement"]),
+    "fluid": _subs(["flow_dynamics", "boundary_interaction", "fluid_continuity"]),
+    "lighting": _subs(["reflection", "shadow"]),
 }
-

@@ -1,7 +1,9 @@
 from PIL import Image
 
+
 def load_video(video_file):
     from decord import VideoReader
+
     vr = VideoReader(video_file)
 
     # Get video frame rate

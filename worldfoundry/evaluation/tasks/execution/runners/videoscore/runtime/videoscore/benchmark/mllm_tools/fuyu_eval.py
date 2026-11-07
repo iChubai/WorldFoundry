@@ -6,9 +6,11 @@ from typing import List
 from io import BytesIO
 from .mllm_utils import merge_images
 
-class Fuyu():
+
+class Fuyu:
     support_multi_image = False
-    def __init__(self, model_id:str="adept/fuyu-8b") -> None:
+
+    def __init__(self, model_id: str = "adept/fuyu-8b") -> None:
         """
         Args:
             model_id (str): Fuyu model name, e.g. "adept/fuyu-8b"
@@ -17,8 +19,10 @@ class Fuyu():
         self.processor = FuyuProcessor.from_pretrained(model_id)
         self.model = FuyuForCausalLM.from_pretrained(model_id, device_map="auto", torch_dtype=torch.bfloat16)
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
-        self.pad_token_id = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
-    
+        self.pad_token_id = (
+            self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
+        )
+
     def __call__(self, inputs: List[dict]) -> str:
         """
         Args:
@@ -52,13 +56,14 @@ class Fuyu():
         image = merge_images(image_links)
         inputs = self.processor(text=text_prompt, images=image, return_tensors="pt").to(self.model.device)
         return inputs
-    
+
     def get_parsed_output(self, inputs):
         generation_output = self.model.generate(**inputs, max_new_tokens=512, pad_token_id=self.pad_token_id)
         input_len = inputs.input_ids.shape[1]
         generation_text = self.processor.batch_decode(generation_output[:, input_len:], skip_special_tokens=True)
         return generation_text[0].strip(" \n")
-    
+
+
 if __name__ == "__main__":
     model = Fuyu()
     # 0 shot
@@ -66,58 +71,40 @@ if __name__ == "__main__":
     zero_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 1 shot
     one_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     # 2 shot
     two_shot_exs = [
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_34_1.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A zebra."
-        },
+        {"type": "text", "content": "What is in the image? A zebra."},
         {
             "type": "image",
-            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg"
+            "content": "https://chromaica.github.io/Museum/ImagenHub_Text-Guided_IE/input/sample_337180_3.jpg",
         },
-        {
-            "type": "text",
-            "content": "What is in the image? A black cat."
-        },
+        {"type": "text", "content": "What is in the image? A black cat."},
         {
             "type": "image",
-            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*"
+            "content": "https://hips.hearstapps.com/hmg-prod/images/rabbit-breeds-american-white-1553635287.jpg?crop=0.976xw:0.651xh;0.0242xw,0.291xh&resize=980:*",
         },
-        {
-            "type": "text",
-            "content": "What is in the image?"
-        }
+        {"type": "text", "content": "What is in the image?"},
     ]
     print("### 0 shot")
     print(model(zero_shot_exs))
@@ -134,4 +121,3 @@ if __name__ == "__main__":
     ### 2 shot
     A zebra and a cat.
     """
-    

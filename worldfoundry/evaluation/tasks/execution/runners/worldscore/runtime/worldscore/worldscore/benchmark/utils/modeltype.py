@@ -27,5 +27,5 @@ type2model = {
         "minimax_i2v",
         "ltx_video_i2v",
         "wan2.1_i2v",
-    ]
+    ],
 }

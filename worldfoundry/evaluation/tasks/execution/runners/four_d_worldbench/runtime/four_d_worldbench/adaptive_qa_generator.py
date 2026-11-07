@@ -13,27 +13,29 @@ from openai import OpenAI
 # Import question cache manager
 try:
     from question_cache_manager import QuestionCacheManager
+
     CACHE_AVAILABLE = True
 except ImportError:
     CACHE_AVAILABLE = False
     print("Warning: question_cache_manager not available. Questions will not be cached.")
+
 
 class AdaptiveQAGenerator:
     def __init__(self, api_base_url: str = None, api_key: str = None):
         """Initialize question generator"""
         # Use default configuration or passed-in configuration
         self.client = OpenAI(
-            base_url=api_base_url or os.environ.get('OPENAI_BASE_URL', ''),
-            api_key=api_key or os.environ.get('OPENAI_API_KEY', ''),
+            base_url=api_base_url or os.environ.get("OPENAI_BASE_URL", ""),
+            api_key=api_key or os.environ.get("OPENAI_API_KEY", ""),
         )
         self.model_type = os.environ.get("OPENAI_MODEL", "gpt-4o")
-        
+
         # Initialize cache manager
         if CACHE_AVAILABLE:
             self.cache_manager = QuestionCacheManager()
         else:
             self.cache_manager = None
-        
+
         # Define specialized question generation templates for different dimensions
         self.dimension_prompts = {
             "alignment_relationship_control": """
@@ -62,8 +64,7 @@ Requirements:
 - Questions should be specific to the video content
 - Format as a JSON list of strings
 """,
-            
-             "alignment_event_control": """
+            "alignment_event_control": """
 You are an expert in story analysis and plot understanding.
 Analyze the following video content and generate 10 specific yes/no questions that evaluate the story event, character actions, and narrative progression in chronological order.
 
@@ -90,7 +91,7 @@ Requirements:
 - Raise questions about the landscape and scene content of the video caption in time order
 - Format as a JSON list of strings.
 """,
-            "alignment_motion_control":"""
+            "alignment_motion_control": """
 You are an expert in motion analysis and temporal motion sequence understanding.
 Analyze the following video caption and generate 10 specific yes/no questions that evaluate the temporal order and sequence of motions described in the video caption.
 
@@ -141,7 +142,6 @@ Requirements:
 - Questions should be specific to the video content
 - Format as a JSON list of strings
 """,
-            
             "physics_realism": """
 You are a scientist who designs diagnostic yes/no questions about short real‑world scenarios for physics evaluation.
 
@@ -166,7 +166,7 @@ Requirements:
 - Use present tense, neutral tone, and end each question with '(yes or no)'
 - Questions should be answerable 'yes' if the scene follows real-world physics
 - Format as a JSON list of strings
-"""
+""",
         }
 
     def generate_questions_for_dimension(self, content: str, dimension: str) -> List[str]:
@@ -176,20 +176,20 @@ Requirements:
             cached_questions = self.cache_manager.get_questions(content, dimension)
             if cached_questions:
                 return cached_questions
-        
+
         # Cache miss, generate new questions
         questions = self._generate_new_questions(content, dimension)
-        
+
         # Cache newly generated questions
         if self.cache_manager and questions:
             self.cache_manager.cache_questions(content, dimension, questions)
-        
+
         return questions
-    
+
     def _generate_new_questions(self, content: str, dimension: str) -> List[str]:
         """Generate new questions (without using cache)"""
         print(f"Generating new questions: Calling API to generate questions for dimension '{dimension}'...")
-        
+
         # Select appropriate prompt template
         if dimension.lower() in self.dimension_prompts:
             prompt_template = self.dimension_prompts[dimension.lower()]
@@ -204,16 +204,16 @@ Requirements:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an assistant that only outputs valid JSON format. Return the questions as a JSON array of strings."
+                        "content": "You are an assistant that only outputs valid JSON format. Return the questions as a JSON array of strings.",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.1,
             )
 
             content_response = response.choices[0].message.content
             content_response = content_response.strip().lstrip("```json").rstrip("```").strip()
-            
+
             # Try to parse JSON
             try:
                 questions = json.loads(content_response)
@@ -227,20 +227,19 @@ Requirements:
                 print(f"JSON decode error: {e}")
                 print(f"Raw content: {content_response}")
                 return []
-                
+
         except Exception as e:
             print(f"API call failed: {e}")
             return []
 
-
     def process_json_file(self, json_file_path: str, dimension: str) -> bool:
         """Process JSON file, check and generate missing questions"""
         try:
-            with open(json_file_path, 'r', encoding='utf-8') as f:
+            with open(json_file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             modified = False
-            
+
             # Process data
             if isinstance(data, list):
                 # VBench format JSON array
@@ -248,7 +247,7 @@ Requirements:
                     if self._needs_questions(item):
                         questions = self._generate_questions_for_item(item, dimension)
                         if questions:
-                            item['auxiliary_info'] = questions
+                            item["auxiliary_info"] = questions
                             modified = True
                             print(f"Generated {len(questions)} questions for video")
                         else:
@@ -260,52 +259,52 @@ Requirements:
                     if self._needs_questions(item):
                         questions = self._generate_questions_for_item(item, dimension)
                         if questions:
-                            item['auxiliary_info'] = questions
+                            item["auxiliary_info"] = questions
                             modified = True
                             print(f"Generated {len(questions)} questions for {key}")
                         else:
                             print(f"Question generation failed, skipping this item")
                             return False
-            
+
             # Save file if modified
             if modified:
-                with open(json_file_path, 'w', encoding='utf-8') as f:
+                with open(json_file_path, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2, ensure_ascii=False)
                 print(f"File updated: {json_file_path}")
                 return True
             else:
                 print("JSON file already has sufficient questions, no need to generate")
                 return False
-                
+
         except Exception as e:
             print(f"Error processing JSON file: {e}")
             return False
 
     def _needs_questions(self, item: Dict[str, Any]) -> bool:
         """Check if item needs question generation"""
-        auxiliary_info = item.get('auxiliary_info', [])
+        auxiliary_info = item.get("auxiliary_info", [])
         return not auxiliary_info or len(auxiliary_info) == 0
 
     def _generate_questions_for_item(self, item: Dict[str, Any], dimension: str) -> List[str]:
         """Generate questions for a single item"""
         # Try to extract content from item for question generation
         content = ""
-        #breakpoint()
+        # breakpoint()
         # Try different content fields
-        if 'prompt_en' in item:
-            content = item['prompt_en']
-        elif 'prompt' in item:
-            content = item['prompt']
-        elif 'caption' in item:
-            content = item['caption']
-        elif 'description' in item:
-            content = item['description']
+        if "prompt_en" in item:
+            content = item["prompt_en"]
+        elif "prompt" in item:
+            content = item["prompt"]
+        elif "caption" in item:
+            content = item["caption"]
+        elif "description" in item:
+            content = item["description"]
         else:
             # If no text content, use video path
-            video_list = item.get('video_list', [])
+            video_list = item.get("video_list", [])
             if video_list:
                 content = f"Video file: {video_list[0] if isinstance(video_list, list) else video_list}"
-        #breakpoint()
+        # breakpoint()
         if content:
             # Try to generate questions
             questions = self.generate_questions_for_dimension(content, dimension)
@@ -325,16 +324,14 @@ def main():
     parser.add_argument("--dimension", required=True, help="Evaluation dimension")
     parser.add_argument("--api_base_url", help="OpenAI API base URL")
     parser.add_argument("--api_key", help="OpenAI API key")
-    parser.add_argument("--migrate_cache", action="store_true", 
-                       help="Migrate existing questions to cache system")
-    parser.add_argument("--cache_stats", action="store_true",
-                       help="Display cache statistics")
-    
+    parser.add_argument("--migrate_cache", action="store_true", help="Migrate existing questions to cache system")
+    parser.add_argument("--cache_stats", action="store_true", help="Display cache statistics")
+
     args = parser.parse_args()
-    
+
     # Create question generator
     generator = AdaptiveQAGenerator(args.api_base_url, args.api_key)
-    
+
     # Handle cache-related operations
     if args.cache_stats and generator.cache_manager:
         stats = generator.cache_manager.get_cache_stats(args.dimension)
@@ -343,15 +340,15 @@ def main():
         print(f"  - Cached questions: {stats['total_cached_questions']}")
         print(f"  - Cache file: {stats['cache_file']}")
         return
-    
+
     if args.migrate_cache and generator.cache_manager:
         migrated = generator.cache_manager.migrate_existing_questions(args.json_file, args.dimension)
         print(f"Migration complete: {migrated} questions migrated to cache")
         return
-    
+
     # Process JSON file
     success = generator.process_json_file(args.json_file, args.dimension)
-    
+
     if success:
         print("Question generation complete!")
     else:

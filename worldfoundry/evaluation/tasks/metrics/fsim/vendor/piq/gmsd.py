@@ -8,6 +8,7 @@ Reference:
     http://www.cse.ust.hk/~psander/docs/gradsim.pdf
 
 """
+
 import torch
 from typing import Optional, Union
 
@@ -18,8 +19,13 @@ from piq.utils import _validate_input, _reduce
 from piq.functional import similarity_map, gradient_map, prewitt_filter, rgb2yiq
 
 
-def gmsd(x: torch.Tensor, y: torch.Tensor, reduction: str = 'mean',
-         data_range: Union[int, float] = 1., t: float = 170 / (255. ** 2)) -> torch.Tensor:
+def gmsd(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    reduction: str = "mean",
+    data_range: Union[int, float] = 1.0,
+    t: float = 170 / (255.0**2),
+) -> torch.Tensor:
     r"""Compute Gradient Magnitude Similarity Deviation.
 
     Supports greyscale and colour images with RGB channel order.
@@ -62,8 +68,7 @@ def gmsd(x: torch.Tensor, y: torch.Tensor, reduction: str = 'mean',
     return _reduce(score, reduction)
 
 
-def _gmsd(x: torch.Tensor, y: torch.Tensor,
-          t: float = 170 / (255. ** 2), alpha: float = 0.0) -> torch.Tensor:
+def _gmsd(x: torch.Tensor, y: torch.Tensor, t: float = 170 / (255.0**2), alpha: float = 0.0) -> torch.Tensor:
     r"""Compute Gradient Magnitude Similarity Deviation
     Supports greyscale images in [0, 1] range.
 
@@ -118,8 +123,9 @@ class GMSDLoss(_Loss):
 
     """
 
-    def __init__(self, reduction: str = 'mean', data_range: Union[int, float] = 1.,
-                 t: float = 170 / (255. ** 2)) -> None:
+    def __init__(
+        self, reduction: str = "mean", data_range: Union[int, float] = 1.0, t: float = 170 / (255.0**2)
+    ) -> None:
         super().__init__()
 
         # Generic loss parameters.
@@ -143,10 +149,19 @@ class GMSDLoss(_Loss):
         return gmsd(x=x, y=y, reduction=self.reduction, data_range=self.data_range, t=self.t)
 
 
-def multi_scale_gmsd(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float] = 1., reduction: str = 'mean',
-                     scale_weights: Optional[torch.Tensor] = None,
-                     chromatic: bool = False, alpha: float = 0.5, beta1: float = 0.01, beta2: float = 0.32,
-                     beta3: float = 15., t: float = 170) -> torch.Tensor:
+def multi_scale_gmsd(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    data_range: Union[int, float] = 1.0,
+    reduction: str = "mean",
+    scale_weights: Optional[torch.Tensor] = None,
+    chromatic: bool = False,
+    alpha: float = 0.5,
+    beta1: float = 0.01,
+    beta2: float = 0.32,
+    beta3: float = 15.0,
+    t: float = 170,
+) -> torch.Tensor:
     r"""Computation of Multi scale GMSD.
 
     Supports greyscale and colour images with RGB channel order.
@@ -189,10 +204,10 @@ def multi_scale_gmsd(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, fl
 
     # Check that input is big enough
     num_scales = scale_weights.size(0)
-    min_size = 2 ** num_scales + 1
+    min_size = 2**num_scales + 1
 
     if x.size(-1) < min_size or x.size(-2) < min_size:
-        raise ValueError(f'Invalid size of the input images, expected at least {min_size}x{min_size}.')
+        raise ValueError(f"Invalid size of the input images, expected at least {min_size}x{min_size}.")
 
     num_channels = x.size(1)
     if num_channels == 3:
@@ -202,7 +217,6 @@ def multi_scale_gmsd(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, fl
     ms_gmds = []
     for scale in range(num_scales):
         if scale > 0:
-
             # Average by 2x2 filter and downsample
             up_pad = 0
             down_pad = max(x.shape[2] % 2, x.shape[3] % 2)
@@ -231,7 +245,7 @@ def multi_scale_gmsd(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, fl
         y_iq = y[:, 1:]
 
         rmse_iq = torch.sqrt(torch.mean((x_iq - y_iq) ** 2, dim=[2, 3]))
-        rmse_chrome = torch.sqrt(torch.sum(rmse_iq ** 2, dim=1))
+        rmse_chrome = torch.sqrt(torch.sum(rmse_iq**2, dim=1))
         gamma = 2 / (1 + beta2 * torch.exp(-beta3 * ms_gmds_val)) - 1
 
         score = gamma * ms_gmds_val + (1 - gamma) * beta1 * rmse_chrome
@@ -268,10 +282,18 @@ class MultiScaleGMSDLoss(_Loss):
         http://www.cse.ust.hk/~psander/docs/gradsim.pdf
     """
 
-    def __init__(self, reduction: str = 'mean', data_range: Union[int, float] = 1.,
-                 scale_weights: Optional[torch.Tensor] = None,
-                 chromatic: bool = False, alpha: float = 0.5, beta1: float = 0.01, beta2: float = 0.32,
-                 beta3: float = 15., t: float = 170) -> None:
+    def __init__(
+        self,
+        reduction: str = "mean",
+        data_range: Union[int, float] = 1.0,
+        scale_weights: Optional[torch.Tensor] = None,
+        chromatic: bool = False,
+        alpha: float = 0.5,
+        beta1: float = 0.01,
+        beta2: float = 0.32,
+        beta3: float = 15.0,
+        t: float = 170,
+    ) -> None:
         super().__init__()
 
         # Generic loss parameters.
@@ -304,6 +326,16 @@ class MultiScaleGMSDLoss(_Loss):
         Returns:
             Value of MS-GMSD loss to be minimized in [0, 1] range.
         """
-        return multi_scale_gmsd(x=x, y=y, data_range=self.data_range,
-                                reduction=self.reduction, chromatic=self.chromatic, alpha=self.alpha, beta1=self.beta1,
-                                beta2=self.beta2, beta3=self.beta3, scale_weights=self.scale_weights, t=self.t)
+        return multi_scale_gmsd(
+            x=x,
+            y=y,
+            data_range=self.data_range,
+            reduction=self.reduction,
+            chromatic=self.chromatic,
+            alpha=self.alpha,
+            beta1=self.beta1,
+            beta2=self.beta2,
+            beta3=self.beta3,
+            scale_weights=self.scale_weights,
+            t=self.t,
+        )

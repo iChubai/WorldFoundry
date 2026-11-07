@@ -33,9 +33,7 @@ class LocalScriptRunner(WorldModelRunner):
         super().__init__(name, config)
         repo_path_str = config.get("repo_path", "")
         if not repo_path_str:
-            raise ValueError(
-                f"[{name}] 'repo_path' is required in the model config."
-            )
+            raise ValueError(f"[{name}] 'repo_path' is required in the model config.")
         self.repo_path = Path(repo_path_str).expanduser().resolve()
         self.script: str = config.get("script", "run.sh")
         self.extra_args: List[str] = list(config.get("extra_args") or [])
@@ -77,7 +75,8 @@ class LocalScriptRunner(WorldModelRunner):
             cmd.append(f"--master_port={master_port}")
         cmd += [
             str(script_path),
-            "--tasks_json", tasks_json_path,
+            "--tasks_json",
+            tasks_json_path,
         ] + self.daemon_args
         return cmd
 
@@ -97,9 +96,12 @@ class LocalScriptRunner(WorldModelRunner):
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         cmd = [
-            "bash", str(script_path),
-            "--prompt", prompt,
-            "--output", str(output_path),
+            "bash",
+            str(script_path),
+            "--prompt",
+            prompt,
+            "--output",
+            str(output_path),
         ]
         if init_frame and init_frame.exists():
             cmd += ["--init_frame", str(init_frame)]
@@ -124,15 +126,11 @@ class LocalScriptRunner(WorldModelRunner):
                 print(result.stderr, end="")
 
         if result.returncode != 0:
-            print(
-                f"[{self.name}] Script exited {result.returncode} for task {task_id}"
-            )
+            print(f"[{self.name}] Script exited {result.returncode} for task {task_id}")
             return False
 
         if not output_path.exists():
-            print(
-                f"[{self.name}] Script exited 0 but output not found: {output_path}"
-            )
+            print(f"[{self.name}] Script exited 0 but output not found: {output_path}")
             return False
 
         return True

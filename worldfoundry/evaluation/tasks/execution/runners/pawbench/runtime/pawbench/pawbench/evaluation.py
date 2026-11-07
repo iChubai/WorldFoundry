@@ -198,9 +198,7 @@ def _build_sample(
 def _source_identity(path: Path) -> SourceImageIdentity:
     if path.is_file():
         return SourceImageIdentity(attached=True, uri=path.resolve().as_uri())
-    return SourceImageIdentity(
-        attached=False, absent_reason="source_image_missing_in_local_package"
-    )
+    return SourceImageIdentity(attached=False, absent_reason="source_image_missing_in_local_package")
 
 
 def _judge_samples(samples: list[JudgmentSample], provider: ProviderConfig) -> list[dict[str, Any]]:
@@ -245,18 +243,14 @@ def _prepare_output(
         except (OSError, json.JSONDecodeError) as exc:
             raise ValueError(f"invalid PAWBench run metadata: {paths['run']}") from exc
         if existing.get("fingerprint") != run["fingerprint"]:
-            raise ValueError(
-                "output_dir belongs to a different benchmark, model, or VLM configuration"
-            )
+            raise ValueError("output_dir belongs to a different benchmark, model, or VLM configuration")
     else:
         _atomic_write_json(paths["run"], run)
     paths["checkpoint"].touch(exist_ok=True)
     return paths
 
 
-def _run_record(
-    benchmark_root: Path, model_or_lane: str, provider: ProviderConfig
-) -> dict[str, Any]:
+def _run_record(benchmark_root: Path, model_or_lane: str, provider: ProviderConfig) -> dict[str, Any]:
     benchmark_digest = _benchmark_digest(benchmark_root)
     evaluator_digest = _evaluator_digest()
     provider_record = {
@@ -316,9 +310,7 @@ def _benchmark_digest(root: Path) -> str:
 def _evaluator_digest() -> str:
     root = Path(__file__).resolve().parent
     digest = hashlib.sha256()
-    files = sorted(
-        path for path in root.rglob("*") if path.is_file() and path.suffix in {".py", ".yaml"}
-    )
+    files = sorted(path for path in root.rglob("*") if path.is_file() and path.suffix in {".py", ".yaml"})
     for path in files:
         relative = str(path.relative_to(root))
         digest.update(relative.encode("utf-8") + b"\0" + path.read_bytes() + b"\0")
@@ -350,9 +342,7 @@ def _video_fingerprint(video: Mapping[str, Any] | None) -> str:
             "sample_id": str(video["sample_id"]),
             "path": str(path),
         }
-    return hashlib.sha256(
-        json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
 def _load_checkpoints(
@@ -425,9 +415,7 @@ def _write_outputs(
 ) -> dict[str, str] | None:
     if output is None:
         return None
-    rows_text = "".join(
-        json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in rows
-    )
+    rows_text = "".join(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in rows)
     _atomic_write_text(output["rows"], rows_text)
     _atomic_write_json(output["metrics"], metrics)
     return {
@@ -455,11 +443,7 @@ def _read_benchmark(root: Path, model_or_lane: str) -> tuple[dict[str, Any], dic
     try:
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
         scene_table = root / str(manifest["scene_table"])
-        scenes = [
-            json.loads(line)
-            for line in scene_table.read_text(encoding="utf-8").splitlines()
-            if line
-        ]
+        scenes = [json.loads(line) for line in scene_table.read_text(encoding="utf-8").splitlines() if line]
     except (KeyError, OSError, json.JSONDecodeError) as exc:
         raise ValueError("invalid local PAWBench package") from exc
     if manifest.get("schema_version") != "pawbench.benchmark_inputs/v1" or len(scenes) != 50:
@@ -537,11 +521,7 @@ def _index_videos(
             video.get("sample_id"),
             video.get("video_path"),
         )
-        if (
-            not isinstance(scene_id, str)
-            or not isinstance(repeat, int)
-            or (scene_id, repeat) not in expected
-        ):
+        if not isinstance(scene_id, str) or not isinstance(repeat, int) or (scene_id, repeat) not in expected:
             blockers.append("unexpected_video_item")
             continue
         slot = (scene_id, repeat)
@@ -549,11 +529,7 @@ def _index_videos(
             supplied[slot] = {"sample_id": sample_id, "error": "duplicate_video_item"}
             blockers.append(f"duplicate_video_item:{scene_id}:{repeat}")
             continue
-        if (
-            not isinstance(sample_id, str)
-            or not sample_id
-            or not isinstance(video_path, (str, Path))
-        ):
+        if not isinstance(sample_id, str) or not sample_id or not isinstance(video_path, (str, Path)):
             supplied[slot] = {"sample_id": sample_id, "error": "malformed_video_item"}
             blockers.append(f"malformed_video_item:{scene_id}:{repeat}")
             continue

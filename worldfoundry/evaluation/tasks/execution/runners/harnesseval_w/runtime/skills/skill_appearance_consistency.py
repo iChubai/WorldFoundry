@@ -124,13 +124,9 @@ def _backend_identity(backend: SkillBackendIdentity) -> dict[str, str]:
     }
     missing = [name for name, value in identity.items() if not value]
     if missing:
-        raise ValueError(
-            f"appearance consistency backend identity missing: {', '.join(missing)}"
-        )
+        raise ValueError(f"appearance consistency backend identity missing: {', '.join(missing)}")
     if str(backend.execution_mode).strip() != "local":
-        raise ValueError(
-            "appearance consistency backend execution_mode must be local"
-        )
+        raise ValueError("appearance consistency backend execution_mode must be local")
     return identity
 
 

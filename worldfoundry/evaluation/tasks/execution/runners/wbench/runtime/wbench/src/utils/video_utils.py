@@ -1,4 +1,5 @@
 """Video frame loading utilities."""
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -9,7 +10,7 @@ def load_video_frames(
     video_path: str,
     num_frames: int = 16,
     target_size: Optional[Tuple[int, int]] = None,
-    sample_fps: Optional[float] = None
+    sample_fps: Optional[float] = None,
 ) -> List[Image.Image]:
     """
     Load frames from a video file.

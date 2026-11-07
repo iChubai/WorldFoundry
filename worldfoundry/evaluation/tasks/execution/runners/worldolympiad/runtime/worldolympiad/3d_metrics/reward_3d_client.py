@@ -8,12 +8,7 @@ from typing import Any
 
 
 def reward_3d_server_url() -> str | None:
-    raw = (
-        os.getenv("REWARD_3D_SERVER_URL")
-        or os.getenv("DA3_SERVER_URL")
-        or os.getenv("REWARD_3D_URL")
-        or ""
-    ).strip()
+    raw = (os.getenv("REWARD_3D_SERVER_URL") or os.getenv("DA3_SERVER_URL") or os.getenv("REWARD_3D_URL") or "").strip()
     return raw.rstrip("/") if raw else None
 
 

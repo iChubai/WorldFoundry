@@ -7,6 +7,7 @@ from typing import Any, Literal, Mapping
 
 AxisName = Literal["outcome_readout", "trustworthiness_audit"]
 
+
 @dataclass(frozen=True)
 class RowIdentity:
     sample_id: str

@@ -18,8 +18,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import cv2
 
 # Suppress gRPC fork warnings when using parallel execution
-os.environ['GRPC_VERBOSITY'] = 'ERROR'
-os.environ['GLOG_minloglevel'] = '2'
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"
 
 import google.generativeai as genai
 from PIL import Image
@@ -29,7 +29,7 @@ from openai import OpenAI
 class GeminiGPTEvaluator:
     # Class-level semaphores to limit concurrent API calls
     _gemini_semaphore = threading.Semaphore(20)  # Max 20 concurrent Gemini calls
-    _gpt_semaphore = threading.Semaphore(3)      # Max 3 concurrent GPT calls
+    _gpt_semaphore = threading.Semaphore(3)  # Max 3 concurrent GPT calls
 
     def __init__(self, gemini_api_key: Optional[str] = None, openai_api_key: Optional[str] = None):
         """Initialize evaluator with both Gemini and OpenAI API keys."""
@@ -37,9 +37,7 @@ class GeminiGPTEvaluator:
         if gemini_api_key is None:
             gemini_api_key = os.environ.get("GOOGLE_API_KEY")
             if not gemini_api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         genai.configure(api_key=gemini_api_key)
         self.gemini_model = genai.GenerativeModel("gemini-3-pro-preview")
@@ -48,9 +46,7 @@ class GeminiGPTEvaluator:
         if openai_api_key is None:
             openai_api_key = os.environ.get("OPENAI_API_KEY")
             if not openai_api_key:
-                raise ValueError(
-                    "OPENAI_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("OPENAI_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         self.openai_client = OpenAI(api_key=openai_api_key)
         self.gpt_model = "gpt-5.2"  # GPT-5.2 with frame extraction
@@ -61,7 +57,7 @@ class GeminiGPTEvaluator:
     def _encode_image(self, image_path: str) -> str:
         """Encode image to base64 for OpenAI API."""
         with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+            return base64.b64encode(image_file.read()).decode("utf-8")
 
     def _extract_frames(self, video_path: str, frame_interval: int = 5) -> List[str]:
         """
@@ -102,9 +98,7 @@ class GeminiGPTEvaluator:
 
         return frame_paths
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
         """
         First call: Gemini predicts expected process.
 
@@ -298,7 +292,7 @@ EXPLANATION: [Your detailed explanation]"""
             "gpt_response": gpt_response,
             "gpt_verdict": gpt_verdict,
             "gpt_time": gpt_time,
-            "consensus_verdict": consensus_verdict
+            "consensus_verdict": consensus_verdict,
         }, consensus_verdict
 
     def _verify_with_gemini(self, video_path: str, prompt: str) -> Tuple[bool, str, float]:
@@ -349,22 +343,24 @@ EXPLANATION: [Your detailed explanation]"""
                     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
                     # Build message content with all frames
-                    content = [{"type": "text", "text": f"{prompt}\n\nYou are given a sequence of frames from the video (every 5th frame). Watch the progression carefully."}]
+                    content = [
+                        {
+                            "type": "text",
+                            "text": f"{prompt}\n\nYou are given a sequence of frames from the video (every 5th frame). Watch the progression carefully.",
+                        }
+                    ]
 
                     for frame_path in frame_paths:
                         base64_frame = self._encode_image(frame_path)
-                        content.append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_frame}"
-                            }
-                        })
+                        content.append(
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_frame}"}}
+                        )
 
                     # Call GPT with all frames
                     response = client.chat.completions.create(
                         model=self.gpt_model,
                         messages=[{"role": "user", "content": content}],
-                        max_completion_tokens=1000
+                        max_completion_tokens=1000,
                     )
 
                     response_text = response.choices[0].message.content
@@ -438,7 +434,7 @@ EXPLANATION: [Your detailed explanation]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process (Gemini only)

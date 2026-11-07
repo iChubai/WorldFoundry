@@ -21,6 +21,7 @@ Output:
         conf.npy         (N, H, W) float32
         meta.json        metadata
 """
+
 import argparse
 import json
 import logging
@@ -74,20 +75,19 @@ def extract_frames(video_path, fps=3):
         if ret:
             frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     cap.release()
-    return np.stack(frames), indices[:len(frames)]
+    return np.stack(frames), indices[: len(frames)]
 
 
 def run_da3(model, frames_rgb, tmpdir):
     paths = []
     for i, frame in enumerate(frames_rgb):
-        p = os.path.join(tmpdir, f'{i:04d}.png')
+        p = os.path.join(tmpdir, f"{i:04d}.png")
         cv2.imwrite(p, cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
         paths.append(p)
     return model.inference(paths)
 
 
-def process_single(video_path, output_dir, model_dir=None,
-                   fps=3, device="cuda:0"):
+def process_single(video_path, output_dir, model_dir=None, fps=3, device="cuda:0"):
     t0 = time.time()
 
     frames, indices = extract_frames(video_path, fps=fps)
@@ -106,7 +106,7 @@ def process_single(video_path, output_dir, model_dir=None,
     np.save(os.path.join(output_dir, "depth.npy"), pred.depth)
     np.save(os.path.join(output_dir, "extrinsics.npy"), pred.extrinsics)
     np.save(os.path.join(output_dir, "intrinsics.npy"), pred.intrinsics)
-    if hasattr(pred, 'conf') and pred.conf is not None:
+    if hasattr(pred, "conf") and pred.conf is not None:
         np.save(os.path.join(output_dir, "conf.npy"), pred.conf)
 
     ext = pred.extrinsics
@@ -120,8 +120,7 @@ def process_single(video_path, output_dir, model_dir=None,
     np.save(os.path.join(output_dir, "c2w.npy"), c2w)
 
     elapsed = time.time() - t0
-    meta = {"num_frames": len(frames), "depth_shape": list(pred.depth.shape),
-            "elapsed": round(elapsed, 1)}
+    meta = {"num_frames": len(frames), "depth_shape": list(pred.depth.shape), "elapsed": round(elapsed, 1)}
     with open(os.path.join(output_dir, "meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
 
@@ -133,13 +132,14 @@ def _gpu_worker(args_tuple):
     gpu_id, tasks, model_dir, fps = args_tuple
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     import torch
+
     torch.set_num_threads(4)
     device = "cuda:0"
     tag = f"[GPU{gpu_id}]"
     n_total = len(tasks)
     ok, fail = 0, 0
     for i, (video_path, output_dir) in enumerate(tasks):
-        print(f"  {tag} [{i+1}/{n_total}] {os.path.basename(video_path)}", flush=True)
+        print(f"  {tag} [{i + 1}/{n_total}] {os.path.basename(video_path)}", flush=True)
         try:
             process_single(video_path, output_dir, model_dir, fps, device)
             ok += 1
@@ -188,8 +188,7 @@ def main():
         for i, t in enumerate(tasks):
             chunks[i % len(gpu_ids)].append(t)
 
-        worker_args = [(gpu_ids[i], chunks[i], args.model_dir, args.fps)
-                       for i in range(len(gpu_ids)) if chunks[i]]
+        worker_args = [(gpu_ids[i], chunks[i], args.model_dir, args.fps) for i in range(len(gpu_ids)) if chunks[i]]
 
         ctx = mp.get_context("spawn")
         with ctx.Pool(len(worker_args)) as pool:

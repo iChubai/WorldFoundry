@@ -191,9 +191,9 @@ def farthest_distance(points):
             while True:
                 next_k = (k + 1) % n
 
-                cross = (pts[j, 0] - pts[i, 0]) * (pts[next_k, 1] - pts[k, 1]) - (
-                    pts[j, 1] - pts[i, 1]
-                ) * (pts[next_k, 0] - pts[k, 0])
+                cross = (pts[j, 0] - pts[i, 0]) * (pts[next_k, 1] - pts[k, 1]) - (pts[j, 1] - pts[i, 1]) * (
+                    pts[next_k, 0] - pts[k, 0]
+                )
                 if cross < 0:
                     k = next_k
                 else:

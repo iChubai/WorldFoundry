@@ -62,7 +62,9 @@ def ensure_work_dir(work_dir: str | Path | None) -> Path:
     return out
 
 
-def model_target_trajectory(trajectory: CameraTrajectory, model_name: str, num_frames: int) -> tuple[CameraTrajectory, object]:
+def model_target_trajectory(
+    trajectory: CameraTrajectory, model_name: str, num_frames: int
+) -> tuple[CameraTrajectory, object]:
     amp = resolve_model_amplitude(model_name)
     target = trajectory.resample(int(num_frames))
     c2w = target.to_c2w()

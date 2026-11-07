@@ -1,4 +1,5 @@
 """HPSv3 human preference score — Qwen2-VL-7B based preference model."""
+
 import os
 from typing import Dict, Any, List
 

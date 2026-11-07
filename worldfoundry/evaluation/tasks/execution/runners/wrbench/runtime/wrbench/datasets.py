@@ -38,8 +38,7 @@ def _package_data_dir() -> Path:
     if standalone.is_dir():
         return standalone
     raise FileNotFoundError(
-        "WRBench assets were not found under WorldFoundry benchmark assets; "
-        "set WORLDFOUNDRY_WRBENCH_ASSETS_ROOT"
+        "WRBench assets were not found under WorldFoundry benchmark assets; set WORLDFOUNDRY_WRBENCH_ASSETS_ROOT"
     )
 
 
@@ -183,11 +182,7 @@ def _build_t2v_layout_anchor_prompt(
     tail = event_tails.get(variant_id)
     if tail is None:
         raise ValueError(f"{variant_id!r} missing T2V event tail")
-    return (
-        f"In {scene}, {subject}; {interactor}. "
-        f"The layout includes {open_surface}. {anchor_text}. "
-        f"{tail}"
-    )
+    return f"In {scene}, {subject}; {interactor}. The layout includes {open_surface}. {anchor_text}. {tail}"
 
 
 def resolve_variant_prompt(

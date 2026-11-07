@@ -14,14 +14,20 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.paths imp
     config_path as grounding_dino_config_path,
 )
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.utils import clean_state_dict, get_phrases_from_posmap
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util.utils import (
+    clean_state_dict,
+    get_phrases_from_posmap,
+)
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import BaseMetric
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    BaseMetric,
+)
 
 
 # Load spaCy's small English model
 # make sure to run: python -m spacy download en_core_web_sm
 import spacy
+
 nlp = spacy.load("en_core_web_sm")
 
 
@@ -38,6 +44,7 @@ def load_image(image_path):
     )
     image, _ = transform(image_pil, None)  # 3, h, w
     return image_pil, image
+
 
 def load_model(model_config_path, model_checkpoint_path, bert_base_uncased_path, device):
     args = SLConfig.fromfile(model_config_path)
@@ -84,17 +91,19 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
 
     return boxes_filt, pred_phrases
 
+
 def standardize_string(s):
     # Use a regular expression to remove spaces around special symbols
     # Adjust the characters in the square brackets as needed
-    s = re.sub(r"\s*([_\-*/+])\s*", r"\1", s)  
+    s = re.sub(r"\s*([_\-*/+])\s*", r"\1", s)
     return s
+
 
 def extract_noun_adjective(phrase):
     doc = nlp(phrase)
     adjectives = []
     nouns = []
-    
+
     for token in doc:
         if token.pos_ in ["ADJ", "JJ", "JJR", "JJS"]:  # Adjectives and related tags
             adjectives.append(token.text.lower())
@@ -105,9 +114,10 @@ def extract_noun_adjective(phrase):
 
     return adjectives, nouns
 
+
 def get_match_point(result, prompt_list):
     matched_prompts = set()
-    
+
     if "##" in result:
         result = result.replace("##", "")
         for prompt in prompt_list:
@@ -118,7 +128,7 @@ def get_match_point(result, prompt_list):
         result_adjectives, result_nouns = extract_noun_adjective(result)
         for prompt in prompt_list:
             prompt_adjectives, prompt_nouns = extract_noun_adjective(prompt)
-            
+
             # Count matches for nouns
             noun_matches = sum(1 for noun in result_nouns if noun in prompt_nouns)
             # If no nouns match, skip this prompt
@@ -129,17 +139,18 @@ def get_match_point(result, prompt_list):
             return 1, matched_prompts
 
     return 0, matched_prompts
-    
+
+
 class ObjectDetectionMetric(BaseMetric):
     """
     Object Detection Metric
     Return: detection success rate
     Range: [0, 1] higher the better
     """
-    
+
     def __init__(self) -> None:
         super().__init__()
-        
+
         args = {
             "config_file": str(grounding_dino_config_path()),
             "grounded_checkpoint": str(grounding_dino_checkpoint_path()),
@@ -154,16 +165,11 @@ class ObjectDetectionMetric(BaseMetric):
         }
         args = argparse.Namespace(**args)
 
-        # load model        
+        # load model
         self._model = load_model(args.config_file, args.grounded_checkpoint, args.bert_base_uncased_path, args.device)
         self._args = args
-        
-    def _compute_scores(
-        self, 
-        rendered_images: List[str], 
-        text_prompt: str
-    ) -> float:
-        
+
+    def _compute_scores(self, rendered_images: List[str], text_prompt: str) -> float:
         prompt_list = text_prompt.split(", ")
         prompt_list = prompt_list[1:]
         prompt_list = [p.lower() for p in prompt_list]
@@ -171,51 +177,51 @@ class ObjectDetectionMetric(BaseMetric):
         for prompt in prompt_list:
             if prompt_string != "":
                 prompt_string += ", "
-            prompt_string += prompt 
+            prompt_string += prompt
         text_prompt = prompt_string
-        
+
         scores = []
         for image_path in rendered_images:
             image_pil, image = load_image(image_path)
-            
+
             # run model
             boxes_filt, pred_phrases = get_grounding_output(
-                self._model, image, text_prompt, self._args.box_threshold, self._args.text_threshold, device=self._args.device
+                self._model,
+                image,
+                text_prompt,
+                self._args.box_threshold,
+                self._args.text_threshold,
+                device=self._args.device,
             )
             print(pred_phrases)
-            
+
             count = 0
             result_cache = set()
             remaining_prompts = set(prompt_list)
-            
+
             # First pass: exact matches
             for phrase in pred_phrases:
-                result = re.sub(r'\(.*?\)', '', phrase).strip().lower()
-                result = standardize_string(result) 
+                result = re.sub(r"\(.*?\)", "", phrase).strip().lower()
+                result = standardize_string(result)
                 if result in result_cache or result not in remaining_prompts:
                     continue
                 result_cache.add(result)
                 if result in remaining_prompts:
                     count += 1
                     remaining_prompts.remove(result)
-            
+
             # Second pass: partial matches
             for phrase in pred_phrases:
-                result = re.sub(r'\(.*?\)', '', phrase).strip().lower()
+                result = re.sub(r"\(.*?\)", "", phrase).strip().lower()
                 result = standardize_string(result)
                 if result not in result_cache:
                     point, matched_prompts = get_match_point(result, list(remaining_prompts))
-                    count += point    
-                    remaining_prompts -= matched_prompts            
-            
+                    count += point
+                    remaining_prompts -= matched_prompts
+
             rate = min(count / len(prompt_list), 1)
 
             scores.append(rate)
 
         score = sum(scores) / len(scores)
         return score
-
-        
-        
-        
-        

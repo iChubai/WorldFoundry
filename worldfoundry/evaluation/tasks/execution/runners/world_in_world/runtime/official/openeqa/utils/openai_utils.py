@@ -65,7 +65,6 @@ def call_openai_api(
     max_tokens: int = 32,
     temperature: float = 0.2,
     verbose: bool = False,
-
     base_url: Optional[str] = None,
 ):
     if base_url is None:

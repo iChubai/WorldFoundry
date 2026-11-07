@@ -84,7 +84,9 @@ def get_frame_indices(num_frames, vlen, sample="rand", fix_start=None, input_fps
     return frame_indices
 
 
-def load_video(video_path, square_resize=None, data_transform=None, num_frames=None, return_tensor=True, width=None, height=None):
+def load_video(
+    video_path, square_resize=None, data_transform=None, num_frames=None, return_tensor=True, width=None, height=None
+):
     file_list = sorted(os.listdir(video_path))
     img_files = [f for f in file_list if f.endswith((".jpg", ".jpeg", ".png"))]
 

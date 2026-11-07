@@ -7,16 +7,20 @@ import torch
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import get_model2type, layout_info, type2model
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.gpu_utils import get_torch_device
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
+    get_model2type,
+    layout_info,
+    type2model,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.gpu_utils import (
+    get_torch_device,
+)
 
 
 def convert_extrinsics_blender(camera):
     transform_matrix_w2c_pt3d = camera.RT.to(torch.float32)
 
-    pt3d_to_blender = torch.diag(
-        torch.tensor([-1.0, 1.0, -1.0, 1.0], device=camera.device)
-    )
+    pt3d_to_blender = torch.diag(torch.tensor([-1.0, 1.0, -1.0, 1.0], device=camera.device))
     transform_matrix_w2c_blender = pt3d_to_blender @ transform_matrix_w2c_pt3d
 
     extrinsics = transform_matrix_w2c_blender
@@ -44,9 +48,7 @@ class CameraExtrinsics(object):
 
     def update_RT(self):
         RT = torch.cat((self.R, self.T), dim=1)
-        last_row = torch.tensor(
-            [[0, 0, 0, 1]], device=self.R.device, dtype=self.R.dtype
-        )
+        last_row = torch.tensor([[0, 0, 0, 1]], device=self.R.device, dtype=self.R.dtype)
 
         self.RT = torch.cat((RT, last_row), dim=0)
         return self.RT
@@ -345,9 +347,7 @@ class CameraGen(object):
         # transform all cameras so that the first camera is at the origin
         self.transform_all_cam_to_current_cam(index=0)
         self.generate_interp_cameras()
-        cameras_list, cameras_interp_list = self.save_cameras(
-            save_path, verbose=verbose
-        )
+        cameras_list, cameras_interp_list = self.save_cameras(save_path, verbose=verbose)
         self.clear()
 
         return np.array(cameras_list), np.array(cameras_interp_list)

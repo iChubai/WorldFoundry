@@ -21,9 +21,7 @@ import cv2
 import numpy as np
 
 
-def generate_mask(
-    in_path: str, out_video_path: str, is_real: bool, threshold_value: int = 10
-) -> None:
+def generate_mask(in_path: str, out_video_path: str, is_real: bool, threshold_value: int = 10) -> None:
     """
     Processes a video to generate a binary mask for ROI detection.
 
@@ -78,9 +76,7 @@ def generate_mask(
         name_parts[-1] = replace_last_part
         out_video_path = "/".join(name_parts)
 
-        out = cv2.VideoWriter(
-            out_video_path, fourcc, fps, (width, height), isColor=False
-        )
+        out = cv2.VideoWriter(out_video_path, fourcc, fps, (width, height), isColor=False)
 
         # Read and initialize background model with first real frame
         ret, prev_frame = cap.read()
@@ -113,9 +109,7 @@ def generate_mask(
 
             frame_diff = cv2.absdiff(gray_frame, avg_gray_frame)
 
-            _, binary_frame = cv2.threshold(
-                frame_diff, threshold_value, 255, cv2.THRESH_BINARY
-            )
+            _, binary_frame = cv2.threshold(frame_diff, threshold_value, 255, cv2.THRESH_BINARY)
 
             binary_frame = cv2.morphologyEx(binary_frame, cv2.MORPH_OPEN, kernel)
             binary_frame = cv2.morphologyEx(binary_frame, cv2.MORPH_CLOSE, kernel)
@@ -165,9 +159,7 @@ def generate_binary_masks(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Process videos for binary segmentation."
-    )
+    parser = argparse.ArgumentParser(description="Process videos for binary segmentation.")
     parser.add_argument(
         "--input_parent_directory",
         type=str,

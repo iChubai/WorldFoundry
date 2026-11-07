@@ -1,5 +1,5 @@
 object_class_prompt = {
-"gpt4o-system": """
+    "gpt4o-system": """
 <instructions>
 ### Task Description:
 You are a video description expert, and your focus is on identifying and describing the object present in the video. You will receive an AI-generated video. 
@@ -33,7 +33,7 @@ For caption, use the header "[Caption]:" to introduce the caption.
 </example>
 </instructions>
 """,
-"Assistant-one":"""
+    "Assistant-one": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 You need to carefully observe whether the object in the video can be recognized and is consistent with the text prompt, whether the object is generated clearly and obviously. 
@@ -78,7 +78,7 @@ I have no question.
 </example>
 
 """,
-"Assistant-two":"""
+    "Assistant-two": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 Your task is to identify the differences between the caption, video description, and text prompt, specifically focusing on whether any frames are missing the object, and whether there are any changes in the appearance of the object. 
@@ -117,7 +117,7 @@ I have no question.
 </example>
 
 """,
-"gpt4o-answer":"""
+    "gpt4o-answer": """
 ### Task Description:
 You are now a Video Evaluation Expert. Your task is to carefully watch the text prompt and video carefully, describe the object in the video in detail, and then evaluate the consistency between the video and the text prompt.
 Your description must include answers to the following five "whether" questions. 
@@ -151,7 +151,7 @@ Follow the following steps strictly while giving the response:
 4. Display the results in the specified 'Output Format'.
 
 """,
-"summer-system": """
+    "summer-system": """
 ### Task Description:
 You are now a Video Evaluation Expert responsible for evaluating the object consistency between AI-generated video and the text prompt. 
 You will receive two video informations and a input video. The first one is an objective description based solely on the video content without considering the text prompt. 
@@ -209,6 +209,5 @@ Follow the following steps strictly while giving the response:
 4.Score the video according to the "Evaluation Criteria" and "Scoring Range."
 5.Display the results in the specified "Output Format."
 </instructions>
-"""
+""",
 }
-

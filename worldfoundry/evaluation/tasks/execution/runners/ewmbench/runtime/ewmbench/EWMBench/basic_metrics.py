@@ -12,26 +12,27 @@ def cal_ssim(gt_img, pd_img):
 
 
 def compute_basic_metrics(gt_path, pd_path, metric_names=["psnr", "ssim"]):
-
-    metric_funcs = dict({
-        "psnr": peak_signal_noise_ratio,
-        "ssim": cal_ssim,
-    })
+    metric_funcs = dict(
+        {
+            "psnr": peak_signal_noise_ratio,
+            "ssim": cal_ssim,
+        }
+    )
     res = dict()
     for _ in metric_names:
-        assert(_ in metric_funcs)
+        assert _ in metric_funcs
         res.update({_: dict()})
-    
+
     for task_id in sorted(os.listdir(pd_path)):
         task_path = os.path.join(pd_path, task_id)
-        
+
         for _ in metric_names:
             res[_][task_id] = {}
 
         for episode_id in tqdm(sorted(os.listdir(task_path))):
-            if episode_id.endswith(('.png', '.json')): 
+            if episode_id.endswith((".png", ".json")):
                 continue
-            
+
             for _ in metric_names:
                 res[_][task_id][episode_id] = {}
 
@@ -45,7 +46,7 @@ def compute_basic_metrics(gt_path, pd_path, metric_names=["psnr", "ssim"]):
                 pd_image_list += glob.glob(os.path.join(task_path, episode_id, gid, "video", "frame_*.jpg"))
                 pd_image_list.sort()
                 try:
-                    assert(len(pd_image_list) == n_frames)
+                    assert len(pd_image_list) == n_frames
                 except:
                     print(len(pd_image_list), n_frames)
                 cur_metrics = dict()
@@ -59,6 +60,6 @@ def compute_basic_metrics(gt_path, pd_path, metric_names=["psnr", "ssim"]):
                             cur_metrics.update({_: 0.0})
                         cur_metrics[_] += metric_funcs[_](gt_img, pd_img)
                 for _ in metric_names:
-                    res[_][task_id][episode_id].update({gid: cur_metrics[_]/n_frames})
-    
+                    res[_][task_id][episode_id].update({gid: cur_metrics[_] / n_frames})
+
     return res

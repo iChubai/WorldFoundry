@@ -2,8 +2,12 @@ import json
 
 from tqdm import tqdm
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloader import DataLoader
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import create_cameras
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloader import (
+    DataLoader,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
+    create_cameras,
+)
 
 
 class dataloader_threedgen(DataLoader):
@@ -16,9 +20,7 @@ class dataloader_threedgen(DataLoader):
             data = json.load(f)
 
         for image_data in tqdm(data):
-            data_point, cameras, cameras_interp, ignore = self.load_data(
-                image_data, regenerate
-            )
+            data_point, cameras, cameras_interp, ignore = self.load_data(image_data, regenerate)
             if ignore:
                 continue
 

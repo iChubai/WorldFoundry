@@ -7,6 +7,9 @@ copy; ``runners/mirabench/runtime/mirabench/evaluation/pytorch_i3d.py`` is a
 thin re-export shim kept for official-protocol import compatibility.
 """
 
+from collections.abc import Sequence
+from typing import Any, cast
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -15,18 +18,19 @@ import torch.nn.functional as F
 
 class MaxPool3dSamePadding(nn.MaxPool3d):
     def compute_pad(self, dim, s):
-        if s % self.stride[dim] == 0:
-            return max(self.kernel_size[dim] - self.stride[dim], 0)
+        if s % cast(Sequence[int], self.stride)[dim] == 0:
+            return max(cast(Sequence[int], self.kernel_size)[dim] - cast(Sequence[int], self.stride)[dim], 0)
         else:
-            return max(self.kernel_size[dim] - (s % self.stride[dim]), 0)
+            return max(cast(Sequence[int], self.kernel_size)[dim] - (s % cast(Sequence[int], self.stride)[dim]), 0)
 
-    def forward(self, x):
+    # The pooling interface retains its public x keyword.
+    def forward(self, x):  # ty: ignore[invalid-method-override]
         # compute 'same' padding
         (batch, channel, t, h, w) = x.size()
         # print t,h,w
-        out_t = np.ceil(float(t) / float(self.stride[0]))
-        out_h = np.ceil(float(h) / float(self.stride[1]))
-        out_w = np.ceil(float(w) / float(self.stride[2]))
+        _out_t = np.ceil(float(t) / float(cast(Sequence[int], self.stride)[0]))
+        _out_h = np.ceil(float(h) / float(cast(Sequence[int], self.stride)[1]))
+        _out_w = np.ceil(float(w) / float(cast(Sequence[int], self.stride)[2]))
         # print out_t, out_h, out_w
         pad_t = self.compute_pad(0, t)
         pad_h = self.compute_pad(1, h)
@@ -44,7 +48,7 @@ class MaxPool3dSamePadding(nn.MaxPool3d):
         # print x.size()
         # print pad
         x = F.pad(x, pad)
-        return super(MaxPool3dSamePadding, self).forward(x)
+        return super().forward(x)
 
 
 class Unit3D(nn.Module):
@@ -61,7 +65,7 @@ class Unit3D(nn.Module):
         name="unit_3d",
     ):
         """Initializes Unit3D module."""
-        super(Unit3D, self).__init__()
+        super().__init__()
 
         self._output_channels = output_channels
         self._kernel_shape = kernel_shape
@@ -94,9 +98,9 @@ class Unit3D(nn.Module):
         # compute 'same' padding
         (batch, channel, t, h, w) = x.size()
         # print t,h,w
-        out_t = np.ceil(float(t) / float(self._stride[0]))
-        out_h = np.ceil(float(h) / float(self._stride[1]))
-        out_w = np.ceil(float(w) / float(self._stride[2]))
+        _out_t = np.ceil(float(t) / float(self._stride[0]))
+        _out_h = np.ceil(float(h) / float(self._stride[1]))
+        _out_w = np.ceil(float(w) / float(self._stride[2]))
         # print out_t, out_h, out_w
         pad_t = self.compute_pad(0, t)
         pad_h = self.compute_pad(1, h)
@@ -126,7 +130,7 @@ class Unit3D(nn.Module):
 
 class InceptionModule(nn.Module):
     def __init__(self, in_channels, out_channels, name):
-        super(InceptionModule, self).__init__()
+        super().__init__()
 
         self.b0 = Unit3D(
             in_channels=in_channels,
@@ -161,7 +165,7 @@ class InceptionModule(nn.Module):
             kernel_shape=[3, 3, 3],
             name=name + "/Branch_2/Conv3d_0b_3x3",
         )
-        self.b3a = MaxPool3dSamePadding(kernel_size=[3, 3, 3], stride=(1, 1, 1), padding=0)
+        self.b3a = MaxPool3dSamePadding(kernel_size=cast(Any, [3, 3, 3]), stride=(1, 1, 1), padding=0)
         self.b3b = Unit3D(
             in_channels=in_channels,
             output_channels=out_channels[5],
@@ -252,9 +256,9 @@ class InceptionI3d(nn.Module):
         """
 
         if final_endpoint not in self.VALID_ENDPOINTS:
-            raise ValueError("Unknown final endpoint %s" % final_endpoint)
+            raise ValueError(f"Unknown final endpoint {final_endpoint}")
 
-        super(InceptionI3d, self).__init__()
+        super().__init__()
         self._num_classes = num_classes
         self._spatial_squeeze = spatial_squeeze
         self._final_endpoint = final_endpoint
@@ -262,7 +266,7 @@ class InceptionI3d(nn.Module):
         self.is_coinrun = is_coinrun
 
         if self._final_endpoint not in self.VALID_ENDPOINTS:
-            raise ValueError("Unknown final endpoint %s" % self._final_endpoint)
+            raise ValueError(f"Unknown final endpoint {self._final_endpoint}")
 
         self.end_points = {}
         end_point = "Conv3d_1a_7x7"
@@ -278,7 +282,7 @@ class InceptionI3d(nn.Module):
             return
 
         end_point = "MaxPool3d_2a_3x3"
-        self.end_points[end_point] = MaxPool3dSamePadding(kernel_size=[1, 3, 3], stride=(1, 2, 2), padding=0)
+        self.end_points[end_point] = MaxPool3dSamePadding(kernel_size=cast(Any, [1, 3, 3]), stride=(1, 2, 2), padding=0)
         if self._final_endpoint == end_point:
             return
 
@@ -297,7 +301,7 @@ class InceptionI3d(nn.Module):
             return
 
         end_point = "MaxPool3d_3a_3x3"
-        self.end_points[end_point] = MaxPool3dSamePadding(kernel_size=[1, 3, 3], stride=(1, 2, 2), padding=0)
+        self.end_points[end_point] = MaxPool3dSamePadding(kernel_size=cast(Any, [1, 3, 3]), stride=(1, 2, 2), padding=0)
         if self._final_endpoint == end_point:
             return
 
@@ -313,7 +317,7 @@ class InceptionI3d(nn.Module):
 
         end_point = "MaxPool3d_4a_3x3"
         self.end_points[end_point] = MaxPool3dSamePadding(
-            kernel_size=[1 if is_coinrun else 3, 3, 3], stride=(1 if is_coinrun else 2, 2, 2), padding=0
+            kernel_size=cast(Any, [1 if is_coinrun else 3, 3, 3]), stride=(1 if is_coinrun else 2, 2, 2), padding=0
         )
         if self._final_endpoint == end_point:
             return
@@ -347,7 +351,7 @@ class InceptionI3d(nn.Module):
 
         end_point = "MaxPool3d_5a_2x2"
         self.end_points[end_point] = MaxPool3dSamePadding(
-            kernel_size=[2, 2, 2], stride=(1 if is_coinrun else 2, 2, 2), padding=0
+            kernel_size=cast(Any, [2, 2, 2]), stride=(1 if is_coinrun else 2, 2, 2), padding=0
         )
         if self._final_endpoint == end_point:
             return
@@ -367,7 +371,7 @@ class InceptionI3d(nn.Module):
             return
 
         end_point = "Logits"
-        self.avg_pool = nn.AvgPool3d(kernel_size=[1, 8, 8] if is_coinrun else [2, 7, 7], stride=(1, 1, 1))
+        self.avg_pool = nn.AvgPool3d(kernel_size=cast(Any, [1, 8, 8] if is_coinrun else [2, 7, 7]), stride=(1, 1, 1))
         self.dropout = nn.Dropout(dropout_keep_prob)
         self.logits = Unit3D(
             in_channels=384 + 384 + 128 + 128,
@@ -396,15 +400,15 @@ class InceptionI3d(nn.Module):
         )
 
     def build(self):
-        for k in self.end_points.keys():
+        for k in self.end_points:
             self.add_module(k, self.end_points[k])
 
     def forward(self, x):
         for end_point in self.VALID_ENDPOINTS:
             if end_point in self.end_points:
-                x = self._modules[end_point](x)  # use _modules to work with dataparallel
+                x = cast(nn.Module, self._modules[end_point])(x)  # use _modules to work with dataparallel
 
-        x = self.logits(self.dropout(self.avg_pool(x)))
+        x = cast(Unit3D, self.logits)(self.dropout(self.avg_pool(x)))
         if self._spatial_squeeze:
             logits = x.squeeze(3).squeeze(3)
         logits = logits.mean(dim=2)
@@ -414,20 +418,20 @@ class InceptionI3d(nn.Module):
     def extract_features(self, x):
         for end_point in self.VALID_ENDPOINTS:
             if end_point in self.end_points:
-                x = self._modules[end_point](x)
+                x = cast(nn.Module, self._modules[end_point])(x)
         return self.avg_pool(x)
 
     def extract_pre_pool_features(self, x):
         for end_point in self.VALID_ENDPOINTS:
             if end_point in self.end_points:
-                x = self._modules[end_point](x)
+                x = cast(nn.Module, self._modules[end_point])(x)
         return x
 
     def extract_features_multiscale(self, x):
         xs = []
         for end_point in self.VALID_ENDPOINTS:
             if end_point in self.end_points:
-                x = self._modules[end_point](x)
+                x = cast(nn.Module, self._modules[end_point])(x)
                 if end_point in self.FEAT_ENDPOINTS:
                     xs.append(x)
         return xs

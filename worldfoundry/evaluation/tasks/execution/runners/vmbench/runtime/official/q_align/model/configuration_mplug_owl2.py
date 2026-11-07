@@ -2,13 +2,10 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-import copy
 import os
-from typing import Union
+from typing import ClassVar
 
 from transformers.configuration_utils import PretrainedConfig
-from transformers.models.auto import CONFIG_MAPPING
-from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
@@ -97,7 +94,7 @@ class LlamaConfig(PretrainedConfig):
     ```"""
 
     model_type = "llama"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list[str]] = ["past_key_values"]
 
     def __init__(
         self,

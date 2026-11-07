@@ -2,7 +2,6 @@ import base64
 from io import BytesIO
 
 import torch
-from icecream import ic
 from PIL import Image
 from q_align.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
 from transformers import StoppingCriteria
@@ -27,10 +26,7 @@ def expand2square(pil_img, background_color):
 
 
 def process_images(images, image_processor, model_cfg=None):
-    if model_cfg is not None:
-        image_aspect_ratio = getattr(model_cfg, "image_aspect_ratio", None)
-    else:
-        image_aspect_ratio = "resize"
+    image_aspect_ratio = getattr(model_cfg, "image_aspect_ratio", None) if model_cfg is not None else "resize"
     new_images = []
     if image_aspect_ratio == "pad":
         for image in images:
@@ -106,7 +102,4 @@ class KeywordsStoppingCriteria(StoppingCriteria):
             if (output_ids[0, -keyword_id.shape[0] :] == keyword_id).all():
                 return True
         outputs = self.tokenizer.batch_decode(output_ids[:, -offset:], skip_special_tokens=True)[0]
-        for keyword in self.keywords:
-            if keyword in outputs:
-                return True
-        return False
+        return any(keyword in outputs for keyword in self.keywords)

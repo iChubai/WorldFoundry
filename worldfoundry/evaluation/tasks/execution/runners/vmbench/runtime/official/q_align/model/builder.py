@@ -14,12 +14,10 @@
 
 
 import os
-import shutil
 import warnings
 
 import torch
-from icecream import ic
-from q_align.model import *
+from q_align.model import *  # noqa: F403 - Preserve the upstream model namespace exports.
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from transformers.models.clip.image_processing_clip import CLIPImageProcessor
 
@@ -48,13 +46,14 @@ def load_pretrained_model(
         # Load LLaVA model
         if "lora" in model_name.lower() and model_base is None:
             warnings.warn(
-                "There is `lora` in model name but no `model_base` is provided. If you are loading a LoRA model, please provide the `model_base` argument. Detailed instruction: https://github.com/haotian-liu/LLaVA#launch-a-model-worker-lora-weights-unmerged."
+                "There is `lora` in model name but no `model_base` is provided. If you are loading a LoRA model, please provide the `model_base` argument. Detailed instruction: https://github.com/haotian-liu/LLaVA#launch-a-model-worker-lora-weights-unmerged.",
+                stacklevel=1,
             )
         if "lora" in model_name.lower() and model_base is not None:
             lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
             print("Loading mPLUG-Owl2 from base model...")
-            model = MPLUGOwl2LlamaForCausalLM.from_pretrained(
+            model = MPLUGOwl2LlamaForCausalLM.from_pretrained(  # noqa: F405 - Public q_align.model export.
                 model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, **kwargs
             )
             token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
@@ -102,12 +101,14 @@ def load_pretrained_model(
             print("Loading mPLUG-Owl2 from base model...")
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
             cfg_pretrained = AutoConfig.from_pretrained(model_path)
-            model = MPLUGOwl2LlamaForCausalLM.from_pretrained(
+            model = MPLUGOwl2LlamaForCausalLM.from_pretrained(  # noqa: F405 - Public q_align.model export.
                 model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs
             )
         else:
             tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
-            model = MPLUGOwl2LlamaForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+            model = MPLUGOwl2LlamaForCausalLM.from_pretrained(  # noqa: F405 - Public q_align.model export.
+                model_path, low_cpu_mem_usage=True, **kwargs
+            )
     else:
         # Load language model
         if model_base is not None:
@@ -123,7 +124,6 @@ def load_pretrained_model(
             print("Convert to FP16...")
             model.to(torch.float16)
         else:
-            use_fast = False
             tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
             model = AutoModelForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
 
@@ -132,9 +132,6 @@ def load_pretrained_model(
     # vision_tower.to(device=device, dtype=torch.float16)
     image_processor = CLIPImageProcessor.from_pretrained(model_path)
 
-    if hasattr(model.config, "max_sequence_length"):
-        context_len = model.config.max_sequence_length
-    else:
-        context_len = 2048
+    context_len = model.config.max_sequence_length if hasattr(model.config, "max_sequence_length") else 2048
 
     return tokenizer, model, image_processor, context_len

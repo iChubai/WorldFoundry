@@ -1,10 +1,10 @@
-import copy
+# Llama and optional FlashAttention helpers follow the upstream wildcard export contract.
+# ruff: noqa: F405
 import math
 import os
 import sys
 import warnings
 from functools import partial
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -14,8 +14,8 @@ from torch import nn
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, dir_path)
 
-import transformers
-from transformers.models.llama.modeling_llama import *
+import transformers  # noqa: E402 - Retain standalone path setup before model providers.
+from transformers.models.llama.modeling_llama import *  # noqa: E402, F403 - Preserve upstream and optional FlashAttention exports.
 
 
 def _get_unpad_data(attention_mask):
@@ -30,17 +30,17 @@ def _get_unpad_data(attention_mask):
     )
 
 
-from transformers.configuration_utils import PretrainedConfig
-from transformers.modeling_attn_mask_utils import _prepare_4d_causal_attention_mask_for_sdpa
-from transformers.utils import logging
+from transformers.modeling_attn_mask_utils import (  # noqa: E402 - Retain standalone path setup.
+    _prepare_4d_causal_attention_mask_for_sdpa,
+)
 
-from .configuration_mplug_owl2 import LlamaConfig
-from .modeling_attn_mask_utils import _prepare_4d_causal_attention_mask
+from .configuration_mplug_owl2 import LlamaConfig  # noqa: E402 - Retain standalone path setup.
+from .modeling_attn_mask_utils import _prepare_4d_causal_attention_mask  # noqa: E402 - Retain standalone path setup.
 
 
 class MultiwayNetwork(nn.Module):
     def __init__(self, module_provider, num_multiway=2):
-        super(MultiwayNetwork, self).__init__()
+        super().__init__()
 
         self.multiway = torch.nn.ModuleList([module_provider() for _ in range(num_multiway)])
 
@@ -247,7 +247,8 @@ class LlamaFlashAttention2(LlamaAttention):
         # LlamaFlashAttention2 attention does not support output_attentions
         if "padding_mask" in kwargs:
             warnings.warn(
-                "Passing `padding_mask` is deprecated and will be removed in v4.37. Please make sure use `attention_mask` instead.`"
+                "Passing `padding_mask` is deprecated and will be removed in v4.37. Please make sure use `attention_mask` instead.`",
+                stacklevel=1,
             )
 
             # overwrite attention_mask with padding_mask
@@ -346,7 +347,7 @@ class LlamaFlashAttention2(LlamaAttention):
             softmax_scale (`float`, *optional*):
                 The scaling of QK^T before applying softmax. Default to 1 / sqrt(head_dim)
         """
-        if not self._flash_attn_uses_top_left_mask:
+        if not self._flash_attn_uses_top_left_mask:  # noqa: SIM108 - Keep the ROCm causal-mask contract explicit.
             causal = self.is_causal
         else:
             # TODO: Remove the `query_length != 1` check once Flash Attention for RoCm is bumped to 2.1. For details, please see the comment in LlamaFlashAttention2 __init__.
@@ -480,11 +481,10 @@ class LlamaSdpaAttention(LlamaAttention):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        if attention_mask is not None:
-            if attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
-                raise ValueError(
-                    f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
-                )
+        if attention_mask is not None and attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
+            raise ValueError(
+                f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
+            )
 
         # SDPA with memory-efficient backend is currently (torch==2.1.2) bugged with non-contiguous inputs with custom attn_mask,
         # Reference: https://github.com/pytorch/pytorch/issues/112577.
@@ -662,12 +662,11 @@ def model_forward(
 
     hidden_states = inputs_embeds
 
-    if self.gradient_checkpointing and self.training:
-        if use_cache:
-            logger.warning_once(
-                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-            )
-            use_cache = False
+    if self.gradient_checkpointing and self.training and use_cache:
+        logger.warning_once(
+            "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+        )
+        use_cache = False
 
     # decoder layers
     all_hidden_states = () if output_hidden_states else None
@@ -685,7 +684,7 @@ def model_forward(
             def create_custom_forward(module):
                 def custom_forward(*inputs):
                     # None for past_key_value
-                    return module(*inputs, past_key_value, output_attentions)
+                    return module(*inputs, past_key_value, output_attentions)  # noqa: B023 - Preserve the upstream late-bound checkpoint cache.
 
                 return custom_forward
 
@@ -815,8 +814,8 @@ def causal_model_forward(
         loss = loss_fct(shift_logits, shift_labels)
 
     if not return_dict:
-        output = (logits,) + outputs[1:]
-        return (loss,) + output if loss is not None else output
+        output = (logits, *outputs[1:])
+        return (loss, *output) if loss is not None else output
 
     return CausalLMOutputWithPast(
         loss=loss,

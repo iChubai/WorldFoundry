@@ -1,4 +1,3 @@
-import datetime
 import logging
 import logging.handlers
 import os
@@ -48,7 +47,7 @@ def build_logger(logger_name, logger_filename):
         handler = logging.handlers.TimedRotatingFileHandler(filename, when="D", utc=True)
         handler.setFormatter(formatter)
 
-        for name, item in logging.root.manager.loggerDict.items():
+        for _name, item in logging.root.manager.loggerDict.items():
             if isinstance(item, logging.Logger):
                 item.addHandler(handler)
 

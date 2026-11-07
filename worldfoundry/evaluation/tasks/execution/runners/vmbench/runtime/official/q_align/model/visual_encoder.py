@@ -1,15 +1,13 @@
 import math
-from typing import Any, Optional, Tuple, Union
+from typing import ClassVar
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint
-from icecream import ic
 from transformers.modeling_outputs import (
     BaseModelOutput,
-    BaseModelOutputWithPastAndCrossAttentions,
     BaseModelOutputWithPooling,
 )
 from transformers.modeling_utils import PreTrainedModel
@@ -170,57 +168,25 @@ class MplugOwlVisionAttention(nn.Module):
             mixed_qkv[1],
             mixed_qkv[2],
         )
-        # if self.config.use_flash_attn and flash_attn_func is not None:
-        if False:
-            # [b*sq, np, hn]
-            query_states = query_states.permute(0, 2, 1, 3).contiguous()
-            query_states = query_states.view(query_states.size(0) * query_states.size(1), query_states.size(2), -1)
+        # Take the dot product between "query" and "key" to get the raw attention scores.
+        attention_scores = torch.matmul(query_states, key_states.transpose(-1, -2))
 
-            key_states = key_states.permute(0, 2, 1, 3).contiguous()
-            key_states = key_states.view(key_states.size(0) * key_states.size(1), key_states.size(2), -1)
+        attention_scores = attention_scores * self.scale
 
-            value_states = value_states.permute(0, 2, 1, 3).contiguous()
-            value_states = value_states.view(value_states.size(0) * value_states.size(1), value_states.size(2), -1)
+        # Normalize the attention scores to probabilities.
+        attention_probs = torch.softmax(attention_scores, dim=-1)
 
-            cu_seqlens = torch.arange(
-                0, (bsz + 1) * seq_len, step=seq_len, dtype=torch.int32, device=query_states.device
-            )
+        # This is actually dropping out entire tokens to attend to, which might
+        # seem a bit unusual, but is taken from the original Transformer paper.
+        attention_probs = self.dropout(attention_probs)
 
-            context_layer = flash_attn_func(
-                query_states,
-                key_states,
-                value_states,
-                cu_seqlens,
-                cu_seqlens,
-                seq_len,
-                seq_len,
-                self.dropout if self.training else 0.0,
-                softmax_scale=self.scale,
-                causal=False,
-                return_attn_probs=False,
-            )
-            # [b*sq, np, hn] => [b, sq, np, hn]
-            context_layer = context_layer.view(bsz, seq_len, context_layer.size(1), context_layer.size(2))
-        else:
-            # Take the dot product between "query" and "key" to get the raw attention scores.
-            attention_scores = torch.matmul(query_states, key_states.transpose(-1, -2))
+        # Mask heads if we want to
+        if head_mask is not None:
+            attention_probs = attention_probs * head_mask
 
-            attention_scores = attention_scores * self.scale
+        context_layer = torch.matmul(attention_probs, value_states).permute(0, 2, 1, 3)
 
-            # Normalize the attention scores to probabilities.
-            attention_probs = torch.softmax(attention_scores, dim=-1)
-
-            # This is actually dropping out entire tokens to attend to, which might
-            # seem a bit unusual, but is taken from the original Transformer paper.
-            attention_probs = self.dropout(attention_probs)
-
-            # Mask heads if we want to
-            if head_mask is not None:
-                attention_probs = attention_probs * head_mask
-
-            context_layer = torch.matmul(attention_probs, value_states).permute(0, 2, 1, 3)
-
-        new_context_layer_shape = context_layer.size()[:-2] + (self.hidden_size,)
+        new_context_layer_shape = (*context_layer.size()[:-2], self.hidden_size)
         context_layer = context_layer.reshape(new_context_layer_shape)
 
         output = self.dense(context_layer)
@@ -352,9 +318,9 @@ class MplugOwlVisionEncoder(nn.Module):
         all_attentions = () if output_attentions else None
 
         hidden_states = inputs_embeds
-        for idx, encoder_layer in enumerate(self.layers):
+        for _idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
-                encoder_states = encoder_states + (hidden_states,)
+                encoder_states = (*encoder_states, hidden_states)
             if self.gradient_checkpointing and self.training:
 
                 def create_custom_forward(module):
@@ -378,10 +344,10 @@ class MplugOwlVisionEncoder(nn.Module):
             hidden_states = layer_outputs[0]
 
             if output_attentions:
-                all_attentions = all_attentions + (layer_outputs[1],)
+                all_attentions = (*all_attentions, layer_outputs[1])
 
         if output_hidden_states:
-            encoder_states = encoder_states + (hidden_states,)
+            encoder_states = (*encoder_states, hidden_states)
 
         if not return_dict:
             return tuple(v for v in [hidden_states, encoder_states, all_attentions] if v is not None)
@@ -390,7 +356,7 @@ class MplugOwlVisionEncoder(nn.Module):
 
 class MplugOwlVisionModel(PreTrainedModel):
     main_input_name = "pixel_values"
-    _no_split_modules = ["MplugOwlVisionEncoderLayer"]
+    _no_split_modules: ClassVar[list[str]] = ["MplugOwlVisionEncoderLayer"]
 
     def __init__(self, config):
         super().__init__(config)
@@ -439,7 +405,7 @@ class MplugOwlVisionModel(PreTrainedModel):
         pooled_output = self.post_layernorm(pooled_output)
 
         if not return_dict:
-            return (last_hidden_state, pooled_output) + encoder_outputs[1:]
+            return (last_hidden_state, pooled_output, *encoder_outputs[1:])
 
         return BaseModelOutputWithPooling(
             last_hidden_state=last_hidden_state,
@@ -477,8 +443,7 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
         self.config = config
         if config.hidden_size % config.num_attention_heads != 0:
             raise ValueError(
-                "The hidden size (%d) is not a multiple of the number of attention heads (%d)"
-                % (config.hidden_size, config.num_attention_heads)
+                f"The hidden size ({config.hidden_size:d}) is not a multiple of the number of attention heads ({config.num_attention_heads:d})"
             )
 
         self.num_attention_heads = config.num_attention_heads
@@ -525,7 +490,7 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
         return self.attention_map
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        new_x_shape = (*x.size()[:-1], self.num_attention_heads, self.attention_head_size)
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -582,12 +547,12 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
         context_layer = torch.matmul(attention_probs_dropped, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+        new_context_layer_shape = (*context_layer.size()[:-2], self.all_head_size)
         context_layer = context_layer.view(*new_context_layer_shape)
 
         outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
 
-        outputs = outputs + (past_key_value,)
+        outputs = (*outputs, past_key_value)
         return outputs
 
 
@@ -658,7 +623,7 @@ class MplugOwlVisualAbstractorAttention(nn.Module):
         )
         attention_output = self.output(self_outputs[0], hidden_states)
         # add attentions if we output them
-        outputs = (attention_output,) + self_outputs[1:]
+        outputs = (attention_output, *self_outputs[1:])
         return outputs
 
 
@@ -724,7 +689,7 @@ class MplugOwlVisualAbstractorEncoder(nn.Module):
         for i in range(self.config.num_hidden_layers):
             layer_module = self.layers[i]
             if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = (*all_hidden_states, hidden_states)
 
             layer_head_mask = head_mask[i] if head_mask is not None else None
             past_key_value = past_key_values[i] if past_key_values is not None else None
@@ -733,7 +698,7 @@ class MplugOwlVisualAbstractorEncoder(nn.Module):
 
                 def create_custom_forward(module):
                     def custom_forward(*inputs):
-                        return module(*inputs, past_key_value, output_attentions)
+                        return module(*inputs, past_key_value, output_attentions)  # noqa: B023 - Preserve the upstream late-bound checkpoint cache.
 
                     return custom_forward
 
@@ -763,7 +728,7 @@ class MplugOwlVisualAbstractorEncoder(nn.Module):
 
 
 class MplugOwlVisualAbstractorModel(PreTrainedModel):
-    _no_split_modules = ["MplugOwlVisualAbstractorLayer"]
+    _no_split_modules: ClassVar[list[str]] = ["MplugOwlVisualAbstractorLayer"]
 
     def __init__(self, config, language_hidden_size):
         super().__init__(config)
@@ -876,7 +841,7 @@ class MplugOwlVisualAbstractorModel(PreTrainedModel):
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if encoder_hidden_states is not None:
-            if type(encoder_hidden_states) == list:
+            if type(encoder_hidden_states) is list:
                 encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states[0].size()
             else:
                 (
@@ -886,7 +851,7 @@ class MplugOwlVisualAbstractorModel(PreTrainedModel):
                 ) = encoder_hidden_states.size()
             encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
 
-            if type(encoder_attention_mask) == list:
+            if type(encoder_attention_mask) is list:
                 encoder_extended_attention_mask = [self.invert_attention_mask(mask) for mask in encoder_attention_mask]
             elif encoder_attention_mask is None:
                 encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)

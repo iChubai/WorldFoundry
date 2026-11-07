@@ -12,12 +12,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import copy
 import os
 import sys
 import tempfile
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -26,25 +24,31 @@ from torch.nn import CrossEntropyLoss
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, dir_path)
 
-from transformers import (
+from transformers import (  # noqa: E402 - Retain standalone path setup before model providers.
     AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     CLIPImageProcessor,
-    LlamaConfig,
     LlamaForCausalLM,
     LlamaModel,
 )
-from transformers.modeling_outputs import CausalLMOutputWithPast
+from transformers.modeling_outputs import CausalLMOutputWithPast  # noqa: E402 - Retain standalone path setup.
 
-from .configuration_mplug_owl2 import MPLUGOwl2Config, MplugOwlVisionConfig, MplugOwlVisualAbstractorConfig
-from .modeling_llama2 import replace_llama_modality_adaptive
-from .visual_encoder import MplugOwlVisionModel, MplugOwlVisualAbstractorModel
+from .configuration_mplug_owl2 import (  # noqa: E402 - Retain standalone path setup.
+    MPLUGOwl2Config,
+    MplugOwlVisionConfig,
+    MplugOwlVisualAbstractorConfig,
+)
+from .modeling_llama2 import replace_llama_modality_adaptive  # noqa: E402 - Retain standalone path setup.
+from .visual_encoder import (  # noqa: E402 - Retain standalone path setup.
+    MplugOwlVisionModel,
+    MplugOwlVisualAbstractorModel,
+)
 
 IGNORE_INDEX = -100
 IMAGE_TOKEN_INDEX = -200
 DEFAULT_IMAGE_TOKEN = "<|image|>"
-from icecream import ic
+from icecream import ic  # noqa: E402 - Model and token initialization precede the diagnostic provider.
 
 
 def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX, return_tensors=None):
@@ -89,7 +93,7 @@ def expand2square(pil_img, background_color):
 
 class MPLUGOwl2MetaModel:
     def __init__(self, config):
-        super(MPLUGOwl2MetaModel, self).__init__(config)
+        super().__init__(config)
         self.vision_model = MplugOwlVisionModel(MplugOwlVisionConfig(**config.visual_config["visual_model"]))
         self.visual_abstractor = MplugOwlVisualAbstractorModel(
             MplugOwlVisualAbstractorConfig(**config.visual_config["visual_abstractor"]), config.hidden_size
@@ -130,7 +134,7 @@ class MPLUGOwl2MetaForCausalLM(ABC):
             return input_ids, multiway_indices, attention_mask, past_key_values, None, labels
 
         if type(images) is list or images.ndim == 5:
-            concat_images = torch.cat([image for image in images], dim=0)
+            concat_images = torch.cat(list(images), dim=0)
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)
@@ -309,7 +313,7 @@ class MPLUGOwl2LlamaModel(MPLUGOwl2MetaModel, LlamaModel):
     config_class = MPLUGOwl2Config
 
     def __init__(self, config: MPLUGOwl2Config):
-        super(MPLUGOwl2LlamaModel, self).__init__(config)
+        super().__init__(config)
 
 
 class MPLUGOwl2LlamaForCausalLM(LlamaForCausalLM, MPLUGOwl2MetaForCausalLM):
@@ -434,8 +438,8 @@ class MPLUGOwl2LlamaForCausalLM(LlamaForCausalLM, MPLUGOwl2MetaForCausalLM):
             loss = loss_fct(shift_logits, shift_labels)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits, *outputs[1:])
+            return (loss, *output) if loss is not None else output
 
         return CausalLMOutputWithPast(
             loss=loss,

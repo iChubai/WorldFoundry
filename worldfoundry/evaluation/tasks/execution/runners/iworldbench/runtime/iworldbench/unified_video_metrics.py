@@ -17,6 +17,7 @@ Usage example:
     )
 """
 
+import contextlib
 import csv
 import json
 import logging
@@ -26,7 +27,6 @@ import sys
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List, Optional
 
 import numpy as np
 
@@ -316,10 +316,8 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
                 failed_workers.append((rank, returncode))
 
         for f in tmp_files:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(f)
-            except OSError:
-                pass
 
         if failed_workers:
             details = ", ".join(f"gpu {rank}: exit {returncode}" for rank, returncode in failed_workers)

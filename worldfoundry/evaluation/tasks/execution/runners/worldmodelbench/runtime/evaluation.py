@@ -4,7 +4,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 from mmengine import dump, load
@@ -248,7 +247,7 @@ def main():
         try:
             preds, accs = results["preds"], results["accs"]
         except KeyError:
-            raise KeyError("Expected keys not found in results file")
+            raise KeyError("Expected keys not found in results file")  # noqa: B904 - Preserve the implicit context.
     else:
         printer.console.print("[bold green]Starting new evaluation...[/bold green]")
         preds = {}
@@ -265,7 +264,7 @@ def main():
             # Main task for video processing
             video_task = progress.add_task("Processing videos", total=len(validation_set))
 
-            for vid, v_i in tqdm(enumerate(validation_set), total=len(validation_set)):
+            for _vid, v_i in tqdm(enumerate(validation_set), total=len(validation_set)):
                 video_name = Path(v_i["first_frame"]).stem
                 video = evaluator._load_video(video_name)
                 if not video:
@@ -323,7 +322,7 @@ def main():
 
     # Process and display results
     printer.console.print("\n[bold]Final Evaluation Results[/bold]")
-    total_score = evaluator.process_results(preds, accs)
+    evaluator.process_results(preds, accs)
 
 
 if __name__ == "__main__":

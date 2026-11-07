@@ -72,15 +72,13 @@ class metrics_calculator:
             self.tracking_strength_model_cotracker = CoTrackerOnlinePredictor().to(self.device)
             self.tracking_strength_grid_size = 10
             self.tracking_strength_frame_interval = 1
-        if set(
-            [
-                "3D_consistency_num_pts",
-                "3D_consistency_num_inliers_F",
-                "3D_consistency_keep_ratio",
-                "3D_consistency_mean_err",
-                "3D_consistency_rmse",
-            ]
-        ) & set(metrics):
+        if {
+            "3D_consistency_num_pts",
+            "3D_consistency_num_inliers_F",
+            "3D_consistency_keep_ratio",
+            "3D_consistency_mean_err",
+            "3D_consistency_rmse",
+        } & set(metrics):
             self.consistency_3D_interval_list = [60, 50, 40, 30, 20, 10]  # default setting
             # self.consistency_3D_interval_list=[20, 10] # default setting
             self.consistency_3D_ransac_th = 3
@@ -96,15 +94,13 @@ class metrics_calculator:
             self.imaging_quality_model = MUSIQ(pretrained_model_path=imaging_quality_model_ckpt)
             self.imaging_quality_model.to(self.device)
             self.imaging_quality_model.training = False
-        if set(
-            [
-                "camera_alignment",
-                "main_object_alignment",
-                "background_alignment",
-                "style_alignment",
-                "overall_consistency",
-            ]
-        ) & set(metrics):
+        if {
+            "camera_alignment",
+            "main_object_alignment",
+            "background_alignment",
+            "style_alignment",
+            "overall_consistency",
+        } & set(metrics):
             text_video_consistency_model_viclip_ckpt = str(viclip_checkpoint_path())
             text_video_consistency_model_viclip_tokenizerp_ckpt = None
 

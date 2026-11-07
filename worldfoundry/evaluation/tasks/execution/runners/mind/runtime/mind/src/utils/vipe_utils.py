@@ -1,9 +1,7 @@
 import hashlib
 import os
 import subprocess
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from tqdm import tqdm
@@ -228,7 +226,7 @@ def extract_traj(
     video: Path,
     cache_dir: Path,
     pipeline: str = "default",
-    gt_cache_path: Path = None,
+    gt_cache_path: Path | None = None,
     expected_frames: int = 97,
     verbose_prefix: str = "",
     gpu_id: int = 0,

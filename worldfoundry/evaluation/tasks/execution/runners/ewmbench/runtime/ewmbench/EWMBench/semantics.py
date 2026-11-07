@@ -81,10 +81,7 @@ def evaluate_run(semantics_model, eval_config, dt_json, gt_json):
     for gen_id, _gen_string in zip(gen_idxs, gen_strings, strict=False):
         task_eps_trail = gen_id.split("_dataset_")[-1].split("_")
         task_id = task_eps_trail[0]
-        if len(task_eps_trail) == 3:
-            eps_id = task_eps_trail[1]
-        else:
-            eps_id = "_".join(task_eps_trail[1:-1])
+        eps_id = task_eps_trail[1] if len(task_eps_trail) == 3 else "_".join(task_eps_trail[1:-1])
 
         gt_idx = f"gt_dataset_{task_id}_{eps_id}"
         gt_string = gt_strings[gt_idxs.index(gt_idx)]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from functools import cache, lru_cache
+from functools import cache
 from typing import Any
 
 import yaml

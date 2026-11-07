@@ -4,20 +4,15 @@ Copyright (c) 2022-present NAVER Corp.
 Apache-2.0
 """
 
-import copy
 import json
 import os
-import pickle
-import random
 import re
-from typing import *
 
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-from torchvision.datasets import CocoCaptions
 
 
 class VideoDataset(Dataset):
@@ -30,7 +25,7 @@ class VideoDataset(Dataset):
 
     def __init__(
         self,
-        prompt_file: str = None,
+        prompt_file: str | None = None,
         gen_path: str = ".",
         media_size: int = 256,
         max_num_frm: int = 64,

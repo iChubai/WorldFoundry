@@ -37,7 +37,7 @@ def parse_list_of_floats(value):
                 raise ValueError("No valid floats found in the input string.")
             return parsed_floats
         except ValueError:
-            raise ValueError("Failed to parse floats from the input string.")
+            raise ValueError("Failed to parse floats from the input string.")  # noqa: B904 - Preserve the implicit context.
 
     elif isinstance(value, list):
         if all(isinstance(x, (int, float)) for x in value):
@@ -81,7 +81,7 @@ def calculate_iq_score(file_path: str) -> tuple[float, float]:
     total_sum_v1_mse = round(df["sum_v1_mse"].sum(), 4)
     total_sum_spatiotemporal_iou_v1 = round(df["sum_spatiotemporal_iou_v1"].sum(), 4)
 
-    list_length = len(df["v1_mse_perspective-left"].iloc[0]) if len(df) > 0 else 0
+    _list_length = len(df["v1_mse_perspective-left"].iloc[0]) if len(df) > 0 else 0
 
     total_sum_v1_mse = df.apply(
         lambda row: np.mean(np.concatenate([row[f"v1_mse_{view}"] for view in VIEWS])),

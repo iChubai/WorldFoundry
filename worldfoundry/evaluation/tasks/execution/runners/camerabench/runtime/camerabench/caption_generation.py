@@ -4,7 +4,7 @@ import json
 import os
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import t2v_metrics
 from tqdm import tqdm
@@ -39,7 +39,7 @@ def load_caption_data(data_path: str) -> list[dict[str, Any]]:
 
 
 def generate_captions_for_model(
-    model_name: str, checkpoint: str, data: list[dict[str, Any]], video_dir: str, sample_size: int = None
+    model_name: str, checkpoint: str, data: list[dict[str, Any]], video_dir: str, sample_size: int | None = None
 ) -> dict[str, Any]:
     """
     Generate captions using a single model.

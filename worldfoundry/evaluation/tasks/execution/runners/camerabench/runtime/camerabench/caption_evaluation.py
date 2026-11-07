@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import argparse
 import glob
+import itertools
 import json
 import os
 import string
 import time
 from collections import Counter
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import nltk
 import numpy as np
@@ -223,8 +224,8 @@ def calculate_meteor_score(reference, candidate):
         ref_unigrams = set(ref_tokens)
         cand_unigrams = set(cand_tokens)
 
-        ref_bigrams = set(zip(ref_tokens[:-1], ref_tokens[1:], strict=False)) if len(ref_tokens) > 1 else set()
-        cand_bigrams = set(zip(cand_tokens[:-1], cand_tokens[1:], strict=False)) if len(cand_tokens) > 1 else set()
+        ref_bigrams = set(itertools.pairwise(ref_tokens)) if len(ref_tokens) > 1 else set()
+        cand_bigrams = set(itertools.pairwise(cand_tokens)) if len(cand_tokens) > 1 else set()
 
         # Calculate precision and recall for unigrams
         unigram_matches = len(ref_unigrams.intersection(cand_unigrams))
@@ -343,7 +344,7 @@ def calculate_generative_match(reference, candidate, api_key=None, retries=3, de
     return 0.5  # Should never reach here but just in case
 
 
-def evaluate_caption_file(file_path: str, api_key: str = None) -> dict[str, Any]:
+def evaluate_caption_file(file_path: str, api_key: str | None = None) -> dict[str, Any]:
     """
     Evaluate captions from a single result file.
 

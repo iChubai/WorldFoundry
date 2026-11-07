@@ -106,7 +106,7 @@ def compute_scene_consistency(json_dir, submodules_list, **kwargs):
         if k.startswith("teacher"):
             k_toload = k.replace("teacher.", "")
             k_toload = k_toload.replace("backbone.", "")
-            if k_toload in ori_state_dict.keys():
+            if k_toload in ori_state_dict:
                 state_dict_toload.update({k_toload: v})
     print(dino_model.load_state_dict(state_dict_toload, strict=False))
     print("Initialize DINO success")

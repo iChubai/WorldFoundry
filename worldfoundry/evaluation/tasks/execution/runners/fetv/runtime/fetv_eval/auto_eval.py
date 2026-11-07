@@ -7,9 +7,7 @@ Apache-2.0
 import json
 import os
 import re
-from typing import *
 
-from PIL import Image
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
@@ -26,12 +24,12 @@ import time
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
-from metrics import *
+from metrics import ClipScore
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from torchmetrics.metric import Metric
-from video_dataset import *
+from video_dataset import VideoDataset
 
 
 def str2bool(v):
@@ -69,7 +67,7 @@ def pre_caption(caption, max_words=50):
     return caption
 
 
-def get_clip(eval_model: Module, device: Union[torch.device, int]) -> Tuple[Module, Module]:
+def get_clip(eval_model: Module, device: torch.device | int) -> tuple[Module, Module]:
     """Get the CLIP model
 
     Args:
@@ -92,7 +90,7 @@ def get_clip(eval_model: Module, device: Union[torch.device, int]) -> Tuple[Modu
     return clip_model, clip_prep
 
 
-def init_metric(root: str, metric: Type[Metric], eval_model: Module, limit: int, device: torch.device) -> Metric:
+def init_metric(root: str, metric: type[Metric], eval_model: Module, limit: int, device: torch.device) -> Metric:
     """Initialize a given metric class.
 
     Args:
@@ -114,7 +112,7 @@ def init_metric(root: str, metric: Type[Metric], eval_model: Module, limit: int,
 @torch.no_grad()
 def populate_metrics(
     dataloader: DataLoader,
-    metrics: List[Metric],
+    metrics: list[Metric],
     clip_model: Module,
 ) -> Tensor:
     """Populate the list of metrics using a given data loader.
@@ -129,7 +127,7 @@ def populate_metrics(
         Tensor: Labels
     """
     device = next(clip_model.parameters()).device
-    for i, (fake, caption, vid) in enumerate(tqdm(dataloader)):
+    for i, (fake, caption, _vid) in enumerate(tqdm(dataloader)):
         fake = fake.cuda(device)  # [batch_size, frame_num, 3, h, w]
         batch_size = fake.shape[0]
         fake_frame_num = fake.shape[1]
@@ -153,7 +151,7 @@ def populate_metrics(
         )  # [batch_size, frame_num, hidden_size]
 
         # metrics handle features in float64
-        for idx, m in enumerate(metrics):
+        for _idx, m in enumerate(metrics):
             m.update(None, Y_ref, F.normalize(X.mean(1), dim=-1))
 
         if (i + 1) * Y_ref.shape[0] > metrics[0].limit:
@@ -169,7 +167,8 @@ def blipscore(config_path, args):
         blip_retrieval,
     )
 
-    config = yaml.load(open(config_path), Loader=yaml.Loader)
+    with open(config_path) as config_file:
+        config = yaml.load(config_file, Loader=yaml.Loader)
 
     #### Dataset ####
     print("Creating BLIP dataset")
@@ -230,7 +229,7 @@ def compute_blipscore(model, data_loader, tokenizer, device, config, utils, use_
     print("Computing video features for evaluation...")
     video_feats = []
     video_embeds = []
-    for i, (video, _, _) in enumerate(tqdm(data_loader)):
+    for _i, (video, _, _) in enumerate(tqdm(data_loader)):
         B, N, C, W, H = video.size()
         video = video.view(-1, C, W, H)
         video = video.to(device, non_blocking=True)

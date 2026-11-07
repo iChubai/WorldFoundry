@@ -82,7 +82,7 @@ for data_tmp in single_clip1:
 multi_GPT1_score = []
 for data_tmp in multi_GPT4o1:
     score = 0
-    if "CLIP_Index" not in data_tmp["multiimage_question"].keys():
+    if "CLIP_Index" not in data_tmp["multiimage_question"]:
         if "no" in data_tmp["multiimage_question"]["GPT4o_1"]["Choice"].strip().lower():
             score += 0
         elif "yes" in data_tmp["multiimage_question"]["GPT4o_1"]["Choice"].strip().lower():
@@ -120,7 +120,7 @@ multi_llava1_score = []
 
 for data_tmp in multi_llava1:
     retrieval_question = data_tmp["multiimage_question"]
-    if "CLIP_Index" not in data_tmp["multiimage_question"].keys():
+    if "CLIP_Index" not in data_tmp["multiimage_question"]:
         score_discrete = 0
         if "no" in data_tmp["multiimage_question"]["LLava_1"].strip().lower():
             data_tmp["multiimage_question"]["LLava_1_Score"] = 0

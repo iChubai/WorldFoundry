@@ -12,17 +12,19 @@ def cal_ssim(gt_img, pd_img):
     return structural_similarity(gt_img, pd_img, channel_axis=-1)
 
 
-def compute_basic_metrics(gt_path, pd_path, metric_names=["psnr", "ssim"]):
-    metric_funcs = dict(
-        {
-            "psnr": peak_signal_noise_ratio,
-            "ssim": cal_ssim,
-        }
-    )
-    res = dict()
+def compute_basic_metrics(
+    gt_path,
+    pd_path,
+    metric_names=["psnr", "ssim"],  # noqa: B006 - Read-only default; retain the public signature.
+):
+    metric_funcs = {
+        "psnr": peak_signal_noise_ratio,
+        "ssim": cal_ssim,
+    }
+    res = {}
     for _ in metric_names:
         assert _ in metric_funcs
-        res.update({_: dict()})
+        res.update({_: {}})
 
     for task_id in sorted(os.listdir(pd_path)):
         task_path = os.path.join(pd_path, task_id)
@@ -48,9 +50,9 @@ def compute_basic_metrics(gt_path, pd_path, metric_names=["psnr", "ssim"]):
                 pd_image_list.sort()
                 try:
                     assert len(pd_image_list) == n_frames
-                except:
+                except BaseException:
                     print(len(pd_image_list), n_frames)
-                cur_metrics = dict()
+                cur_metrics = {}
                 for pd_img, gt_img in zip(pd_image_list, gt_image_list, strict=False):
                     pd_img = np.asanyarray(Image.open(pd_img))
                     gt_img = np.asanyarray(Image.open(gt_img))

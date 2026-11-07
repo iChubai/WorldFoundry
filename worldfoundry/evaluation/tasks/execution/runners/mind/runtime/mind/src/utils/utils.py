@@ -7,11 +7,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from PIL import Image, ImageSequence
+from PIL import Image
 
 # from decord import VideoReader, cpu
 from torchvision import transforms
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize
 from torchvision.transforms import functional as F
 from tqdm import tqdm
 
@@ -155,8 +155,8 @@ def expand_to_batch_dim(tensor, batch_size):
 
 
 # legacy code, preserve
-import av
-from torchvision.io import read_video
+import av  # noqa: E402 - PyAV keeps its upstream load order after OpenCV and Torchvision.
+from torchvision.io import read_video  # noqa: E402 - Legacy video loaders keep their upstream imports.
 
 
 def load_sample_video(video_path, mark_time, total_time, max_time=None) -> torch.Tensor:

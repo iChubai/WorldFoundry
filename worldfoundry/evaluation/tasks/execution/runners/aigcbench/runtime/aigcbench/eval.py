@@ -1,5 +1,4 @@
 import numpy as np
-from einops import rearrange
 from metrics.clip_score import calculate_clip_score
 from PIL import Image
 from skimage.metrics import mean_squared_error
@@ -12,18 +11,22 @@ model, preprocess = clip.load("path_to_dir/ViT-L-14.pt", device="cuda")
 
 
 # GenVideo-RefVideo SSIM
-def compute_video_video_similarity_ssim(reference_video_path, video_path, keyframes=[0, 4, 8, 12, 15]):
+def compute_video_video_similarity_ssim(
+    reference_video_path,
+    video_path,
+    keyframes=[0, 4, 8, 12, 15],  # noqa: B006 - Read-only default; retain the public signature.
+):
     global model, preprocess
 
     reference_video = load_video(reference_video_path)
     try:
         video_frames = load_video(video_path, size=(reference_video[0].shape[1], reference_video[0].shape[0]))[:16]
-    except:
+    except BaseException:
         print(video_path, " Error !!")
         return {"ssim": 0, "state": 0}
 
     all_frame_scores = 0.0
-    for idx, frames in enumerate(keyframes):
+    for _idx, frames in enumerate(keyframes):
         im1 = np.array(
             reference_video[10 + frames * 3]
         )  # In webvid, we start with the tenth frame of the video for the motion. Different fps * 3
@@ -80,18 +83,22 @@ def compute_video_text_alignment(video_path, text):
 
 
 # GenVideo-RefVideo clip (keyframes)
-def compute_video_video_similarity(reference_video_path, video_path, keyframes=[0, 4, 8, 12, 15]):
+def compute_video_video_similarity(
+    reference_video_path,
+    video_path,
+    keyframes=[0, 4, 8, 12, 15],  # noqa: B006 - Read-only default; retain the public signature.
+):
     global model, preprocess
 
     reference_video = load_video(reference_video_path)
     try:
         video_frames = load_video(video_path, size=reference_video[0].shape[:2])
-    except:
+    except BaseException:
         print(video_path, " Error !!")
         return {"clip": 0, "state": 0}
 
     all_frame_scores = 0.0
-    for idx, frames in enumerate(keyframes):
+    for _idx, frames in enumerate(keyframes):
         im1 = Image.fromarray(np.array(reference_video[10 + frames * 3]))
         im2 = Image.fromarray(np.array(video_frames[frames]))
         score = (
@@ -115,7 +122,7 @@ def compute_image_image_similarity(init_image_path, video_path):
     init_image = Image.fromarray(load_image(init_image_path))
     try:
         video_frames = load_video(video_path, size=init_image.size)  # size=(512, 904)
-    except:
+    except BaseException:
         print(video_path, " Error !!")
         return {"MSE": 0, "SSIM": 0, "state": 0}
     init_image_np = np.array(init_image)
@@ -140,7 +147,7 @@ def compute_video_image_similarity(video_path, image_path):
 
     try:
         video_frames = load_video(video_path, size=image.size)
-    except:
+    except BaseException:
         print(video_path, " Error !!")
         return {"clip_per": all_frame_scores / len(video_frames), "state": 0}
 

@@ -1,6 +1,8 @@
 import base64
+import io
 
 import cv2
+from PIL import Image
 
 
 def ext_frame(video_path, num_frames=5, scale_percent=20):
@@ -102,13 +104,6 @@ def merge_args(cfg, args, training=False):
         cfg["multi_resolution"] = False
 
     return cfg
-
-
-import base64
-import io
-
-import cv2
-from PIL import Image
 
 
 class ImageProcessor:

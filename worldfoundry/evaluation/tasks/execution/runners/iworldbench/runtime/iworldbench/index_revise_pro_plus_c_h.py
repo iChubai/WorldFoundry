@@ -1,4 +1,3 @@
-import asyncio
 import csv
 import os
 import threading
@@ -138,7 +137,7 @@ class ColorMetric(ABC):
         if not os.path.exists(self.log_file):
             return set()
         with open(self.log_file, encoding="utf-8") as f:
-            return set(line.strip() for line in f)
+            return {line.strip() for line in f}
 
     def mark_as_done(self, file_name):
         with open(self.log_file, "a", encoding="utf-8") as f:
@@ -451,10 +450,7 @@ def calculate_clarity(video_dir, save_dir, k=None, threshold=None, max_workers=N
     threshold = threshold if threshold is not None else cfg.CLARITY_NOISE_THRESHOLD
     max_workers = max_workers if max_workers is not None else cfg.MAX_WORKERS
 
-    if cfg.NOISE_DEVICE == "auto":
-        dev = "cuda" if torch.cuda.is_available() else "cpu"
-    else:
-        dev = cfg.NOISE_DEVICE
+    dev = ("cuda" if torch.cuda.is_available() else "cpu") if cfg.NOISE_DEVICE == "auto" else cfg.NOISE_DEVICE
 
     n_obj = NoiseImpl("color_brisque_noise_for_clarity", "Noise_Internal", save_dir)
     c_obj = ClarityImpl("color_tenengrad_clarity_similarity", "Clarity_Tenengrad", save_dir)
@@ -472,7 +468,6 @@ def calculate_memory(video_dir, save_dir, alpha=None, max_workers=None):
     max_workers = max_workers if max_workers is not None else cfg.MAX_WORKERS
 
     obj = MemorySymmetryImpl(save_dir)
-    engine = AtomicProcessor(video_dir, save_dir, max_workers)
 
     def _memory_logic(frames):
         mse_array = obj.calculate(frames, alpha=alpha)

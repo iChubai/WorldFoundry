@@ -13,6 +13,7 @@ import threading
 import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
+from typing import ClassVar
 
 import matplotlib
 import numpy as np
@@ -41,7 +42,7 @@ class MetricConfig:
     FILE_PREFIX = "camera_"
     TARGET_CAMERA_DIR = str(_PACKAGE_ROOT / "camera_trajectories" / "inference_txt")
     NORM_SCALE = 1.0
-    TRAJ_ACCURACY_THRESHOLDS = {
+    TRAJ_ACCURACY_THRESHOLDS: ClassVar[dict[int, float]] = {
         0: 0.55,
         1: 0.55,
         2: 0.55,
@@ -52,7 +53,7 @@ class MetricConfig:
 
     SOURCE_NPZ_DIR = str(_PACKAGE_ROOT / "camera_trajectories" / "reference_npz")
     GEN_NPZ_DIR = ""
-    TRAJ_NPZ_SIMILARITY_THRESHOLDS = {
+    TRAJ_NPZ_SIMILARITY_THRESHOLDS: ClassVar[dict[int, float]] = {
         0: 0.55,
         1: 0.55,
         2: 0.55,
@@ -83,8 +84,8 @@ def _cosine_similarity_abs(vec1, vec2):
 
 
 def _rotation_matrix_to_euler(R):
-    r00, r01, r02 = R[0, 0], R[0, 1], R[0, 2]
-    r10, r11, r12 = R[1, 0], R[1, 1], R[1, 2]
+    r00, r01, _r02 = R[0, 0], R[0, 1], R[0, 2]
+    r10, r11, _r12 = R[1, 0], R[1, 1], R[1, 2]
     r20, r21, r22 = R[2, 0], R[2, 1], R[2, 2]
 
     sin_beta = -r20
@@ -152,7 +153,7 @@ def _exponential_decay_weighted_sum(similarity_array, alpha=None):
     return np.clip(np.dot(weights / weight_sum, frame_scores), 0.0, 1.0)
 
 
-def g(n: int, filename: str = None) -> int:
+def g(n: int, filename: str | None = None) -> int:
     """g(n)"""
     if n == 0:
         return 0
@@ -168,7 +169,7 @@ def g(n: int, filename: str = None) -> int:
         return 0
 
 
-def calculate_correct_x(y: int, z: int, filename: str = None) -> int:
+def calculate_correct_x(y: int, z: int, filename: str | None = None) -> int:
     """yx"""
     if y == 0 and z == 0:
         return 1
@@ -243,7 +244,8 @@ def _load_npz_trajectory(npz_path: str) -> tuple:
     R_trans_T = R_trans.T
 
     with np.load(npz_path) as npz_data:
-        data_key = "data" if "data" in npz_data else list(npz_data.keys())[0]
+        keys = list(npz_data.keys())
+        data_key = "data" if "data" in npz_data else keys[0]
         poses = npz_data[data_key]
 
         if len(poses.shape) != 3 or poses.shape[1:] not in [(3, 4), (4, 4)]:
@@ -288,7 +290,7 @@ def _parse_memory_id(filename: str):
     return None
 
 
-def _find_matched_target_file(file_id: tuple, filename: str = None) -> str:
+def _find_matched_target_file(file_id: tuple, filename: str | None = None) -> str:
     """）"""
     if filename:
         memory_id = _parse_memory_id(filename)
@@ -322,7 +324,7 @@ def _compute_trajectory_derivative(trajectory: np.ndarray) -> np.ndarray:
     return trajectory[1:] - trajectory[:-1]
 
 
-def _normalize_trajectory(trajectory: np.ndarray, scale: float = None) -> np.ndarray:
+def _normalize_trajectory(trajectory: np.ndarray, scale: float | None = None) -> np.ndarray:
     """）"""
     scale = scale if scale is not None else cfg.NORM_SCALE
     trans_xyz = trajectory[:, [3, 7, 11]]
@@ -372,7 +374,7 @@ def _compute_displacement_vectors(translation: np.ndarray) -> np.ndarray:
     return translation[1:] - translation[:-1]
 
 
-def _normalize_displacement_vectors(displacement: np.ndarray, scale: float = None) -> np.ndarray:
+def _normalize_displacement_vectors(displacement: np.ndarray, scale: float | None = None) -> np.ndarray:
     """）"""
     scale = scale if scale is not None else cfg.NORM_SCALE
     max_val = np.max(np.abs(displacement)) + EPS
@@ -396,9 +398,6 @@ def _calculate_trajectory_difference(vipe_traj: np.ndarray) -> tuple:
         if v_rev_idx < 0:
             print(f"⚠️  {v_rev_idx}，")
             continue
-
-        v_forward = v_t[t]
-        v_backward = -v_t[v_rev_idx]
 
         if t + 1 >= len(vipe_traj) or T_v - t >= len(vipe_traj) or T_v - t - 1 < 0:
             print(f"⚠️  {t}，")
@@ -425,7 +424,7 @@ def _get_npz_similarity_threshold(level: int) -> float:
     return cfg.TRAJ_NPZ_SIMILARITY_THRESHOLDS.get(level, cfg.DEFAULT_NPZ_THRESHOLD)
 
 
-def _find_matched_source_npz(npz_filename: str, source_npz_dir: Path = None) -> str:
+def _find_matched_source_npz(npz_filename: str, source_npz_dir: Path | None = None) -> str:
     source_npz_dir = Path(source_npz_dir or cfg.SOURCE_NPZ_DIR)
     source_npz_path = source_npz_dir / npz_filename
     if source_npz_path.exists():
@@ -501,7 +500,7 @@ class TrajectoryMetric(ABC):
         if not os.path.exists(self.log_file):
             return set()
         with open(self.log_file, encoding="utf-8") as f:
-            return set(line.strip() for line in f)
+            return {line.strip() for line in f}
 
     def mark_as_done(self, file_name):
         with open(self.log_file, "a", encoding="utf-8") as f:
@@ -643,7 +642,8 @@ class TrajectoryDifferenceImpl(TrajectoryMetric):
 
     def calculate(self, npz_path, **kwargs):
         """（index_td ）"""
-        file_id = _parse_file_id(os.path.basename(npz_path))
+        # Parsing logs inferred trajectory-index corrections.
+        _parse_file_id(os.path.basename(npz_path))
 
         vipe_traj, num_frames = _load_npz_trajectory(npz_path)
 
@@ -752,7 +752,7 @@ class AtomicProcessor:
         total = len(files)
         self.done = 0
         start_t = time.time()
-        plot_status = "" if cfg.ENABLE_PLOTTING else ""
+        plot_status = ""
         print(f"\n>>> : {metric_obj.short_name} | : {self.dataset_name} | : {total} | : {plot_status}")
         print(f">>> ：video_dirNPZ: {self.video_dir}")
 
@@ -820,7 +820,7 @@ class AtomicProcessor:
             try:
                 with open(v_csv, encoding="utf-8") as f:
                     reader = csv.reader(f)
-                    header = next(reader)
+                    next(reader)
                     for row in reader:
                         if len(row) >= 2:
                             file_name = row[0]
@@ -850,7 +850,7 @@ class AtomicProcessor:
             writer.writerow([round(success_rate, 6)])
 
         level_groups = {}
-        for file_name, (binary_score, raw_score, level) in all_level_data.items():
+        for _file_name, (binary_score, _raw_score, level) in all_level_data.items():
             if level not in level_groups:
                 level_groups[level] = []
             level_groups[level].append(binary_score)

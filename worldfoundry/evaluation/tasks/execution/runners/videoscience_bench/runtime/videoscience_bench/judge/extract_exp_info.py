@@ -8,7 +8,6 @@ import os
 import re
 import shlex
 from pathlib import Path
-from typing import Dict, List, Optional
 
 # ----- exact column names
 REQUIRED_COLUMNS = [

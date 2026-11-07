@@ -134,7 +134,7 @@ def caption_reference(model_name, model_path, video_folder_root, save_path, **kw
                 start_index = parts.index(model_dataset) + 1
                 video_index = parts.index("video")
                 selected_parts = parts[start_index:video_index]
-                mp4_file_name = "_".join([model_dataset] + selected_parts)
+                mp4_file_name = "_".join([model_dataset, *selected_parts])
             except ValueError:
                 mp4_file_name = "error_in_filename_construction"
 

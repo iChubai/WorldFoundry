@@ -64,7 +64,7 @@ def validate_outcome_response(raw: str | dict[str, Any], *, scene_id: str) -> Va
     if not isinstance(label, str) or not label:
         return ValidationResult(status="schema_invalid", payload=payload, errors=("outcome_label must be a string",))
 
-    canonical_labels = set(str(item) for item in rubric.get("canonical_labels", []))
+    canonical_labels = {str(item) for item in rubric.get("canonical_labels", [])}
     aliases = {str(key): str(value) for key, value in (rubric.get("label_aliases") or {}).items()}
     canonical = aliases.get(label, label)
     if canonical not in canonical_labels:

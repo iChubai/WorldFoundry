@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-import torch.nn.functional as F
 import utils.vipe_utils as vipe_utils
 from tqdm import tqdm
 from utils.utils import CACHE_DIR, crop_video_frames

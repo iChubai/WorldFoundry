@@ -8,7 +8,6 @@ import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 try:
     import cv2
@@ -234,7 +233,6 @@ class OpenAIVLMAPI(_BaseVLM):
 
         if not r.ok:
             print(f"[VLM HTTP ERROR] {r.status_code} {r.reason} for {url}")
-            err = r.json()
 
         resp = r.json()
         output_text = self._extract_output_text(resp)

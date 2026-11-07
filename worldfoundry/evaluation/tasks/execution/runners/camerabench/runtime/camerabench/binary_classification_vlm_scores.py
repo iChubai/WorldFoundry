@@ -10,7 +10,6 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import t2v_metrics
 from tqdm import tqdm
 

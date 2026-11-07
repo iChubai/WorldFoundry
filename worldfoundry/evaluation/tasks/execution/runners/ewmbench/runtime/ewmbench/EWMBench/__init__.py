@@ -1,3 +1,4 @@
+import contextlib
 import csv
 import json
 import os
@@ -68,7 +69,7 @@ class EmbodiedWorldModelBenchmark:
     def merge_all_metrics_to_csv(self, data_name, data, save_path="final_results.csv"):
         rows = []
         metrics = defaultdict(list)
-        all_fields = set(["task_id", "episode_id", "trial_id"])
+        all_fields = {"task_id", "episode_id", "trial_id"}
         scene_dict = {}
         logic_dict = {}
         diversity_data = data.get("diversity", {})
@@ -93,10 +94,7 @@ class EmbodiedWorldModelBenchmark:
                     gid_contents = gid.split("_dataset_")[-1].split("_")
                     task_id = gid_contents[0]
                     trail_id = gid_contents[-1]
-                    if len(gid_contents) == 3:
-                        episode_id = gid_contents[1]
-                    else:
-                        episode_id = "_".join(gid_contents[1:-1])
+                    episode_id = gid_contents[1] if len(gid_contents) == 3 else "_".join(gid_contents[1:-1])
                     logic_dict[(task_id, episode_id, trail_id)] = val
                     all_triplets.add((task_id, episode_id, trail_id))
                 except Exception:
@@ -112,7 +110,7 @@ class EmbodiedWorldModelBenchmark:
                 continue
             for task_id, epis in data[dim].items():
                 for episode_id, trials in epis.items():
-                    for trial_id in trials.keys():
+                    for trial_id in trials:
                         all_triplets.add((task_id, episode_id, trial_id))
 
         for task_id, episode_id, trial_id in sorted(all_triplets):
@@ -151,10 +149,8 @@ class EmbodiedWorldModelBenchmark:
                     if k in traj:
                         row[k] = traj[k]
                         all_fields.add(k)
-                        try:
+                        with contextlib.suppress(Exception):
                             metrics[k].append(float(traj[k]))
-                        except Exception:
-                            pass
 
             sc = scene_dict.get((task_id, episode_id, trial_id), "")
             if sc != "":
@@ -166,10 +162,8 @@ class EmbodiedWorldModelBenchmark:
             if logic != "":
                 row["logic_constraints"] = logic
                 all_fields.add("logic_constraints")
-                try:
+                with contextlib.suppress(Exception):
                     metrics["logic_constraints"].append(int(logic))
-                except Exception:
-                    pass
 
             str_task_id = str(task_id)
             str_episode_id = str(episode_id)
@@ -187,7 +181,7 @@ class EmbodiedWorldModelBenchmark:
             rows.append(row)
 
         field_list = []
-        for f in ["task_id", "episode_id", "trial_id"] + sorted(all_fields - {"task_id", "episode_id", "trial_id"}):
+        for f in ["task_id", "episode_id", "trial_id", *sorted(all_fields - {"task_id", "episode_id", "trial_id"})]:
             if any(f in r and r[f] != "" for r in rows):
                 field_list.append(f)
 

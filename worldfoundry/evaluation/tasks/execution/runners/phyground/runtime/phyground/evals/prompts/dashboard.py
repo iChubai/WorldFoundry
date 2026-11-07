@@ -1,7 +1,5 @@
 """Simple dashboard to view prompt YAML files."""
 
-from pathlib import Path
-
 import yaml
 from flask import Flask, render_template_string
 

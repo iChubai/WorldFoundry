@@ -11,7 +11,6 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import t2v_metrics
 from tqdm import tqdm
 
@@ -59,7 +58,7 @@ def generate_vqa_retrieval_scores(samples, model, video_base_path, question_temp
     """Generate VQA and retrieval scores for samples"""
     results = []
 
-    for i, sample in enumerate(tqdm(samples, desc="Computing VQA/Retrieval scores")):
+    for _i, sample in enumerate(tqdm(samples, desc="Computing VQA/Retrieval scores")):
         pos_video = sample["pos_video"]
         neg_video = sample["neg_video"]
 

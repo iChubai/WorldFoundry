@@ -5,7 +5,6 @@
 # email: xuanyili.edu@gmail.com
 # github: https://github.com/meteorshowers/SoraGeoEvaluate
 #############################################################################
-import csv
 import os
 
 import cv2
@@ -34,7 +33,7 @@ def compute_fundamental_error(inliers, src_pts, dst_pts, F):
     mae = np.mean(errors)
 
     # Calculate Standard Deviation of Errors
-    std_deviation_errors = np.std(errors)
+    _std_deviation_errors = np.std(errors)
     # Print the results
 
     return mean_error, median_error, rmse, mae
@@ -103,8 +102,7 @@ def StereoMathing(img1, img2, out_dir):
         os.makedirs(out_dir)
 
     # 创建SIFT特征点检测器
-    num_corners = 100000
-    # sift = cv2.SIFT_create(num_corners)
+    # sift = cv2.SIFT_create(100000)
 
     # sift = cv2.SIFT_create(nfeatures=100000, nOctaveLayers=1, contrastThreshold=0.001, edgeThreshold=5, sigma=1.6)
     sift = cv2.SIFT_create(nfeatures=40000, nOctaveLayers=3, contrastThreshold=0.005, edgeThreshold=30)
@@ -138,8 +136,8 @@ def StereoMathing(img1, img2, out_dir):
     img_size = (2048, 1440)
     _, H1, H2 = cv2.stereoRectifyUncalibrated(src_pts, dst_pts, F, img_size)
 
-    image_width, image_height = img1.shape[0], img1.shape[1]  # 图像宽度和高度
-    # corrected_H, projected_width, projected_height = correct_H(H1, image_width, image_height)
+    # 图像宽度和高度: img1.shape[0], img1.shape[1]
+    # corrected_H, projected_width, projected_height = correct_H(H1, img1.shape[0], img1.shape[1])
 
     # 极线校正
     img1_rectified = cv2.warpPerspective(img1, H1, img_size)
@@ -165,24 +163,20 @@ def StereoMathing(img1, img2, out_dir):
     min_disp = -96
     num_disp = 192
     block_size = window_size
-    uniqueness_ratio = 10
-    speckle_window_size = 400
-    speckle_range = 32
     p1 = 4 * window_size**2
     p2 = 128 * window_size**2
-    pre_filter_cap = 63
     # 创建 SGBM 对象
     stereo = cv2.StereoSGBM_create(
         minDisparity=min_disp,
         numDisparities=num_disp,
         blockSize=block_size,
-        # uniquenessRatio=uniqueness_ratio,
-        # speckleWindowSize=speckle_window_size,
-        # speckleRange=speckle_range,
+        # uniquenessRatio=10,
+        # speckleWindowSize=400,
+        # speckleRange=32,
         disp12MaxDiff=1,
         P1=p1,
         P2=p2,
-        # preFilterCap = pre_filter_cap
+        # preFilterCap=63
     )
 
     # 计算视差图

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from functools import cache, lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any
 

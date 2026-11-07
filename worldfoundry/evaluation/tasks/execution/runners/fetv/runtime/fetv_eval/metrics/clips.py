@@ -5,12 +5,11 @@ Apache-2.0
 """
 
 import random
-from typing import *
+from typing import Any
 
 import torch
 from torch import Tensor
 from torchmetrics.metric import Metric
-from torchmetrics.utilities import rank_zero_info
 
 
 class ClipScore(Metric):
@@ -29,7 +28,7 @@ class ClipScore(Metric):
     full_state_update: bool = False
 
     def __init__(
-        self, feature: int = 512, limit: int = 30000, avg_first: bool = True, weight=1.0, **kwargs: Dict[str, Any]
+        self, feature: int = 512, limit: int = 30000, avg_first: bool = True, weight=1.0, **kwargs: dict[str, Any]
     ) -> None:
         super().__init__(**kwargs)
 

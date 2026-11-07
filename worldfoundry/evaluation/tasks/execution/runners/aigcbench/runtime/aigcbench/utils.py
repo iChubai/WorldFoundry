@@ -16,7 +16,7 @@ def load_video(video_path, size=None, mode="RGB"):
             break
         if k in frame_index:
             _, frame = cap.retrieve()
-            if size != None:
+            if size is not None:
                 frame = cv2.resize(frame, size)
             if mode == "RGB":
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

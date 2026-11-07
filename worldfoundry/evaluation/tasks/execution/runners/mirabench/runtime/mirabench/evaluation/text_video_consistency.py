@@ -1,16 +1,14 @@
-import json
-import os
 import random
 from weakref import WeakKeyDictionary
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from PIL import Image
 from torchvision import transforms
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize
 
-from worldfoundry.base_models.perception_core.video_text.viclip import SimpleTokenizer, ViCLIP
+from worldfoundry.base_models.perception_core.video_text.viclip import SimpleTokenizer as SimpleTokenizer
+from worldfoundry.base_models.perception_core.video_text.viclip import ViCLIP as ViCLIP
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -20,7 +18,7 @@ try:
 except ImportError:
     BICUBIC = Image.BICUBIC
     BILINEAR = Image.BILINEAR
-from decord import VideoReader, cpu
+from decord import VideoReader
 
 
 def clip_transform(n_px):
@@ -74,7 +72,7 @@ def get_frame_indices(num_frames, vlen, sample="rand", fix_start=None, input_fps
         if sample == "rand":
             try:
                 frame_indices = [random.choice(range(x[0], x[1])) for x in ranges]
-            except:
+            except BaseException:
                 frame_indices = np.random.permutation(vlen)[:acc_samples]
                 frame_indices.sort()
                 frame_indices = list(frame_indices)

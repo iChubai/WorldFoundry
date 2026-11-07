@@ -262,7 +262,7 @@ def compute_metrics(
     test_root,
     dino_path,
     output_path,
-    requested_metrics=["lcm", "visual", "dino", "action"],
+    requested_metrics=["lcm", "visual", "dino", "action"],  # noqa: B006 - Read-only default; retain the public signature.
     video_max_time=100,
     process_batch_size=10,
     num_gpus=1,

@@ -6,6 +6,12 @@ import from here instead of defining its own copy.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+
+# Re-export sub-question definitions (defined in evals/sub_questions.py)
+from evals.sub_questions import SUB_QUESTIONS as SUB_QUESTIONS
+from evals.sub_questions import SubQuestion as SubQuestion
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Full bilingual criteria (Chinese + English) — used by VLM evaluation prompts
 # ──────────────────────────────────────────────────────────────────────────────
@@ -45,10 +51,6 @@ CRITERIA_ZH: dict[str, str] = {
 # Backward-compatible alias — defaults to English
 CRITERIA = CRITERIA_EN
 
-# Re-export sub-question definitions (defined in evals/sub_questions.py)
-from dataclasses import dataclass, field
-
-from evals.sub_questions import SUB_QUESTIONS, SubQuestion  # noqa: F401
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Human-eval Rating Instrument — structured criteria for human annotators

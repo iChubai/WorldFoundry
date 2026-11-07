@@ -10,15 +10,12 @@ import numpy as np
 import requests
 import torch
 from PIL import Image
-from torchvision.io import write_video
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    DEFAULT_IM_END_TOKEN,
-    DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_TOKEN,
     IMAGE_TOKEN_INDEX,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
     get_model_name_from_path,
     process_images,
@@ -243,7 +240,7 @@ def load_image(image_file):
     """
     Load an image from a file.
     """
-    if image_file.startswith("http") or image_file.startswith("https"):
+    if image_file.startswith(("http", "https")):
         response = requests.get(image_file)
         image = Image.open(BytesIO(response.content)).convert("RGB")
     else:
@@ -431,7 +428,6 @@ def sort_files_by_json_number(file_list, prompts_data):
 
     print("Files sorted by JSON number field:")
     for i, filename in enumerate(sorted_files[:5]):  # Show first 5 files
-        file_id = os.path.splitext(filename)[0]
         sort_key = get_sort_key(filename)
         print(f"  {i + 1}. {filename} (number: {sort_key})")
     if len(sorted_files) > 5:
@@ -1028,10 +1024,7 @@ Realism: 4
         prompt = conv.get_prompt()
 
         input_ids_result = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt")
-        if isinstance(input_ids_result, list):
-            input_ids = torch.tensor(input_ids_result)
-        else:
-            input_ids = input_ids_result
+        input_ids = torch.tensor(input_ids_result) if isinstance(input_ids_result, list) else input_ids_result
         input_ids = input_ids.unsqueeze(0).cuda()
 
         with torch.inference_mode():
@@ -1039,7 +1032,7 @@ Realism: 4
                 input_ids,
                 images=images_tensor,
                 image_sizes=image_sizes,
-                do_sample=True if args.temperature > 0 else False,
+                do_sample=args.temperature > 0,
                 temperature=args.temperature,
                 top_p=args.top_p,
                 num_beams=args.num_beams,
@@ -1123,7 +1116,7 @@ def model_score(csv_path):
                     # Add empty cells to align with the header if necessary
                     num_cols = len(lines[0])  # Get number of columns from header
                     padding = [""] * (num_cols - 2) if num_cols > 2 else []
-                    writer.writerow(["Overall Average Model Score:", f"{overall_average_score:.4f}"] + padding)
+                    writer.writerow(["Overall Average Model Score:", f"{overall_average_score:.4f}", *padding])
             else:
                 print("No valid video scores found to calculate an overall average.")
 

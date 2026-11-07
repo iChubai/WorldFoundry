@@ -129,7 +129,6 @@ def evaluate_single_file(score_file, generate_plots_flag=False, output_dir=None,
 
     # Extract metadata
     metadata = score_data.get("metadata", {})
-    method_name = metadata.get("method_type", "Unknown_Method")
     model_name = metadata.get("model_name", "Unknown_Model")
     checkpoint = metadata.get("checkpoint", "")
     split_name = metadata.get("split_name", Path(score_file).stem)
@@ -245,10 +244,7 @@ def print_hierarchical_results(results):
         checkpoint = metrics.get("checkpoint", "")
 
         # Create a model key that includes checkpoint info
-        if checkpoint:
-            model_key = (model_name, checkpoint)
-        else:
-            model_key = (model_name, "")
+        model_key = (model_name, checkpoint) if checkpoint else (model_name, "")
 
         grouped_results[model_key]["splits"].append((split_name, metrics))
 
@@ -270,10 +266,7 @@ def print_hierarchical_results(results):
             split_display_name = metrics.get("split_name", split_name.split("_")[-1])
 
             # Use different symbols for different splits
-            if i == len(splits) - 1:  # Last split
-                prefix = "   └─"
-            else:
-                prefix = "   ├─"
+            prefix = "   └─" if i == len(splits) - 1 else "   ├─"  # Last split
 
             print(
                 f"{prefix} {split_display_name:25s}: mAP = {metrics['average_precision']:.4f}, AUC = {metrics['roc_auc']:.4f} "
@@ -302,7 +295,7 @@ def find_score_files(score_dir):
     score_files = list(score_dir.glob("classification_scores_*.json"))
 
     # Remove duplicates and sort
-    score_files = sorted(list(set(score_files)))
+    score_files = sorted(set(score_files))
     return score_files
 
 
@@ -402,7 +395,7 @@ def main():
     else:
         # Create a descriptive filename without timestamp
         # Include number of models/files for clarity
-        num_models = len(set([m.get("model_name", "unknown") for m in valid_results.values() if m and "metadata" in m]))
+        num_models = len({m.get("model_name", "unknown") for m in valid_results.values() if m and "metadata" in m})
         num_files = len(valid_results)
         output_file = output_dir / f"binary_classification_evaluation_{num_models}models_{num_files}files.json"
 

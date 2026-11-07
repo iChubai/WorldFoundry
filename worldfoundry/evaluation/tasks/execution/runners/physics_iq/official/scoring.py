@@ -81,7 +81,7 @@ class IQTable:
     views = VIEWS
     ratio_eps = 1e-8  # small constant to prevent divide-by-zero in ratio computations
 
-    def __init__(self, df: pd.DataFrame, metadata: dict = None, lazy_integrity: bool = False):
+    def __init__(self, df: pd.DataFrame, metadata: dict | None = None, lazy_integrity: bool = False):
         if len(df) == 0:
             raise ValueError("IQTable requires at least one scenario row; the DataFrame is empty.")
         self.df = df.copy()  # own our data so callers can't mutate it under us
@@ -194,7 +194,10 @@ class IQTable:
     def compute_metric_ratio_by_view(self, metric_key) -> np.ndarray:
         """Compute the metric ratio for each view separately, returning an array of shape (n_scenarios, n_views)."""
         get_mean_dict = self.list_column_mean_by_view_dict
-        mapping_fct = lambda x: [get_mean_dict[view_col] for view_col in x]
+
+        def mapping_fct(x):
+            return [get_mean_dict[view_col] for view_col in x]
+
         _score_map = {
             self.spatial_iou_key: (self.spatial_iou_cols, self.variance_spatial_cols),
             self.weighted_spatial_iou_key: (

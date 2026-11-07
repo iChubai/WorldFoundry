@@ -15,6 +15,7 @@ from __future__ import annotations
 import abc
 import argparse
 import base64
+import contextlib
 import json
 import logging
 import os
@@ -163,7 +164,7 @@ class VLMBackend(abc.ABC):
     @abc.abstractmethod
     def call(self, video_path: str, prompt_text: str, system_prompt: str | None = None) -> str: ...
 
-    def release_video(self, video_path: str) -> None:
+    def release_video(self, video_path: str) -> None:  # noqa: B027 - Optional hook; stateless backends keep the no-op.
         pass
 
 
@@ -271,10 +272,8 @@ class GeminiBackend(VLMBackend):
     def release_video(self, video_path: str) -> None:
         uploaded = self._upload_cache.pop(video_path, None)
         if uploaded is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self.client.files.delete(name=uploaded.name)
-            except Exception:
-                pass
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -426,7 +425,7 @@ def _extract_video_frames_b64(
         n = min(num_frames, total, max_images)
         indices = np.linspace(0, total - 1, n, dtype=int)
     else:
-        step = max(1, int(round(source_fps / sample_fps))) if source_fps > 0 else 1
+        step = max(1, round(source_fps / sample_fps)) if source_fps > 0 else 1
         indices = np.arange(0, total, step, dtype=int)
         if len(indices) > max_images:
             keep = np.linspace(0, len(indices) - 1, max_images, dtype=int)

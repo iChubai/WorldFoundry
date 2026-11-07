@@ -11,9 +11,10 @@ It serves as the transition layer between:
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import (
@@ -36,6 +37,7 @@ class VlaVaWamRunRequest:
     Provides granular controls over dataset selection, runner manifest options,
     evaluation tracks, metric suites, and execution safety switches.
     """
+
     output_dir: str | Path
     spec: EmbodiedGenerationSpec | Mapping[str, Any]
     samples: Sequence[Mapping[str, Any]] = ()
@@ -85,7 +87,9 @@ def _coerce_request(
     return VlaVaWamRunRequest(**payload)
 
 
-def _generation_requests(run_request: VlaVaWamRunRequest, spec: EmbodiedGenerationSpec) -> tuple[GenerationRequest, ...]:
+def _generation_requests(
+    run_request: VlaVaWamRunRequest, spec: EmbodiedGenerationSpec
+) -> tuple[GenerationRequest, ...]:
     """Compiles and materializes physical GenerationRequest instances.
 
     If pre-formed requests are provided in the run request, validates and returns them.
@@ -185,7 +189,11 @@ def build_vla_va_wam_evaluate_request(
     run_request = _coerce_request(request, kwargs)
     if run_request.schema_version != VLA_VA_WAM_RUN_REQUEST_SCHEMA_VERSION:
         raise ValueError(f"unsupported VlaVaWamRunRequest schema_version: {run_request.schema_version}")
-    spec = run_request.spec if isinstance(run_request.spec, EmbodiedGenerationSpec) else EmbodiedGenerationSpec.from_dict(run_request.spec)
+    spec = (
+        run_request.spec
+        if isinstance(run_request.spec, EmbodiedGenerationSpec)
+        else EmbodiedGenerationSpec.from_dict(run_request.spec)
+    )
     requests = _generation_requests(run_request, spec)
     return EvaluateRunRequest(
         output_dir=run_request.output_dir,

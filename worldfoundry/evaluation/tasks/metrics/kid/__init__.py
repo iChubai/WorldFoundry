@@ -25,4 +25,13 @@ METRIC_MODULE = metric_module_from_globals(
 
 compute = compute_kid
 
-__all__ = ["ALIASES", "FAMILY", "HIGHER_IS_BETTER", "METRIC_ID", "METRIC_MODULE", "compute", "compute_kid", "polynomial_mmd"]
+__all__ = [
+    "ALIASES",
+    "FAMILY",
+    "HIGHER_IS_BETTER",
+    "METRIC_ID",
+    "METRIC_MODULE",
+    "compute",
+    "compute_kid",
+    "polynomial_mmd",
+]

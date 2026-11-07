@@ -6,9 +6,10 @@ import csv
 import hashlib
 import os
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.execution.process import read_text_tail, run_logged_subprocess
 from worldfoundry.core.io import materialize_file
@@ -85,7 +86,6 @@ def discover_official_results(search_roots: list[Path]) -> Path | None:
     return None
 
 
-
 @dataclass(frozen=True)
 class EwmbenchScorerConfig:
     backend: str
@@ -96,10 +96,14 @@ class EwmbenchScorerConfig:
 
 def scorer_config_from_env(*, repo_root: Path | None = None) -> EwmbenchScorerConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_EWMBENCH_SCORER_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_EWMBENCH_RUNTIME_BACKEND")
-        or "mock"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_EWMBENCH_SCORER_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_EWMBENCH_RUNTIME_BACKEND")
+            or "mock"
+        )
+        .strip()
+        .lower()
+    )
     repo_root = resolve_ewmbench_root(repo_root)
     strict = os.environ.get("WORLDFOUNDRY_EWMBENCH_STRICT", "").strip().lower() in {"1", "true", "yes", "on"}
     return EwmbenchScorerConfig(
@@ -111,7 +115,7 @@ def scorer_config_from_env(*, repo_root: Path | None = None) -> EwmbenchScorerCo
 
 
 def _deterministic_mock_score(*, seed: str, metric_id: str) -> float:
-    digest = hashlib.sha256(f"{seed}:{metric_id}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(f"{seed}:{metric_id}".encode()).hexdigest()
     bucket = int(digest[:8], 16) % 25
     higher_is_better = METRIC_SPECS[metric_id]["higher_is_better"]
     if higher_is_better:
@@ -140,9 +144,7 @@ def _write_mock_csv(*, output_path: Path, seed: str, prompt_records: list[Mappin
             {
                 "episode_id": record["prompt_id"],
                 "scene_consistency": _deterministic_mock_score(seed=episode_seed, metric_id="scene_consistency"),
-                "trajectory_consistency": _deterministic_mock_score(
-                    seed=episode_seed, metric_id="motion_correctness"
-                ),
+                "trajectory_consistency": _deterministic_mock_score(seed=episode_seed, metric_id="motion_correctness"),
                 "semantics": _deterministic_mock_score(seed=episode_seed, metric_id="semantic_alignment"),
                 "diversity": _deterministic_mock_score(seed=episode_seed, metric_id="diversity"),
             }
@@ -193,9 +195,7 @@ def _run_upstream_evaluate(
     if overwrite:
         command.append("--overwrite")
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(
-        part for part in (str(repo_root.resolve()), env.get("PYTHONPATH")) if part
-    )
+    env["PYTHONPATH"] = os.pathsep.join(part for part in (str(repo_root.resolve()), env.get("PYTHONPATH")) if part)
     timeout_value = os.environ.get("WORLDFOUNDRY_EWMBENCH_TIMEOUT_SECONDS", "").strip()
     timeout_seconds = float(timeout_value) if timeout_value else None
     if timeout_seconds is not None and timeout_seconds <= 0:
@@ -213,15 +213,11 @@ def _run_upstream_evaluate(
     )
     if completed.returncode != 0:
         detail = read_text_tail(stderr_path) or read_text_tail(stdout_path)
-        raise RuntimeError(
-            "EWMBench upstream evaluate.py failed "
-            f"(exit={completed.returncode}): {detail}"
-        )
+        raise RuntimeError(f"EWMBench upstream evaluate.py failed (exit={completed.returncode}): {detail}")
     discovered = discover_official_results([output_dir, repo_root, repo_root / "output"])
     if discovered is None:
         raise FileNotFoundError(
-            "EWMBench upstream evaluate.py did not produce ewmbm_final_table.csv under "
-            f"{repo_root}"
+            f"EWMBench upstream evaluate.py did not produce ewmbm_final_table.csv under {repo_root}"
         )
     return discovered
 

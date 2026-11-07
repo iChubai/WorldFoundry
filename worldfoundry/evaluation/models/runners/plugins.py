@@ -10,10 +10,11 @@ from __future__ import annotations
 import importlib
 import os
 import traceback
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from importlib.metadata import entry_points
-from typing import Any, Mapping
+from typing import Any
 
 from .registry import ModelRunnerRegistryEntry, ModelRunnerRegistryIssue
 
@@ -105,7 +106,7 @@ def _entry_point_discovery() -> tuple[tuple[ModelRunnerRegistryEntry, ...], tupl
         origin = f"entry point {ep.name!r} -> {ep.value}"
         try:
             entries.append(_coerce_plugin_entry(ep.load(), fallback_name=ep.name, origin=origin))
-        except Exception as exc:  # noqa: BLE001 - broken plugins must not break builtin runners.
+        except Exception as exc:  # broken plugins must not break builtin runners.
             issues.append(
                 ModelRunnerRegistryIssue(
                     code="plugin_load_failed",

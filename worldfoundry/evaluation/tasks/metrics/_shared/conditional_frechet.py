@@ -60,13 +60,13 @@ def trace_sqrt_product(sigma, sigma_v):
 
 
 def sample_covariance(a, b, invert=False):
-    '''
+    """
     Sample covariance estimating
     a = [N,m]
     b = [N,m]
-    '''
-    assert (a.shape[0] == b.shape[0])
-    assert (a.shape[1] == b.shape[1])
+    """
+    assert a.shape[0] == b.shape[0]
+    assert a.shape[1] == b.shape[1]
     N = a.shape[0]
     C = tf.matmul(tf.transpose(a), b) / N
     return tf.linalg.pinv(C) if invert else C
@@ -78,7 +78,7 @@ def no_embedding(x):
 
 @tf.function
 def cfid(y_true, y_predict, x_true, embeding=no_embedding, estimator=sample_covariance):
-    '''
+    """
     CFID metric implementation, according to the formula described in the paper;
     https://arxiv.org/abs/2103.11521
     The formula:
@@ -104,14 +104,14 @@ def cfid(y_true, y_predict, x_true, embeding=no_embedding, estimator=sample_cova
     embedding - Functon that transform [N,ki] -> [N,m], 'no_embedding' might be consider to used, if you working with same dimensions activations.
     estimator - Covariance estimator. Default is sample covariance estimator.
                 The estimator might be switched to other estimators. Remmember that other estimator must support 'invert' argument
-    '''
+    """
 
     y_predict = embeding(y_predict)
     y_true = embeding(y_true)
     x_true = embeding(x_true)
 
-    assert ((y_predict.shape[0] == y_true.shape[0]) and (y_predict.shape[0] == x_true.shape[0]))
-    assert ((y_predict.shape[1] == y_true.shape[1]) and (y_predict.shape[1] == x_true.shape[1]))
+    assert (y_predict.shape[0] == y_true.shape[0]) and (y_predict.shape[0] == x_true.shape[0])
+    assert (y_predict.shape[1] == y_true.shape[1]) and (y_predict.shape[1] == x_true.shape[1])
 
     # mean estimations
     m_y_true = tf.reduce_mean(y_true, axis=0)
@@ -130,18 +130,25 @@ def cfid(y_true, y_predict, x_true, embeding=no_embedding, estimator=sample_cova
     inv_с_x_true_x_true = estimator(x_true - m_x_true, x_true - m_x_true, invert=True)
 
     # conditional covariance estimations
-    c_y_true_given_x_true = с_y_true_y_true - tf.matmul(с_y_true_x_true,
-                                                        tf.matmul(inv_с_x_true_x_true, с_x_true_y_true))
-    c_y_predict_given_x_true = с_y_predict_y_predict - tf.matmul(с_y_predict_x_true,
-                                                                 tf.matmul(inv_с_x_true_x_true, c_x_true_y_predict))
+    c_y_true_given_x_true = с_y_true_y_true - tf.matmul(
+        с_y_true_x_true, tf.matmul(inv_с_x_true_x_true, с_x_true_y_true)
+    )
+    c_y_predict_given_x_true = с_y_predict_y_predict - tf.matmul(
+        с_y_predict_x_true, tf.matmul(inv_с_x_true_x_true, c_x_true_y_predict)
+    )
     c_y_true_x_true_minus_c_y_predict_x_true = с_y_true_x_true - с_y_predict_x_true
     c_x_true_y_true_minus_c_x_true_y_predict = с_x_true_y_true - c_x_true_y_predict
 
     # Distance between Gaussians
-    m_dist = tf.einsum('...k,...k->...', m_y_true - m_y_predict, m_y_true - m_y_predict)
-    c_dist1 = tf.linalg.trace(tf.matmul(tf.matmul(c_y_true_x_true_minus_c_y_predict_x_true, inv_с_x_true_x_true),
-                                        c_x_true_y_true_minus_c_x_true_y_predict))
+    m_dist = tf.einsum("...k,...k->...", m_y_true - m_y_predict, m_y_true - m_y_predict)
+    c_dist1 = tf.linalg.trace(
+        tf.matmul(
+            tf.matmul(c_y_true_x_true_minus_c_y_predict_x_true, inv_с_x_true_x_true),
+            c_x_true_y_true_minus_c_x_true_y_predict,
+        )
+    )
     c_dist2 = tf.linalg.trace(c_y_true_given_x_true + c_y_predict_given_x_true) - 2 * trace_sqrt_product(
-        c_y_predict_given_x_true, c_y_true_given_x_true)
+        c_y_predict_given_x_true, c_y_true_given_x_true
+    )
 
     return m_dist + c_dist1 + c_dist2

@@ -117,7 +117,7 @@ class Score(nn.Module):
                         scores[offset : offset + count, visual_index, text_index] = torch.cat(
                             [
                                 self.model.forward([visual], [prompt], **kwargs).reshape(-1)
-                                for visual, prompt in zip(prepared, prompts)
+                                for visual, prompt in zip(prepared, prompts, strict=False)
                             ]
                         )
             offset += count

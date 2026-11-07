@@ -23,7 +23,6 @@ EVAL_SCRIPT_REL = Path("run_iworldbench_evaluation.py")
 REPORTS_DIR_NAME = "reports"
 
 
-
 def resolve_evaluation_script(*, repo_root: Path | None = None) -> Path | None:
     root = repo_root or resolve_iworldbench_root()
     if root is None:
@@ -85,14 +84,16 @@ def runtime_config_from_env(
     repo_root: Path | None = None,
 ) -> IWorldBenchRuntimeConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_IWORLD_BENCH_SCORER_BACKEND")
-        or "official"
-    ).strip().lower()
-    if backend not in {"official", "mock"}:
-        raise ValueError(
-            "WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND must be 'official' or the explicit CI-only 'mock'"
+        (
+            os.environ.get("WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_IWORLD_BENCH_SCORER_BACKEND")
+            or "official"
         )
+        .strip()
+        .lower()
+    )
+    if backend not in {"official", "mock"}:
+        raise ValueError("WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND must be 'official' or the explicit CI-only 'mock'")
     strict = os.environ.get("WORLDFOUNDRY_IWORLD_BENCH_STRICT", "").strip().lower() in {"1", "true", "yes", "on"}
     return IWorldBenchRuntimeConfig(
         backend=backend,
@@ -105,7 +106,7 @@ def runtime_config_from_env(
 
 
 def _deterministic_mock_score(*, seed: str, metric_id: str) -> float:
-    digest = hashlib.sha256(f"{seed}:{metric_id}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(f"{seed}:{metric_id}".encode()).hexdigest()
     bucket = int(digest[:8], 16) % 25
     return round(0.55 + bucket / 100.0, 4)
 

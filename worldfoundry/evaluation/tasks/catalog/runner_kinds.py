@@ -8,8 +8,8 @@ code.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Mapping
 
 EXTERNAL_RUNNER_KINDS: frozenset[str] = frozenset(
     {
@@ -64,14 +64,10 @@ RUNNER_KIND_ALIASES: Mapping[str, str] = MappingProxyType(
 # use the derived semantic groups below or normalize the value first.
 RUNNER_KINDS: frozenset[str] = frozenset(CANONICAL_RUNNER_KINDS | RUNNER_KIND_ALIASES.keys())
 IN_TREE_RUNTIME_KINDS: frozenset[str] = frozenset(
-    kind
-    for kind in RUNNER_KINDS
-    if RUNNER_KIND_ALIASES.get(kind, kind) in CANONICAL_IN_TREE_RUNNER_KINDS
+    kind for kind in RUNNER_KINDS if RUNNER_KIND_ALIASES.get(kind, kind) in CANONICAL_IN_TREE_RUNNER_KINDS
 )
 IN_TREE_RESULT_NORMALIZER_KINDS: frozenset[str] = frozenset(
-    kind
-    for kind in RUNNER_KINDS
-    if RUNNER_KIND_ALIASES.get(kind, kind) in CANONICAL_IN_TREE_RESULT_NORMALIZER_KINDS
+    kind for kind in RUNNER_KINDS if RUNNER_KIND_ALIASES.get(kind, kind) in CANONICAL_IN_TREE_RESULT_NORMALIZER_KINDS
 )
 IN_TREE_EXECUTION_KINDS: frozenset[str] = frozenset(IN_TREE_RUNTIME_KINDS - IN_TREE_RESULT_NORMALIZER_KINDS)
 

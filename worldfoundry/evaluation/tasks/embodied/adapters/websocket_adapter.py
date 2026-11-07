@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import Future
 import threading
-from typing import Any, Mapping
+from collections.abc import Mapping
+from concurrent.futures import Future
+from typing import Any
 
 from worldfoundry.evaluation.tasks.embodied.model_server.connection import EmbodiedWebSocketConnection
 from worldfoundry.evaluation.tasks.embodied.policy_adapter import normalize_action_payload

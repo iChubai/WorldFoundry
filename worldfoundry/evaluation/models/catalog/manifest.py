@@ -9,9 +9,9 @@ harness.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from collections.abc import Iterable, Mapping
 from typing import Any
 
 import yaml
@@ -21,7 +21,6 @@ from ...api.registry import ModelRegistry
 from ...utils import DATA_ROOT
 from .schema import ModelZooEntry, load_entries, select_default_variant
 
-
 # ── Type aliases and constants ───────────────────────────────
 
 SourceModelMap = Mapping[str, Any]
@@ -30,6 +29,7 @@ DEFAULT_MODEL_CATALOG_ROOT = DATA_ROOT / "models" / "catalog"
 
 
 # ── Coercion helpers ─────────────────────────────────────────
+
 
 def _tuple_of_str(value: Any) -> tuple[str, ...]:
     """Coerce any scalar or iterable value to a tuple of strings."""
@@ -102,6 +102,7 @@ def _aliases_for_entry(entry: ModelZooEntry) -> tuple[str, ...]:
 
 
 # ── Output artifact deduction ─────────────────────────────────
+
 
 def _coerce_model_zoo_entry(value: ModelZooEntry | Mapping[str, Any]) -> ModelZooEntry:
     """Coerce a dictionary mapping or ModelZooEntry instance to a ModelZooEntry."""
@@ -180,6 +181,7 @@ def _variant_metadata(variant: Any) -> dict[str, Any]:
 
 # ── Manifest dataclass ────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class ModelCatalogManifest:
     """Target model-catalog manifest from ``data/models/catalog``.
@@ -213,7 +215,7 @@ class ModelCatalogManifest:
     schema_version: int | str = 2
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any]) -> "ModelCatalogManifest":
+    def from_mapping(cls, data: Mapping[str, Any]) -> ModelCatalogManifest:
         """Instantiate a ModelCatalogManifest from a mapping dictionary representation."""
         model_id = str(data.get("model_id") or data.get("id") or "")
         manifest = cls(
@@ -234,7 +236,7 @@ class ModelCatalogManifest:
         return manifest
 
     @classmethod
-    def from_model_zoo_entry(cls, entry: ModelZooEntry) -> "ModelCatalogManifest":
+    def from_model_zoo_entry(cls, entry: ModelZooEntry) -> ModelCatalogManifest:
         """Build a ModelCatalogManifest from a ModelZooEntry instance."""
         github = entry.official_repo_url
         hf_items = [{"repo_id": repo_id} for repo_id in entry.hf_repo_ids]
@@ -248,7 +250,10 @@ class ModelCatalogManifest:
             name=entry.name or entry.model_id,
             family=entry.provider or "",
             domain=entry.tasks[0] if entry.tasks else "",
-            capabilities={"task_family": entry.tasks[0] if entry.tasks else "", "modalities": list(entry.output_artifacts)},
+            capabilities={
+                "task_family": entry.tasks[0] if entry.tasks else "",
+                "modalities": list(entry.output_artifacts),
+            },
             availability={
                 "source": entry.source.status,
                 "license": entry.license,
@@ -324,7 +329,9 @@ class ModelCatalogManifest:
             provider=self.source_status,
             capabilities=capabilities,
             supported_tasks=(self.task_family,) if self.task_family else (),
-            required_artifacts=tuple(str(item.get("repo_id") or item.get("hf_repo_id") or item.get("id") or "") for item in checkpoints),
+            required_artifacts=tuple(
+                str(item.get("repo_id") or item.get("hf_repo_id") or item.get("id") or "") for item in checkpoints
+            ),
             tags=_unique((self.family, self.domain, str(self.integration.get("status") or ""))),
             metadata={
                 "family": self.family,
@@ -339,6 +346,7 @@ class ModelCatalogManifest:
 
 
 # ── Catalog loading ──────────────────────────────────────────
+
 
 def _catalog_paths(root: str | Path | None = None) -> tuple[Path, ...]:
     """Retrieve all YAML catalog file paths from a root directory recursively."""
@@ -434,17 +442,25 @@ def model_zoo_entry_to_world_model_manifest(value: ModelZooEntry | Mapping[str, 
     variant_tasks = tuple(variant.task for variant in entry.variants)
     capabilities = _dedupe((*entry.tasks, *variant_tasks)) or ("world_generation",)
     default_variant = select_default_variant(entry, allow_runner_target_fallback=False)
-    default_runner_target = default_variant.runner_target if default_variant is not None else (
-        entry.runner_target if entry.integration_status == "integrated" else None
+    default_runner_target = (
+        default_variant.runner_target
+        if default_variant is not None
+        else (entry.runner_target if entry.integration_status == "integrated" else None)
     )
-    default_runtime_profile = default_variant.runtime_profile if default_variant is not None else (
-        entry.runtime_profile if default_runner_target else None
+    default_runtime_profile = (
+        default_variant.runtime_profile
+        if default_variant is not None
+        else (entry.runtime_profile if default_runner_target else None)
     )
-    default_pipeline_target = default_variant.pipeline_target if default_variant is not None else (
-        entry.pipeline_target if default_runner_target else None
+    default_pipeline_target = (
+        default_variant.pipeline_target
+        if default_variant is not None
+        else (entry.pipeline_target if default_runner_target else None)
     )
-    default_pipeline_binding = default_variant.pipeline_binding if default_variant is not None else (
-        entry.pipeline_binding if default_runner_target else None
+    default_pipeline_binding = (
+        default_variant.pipeline_binding
+        if default_variant is not None
+        else (entry.pipeline_binding if default_runner_target else None)
     )
     required_artifacts = _dedupe(entry.hf_repo_ids)
     metadata = {
@@ -457,9 +473,7 @@ def model_zoo_entry_to_world_model_manifest(value: ModelZooEntry | Mapping[str, 
         "integrated_variant_ids": [
             item.variant_id for item in entry.variants if item.integration_status == "integrated"
         ],
-        "runnable_runner_variant_ids": [
-            item.variant_id for item in entry.variants if item.is_runnable_runner_entry
-        ],
+        "runnable_runner_variant_ids": [item.variant_id for item in entry.variants if item.is_runnable_runner_entry],
         "hf_repo_ids": list(entry.hf_repo_ids),
         "integration_status": entry.integration_status,
         "verification_status": entry.verification_status,
@@ -488,9 +502,7 @@ def model_zoo_entry_to_world_model_manifest(value: ModelZooEntry | Mapping[str, 
         "default_verification_status": (
             default_variant.verification_status if default_variant is not None else entry.verification_status
         ),
-        "default_min_vram_gb": (
-            default_variant.min_vram_gb if default_variant is not None else entry.min_vram_gb
-        ),
+        "default_min_vram_gb": (default_variant.min_vram_gb if default_variant is not None else entry.min_vram_gb),
         "min_vram_gb": entry.min_vram_gb,
         "notes": entry.notes,
     }
@@ -531,6 +543,7 @@ def write_world_model_manifests_json(entries_path: str | Path, output_path: str 
 
 
 # ── Source-map manifest builders ──────────────────────────────
+
 
 def model_manifests_from_source_maps(
     loaders_by_family: SourceFamilyMaps,
@@ -598,6 +611,7 @@ def model_manifests_from_source_maps(
 
 
 # ── Source-map helper functions ──────────────────────────────
+
 
 def build_model_manifests(
     loaders_by_family: SourceFamilyMaps,

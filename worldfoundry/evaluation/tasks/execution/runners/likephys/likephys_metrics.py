@@ -20,8 +20,9 @@ means the model ranked every valid clip below every impossible counterpart.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_scenarios import (
     DOMAIN_SCENARIOS,
@@ -275,9 +276,7 @@ def load_scenario_results(
         candidates = [resolved]
     else:
         candidates = sorted(
-            path
-            for path in resolved.rglob(f"{RESULTS_FILENAME_PREFIX}*{RESULTS_FILENAME_SUFFIX}")
-            if path.is_file()
+            path for path in resolved.rglob(f"{RESULTS_FILENAME_PREFIX}*{RESULTS_FILENAME_SUFFIX}") if path.is_file()
         )
     if not candidates:
         raise ValueError(f"no LikePhys results_<model>.json artifacts found under {resolved}")
@@ -287,8 +286,7 @@ def load_scenario_results(
     if model_key is None and len(discovered_models) > 1:
         known = ", ".join(sorted(str(item) for item in discovered_models))
         raise ValueError(
-            f"multiple LikePhys probe backends found under {resolved} ({known}); "
-            "pass --probe-model to select one"
+            f"multiple LikePhys probe backends found under {resolved} ({known}); pass --probe-model to select one"
         )
 
     scenarios: dict[str, dict[str, Any]] = {}
@@ -301,10 +299,7 @@ def load_scenario_results(
         if block is None:
             continue
         inferred = scenario_id_for_variations(
-            variation
-            for subgroup in block.values()
-            if isinstance(subgroup, Mapping)
-            for variation in subgroup
+            variation for subgroup in block.values() if isinstance(subgroup, Mapping) for variation in subgroup
         )
         key = scenario_id or inferred or str(payload.get("scenario") or payload.get("data") or path.parent.name)
         scenarios[key] = {
@@ -364,7 +359,7 @@ def compute_likephys_metrics(
         if summary["misrank_rate"] is not None:
             scenario_rates.append(summary["misrank_rate"])
 
-    metrics: dict[str, float | None] = {metric_id: None for metric_id in METRIC_ORDER}
+    metrics: dict[str, float | None] = dict.fromkeys(METRIC_ORDER)
     metrics["likephys_misrank_rate"] = _pooled(pooled_variation_rates)
     metrics["likephys_dataset_weighted_misrank_rate"] = _pooled(scenario_rates)
 

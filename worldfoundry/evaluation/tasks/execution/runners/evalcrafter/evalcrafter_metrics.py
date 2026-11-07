@@ -95,6 +95,7 @@ RESULT_PATTERNS = {
     "evalcrafter_total": r"Total\s+([-+]?\d+(?:\.\d+)?)",
 }
 
+
 def scalar(value: Any) -> float | None:
     if isinstance(value, bool) or value is None:
         return None

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import resolve_env_path, bundled_benchmark_asset
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset, resolve_env_path
 from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_prompts import (
     resolve_physvidbench_root,
 )
@@ -13,8 +12,6 @@ from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_p
 DEFAULT_CAPTIONS_DIR_REL = Path("captions")
 DEFAULT_CAPTION_BASE_REL = Path("captions/cogvideo2b")
 CAPTION_SUFFIXES = ("_FP", "_OP", "_SR", "_TD", "_AU", "_MT", "_FM", "")
-
-
 
 
 def resolve_captions_dir(

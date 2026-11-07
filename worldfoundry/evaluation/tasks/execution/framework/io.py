@@ -8,9 +8,10 @@ scores or metrics emitted by official benchmark runtimes into canonical forms.
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable, Mapping
 from math import isfinite
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import (
     append_jsonl,

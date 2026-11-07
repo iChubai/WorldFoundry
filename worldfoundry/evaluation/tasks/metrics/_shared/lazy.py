@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from functools import lru_cache
+from functools import cache
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_module(module_path: str) -> ModuleType:
     parent_name, _, _ = module_path.rpartition(".")
     parent = sys.modules.get(parent_name)

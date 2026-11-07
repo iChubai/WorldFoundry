@@ -32,16 +32,18 @@ from worldfoundry.evaluation.runner import (
     run_model_benchmark,
     run_model_benchmark_suite,
 )
-from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_runner import run_benchmark_execution
 from worldfoundry.evaluation.tasks.catalog.dispatch import (
     BENCHMARK_INTEGRATION_REGISTRY,
+    VIDEO_RUNNER_REGISTRY,
     BenchmarkIntegrationSpec,
     IntegrationTier,
-    VIDEO_RUNNER_REGISTRY,
     VideoRunnerSpec,
     integration_spec,
+)
+from worldfoundry.evaluation.tasks.catalog.dispatch import (
     video_runner_spec as _video_runner_spec,
 )
+from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_runner import run_benchmark_execution
 from worldfoundry.evaluation.utils import BENCHMARK_ZOO_DIR, REPO_ROOT
 
 
@@ -111,22 +113,22 @@ def benchmark_integration_spec(benchmark_id: str) -> BenchmarkIntegrationSpec | 
 
 __all__ = [
     "BENCHMARK_INTEGRATION_REGISTRY",
+    "VIDEO_RUNNER_REGISTRY",
     "BenchmarkIntegrationSpec",
-    "IntegrationTier",
     "EvaluateRunRequest",
     "EvaluateRunResult",
+    "IntegrationTier",
     "ModelBenchmarkRunRequest",
     "ModelBenchmarkRunResult",
     "ModelBenchmarkSuiteRequest",
     "ModelBenchmarkSuiteResult",
-    "VIDEO_RUNNER_REGISTRY",
     "VideoRunnerSpec",
     "WorldFoundryRunRequest",
     "WorldFoundryRunResult",
+    "benchmark_integration_spec",
     "execute_evaluate_run",
     "list_video_benchmarks",
     "normalize_upstream_results",
-    "benchmark_integration_spec",
     "run_benchmark",
     "run_benchmark_execution",
     "run_model_benchmark",

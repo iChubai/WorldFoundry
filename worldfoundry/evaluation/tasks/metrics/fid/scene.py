@@ -108,8 +108,7 @@ def _resolve_crop_dir(
         return path
     if bboxes_json is None:
         raise ValueError(
-            "SceneFID requires pre-extracted crop directories or a bboxes JSON manifest "
-            "(object crop + FID protocol)."
+            "SceneFID requires pre-extracted crop directories or a bboxes JSON manifest (object crop + FID protocol)."
         )
     bboxes = _load_bboxes(Path(bboxes_json))
     if bbox_source_root is not None:

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from math import isfinite
 from numbers import Real
-from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping, tuple_of_str
 
@@ -122,7 +122,7 @@ class MetricSpec(JsonContract):
         return self.id
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "MetricSpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> MetricSpec:
         return cls(
             id=data.get("id"),
             metric_id=data.get("metric_id"),
@@ -188,7 +188,7 @@ class MetricResult(JsonContract):
             object.__setattr__(self, "diagnostics", {**self.diagnostics, "nonfinite_values": nonfinite})
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "MetricResult":
+    def from_dict(cls, data: Mapping[str, Any]) -> MetricResult:
         return cls(
             sample_id=str(data["sample_id"]),
             metric_id=str(data["metric_id"]),
@@ -249,7 +249,7 @@ class AggregateResult(JsonContract):
             object.__setattr__(self, "diagnostics", {**self.diagnostics, "nonfinite_values": nonfinite})
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "AggregateResult":
+    def from_dict(cls, data: Mapping[str, Any]) -> AggregateResult:
         return cls(
             metric_id=str(data["metric_id"]),
             n_total=data.get("n_total", 0),

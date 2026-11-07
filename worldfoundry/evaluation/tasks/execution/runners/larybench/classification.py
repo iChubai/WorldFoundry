@@ -7,13 +7,14 @@ import os
 import numpy as np
 import torch
 import torch.distributed as dist
+from torch import nn
+from torch.nn.parallel import DistributedDataParallel
+
 from .classification_data import (
     LatentActionVideoDataset,
     make_latent_action_dataloader,
 )
 from .classification_model import FeatureEvaluator
-from torch import nn
-from torch.nn.parallel import DistributedDataParallel
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +45,16 @@ def _gather_predictions(predictions, labels, world_size, rank, device):
     if rank != 0:
         return None, None
     return (
-        [value for rank_values, size in zip(all_predictions, sizes) for value in rank_values[:size].cpu().tolist()],
-        [value for rank_values, size in zip(all_labels, sizes) for value in rank_values[:size].cpu().tolist()],
+        [
+            value
+            for rank_values, size in zip(all_predictions, sizes, strict=False)
+            for value in rank_values[:size].cpu().tolist()
+        ],
+        [
+            value
+            for rank_values, size in zip(all_labels, sizes, strict=False)
+            for value in rank_values[:size].cpu().tolist()
+        ],
     )
 
 
@@ -147,7 +156,7 @@ def _run_epoch(
         finite = torch.tensor(
             [
                 torch.isfinite(loss).item() and torch.isfinite(value).all().item()
-                for loss, value in zip(batch_losses, output)
+                for loss, value in zip(batch_losses, output, strict=False)
             ],
             dtype=torch.int32,
             device=device,
@@ -155,14 +164,14 @@ def _run_epoch(
         dist.all_reduce(finite, op=dist.ReduceOp.MIN)
 
         if training:
-            for index, (loss, optimizer) in enumerate(zip(batch_losses, optimizers or [])):
+            for index, (loss, optimizer) in enumerate(zip(batch_losses, optimizers or [], strict=False)):
                 optimizer.zero_grad(set_to_none=True)
                 if finite[index]:
                     loss.backward()
                     optimizer.step()
 
         with torch.no_grad():
-            for index, (value, loss) in enumerate(zip(output, batch_losses)):
+            for index, (value, loss) in enumerate(zip(output, batch_losses, strict=False)):
                 if not finite[index]:
                     continue
                 predicted = value.argmax(dim=1)
@@ -176,11 +185,13 @@ def _run_epoch(
                 labels.extend(target.cpu().tolist())
 
         if step % 10 == 0 and models:
-            local_accuracy = [100.0 * value / count if count else 0.0 for value, count in zip(correct, sample_counts)]
+            local_accuracy = [
+                100.0 * value / count if count else 0.0 for value, count in zip(correct, sample_counts, strict=False)
+            ]
             logger.info("step=%d best_local_accuracy=%.3f", step, max(local_accuracy))
 
     aggregate = []
-    for values in zip(correct, losses, sample_counts):
+    for values in zip(correct, losses, sample_counts, strict=False):
         stats = torch.tensor(values, dtype=torch.float64, device=device)
         dist.all_reduce(stats)
         aggregate.append(stats.tolist())
@@ -260,7 +271,7 @@ def main(args_eval):
     optimizers = []
     lr_schedulers = []
     wd_schedulers = []
-    for model, config in zip(models, optimizer_configs):
+    for model, config in zip(models, optimizer_configs, strict=False):
         groups = [
             {
                 "params": model.parameters(),
@@ -283,9 +294,9 @@ def main(args_eval):
     if args_eval.get("resume_checkpoint") and os.path.exists(checkpoint_path):
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
         start_epoch = checkpoint["epoch"]
-        for model, state in zip(models, checkpoint["classifiers"]):
+        for model, state in zip(models, checkpoint["classifiers"], strict=False):
             model.load_state_dict(state)
-        for optimizer, state in zip(optimizers, checkpoint["optimizers"]):
+        for optimizer, state in zip(optimizers, checkpoint["optimizers"], strict=False):
             optimizer.load_state_dict(state)
         for _ in range(start_epoch * steps_per_epoch):
             for schedule in lr_schedulers + wd_schedulers:

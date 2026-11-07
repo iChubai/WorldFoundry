@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +15,11 @@
 """IO utilities."""
 
 import glob
-from torch.utils.data import Dataset, DataLoader
+
 import numpy as np
-from PIL import Image
 import tqdm
+from PIL import Image
+from torch.utils.data import DataLoader, Dataset
 
 
 class CMMDDataset(Dataset):
@@ -109,7 +109,7 @@ def compute_embeddings_for_dir(
 
         if np.min(image_batch) < 0 or np.max(image_batch) > 1:
             raise ValueError(
-                "Image values are expected to be in [0, 1]. Found:" f" [{np.min(image_batch)}, {np.max(image_batch)}]."
+                f"Image values are expected to be in [0, 1]. Found: [{np.min(image_batch)}, {np.max(image_batch)}]."
             )
 
         # Compute the embeddings using a pmapped function.

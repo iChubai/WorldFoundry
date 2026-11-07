@@ -6,7 +6,7 @@ Lookups go through :func:`video_quality_spec`. YAML entrypoints bind onto
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.lazy_registry import (
@@ -24,20 +24,17 @@ _BLOCKED_REASON = {
 
 _BLOCKED_DETAIL = {
     "aigcbench": (
-        "official AIGCBench scorer outputs are required; this evaluator only "
-        "normalizes existing official result files"
+        "official AIGCBench scorer outputs are required; this evaluator only normalizes existing official result files"
     ),
     "fetv": (
         "official FETV metric or annotation outputs are required; this evaluator "
         "only normalizes existing official result files"
     ),
     "mirabench": (
-        "official MiraBench scorer outputs are required; this evaluator only "
-        "normalizes existing official result files"
+        "official MiraBench scorer outputs are required; this evaluator only normalizes existing official result files"
     ),
     "genai-bench": (
-        "human preference labels and model or judge predictions are required for "
-        "pairwise preference accuracy"
+        "human preference labels and model or judge predictions are required for pairwise preference accuracy"
     ),
     "ipv-bench": (
         "human annotation, official judge outputs, or official understanding "
@@ -317,7 +314,7 @@ def supported_video_quality_benchmark_ids() -> tuple[str, ...]:
     return catalog_ids if catalog_ids else supported_ids(_BLOCKED_REASON)
 
 
-@lru_cache(maxsize=None)
+@cache
 def video_quality_spec(benchmark_id: str) -> dict[str, Any]:
     key = normalize_registry_key(benchmark_id)
     if key not in _BLOCKED_REASON:

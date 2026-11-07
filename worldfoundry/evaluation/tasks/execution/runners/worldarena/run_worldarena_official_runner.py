@@ -57,13 +57,17 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run the in-tree WorldArena video-quality runtime and normalize its result artifact.",
     )
-    parser.add_argument("--worldarena-root", type=Path, help="Override the in-tree WorldArena video_quality runtime root.")
+    parser.add_argument(
+        "--worldarena-root", type=Path, help="Override the in-tree WorldArena video_quality runtime root."
+    )
     parser.add_argument("--config-path", type=Path, help="WorldArena config YAML. If omitted, one is generated.")
     parser.add_argument("--dimension", nargs="+", default=None, help="WorldArena metric dimensions to run.")
     parser.add_argument("--gt-data-dir", type=Path, help="Prepared WorldArena gt_dataset root.")
     parser.add_argument("--generated-dataset-dir", type=Path, help="Prepared WorldArena generated_dataset root.")
     parser.add_argument("--action-gt-data-dir", type=Path, help="Prepared action-following gt_dataset root.")
-    parser.add_argument("--action-generated-dataset-dir", type=Path, help="Prepared action-following generated_dataset root.")
+    parser.add_argument(
+        "--action-generated-dataset-dir", type=Path, help="Prepared action-following generated_dataset root."
+    )
     parser.add_argument("--ckpt-root", type=Path, help="Root containing WorldArena metric checkpoints.")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -117,14 +121,10 @@ def _generated_config(args: argparse.Namespace, runtime_root: Path, output_dir: 
     prepared_base = run_root / "prepared"
     generated_input = args.generated_dataset_dir or args.generated_video_dir
     generated_dataset = (
-        generated_input.expanduser().resolve()
-        if generated_input is not None
-        else prepared_base / "generated_dataset"
+        generated_input.expanduser().resolve() if generated_input is not None else prepared_base / "generated_dataset"
     )
     gt_dataset = (
-        args.gt_data_dir.expanduser().resolve()
-        if args.gt_data_dir is not None
-        else prepared_base / "gt_dataset"
+        args.gt_data_dir.expanduser().resolve() if args.gt_data_dir is not None else prepared_base / "gt_dataset"
     )
     action_generated_input = args.action_generated_dataset_dir or args.generated_video_dir
     action_generated = (
@@ -149,7 +149,9 @@ def _generated_config(args: argparse.Namespace, runtime_root: Path, output_dir: 
     musiq_weight = _asset_path_or("vbench_musiq_spaq_checkpoint", ckpt_root / "pyiqa" / "musiq_spaq_ckpt-358bb6af.pth")
     raft_weight = _path_or_fallback(raft_checkpoint_path, ckpt_root / "raft" / "raft-things.pth")
     sea_raft_cfg = str(sea_raft_config_path("spring-M.json"))
-    sea_raft_weight = _path_or_fallback(sea_raft_checkpoint_path, ckpt_root / "sea_raft" / "Tartan-C-T-TSKH-spring540x960-M.pth")
+    sea_raft_weight = _path_or_fallback(
+        sea_raft_checkpoint_path, ckpt_root / "sea_raft" / "Tartan-C-T-TSKH-spring540x960-M.pth"
+    )
     vfimamba_weight = _path_or_fallback(vfimamba_checkpoint_path, ckpt_root / "VFIMamba.pkl")
     config = {
         "model_name": "worldarena",
@@ -251,7 +253,11 @@ def run_official_worldarena(args: argparse.Namespace, output_dir: Path) -> Path:
     if not eval_script.is_file():
         raise FileNotFoundError(f"missing in-tree WorldArena runtime: {eval_script}")
     dimensions = args.dimension or list(DEFAULT_DIMENSIONS)
-    config_path = args.config_path.expanduser().resolve() if args.config_path else _generated_config(args, runtime_root, output_dir)
+    config_path = (
+        args.config_path.expanduser().resolve()
+        if args.config_path
+        else _generated_config(args, runtime_root, output_dir)
+    )
     _require_prepared_dataset_layout(config_path, list(dimensions))
     command = [sys.executable, str(eval_script), "--dimension", *dimensions, "--config_path", str(config_path)]
     if args.overwrite:
@@ -406,9 +412,7 @@ def normalize_worldarena_results(args: argparse.Namespace, results_path: Path, o
         "normalization_ok": available_count > 0,
         "eligibility": {
             "full_suite_valid": False,
-            "official_video_quality_component_verified": (
-                official_runtime_executed and bool(component_metrics)
-            ),
+            "official_video_quality_component_verified": (official_runtime_executed and bool(component_metrics)),
             "embodied_tracks_executed": False,
         },
         "run": {
@@ -426,9 +430,7 @@ def normalize_worldarena_results(args: argparse.Namespace, results_path: Path, o
             "benchmark_id": args.benchmark_id,
             "contract_only": False,
             "evidence_level": (
-                "official_video_quality_runtime"
-                if official_runtime_executed
-                else "official_results_normalized"
+                "official_video_quality_runtime" if official_runtime_executed else "official_results_normalized"
             ),
             "evidence_scope": (
                 "bounded_video_quality_component"
@@ -440,9 +442,7 @@ def normalize_worldarena_results(args: argparse.Namespace, results_path: Path, o
             "official_results_path": str(results_path.resolve()),
             "generated_video_dir": None if args.generated_video_dir is None else str(args.generated_video_dir),
             "generated_dataset_dir": (
-                None
-                if getattr(args, "generated_dataset_dir", None) is None
-                else str(args.generated_dataset_dir)
+                None if getattr(args, "generated_dataset_dir", None) is None else str(args.generated_dataset_dir)
             ),
         },
         "metrics": {
@@ -478,7 +478,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.run_official:
         try:
             results_path = run_official_worldarena(args, output_dir)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             failure = {
                 "schema_version": SCORECARD_SCHEMA_VERSION,
                 "official_benchmark_verified": False,

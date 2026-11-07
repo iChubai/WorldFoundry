@@ -221,11 +221,15 @@ def evaluate_genai_alignment_scores(
         for tag, prompt_indices in tags.items():
             item_indices: list[int] = []
             for prompt_idx in prompt_indices:
-                item_indices.extend(prompt_to_items.get(f"{int(prompt_idx):05d}", prompt_to_items.get(str(prompt_idx), [])))
+                item_indices.extend(
+                    prompt_to_items.get(f"{int(prompt_idx):05d}", prompt_to_items.get(str(prompt_idx), []))
+                )
             if not item_indices:
                 continue
             tag_results[tag] = {
-                "alignment": _correlation_payload([our_scores[index] for index in item_indices], [human_scores[index] for index in item_indices])
+                "alignment": _correlation_payload(
+                    [our_scores[index] for index in item_indices], [human_scores[index] for index in item_indices]
+                )
             }
         result["per_skill"] = tag_results
     return result
@@ -247,7 +251,9 @@ def evaluate_genai_alignment_score_file(
         if prompt_to_items_path is not None and prompt_to_items_path.is_file()
         else None
     )
-    return evaluate_genai_alignment_scores(_load_scores(score_path), metadata, tags=tags, prompt_to_items=prompt_to_items)
+    return evaluate_genai_alignment_scores(
+        _load_scores(score_path), metadata, tags=tags, prompt_to_items=prompt_to_items
+    )
 
 
 def evaluate_genai_ranking_scores(
@@ -268,7 +274,9 @@ def evaluate_genai_ranking_scores(
     human_per_prompt = human_scores.reshape(prompt_count, 9)
     argmax_human = np.argmax(human_per_prompt, axis=1)
     argmin_human = np.argmin(human_per_prompt, axis=1)
-    ranking_accuracy = our_per_prompt[np.arange(prompt_count), argmax_human] > our_per_prompt[np.arange(prompt_count), argmin_human]
+    ranking_accuracy = (
+        our_per_prompt[np.arange(prompt_count), argmax_human] > our_per_prompt[np.arange(prompt_count), argmin_human]
+    )
 
     result: dict[str, Any] = {
         "pearson": calc_pearson(human_scores, our_scores),
@@ -279,7 +287,11 @@ def evaluate_genai_ranking_scores(
     if tags is not None and images_to_prompt_idx is not None:
         per_skill: dict[str, Any] = {}
         for tag, prompt_indices in tags.items():
-            selected = [index for index, prompt_idx in enumerate(images_to_prompt_idx[:prompt_count]) if prompt_idx in prompt_indices]
+            selected = [
+                index
+                for index, prompt_idx in enumerate(images_to_prompt_idx[:prompt_count])
+                if prompt_idx in prompt_indices
+            ]
             if selected:
                 per_skill[tag] = float(ranking_accuracy[selected].mean())
         per_skill["all"] = result["ranking_accuracy"]

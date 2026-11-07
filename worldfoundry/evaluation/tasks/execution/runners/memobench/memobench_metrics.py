@@ -280,9 +280,7 @@ def _candidate_files(path: Path) -> list[Path]:
     if not path.is_dir():
         return []
     files = [
-        child
-        for child in path.rglob("*")
-        if child.is_file() and child.suffix.lower() in {".csv", ".json", ".jsonl"}
+        child for child in path.rglob("*") if child.is_file() and child.suffix.lower() in {".csv", ".json", ".jsonl"}
     ]
     preferred: list[Path] = []
     for child in files:
@@ -441,4 +439,3 @@ __all__ = [
     "metric_rows",
     "normalize_score",
 ]
-

@@ -5,15 +5,16 @@ from __future__ import annotations
 import gzip
 import json
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
-    first_existing_dir,
-    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
+    first_existing_dir,
+    resolve_env_path,
 )
 
 BENCHMARK_ID = "world-in-world"
@@ -39,7 +40,6 @@ CANONICAL_TASKS = ("AR", "IGNav", "AEQA", "Manip")
 CANONICAL_AEQA_PROMPT_COUNT = 184
 
 DEFAULT_TASK = "AEQA"
-
 
 
 def resolve_world_in_world_root(explicit: Path | None = None) -> Path | None:

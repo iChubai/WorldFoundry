@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import torch
 import math
-import torchvision
 
-from tqdm import tqdm
-
-from fld.features.FeatureExtractor import FeatureExtractor
+import torch
 from fld.datasets.ImageFilesDataset import ImageFilesDataset
 from fld.datasets.ImageTensorDataset import ImageTensorDataset
+from fld.features.FeatureExtractor import FeatureExtractor
+from tqdm import tqdm
 
 BATCH_SIZE = 256
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -16,9 +14,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class ImageFeatureExtractor(FeatureExtractor):
     def get_tensor_features(self, img_tensor: torch.Tensor, name=None, recompute=False):
-        img_tensor = (
-            img_tensor.cpu()
-        )  # Ensure the tensor is on CPU (required for ToPilImage)
+        img_tensor = img_tensor.cpu()  # Ensure the tensor is on CPU (required for ToPilImage)
         dataset = ImageTensorDataset(img_tensor)
         return self.get_features(dataset, name, recompute)
 

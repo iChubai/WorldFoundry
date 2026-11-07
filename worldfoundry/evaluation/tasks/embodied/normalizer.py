@@ -22,13 +22,13 @@ import csv
 import json
 import sys
 from collections import defaultdict
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import write_json, write_jsonl
 from worldfoundry.core.observability.time import utc_now_iso
 from worldfoundry.evaluation.tasks.execution.framework.normalizers import apply_normalizer
-
 
 # Schema version for normalized scorecard files.
 SCORECARD_SCHEMA_VERSION = "worldfoundry-scorecard"
@@ -195,7 +195,9 @@ def read_input_rows(paths: Iterable[Path]) -> tuple[list[dict[str, Any]], dict[s
     summary: dict[str, Any] = {}
     source_files: list[str] = []
     for input_path in paths:
-        candidates = sorted(path for path in input_path.rglob("*") if path.is_file()) if input_path.is_dir() else [input_path]
+        candidates = (
+            sorted(path for path in input_path.rglob("*") if path.is_file()) if input_path.is_dir() else [input_path]
+        )
         for path in candidates:
             suffix = path.suffix.lower()
             if suffix not in {".json", ".jsonl", ".csv", ".tsv"} and path.name not in {"_result.txt", "result.txt"}:
@@ -260,7 +262,8 @@ def infer_normalizer(metric_id: str, overrides: Mapping[str, str]) -> str | None
     if metric_id in overrides:
         return overrides[metric_id]
     if (
-        metric_id in {
+        metric_id
+        in {
             "success",
             "success_rate",
             "task_success",
@@ -337,7 +340,9 @@ def normalized_metric_rows(
                     "metadata": {
                         key: value
                         for key, value in row.items()
-                        if key not in values and key not in ID_FIELDS and key not in {"metric", "metric_id", "metric_name"}
+                        if key not in values
+                        and key not in ID_FIELDS
+                        and key not in {"metric", "metric_id", "metric_name"}
                     },
                 }
             )
@@ -358,9 +363,7 @@ def summarize(rows: list[dict[str, Any]], summary_payload: Mapping[str, Any]) ->
         metric_id: sum(values) / len(values) for metric_id, values in sorted(by_metric.items()) if values
     }
     per_task = {
-        task_id: {
-            metric_id: sum(values) / len(values) for metric_id, values in sorted(metrics.items()) if values
-        }
+        task_id: {metric_id: sum(values) / len(values) for metric_id, values in sorted(metrics.items()) if values}
         for task_id, metrics in sorted(by_task_metric.items())
     }
     return {
@@ -490,11 +493,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Normalize official VLA / VA(VAM) / WAM JSON, JSONL, or CSV results into a WorldFoundry scorecard."
     )
-    parser.add_argument("--input", action="append", type=Path, required=True, help="Official result file or directory. Repeatable.")
+    parser.add_argument(
+        "--input", action="append", type=Path, required=True, help="Official result file or directory. Repeatable."
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--benchmark-id", required=True)
     parser.add_argument("--track", choices=sorted(TRACKS), required=True)
-    parser.add_argument("--normalizer", action="append", default=[], help="Metric override as metric_id=normalizer_spec.")
+    parser.add_argument(
+        "--normalizer", action="append", default=[], help="Metric override as metric_id=normalizer_spec."
+    )
     parser.add_argument("--json", action="store_true", help="Print the scorecard JSON after writing artifacts.")
     return parser
 

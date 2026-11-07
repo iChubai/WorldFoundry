@@ -8,10 +8,10 @@ from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
-    first_existing_dir,
-    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
+    first_existing_dir,
+    resolve_env_path,
 )
 
 BENCHMARK_ID = "iworld-bench"
@@ -25,8 +25,6 @@ SPLIT_TASK_NAMES = {
     "mem": "Mem",
     "camera_following": "CameraFollowing",
 }
-
-
 
 
 def resolve_iworldbench_root(explicit: Path | None = None) -> Path | None:

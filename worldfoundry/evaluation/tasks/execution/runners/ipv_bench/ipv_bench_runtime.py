@@ -39,7 +39,6 @@ def discover_official_results(search_roots: list[Path]) -> Path | None:
     return None
 
 
-
 @dataclass(frozen=True)
 class IpvBenchRuntimeConfig:
     backend: str
@@ -48,10 +47,14 @@ class IpvBenchRuntimeConfig:
 
 def runtime_config_from_env() -> IpvBenchRuntimeConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_IPV_BENCH_SCORER_BACKEND")
-        or "artifact"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_IPV_BENCH_SCORER_BACKEND")
+            or "artifact"
+        )
+        .strip()
+        .lower()
+    )
     strict = os.environ.get("WORLDFOUNDRY_IPV_BENCH_STRICT", "").strip().lower() in {"1", "true", "yes", "on"}
     return IpvBenchRuntimeConfig(
         backend=backend,

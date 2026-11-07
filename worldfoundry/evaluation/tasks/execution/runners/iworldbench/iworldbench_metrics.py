@@ -5,8 +5,9 @@ from __future__ import annotations
 import csv
 import json
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric as _mean
 
@@ -245,7 +246,7 @@ def compute_iworldbench_metrics(
     if results_path is not None and not parsed_rows:
         parsed_rows = collect_result_rows(results_path)
 
-    per_metric: dict[str, float | None] = {metric_id: None for metric_id in METRIC_ORDER}
+    per_metric: dict[str, float | None] = dict.fromkeys(METRIC_ORDER)
     sample_counts: dict[str, int] = {}
 
     if parsed_rows and all("metric_id" in row and "score" in row for row in parsed_rows[: min(3, len(parsed_rows))]):

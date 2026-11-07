@@ -62,7 +62,13 @@ def _score_file_identity(score_file: Path, score_data: dict[str, Any]) -> tuple[
         unique_id = f"{model_name}_{clean_checkpoint}_{split_name}"
     else:
         unique_id = f"{model_name}_{split_name}"
-    return unique_id, {"metadata": metadata, "model_name": model_name, "checkpoint": checkpoint, "split_name": split_name, "unique_id": unique_id}
+    return unique_id, {
+        "metadata": metadata,
+        "model_name": model_name,
+        "checkpoint": checkpoint,
+        "split_name": split_name,
+        "unique_id": unique_id,
+    }
 
 
 def evaluate_binary_score_file(score_file: Path) -> tuple[str, dict[str, Any] | None]:
@@ -246,7 +252,9 @@ def calculate_bleu2_score(reference: Any, candidate: Any) -> float:
     try:
         from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 
-        return float(sentence_bleu([ref_tokens], cand_tokens, weights=(0.5, 0.5), smoothing_function=SmoothingFunction().method1))
+        return float(
+            sentence_bleu([ref_tokens], cand_tokens, weights=(0.5, 0.5), smoothing_function=SmoothingFunction().method1)
+        )
     except Exception:
         unigram_precision = len(set(ref_tokens) & set(cand_tokens)) / len(cand_tokens)
         ref_bigrams = set(zip(ref_tokens[:-1], ref_tokens[1:], strict=False))
@@ -304,7 +312,9 @@ def calculate_meteor_score(reference: Any, candidate: Any) -> float:
     return 0.0 if precision + recall == 0 else (10 * precision * recall) / (recall + 9 * precision)
 
 
-def calculate_generative_match(reference: Any, candidate: Any, *, api_key: str | None = None, retries: int = 3, delay: float = 2.0) -> float | None:
+def calculate_generative_match(
+    reference: Any, candidate: Any, *, api_key: str | None = None, retries: int = 3, delay: float = 2.0
+) -> float | None:
     if not reference or not candidate:
         return 0.0
     api_key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -399,7 +409,13 @@ def evaluate_camerabench_caption(
     api_key: str | None = None,
 ) -> dict[str, Any]:
     files = score_files or (find_caption_score_files(score_dir) if score_dir is not None else [])
-    results = [result for score_file in files if score_file.is_file() for result in [evaluate_caption_file(score_file, api_key=api_key)] if result]
+    results = [
+        result
+        for score_file in files
+        if score_file.is_file()
+        for result in [evaluate_caption_file(score_file, api_key=api_key)]
+        if result
+    ]
     summary = {
         "evaluation_timestamp": datetime.now(timezone.utc).isoformat(),
         "evaluated_files": len(files),
@@ -432,9 +448,13 @@ def evaluate_camerabench_from_score_dir(
         if item == "binary":
             task_results[item] = evaluate_camerabench_binary(score_dir=score_dir, output_file=output_file)
         elif item == "vqa_retrieval":
-            task_results[item] = evaluate_camerabench_vqa_retrieval(score_dir=score_dir, mode=mode, output_file=output_file)
+            task_results[item] = evaluate_camerabench_vqa_retrieval(
+                score_dir=score_dir, mode=mode, output_file=output_file
+            )
         elif item == "caption":
             api_key = None if no_gpt else openai_api_key
-            task_results[item] = evaluate_camerabench_caption(score_dir=score_dir, output_file=output_file, api_key=api_key)
+            task_results[item] = evaluate_camerabench_caption(
+                score_dir=score_dir, output_file=output_file, api_key=api_key
+            )
         commands.append(f"worldfoundry.evaluation.tasks.execution.runners.camerabench.camerabench_metrics:{item}")
     return task_results, commands

@@ -8,10 +8,11 @@ and de-duplicating entries across multiple YAML sources.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping
+from typing import Any
 
 from ...api import WorldModelManifest
 from ...api.registry import AliasRegistryStore, lookup_key
@@ -23,6 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 # ── Custom exceptions ────────────────────────────────────────
 
+
 class DuplicateModelZooKeyError(ValueError):
     """Raised when a model-zoo key or alias resolves ambiguously."""
 
@@ -32,6 +34,7 @@ class UnknownModelZooKeyError(KeyError):
 
 
 # ── Variant record ────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class ModelZooVariantRecord:
@@ -67,6 +70,7 @@ def is_model_catalog_metadata_manifest(path: str | Path) -> bool:
 
 
 # ── Entry helpers ────────────────────────────────────────────
+
 
 def _normalise_key(value: str) -> str:
     """Normalize a registry key string for case-insensitive lookup."""
@@ -126,6 +130,7 @@ def _load_entries_with_priority(path: str | Path) -> tuple[tuple[int, ModelZooEn
 
 
 # ── Pipeline route hydration ─────────────────────────────────
+
 
 def _resolve_entry_pipeline_route(entry: ModelZooEntry) -> tuple[str, str] | None:
     """Resolve the pipeline import target and binding for a main entry."""
@@ -212,6 +217,7 @@ def _hydrate_pipeline_routes(entry: ModelZooEntry) -> ModelZooEntry:
 
 # ── Entry de-duplication ──────────────────────────────────────
 
+
 def _dedupe_entries_by_target_priority(paths: Iterable[str | Path]) -> tuple[ModelZooEntry, ...]:
     """De-duplicate model entries from multiple paths, prioritizing higher schema versions.
 
@@ -245,6 +251,7 @@ def _dedupe_entries_by_target_priority(paths: Iterable[str | Path]) -> tuple[Mod
 
 
 # ── Registry class ────────────────────────────────────────────
+
 
 class ModelZooRegistry:
     """In-memory registry for model-zoo manifest metadata with alias lookups.
@@ -285,7 +292,7 @@ class ModelZooRegistry:
         return len(self._store)
 
     @classmethod
-    def from_directory(cls, path: str | Path | None = None, *, pattern: str | None = None) -> "ModelZooRegistry":
+    def from_directory(cls, path: str | Path | None = None, *, pattern: str | None = None) -> ModelZooRegistry:
         """Load and build a registry from files inside a model-zoo directory."""
         root = Path(path) if path is not None else default_model_zoo_dir()
         paths = sorted(root.glob(pattern)) if pattern else manifest_paths(root)
@@ -296,7 +303,7 @@ class ModelZooRegistry:
         )
 
     @classmethod
-    def from_paths(cls, paths: Iterable[str | Path]) -> "ModelZooRegistry":
+    def from_paths(cls, paths: Iterable[str | Path]) -> ModelZooRegistry:
         """Load and build a registry from specific manifest file paths."""
         return cls(_dedupe_entries_by_target_priority(paths))
 
@@ -431,11 +438,7 @@ class ModelZooRegistry:
     def by_task(self, task: str) -> tuple[ModelZooEntry, ...]:
         """Filter model entries by a specific task they support."""
         lookup = _normalise_key(task)
-        return tuple(
-            entry
-            for entry in self.list()
-            if any(item.casefold() == lookup for item in _entry_tasks(entry))
-        )
+        return tuple(entry for entry in self.list() if any(item.casefold() == lookup for item in _entry_tasks(entry)))
 
     def find_by_task(self, task: str) -> tuple[ModelZooEntry, ...]:
         """Find model entries by a specific task."""
@@ -451,6 +454,7 @@ class ModelZooRegistry:
 
 
 # ── Cached registry loader ────────────────────────────────────
+
 
 @lru_cache(maxsize=32)
 def _load_model_zoo_registry_cached(resolved_root: str) -> ModelZooRegistry:

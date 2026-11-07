@@ -11,7 +11,9 @@ from worldfoundry.evaluation.tasks.metrics._shared.lazy import lazy_export
 from worldfoundry.evaluation.tasks.metrics.registry import metric_module_from_globals
 
 compute_cas_from_predictions = lazy_export(f"{__name__}.wrapper", "compute_cas_from_predictions", owner=__name__)
-train_classifier_and_compute_cas = lazy_export(f"{__name__}.wrapper", "train_classifier_and_compute_cas", owner=__name__)
+train_classifier_and_compute_cas = lazy_export(
+    f"{__name__}.wrapper", "train_classifier_and_compute_cas", owner=__name__
+)
 
 METRIC_ID = "cas"
 ALIASES = ("classification-accuracy-score", "classification_accuracy_score")

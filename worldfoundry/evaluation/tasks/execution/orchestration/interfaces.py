@@ -7,9 +7,10 @@ and results/stages of official benchmark executions are tracked, normalized, and
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 # Generic type alias for JSON-compatible values
 JsonValue = Any
@@ -43,6 +44,7 @@ class BenchmarkSample:
         expected_outputs: Target answers, reference values, or ground-truth data mapped by string keys.
         metadata: Additional contextual metadata associated with this sample.
     """
+
     sample_id: str
     inputs: Mapping[str, JsonValue] = field(default_factory=dict)
     expected_outputs: Mapping[str, JsonValue] = field(default_factory=dict)
@@ -68,6 +70,7 @@ class DatasetMaterializationPlan:
         requires_auth: Flag indicating if dataset retrieval needs credentials/login tokens.
         notes: Helpful diagnostic explanations or instructions regarding setup prerequisites.
     """
+
     benchmark_id: str
     dataset_ids: tuple[str, ...] = ()
     commands: tuple[tuple[str, ...], ...] = ()
@@ -97,6 +100,7 @@ class OfficialRunResult:
         artifacts: Dictionary mapping unique asset names to their generated file parameters or metadata.
         metadata: Arbitrary execution or system metrics reported by the runner.
     """
+
     benchmark_id: str
     output_dir: Path
     scorecard_path: Path
@@ -129,10 +133,7 @@ class OfficialRunResult:
             return True
         mode = str(self.metadata.get("mode") or "")
         if mode in {"normalizer", "official-validation"}:
-            return (
-                self.metadata.get("normalization_ok") is True
-                and self.metadata.get("returncode") in {None, 0}
-            )
+            return self.metadata.get("normalization_ok") is True and self.metadata.get("returncode") in {None, 0}
         if mode == "contract":
             return self.metadata.get("contract_only") is True
         return False
@@ -168,6 +169,7 @@ class OfficialRunStage:
         data: Internal operational state or properties transferred between runner pipeline steps.
         metadata: Additional environment or runner telemetry captured during this phase.
     """
+
     benchmark_id: str
     stage: str
     output_dir: Path
@@ -188,6 +190,7 @@ class BenchmarkRunner(Protocol):
     Implementations are responsible for loading baseline manifests, defining setup dependencies,
     streaming task inputs, and executing evaluation procedures.
     """
+
     benchmark_id: str
 
     def load_manifest(self) -> Mapping[str, JsonValue]:

@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 
 from worldfoundry.base_models.perception_core.video_text.vqa_score.constants import HF_CACHE_DIR
@@ -58,7 +56,7 @@ class LanguageBindVideoCLIPScoreModel(ScoreModel):
         self.num_frames = 8  # All models have 8 frames (12 frames models are not released as of Feb 2025)
         self.model.eval()
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         # Simply verify if all are videos ending with video formats such as mp4
         if not all([img.endswith((".mp4", ".avi")) for img in image]):
@@ -66,7 +64,7 @@ class LanguageBindVideoCLIPScoreModel(ScoreModel):
         return image
 
     @torch.no_grad()
-    def forward(self, images: List[str], texts: List[str], num_frames: int = 8) -> torch.Tensor:
+    def forward(self, images: list[str], texts: list[str], num_frames: int = 8) -> torch.Tensor:
         """Forward pass of the model to return n scores for n (image, text) pairs (in PyTorch Tensor)"""
         assert len(images) == len(texts)
         if num_frames != self.num_frames:

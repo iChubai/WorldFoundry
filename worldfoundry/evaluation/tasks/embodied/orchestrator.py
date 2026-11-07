@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
+from collections.abc import Mapping, Sequence
 from contextlib import ExitStack
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import JsonlWriter
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult

@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import json
 import os
@@ -23,8 +19,9 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
     write_json,
     write_jsonl,
 )
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.utils import HFD_DATASET_CACHE_ROOT, REPO_ROOT, worldfoundry_hfd_dataset_root
-from worldfoundry.runtime.env import (  # type: ignore[reportMissingImports]  # noqa: E402
+from worldfoundry.runtime.env import (  # type: ignore[reportMissingImports]
     resolve_data_dir,
     resolve_hf_cache_dir,
 )
@@ -454,7 +451,9 @@ def load_upstream_results(path: Path) -> tuple[dict[str, Any], Path]:
 def dimension_blocks(raw_results: dict[str, Any], upstream_results_path: Path) -> dict[str, dict[str, Any]]:
     blocks: dict[str, dict[str, Any]] = {}
     if {"average_scores", "scores"} & set(raw_results):
-        dimension = canonical_dimension(raw_results.get("dimension")) or infer_dimension_from_path(upstream_results_path)
+        dimension = canonical_dimension(raw_results.get("dimension")) or infer_dimension_from_path(
+            upstream_results_path
+        )
         if dimension is None:
             raise ValueError("single Video-Bench result JSON requires a dimension field or dimension-named path")
         return {dimension: raw_results}
@@ -466,7 +465,9 @@ def dimension_blocks(raw_results: dict[str, Any], upstream_results_path: Path) -
     return blocks
 
 
-def sample_rows_for_dimension(dimension: str, block: dict[str, Any], upstream_results_path: Path) -> list[dict[str, Any]]:
+def sample_rows_for_dimension(
+    dimension: str, block: dict[str, Any], upstream_results_path: Path
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     scores = block.get("scores")
     if not isinstance(scores, dict):
@@ -498,7 +499,9 @@ def sample_rows_for_dimension(dimension: str, block: dict[str, Any], upstream_re
     return rows
 
 
-def dimension_score(dimension: str, block: dict[str, Any], sample_rows: list[dict[str, Any]]) -> tuple[float | None, str, int]:
+def dimension_score(
+    dimension: str, block: dict[str, Any], sample_rows: list[dict[str, Any]]
+) -> tuple[float | None, str, int]:
     average_scores = block.get("average_scores")
     if isinstance(average_scores, dict):
         values = [scalar(value) for value in average_scores.values()]
@@ -551,7 +554,9 @@ def normalize_videobench_results(
         block = blocks.get(dimension, {})
         sample_rows = sample_rows_for_dimension(dimension, block, upstream_results_path) if block else []
         all_sample_rows.extend(sample_rows)
-        raw_score, source, sample_count = dimension_score(dimension, block, sample_rows) if block else (None, "dimension_missing", 0)
+        raw_score, source, sample_count = (
+            dimension_score(dimension, block, sample_rows) if block else (None, "dimension_missing", 0)
+        )
         normalized_score = normalize_videobench_score(raw_score, spec["max_score"])
         row = {
             "metric_id": spec["metric_id"],
@@ -604,7 +609,15 @@ def normalize_videobench_results(
     normalized = normalizer_only and returncode == 0 and available_count > 0
     official_verified = command is not None and returncode == 0 and available_count > 0
     normalization_ok = (official_verified or normalized) and not blocked_reasons
-    run_status = "blocked" if blocked_reasons else "official_verified" if official_verified else "normalized" if normalized else "failed"
+    run_status = (
+        "blocked"
+        if blocked_reasons
+        else "official_verified"
+        if official_verified
+        else "normalized"
+        if normalized
+        else "failed"
+    )
     scorecard = {
         "schema_version": SCORECARD_SCHEMA_VERSION,
         "run": {
@@ -635,7 +648,9 @@ def normalize_videobench_results(
             ],
         },
         "generation": {
-            "successful": len({(row["dimension"], row["sample_id"], row["model_name"]) for row in all_sample_rows if row["available"]}),
+            "successful": len(
+                {(row["dimension"], row["sample_id"], row["model_name"]) for row in all_sample_rows if row["available"]}
+            ),
             "failed": len([row for row in all_sample_rows if not row["available"]]),
         },
         "metrics": {
@@ -709,7 +724,9 @@ def resolved_dimensions(args: argparse.Namespace) -> list[str]:
 def required_secret(name: str, value: str | None) -> str:
     if value:
         return value
-    raise ValueError(f"official Video-Bench runtime requires {name}; use --official-results-path for offline normalization")
+    raise ValueError(
+        f"official Video-Bench runtime requires {name}; use --official-results-path for offline normalization"
+    )
 
 
 def missing_judge_api_requirements(args: argparse.Namespace) -> list[str]:
@@ -733,7 +750,9 @@ def write_runtime_config(args: argparse.Namespace, output_dir: Path, dimensions:
     if not isinstance(config, dict):
         config = {}
 
-    config["GPT4o_API_KEY"] = required_secret("WORLDFOUNDRY_VIDEOBENCH_GPT4O_API_KEY or OPENAI_API_KEY", args.gpt4o_api_key)
+    config["GPT4o_API_KEY"] = required_secret(
+        "WORLDFOUNDRY_VIDEOBENCH_GPT4O_API_KEY or OPENAI_API_KEY", args.gpt4o_api_key
+    )
     config["GPT4o_BASE_URL"] = args.gpt4o_base_url or ""
     config["GPT4o_mini_API_KEY"] = required_secret(
         "WORLDFOUNDRY_VIDEOBENCH_GPT4O_MINI_API_KEY or OPENAI_API_KEY",
@@ -755,7 +774,9 @@ def write_runtime_config(args: argparse.Namespace, output_dir: Path, dimensions:
     return config_path
 
 
-def resolve_full_json_path(args: argparse.Namespace, output_dir: Path, dimensions: list[str], annotation_root: Path | None) -> Path:
+def resolve_full_json_path(
+    args: argparse.Namespace, output_dir: Path, dimensions: list[str], annotation_root: Path | None
+) -> Path:
     """
     Resolve or build the prompt metadata JSON required by official Video-Bench.
 
@@ -781,7 +802,9 @@ def resolve_full_json_path(args: argparse.Namespace, output_dir: Path, dimension
 
     if annotation_root is None:
         annotation_root = resolve_annotation_root(args, required=True)
-    return build_full_json_from_annotations(annotation_root, output_dir / "VideoBench_full.from_annotations.json", dimensions)
+    return build_full_json_from_annotations(
+        annotation_root, output_dir / "VideoBench_full.from_annotations.json", dimensions
+    )
 
 
 def collect_official_output(output_dir: Path) -> tuple[dict[str, Any], Path]:
@@ -854,7 +877,9 @@ def run_videobench(args: argparse.Namespace) -> dict[str, Any]:
 
     videos_path = resolve_videos_path(args)
     if videos_path is None:
-        raise ValueError("--videos-path, --generated-video-dir, --model-output-dir, or --official-results-path is required")
+        raise ValueError(
+            "--videos-path, --generated-video-dir, --model-output-dir, or --official-results-path is required"
+        )
     if not args.videobench_root.is_dir():
         raise FileNotFoundError(f"Video-Bench root not found: {args.videobench_root}")
 
@@ -928,9 +953,13 @@ def run_videobench(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run official Video-Bench or normalize official score outputs to a WorldFoundry scorecard.")
+    parser = argparse.ArgumentParser(
+        description="Run official Video-Bench or normalize official score outputs to a WorldFoundry scorecard."
+    )
     parser.add_argument("--benchmark-id", default=os.environ.get("WORLDFOUNDRY_BENCHMARK_ID", "video-bench"))
-    parser.add_argument("--videobench-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_ROOT", DEFAULT_VIDEOBENCH_ROOT))
+    parser.add_argument(
+        "--videobench-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_ROOT", DEFAULT_VIDEOBENCH_ROOT)
+    )
     parser.add_argument(
         "--official-results-path",
         dest="from_upstream_results",
@@ -939,21 +968,35 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--from-upstream-results", dest="from_upstream_results", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--videos-path", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_VIDEOS_PATH"))
-    parser.add_argument("--generated-video-dir", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_GENERATED_VIDEO_DIR"))
+    parser.add_argument(
+        "--generated-video-dir", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_GENERATED_VIDEO_DIR")
+    )
     parser.add_argument("--model-output-dir", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_MODEL_OUTPUT_DIR"))
     parser.add_argument("--annotation-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_ANNOTATION_ROOT"))
-    parser.add_argument("--official-videos-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_OFFICIAL_VIDEOS_ROOT"))
+    parser.add_argument(
+        "--official-videos-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_OFFICIAL_VIDEOS_ROOT")
+    )
     parser.add_argument("--full-json-dir", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_FULL_JSON_DIR"))
     parser.add_argument("--dimension", action="append", default=None)
-    parser.add_argument("--mode", choices=("standard", "custom_static", "custom_nonstatic"), default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_MODE", "standard"))
+    parser.add_argument(
+        "--mode",
+        choices=("standard", "custom_static", "custom_nonstatic"),
+        default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_MODE", "standard"),
+    )
     parser.add_argument("--models", nargs="+", default=env_list("WORLDFOUNDRY_VIDEOBENCH_MODELS") or [])
     parser.add_argument("--prompt", default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_PROMPT"))
     parser.add_argument("--prompt-file", type=Path, default=env_path("WORLDFOUNDRY_VIDEOBENCH_PROMPT_FILE"))
     parser.add_argument("--output-dir", type=Path, default=env_path("WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"))
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--timeout", type=int, default=int(os.environ.get("WORLDFOUNDRY_VIDEOBENCH_TIMEOUT", "3600")))
-    parser.add_argument("--gpt4o-api-key", default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_GPT4O_API_KEY") or os.environ.get("OPENAI_API_KEY"))
-    parser.add_argument("--gpt4o-base-url", default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_GPT4O_BASE_URL") or os.environ.get("OPENAI_BASE_URL"))
+    parser.add_argument(
+        "--gpt4o-api-key",
+        default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_GPT4O_API_KEY") or os.environ.get("OPENAI_API_KEY"),
+    )
+    parser.add_argument(
+        "--gpt4o-base-url",
+        default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_GPT4O_BASE_URL") or os.environ.get("OPENAI_BASE_URL"),
+    )
     parser.add_argument(
         "--gpt4o-mini-api-key",
         default=os.environ.get("WORLDFOUNDRY_VIDEOBENCH_GPT4O_MINI_API_KEY") or os.environ.get("OPENAI_API_KEY"),

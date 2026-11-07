@@ -16,14 +16,13 @@ read from the ``DAGroup-PKU/RBench`` dataset manifests.
 
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
+
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 
 BENCHMARK_ID = "rbench"
 DISPLAY_NAME = "RBench"
@@ -95,15 +94,14 @@ TASK_CATEGORY_A_FIELDS: Mapping[str, tuple[str, str]] = {
 VLM_BACKENDS: tuple[str, ...] = ("gpt", "qwen_local", "qwen_api")
 DEFAULT_VLM_BACKEND = "gpt"
 
+
 # ``prefix_tag`` used in upstream summary filenames: qwen_api/qwen_local both write "qwen".
 def summary_prefix_tag(vlm_backend: str) -> str:
     """Return the upstream ``score_summary_<tag>.csv`` tag for a VLM backend."""
     return "gpt" if vlm_backend == "gpt" else "qwen"
 
 
-CANONICAL_EMBODIMENT_PROMPT_COUNT = sum(
-    split.prompt_count for split in SPLITS if split.track == EMBODIMENT_TRACK
-)
+CANONICAL_EMBODIMENT_PROMPT_COUNT = sum(split.prompt_count for split in SPLITS if split.track == EMBODIMENT_TRACK)
 CANONICAL_TASK_PROMPT_COUNT = sum(split.prompt_count for split in SPLITS if split.track == TASK_TRACK)
 CANONICAL_PROMPT_COUNT = CANONICAL_EMBODIMENT_PROMPT_COUNT + CANONICAL_TASK_PROMPT_COUNT
 
@@ -190,9 +188,7 @@ def video_coverage(*, video_dir: Path | None, expected: Sequence[str]) -> dict[s
     actual: set[str] = set()
     if video_dir is not None and Path(video_dir).is_dir():
         actual = {
-            path.stem
-            for path in Path(video_dir).iterdir()
-            if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
+            path.stem for path in Path(video_dir).iterdir() if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
         }
     expected_set = {str(item) for item in expected}
     missing = sorted(expected_set - actual)
@@ -216,7 +212,6 @@ __all__ = [
     "DISPLAY_NAME",
     "EMBODIMENT_ORDER",
     "EMBODIMENT_TRACK",
-    "RBenchSplit",
     "SPLITS",
     "SPLITS_BY_ID",
     "TASK_CATEGORY_A_FIELDS",
@@ -225,6 +220,7 @@ __all__ = [
     "TASK_TRACK",
     "VIDEO_SUFFIXES",
     "VLM_BACKENDS",
+    "RBenchSplit",
     "expected_video_stems",
     "load_prompt_records",
     "prompt_index",

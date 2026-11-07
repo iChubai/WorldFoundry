@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
 from worldfoundry.evaluation.tasks.execution.framework.io import write_jsonl
@@ -141,9 +142,7 @@ def _consistency_features(model: Any, frames: Sequence[Any], *, device: Any, bat
     from torchvision.transforms import Resize
 
     resize = Resize([224, 224])
-    pixels = torch.stack(
-        [resize(torch.from_numpy(frame).permute(2, 0, 1).float()) for frame in frames]
-    )
+    pixels = torch.stack([resize(torch.from_numpy(frame).permute(2, 0, 1).float()) for frame in frames])
     return _image_features(model, pixels, device=device, batch_size=batch_size)
 
 
@@ -213,11 +212,7 @@ def run_raw_video_metrics(
     videos_dir = videos_dir.expanduser().resolve()
     if not videos_dir.is_dir():
         raise FileNotFoundError(f"EvalCrafter videos directory not found: {videos_dir}")
-    selected_records = [
-        record
-        for record in prompt_records
-        if (videos_dir / f"{record['prompt_id']}.mp4").is_file()
-    ]
+    selected_records = [record for record in prompt_records if (videos_dir / f"{record['prompt_id']}.mp4").is_file()]
     if not selected_records:
         raise FileNotFoundError(
             f"no prompt-matched ####.mp4 videos found under {videos_dir}; expected names such as 0000.mp4"

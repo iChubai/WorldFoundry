@@ -8,17 +8,17 @@ all zoo entries into a single registry).
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Iterable
 
 from ...api.registry import lookup_key
 from ..pipelines.bindings import resolve_pipeline_route
 from .schema import ModelZooEntry
 from .zoo_registry import load_model_zoo_registry
 
-
 # ── Dataclass definition ────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class ModelDefinition:
@@ -57,6 +57,7 @@ class ModelDefinition:
 
 # ── Registry class ────────────────────────────────────────────
 
+
 class ModelRegistry:
     """Registry managing collections of :class:`ModelDefinition` with alias lookups.
 
@@ -94,6 +95,7 @@ class ModelRegistry:
 
 
 # ── Entry-to-definition helpers ──────────────────────────────
+
 
 def _family_from_entry(entry: ModelZooEntry) -> str:
     """Extract a task family name from a model-zoo entry."""
@@ -137,6 +139,7 @@ def _catalog_definitions() -> tuple[ModelDefinition, ...]:
 
 
 # ── Cached discovery ─────────────────────────────────────────
+
 
 @lru_cache(maxsize=1)
 def discover_model_registry() -> ModelRegistry:

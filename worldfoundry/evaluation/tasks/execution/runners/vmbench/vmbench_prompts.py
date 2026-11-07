@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
-    first_existing_dir,
-    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
+    first_existing_dir,
+    resolve_env_path,
 )
 from worldfoundry.evaluation.tasks.execution.framework.io import write_json
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
@@ -19,7 +20,6 @@ from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDE
 BENCHMARK_ID = "vmbench"
 PROMPT_SUITE_REL = Path("prompts/prompts.json")
 CANONICAL_PROMPT_COUNT = 1050
-
 
 
 def resolve_vmbench_root(explicit: Path | None = None) -> Path | None:
@@ -82,7 +82,11 @@ def _load_prompt_payload(path: Path) -> Sequence[Any]:
     elif suffix == ".jsonl":
         return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     elif suffix == ".txt":
-        return [{"prompt": line.strip(), "index": f"{index + 1:04d}"} for index, line in enumerate(path.read_text(encoding="utf-8").splitlines()) if line.strip()]
+        return [
+            {"prompt": line.strip(), "index": f"{index + 1:04d}"}
+            for index, line in enumerate(path.read_text(encoding="utf-8").splitlines())
+            if line.strip()
+        ]
     raise ValueError(f"Unsupported VMBench prompt manifest format: {path}")
 
 
@@ -178,13 +182,17 @@ def materialize_vmbench_meta_info(
     for record in records:
         video_path = video_root / str(record["official_video_name"])
         if not video_path.is_file():
-            alt_matches = [
-                candidate
-                for candidate in video_root.iterdir()
-                if candidate.is_file()
-                and candidate.stem == str(record["prompt_id"])
-                and candidate.suffix.lower() in VIDEO_SUFFIXES
-            ] if video_root.is_dir() else []
+            alt_matches = (
+                [
+                    candidate
+                    for candidate in video_root.iterdir()
+                    if candidate.is_file()
+                    and candidate.stem == str(record["prompt_id"])
+                    and candidate.suffix.lower() in VIDEO_SUFFIXES
+                ]
+                if video_root.is_dir()
+                else []
+            )
             if alt_matches:
                 video_path = alt_matches[0]
         if video_path.is_file():

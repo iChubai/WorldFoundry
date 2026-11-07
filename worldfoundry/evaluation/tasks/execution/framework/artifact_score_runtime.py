@@ -14,11 +14,12 @@ import csv
 import json
 import re
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
-from worldfoundry.core.observability.logging_setup import configure_logging, get_logger
 from worldfoundry.core.io.formats.serialization import iter_jsonl
+from worldfoundry.core.observability.logging_setup import configure_logging, get_logger
 from worldfoundry.evaluation.tasks.execution.framework.io import scalar_number, write_json
 
 SUPPORTED_SUFFIXES = {".json", ".jsonl", ".csv", ".tsv"}
@@ -189,11 +190,15 @@ def metric_rows_from_payload(benchmark_id: str, payload: Any, source: Path) -> l
         for item in payload:
             if not isinstance(item, dict):
                 continue
-            metric_key = item.get("metric_id") or item.get("metric") or item.get("name") or item.get("Key") or item.get("key")
+            metric_key = (
+                item.get("metric_id") or item.get("metric") or item.get("name") or item.get("Key") or item.get("key")
+            )
             metric_id = canonical_metric_id(benchmark_id, metric_key)
             score = _score_from_mapping(item)
             if metric_id and score is not None:
-                rows.append({**item, "metric_id": metric_id, "score": score, "source": item.get("source") or str(source)})
+                rows.append(
+                    {**item, "metric_id": metric_id, "score": score, "source": item.get("source") or str(source)}
+                )
                 continue
             rows.extend(_rows_from_metric_mapping(benchmark_id, item, source))
         return rows
@@ -275,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
             generated_video_dir=args.generated_video_dir,
             output_path=args.output_path,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         get_logger(__name__).event(
             "ERROR",
             "artifact_score.materialization_failed",

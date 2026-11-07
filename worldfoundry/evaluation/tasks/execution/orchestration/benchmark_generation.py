@@ -8,10 +8,11 @@ module/function naming convention; the registry only records the differences.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.utils import BENCHMARK_ASSETS_ROOT

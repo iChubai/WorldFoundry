@@ -26,11 +26,13 @@ from ..catalog.schema import BenchmarkDatasetRef, BenchmarkZooEntry
 
 JsonValue = Any
 
-_FALSEY_ACCESS_VALUES = frozenset({None, False, "false", "False", "none", "None", "", 0})
+_FALSEY_ACCESS_VALUES = frozenset({None, False, "false", "False", "none", "None", ""})
 _HF_DATASET_KEYS = ("huggingface_datasets", "hf_datasets", "datasets")
 _PAYLOAD_LIST_KEYS = ("benchmarks", "entries", "benchmark_zoo", "manifests")
 _LOCAL_DATA_ROOT_ENV = "WORLDFOUNDRY_BENCHMARK_DATA_ROOT"
-_LOCAL_MANIFEST_ENV = "WORLDFOUNDRY_BENCHMARK_DATA_MANIFEST"  # legacy dataset-only manifest; prefer LOCAL_ASSET_MANIFEST
+_LOCAL_MANIFEST_ENV = (
+    "WORLDFOUNDRY_BENCHMARK_DATA_MANIFEST"  # legacy dataset-only manifest; prefer LOCAL_ASSET_MANIFEST
+)
 _OPEN_LICENSES = frozenset(
     {
         "afl-3.0",
@@ -266,7 +268,7 @@ def _dataset_ref_path_candidate(path: str | None) -> Path | None:
     return resolved if resolved.is_absolute() else project_root() / resolved
 
 
-def direct_dataset_dir_candidates_for_ref(cache_dir: str | Path, ref: "DatasetRef") -> tuple[Path, ...]:
+def direct_dataset_dir_candidates_for_ref(cache_dir: str | Path, ref: DatasetRef) -> tuple[Path, ...]:
     """Return direct-layout candidates, preferring an explicit manifest path."""
 
     if not ref.hf_dataset_id:
@@ -287,6 +289,7 @@ class DatasetRef:
     Hugging Face repository IDs, local paths, split constraints, licensing rules,
     and authorization prerequisites.
     """
+
     hf_dataset_id: str | None = None
     revision: str | None = None
     license: str | None = None
@@ -322,9 +325,8 @@ class DatasetRef:
         object.__setattr__(self, "source", _optional_str(self.source))
         object.__setattr__(self, "metadata", dict(self.metadata))
 
-
     @classmethod
-    def from_benchmark_ref(cls, ref: BenchmarkDatasetRef, *, source: str | None = None) -> "DatasetRef":
+    def from_benchmark_ref(cls, ref: BenchmarkDatasetRef, *, source: str | None = None) -> DatasetRef:
         """Construct a DatasetRef from a catalog BenchmarkDatasetRef.
 
         Args:
@@ -351,7 +353,7 @@ class DatasetRef:
         )
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any], *, source: str | None = None) -> "DatasetRef":
+    def from_mapping(cls, data: Mapping[str, Any], *, source: str | None = None) -> DatasetRef:
         """Parse a DatasetRef from an arbitrary raw key-value mapping.
 
         Args:
@@ -421,6 +423,7 @@ class DatasetAccessIssue:
         field: Reference field name implicated in this issue.
         value: Offending value, if any.
     """
+
     code: str
     severity: str
     message: str
@@ -447,6 +450,7 @@ class DatasetAccessReport:
         requires_auth: Whether access needs Hugging Face authorization credentials.
         issues: Tuple of detected compliance/access issues.
     """
+
     hf_dataset_id: str | None
     access_status: str
     license_status: str
@@ -502,6 +506,7 @@ class DatasetLocalStatus:
         status: Detailed status label ('ready', 'not_found', etc.).
         reason: Optional descriptive reason for non-ready states.
     """
+
     hf_dataset_id: str | None
     cache_dataset_dir: Path | None
     direct_dataset_dir: Path | None = None
@@ -563,6 +568,7 @@ class DatasetLocation:
         snapshot_dir: Snapshot directory Path checked, if any.
         checked_paths: Candidate paths that were examined during resolution.
     """
+
     hf_dataset_id: str | None
     path: Path | None
     ready: bool
@@ -607,6 +613,7 @@ class DatasetDownloadPlan:
         local_checks: Local readiness status structures, if checked.
         metadata: Optional dictionary detailing overall plan statistics.
     """
+
     refs: tuple[DatasetRef, ...]
     commands: tuple[tuple[str, ...], ...]
     cache_dir: Path
@@ -735,7 +742,9 @@ def _mapping_has_direct_ref_shape(data: Mapping[str, Any]) -> bool:
     return "id" in data and not _mapping_has_manifest_shape(data)
 
 
-def _parse_official_sources(data: Mapping[str, Any], refs: list[DatasetRef], *, source_prefix: str = "official_sources") -> None:
+def _parse_official_sources(
+    data: Mapping[str, Any], refs: list[DatasetRef], *, source_prefix: str = "official_sources"
+) -> None:
     """Parse official repository sources inside a manifest dictionary into a list.
 
     Args:
@@ -858,8 +867,8 @@ def parse_dataset_refs(source: Any) -> tuple[DatasetRef, ...]:
         for item in source:
             refs.extend(parse_dataset_refs(item))
         return _dedupe_refs(refs)
-    if hasattr(source, "data") and isinstance(getattr(source, "data"), Mapping):
-        return parse_dataset_refs(getattr(source, "data"))
+    if hasattr(source, "data") and isinstance(source.data, Mapping):
+        return parse_dataset_refs(source.data)
     if isinstance(source, str):
         return _dedupe_refs((DatasetRef(hf_dataset_id=source),))
     raise TypeError(f"cannot parse dataset refs from {type(source).__name__}")
@@ -984,8 +993,10 @@ def classify_dataset_access(ref: DatasetRef | BenchmarkDatasetRef | Mapping[str,
         )
     elif license_value in _OPEN_LICENSES:
         license_status = "open"
-    elif license_value in {"other", "unknown"} or "cc-by-nc" in license_value or any(
-        marker in license_value for marker in _LICENSE_REVIEW_MARKERS
+    elif (
+        license_value in {"other", "unknown"}
+        or "cc-by-nc" in license_value
+        or any(marker in license_value for marker in _LICENSE_REVIEW_MARKERS)
     ):
         license_status = "review_required"
         issues.append(
@@ -1126,7 +1137,9 @@ def _status_from_local_check(
     return "ready"
 
 
-def _shallow_incomplete_files(root: Path, *, limit: int = _DIRECT_DATASET_INCOMPLETE_LIMIT) -> tuple[Mapping[str, JsonValue], ...]:
+def _shallow_incomplete_files(
+    root: Path, *, limit: int = _DIRECT_DATASET_INCOMPLETE_LIMIT
+) -> tuple[Mapping[str, JsonValue], ...]:
     """Perform a shallow fast scan to detect any temporary download markers.
 
     Args:
@@ -1468,7 +1481,9 @@ def _direct_dataset_download_metadata_revision(local_dir_metadata: Path) -> str 
     pending = deque([local_dir_metadata])
     seen_dirs = 0
     seen_files = 0
-    while pending and seen_dirs < _DIRECT_DATASET_METADATA_DIR_LIMIT and seen_files < _DIRECT_DATASET_METADATA_FILE_LIMIT:
+    while (
+        pending and seen_dirs < _DIRECT_DATASET_METADATA_DIR_LIMIT and seen_files < _DIRECT_DATASET_METADATA_FILE_LIMIT
+    ):
         directory = pending.popleft()
         seen_dirs += 1
         try:
@@ -1576,9 +1591,7 @@ def check_local_dataset(
     snapshot_dirs: list[Path] = []
     if revision and is_commit_like_revision(revision):
         snapshot_dirs.append(snapshots_dir / revision)
-    elif revision and referenced_snapshot:
-        snapshot_dirs.append(snapshots_dir / referenced_snapshot)
-    elif referenced_snapshot:
+    elif (revision and referenced_snapshot) or referenced_snapshot:
         snapshot_dirs.append(snapshots_dir / referenced_snapshot)
     elif snapshots_dir.is_dir():
         snapshot_dirs.extend(path for path in sorted(snapshots_dir.iterdir()) if path.is_dir())
@@ -1783,11 +1796,15 @@ def _manifest_dataset_items(payload: Any) -> tuple[Mapping[str, Any], ...]:
             return tuple(item for item in value if isinstance(item, Mapping))
         if isinstance(value, Mapping):
             return tuple(
-                {"hf_dataset_id": dataset_id, **item} if isinstance(item, Mapping) else {"hf_dataset_id": dataset_id, "path": item}
+                {"hf_dataset_id": dataset_id, **item}
+                if isinstance(item, Mapping)
+                else {"hf_dataset_id": dataset_id, "path": item}
                 for dataset_id, item in value.items()
             )
     return tuple(
-        {"hf_dataset_id": dataset_id, **item} if isinstance(item, Mapping) else {"hf_dataset_id": dataset_id, "path": item}
+        {"hf_dataset_id": dataset_id, **item}
+        if isinstance(item, Mapping)
+        else {"hf_dataset_id": dataset_id, "path": item}
         for dataset_id, item in payload.items()
     )
 
@@ -2151,9 +2168,7 @@ def _metadata_for_plan(
         "hf_dataset_ids": [ref.hf_dataset_id for ref in selected_refs if ref.hf_dataset_id],
         "dataset_refs": [ref.to_dict() for ref in selected_refs],
         "missing_requested_dataset_ids": [
-            dataset_id
-            for dataset_id in requested_dataset_ids
-            if dataset_id not in selected_dataset_ids
+            dataset_id for dataset_id in requested_dataset_ids if dataset_id not in selected_dataset_ids
         ],
     }
     not_applicable = next((ref for ref in selected_refs or all_refs if ref.not_applicable), None)
@@ -2232,7 +2247,9 @@ class DatasetManager:
         """
         return hf_cache_dataset_dir(self.cache_dir, dataset_id)
 
-    def build_download_command(self, ref: DatasetRef | BenchmarkDatasetRef | Mapping[str, Any] | str) -> tuple[str, ...]:
+    def build_download_command(
+        self, ref: DatasetRef | BenchmarkDatasetRef | Mapping[str, Any] | str
+    ) -> tuple[str, ...]:
         """Constructs an executable CLI command array to retrieve the target dataset from Hugging Face.
 
         Args:
@@ -2328,11 +2345,7 @@ class DatasetManager:
         selected_refs = filter_dataset_refs(all_refs, requested_dataset_ids)
 
         download_refs = _dedupe_download_refs(selected_refs)
-        commands = tuple(
-            self.build_download_command(ref)
-            for ref in download_refs
-            if ref.hf_dataset_id
-        )
+        commands = tuple(self.build_download_command(ref) for ref in download_refs if ref.hf_dataset_id)
         local_checks = tuple(self.check_local(ref) for ref in download_refs) if check_local else ()
         access_reports = tuple(classify_dataset_access(ref) for ref in download_refs)
         metadata = _metadata_for_plan(
@@ -2351,12 +2364,13 @@ class DatasetManager:
             metadata=metadata,
         )
 
+
 __all__ = [
     "DatasetAccessIssue",
     "DatasetAccessReport",
     "DatasetDownloadPlan",
-    "DatasetLocation",
     "DatasetLocalStatus",
+    "DatasetLocation",
     "DatasetManager",
     "DatasetRef",
     "build_hf_download_command",

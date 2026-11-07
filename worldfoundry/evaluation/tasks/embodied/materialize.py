@@ -14,13 +14,13 @@ It handles:
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 
 from .contracts import EmbodiedGenerationSpec
-
 
 # Standard schema version for materialized request outputs.
 VLA_VA_WAM_REQUESTS_SCHEMA_VERSION = "worldfoundry-vla-va-wam-requests"
@@ -70,6 +70,7 @@ class VlaVaWamMaterializedRequests:
         split: The data split (e.g., 'train', 'validation', 'test') these requests belong to.
         requests: An immutable tuple of `GenerationRequest` instances.
     """
+
     schema_version: str
     track: str
     task_name: str
@@ -160,7 +161,7 @@ def _inputs_for_sample(sample: Mapping[str, Any], spec: EmbodiedGenerationSpec) 
     # Handle optional 'references' block.
     references = sample.get("references")
     if isinstance(references, Mapping):
-        inputs["references"] = dict(references) # Store a copy of references.
+        inputs["references"] = dict(references)  # Store a copy of references.
     return inputs
 
 
@@ -183,7 +184,7 @@ def _sample_controls(sample: Mapping[str, Any]) -> dict[str, Any]:
 
     # Merge individual control parameters specified by DEFAULT_SAMPLE_CONTROL_KEYS.
     for key in DEFAULT_SAMPLE_CONTROL_KEYS:
-        if key == "controls": # Avoid re-processing the 'controls' block already handled above.
+        if key == "controls":  # Avoid re-processing the 'controls' block already handled above.
             continue
         if key in sample and key not in controls:
             controls[str(key)] = sample[key]
@@ -263,7 +264,7 @@ def request_from_vla_va_wam_sample(
     return GenerationRequest(
         sample_id=sample_id,
         task_name=resolved_spec.task_name,
-        split=str(sample.get("split", split)), # Use sample's split if available, otherwise default.
+        split=str(sample.get("split", split)),  # Use sample's split if available, otherwise default.
         request_id=str(sample.get("request_id", f"{resolved_spec.task_name}:{sample_id}")),
         inputs=_inputs_for_sample(sample, resolved_spec),
         controls=controls,

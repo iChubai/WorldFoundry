@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Callable
-from typing import List, Set, Tuple
 
 import numpy as np
 import numpy.typing
@@ -72,7 +70,7 @@ class TauSufficientStats:
             other.ties_both,
         )
 
-    def __iadd__(self, other: "TauSufficientStats") -> "TauSufficientStats":
+    def __iadd__(self, other: TauSufficientStats) -> TauSufficientStats:
         self.con += other.con
         self.dis += other.dis
         self.ties_human += other.ties_human
@@ -81,7 +79,7 @@ class TauSufficientStats:
         self.num_pairs += other.num_pairs
         return self
 
-    def __isub__(self, other: "TauSufficientStats") -> "TauSufficientStats":
+    def __isub__(self, other: TauSufficientStats) -> TauSufficientStats:
         self.con -= other.con
         self.dis -= other.dis
         self.ties_human -= other.ties_human
@@ -108,8 +106,8 @@ class TauSufficientStats:
 
 @dataclasses.dataclass(frozen=True)
 class TauOptimizationResult:
-    thresholds: List[float]
-    taus: List[float]
+    thresholds: list[float]
+    taus: list[float]
     best_threshold: float
     best_tau: float
 
@@ -137,7 +135,7 @@ def _enumerate_pairs(
     metric_scores: np.ndarray,
     sample_rate: float,
     filter_nones: bool = True,
-) -> Tuple[List[_RankedPair], Set[int]]:
+) -> tuple[list[_RankedPair], set[int]]:
     pairs: list[_RankedPair] = []
     rows: set[int] = set()
     for row, (human_row, metric_row) in enumerate(zip(human_scores, metric_scores, strict=True)):
@@ -153,7 +151,9 @@ def _enumerate_pairs(
         for left in range(len(human_row)):
             for right in range(left + 1, len(human_row)):
                 if sample_rate == 1.0 or np.random.random() <= sample_rate:
-                    pairs.append(_RankedPair(human_row[left], human_row[right], metric_row[left], metric_row[right], row))
+                    pairs.append(
+                        _RankedPair(human_row[left], human_row[right], metric_row[left], metric_row[right], row)
+                    )
                     rows.add(row)
     return pairs, rows
 

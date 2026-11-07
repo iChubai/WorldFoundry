@@ -280,10 +280,10 @@ class RoboMMEBenchmark(BaseSimulator):
         # Lavapipe engagement requested (explicitly or via 'auto' fallback).
         if not RoboMMEBenchmark._engage_lavapipe():
             raise RuntimeError(
-                "Lavapipe rendering requested (ROBOMME_USE_LAVAPIPE={!r}) but could not "
+                f"Lavapipe rendering requested (ROBOMME_USE_LAVAPIPE={mode!r}) but could not "
                 "be engaged. Check earlier log lines for the specific reason "
                 "(sapien.render already imported, ICD missing, etc.); continuing on the "
-                "native NVIDIA path would hang on affected hosts.".format(mode)
+                "native NVIDIA path would hang on affected hosts."
             )
         RoboMMEBenchmark._rendering_configured = True
 

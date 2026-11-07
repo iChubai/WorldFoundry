@@ -5,7 +5,6 @@ from fld.metrics.Metric import Metric
 from fld.utils import shuffle
 from tqdm import tqdm
 
-
 KEY_METRIC_KID_MEAN = "kernel_inception_distance_mean"
 KEY_METRIC_KID_STD = "kernel_inception_distance_std"
 
@@ -37,11 +36,7 @@ def mmd2(K_XX, K_XY, K_YY, unit_diagonal=False, mmd_est="unbiased"):
     K_XY_sum = K_XY_sums_0.sum()
 
     if mmd_est == "biased":
-        mmd2 = (
-            (Kt_XX_sum + sum_diag_X) / (m * m)
-            + (Kt_YY_sum + sum_diag_Y) / (m * m)
-            - 2 * K_XY_sum / (m * m)
-        )
+        mmd2 = (Kt_XX_sum + sum_diag_X) / (m * m) + (Kt_YY_sum + sum_diag_Y) / (m * m) - 2 * K_XY_sum / (m * m)
     else:
         mmd2 = (Kt_XX_sum + Kt_YY_sum) / (m * (m - 1))
         if mmd_est == "unbiased":
@@ -60,15 +55,9 @@ def polynomial_kernel(X, Y, degree=3, gamma=None, coef0=1):
 
 
 def polynomial_mmd(features_1, features_2, degree, gamma, coef0):
-    k_11 = polynomial_kernel(
-        features_1, features_1, degree=degree, gamma=gamma, coef0=coef0
-    )
-    k_22 = polynomial_kernel(
-        features_2, features_2, degree=degree, gamma=gamma, coef0=coef0
-    )
-    k_12 = polynomial_kernel(
-        features_1, features_2, degree=degree, gamma=gamma, coef0=coef0
-    )
+    k_11 = polynomial_kernel(features_1, features_1, degree=degree, gamma=gamma, coef0=coef0)
+    k_22 = polynomial_kernel(features_2, features_2, degree=degree, gamma=gamma, coef0=coef0)
+    k_12 = polynomial_kernel(features_1, features_2, degree=degree, gamma=gamma, coef0=coef0)
     return mmd2(k_11, k_12, k_22)
 
 
@@ -125,7 +114,7 @@ class KID(Metric):
         if ref_size is None:
             self.name = f"KID {ref_feat.title()}"
         else:
-            self.name = f"KID {ref_feat.title()} - {ref_size//1000}k"
+            self.name = f"KID {ref_feat.title()} - {ref_size // 1000}k"
 
     def compute_metric(
         self,

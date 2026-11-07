@@ -1,16 +1,8 @@
-import os
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import json
-import math
 import warnings
 
-from fld.utils import shuffle
 from fld.metrics.Metric import Metric
-from fld.MoG import preprocess_feat, MoG
-
+from fld.MoG import MoG, preprocess_feat
+from fld.utils import shuffle
 
 GEN_SIZE = 10000
 
@@ -37,9 +29,7 @@ class FLD(Metric):
             gen_feat = shuffle(gen_feat, min(len(gen_feat), self.gen_size))
 
         """Preprocess"""
-        train_feat, test_feat, gen_feat = preprocess_feat(
-            train_feat, test_feat, gen_feat
-        )
+        train_feat, test_feat, gen_feat = preprocess_feat(train_feat, test_feat, gen_feat)
 
         # Fit MoGs
         mog_gen = MoG(gen_feat)
@@ -56,9 +46,7 @@ class FLD(Metric):
             test_nll = mog_gen.get_dim_adjusted_nlls(test_feat).mean().item()
             metric_val = self.get_nll_diff(train_nll, test_nll)
             if metric_val < -1_000:
-                warnings.warn(
-                    "Very high FLD gen gap value: your generated data is likely completely memorized."
-                )
+                warnings.warn("Very high FLD gen gap value: your generated data is likely completely memorized.")
             return metric_val
         else:
             raise Exception(f"Invalid mode for FLD metric: {self.eval_feat}")
@@ -66,18 +54,14 @@ class FLD(Metric):
         nll = nlls.mean().item()
 
         if not self.baseline_nll:
-            baseline_nll = self.get_baseline_nll(
-                train_feat, test_feat, size=len(gen_feat)
-            )
+            baseline_nll = self.get_baseline_nll(train_feat, test_feat, size=len(gen_feat))
         else:
             baseline_nll = self.baseline_nll
 
         metric_val = self.get_nll_diff(nll, baseline_nll)
 
         if metric_val > 1_000:
-            warnings.warn(
-                "Very high FLD value, your generated data is likely completely memorized."
-            )
+            warnings.warn("Very high FLD value, your generated data is likely completely memorized.")
 
         return metric_val
 

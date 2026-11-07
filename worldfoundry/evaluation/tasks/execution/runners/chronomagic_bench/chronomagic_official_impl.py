@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import json
 import os
-import shutil
 import shlex
+import shutil
 import subprocess
 import sys
 import time
 from functools import partial
 from pathlib import Path
 from typing import Any
-
-
-from worldfoundry.evaluation.utils import REPO_ROOT
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_data import (
     build_generated_video_manifest,
@@ -35,7 +28,8 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
     write_json,
     write_jsonl,
 )
-
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
+from worldfoundry.evaluation.utils import REPO_ROOT
 
 DEFAULT_CHRONOMAGIC_ROOT = (
     REPO_ROOT
@@ -204,11 +198,7 @@ def component_result_availability(
         available_by_model[name] = available
 
     missing_required = sorted({component for missing in missing_by_model.values() for component in missing})
-    available_components = [
-        component
-        for component in components
-        if component not in missing_required
-    ]
+    available_components = [component for component in components if component not in missing_required]
     return {
         "required_components": list(components),
         "required_result_keys": required,
@@ -249,7 +239,9 @@ def leaderboard_field_availability(raw_results: dict[str, Any], model_name: str 
     }
 
 
-def per_model_rows(raw_results: dict[str, Any], model_name: str | None, upstream_results_path: Path) -> list[dict[str, Any]]:
+def per_model_rows(
+    raw_results: dict[str, Any], model_name: str | None, upstream_results_path: Path
+) -> list[dict[str, Any]]:
     rows = []
     for name, row in choose_model_rows(raw_results, model_name).items():
         rows.append(
@@ -279,16 +271,37 @@ def per_sample_rows_from_all_results(all_results_dir: Path | None) -> list[dict[
             for item in raw.get("all_scores", []):
                 if isinstance(item, dict):
                     for video_id, metrics in item.items():
-                        rows.append({"metric_family": "CHScore", "video_id": video_id, "metrics": metrics, "source": str(path.resolve())})
+                        rows.append(
+                            {
+                                "metric_family": "CHScore",
+                                "video_id": video_id,
+                                "metrics": metrics,
+                                "source": str(path.resolve()),
+                            }
+                        )
         elif path.name.endswith("_MTScore.json"):
             for item in raw.get("video_scores", []):
                 if isinstance(item, dict):
-                    rows.append({"metric_family": "MTScore", "video_id": item.get("video_name"), "metrics": item, "source": str(path.resolve())})
+                    rows.append(
+                        {
+                            "metric_family": "MTScore",
+                            "video_id": item.get("video_name"),
+                            "metrics": item,
+                            "source": str(path.resolve()),
+                        }
+                    )
         elif path.name.endswith("_GPT4o-MTScore.json"):
             formatted = raw.get("Formatted Data")
             if isinstance(formatted, dict):
                 for video_id, metrics in formatted.items():
-                    rows.append({"metric_family": "GPT4o-MTScore", "video_id": video_id, "metrics": metrics, "source": str(path.resolve())})
+                    rows.append(
+                        {
+                            "metric_family": "GPT4o-MTScore",
+                            "video_id": video_id,
+                            "metrics": metrics,
+                            "source": str(path.resolve()),
+                        }
+                    )
     return rows
 
 
@@ -607,7 +620,9 @@ def stage_generated_video_input(args: argparse.Namespace, output_dir: Path) -> N
                 target = part_dir / video.name
                 if target.exists() and target.resolve() != video.resolve():
                     target = part_dir / f"{video.stem}-{index}{video.suffix.lower()}"
-                rows.append({"part": part, "source": str(video), "target": str(target), "method": link_or_copy(video, target)})
+                rows.append(
+                    {"part": part, "source": str(video), "target": str(target), "method": link_or_copy(video, target)}
+                )
     else:
         videos = list_video_files(source)
         if not videos:
@@ -667,14 +682,17 @@ def validate_input_layout(args: argparse.Namespace) -> None:
             elif not list_direct_video_files(model_dir):
                 missing.append(f"{model_name}/*.mp4")
     if missing:
-        layout = "input_folder/model_name/{1,2,3}/*.mp4" if args.eval_type == "open" else "input_folder/model_name/*.mp4"
+        layout = (
+            "input_folder/model_name/{1,2,3}/*.mp4" if args.eval_type == "open" else "input_folder/model_name/*.mp4"
+        )
         raise FileNotFoundError(
-            f"ChronoMagic {args.eval_type} eval input layout must match {layout}; missing: "
-            + ", ".join(missing)
+            f"ChronoMagic {args.eval_type} eval input layout must match {layout}; missing: " + ", ".join(missing)
         )
 
 
-def build_component_commands(args: argparse.Namespace, result_root: Path, components: tuple[str, ...]) -> list[list[str]]:
+def build_component_commands(
+    args: argparse.Namespace, result_root: Path, components: tuple[str, ...]
+) -> list[list[str]]:
     if args.input_folder is None:
         raise ValueError("--input-folder is required for ChronoMagic component execution")
 
@@ -887,9 +905,13 @@ def run_chronomagic(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run official ChronoMagic-Bench or normalize official results to a WorldFoundry scorecard.")
+    parser = argparse.ArgumentParser(
+        description="Run official ChronoMagic-Bench or normalize official results to a WorldFoundry scorecard."
+    )
     parser.add_argument("--benchmark-id", default=os.environ.get("WORLDFOUNDRY_BENCHMARK_ID", "chronomagic-bench"))
-    parser.add_argument("--chronomagic-root", type=Path, default=env_path("WORLDFOUNDRY_CHRONOMAGIC_ROOT", DEFAULT_CHRONOMAGIC_ROOT))
+    parser.add_argument(
+        "--chronomagic-root", type=Path, default=env_path("WORLDFOUNDRY_CHRONOMAGIC_ROOT", DEFAULT_CHRONOMAGIC_ROOT)
+    )
     parser.add_argument(
         "--official-results-path",
         dest="from_upstream_results",
@@ -912,17 +934,35 @@ def build_parser() -> argparse.ArgumentParser:
         default=env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR"),
         help="Generated ChronoMagic video directory; defaults to WORLDFOUNDRY_GENERATED_ARTIFACT_DIR.",
     )
-    parser.add_argument("--eval-type", choices=("open", "close"), default=os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_EVAL_TYPE", "close"))
+    parser.add_argument(
+        "--eval-type", choices=("open", "close"), default=os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_EVAL_TYPE", "close")
+    )
     parser.add_argument(
         "--components",
         default=os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_COMPONENTS", "all"),
         help="Comma-separated official components to run: all, chscore, mtscore, gpt4o_mtscore.",
     )
-    parser.add_argument("--model-pth-chscore", type=Path, default=env_path("WORLDFOUNDRY_CHRONOMAGIC_CHSCORE_CKPT", Path("cotracker2.pth")))
-    parser.add_argument("--model-pth-mtscore", type=Path, default=env_path("WORLDFOUNDRY_CHRONOMAGIC_MTSCORE_CKPT", Path("InternVideo2-stage2_1b-224p-f4.pt")))
-    parser.add_argument("--video-frames-folder", default=os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_VIDEO_FRAMES_FOLDER", "video_frames_folder_temp"))
-    parser.add_argument("--num-workers", type=int, default=int(os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_NUM_WORKERS", "8")))
-    parser.add_argument("--openai-api", default=os.environ.get("OPENAI_API_KEY") or os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_OPENAI_API"))
+    parser.add_argument(
+        "--model-pth-chscore",
+        type=Path,
+        default=env_path("WORLDFOUNDRY_CHRONOMAGIC_CHSCORE_CKPT", Path("cotracker2.pth")),
+    )
+    parser.add_argument(
+        "--model-pth-mtscore",
+        type=Path,
+        default=env_path("WORLDFOUNDRY_CHRONOMAGIC_MTSCORE_CKPT", Path("InternVideo2-stage2_1b-224p-f4.pt")),
+    )
+    parser.add_argument(
+        "--video-frames-folder",
+        default=os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_VIDEO_FRAMES_FOLDER", "video_frames_folder_temp"),
+    )
+    parser.add_argument(
+        "--num-workers", type=int, default=int(os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_NUM_WORKERS", "8"))
+    )
+    parser.add_argument(
+        "--openai-api",
+        default=os.environ.get("OPENAI_API_KEY") or os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_OPENAI_API"),
+    )
     parser.add_argument("--api-base-url", default=os.environ.get("WORLDFOUNDRY_CHRONOMAGIC_API_BASE_URL"))
     parser.add_argument("--output-dir", type=Path, default=env_path("WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"))
     parser.add_argument("--python", default=sys.executable)

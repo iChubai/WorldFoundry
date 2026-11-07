@@ -9,8 +9,9 @@ def local_vlm_generate(*, prompt: str, video_path: Path, model_path: Path) -> st
     """Run a local Qwen2.5-VL style model on one video prompt pair."""
     try:
         import torch
-        from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
         from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
+
+        from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
     except ImportError as exc:
         raise RuntimeError(
             "Local VideoVerse judge requires torch, transformers, and the in-tree Qwen-VL utilities."
@@ -52,7 +53,7 @@ def local_vlm_generate(*, prompt: str, video_path: Path, model_path: Path) -> st
     inputs = inputs.to(model.device)
     generated_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)
     generated_ids_trimmed = [
-        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
     ]
     output_text = processor.batch_decode(
         generated_ids_trimmed,

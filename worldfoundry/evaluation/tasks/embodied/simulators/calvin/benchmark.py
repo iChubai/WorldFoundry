@@ -10,9 +10,10 @@ import logging
 import math
 import os
 import sys
+from collections.abc import Mapping
 from copy import copy
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -68,10 +69,7 @@ def _resolve_calvin_dataset_path(
     env = os.environ if environ is None else environ
     configured_root = env.get(CALVIN_DATASET_ROOT_ENV)
     if not configured_root:
-        raise ValueError(
-            "CALVIN dataset path is required; pass dataset_path or set "
-            f"{CALVIN_DATASET_ROOT_ENV}"
-        )
+        raise ValueError(f"CALVIN dataset path is required; pass dataset_path or set {CALVIN_DATASET_ROOT_ENV}")
     root = Path(configured_root).expanduser()
     split = str(env.get(CALVIN_SPLIT_ENV) or "validation").strip() or "validation"
     for task_directory in CALVIN_TASK_DIRECTORY_PRIORITY:
@@ -290,10 +288,10 @@ class CALVINBenchmark(BaseSimulator):
         if self.calvin_root is not None:
             _prepend_calvin_source_paths(self.calvin_root)
 
+        import hydra
         import pytorch_lightning as pl
         import torch
         from omegaconf import OmegaConf
-        import hydra
 
         pl.seed_everything(self.seed, workers=True)
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -726,7 +724,7 @@ class CALVINBenchmark(BaseSimulator):
         # Get language annotation for current subtask
         subtask_name = self._eval_sequence[self._subtask_idx]
         lang = LANG_ANNOTATIONS.get(subtask_name, subtask_name)
-        
+
         obs_dict: dict[str, Any] = {
             "images": {"static": img},
             "task_description": lang,

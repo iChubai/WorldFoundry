@@ -11,8 +11,9 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from worldfoundry.base_models.capabilities import vbench_asset_path
 from worldfoundry.core.io.formats.serialization import read_jsonl_objects, write_jsonl
@@ -143,7 +144,9 @@ def official_runtime_preflight(runtime_root: Path | None = None) -> dict[str, An
     root = resolve_fetv_runtime_root(runtime_root)
     runtime_files = {relative: (root / relative).exists() for relative in REQUIRED_RUNTIME_FILES}
     base_model_files = {relative: (FETV_BLIP_ROOT / relative).exists() for relative in BASE_MODEL_RUNTIME_FILES}
-    stylegan_v_files = {relative: (FETV_STYLEGAN_V_ROOT / relative).exists() for relative in BASE_MODEL_STYLEGAN_V_FILES}
+    stylegan_v_files = {
+        relative: (FETV_STYLEGAN_V_ROOT / relative).exists() for relative in BASE_MODEL_STYLEGAN_V_FILES
+    }
     package_imports = {name: _has_import(module) for name, module in PACKAGE_IMPORTS.items()}
     missing = [f"runtime:{name}" for name, ok in runtime_files.items() if not ok]
     missing.extend(f"base_model:fetv_blip/{name}" for name, ok in base_model_files.items() if not ok)
@@ -158,11 +161,9 @@ def official_runtime_preflight(runtime_root: Path | None = None) -> dict[str, An
         "base_model_stylegan_v_files": stylegan_v_files,
         "package_imports": package_imports,
         "missing": missing,
-        "ok_for_import": not any(not ok for ok in runtime_files.values()) and not any(
-            not ok for ok in base_model_files.values()
-        ) and not any(
-            not ok for ok in stylegan_v_files.values()
-        ),
+        "ok_for_import": not any(not ok for ok in runtime_files.values())
+        and not any(not ok for ok in base_model_files.values())
+        and not any(not ok for ok in stylegan_v_files.values()),
         "ok_for_full_run": not missing,
     }
 
@@ -403,7 +404,9 @@ def _run_command(
         "stderr_path": str(stderr_path),
     }
     if completed.returncode != 0:
-        raise RuntimeError(f"FETV official metric {name} failed with exit code {completed.returncode}; see {stderr_path}")
+        raise RuntimeError(
+            f"FETV official metric {name} failed with exit code {completed.returncode}; see {stderr_path}"
+        )
     return record
 
 
@@ -695,17 +698,25 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--metrics", nargs="+", default=_split_tokens(os.environ.get("WORLDFOUNDRY_FETV_METRICS")))
     parser.add_argument("--prompt-file", type=Path, default=None)
     parser.add_argument("--clip-model", default=os.environ.get("WORLDFOUNDRY_FETV_CLIP_MODEL", "ViT-B/32"))
-    parser.add_argument("--is-clip-ft", action="store_true", default=os.environ.get("WORLDFOUNDRY_FETV_IS_CLIP_FT") == "1")
+    parser.add_argument(
+        "--is-clip-ft", action="store_true", default=os.environ.get("WORLDFOUNDRY_FETV_IS_CLIP_FT") == "1"
+    )
     parser.add_argument("--blip-config", type=Path, default=None)
     parser.add_argument("--fid-generated-video-dir", type=Path, default=None)
     parser.add_argument("--fid-real-video-dir", type=Path, default=None)
     parser.add_argument("--fvd-generated-video-dir", type=Path, default=None)
     parser.add_argument("--fvd-real-video-dir", type=Path, default=None)
-    parser.add_argument("--seeds", default=os.environ.get("WORLDFOUNDRY_FETV_SEEDS", ",".join(map(str, OFFICIAL_SEEDS))))
+    parser.add_argument(
+        "--seeds", default=os.environ.get("WORLDFOUNDRY_FETV_SEEDS", ",".join(map(str, OFFICIAL_SEEDS)))
+    )
     parser.add_argument("--cuda-visible-devices", default=os.environ.get("CUDA_VISIBLE_DEVICES"))
     parser.add_argument("--fvd-gpus", type=int, default=int(os.environ.get("WORLDFOUNDRY_FETV_FVD_GPUS", "1")))
-    parser.add_argument("--fvd-resolution", type=int, default=int(os.environ.get("WORLDFOUNDRY_FETV_FVD_RESOLUTION", "256")))
-    parser.add_argument("--max-frame-num", type=int, default=int(os.environ.get("WORLDFOUNDRY_FETV_MAX_FRAME_NUM", "64")))
+    parser.add_argument(
+        "--fvd-resolution", type=int, default=int(os.environ.get("WORLDFOUNDRY_FETV_FVD_RESOLUTION", "256"))
+    )
+    parser.add_argument(
+        "--max-frame-num", type=int, default=int(os.environ.get("WORLDFOUNDRY_FETV_MAX_FRAME_NUM", "64"))
+    )
     parser.add_argument("--limit", type=int, default=int(os.environ.get("WORLDFOUNDRY_FETV_LIMIT", "1000")))
     parser.add_argument("--python", default=os.environ.get("PYTHON", sys.executable))
     parser.add_argument("--timeout", type=int, default=int(os.environ.get("WORLDFOUNDRY_FETV_TIMEOUT_SECONDS", "7200")))

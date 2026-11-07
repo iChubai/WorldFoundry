@@ -17,7 +17,6 @@ from worldfoundry.evaluation.tasks.execution.runners.phyground.phyground_prompts
 )
 
 
-
 @dataclass(frozen=True)
 class PhyGroundJudgeConfig:
     backend: str
@@ -30,10 +29,14 @@ class PhyGroundJudgeConfig:
 
 def judge_config_from_env() -> PhyGroundJudgeConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_PHYGROUND_JUDGE_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_PHYGROUND_SCORER_BACKEND")
-        or "artifact"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_PHYGROUND_JUDGE_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_PHYGROUND_SCORER_BACKEND")
+            or "artifact"
+        )
+        .strip()
+        .lower()
+    )
     repo_root = resolve_phyground_root()
     prompts_json_path = None
     try:

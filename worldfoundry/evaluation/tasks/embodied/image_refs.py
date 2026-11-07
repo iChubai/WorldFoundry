@@ -9,13 +9,9 @@ from typing import Any
 
 _DIGEST_RE = re.compile(r"sha256:[0-9a-fA-F]{64}\Z")
 
-AUTH_GATED_FLOATING_OFFICIAL_PROFILES = frozenset(
-    {"behavior1k", "libero-plus", "molmospaces", "robomme"}
-)
+AUTH_GATED_FLOATING_OFFICIAL_PROFILES = frozenset({"behavior1k", "libero-plus", "molmospaces", "robomme"})
 CROSS_REPO_FLOATING_MIRROR_PROFILES = frozenset({"libero"})
-KNOWN_FLOATING_OFFICIAL_PROFILES = (
-    AUTH_GATED_FLOATING_OFFICIAL_PROFILES | CROSS_REPO_FLOATING_MIRROR_PROFILES
-)
+KNOWN_FLOATING_OFFICIAL_PROFILES = AUTH_GATED_FLOATING_OFFICIAL_PROFILES | CROSS_REPO_FLOATING_MIRROR_PROFILES
 
 
 def _env_truthy(name: str, default: str = "0") -> bool:
@@ -37,9 +33,7 @@ def _validate_embedded_digest(image: str) -> None:
         raise ValueError(f"invalid docker image digest reference: {image!r}")
     repository, digest = image.split("@", 1)
     if not repository or _DIGEST_RE.fullmatch(digest) is None:
-        raise ValueError(
-            f"invalid docker image digest reference {image!r}; expected name@sha256:<64 hex>"
-        )
+        raise ValueError(f"invalid docker image digest reference {image!r}; expected name@sha256:<64 hex>")
 
 
 def image_ref_is_floating(image: str) -> bool:
@@ -62,10 +56,7 @@ def assert_image_ref_pinned(
     ref = str(image or "").strip()
     _validate_embedded_digest(ref)
     if require_pinned_images(override=require) and image_ref_is_floating(ref):
-        raise ValueError(
-            f"refusing floating docker.{what}={image!r}; use an immutable tag or "
-            "name@sha256:<64 hex>"
-        )
+        raise ValueError(f"refusing floating docker.{what}={image!r}; use an immutable tag or name@sha256:<64 hex>")
 
 
 def normalize_digest(digest: str) -> str:

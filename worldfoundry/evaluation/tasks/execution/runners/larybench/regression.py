@@ -10,12 +10,12 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed
 from diffusers import DDPMScheduler
 from diffusers.optimization import get_constant_schedule_with_warmup
-from .paths import get_data_root, resolve_la_path
 from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
+from .paths import get_data_root, resolve_la_path
 from .regression_dit import DiT
 
 DIM_LABELS = {

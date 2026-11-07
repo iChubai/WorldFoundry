@@ -31,7 +31,13 @@ import numpy as np
 
 from worldfoundry.core.io.paths import local_data_root_path
 from worldfoundry.evaluation.tasks.embodied.simulators.base import BaseSimulator, StepResult
-from worldfoundry.evaluation.tasks.embodied.simulators.specs import GRIPPER_01, IMAGE_RGB, LANGUAGE, STATE_JOINT, DimSpec
+from worldfoundry.evaluation.tasks.embodied.simulators.specs import (
+    GRIPPER_01,
+    IMAGE_RGB,
+    LANGUAGE,
+    STATE_JOINT,
+    DimSpec,
+)
 
 logger = logging.getLogger(__name__)
 

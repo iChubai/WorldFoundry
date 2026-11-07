@@ -13,13 +13,13 @@ outside the checked-in runtime, so the vendored source stays read-only.
 
 from __future__ import annotations
 
-
 import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:
@@ -70,9 +70,7 @@ WEIGHT_ARGS: tuple[tuple[str, str], ...] = (
 )
 
 
-def _resolve_weight_value(
-    relative: str, *, resolved: ResolvedBaseModels, weights_dir: Path
-) -> str:
+def _resolve_weight_value(relative: str, *, resolved: ResolvedBaseModels, weights_dir: Path) -> str:
     """Pick each weight path from base_models when staged, else --weights-dir.
 
     Precedence per model: an explicit per-model env var (``QWENVL_MODEL_PATH``,
@@ -253,9 +251,7 @@ def build_official_command(
         str(args.workers),
     ]
     for flag, relative in WEIGHT_ARGS:
-        command.extend(
-            [flag, _resolve_weight_value(relative, resolved=resolved, weights_dir=weights_dir)]
-        )
+        command.extend([flag, _resolve_weight_value(relative, resolved=resolved, weights_dir=weights_dir)])
     if custom_root:
         command.extend(["--root", str(case_root), "--domain-name", domains[0]])
     else:
@@ -287,9 +283,7 @@ def build_official_command(
     return command
 
 
-def runtime_env(
-    *, root: Path, da3_src: Path | None, resolved: ResolvedBaseModels | None = None
-) -> dict[str, str]:
+def runtime_env(*, root: Path, da3_src: Path | None, resolved: ResolvedBaseModels | None = None) -> dict[str, str]:
     """Expose the runtime tree plus base_models code on PYTHONPATH.
 
     The vendored modules insert their own root into ``sys.path``. The base_models
@@ -368,9 +362,7 @@ def run_official(args: argparse.Namespace, output_dir: Path) -> tuple[Path, dict
         ],
     }
     if execution.get("returncode") != 0:
-        raise RuntimeError(
-            f"WorldOlympiad official runtime exited with {execution.get('returncode')}; see {log_path}"
-        )
+        raise RuntimeError(f"WorldOlympiad official runtime exited with {execution.get('returncode')}; see {log_path}")
     return case_root, runtime
 
 
@@ -451,9 +443,7 @@ def build_scorecard(
         },
         "benchmark": {"benchmark_id": args.benchmark_id, "name": "WorldOlympiad"},
         "metrics": {
-            "leaderboard": {
-                row["metric_id"]: row["score"] for row in available if row["score"] is not None
-            },
+            "leaderboard": {row["metric_id"]: row["score"] for row in available if row["score"] is not None},
             "per_metric": {row["metric_id"]: row for row in rows},
             "tracks": {track: list(TRACK_METRICS[track]) for track in TRACKS},
             "primary_metric": PRIMARY_METRIC,
@@ -598,11 +588,13 @@ def main(argv: list[str] | None = None) -> int:
         scorecard = build_scorecard(
             args, output_dir=output_dir, results_path=results_path, normalized=normalized, runtime=runtime
         )
-    except Exception as exc:  # noqa: BLE001 - failures are reported as a scorecard, not a traceback
+    except Exception as exc:  # failures are reported as a scorecard, not a traceback
         scorecard = failure_scorecard(args, output_dir, exc)
     ok = scorecard["normalization_ok"] is True
     if args.json:
-        print(json.dumps({"ok": ok, "output_dir": str(output_dir), "scorecard": scorecard}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps({"ok": ok, "output_dir": str(output_dir), "scorecard": scorecard}, ensure_ascii=False, indent=2)
+        )
     elif ok:
         evaluation = scorecard["evaluation"]
         print(

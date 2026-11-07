@@ -11,8 +11,9 @@ import gc
 import inspect
 import sys
 import warnings
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, WorldModelConfig
 
@@ -109,7 +110,7 @@ class WorldFoundryPipelineRunner:
         }
 
     @classmethod
-    def from_config(cls, config: WorldModelConfig) -> "WorldFoundryPipelineRunner":
+    def from_config(cls, config: WorldModelConfig) -> WorldFoundryPipelineRunner:
         """Build a runner from a :class:`WorldModelConfig` using the pipeline loading subsystem.
 
         Args:
@@ -194,7 +195,7 @@ class WorldFoundryPipelineRunner:
         """
         try:
             return lifecycle.generate_in_context(request)
-        except Exception as exc:  # noqa: BLE001 - evaluation records per-sample failures.
+        except Exception as exc:  # evaluation records per-sample failures.
             return failed_generation_result(request, self.model_id, exc)
 
     def _apply_generation_defaults(self, request: GenerationRequest) -> GenerationRequest:
@@ -276,7 +277,7 @@ class WorldFoundryPipelineRunner:
             if callable(cleanup_fn):
                 try:
                     cleanup_fn()
-                except Exception as exc:  # noqa: BLE001 - cleanup must not invalidate completed outputs.
+                except Exception as exc:  # cleanup must not invalidate completed outputs.
                     warnings.warn(f"pipeline cleanup failed: {exc}", RuntimeWarning, stacklevel=2)
         finally:
             del cleanup_fn

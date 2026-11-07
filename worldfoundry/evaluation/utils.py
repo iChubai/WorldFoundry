@@ -14,10 +14,11 @@ import platform
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import (
     append_jsonl as append_jsonl,
@@ -373,7 +374,7 @@ def model_runner_fingerprint(model_runner: Any | None) -> dict[str, Any] | None:
     if callable(describe):
         try:
             described = describe()
-        except Exception as exc:  # noqa: BLE001 - version capture must not fail a run.
+        except Exception as exc:  # version capture must not fail a run.
             payload["describe_capabilities_error"] = f"{type(exc).__name__}: {exc}"
         else:
             payload["described_capabilities"] = jsonable(described)

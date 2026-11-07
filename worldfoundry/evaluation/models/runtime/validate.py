@@ -124,7 +124,7 @@ def validate_runtime_profile_references(
                         ),
                     )
                 )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             issues.append(
                 RuntimeValidationIssue(
                     code="runtime_environment_missing",
@@ -147,7 +147,7 @@ def validate_runtime_profile_references(
                         ),
                     )
                 )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             issues.append(
                 RuntimeValidationIssue(
                     code="runtime_assets_missing",
@@ -170,7 +170,7 @@ def validate_runtime_profile_references(
                         ),
                     )
                 )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             issues.append(
                 RuntimeValidationIssue(
                     code="pipeline_binding_missing",
@@ -206,7 +206,7 @@ def validate_pipeline_aliases_against_bindings(
     for group in aliases.list():
         try:
             canonical = bindings.get(group.canonical_id)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             issues.append(
                 RuntimeValidationIssue(
                     code="pipeline_alias_unknown_canonical",
@@ -220,7 +220,7 @@ def validate_pipeline_aliases_against_bindings(
                 resolved = bindings.get(alias)
             except KeyError:
                 continue
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 issues.append(
                     RuntimeValidationIssue(
                         code="pipeline_alias_unresolved",

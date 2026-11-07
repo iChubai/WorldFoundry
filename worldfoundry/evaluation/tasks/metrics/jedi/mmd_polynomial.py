@@ -3,6 +3,7 @@
 import numpy as np
 from sklearn import metrics
 
+
 def mmd_poly(X, Y, degree=2, gamma=None, coef0=0):
     """MMD using polynomial kernel (i.e., k(x,y) = (gamma <X, Y> + coef0)^degree)
 
@@ -23,7 +24,8 @@ def mmd_poly(X, Y, degree=2, gamma=None, coef0=0):
     XY = metrics.pairwise.polynomial_kernel(X, Y, degree, gamma, coef0)
     return XX.mean() + YY.mean() - 2 * XY.mean()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     a = np.arange(1, 10).reshape(3, 3)
     b = [[7, 6, 5], [4, 3, 2], [1, 1, 8], [0, 2, 5]]
     b = np.array(b)

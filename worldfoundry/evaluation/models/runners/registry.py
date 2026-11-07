@@ -13,8 +13,9 @@ Sections:
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import WorldModelConfig
 from worldfoundry.evaluation.models.import_target import import_dotted_attr
@@ -54,7 +55,7 @@ class ModelRunnerRegistryEntry:
     runner_class: type | None = None
 
     @classmethod
-    def from_mapping(cls, entry: Mapping[str, Any]) -> "ModelRunnerRegistryEntry":
+    def from_mapping(cls, entry: Mapping[str, Any]) -> ModelRunnerRegistryEntry:
         """Build entry from a mapping with at least ``name``."""
         return cls(
             name=str(entry["name"]),

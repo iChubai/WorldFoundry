@@ -7,14 +7,15 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.base_models.capabilities import get_base_model_capability
 from worldfoundry.base_models.llm_mllm_core.mllm.videophy2_autoeval import runtime_root as autoeval_runtime_root
 from worldfoundry.evaluation.tasks.execution.framework.official_runner import default_benchmark_timeout
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, VIDEO_SUFFIXES
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES, resolve_env_path
 from worldfoundry.evaluation.tasks.execution.runners.videophy2.videophy2_prompts import (
     load_prompt_records,
     official_video_filename_for_record,
@@ -40,8 +41,6 @@ class VideoPhy2JudgeConfig:
     strict: bool = False
 
 
-
-
 def judge_config_from_env(
     *,
     checkpoint: Path | None = None,
@@ -51,10 +50,14 @@ def judge_config_from_env(
     python_executable: str | None = None,
 ) -> VideoPhy2JudgeConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_VIDEOPHY2_JUDGE_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_VIDEOPHY2_SCORER_BACKEND")
-        or "autoeval"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_VIDEOPHY2_JUDGE_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_VIDEOPHY2_SCORER_BACKEND")
+            or "autoeval"
+        )
+        .strip()
+        .lower()
+    )
     if backend in {"official", "real", "video_phy2_auto", "videophy2_auto"}:
         backend = "autoeval"
     repo_root = resolve_videophy2_root()
@@ -229,7 +232,11 @@ def _run_autoeval_task(
         command.extend(["--lora_checkpoint", str(config.lora_checkpoint)])
     env = os.environ.copy()
     existing_pythonpath = env.get("PYTHONPATH", "")
-    env["PYTHONPATH"] = str(config.runtime_root) if not existing_pythonpath else f"{config.runtime_root}{os.pathsep}{existing_pythonpath}"
+    env["PYTHONPATH"] = (
+        str(config.runtime_root)
+        if not existing_pythonpath
+        else f"{config.runtime_root}{os.pathsep}{existing_pythonpath}"
+    )
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w", encoding="utf-8") as log_handle:
         process = subprocess.run(

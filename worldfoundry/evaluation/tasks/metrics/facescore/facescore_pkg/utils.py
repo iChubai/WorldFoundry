@@ -1,12 +1,11 @@
-import hashlib
 import os
 import urllib
-import warnings
-from typing import Any, Union, List
-from ImageReward import ImageReward
+
 import torch
-from tqdm import tqdm
 from huggingface_hub import hf_hub_download
+from ImageReward import ImageReward
+from tqdm import tqdm
+
 # os.environ['HF_ENDPOINT']='https://hf-mirror.com'
 
 
@@ -15,7 +14,7 @@ _MODELS = {
 }
 
 
-def available_models() -> List[str]:
+def available_models() -> list[str]:
     """Returns the names of available FS models"""
     return list(_MODELS.keys())
 
@@ -28,7 +27,12 @@ def FaceScore_download(url: str, root: str):
     return download_target
 
 
-def load(name: str = "FaceScore", device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", download_root: str = None, med_config: str = None):
+def load(
+    name: str = "FaceScore",
+    device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu",
+    download_root: str = None,
+    med_config: str = None,
+):
     """Load a FaceScore model
 
     Parameters
@@ -54,21 +58,22 @@ def load(name: str = "FaceScore", device: Union[str, torch.device] = "cuda" if t
     else:
         raise RuntimeError(f"Model {name} not found; available models = {available_models()}")
 
-    print('load checkpoint from %s'%model_path)
-    state_dict = torch.load(model_path, map_location='cpu')
-    
+    print("load checkpoint from %s" % model_path)
+    state_dict = torch.load(model_path, map_location="cpu")
+
     # med_config
     if med_config is None:
-        med_config = FaceScore_download("https://huggingface.co/AIGCer-OPPO/FaceScore/resolve/main/med_config.json", download_root or os.path.expanduser("~/.cache/FaceScore"))
-    
+        med_config = FaceScore_download(
+            "https://huggingface.co/AIGCer-OPPO/FaceScore/resolve/main/med_config.json",
+            download_root or os.path.expanduser("~/.cache/FaceScore"),
+        )
+
     model = ImageReward(device=device, med_config=med_config).to(device)
-    msg = model.load_state_dict(state_dict,strict=False)
+    msg = model.load_state_dict(state_dict, strict=False)
     print("checkpoint loaded")
     model.eval()
 
     return model
-
-
 
 
 def _download(url: str, root: str):
@@ -84,7 +89,9 @@ def _download(url: str, root: str):
         return download_target
 
     with urllib.request.urlopen(url) as source, open(download_target, "wb") as output:
-        with tqdm(total=int(source.info().get("Content-Length")), ncols=80, unit='iB', unit_scale=True, unit_divisor=1024) as loop:
+        with tqdm(
+            total=int(source.info().get("Content-Length")), ncols=80, unit="iB", unit_scale=True, unit_divisor=1024
+        ) as loop:
             while True:
                 buffer = source.read(8192)
                 if not buffer:

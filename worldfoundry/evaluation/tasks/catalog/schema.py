@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, require_mapping, to_plain
 from worldfoundry.evaluation.api.json_contract import tuple_of_str as _tuple_of_str
@@ -224,7 +225,7 @@ def _bool(value: Any) -> bool:
     return bool(value)
 
 
-def _metric_spec(value: Any) -> "BenchmarkMetricSpec":
+def _metric_spec(value: Any) -> BenchmarkMetricSpec:
     """Coerces a raw input into a BenchmarkMetricSpec object.
 
     Args:
@@ -690,7 +691,7 @@ class BenchmarkSource(JsonSerializable):
         object.__setattr__(self, "notes", _tuple_of_str(self.notes))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "BenchmarkSource":
+    def from_dict(cls, data: Mapping[str, Any]) -> BenchmarkSource:
         source = _require_mapping(data, "BenchmarkSource.from_dict")
         status = _normalize_source_status(source.get("status", source.get("source_status", "unknown")))
         official_repo_url = source.get("official_repo_url")
@@ -738,7 +739,7 @@ class BenchmarkDatasetRef(JsonSerializable):
         object.__setattr__(self, "notes", _tuple_of_str(self.notes))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "BenchmarkDatasetRef":
+    def from_dict(cls, data: Mapping[str, Any]) -> BenchmarkDatasetRef:
         """Instantiates a BenchmarkDatasetRef from a raw dictionary mapping.
 
         Args:
@@ -890,7 +891,7 @@ class BenchmarkMetricSpec(JsonSerializable):
         object.__setattr__(self, "notes", _tuple_of_str(self.notes))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "BenchmarkMetricSpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> BenchmarkMetricSpec:
         """Loads a BenchmarkMetricSpec from a raw dictionary mapping.
 
         Args:
@@ -985,7 +986,7 @@ class BenchmarkRunnerSpec(JsonSerializable):
         object.__setattr__(self, "notes", _tuple_of_str(self.notes))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "BenchmarkRunnerSpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> BenchmarkRunnerSpec:
         """Constructs a BenchmarkRunnerSpec from a raw dictionary mapping.
 
         Args:
@@ -1253,7 +1254,7 @@ class BenchmarkZooEntry(JsonSerializable):
         return self.runner.verification_status
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "BenchmarkZooEntry":
+    def from_dict(cls, data: Mapping[str, Any]) -> BenchmarkZooEntry:
         """Loads a BenchmarkZooEntry from a raw dictionary mapping, normalizing and parsing nested fields.
 
         Args:

@@ -22,8 +22,7 @@ METRIC_MODULE = metric_module_from_globals(
     metric_id=METRIC_ID,
     aliases=ALIASES,
     description=(
-        "Conditional Inception Score (Benny et al., IJCV 2020): BCIS * WCIS from "
-        "class-bucketed softmax predictions."
+        "Conditional Inception Score (Benny et al., IJCV 2020): BCIS * WCIS from class-bucketed softmax predictions."
     ),
     family=FAMILY,
     higher_is_better=HIGHER_IS_BETTER,

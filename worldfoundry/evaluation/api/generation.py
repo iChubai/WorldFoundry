@@ -8,9 +8,9 @@ restore nested ArtifactRef objects after JSON deserialization.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping
 
@@ -46,7 +46,7 @@ def is_generation_status_successful(status: Any) -> bool:
     return normalize_generation_status(status) in GENERATION_SUCCESS_STATUSES
 
 
-def is_generation_result_successful(result: "GenerationResult") -> bool:
+def is_generation_result_successful(result: GenerationResult) -> bool:
     """Return whether a result may be scored as a completed generation.
 
     Args:
@@ -119,7 +119,7 @@ class GenerationRequest(JsonContract):
         return self.task_name
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "GenerationRequest":
+    def from_dict(cls, data: Mapping[str, Any]) -> GenerationRequest:
         return cls(
             sample_id=str(data["sample_id"]),
             task_name=data.get("task_name"),
@@ -159,7 +159,7 @@ class GenerationResult(JsonContract):
         object.__setattr__(self, "metadata", copy_mapping(self.metadata))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "GenerationResult":
+    def from_dict(cls, data: Mapping[str, Any]) -> GenerationResult:
         # Rows serialized by to_dict always carry a status; a row without one
         # is incomplete external data and must not default to success.
         return cls(

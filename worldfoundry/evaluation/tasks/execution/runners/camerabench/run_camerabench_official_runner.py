@@ -12,7 +12,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.tasks.execution.framework.io import (  # noqa: E402
+from worldfoundry.evaluation.tasks.execution.framework.io import (
     env_path,
     load_json,
     mean_numeric,

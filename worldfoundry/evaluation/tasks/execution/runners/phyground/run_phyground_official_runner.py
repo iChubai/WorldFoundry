@@ -7,8 +7,9 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -320,7 +321,7 @@ def main(argv: list[str] | None = None) -> int:
             scorecard = run_official_phyground(args)
         else:
             scorecard = normalize_phyground_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {
             "schema_version": SCORECARD_SCHEMA_VERSION,

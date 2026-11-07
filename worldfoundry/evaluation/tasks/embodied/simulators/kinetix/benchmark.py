@@ -193,9 +193,7 @@ class KinetixBenchmark(BaseSimulator):
 
         # Determine the Kinetix environment name based on the desired observation type.
         env_name = (
-            "Kinetix-Symbolic-Continuous-v1"
-            if self._observation_type == "symbolic"
-            else "Kinetix-Pixels-Continuous-v1"
+            "Kinetix-Symbolic-Continuous-v1" if self._observation_type == "symbolic" else "Kinetix-Pixels-Continuous-v1"
         )
         # Create the Kinetix environment instance using the resolved name and static parameters.
         env = kenv.make_kinetix_env_from_name(env_name, static_env_params=static_env_params)

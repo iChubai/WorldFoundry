@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import coerce_unit_score, optional_float
 
@@ -58,8 +59,6 @@ def _dimension_scores(
     return scores
 
 
-
-
 def _score_from_records(
     records: list[Mapping[str, JsonValue]],
     metric_id: str,
@@ -105,8 +104,6 @@ def _score_from_records(
     )
 
 
-
-
 def _joint_score_from_records(
     records: list[Mapping[str, JsonValue]],
     official_results_path: Path | None,
@@ -118,7 +115,9 @@ def _joint_score_from_records(
         official_results_path: Source path for diagnostics.
     """
 
-    explicit = _score_from_records(records, "joint_score", official_results_path, aliases=("joint", "SA=1, PC=1", "SA_PC"))
+    explicit = _score_from_records(
+        records, "joint_score", official_results_path, aliases=("joint", "SA=1, PC=1", "SA_PC")
+    )
     if explicit is not None:
         return explicit
     values = []
@@ -143,8 +142,6 @@ def _joint_score_from_records(
     )
 
 
-
-
 def _rule_followed_rate(
     records: list[Mapping[str, JsonValue]],
     official_results_path: Path | None,
@@ -159,8 +156,12 @@ def _rule_followed_rate(
     correct = 0
     total = 0
     for record in records:
-        followed = _sequence_value(_first_nested_value(record, ("physics_rules_followed", "rules_followed", "followed_rules")))
-        violated = _sequence_value(_first_nested_value(record, ("physics_rules_unfollowed", "rules_unfollowed", "violated_rules")))
+        followed = _sequence_value(
+            _first_nested_value(record, ("physics_rules_followed", "rules_followed", "followed_rules"))
+        )
+        violated = _sequence_value(
+            _first_nested_value(record, ("physics_rules_unfollowed", "rules_unfollowed", "violated_rules"))
+        )
         for _ in followed:
             correct += 1
             total += 1
@@ -178,8 +179,6 @@ def _rule_followed_rate(
     )
 
 
-
-
 def _field_aliases(metric_id: str, aliases: tuple[str, ...]) -> tuple[str, ...]:
     """Build common official result field aliases for one metric.
 
@@ -190,8 +189,6 @@ def _field_aliases(metric_id: str, aliases: tuple[str, ...]) -> tuple[str, ...]:
 
     base = [metric_id, metric_id.replace("_", "-"), metric_id.replace("_", " "), metric_id.upper()]
     return tuple(dict.fromkeys([*base, *aliases]))
-
-
 
 
 def _first_record_field(record: Mapping[str, JsonValue], fields: tuple[str, ...]) -> str | None:
@@ -211,8 +208,6 @@ def _first_record_field(record: Mapping[str, JsonValue], fields: tuple[str, ...]
             if record.get(field) not in (None, ""):
                 return field
     return None
-
-
 
 
 def _first_nested_value(record: Mapping[str, JsonValue], fields: tuple[str, ...]) -> JsonValue:
@@ -241,8 +236,6 @@ def _first_nested_value(record: Mapping[str, JsonValue], fields: tuple[str, ...]
     return None
 
 
-
-
 def _unit_score(value: JsonValue, *, scale_max: float | None = None) -> float | None:
     """Normalize official numeric labels to the unit interval.
 
@@ -251,8 +244,6 @@ def _unit_score(value: JsonValue, *, scale_max: float | None = None) -> float | 
         scale_max: Optional scale maximum for ordinal scores.
     """
     return coerce_unit_score(value, scale_max=scale_max, allow_bool=True)
-
-
 
 
 def _looks_likert(value: JsonValue) -> bool:
@@ -264,8 +255,6 @@ def _looks_likert(value: JsonValue) -> bool:
 
     numeric = optional_float(value)
     return numeric is not None and 1.0 <= numeric <= 5.0 and float(numeric).is_integer()
-
-
 
 
 def _sequence_value(value: JsonValue) -> tuple[JsonValue, ...]:
@@ -282,8 +271,6 @@ def _sequence_value(value: JsonValue) -> tuple[JsonValue, ...]:
     return ()
 
 
-
-
 def _metric_key(value: str) -> str:
     """Normalize metric and category keys for alias matching.
 
@@ -294,14 +281,10 @@ def _metric_key(value: str) -> str:
     return value.strip().casefold().replace("_", "-").replace(" ", "-")
 
 
-
-
 def _loose_id(value: str) -> str:
     """Normalize ids for model/result matching while preserving explicit ids elsewhere."""
 
     return re.sub(r"[^a-z0-9]+", "", value.casefold())
-
-
 
 
 def _float_list(value: JsonValue) -> list[float]:

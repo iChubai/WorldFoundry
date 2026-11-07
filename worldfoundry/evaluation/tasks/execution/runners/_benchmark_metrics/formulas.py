@@ -438,11 +438,7 @@ def chronomagic_average_scores(
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             grouped[match.group(1)].append(float(value))
     output_key = f"Average_{suffix}"
-    return {
-        prefix: {output_key: sum(values) / len(values)}
-        for prefix, values in sorted(grouped.items())
-        if values
-    }
+    return {prefix: {output_key: sum(values) / len(values)} for prefix, values in sorted(grouped.items()) if values}
 
 
 def worldmodelbench_score(
@@ -713,7 +709,10 @@ def _spearman(left: Sequence[float], right: Sequence[float]) -> float | None:
     right_ranks = _average_ranks(right)
     left_mean = sum(left_ranks) / len(left_ranks)
     right_mean = sum(right_ranks) / len(right_ranks)
-    numerator = sum((left_value - left_mean) * (right_value - right_mean) for left_value, right_value in zip(left_ranks, right_ranks))
+    numerator = sum(
+        (left_value - left_mean) * (right_value - right_mean)
+        for left_value, right_value in zip(left_ranks, right_ranks, strict=False)
+    )
     left_denominator = math.sqrt(sum((value - left_mean) ** 2 for value in left_ranks))
     right_denominator = math.sqrt(sum((value - right_mean) ** 2 for value in right_ranks))
     if left_denominator == 0.0 or right_denominator == 0.0:
@@ -755,7 +754,10 @@ def _retrieval_score_dict(record: Mapping[str, JsonValue]) -> dict[str, float] |
     Returns:
         Score dict, or None if invalid.
     """
-    if all(key in record for key in ("pos_text_pos_image", "pos_text_neg_image", "neg_text_pos_image", "neg_text_neg_image")):
+    if all(
+        key in record
+        for key in ("pos_text_pos_image", "pos_text_neg_image", "neg_text_pos_image", "neg_text_neg_image")
+    ):
         try:
             return {
                 key: float(record[key])
@@ -834,13 +836,13 @@ def _join_prediction_answer_rows(
         return tuple(dict(row) for row in pred_map.values())
     answer_map = _row_map(answers)
     return tuple(
-        {**dict(pred_row), **dict(answer_map.get(key, {}))}
-        for key, pred_row in pred_map.items()
-        if key in answer_map
+        {**dict(pred_row), **dict(answer_map.get(key, {}))} for key, pred_row in pred_map.items() if key in answer_map
     )
 
 
-def _row_map(rows: Mapping[str, Mapping[str, JsonValue]] | Sequence[Mapping[str, JsonValue]]) -> dict[str, Mapping[str, JsonValue]]:
+def _row_map(
+    rows: Mapping[str, Mapping[str, JsonValue]] | Sequence[Mapping[str, JsonValue]],
+) -> dict[str, Mapping[str, JsonValue]]:
     """Map collection sequence rows to dictionaries keyed by question/sample ID.
 
     Args:
@@ -915,7 +917,9 @@ def _safe_div(numerator: int | float, denominator: int | float) -> float:
     return float(numerator) / float(denominator) if denominator else 0.0
 
 
-def _normalize_score_keys(scores: Mapping[str, JsonValue], *, aliases: Mapping[str, str] | None = None) -> dict[str, JsonValue]:
+def _normalize_score_keys(
+    scores: Mapping[str, JsonValue], *, aliases: Mapping[str, str] | None = None
+) -> dict[str, JsonValue]:
     """Map raw or colloquial dimension names to their canonical VBench task names.
 
     Args:
@@ -930,7 +934,9 @@ def _normalize_score_keys(scores: Mapping[str, JsonValue], *, aliases: Mapping[s
     for key, value in scores.items():
         text = str(key)
         canonical = aliases.get(text, text.replace("_", " ").strip())
-        output[canonical] = value[0] if isinstance(value, Sequence) and not isinstance(value, (str, bytes)) and value else value
+        output[canonical] = (
+            value[0] if isinstance(value, Sequence) and not isinstance(value, (str, bytes)) and value else value
+        )
     return output
 
 

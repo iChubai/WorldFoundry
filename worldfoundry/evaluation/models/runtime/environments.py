@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.utils import (
     MODEL_RUNTIME_ENVIRONMENTS_ROOT,
@@ -83,7 +84,7 @@ class RuntimeEnvironmentProfile:
         return self.env_root / self.env_name if self.env_root is not None else None
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any], *, source: str = "target") -> "RuntimeEnvironmentProfile":
+    def from_mapping(cls, data: Mapping[str, Any], *, source: str = "target") -> RuntimeEnvironmentProfile:
         """Build a :class:`RuntimeEnvironmentProfile` from a raw YAML mapping.
 
         Supports nested ``conda``, ``system``, ``env``, and ``validation``
@@ -114,12 +115,7 @@ class RuntimeEnvironmentProfile:
             env_name=env_name,
             schema_version=_schema_version(data.get("schema_version")),
             python=str(conda.get("python") or data.get("python") or "3.10"),
-            cuda_profile=str(
-                conda.get("cuda_profile")
-                or system.get("cuda")
-                or data.get("cuda_profile")
-                or "cu113"
-            ),
+            cuda_profile=str(conda.get("cuda_profile") or system.get("cuda") or data.get("cuda_profile") or "cu113"),
             driver_status=str(conda.get("driver_status") or data.get("driver_status") or "compatible"),
             conda_packages=_tuple_of_str(
                 packages.get("conda")
@@ -128,10 +124,7 @@ class RuntimeEnvironmentProfile:
                 or data.get("conda_packages")
             ),
             pip_packages=_tuple_of_str(
-                packages.get("pip")
-                or top_packages.get("pip")
-                or conda.get("pip_packages")
-                or data.get("pip_packages")
+                packages.get("pip") or top_packages.get("pip") or conda.get("pip_packages") or data.get("pip_packages")
             ),
             pip_extra_index_url=(
                 str(conda.get("pip_extra_index_url") or data.get("pip_extra_index_url"))
@@ -146,7 +139,9 @@ class RuntimeEnvironmentProfile:
             source_requirement_files=_tuple_of_str(
                 conda.get("source_requirement_files") or data.get("source_requirement_files")
             ),
-            editable_install_dirs=_tuple_of_str(conda.get("editable_install_dirs") or data.get("editable_install_dirs")),
+            editable_install_dirs=_tuple_of_str(
+                conda.get("editable_install_dirs") or data.get("editable_install_dirs")
+            ),
             pythonpath_dirs=_tuple_of_str(conda.get("pythonpath_dirs") or data.get("pythonpath_dirs")),
             env_required=_tuple_of_str(env.get("required") or data.get("env_required")),
             env_optional=_tuple_of_str(env.get("optional") or data.get("env_optional")),
@@ -166,7 +161,7 @@ class RuntimeEnvironmentProfile:
         *,
         environment_id: str | None = None,
         source: str = "legacy",
-    ) -> "RuntimeEnvironmentProfile":
+    ) -> RuntimeEnvironmentProfile:
         """Build a :class:`RuntimeEnvironmentProfile` from a legacy conda environment spec.
 
         Args:

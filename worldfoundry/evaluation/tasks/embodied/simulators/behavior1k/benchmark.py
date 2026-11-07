@@ -296,13 +296,13 @@ class Behavior1KBenchmark(BaseSimulator):
         _orig_signal = None
         if threading.current_thread() is not threading.main_thread():
             _orig_signal = _signal.signal
-            setattr(_signal, "signal", lambda *a, **kw: None)
+            _signal.signal = lambda *a, **kw: None
 
         try:
             return self._make_env_inner(task_name)
         finally:
             if _orig_signal is not None:
-                setattr(_signal, "signal", _orig_signal)
+                _signal.signal = _orig_signal
 
     def _make_env_inner(self, task_name: str) -> Any:
         """Inner method constructing the environment with Hydra configuration.
@@ -451,7 +451,7 @@ class Behavior1KBenchmark(BaseSimulator):
             get_task_instance_path(scene_model),
             f"json/{scene_model}_task_{task.activity_name}_instances/{tro_filename}-tro_state.json",
         )
-        with open(tro_file_path, "r") as f:
+        with open(tro_file_path) as f:
             # Load the state from JSON and convert to PyTorch tensors.
             tro_state = recursively_convert_to_torch(json.load(f))
 

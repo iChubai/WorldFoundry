@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import iter_jsonl_objects
 from worldfoundry.evaluation.api import ArtifactRef, GenerationResult
@@ -132,8 +133,8 @@ __all__ = [
     "build_import_metric_rows",
     "build_video_coverage",
     "iter_generation_video_artifacts",
-    "reset_generation_artifact_staging",
     "iter_video_files",
+    "reset_generation_artifact_staging",
     "resolve_env_path",
     "video_stems_in_directory",
 ]

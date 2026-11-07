@@ -8,9 +8,10 @@ and an internal registry format.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from worldfoundry.evaluation.tasks.catalog import BenchmarkSpec, CatalogRegistry, WorldTaskConfig
 
@@ -94,11 +95,7 @@ def iter_task_yaml_paths(
         # Choose the appropriate glob method based on the 'recursive' flag.
         iterator = root.rglob("*") if recursive else root.glob("*")
         # Extend the list with paths that are files and have a YAML/YML suffix.
-        paths.extend(
-            path
-            for path in iterator
-            if path.is_file() and path.suffix.lower() in {".yaml", ".yml"}
-        )
+        paths.extend(path for path in iterator if path.is_file() and path.suffix.lower() in {".yaml", ".yml"})
     # Convert paths to absolute, unique, and sorted Path objects.
     return tuple(sorted(dict.fromkeys(path.resolve() for path in paths)))
 
@@ -135,6 +132,7 @@ class TaskRegistryEntry:
         task: The strongly-typed WorldTaskConfig config object.
         source_path: Path to the YAML manifest file containing this task.
     """
+
     benchmark_name: str
     task: WorldTaskConfig
     source_path: Path | None = None
@@ -221,9 +219,7 @@ class TaskRegistry:
         key = entry.key
         if not replace and key in self._entries:
             benchmark, task = key
-            raise DuplicateTaskRegistryKeyError(
-                f"duplicate task registry entry: benchmark={benchmark!r} task={task!r}"
-            )
+            raise DuplicateTaskRegistryKeyError(f"duplicate task registry entry: benchmark={benchmark!r} task={task!r}")
         # Add key to maintain registration order if it's a new entry.
         if key not in self._entries:
             self._order.append(key)
@@ -272,7 +268,7 @@ class TaskRegistry:
             entries.append(entry)
         return entries
 
-    def get(self        , task: str, *, benchmark: str | None = None) -> TaskRegistryEntry:
+    def get(self, task: str, *, benchmark: str | None = None) -> TaskRegistryEntry:
         """Retrieves a single task entry by name.
 
         If `benchmark` is provided, it attempts to find a task with that name within the specified benchmark.
@@ -428,7 +424,7 @@ def validate_task_yaml_file(
         loaded = load_catalog_yaml(source_path, root_dir=root_dir)
         # Convert the loaded object(s) into TaskRegistryEntry objects for detail extraction.
         entries = _entries_from_loaded_catalog(loaded, source_path=source_path.resolve())
-    except Exception as exc:  # noqa: BLE001 - validation reports the precise loader error.
+    except Exception as exc:  # validation reports the precise loader error.
         # If any exception occurs during loading or parsing, report it as a validation failure.
         return {
             "ok": False,

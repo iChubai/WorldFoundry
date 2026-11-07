@@ -5,10 +5,10 @@ from __future__ import annotations
 import csv
 import json
 import math
+from collections.abc import Mapping
 from pathlib import Path
 from statistics import mean
-from typing import Any, Mapping
-
+from typing import Any
 
 METRIC_SPECS: dict[str, dict[str, Any]] = {
     "d1_cam_prec": {"name": "Requested-camera precision (D1-CamPrec)", "group": "camera"},
@@ -17,7 +17,10 @@ METRIC_SPECS: dict[str, dict[str, Any]] = {
     "d2_visual_integrity": {"name": "Visual integrity (D2)", "group": "visible_consistency"},
     "d3_visible_spatial_consistency": {"name": "Visible spatial consistency (D3)", "group": "visible_consistency"},
     "d4_visible_state_consistency": {"name": "Visible state consistency (D4)", "group": "visible_consistency"},
-    "d5_reobservation_spatial_consistency": {"name": "Re-observation spatial consistency (D5)", "group": "reobservation"},
+    "d5_reobservation_spatial_consistency": {
+        "name": "Re-observation spatial consistency (D5)",
+        "group": "reobservation",
+    },
     "d6_reobservation_state_consistency": {"name": "Re-observation state consistency (D6)", "group": "reobservation"},
     "wrbench_average": {"name": "WRBench diagnostic average", "group": "aggregate"},
 }
@@ -25,13 +28,28 @@ METRIC_ORDER = tuple(METRIC_SPECS)
 
 VALUE_ALIASES: dict[str, tuple[str, ...]] = {
     "d1_cam_prec": ("D1_CamPrec", "D1_camera_pose", "d1_camera_accuracy", "d1_cam_prec"),
-    "d1_cam_align_common_yaw": ("D1_CamAlign_common_yaw", "D1_camalign", "d1_camalign_score", "d1_cam_align_common_yaw"),
+    "d1_cam_align_common_yaw": (
+        "D1_CamAlign_common_yaw",
+        "D1_camalign",
+        "d1_camalign_score",
+        "d1_cam_align_common_yaw",
+    ),
     "d1_cam_align_static_hold": ("D1_CamAlign_static_hold", "d1_cam_align_static_hold"),
     "d2_visual_integrity": ("D2", "D2_visual_integrity", "d2_selected_visual_integrity_score", "d2_visual_integrity"),
     "d3_visible_spatial_consistency": ("D3", "D3_spatial_in", "vlm_spatial_fidelity", "d3_visible_spatial_consistency"),
     "d4_visible_state_consistency": ("D4", "D4_state_in", "vlm_state_fidelity", "d4_visible_state_consistency"),
-    "d5_reobservation_spatial_consistency": ("D5", "D5_spatial_oov", "vlm_spatial_reasoning", "d5_reobservation_spatial_consistency"),
-    "d6_reobservation_state_consistency": ("D6", "D6_state_oov", "vlm_state_reasoning", "d6_reobservation_state_consistency"),
+    "d5_reobservation_spatial_consistency": (
+        "D5",
+        "D5_spatial_oov",
+        "vlm_spatial_reasoning",
+        "d5_reobservation_spatial_consistency",
+    ),
+    "d6_reobservation_state_consistency": (
+        "D6",
+        "D6_state_oov",
+        "vlm_state_reasoning",
+        "d6_reobservation_state_consistency",
+    ),
     "wrbench_average": ("Avg", "wrbench_average"),
 }
 

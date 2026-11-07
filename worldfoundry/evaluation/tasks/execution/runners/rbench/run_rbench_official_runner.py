@@ -16,18 +16,16 @@ upstream summary CSVs, so a partial judge run cannot silently look complete.
 
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.tasks.execution.runners.rbench.rbench_metrics import (
     EMBODIMENT_ROW_COLUMNS,
     METRIC_ORDER,
@@ -240,18 +238,12 @@ def _coverage(
             except (FileNotFoundError, KeyError, ValueError):
                 expected = set()
             if expected:
-                entry["generated_videos"] = video_coverage(
-                    video_dir=generated_artifact_dir, expected=sorted(expected)
-                )
+                entry["generated_videos"] = video_coverage(video_dir=generated_artifact_dir, expected=sorted(expected))
         per_split[split_id] = entry
 
-    incomplete = sorted(
-        split_id for split_id, entry in per_split.items() if entry["complete"] is not True
-    )
+    incomplete = sorted(split_id for split_id, entry in per_split.items() if entry["complete"] is not True)
     scored_prompt_total = sum(scored_counts.get(split_id, 0) for split_id in scored_splits)
-    all_splits_present = not [
-        item for item in (*EMBODIMENT_ORDER, *TASK_ORDER) if item not in scored_splits
-    ]
+    all_splits_present = not [item for item in (*EMBODIMENT_ORDER, *TASK_ORDER) if item not in scored_splits]
 
     return {
         "expected_prompt_count": CANONICAL_PROMPT_COUNT,
@@ -360,9 +352,7 @@ def aggregate_rbench_results(args: argparse.Namespace) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     results_path = _resolve_results_path(args)
     if results_path is None:
-        raise ValueError(
-            "--official-results-path or WORLDFOUNDRY_RBENCH_RESULTS_PATH is required"
-        )
+        raise ValueError("--official-results-path or WORLDFOUNDRY_RBENCH_RESULTS_PATH is required")
     layout = resolve_layout(
         results_path,
         model_id=args.result_model_id,
@@ -373,9 +363,7 @@ def aggregate_rbench_results(args: argparse.Namespace) -> dict[str, Any]:
     embodiment_dir = layout.embodiment_track_dir if EMBODIMENT_TRACK in selected_tracks else None
     task_dir = layout.task_track_dir if TASK_TRACK in selected_tracks else None
     if embodiment_dir is None and task_dir is None:
-        raise RBenchLayoutError(
-            f"no RBench results available for the selected tracks: {sorted(selected_tracks)}"
-        )
+        raise RBenchLayoutError(f"no RBench results available for the selected tracks: {sorted(selected_tracks)}")
 
     computed = compute_rbench_metrics(
         embodiment_track_dir=embodiment_dir,
@@ -423,9 +411,7 @@ def aggregate_rbench_results(args: argparse.Namespace) -> dict[str, Any]:
         output_dir / "track_breakdown.json",
         {
             "embodiment_track": {
-                key: value
-                for key, value in (computed.get("embodiment_track") or {}).items()
-                if key != "per_split"
+                key: value for key, value in (computed.get("embodiment_track") or {}).items() if key != "per_split"
             }
             | {
                 "per_split": {
@@ -492,7 +478,7 @@ def main(argv: list[str] | None = None) -> int:
         args.official_results_path = sample_path
     try:
         scorecard = aggregate_rbench_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = _failure_scorecard(args, exc)
         write_json(args.output_dir / "scorecard.json", scorecard)

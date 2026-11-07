@@ -16,8 +16,9 @@ per-video recomputation, use the runner with ``--official-results-path`` pointin
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.official_result_scoring import OfficialMetricScore
 from worldfoundry.evaluation.tasks.execution.runners.rbench.rbench_metrics import (
@@ -93,11 +94,7 @@ def _from_embodiment_summary(
     for column, metric_id in _SUMMARY_COLUMN_METRICS.items():
         value = _to_float(total_row.get(column)) if total_row else None
         if value is None:
-            values = [
-                number
-                for row in embodiment_rows
-                if (number := _to_float(row.get(column))) is not None
-            ]
+            values = [number for row in embodiment_rows if (number := _to_float(row.get(column))) is not None]
             value = _mean(values)
             aggregation = "mean_over_embodiment_rows"
         else:

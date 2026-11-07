@@ -28,15 +28,10 @@ def discover_metrics_json(search_roots: list[Path]) -> Path | None:
             continue
         if root.is_file() and root.name in metric_names:
             return root
-        matches = sorted(
-            path
-            for name in metric_names
-            for path in root.glob(f"**/{name}")
-        )
+        matches = sorted(path for name in metric_names for path in root.glob(f"**/{name}"))
         if matches:
             return matches[-1]
     return None
-
 
 
 @dataclass(frozen=True)
@@ -55,10 +50,14 @@ def runtime_config_from_env(
     repo_root: Path | None = None,
 ) -> WorldInWorldRuntimeConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_WORLD_IN_WORLD_RUNTIME_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_WORLD_IN_WORLD_SCORER_BACKEND")
-        or "official"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_WORLD_IN_WORLD_RUNTIME_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_WORLD_IN_WORLD_SCORER_BACKEND")
+            or "official"
+        )
+        .strip()
+        .lower()
+    )
     resolved_task = (task or os.environ.get("WORLDFOUNDRY_WORLD_IN_WORLD_TASK") or DEFAULT_TASK).strip()
     resolved_exp_id = exp_id or os.environ.get("WORLDFOUNDRY_WORLD_IN_WORLD_EXP_ID") or "worldfoundry_artifact"
     strict = os.environ.get("WORLDFOUNDRY_WORLD_IN_WORLD_STRICT", "").strip().lower() in {
@@ -132,9 +131,7 @@ def run_world_in_world_evaluator(
     results_path = output_dir / "world_in_world_metrics.json"
     prompt_records: list[dict[str, Any]] = []
     try:
-        prompt_records = unique_prompt_records(
-            load_prompt_records(task=config.task, repo_root=config.repo_root)
-        )
+        prompt_records = unique_prompt_records(load_prompt_records(task=config.task, repo_root=config.repo_root))
         if limit is not None:
             prompt_records = prompt_records[: int(limit)]
     except FileNotFoundError:

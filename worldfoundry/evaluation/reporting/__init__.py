@@ -13,8 +13,9 @@ Sections:
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .comparison_identity import (
     COMPARISON_IDENTITY_SCHEMA_VERSION,
@@ -22,7 +23,7 @@ from .comparison_identity import (
     compare_identities,
     comparison_identity_from_summary,
 )
-
+from .run_browser import RUN_BROWSER_SCHEMA_VERSION, build_run_browser_html, write_run_browser
 from .run_comparison import (
     RUN_COMPARISON_SCHEMA_VERSION,
     build_markdown_comparison,
@@ -39,6 +40,19 @@ from .run_index import (
     select_run_index_rows,
     write_run_index,
 )
+from .run_manifest import (
+    ENV_REQUIREMENTS_SCHEMA_VERSION,
+    ENVIRONMENT_SCHEMA_VERSION,
+    REPRODUCIBILITY_PACKAGES,
+    RUN_MANIFEST_SCHEMA_VERSION,
+    build_env_requirements,
+    build_environment,
+    build_run_manifest,
+    is_sensitive_key,
+    redact_secret_text,
+    redact_secrets,
+    write_run_manifest_artifacts,
+)
 from .run_report import (
     MOCK_BACKEND_BLOCKING_REASON,
     MOCK_EVALUATION_BACKEND,
@@ -50,20 +64,6 @@ from .run_report import (
     load_run_summary,
     write_run_report_artifacts,
 )
-from .run_browser import RUN_BROWSER_SCHEMA_VERSION, build_run_browser_html, write_run_browser
-from .run_manifest import (
-    ENVIRONMENT_SCHEMA_VERSION,
-    ENV_REQUIREMENTS_SCHEMA_VERSION,
-    REPRODUCIBILITY_PACKAGES,
-    RUN_MANIFEST_SCHEMA_VERSION,
-    build_env_requirements,
-    build_environment,
-    build_run_manifest,
-    is_sensitive_key,
-    redact_secret_text,
-    redact_secrets,
-    write_run_manifest_artifacts,
-)
 from .scorecard import SCORECARD_SCHEMA_VERSION, build_scorecard, write_scorecard
 from .validation import (
     CONTRACT_ARTIFACT_KIND_CHOICES,
@@ -73,7 +73,6 @@ from .validation import (
     validate_contract_file,
     validate_contract_paths,
 )
-
 
 # ---------------------------------------------------------------------------
 # Runtime evidence inspection
@@ -128,40 +127,44 @@ def has_official_runtime_evidence(flags: Mapping[str, Any]) -> bool:
         return False
     return flags.get("official_benchmark_verified") is True and flags.get("integration_evidence") is True
 
+
 __all__ = [
-    "CONTRACT_VALIDATION_SCHEMA_VERSION",
-    "CONTRACT_ARTIFACT_KIND_CHOICES",
     "COMPARISON_IDENTITY_SCHEMA_VERSION",
+    "CONTRACT_ARTIFACT_KIND_CHOICES",
+    "CONTRACT_VALIDATION_SCHEMA_VERSION",
     "ENVIRONMENT_SCHEMA_VERSION",
     "ENV_REQUIREMENTS_SCHEMA_VERSION",
     "MOCK_BACKEND_BLOCKING_REASON",
     "MOCK_EVALUATION_BACKEND",
     "REPRODUCIBILITY_PACKAGES",
     "RUNTIME_EVIDENCE_KEYS",
-    "RUN_COMPARISON_SCHEMA_VERSION",
     "RUN_BROWSER_SCHEMA_VERSION",
+    "RUN_COMPARISON_SCHEMA_VERSION",
     "RUN_INDEX_SCHEMA_VERSION",
     "RUN_MANIFEST_SCHEMA_VERSION",
     "RUN_SUMMARY_SCHEMA_VERSION",
     "SCORECARD_SCHEMA_VERSION",
-    "build_env_requirements",
     "build_comparison_identity",
+    "build_env_requirements",
     "build_environment",
-    "build_markdown_contract_validation",
     "build_markdown_comparison",
-    "build_markdown_run_index",
+    "build_markdown_contract_validation",
     "build_markdown_report",
+    "build_markdown_run_index",
     "build_run_browser_html",
     "build_run_comparison",
     "build_run_index",
     "build_run_manifest",
     "build_run_summary",
+    "build_scorecard",
+    "compare_identities",
+    "comparison_identity_from_summary",
     "discover_run_summaries",
     "evaluation_backend_from_payload",
     "has_official_runtime_evidence",
     "inspect_scorecard_runtime_flags",
-    "is_sensitive_key",
     "is_mock_backend",
+    "is_sensitive_key",
     "load_run_index",
     "load_run_summary",
     "normalize_contract_artifact_kind",
@@ -171,12 +174,9 @@ __all__ = [
     "select_run_index_rows",
     "validate_contract_file",
     "validate_contract_paths",
-    "write_run_comparison",
     "write_run_browser",
+    "write_run_comparison",
     "write_run_index",
-    "build_scorecard",
-    "compare_identities",
-    "comparison_identity_from_summary",
     "write_run_manifest_artifacts",
     "write_run_report_artifacts",
     "write_scorecard",

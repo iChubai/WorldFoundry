@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric as _mean
 
@@ -136,7 +137,7 @@ def compute_physvidbench_metrics(*, qa_rows: Sequence[Mapping[str, Any]]) -> dic
             "components": {
                 "question_count": 0,
                 "format": "summary_metric_rows",
-                "type_bucket_counts": {metric_id: 0 for metric_id in TYPE_TO_METRIC.values()},
+                "type_bucket_counts": dict.fromkeys(TYPE_TO_METRIC.values(), 0),
             },
         }
 

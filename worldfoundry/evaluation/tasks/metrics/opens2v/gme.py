@@ -26,9 +26,7 @@ def compute_gme_score(
     from get_gmescore import sample_video_frames
     from utils.gme.gme_model import GmeQwen2VL
 
-    model_path = model_path or os.environ.get(
-        "WORLDFOUNDRY_GME_MODEL_PATH", "Alibaba-NLP/gme-Qwen2-VL-7B-Instruct/"
-    )
+    model_path = model_path or os.environ.get("WORLDFOUNDRY_GME_MODEL_PATH", "Alibaba-NLP/gme-Qwen2-VL-7B-Instruct/")
     with open(input_json_file, encoding="utf-8") as handle:
         prompts = json.load(handle)
     gme = GmeQwen2VL(model_path, attn_model="flash_attention_2", device=device)

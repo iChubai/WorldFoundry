@@ -5,7 +5,7 @@ Upstream harness code will be vendored under ``thirdparty/vla-evaluation-harness
 """
 
 
-# ruff: noqa: F822 - rollout exports are loaded by __getattr__.
+# rollout exports are loaded by __getattr__.
 
 from __future__ import annotations
 
@@ -84,8 +84,8 @@ __all__ = [
     "CAPABILITY_MULTIMODAL_OBSERVATION",
     "CAPABILITY_SESSION_CONTROL",
     "CAPABILITY_TAGS",
-    "CAPABILITY_VA_VIDEO_ACTION",
     "CAPABILITY_VAM_VIDEO_ACTION_MODELING",
+    "CAPABILITY_VA_VIDEO_ACTION",
     "CAPABILITY_VLA_ACTION_PREDICTION",
     "CAPABILITY_VLA_POLICY_ROLLOUT",
     "CAPABILITY_WAM_BRANCH",

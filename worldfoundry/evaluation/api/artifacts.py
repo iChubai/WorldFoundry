@@ -9,9 +9,10 @@ references so callers do not accidentally treat object-store paths as files.
 from __future__ import annotations
 
 import mimetypes
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 from urllib.parse import unquote, urlparse
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping, sha256_bytes, sha256_file
@@ -89,7 +90,7 @@ class ArtifactRef(JsonContract):
         media_metadata: Mapping[str, Any] | None = None,
         metadata: Mapping[str, Any] | None = None,
         compute_hash: bool = True,
-    ) -> "ArtifactRef":
+    ) -> ArtifactRef:
         """Build a reference to a local file, hashing it unless ``compute_hash=False``.
 
         Set ``compute_hash=False`` to skip the full-file SHA-256 read for large
@@ -117,7 +118,7 @@ class ArtifactRef(JsonContract):
         mime_type: str | None = None,
         media_metadata: Mapping[str, Any] | None = None,
         metadata: Mapping[str, Any] | None = None,
-    ) -> "ArtifactRef":
+    ) -> ArtifactRef:
         return cls(
             uri=uri,
             kind=kind,
@@ -139,7 +140,7 @@ class ArtifactRef(JsonContract):
         media_metadata: Mapping[str, Any] | None = None,
         metadata: Mapping[str, Any] | None = None,
         compute_hash: bool = True,
-    ) -> "ArtifactRef":
+    ) -> ArtifactRef:
         if not kind:
             raise ValueError("ArtifactRef.from_uri requires kind.")
         text_uri = str(uri)
@@ -163,7 +164,7 @@ class ArtifactRef(JsonContract):
         )
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ArtifactRef":
+    def from_dict(cls, data: Mapping[str, Any]) -> ArtifactRef:
         kind = data.get("kind")
         if not kind:
             raise ValueError("ArtifactRef requires kind.")

@@ -6,8 +6,9 @@ import json
 import os
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
@@ -886,7 +887,7 @@ def main(argv: list[str] | None = None) -> int:
             scorecard = run_official_videoverse(args)
         else:
             scorecard = normalize_videoverse_results(args)
-    except Exception as exc:  # noqa: BLE001 - CLI should always emit a scorecard-shaped failure.
+    except Exception as exc:  # CLI should always emit a scorecard-shaped failure.
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {
             "schema_version": SCORECARD_SCHEMA_VERSION,

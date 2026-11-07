@@ -23,11 +23,12 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.core.observability.logging_setup import configure_logging, get_logger
@@ -275,7 +276,7 @@ def metric_id_from_key(key: Any, config: BenchRunnerConfig) -> str | None:
     return metric_id
 
 
-@lru_cache(maxsize=None)
+@cache
 def declared_metric_normalizers(benchmark_id: str) -> Mapping[str, str]:
     """Return catalog-declared per-metric normalizer specs for one benchmark.
 
@@ -290,7 +291,7 @@ def declared_metric_normalizers(benchmark_id: str) -> Mapping[str, str]:
         declared = {
             metric.metric_id: str(metric.normalizer) for metric in entry.metrics if getattr(metric, "normalizer", None)
         }
-    except Exception:  # noqa: BLE001 - uncataloged benchmarks fall back to the legacy heuristic.
+    except Exception:  # uncataloged benchmarks fall back to the legacy heuristic.
         declared = {}
     return MappingProxyType(declared)
 
@@ -1154,7 +1155,7 @@ def run_main(config: BenchRunnerConfig, hooks: RunnerHooks, argv: list[str] | No
     try:
         logger.event("INFO", "official_runner.started", "Official runner started")
         scorecard = run_official_pipeline(config=config, hooks=hooks, args=args)
-    except Exception as exc:  # noqa: BLE001 - failure contract: any failure still writes a failed scorecard.
+    except Exception as exc:  # failure contract: any failure still writes a failed scorecard.
         logger.event(
             "ERROR",
             "official_runner.failed",
@@ -1168,7 +1169,7 @@ def run_main(config: BenchRunnerConfig, hooks: RunnerHooks, argv: list[str] | No
                 output_dir=args.output_dir,
                 reason=f"{type(exc).__name__}: {exc}",
             )
-        except Exception:  # noqa: BLE001 - never mask the original failure with a scorecard write error.
+        except Exception:  # never mask the original failure with a scorecard write error.
             logger.event(
                 "ERROR",
                 "official_runner.failed_scorecard_write_failed",

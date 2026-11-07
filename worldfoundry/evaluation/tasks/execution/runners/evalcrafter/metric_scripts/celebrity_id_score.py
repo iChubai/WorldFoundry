@@ -1,13 +1,14 @@
 import argparse
+import logging
 import os
+import tempfile
+import time
+from pathlib import Path
+
 import cv2
 import numpy as np
-from tqdm import tqdm
 from PIL import Image
-import time
-import logging
-import tempfile
-from pathlib import Path
+from tqdm import tqdm
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
@@ -22,7 +23,7 @@ def calculate_celebrity_id_score(video_path, img_paths):
     # Extract frames from the video
     frames = []
     face_verify_score_frames = []
-    
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -42,27 +43,30 @@ def calculate_celebrity_id_score(video_path, img_paths):
             temp_frame_file.flush()  # Make sure the file is written to disk
 
         distance = []
-        for j in range(len(face_images)): 
+        for j in range(len(face_images)):
             face_gt = face_images[j]
             # Calculate the distance using DeepFace.verify() with the temporary file paths
-            distance.append(DeepFace.verify(img1_path=face_gt, img2_path=temp_frame_file.name, enforce_detection = False)['distance'])
+            distance.append(
+                DeepFace.verify(img1_path=face_gt, img2_path=temp_frame_file.name, enforce_detection=False)["distance"]
+            )
         face_verify_score_frames.append(min(distance))
         # Delete the temp_frame_file from the local disk
         os.remove(temp_frame_file.name)
     face_verify_score_frames = np.array(face_verify_score_frames)
     face_verify_score_avg = np.mean(face_verify_score_frames).item()
-    
+
     return face_verify_score_avg
 
+
 def read_text_file(file_path):
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         return f.read().strip()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dir_videos", type=str, default='', help="Specify the path of generated videos")
-    parser.add_argument("--metric", type=str, default='celebrity_id_score', help="Specify the metric to be used")
+    parser.add_argument("--dir_videos", type=str, default="", help="Specify the path of generated videos")
+    parser.add_argument("--metric", type=str, default="celebrity_id_score", help="Specify the metric to be used")
     args = parser.parse_args()
 
     dir_videos = args.dir_videos
@@ -71,17 +75,20 @@ if __name__ == '__main__':
     runtime_root = Path(os.environ.get("WORLDFOUNDRY_EVALCRAFTER_RUNTIME_ROOT", Path.cwd())).resolve()
     results_dir = Path(os.environ.get("WORLDFOUNDRY_EVALCRAFTER_RESULTS_DIR", runtime_root / "results")).resolve()
     dir_path_face = runtime_root / "assets" / "celebrities"
-    assets_root = Path(os.environ.get("WORLDFOUNDRY_EVALCRAFTER_ASSETS_ROOT", bundled_benchmark_asset("evalcrafter"))).resolve()
+    assets_root = Path(
+        os.environ.get("WORLDFOUNDRY_EVALCRAFTER_ASSETS_ROOT", bundled_benchmark_asset("evalcrafter"))
+    ).resolve()
     dir_prompts = assets_root / "prompts"
-   
+
     video_paths = [os.path.join(dir_videos, x) for x in os.listdir(dir_videos)]
     prompt_paths = [str(dir_prompts / (os.path.splitext(os.path.basename(x))[0] + ".txt")) for x in video_paths]
 
     # Load pretrained models
-    device =  "cpu"
+    device = "cpu"
     import json
+
     # Load the JSON data from the file
-    with open(assets_root / "metadata.json", "r") as infile:
+    with open(assets_root / "metadata.json") as infile:
         data = json.load(infile)
     # Extract the dictionaries
     face_vid = {}
@@ -116,7 +123,6 @@ if __name__ == '__main__':
     for key, name in face_vid.items():
         image_paths[key] = [str(dir_path_face / f"{name.replace(' ', '_')}_{i}.jpg") for i in range(1, 4)]
 
-    
     # Calculate SD scores for all video-text pairs
     scores = []
     # Create the directory if it doesn't exist
@@ -143,7 +149,7 @@ if __name__ == '__main__':
         video_path = video_paths[i]
         prompt_path = prompt_paths[i]
         basename = os.path.basename(video_path)[:4]
-        if  basename in face_vid.keys():
+        if basename in face_vid:
             score = calculate_celebrity_id_score(video_path, image_paths[basename])
         else:
             score = None
@@ -151,9 +157,10 @@ if __name__ == '__main__':
         if score is not None:
             scores.append(score)
             average_score = sum(scores) / len(scores)
-            logging.info(f"Vid: {os.path.basename(prompt_paths[i])},  Current {metric}: {score}, Current avg. {metric}: {average_score}.")
+            logging.info(
+                f"Vid: {os.path.basename(prompt_paths[i])},  Current {metric}: {score}, Current avg. {metric}: {average_score}."
+            )
 
-            
     # Calculate the average SD score across all video-text pairs
     average_score = sum(scores) / len(scores)
     logging.info(f"Final average {metric}: {average_score}, Total videos: {len(scores)}")

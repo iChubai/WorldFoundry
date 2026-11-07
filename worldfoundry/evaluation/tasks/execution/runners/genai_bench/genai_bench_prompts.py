@@ -7,17 +7,16 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
-    first_existing_dir,
-    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
+    first_existing_dir,
+    resolve_env_path,
 )
 from worldfoundry.evaluation.utils import benchmark_task_sample_path
 
 BENCHMARK_ID = "genai-bench"
 METADATA_REL = Path("metadata.json")
 PREFERENCE_PAIRS_REL = Path("preference_pairs.fixture.jsonl")
-
 
 
 def resolve_genai_bench_assets_root(explicit: Path | None = None) -> Path:
@@ -50,8 +49,7 @@ def resolve_preference_pairs_path(*, assets_root: Path | None = None) -> Path:
     if sample is not None and sample.is_file():
         return sample
     raise FileNotFoundError(
-        "GenAI-Bench preference fixture is missing. Provide preference_pairs.fixture.jsonl "
-        "or sample_results.jsonl."
+        "GenAI-Bench preference fixture is missing. Provide preference_pairs.fixture.jsonl or sample_results.jsonl."
     )
 
 

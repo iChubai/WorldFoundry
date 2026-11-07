@@ -5,15 +5,15 @@ from __future__ import annotations
 import csv
 import json
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
 from worldfoundry.evaluation.tasks.execution.framework.video_quality_specs import (
     supported_video_quality_benchmark_ids,
     video_quality_spec,
 )
-
 
 JsonValue = Any
 LOCAL_METRIC_IDS = (
@@ -276,7 +276,9 @@ def _metadata_complete(row: Mapping[str, JsonValue]) -> bool:
     Returns:
         True if all required fields are present and non-empty.
     """
-    return all(isinstance(row.get(key), str) and bool(str(row[key]).strip()) for key in ("prompt_id", "prompt", "video_path"))
+    return all(
+        isinstance(row.get(key), str) and bool(str(row[key]).strip()) for key in ("prompt_id", "prompt", "video_path")
+    )
 
 
 def _pair_complete(row: Mapping[str, JsonValue]) -> bool:
@@ -367,7 +369,12 @@ def _official_rows(manifest: JsonValue, root: Path | None) -> list[dict[str, Jso
 def _load_result_rows(path: Path) -> list[dict[str, JsonValue]]:
     suffix = path.suffix.lower()
     if suffix == ".jsonl":
-        return [item for line in path.read_text(encoding="utf-8").splitlines() if line.strip() for item in _normalize_payload_rows(json.loads(line))]
+        return [
+            item
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+            for item in _normalize_payload_rows(json.loads(line))
+        ]
     if suffix in {".csv", ".tsv"}:
         delimiter = "\t" if suffix == ".tsv" else ","
         with path.open("r", encoding="utf-8", newline="") as handle:
@@ -377,7 +384,16 @@ def _load_result_rows(path: Path) -> list[dict[str, JsonValue]]:
 
 def _normalize_payload_rows(payload: JsonValue) -> list[dict[str, JsonValue]]:
     if isinstance(payload, Mapping):
-        for key in ("results", "rows", "items", "samples", "records", "raw_metric_table", "pairwise_preferences", "preferences"):
+        for key in (
+            "results",
+            "rows",
+            "items",
+            "samples",
+            "records",
+            "raw_metric_table",
+            "pairwise_preferences",
+            "preferences",
+        ):
             value = payload.get(key)
             if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
                 return [dict(item) for item in value if isinstance(item, Mapping)]
@@ -387,7 +403,19 @@ def _normalize_payload_rows(payload: JsonValue) -> list[dict[str, JsonValue]]:
             if isinstance(per_metric, Mapping):
                 return _rows_from_metric_mapping(per_metric)
             return _rows_from_metric_mapping(metrics)
-        if any(key in payload for key in ("metric_id", "metric", "name", "score", "value", "prediction", "human_label", "human_preference")):
+        if any(
+            key in payload
+            for key in (
+                "metric_id",
+                "metric",
+                "name",
+                "score",
+                "value",
+                "prediction",
+                "human_label",
+                "human_preference",
+            )
+        ):
             return [dict(payload)]
         return _rows_from_metric_mapping(payload)
     if isinstance(payload, Sequence) and not isinstance(payload, (str, bytes, bytearray)):
@@ -528,10 +556,7 @@ def _mean_by_metric(rows: Sequence[Mapping[str, JsonValue]]) -> dict[str, float]
     grouped: dict[str, list[float]] = {}
     for row in rows:
         grouped.setdefault(str(row["metric_id"]), []).append(float(row["score"]))
-    return {
-        metric_id: sum(scores) / len(scores)
-        for metric_id, scores in grouped.items()
-    }
+    return {metric_id: sum(scores) / len(scores) for metric_id, scores in grouped.items()}
 
 
 def _score_result(
@@ -564,10 +589,7 @@ def _category_scores(rows: Sequence[Mapping[str, JsonValue]]) -> dict[str, float
         category = row.get("category")
         if isinstance(category, str) and category.strip():
             grouped.setdefault(category.strip(), []).append(float(row["score"]))
-    return {
-        category: sum(values) / len(values)
-        for category, values in sorted(grouped.items())
-    }
+    return {category: sum(values) / len(values) for category, values in sorted(grouped.items())}
 
 
 def _genai_metric_results(
@@ -598,8 +620,16 @@ def _genai_metric_results(
 def _preference_pairs(rows: Sequence[Mapping[str, JsonValue]]) -> list[dict[str, str]]:
     pairs: list[dict[str, str]] = []
     for row in rows:
-        label = _normalized_preference_label(_first_text(row, ("human_label", "human_preference", "label", "preference", "winner", "answer", "ground_truth")))
-        prediction = _normalized_preference_label(_first_text(row, ("prediction", "model_prediction", "judge_prediction", "predicted_label", "output", "response")))
+        label = _normalized_preference_label(
+            _first_text(
+                row, ("human_label", "human_preference", "label", "preference", "winner", "answer", "ground_truth")
+            )
+        )
+        prediction = _normalized_preference_label(
+            _first_text(
+                row, ("prediction", "model_prediction", "judge_prediction", "predicted_label", "output", "response")
+            )
+        )
         task = _normalized_task(_first_text(row, ("task", "task_name", "split", "modality", "category")))
         if label is not None and prediction is not None:
             pairs.append({"label": label, "prediction": prediction, "task": task or "unknown"})

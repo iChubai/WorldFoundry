@@ -6,8 +6,9 @@ catalog YAML. Engine implementations stay in the per-bench hook modules.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.catalog.benchmark_id import normalize_benchmark_id
 from worldfoundry.evaluation.tasks.catalog.dispatch import parse_scoring_hook

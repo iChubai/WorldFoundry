@@ -21,8 +21,8 @@ Every constant below mirrors the official release:
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Iterable, Mapping
 
 BENCHMARK_ID = "likephys"
 DISPLAY_NAME = "LikePhys"
@@ -454,8 +454,6 @@ __all__ = [
     "DEFAULT_TIMESTEP_STRATEGY",
     "DISPLAY_NAME",
     "DOMAIN_SCENARIOS",
-    "LikePhysProbeModel",
-    "LikePhysScenario",
     "NEGATIVE_PROMPT",
     "OFFICIAL_PROBE_SWEEP",
     "OFFICIAL_SCENARIO_SWEEP",
@@ -467,6 +465,8 @@ __all__ = [
     "SCENARIOS_BY_ID",
     "SCENARIO_ORDER",
     "VALID_VARIATION",
+    "LikePhysProbeModel",
+    "LikePhysScenario",
     "domain_for_scenario",
     "official_experiment_dirname",
     "reported_variation_filter",

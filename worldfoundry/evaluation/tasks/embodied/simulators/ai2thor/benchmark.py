@@ -236,4 +236,4 @@ class AI2ThorBenchmark(BaseSimulator):
         self._controller = None
 
 
-__all__ = ["AI2ThorBenchmark", "DEFAULT_SCENES", "DEFAULT_MAX_STEPS"]
+__all__ = ["DEFAULT_MAX_STEPS", "DEFAULT_SCENES", "AI2ThorBenchmark"]

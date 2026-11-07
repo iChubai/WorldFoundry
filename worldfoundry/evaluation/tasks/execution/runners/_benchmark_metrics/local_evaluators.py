@@ -10,8 +10,8 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from worldfoundry.evaluation.api import MetricResult
-
 from worldfoundry.evaluation.tasks.metrics.registry import missing_artifacts, normalize_artifact_records
+
 from .formulas import (
     boolean_accuracy,
     camera_binary_classification_metrics,
@@ -27,7 +27,6 @@ from .formulas import (
     worldmodelbench_score,
 )
 from .protocols import payload_from_request_parts, records_from_payload
-
 
 MetricEvaluationCallable = Callable[[Any, Any], MetricResult]
 
@@ -315,7 +314,10 @@ def _chronomagic_chscore_metric(request: Any, entry: Any) -> MetricResult:
         raw_value=value,
         normalized_value=float(value),
         components={"average_chscore": value, "per_model": metrics, "num_models": len(values)},
-        diagnostics={"evaluation_kind": entry.evaluation_kind, "source": "ChronoMagic-Bench.CHScore.step1-get_merged_CHScore"},
+        diagnostics={
+            "evaluation_kind": entry.evaluation_kind,
+            "source": "ChronoMagic-Bench.CHScore.step1-get_merged_CHScore",
+        },
     )
 
 
@@ -441,7 +443,9 @@ def _mcqa_accuracy_metric(request: Any, entry: Any) -> MetricResult:
     Returns:
         The computed MetricResult.
     """
-    predictions = request.reference.get("predictions", request.reference.get("pred", request.reference.get("official_results")))
+    predictions = request.reference.get(
+        "predictions", request.reference.get("pred", request.reference.get("official_results"))
+    )
     answers = request.reference.get("answers", request.reference.get("ground_truth", request.reference.get("labels")))
     taxonomy = request.reference.get("taxonomy_by_video")
     if predictions is None:
@@ -649,17 +653,29 @@ def _filter_success_records(
         Tuple of matching records.
     """
     key = _metric_key(metric_id)
-    if key in {"success-rate", "task-success", "episode-success", "sequence-success", "completion", "goal-success", "rollout-success"}:
+    if key in {
+        "success-rate",
+        "task-success",
+        "episode-success",
+        "sequence-success",
+        "completion",
+        "goal-success",
+        "rollout-success",
+    }:
         return tuple(records)
     tokens = tuple(token for token in key.split("-") if token not in {"success", "rate", "task", "episode"})
     if not tokens:
         return tuple(records)
     filtered = []
     for record in records:
-        haystack = " ".join(
-            str(record.get(name, ""))
-            for name in ("metric_id", "condition", "split", "domain", "task", "task_name", "suite", "category")
-        ).casefold().replace("_", "-")
+        haystack = (
+            " ".join(
+                str(record.get(name, ""))
+                for name in ("metric_id", "condition", "split", "domain", "task", "task_name", "suite", "category")
+            )
+            .casefold()
+            .replace("_", "-")
+        )
         if all(token in haystack for token in tokens):
             filtered.append(record)
     return tuple(filtered) if filtered else tuple(records)

@@ -81,9 +81,7 @@ def _parse_gpu_ids(value):
         elif item.isdigit() or item.startswith(("GPU-", "MIG-")):
             normalized.append(item)
         else:
-            raise ValueError(
-                f"unsupported device selector {item!r}; use CUDA indices, GPU/MIG UUIDs, or cpu"
-            )
+            raise ValueError(f"unsupported device selector {item!r}; use CUDA indices, GPU/MIG UUIDs, or cpu")
     return normalized
 
 

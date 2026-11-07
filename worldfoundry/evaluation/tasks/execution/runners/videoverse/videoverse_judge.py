@@ -12,9 +12,10 @@ import json
 import os
 import re
 import time
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Mapping, Protocol
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import write_json, write_jsonl
 
@@ -26,11 +27,7 @@ EVAL_PROMPT_FOR_OVERALL_EVENTS = (
     "Only output the corresponding letters in order, use commas to separate, and wrap your response with <output></output>. Such as <output>B,D</output> or <output>A,B,C</output>"
     "{}"
 )
-EVAL_PROMPT_FOR_STATISTIC_QUESTION = (
-    "In this video."
-    "\n{}\n"
-    "Answer with Yes or No."
-)
+EVAL_PROMPT_FOR_STATISTIC_QUESTION = "In this video.\n{}\nAnswer with Yes or No."
 
 JudgeFn = Callable[[str, Path | str], str]
 
@@ -159,6 +156,7 @@ def build_judge_fn(config: VideoVerseJudgeConfig, *, override: JudgeFn | None = 
         return override
 
     if config.backend == "mock":
+
         def _mock_judge(prompt: str, video: Path | str) -> str:
             _ = video
             if "sort them in the order" in prompt.lower():

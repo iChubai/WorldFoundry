@@ -49,24 +49,10 @@ def _has_import(module: str) -> bool:
 
 
 def official_runtime_preflight() -> dict[str, Any]:
-    runtime_files = {
-        relative: (OFFICIAL_RUNTIME_ROOT / relative).exists()
-        for relative in REQUIRED_RUNTIME_FILES
-    }
-    package_imports = {
-        name: _has_import(module)
-        for name, module in PACKAGE_IMPORTS.items()
-    }
-    missing = [
-        f"runtime:{name}"
-        for name, ok in runtime_files.items()
-        if not ok
-    ]
-    missing.extend(
-        f"package:{name}"
-        for name, ok in package_imports.items()
-        if not ok
-    )
+    runtime_files = {relative: (OFFICIAL_RUNTIME_ROOT / relative).exists() for relative in REQUIRED_RUNTIME_FILES}
+    package_imports = {name: _has_import(module) for name, module in PACKAGE_IMPORTS.items()}
+    missing = [f"runtime:{name}" for name, ok in runtime_files.items() if not ok]
+    missing.extend(f"package:{name}" for name, ok in package_imports.items() if not ok)
     return {
         "runtime_root": str(OFFICIAL_RUNTIME_ROOT),
         "runtime_files": runtime_files,
@@ -94,12 +80,7 @@ def discover_official_result_file(search_roots: list[Path]) -> Path | None:
             continue
         if root.is_file() and root.name in METRIC_FILE_NAMES:
             return root
-        matches = sorted(
-            path
-            for name in METRIC_FILE_NAMES
-            for path in root.glob(f"**/{name}")
-            if path.is_file()
-        )
+        matches = sorted(path for name in METRIC_FILE_NAMES for path in root.glob(f"**/{name}") if path.is_file())
         if matches:
             return matches[-1]
     return None

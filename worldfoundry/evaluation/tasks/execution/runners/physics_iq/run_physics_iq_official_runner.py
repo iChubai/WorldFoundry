@@ -8,11 +8,16 @@ import csv
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
+    SCORECARD_SCHEMA_VERSION,
+    VIDEO_SUFFIXES,
+    resolve_env_path,
+)
 from worldfoundry.evaluation.tasks.execution.runners.physics_iq.physics_iq_metrics import (
     load_official_results,
     metric_specs,
@@ -30,7 +35,6 @@ from worldfoundry.evaluation.tasks.execution.runners.physics_iq.physics_iq_runti
     select_complete_scenario_records,
 )
 from worldfoundry.evaluation.tasks.execution.runners.physics_iq.protocols import PhysicsIQProtocolSpec, resolve_protocol
-
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -61,8 +65,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-
-
 def _coverage(expected_stems: set[str], generated_dir: Path | None) -> dict[str, Any]:
     if generated_dir is None or not generated_dir.is_dir():
         return {
@@ -73,11 +75,7 @@ def _coverage(expected_stems: set[str], generated_dir: Path | None) -> dict[str,
             "complete": False,
             "missing_ids": sorted(expected_stems)[:50],
         }
-    actual = {
-        path.stem
-        for path in generated_dir.iterdir()
-        if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
-    }
+    actual = {path.stem for path in generated_dir.iterdir() if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES}
     # Model runtimes may preserve only the official four-digit ID prefix.
     expected_by_prefix = {stem[:4]: stem for stem in expected_stems}
     actual_prefixes = {stem[:4] for stem in actual}
@@ -161,7 +159,9 @@ def normalize_physics_iq_results(
     results_path = args.official_results_path or args.raw_metrics_path
     if results_path is None:
         env_result = resolve_env_path("WORLDFOUNDRY_PHYSICS_IQ_RESULTS_PATH")
-        results_path = env_result or discover_physics_iq_results([output_dir, generated_dir] if generated_dir else [output_dir])
+        results_path = env_result or discover_physics_iq_results(
+            [output_dir, generated_dir] if generated_dir else [output_dir]
+        )
     if results_path is None:
         raise ValueError("Provide --official-results-path/--raw-metrics-path or use --run-official.")
 
@@ -214,9 +214,7 @@ def normalize_physics_iq_results(
             "prompt_count": len(prompt_records),
         },
         "metrics": {
-            "leaderboard": {
-                row["metric_id"]: row["normalized_score"] for row in rows if row["available"]
-            },
+            "leaderboard": {row["metric_id"]: row["normalized_score"] for row in rows if row["available"]},
             "per_metric": {row["metric_id"]: row for row in rows},
             "summary": {
                 "available_metric_count": sum(row["available"] for row in rows),
@@ -299,7 +297,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
         scorecard = run_official_physics_iq(args) if args.run_official else normalize_physics_iq_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {
             "schema_version": SCORECARD_SCHEMA_VERSION,

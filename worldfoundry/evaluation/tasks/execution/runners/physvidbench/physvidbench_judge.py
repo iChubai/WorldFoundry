@@ -7,17 +7,18 @@ import hashlib
 import os
 import re
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any
 
 import pandas as pd
 
 from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_captions import (
+    CAPTION_SUFFIXES,
     captions_for_prompt_id,
     load_caption_matrix,
 )
-from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_captions import CAPTION_SUFFIXES
 
 YES_NO_REGEX = re.compile(r"\bQ\s*(\d+)\s*[:\-]\s*(yes|no)\b", re.I)
 JudgeFn = Callable[[str], str]
@@ -59,6 +60,7 @@ def _stable_mock_answer(prompt_id: int, question_index: int) -> str:
 
 def build_judge_fn(config: PhysVidBenchJudgeConfig) -> JudgeFn:
     if config.backend == "mock":
+
         def _mock_judge(prompt: str) -> str:
             prompt_id_match = re.search(r"PromptID\s*(\d+)", prompt)
             prompt_id = int(prompt_id_match.group(1)) if prompt_id_match else 0

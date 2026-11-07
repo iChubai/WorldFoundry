@@ -32,7 +32,15 @@ from typing import Any
 import numpy as np
 
 from worldfoundry.evaluation.tasks.embodied.simulators.base import BaseSimulator, StepResult
-from worldfoundry.evaluation.tasks.embodied.simulators.specs import GRIPPER_CLOSE_POS, IMAGE_RGB, LANGUAGE, POSITION_DELTA, RAW, ROTATION_EULER, DimSpec
+from worldfoundry.evaluation.tasks.embodied.simulators.specs import (
+    GRIPPER_CLOSE_POS,
+    IMAGE_RGB,
+    LANGUAGE,
+    POSITION_DELTA,
+    RAW,
+    ROTATION_EULER,
+    DimSpec,
+)
 
 
 def _linspace_from_range(spec: list[float]) -> np.ndarray:
@@ -283,8 +291,8 @@ class SimplerEnvBenchmark(BaseSimulator):
         Returns:
             A tuple of (gym_env, reset_kwargs).
         """
-        import simpler_env  # noqa: F401 -- registers ManiSkill2 envs
         import gymnasium as gym
+        import simpler_env  # noqa: F401 -- registers ManiSkill2 envs
 
         # Construct make_kwargs, merging common args and VA-specific build kwargs
         make_kwargs = {"obs_mode": "rgbd", **self.env_build_kwargs, **self._common_make_kwargs()}
@@ -365,7 +373,7 @@ class SimplerEnvBenchmark(BaseSimulator):
         else:
             # Binary gripper mode: gripper is either fully open or fully closed based on a threshold
             gripper = 1.0 if raw_action[6] > 0.5 else -1.0
-        
+
         # Concatenate position, rotation, and gripper to form the environment action
         env_action = np.concatenate([pos, rot, [gripper]])
 
@@ -403,6 +411,7 @@ class SimplerEnvBenchmark(BaseSimulator):
             from simpler_env.utils.env.observation_utils import (
                 get_image_from_maniskill2_obs_dict,
             )
+
             # Attempt to extract the primary image from the ManiSkill2 observation dictionary
             return np.asarray(get_image_from_maniskill2_obs_dict(self._env, raw_obs))
         except Exception:
@@ -452,7 +461,11 @@ class SimplerEnvBenchmark(BaseSimulator):
                 obs["states"] = np.asarray(eef, dtype=np.float32)
             elif base_pose is not None and tcp_pose is not None:
                 # If EE state is not directly available, compute it from base_pose and tcp_pose
-                from worldfoundry.evaluation.tasks.embodied.simulators.rotation import matrix_to_quat, pose7_wxyz_to_mat4, quat_xyzw_to_wxyz
+                from worldfoundry.evaluation.tasks.embodied.simulators.rotation import (
+                    matrix_to_quat,
+                    pose7_wxyz_to_mat4,
+                    quat_xyzw_to_wxyz,
+                )
 
                 bp = np.asarray(base_pose, dtype=np.float64).flatten()
                 tp = np.asarray(tcp_pose, dtype=np.float64).flatten()
@@ -463,7 +476,7 @@ class SimplerEnvBenchmark(BaseSimulator):
                 # Compute end-effector pose relative to the base
                 ee_in_base = np.linalg.inv(base_mat) @ tcp_mat
                 pos = ee_in_base[:3, 3]  # Extract position
-                q_wxyz = quat_xyzw_to_wxyz(matrix_to_quat(ee_in_base[:3, :3])) # Extract orientation as wxyz quaternion
+                q_wxyz = quat_xyzw_to_wxyz(matrix_to_quat(ee_in_base[:3, :3]))  # Extract orientation as wxyz quaternion
 
                 assert self._env is not None
                 # Get gripper closedness from environment or agent qpos

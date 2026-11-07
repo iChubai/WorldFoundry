@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Protocol, runtime_checkable
 
 from worldfoundry.evaluation.tasks.embodied.simulators.specs import (
-    DimSpec,
     GRIPPER_CLOSE_POS,
     IMAGE_RGB,
     LANGUAGE,
     POSITION_DELTA,
     ROTATION_AA,
+    DimSpec,
 )
-
 
 ActionPayload = Mapping[str, Any] | Sequence[Any]
 
@@ -243,9 +242,7 @@ def build_policy_adapter(
         PipelineSynthesisPolicyAdapter,
     )
 
-    if policy_target and (
-        backend in {"", "callable_entrypoint"} or _policy_target_is_predict_action(policy_target)
-    ):
+    if policy_target and (backend in {"", "callable_entrypoint"} or _policy_target_is_predict_action(policy_target)):
         return CallableRuntimePolicyAdapter(normalized_id, params)
 
     if backend in OFFICIAL_POLICY_BACKENDS or (policy_target and backend == "lerobot_policy"):

@@ -1,14 +1,6 @@
-import os
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import json
-
-from fld.utils import shuffle
 from fld.metrics.Metric import Metric
-from fld.MoG import preprocess_feat, MoG
-
+from fld.MoG import MoG, preprocess_feat
+from fld.utils import shuffle
 
 GEN_SIZE = 10000
 TEST_SIZE = 10000
@@ -20,7 +12,7 @@ class FLD_P(Metric):
     def __init__(self, baseline_nll=None, gen_size=GEN_SIZE, test_size=TEST_SIZE):
         super().__init__()
 
-        self.name = f"FLD-P"
+        self.name = "FLD-P"
 
         # Corresponds to the likelihood of the test set under a MoG centered at half of the train set fit to the other half of the train set
         self.baseline_nll = baseline_nll
@@ -39,9 +31,7 @@ class FLD_P(Metric):
             test_feat = shuffle(test_feat, min(len(test_feat), self.test_size))
 
         """Preprocess"""
-        train_feat, test_feat, gen_feat = preprocess_feat(
-            train_feat, test_feat, gen_feat
-        )
+        train_feat, test_feat, gen_feat = preprocess_feat(train_feat, test_feat, gen_feat)
         train_feat = shuffle(train_feat)
 
         # Fit MoG at test feat to train feat

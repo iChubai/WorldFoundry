@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.utils import mapping_or_empty as _mapping
 from worldfoundry.evaluation.utils import stable_hash

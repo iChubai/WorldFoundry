@@ -10,7 +10,9 @@ from worldfoundry.evaluation.tasks.metrics.registry import metric_module_from_gl
 compute_gme_score = lazy_export(f"{__name__}.gme", "compute_gme_score", owner=__name__)
 compute_gme_score_from_results = lazy_export(f"{__name__}.gme", "compute_gme_score_from_results", owner=__name__)
 compute_natural_score = lazy_export(f"{__name__}.natural", "compute_natural_score", owner=__name__)
-compute_natural_score_from_results = lazy_export(f"{__name__}.natural", "compute_natural_score_from_results", owner=__name__)
+compute_natural_score_from_results = lazy_export(
+    f"{__name__}.natural", "compute_natural_score_from_results", owner=__name__
+)
 compute_nexus_score = lazy_export(f"{__name__}.nexus", "compute_nexus_score", owner=__name__)
 compute_nexus_score_from_results = lazy_export(f"{__name__}.nexus", "compute_nexus_score_from_results", owner=__name__)
 
@@ -18,9 +20,7 @@ METRIC_MODULES = (
     metric_module_from_globals(
         metric_id="nexus_score",
         aliases=("nexusscore", "nexus-score"),
-        description=(
-            "NexusScore: YOLO-World + GME subject-consistency metric from OpenS2V-Nexus eval."
-        ),
+        description=("NexusScore: YOLO-World + GME subject-consistency metric from OpenS2V-Nexus eval."),
         family="scorer",
         higher_is_better=True,
         tags=("scorer", "video_generation", "subject_consistency", "opens2v"),
@@ -30,8 +30,7 @@ METRIC_MODULES = (
         metric_id="natural_score",
         aliases=("naturalscore", "natural-score"),
         description=(
-            "NaturalScore: GPT-4o video naturalness rating (1-5) from OpenS2V-Nexus eval "
-            "(requires OPENAI_API_KEY)."
+            "NaturalScore: GPT-4o video naturalness rating (1-5) from OpenS2V-Nexus eval (requires OPENAI_API_KEY)."
         ),
         family="scorer",
         higher_is_better=True,
@@ -41,9 +40,7 @@ METRIC_MODULES = (
     metric_module_from_globals(
         metric_id="gme_score",
         aliases=("gmescore", "gme-score"),
-        description=(
-            "GmeScore: GME-Qwen2-VL text-video relevance for OpenS2V subject-to-video evaluation."
-        ),
+        description=("GmeScore: GME-Qwen2-VL text-video relevance for OpenS2V subject-to-video evaluation."),
         family="scorer",
         higher_is_better=True,
         tags=("scorer", "video_generation", "text_relevance", "opens2v"),

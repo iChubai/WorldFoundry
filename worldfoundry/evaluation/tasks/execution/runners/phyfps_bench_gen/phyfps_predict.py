@@ -5,16 +5,16 @@ from __future__ import annotations
 import csv
 import hashlib
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_metrics import VideoPhyFPSRecord
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.visual_chronometer_runtime import (
     predict_video_directory,
 )
-
 
 
 @dataclass(frozen=True)
@@ -44,20 +44,14 @@ def _stable_mock_phyfps(video_name: str, *, segment_index: int | None = None) ->
 def list_generated_videos(video_dir: Path) -> list[Path]:
     if not video_dir.is_dir():
         return []
-    return sorted(
-        path
-        for path in video_dir.iterdir()
-        if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
-    )
+    return sorted(path for path in video_dir.iterdir() if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES)
 
 
 def mock_predict_directory(video_dir: Path, *, stride: int = 4, clip_length: int = 30) -> list[VideoPhyFPSRecord]:
     records: list[VideoPhyFPSRecord] = []
     for video_path in list_generated_videos(video_dir):
         segment_count = max(1, 4 + (hash(video_path.name) % 5))
-        segment_values = [
-            _stable_mock_phyfps(video_path.name, segment_index=index) for index in range(segment_count)
-        ]
+        segment_values = [_stable_mock_phyfps(video_path.name, segment_index=index) for index in range(segment_count)]
         avg_phyfps = round(sum(segment_values) / len(segment_values), 1)
         records.append(
             VideoPhyFPSRecord(

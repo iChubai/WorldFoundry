@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import csv
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_EXTENSIONS
+
 MINIMAL_GIF_BYTES = (
     b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff"
     b"!\xf9\x04\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01"
@@ -194,8 +196,8 @@ def _write_tiny_video(path: Path, *, frames: int = 32, size: int = 224, fps: int
         pass
 
     try:
-        import numpy as np
         import imageio.v2 as imageio
+        import numpy as np
 
         arrays = [np.asarray(frame) for frame in _tiny_rgb_frames(frames=frames, size=size)]
         imageio.mimsave(path, arrays, fps=fps)
@@ -229,7 +231,9 @@ def write_placeholder_video(path: Path, *, frames: int = 32, size: int = 224, fp
     return path
 
 
-def materialize_sample_generated_videos(output_dir: Path, *, count: int = 1, frames: int = 32, size: int = 224, fps: int = 8) -> Path:
+def materialize_sample_generated_videos(
+    output_dir: Path, *, count: int = 1, frames: int = 32, size: int = 224, fps: int = 8
+) -> Path:
     generated_dir = output_dir / "sample_generated_videos"
     generated_dir.mkdir(parents=True, exist_ok=True)
     for index in range(count):

@@ -7,10 +7,11 @@ names to their canonical IDs.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, TypeVar
+from typing import Any, TypeVar
 
 import yaml
 
@@ -47,6 +48,7 @@ RUNTIME_VIDEO_ALIASES: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 # ── Alias group dataclass ────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class PipelineAliasGroup:
     """Group of alternative aliases mapping to a single canonical model ID.
@@ -62,7 +64,7 @@ class PipelineAliasGroup:
     domain: str = ""
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any], *, domain: str = "") -> "PipelineAliasGroup":
+    def from_mapping(cls, data: Mapping[str, Any], *, domain: str = "") -> PipelineAliasGroup:
         """Instantiate a PipelineAliasGroup from a mapping dictionary."""
         aliases = data.get("aliases") or ()
         if isinstance(aliases, str):
@@ -82,6 +84,7 @@ class PipelineAliasGroup:
 
 
 # ── Alias registry ──────────────────────────────────────────────────
+
 
 class PipelineAliasRegistry:
     """Registry maintaining pipeline alias groups with lookups.
@@ -134,11 +137,7 @@ class PipelineAliasRegistry:
 
     def as_alias_mapping(self) -> dict[str, str]:
         """Compile a direct mapping of all aliases back to their canonical IDs."""
-        return {
-            alias: group.canonical_id
-            for group in self._canonical.values()
-            for alias in group.aliases
-        }
+        return {alias: group.canonical_id for group in self._canonical.values() for alias in group.aliases}
 
     def list(self) -> tuple[PipelineAliasGroup, ...]:
         """List all unique registered PipelineAliasGroups, sorted by domain and canonical ID."""
@@ -146,6 +145,7 @@ class PipelineAliasRegistry:
 
 
 # ── Alias mapping helpers ────────────────────────────────────────────
+
 
 def build_alias_mapping(handlers: Mapping[str, HandlerT], aliases: Mapping[str, str]) -> dict[str, HandlerT]:
     """Copy canonical handlers and attach aliases with explicit validation.
@@ -181,6 +181,7 @@ def build_runtime_video_mapping(handlers: Mapping[str, HandlerT]) -> dict[str, H
 
 
 # ── Private helpers ──────────────────────────────────────────────────
+
 
 def _alias_key(value: str) -> str:
     """Normalize a pipeline alias string for lookups (strip + lowercase)."""
@@ -273,6 +274,7 @@ def _groups_from_payload(payload: Mapping[str, Any], *, domain: str) -> tuple[Pi
 
 # ── YAML loading ────────────────────────────────────────────────────
 
+
 def load_pipeline_alias_groups(root: str | Path | None = None) -> tuple[PipelineAliasGroup, ...]:
     """Load and parse all :class:`PipelineAliasGroup` records from the aliases root.
 
@@ -327,9 +329,9 @@ def clear_pipeline_alias_registry_cache() -> None:
 
 __all__ = [
     "DEFAULT_PIPELINE_ALIASES_ROOT",
+    "RUNTIME_VIDEO_ALIASES",
     "PipelineAliasGroup",
     "PipelineAliasRegistry",
-    "RUNTIME_VIDEO_ALIASES",
     "build_alias_mapping",
     "build_runtime_video_mapping",
     "clear_pipeline_alias_registry_cache",

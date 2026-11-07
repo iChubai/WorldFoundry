@@ -2,8 +2,9 @@ import csv
 
 import numpy as np
 import torch
-from .paths import resolve_la_path
 from torch.utils.data import DataLoader, Dataset, DistributedSampler
+
+from .paths import resolve_la_path
 
 
 class LatentActionVideoDataset(Dataset):

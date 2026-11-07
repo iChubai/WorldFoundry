@@ -7,8 +7,9 @@ artifact references, and formatting error messages for failed runs.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import (
     ArtifactRef,

@@ -6,14 +6,16 @@ import json
 import math
 import os
 import shutil
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
+
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 
 from .official.scoring import IQTable
 from .physics_iq_prompts import VIEWS, load_description_rows, unique_generation_records
 from .protocols import PhysicsIQProtocolSpec
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 
 UPSTREAM_REVISION = "b02cf26dc15d559d0ca4f63a6917070312dde185"
 
@@ -85,9 +87,7 @@ def resolve_dataset_root(
     for root in roots:
         if (root / "split-videos" / "testing").is_dir():
             return root
-    raise FileNotFoundError(
-        f"Could not find split-videos/testing below {candidate} for {protocol.display_name}."
-    )
+    raise FileNotFoundError(f"Could not find split-videos/testing below {candidate} for {protocol.display_name}.")
 
 
 def detect_video_fps(video_dir: Path) -> int:
@@ -133,11 +133,7 @@ def _scenario_key_and_view(record: dict[str, str]) -> tuple[str, str]:
 
     generated_name = Path(str(record.get("generated_video_name") or "")).name
     generated_parts = generated_name.split("_", 2)
-    if (
-        len(generated_parts) != 3
-        or generated_parts[1] != view
-        or generated_parts[2] != scenario_key
-    ):
+    if len(generated_parts) != 3 or generated_parts[1] != view or generated_parts[2] != scenario_key:
         raise ValueError(
             "Physics-IQ description row does not map its scenario to the generated video: "
             f"scenario={scenario_name!r}, generated_video_name={generated_name!r}."
@@ -153,9 +149,7 @@ def select_complete_scenario_records(
 ) -> tuple[tuple[dict[str, str], ...], frozenset[str]]:
     """Select a bounded prefix containing every view of each chosen scenario."""
 
-    records = unique_generation_records(
-        load_description_rows(descriptions_path=descriptions_path, spec=protocol)
-    )
+    records = unique_generation_records(load_description_rows(descriptions_path=descriptions_path, spec=protocol))
     if limit is not None:
         if limit <= 0 or limit % len(VIEWS) != 0:
             raise ValueError(
@@ -163,9 +157,7 @@ def select_complete_scenario_records(
                 f"--limit must be a positive multiple of {len(VIEWS)}, got {limit}."
             )
         if limit > len(records):
-            raise ValueError(
-                f"Physics-IQ --limit {limit} exceeds the {len(records)} available videos."
-            )
+            raise ValueError(f"Physics-IQ --limit {limit} exceeds the {len(records)} available videos.")
         records = records[:limit]
 
     grouped: dict[str, list[str]] = {}
@@ -411,9 +403,7 @@ def run_physics_iq_evaluation(config: PhysicsIQRunConfig) -> dict[str, Any]:
             fps=fps,
             video_time_selection="first",
             n_processes=config.n_processes,
-            selected_scenarios=(
-                set(selected_scenarios) if config.limit is not None else None
-            ),
+            selected_scenarios=(set(selected_scenarios) if config.limit is not None else None),
         )
         if not raw_metrics_path.is_file():
             raise RuntimeError("Official raw metric engine did not produce raw_metrics.csv.")

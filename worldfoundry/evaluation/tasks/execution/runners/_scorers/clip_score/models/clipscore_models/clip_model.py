@@ -1,5 +1,3 @@
-from typing import List
-
 import open_clip
 import torch
 
@@ -29,7 +27,7 @@ class CLIPScoreModel(ScoreModel):
         self.tokenizer = open_clip.get_tokenizer(self.arch)
         self.model.eval()
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         image = [self.image_loader(x) for x in image]
         image = [self.preprocess(x) for x in image]
@@ -37,7 +35,7 @@ class CLIPScoreModel(ScoreModel):
         return image
 
     @torch.no_grad()
-    def forward(self, images: List[str], texts: List[str]) -> torch.Tensor:
+    def forward(self, images: list[str], texts: list[str]) -> torch.Tensor:
         """Forward pass of the model to return n scores for n (image, text) pairs (in PyTorch Tensor)"""
         assert len(images) == len(texts)
         image = self.load_images(images)

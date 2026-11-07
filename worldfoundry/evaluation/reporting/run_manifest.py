@@ -12,11 +12,11 @@ import os
 import platform
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.utils import git_metadata, jsonable, package_version, stable_hash, write_json
 from worldfoundry.runtime.env import check_required_env
@@ -89,7 +89,7 @@ def is_sensitive_key(key: str) -> bool:
     )
     if any(segment in _SENSITIVE_KEY_SEGMENTS for segment in segments):
         return True
-    return any(pair in _SENSITIVE_KEY_SEGMENT_PAIRS for pair in zip(segments, segments[1:]))
+    return any(pair in _SENSITIVE_KEY_SEGMENT_PAIRS for pair in zip(segments, segments[1:], strict=False))
 
 
 def _redacted_literal(value: str) -> str:
@@ -253,7 +253,7 @@ def _torch_environment() -> dict[str, Any]:
     }
     try:
         torch = importlib.import_module("torch")
-    except Exception:  # noqa: BLE001 - optional runtime probing must not fail a run.
+    except Exception:  # optional runtime probing must not fail a run.
         return {"torch": torch_payload, "cuda": cuda_payload}
 
     torch_payload["version"] = str(getattr(torch, "__version__", "") or "") or None
@@ -264,13 +264,13 @@ def _torch_environment() -> dict[str, Any]:
         try:
             cuda_payload["available"] = bool(torch_cuda.is_available())
             cuda_payload["device_count"] = int(torch_cuda.device_count())
-        except Exception:  # noqa: BLE001 - CUDA probing is optional metadata.
+        except Exception:  # CUDA probing is optional metadata.
             pass
     cudnn = getattr(getattr(torch, "backends", None), "cudnn", None)
     if cudnn is not None:
         try:
             cuda_payload["cudnn_version"] = cudnn.version()
-        except Exception:  # noqa: BLE001 - cuDNN probing is optional metadata.
+        except Exception:  # cuDNN probing is optional metadata.
             pass
     return {"torch": torch_payload, "cuda": cuda_payload}
 

@@ -187,7 +187,7 @@ class DatasetManifest:
         object.__setattr__(self, "metadata", dict(self.metadata or {}))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "DatasetManifest":
+    def from_dict(cls, data: Mapping[str, Any]) -> DatasetManifest:
         """Reconstruct a DatasetManifest from a key-value mapping.
 
         Args:
@@ -395,7 +395,7 @@ def validate_dataset_manifest(
             "issues": issues,
             "warnings": warnings,
         }
-    except Exception as exc:  # noqa: BLE001 - validation should return structured errors.
+    except Exception as exc:  # validation should return structured errors.
         return {
             "ok": False,
             "schema_version": None,

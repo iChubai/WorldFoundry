@@ -8,26 +8,22 @@ executing an NVlabs/Sana checkout at evaluation time.
 
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import contextlib
-import csv
 import json
 import math
 import os
 import sys
-import time
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
-from typing import Any, Iterable, Mapping
+from typing import Any
+
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 
 from .sana_wm_bench_prompts import (
     CANONICAL_FPS,
-    CANONICAL_FRAME_COUNT,
     CANONICAL_SCENE_COUNT,
     SPLITS,
     load_manifest_rows,
@@ -36,8 +32,15 @@ from .sana_wm_bench_prompts import (
 
 BENCHMARK_ID = "sana-wm-bench"
 VBENCH_DIMS = (
-    "subject_consistency", "background_consistency", "temporal_flickering", "motion_smoothness",
-    "dynamic_degree", "aesthetic_quality", "imaging_quality", "overall_consistency", "temporal_style",
+    "subject_consistency",
+    "background_consistency",
+    "temporal_flickering",
+    "motion_smoothness",
+    "dynamic_degree",
+    "aesthetic_quality",
+    "imaging_quality",
+    "overall_consistency",
+    "temporal_style",
 )
 TEMPORAL_DIMS = ("subject_consistency", "background_consistency", "temporal_flickering", "imaging_quality")
 METRIC_SPECS = {
@@ -122,9 +125,11 @@ def _torch_load_compat():
     import torch
 
     original = torch.load
+
     def compatible(*args: Any, **kwargs: Any) -> Any:
         kwargs.setdefault("weights_only", False)
         return original(*args, **kwargs)
+
     torch.load = compatible
     try:
         yield
@@ -141,6 +146,7 @@ def _load_vbench() -> tuple[type[Any], Path]:
     full_info = Path(in_tree_vbench.__file__).with_name("VBench_full_info.json")
     if not full_info.is_file():
         from worldfoundry.evaluation.tasks.execution.runners.vbench.vbench_official_impl import VBENCH_FULL_INFO_ASSET
+
         full_info = VBENCH_FULL_INFO_ASSET
     if not full_info.is_file():
         raise FileNotFoundError(f"in-tree VBench full-info asset is missing: {full_info}")
@@ -157,13 +163,18 @@ def _raw_vbench_value(path: Path, dimension: str) -> float | None:
     return _number(payload)
 
 
-def _vbench_scores(video_dir: Path, output_dir: Path, prompts: Mapping[str, str], dimensions: Iterable[str]) -> dict[str, float]:
+def _vbench_scores(
+    video_dir: Path, output_dir: Path, prompts: Mapping[str, str], dimensions: Iterable[str]
+) -> dict[str, float]:
     import torch
 
     VBench, full_info = _load_vbench()
     output_dir.mkdir(parents=True, exist_ok=True)
     resolved_videos = video_dir.resolve()
-    prompt_map = {path.name: prompts.get(path.stem.removesuffix("_generated"), path.stem) for path in _video_files(resolved_videos)}
+    prompt_map = {
+        path.name: prompts.get(path.stem.removesuffix("_generated"), path.stem)
+        for path in _video_files(resolved_videos)
+    }
     scores: dict[str, float] = {}
     for dimension in dimensions:
         result_path = output_dir / f"eval_{dimension}_eval_results.json"
@@ -174,8 +185,12 @@ def _vbench_scores(video_dir: Path, output_dir: Path, prompts: Mapping[str, str]
         runner = VBench(torch.device("cuda"), str(full_info), str(output_dir))
         with _torch_load_compat():
             runner.evaluate(
-                videos_path=str(resolved_videos), name=f"eval_{dimension}", dimension_list=[dimension],
-                mode="custom_input", prompt_list=prompt_map, local=dimension == "subject_consistency",
+                videos_path=str(resolved_videos),
+                name=f"eval_{dimension}",
+                dimension_list=[dimension],
+                mode="custom_input",
+                prompt_list=prompt_map,
+                local=dimension == "subject_consistency",
             )
         score = _raw_vbench_value(result_path, dimension)
         if score is None:
@@ -194,14 +209,26 @@ def _vbench_aggregate(raw: Mapping[str, float]) -> dict[str, float]:
         bounds = VBENCH_NORMALIZATION[name]
         return max(0.0, min(1.0, (raw[name] - bounds["min"]) / (bounds["max"] - bounds["min"])))
 
-    quality_dims = ("subject_consistency", "background_consistency", "temporal_flickering", "motion_smoothness", "dynamic_degree", "aesthetic_quality", "imaging_quality")
+    quality_dims = (
+        "subject_consistency",
+        "background_consistency",
+        "temporal_flickering",
+        "motion_smoothness",
+        "dynamic_degree",
+        "aesthetic_quality",
+        "imaging_quality",
+    )
     semantic_dims = ("overall_consistency", "temporal_style")
     quality_weight = sum(VBENCH_DIMENSION_WEIGHTS[name] for name in quality_dims)
     quality = sum(normalized(name) * VBENCH_DIMENSION_WEIGHTS[name] for name in quality_dims) / quality_weight
     semantic = mean(normalized(name) for name in semantic_dims)
     # The official SANA-WM script averages whichever semantic dimensions are
     # present in its nine-dimension run, then keeps total_score as diagnostic.
-    return {"vbench_overall": round(quality * 100.0, 4), "vbench_total_score": round((4.0 * quality + semantic) / 5.0, 4), **dict(raw)}
+    return {
+        "vbench_overall": round(quality * 100.0, 4),
+        "vbench_total_score": round((4.0 * quality + semantic) / 5.0, 4),
+        **dict(raw),
+    }
 
 
 def _frame_reader(path: Path) -> tuple[float, Any, int]:
@@ -209,10 +236,12 @@ def _frame_reader(path: Path) -> tuple[float, Any, int]:
 
     try:
         from decord import VideoReader
+
         reader = VideoReader(str(path))
         return float(reader.get_avg_fps()), lambda index: np.asarray(reader[index].asnumpy()), len(reader)
     except ImportError:
         import imageio.v3 as iio
+
         frames = iio.imread(path)
         return float(CANONICAL_FPS), lambda index: np.asarray(frames[index]), len(frames)
 
@@ -248,7 +277,14 @@ def _ssim(left: np.ndarray, right: np.ndarray) -> float:
         ma, mb = uniform_filter(a, 11), uniform_filter(b, 11)
         va, vb = uniform_filter(a * a, 11) - ma * ma, uniform_filter(b * b, 11) - mb * mb
         cov = uniform_filter(a * b, 11) - ma * mb
-        values.append(float(np.mean(((2 * ma * mb + 6.5025) * (2 * cov + 58.5225)) / ((ma * ma + mb * mb + 6.5025) * (va + vb + 58.5225)))))
+        values.append(
+            float(
+                np.mean(
+                    ((2 * ma * mb + 6.5025) * (2 * cov + 58.5225))
+                    / ((ma * ma + mb * mb + 6.5025) * (va + vb + 58.5225))
+                )
+            )
+        )
     return float(mean(values))
 
 
@@ -270,7 +306,9 @@ def _lpips(left: np.ndarray, right: np.ndarray, device: str) -> float:
         return float(_LPIPS_MODEL(first, second).item())
 
 
-def _revisit(video_dir: Path, metadata: Mapping[str, Any], *, max_pairs: int, use_lpips: bool, device: str) -> dict[str, Any]:
+def _revisit(
+    video_dir: Path, metadata: Mapping[str, Any], *, max_pairs: int, use_lpips: bool, device: str
+) -> dict[str, Any]:
     rows: dict[str, Any] = {}
     all_psnr: list[float] = []
     all_ssim: list[float] = []
@@ -297,17 +335,28 @@ def _revisit(video_dir: Path, metadata: Mapping[str, Any], *, max_pairs: int, us
             values.append(value)
         all_psnr.extend(value["psnr"] for value in values)
         all_ssim.extend(value["ssim"] for value in values)
-        row = {"scene_type": scene.get("scene_type", "unknown"), "pairs": values, "mean_psnr": mean(value["psnr"] for value in values), "mean_ssim": mean(value["ssim"] for value in values)}
+        row = {
+            "scene_type": scene.get("scene_type", "unknown"),
+            "pairs": values,
+            "mean_psnr": mean(value["psnr"] for value in values),
+            "mean_ssim": mean(value["ssim"] for value in values),
+        }
         if use_lpips:
             row["mean_lpips"] = mean(value["lpips"] for value in values)
         rows[scene_id] = row
-    summary = {"overall_mean_psnr": mean(all_psnr) if all_psnr else None, "overall_mean_ssim": mean(all_ssim) if all_ssim else None, "n_total_pairs": len(all_psnr)}
+    summary = {
+        "overall_mean_psnr": mean(all_psnr) if all_psnr else None,
+        "overall_mean_ssim": mean(all_ssim) if all_ssim else None,
+        "n_total_pairs": len(all_psnr),
+    }
     if use_lpips:
         summary["overall_mean_lpips"] = mean(all_lpips) if all_lpips else None
     return {"per_scene": rows, "summary": summary}
 
 
-def _temporal(video_dir: Path, output_dir: Path, prompts: Mapping[str, str], *, window_seconds: float) -> dict[str, Any]:
+def _temporal(
+    video_dir: Path, output_dir: Path, prompts: Mapping[str, str], *, window_seconds: float
+) -> dict[str, Any]:
     import imageio.v3 as iio
     import numpy as np
 
@@ -325,12 +374,20 @@ def _temporal(video_dir: Path, output_dir: Path, prompts: Mapping[str, str], *, 
             if not destination.exists():
                 iio.imwrite(destination, np.stack([frame(i) for i in range(start, end)]), fps=max(1, int(round(fps))))
             windows[name] = destination.parent
-    scores = {name: _vbench_scores(path, output_dir / "vbench" / name, prompts, TEMPORAL_DIMS) for name, path in sorted(windows.items())}
+    scores = {
+        name: _vbench_scores(path, output_dir / "vbench" / name, prompts, TEMPORAL_DIMS)
+        for name, path in sorted(windows.items())
+    }
     trend = {}
     for dimension in TEMPORAL_DIMS:
         values = [score[dimension] for _, score in sorted(scores.items()) if dimension in score]
         if len(values) > 1:
-            trend[dimension] = {"first_window": values[0], "last_window": values[-1], "degradation": values[0] - values[-1], "per_window": values}
+            trend[dimension] = {
+                "first_window": values[0],
+                "last_window": values[-1],
+                "degradation": values[0] - values[-1],
+                "per_window": values,
+            }
     return {"windows": scores, "trend": trend}
 
 
@@ -365,7 +422,17 @@ def _normalise_records(payload: Any) -> dict[str, dict[str, float]]:
         revisit = record.get("revisit", {})
         camera = record.get("camera", {})
         temporal = record.get("temporal", {})
-        for destination, source, key in (("vbench_overall", vbench, "quality"), ("vbench_total_score", vbench, "total"), ("revisit_psnr", revisit, "psnr"), ("revisit_ssim", revisit, "ssim"), ("revisit_lpips", revisit, "lpips"), ("rot_err_deg", camera, "rot_err_deg"), ("trans_err_rel", camera, "trans_err_rel"), ("cam_mc_rel", camera, "cam_mc_rel"), ("delta_iq", temporal, "imaging_quality_drop")):
+        for destination, source, key in (
+            ("vbench_overall", vbench, "quality"),
+            ("vbench_total_score", vbench, "total"),
+            ("revisit_psnr", revisit, "psnr"),
+            ("revisit_ssim", revisit, "ssim"),
+            ("revisit_lpips", revisit, "lpips"),
+            ("rot_err_deg", camera, "rot_err_deg"),
+            ("trans_err_rel", camera, "trans_err_rel"),
+            ("cam_mc_rel", camera, "cam_mc_rel"),
+            ("delta_iq", temporal, "imaging_quality_drop"),
+        ):
             value = _number(source.get(key)) if isinstance(source, Mapping) else None
             if value is not None:
                 values[destination] = round(value * 100.0, 4) if destination == "vbench_overall" else value
@@ -373,13 +440,32 @@ def _normalise_records(payload: Any) -> dict[str, dict[str, float]]:
     return result
 
 
-def _scorecard(*, output_dir: Path, per_split: Mapping[str, Mapping[str, float]], dataset_root: Path | None, video_root: Path | None, source: str, runtime_executed: bool, coverage: Mapping[str, Any] | None = None) -> dict[str, Any]:
+def _scorecard(
+    *,
+    output_dir: Path,
+    per_split: Mapping[str, Mapping[str, float]],
+    dataset_root: Path | None,
+    video_root: Path | None,
+    source: str,
+    runtime_executed: bool,
+    coverage: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     metric_rows = []
     leaderboard: dict[str, float] = {}
     for split, metrics in sorted(per_split.items()):
         for metric_id, (name, higher, group) in METRIC_SPECS.items():
             value = _number(metrics.get(metric_id))
-            row = {"metric_id": metric_id, "split": split, "name": name, "group": group, "higher_is_better": higher, "available": value is not None, "raw_score": value, "normalized_score": value, "source": source}
+            row = {
+                "metric_id": metric_id,
+                "split": split,
+                "name": name,
+                "group": group,
+                "higher_is_better": higher,
+                "available": value is not None,
+                "raw_score": value,
+                "normalized_score": value,
+                "source": source,
+            }
             metric_rows.append(row)
             if value is not None:
                 leaderboard[f"{split}.{metric_id}"] = value
@@ -389,14 +475,46 @@ def _scorecard(*, output_dir: Path, per_split: Mapping[str, Mapping[str, float]]
     full_splits = set(per_split) == set(SPLITS)
     result = {
         "schema_version": SCORECARD_SCHEMA_VERSION,
-        "run": {"status": "official_bounded" if runtime_executed else "normalized", "started_at": utc_now_iso(), "runner": "sana_wm_bench_in_tree_runner", "returncode": 0},
-        "benchmark": {"benchmark_id": BENCHMARK_ID, "name": "SANA-WM 80-Scene Benchmark", "contract_only": False, "requires_upstream_runtime": False},
-        "dataset": {"dataset_root": None if dataset_root is None else str(dataset_root), "generated_artifact_dir": None if video_root is None else str(video_root), "coverage": dict(coverage or {})},
-        "metrics": {"leaderboard": leaderboard, "per_split": {key: dict(value) for key, value in per_split.items()}, "per_metric": metric_rows},
-        "validation": {"normalizer_only": not runtime_executed, "official_runtime_executed": runtime_executed, "canonical_splits_present": full_splits, "pose_note": "Pi3 pose results are imported from <split>/eval_poses.json or --pose-results-path; distributed Pi3 inference remains a separately schedulable in-tree stage."},
-        "eligibility": {"leaderboard_valid": False, "reasons": ["local scorecards are not an NVIDIA leaderboard submission", "full 80-scene videos and evaluator weights are required for a comparable run"]},
+        "run": {
+            "status": "official_bounded" if runtime_executed else "normalized",
+            "started_at": utc_now_iso(),
+            "runner": "sana_wm_bench_in_tree_runner",
+            "returncode": 0,
+        },
+        "benchmark": {
+            "benchmark_id": BENCHMARK_ID,
+            "name": "SANA-WM 80-Scene Benchmark",
+            "contract_only": False,
+            "requires_upstream_runtime": False,
+        },
+        "dataset": {
+            "dataset_root": None if dataset_root is None else str(dataset_root),
+            "generated_artifact_dir": None if video_root is None else str(video_root),
+            "coverage": dict(coverage or {}),
+        },
+        "metrics": {
+            "leaderboard": leaderboard,
+            "per_split": {key: dict(value) for key, value in per_split.items()},
+            "per_metric": metric_rows,
+        },
+        "validation": {
+            "normalizer_only": not runtime_executed,
+            "official_runtime_executed": runtime_executed,
+            "canonical_splits_present": full_splits,
+            "pose_note": "Pi3 pose results are imported from <split>/eval_poses.json or --pose-results-path; distributed Pi3 inference remains a separately schedulable in-tree stage.",
+        },
+        "eligibility": {
+            "leaderboard_valid": False,
+            "reasons": [
+                "local scorecards are not an NVIDIA leaderboard submission",
+                "full 80-scene videos and evaluator weights are required for a comparable run",
+            ],
+        },
         "artifacts": {"scorecard": str(scorecard_path.resolve()), "raw_metric_table": str(metric_path.resolve())},
-        "normalization_ok": bool(leaderboard), "official_benchmark_verified": False, "integration_evidence": runtime_executed and bool(leaderboard), "leaderboard_valid": False,
+        "normalization_ok": bool(leaderboard),
+        "official_benchmark_verified": False,
+        "integration_evidence": runtime_executed and bool(leaderboard),
+        "leaderboard_valid": False,
     }
     write_json(scorecard_path, result)
     return result
@@ -409,7 +527,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-fixture", action="store_true")
     parser.add_argument("--official-results-path", type=Path)
     parser.add_argument("--dataset-root", type=Path, default=env_path("WORLDFOUNDRY_SANA_WM_BENCH_DATASET_ROOT"))
-    parser.add_argument("--generated-video-dir", "--generated-artifact-dir", dest="generated_video_dir", type=Path, default=env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR"))
+    parser.add_argument(
+        "--generated-video-dir",
+        "--generated-artifact-dir",
+        dest="generated_video_dir",
+        type=Path,
+        default=env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR"),
+    )
     parser.add_argument("--output-dir", type=Path, default=env_path("WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"))
     parser.add_argument("--split", default="all", choices=("all", *SPLITS))
     parser.add_argument("--metrics", default="vbench,revisit,temporal,camera")
@@ -431,13 +555,37 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError("--output-dir or WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR is required")
     output_dir = args.output_dir.expanduser().resolve()
     if args.run_fixture:
-        payload = {"records": [{"split": "simple_60s", "vbench": {"quality": 0.811, "total": 0.72}, "revisit": {"psnr": 24.0, "ssim": 0.83, "lpips": 0.14}, "camera": {"rot_err_deg": 3.0, "trans_err_rel": 0.12, "cam_mc_rel": 0.20}, "temporal": {"imaging_quality_drop": 0.03}}]}
+        payload = {
+            "records": [
+                {
+                    "split": "simple_60s",
+                    "vbench": {"quality": 0.811, "total": 0.72},
+                    "revisit": {"psnr": 24.0, "ssim": 0.83, "lpips": 0.14},
+                    "camera": {"rot_err_deg": 3.0, "trans_err_rel": 0.12, "cam_mc_rel": 0.20},
+                    "temporal": {"imaging_quality_drop": 0.03},
+                }
+            ]
+        }
         fixture = output_dir / "fixture_aggregate_results.json"
         fixture.parent.mkdir(parents=True, exist_ok=True)
         write_json(fixture, payload)
-        scorecard = _scorecard(output_dir=output_dir, per_split=_normalise_records(payload), dataset_root=None, video_root=None, source="sana_wm_bench_fixture", runtime_executed=False)
+        scorecard = _scorecard(
+            output_dir=output_dir,
+            per_split=_normalise_records(payload),
+            dataset_root=None,
+            video_root=None,
+            source="sana_wm_bench_fixture",
+            runtime_executed=False,
+        )
     elif args.official_results_path is not None:
-        scorecard = _scorecard(output_dir=output_dir, per_split=_normalise_records(_json(args.official_results_path)), dataset_root=args.dataset_root, video_root=args.generated_video_dir, source="official_result_import", runtime_executed=False)
+        scorecard = _scorecard(
+            output_dir=output_dir,
+            per_split=_normalise_records(_json(args.official_results_path)),
+            dataset_root=args.dataset_root,
+            video_root=args.generated_video_dir,
+            source="official_result_import",
+            runtime_executed=False,
+        )
     elif args.run_official:
         if args.dataset_root is None or args.generated_video_dir is None:
             raise ValueError("--run-official requires --dataset-root and --generated-video-dir")
@@ -451,18 +599,32 @@ def main(argv: list[str] | None = None) -> int:
             split_videos = video_root / split if (video_root / split).is_dir() else video_root
             videos = _video_files(split_videos, args.limit)
             expected = min(len(manifest), args.limit) if args.limit is not None else len(manifest)
-            coverage[split] = {"expected_videos": expected, "found_videos": len(videos), "complete": len(videos) == expected}
+            coverage[split] = {
+                "expected_videos": expected,
+                "found_videos": len(videos),
+                "complete": len(videos) == expected,
+            }
             if not videos:
                 raise FileNotFoundError(f"no *_generated.mp4 files found for {split}: {split_videos}")
             prompts = {str(row["id"]): str(row.get("prompt") or row["id"]) for row in manifest}
             values: dict[str, float] = {}
             eval_root = output_dir / "eval" / split
             if "vbench" in wanted:
-                values.update(_vbench_aggregate(_vbench_scores(split_videos, eval_root / "vbench", prompts, VBENCH_DIMS)))
+                values.update(
+                    _vbench_aggregate(_vbench_scores(split_videos, eval_root / "vbench", prompts, VBENCH_DIMS))
+                )
             if "revisit" in wanted:
-                revisit = _revisit(split_videos, metadata, max_pairs=args.max_pairs, use_lpips=args.revisit_lpips, device=args.device)
+                revisit = _revisit(
+                    split_videos, metadata, max_pairs=args.max_pairs, use_lpips=args.revisit_lpips, device=args.device
+                )
                 write_json(eval_root / "revisit_consistency.json", revisit)
-                values.update({"revisit_psnr": revisit["summary"].get("overall_mean_psnr"), "revisit_ssim": revisit["summary"].get("overall_mean_ssim"), "revisit_lpips": revisit["summary"].get("overall_mean_lpips")})
+                values.update(
+                    {
+                        "revisit_psnr": revisit["summary"].get("overall_mean_psnr"),
+                        "revisit_ssim": revisit["summary"].get("overall_mean_ssim"),
+                        "revisit_lpips": revisit["summary"].get("overall_mean_lpips"),
+                    }
+                )
             if "temporal" in wanted:
                 temporal = _temporal(split_videos, eval_root / "temporal", prompts, window_seconds=args.window_seconds)
                 write_json(eval_root / "temporal_degradation.json", temporal)
@@ -471,9 +633,22 @@ def main(argv: list[str] | None = None) -> int:
                 pose = args.pose_results_path or split_videos / "eval_poses.json"
                 values.update(_camera_summary(pose))
             per_split[split] = {key: value for key, value in values.items() if value is not None}
-        scorecard = _scorecard(output_dir=output_dir, per_split=per_split, dataset_root=root, video_root=video_root, source="sana_wm_bench_in_tree_runtime", runtime_executed=True, coverage=coverage)
+        scorecard = _scorecard(
+            output_dir=output_dir,
+            per_split=per_split,
+            dataset_root=root,
+            video_root=video_root,
+            source="sana_wm_bench_in_tree_runtime",
+            runtime_executed=True,
+            coverage=coverage,
+        )
     else:
         raise ValueError("pass --run-official, --official-results-path, or --run-fixture")
-    result = {"ok": scorecard["normalization_ok"], "benchmark_id": BENCHMARK_ID, "scorecard": scorecard["artifacts"]["scorecard"], "raw_metric_table": scorecard["artifacts"]["raw_metric_table"]}
+    result = {
+        "ok": scorecard["normalization_ok"],
+        "benchmark_id": BENCHMARK_ID,
+        "scorecard": scorecard["artifacts"]["scorecard"],
+        "raw_metric_table": scorecard["artifacts"]["raw_metric_table"],
+    }
     print(json.dumps(result, indent=2, sort_keys=True) if args.json else f"{BENCHMARK_ID}: {result['scorecard']}")
     return 0 if result["ok"] else 1

@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import csv
 import json
@@ -16,6 +12,7 @@ from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.artifact_score_runtime import materialize_artifact_scores
 from worldfoundry.evaluation.tasks.execution.framework.io import env_path, utc_now_iso, write_json, write_jsonl
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.utils import REPO_ROOT
 
 SUPPORTED_SUFFIXES = {".json", ".jsonl", ".csv", ".tsv"}

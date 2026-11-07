@@ -14,10 +14,10 @@ Sections:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 from uuid import uuid4
 
 from worldfoundry.core.io.formats.serialization import JsonlWriter

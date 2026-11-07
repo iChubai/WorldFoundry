@@ -5,10 +5,9 @@ helpers for extracting features from image
 import os
 import platform
 
+import cleanfid
 import numpy as np
 import torch
-
-import cleanfid
 from cleanfid.downloads_helper import check_download_url
 from cleanfid.inception_pytorch import InceptionV3
 from cleanfid.inception_torchscript import InceptionV3W

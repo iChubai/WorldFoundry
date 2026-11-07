@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-
 MetricEvaluatorBinding = tuple[str, str, str, str]
 
 FORMULA_EVALUATOR_BINDINGS: tuple[MetricEvaluatorBinding, ...] = (
@@ -139,7 +138,12 @@ FORMULA_EVALUATOR_BINDINGS: tuple[MetricEvaluatorBinding, ...] = (
         "videoverse_subquestion_accuracy",
         "VideoVerse video-level pass rate from judge result JSON.",
     ),
-    ("video-bench", "mcqa_accuracy", "mcqa_accuracy", "Video-Bench multiple-choice accuracy from predictions and answers."),
+    (
+        "video-bench",
+        "mcqa_accuracy",
+        "mcqa_accuracy",
+        "Video-Bench multiple-choice accuracy from predictions and answers.",
+    ),
     ("ipv-bench", "mcqa_accuracy", "mcqa_accuracy", "IPV-Bench multiple-choice accuracy from predictions and answers."),
     (
         "worldmodelbench",
@@ -209,7 +213,7 @@ def success_metric_bindings() -> tuple[tuple[str, str], ...]:
 
 __all__ = [
     "FORMULA_EVALUATOR_BINDINGS",
-    "MetricEvaluatorBinding",
     "SUCCESS_METRIC_IDS_BY_BENCHMARK",
+    "MetricEvaluatorBinding",
     "success_metric_bindings",
 ]

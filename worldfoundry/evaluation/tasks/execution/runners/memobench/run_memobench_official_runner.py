@@ -15,20 +15,21 @@ require SAM-3 and Gemini credentials.
 
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import json
 import os
 import subprocess
 import sys
 import time
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
+    SCORECARD_SCHEMA_VERSION,
+    resolve_env_path,
+)
 from worldfoundry.evaluation.tasks.execution.runners.memobench.memobench_metrics import (
     METRIC_ORDER,
     compute_memobench_metrics,
@@ -37,8 +38,6 @@ from worldfoundry.evaluation.tasks.execution.runners.memobench.memobench_metrics
 from worldfoundry.evaluation.utils import benchmark_task_sample_path
 
 BENCHMARK_ID = "memobench"
-
-
 
 
 def _runtime_root(explicit: Path | None = None) -> Path:
@@ -123,9 +122,7 @@ def _run_step1(args: argparse.Namespace, runtime_root: Path) -> tuple[Path | Non
         command.extend(["--sample_step", str(args.sample_step)])
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(
-        part for part in (str(runtime_root), env.get("PYTHONPATH")) if part
-    )
+    env["PYTHONPATH"] = os.pathsep.join(part for part in (str(runtime_root), env.get("PYTHONPATH")) if part)
     start = time.monotonic()
     completed = subprocess.run(
         command,
@@ -168,9 +165,7 @@ def _scorecard(
 
     available_rows = [row for row in rows if row.get("available") is True]
     leaderboard = {
-        row["metric_id"]: row["normalized_score"]
-        for row in available_rows
-        if row.get("normalized_score") is not None
+        row["metric_id"]: row["normalized_score"] for row in available_rows if row.get("normalized_score") is not None
     }
     official_runtime_executed = official_runtime is not None
     normalization_ok = bool(available_rows)
@@ -187,8 +182,10 @@ def _scorecard(
         "normalization_ok": normalization_ok,
         "run": {
             "status": (
-                "official_component_verified" if component_verified
-                else "official_results_imported" if normalization_ok
+                "official_component_verified"
+                if component_verified
+                else "official_results_imported"
+                if normalization_ok
                 else "failed"
             ),
             "started_at": utc_now_iso(),

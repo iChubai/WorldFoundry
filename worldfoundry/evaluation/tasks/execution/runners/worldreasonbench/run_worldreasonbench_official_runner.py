@@ -54,8 +54,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-
-
 def _resolve_upstream_root(args: argparse.Namespace) -> Path:
     root = args.worldreasonbench_root or resolve_env_path("WORLDFOUNDRY_WORLDREASONBENCH_ROOT")
     if root is None or not root.is_dir():
@@ -224,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
             protocol = args.protocol
         results = normalize_results(results_path, protocol)
         scorecard = _scorecard(args, results_path, results, runtime)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         scorecard = {
             "schema_version": "worldfoundry-scorecard",
             "official_benchmark_verified": False,

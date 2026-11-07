@@ -1,5 +1,4 @@
 import os
-from typing import List
 
 import torch
 from torchvision import transforms
@@ -43,7 +42,7 @@ class BLIP2ITCScoreModel(ScoreModel):
             ]
         )
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         image = [self.image_loader(x) for x in image]
         image = [self.image_preprocess(image) for image in image]
@@ -53,7 +52,7 @@ class BLIP2ITCScoreModel(ScoreModel):
 
     @torch.no_grad()
     @torch.autocast(device_type="cuda", dtype=torch.float16)
-    def forward(self, images: List[str], texts: List[str]) -> torch.Tensor:
+    def forward(self, images: list[str], texts: list[str]) -> torch.Tensor:
         """Forward pass of the model to return n scores for n (image, text) pairs (in PyTorch Tensor)"""
         assert len(images) == len(texts), "Number of images and texts must match"
 

@@ -10,22 +10,20 @@ Sections:
 * **Spec validation** — policy/simulator action and observation checks.
 * **Factories** — convenience builders for common benchmark ids.
 """
+
 from __future__ import annotations
 
 import inspect
 import logging
 import re
-from typing import Any, Collection, Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import (
     GenerationRequest,
     GenerationResult,
-    WorldModelRunner,
     WorldModelConfig,
-)
-from worldfoundry.evaluation.tasks.embodied.simulators.registry import (
-    get_simulator_entry,
-    resolve_simulator_class,
+    WorldModelRunner,
 )
 from worldfoundry.evaluation.tasks.embodied.contracts import (
     CAPABILITY_MULTIMODAL_OBSERVATION,
@@ -34,6 +32,10 @@ from worldfoundry.evaluation.tasks.embodied.contracts import (
     CAPABILITY_VLA_POLICY_ROLLOUT,
 )
 from worldfoundry.evaluation.tasks.embodied.policy_adapter import build_policy_adapter, normalize_action_payload
+from worldfoundry.evaluation.tasks.embodied.simulators.registry import (
+    get_simulator_entry,
+    resolve_simulator_class,
+)
 from worldfoundry.evaluation.tasks.embodied.simulators.specs import DimSpec, check_specs
 
 logger = logging.getLogger(__name__)
@@ -93,7 +95,7 @@ class EmbodiedClosedLoopRunner(WorldModelRunner):
                 CAPABILITY_MULTIMODAL_OBSERVATION,
             }
         )
-        
+
         self._benchmark_instance: Any = None
         self._benchmark_instance_key: str | None = None
         self._benchmark_class: type | None = None
@@ -141,10 +143,10 @@ class EmbodiedClosedLoopRunner(WorldModelRunner):
         kwargs = dict(self._benchmark_kwargs)
         if self._constructor_accepts("task_name"):
             kwargs["task_name"] = task_name
-        
+
         if self._benchmark_id == "robotwin" and "task_config" not in kwargs:
             kwargs["task_config"] = "demo_clean"
-            
+
         self._benchmark_instance = self._benchmark_class(**kwargs)
         self._benchmark_instance_key = task_name
         self._task_cache = None
@@ -162,7 +164,7 @@ class EmbodiedClosedLoopRunner(WorldModelRunner):
         return name in params or any(item.kind == inspect.Parameter.VAR_KEYWORD for item in params.values())
 
     @classmethod
-    def from_config(cls, config: WorldModelConfig) -> "EmbodiedClosedLoopRunner":
+    def from_config(cls, config: WorldModelConfig) -> EmbodiedClosedLoopRunner:
         """Construct runner from :class:`WorldModelConfig`."""
         params = dict(config.parameters or {})
         benchmark_id = params.get("benchmark_id", "robotwin")
@@ -313,40 +315,40 @@ class EmbodiedClosedLoopRunner(WorldModelRunner):
             task_name = request.task_name
             try:
                 benchmark = self._get_benchmark_instance(task_name)
-                
+
                 task_spec = self._task_spec(benchmark, request, index)
 
                 logger.info("Starting native closed-loop rollout. task=%s, seed=%d", task_name, task_spec["seed"])
                 start_episode = getattr(self._policy_runner, "start_episode", None)
                 if callable(start_episode):
                     start_episode(task_spec)
-                
+
                 # Reset → step loop → harvest episode metrics.
                 raw_obs = benchmark.reset(task_spec)
                 done = False
                 steps = 0
                 step_result = None
-                
+
                 # Read max steps from metadata
                 max_steps_meta = benchmark.get_metadata().get("max_steps", 400)
                 try:
                     max_steps = int(max_steps_meta)
                 except (ValueError, TypeError):
                     max_steps = 400
-                
+
                 # Step until done or max_steps.
                 while not done and steps < max_steps:
                     # Translate raw sensor data into clean, structured spec format
                     obs_spec = benchmark.make_obs(raw_obs, task_spec)
                     task_desc = obs_spec.get("task_description", task_spec["instruction"])
-                    
+
                     # Policy inference and env step.
                     action_pred = self._infer_action(obs_spec, task_desc)
                     step_result = benchmark.step(action_pred)
                     raw_obs = step_result.obs
                     done = benchmark.check_done(step_result)
                     steps += 1
-                
+
                 # Harvest episode metrics from the final step.
                 episode_result = (
                     benchmark.get_step_result(step_result)
@@ -357,17 +359,19 @@ class EmbodiedClosedLoopRunner(WorldModelRunner):
                 end_episode = getattr(self._policy_runner, "end_episode", None)
                 if callable(end_episode):
                     end_episode(dict(episode_result))
-                
+
                 # Package step metrics directly into the vla_va_wam scorecard structure
                 vla_va_wam_payload = {
                     "metrics": {
                         "success_rate": success_val,
                         "task_success": success_val,
-                        **{k: float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v
-                           for k, v in episode_result.items()},
+                        **{
+                            k: float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+                            for k, v in episode_result.items()
+                        },
                     }
                 }
-                
+
                 results.append(
                     GenerationResult(
                         sample_id=request.sample_id,
@@ -377,23 +381,23 @@ class EmbodiedClosedLoopRunner(WorldModelRunner):
                         metadata={
                             "vla_va_wam": vla_va_wam_payload,
                             "steps_run": steps,
-                            "policy_source": "provided_policy" if self._policy_runner is not None else "zero_policy_wiring_check",
+                            "policy_source": "provided_policy"
+                            if self._policy_runner is not None
+                            else "zero_policy_wiring_check",
                             "official_runtime_executed": True,
                             "normalizer_only": False,
                             "integration_evidence": True,
                             "spec_warnings": list(self._spec_warnings),
-                            "task_spec": {
-                                key: value
-                                for key, value in task_spec.items()
-                                if key not in {"task_obj"}
-                            },
-                        }
+                            "task_spec": {key: value for key, value in task_spec.items() if key not in {"task_obj"}},
+                        },
                     )
                 )
                 logger.info("Rollout finished. success=%s, steps=%d", episode_result.get("success", False), steps)
 
             except Exception as exc:
-                logger.exception("Closed-loop rollout execution crashed on task '%s' seed '%s'", task_name, request.sample_id)
+                logger.exception(
+                    "Closed-loop rollout execution crashed on task '%s' seed '%s'", task_name, request.sample_id
+                )
                 results.append(
                     GenerationResult(
                         sample_id=request.sample_id,
@@ -488,8 +492,8 @@ def build_libero_closed_loop_runner(
 
 __all__ = [
     "EmbodiedClosedLoopRunner",
-    "build_embodied_closed_loop_runner",
     "build_ai2thor_closed_loop_runner",
+    "build_embodied_closed_loop_runner",
     "build_libero_closed_loop_runner",
     "validate_policy_simulator_specs",
 ]

@@ -1,7 +1,6 @@
-from torch.utils.data import Dataset
-from PIL import Image
 import torch
 import torchvision
+from torch.utils.data import Dataset
 
 
 class ImageTensorDataset(Dataset):

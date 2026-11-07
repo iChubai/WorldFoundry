@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 from transformers import AutoModel, AutoProcessor
 
@@ -29,7 +27,7 @@ class PickScoreModel(ScoreModel):
         self.processor = AutoProcessor.from_pretrained(processor_name_or_path)
         self.model = AutoModel.from_pretrained(model_pretrained_name_or_path).eval().to(self.device)
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (no preprocessing!!) put on self.device"""
         image = [self.image_loader(x) for x in image]
         image = self.processor(images=image, padding=True, truncation=True, max_length=77, return_tensors="pt").to(
@@ -39,7 +37,7 @@ class PickScoreModel(ScoreModel):
         return image
 
     @torch.no_grad()
-    def forward(self, images: List[str], texts: List[str]) -> torch.Tensor:
+    def forward(self, images: list[str], texts: list[str]) -> torch.Tensor:
         """Forward pass of the model to return n scores for n (image, text) pairs (in PyTorch Tensor)"""
         assert len(images) == len(texts)
         image = self.load_images(images)

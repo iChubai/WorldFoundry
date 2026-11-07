@@ -53,8 +53,8 @@ def _clip_model_id(checkpoints_dir: Path) -> str:
 
 def _load_action_runtime():
     try:
-        from mmengine import Config
         from mmaction.apis import inference_recognizer, init_recognizer
+        from mmengine import Config
     except ImportError as exc:
         raise RuntimeError(
             "EvalCrafter action_score requires the optional MMAction2 runtime. "
@@ -106,7 +106,9 @@ def _calculate_action_score(
 ) -> float:
     pred_result = inference_recognizer(action_model, str(video_path))
     pred_scores = pred_result.pred_scores.item.tolist()
-    score_sorted = sorted(tuple(zip(range(len(pred_scores)), pred_scores)), key=itemgetter(1), reverse=True)
+    score_sorted = sorted(
+        tuple(zip(range(len(pred_scores)), pred_scores, strict=False)), key=itemgetter(1), reverse=True
+    )
     top5_label = score_sorted[:5]
 
     results = [(labels[index], score) for index, score in top5_label]

@@ -5,15 +5,17 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-from worldfoundry.evaluation.utils import benchmark_task_sample_path
-
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
+    SCORECARD_SCHEMA_VERSION,
+    VIDEO_SUFFIXES,
+    resolve_env_path,
+)
 from worldfoundry.evaluation.tasks.execution.runners.wrbench.wrbench_metrics import (
     METRIC_ORDER,
     METRIC_SPECS,
@@ -30,8 +32,7 @@ from worldfoundry.evaluation.tasks.execution.runners.wrbench.wrbench_prompts imp
     materialize_wrbench_generation_requests,
 )
 from worldfoundry.evaluation.tasks.execution.runners.wrbench.wrbench_runtime import run_wrbench_evaluator
-
-
+from worldfoundry.evaluation.utils import benchmark_task_sample_path
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -45,7 +46,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--video-manifest", type=Path)
     parser.add_argument("--runtime-config", type=Path)
     parser.add_argument("--wrbench-root", type=Path)
-    parser.add_argument("--scorer-profile", default="wrbench_default", choices=("wrbench_default", "ablation_manifest_metadata", "custom"))
+    parser.add_argument(
+        "--scorer-profile",
+        default="wrbench_default",
+        choices=("wrbench_default", "ablation_manifest_metadata", "custom"),
+    )
     parser.add_argument("--sidecar-profile-gate", default="main", choices=("main", "certified_opencv"))
     parser.add_argument("--limit", type=int)
     parser.add_argument("--strict", action="store_true")
@@ -53,15 +58,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-
-
 def _coverage(expected_ids: set[str], generated_dir: Path | None) -> dict[str, Any]:
     actual: set[str] = set()
     if generated_dir is not None and generated_dir.is_dir():
         actual = {
-            path.stem
-            for path in generated_dir.rglob("*")
-            if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
+            path.stem for path in generated_dir.rglob("*") if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
         }
     missing = sorted(expected_ids - actual)
     unexpected = sorted(actual - expected_ids)

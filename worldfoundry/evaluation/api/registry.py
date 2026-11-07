@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from collections.abc import Callable as CollectionsCallable
-from typing import Any, Callable, Generic, Iterable, Iterator, Mapping, TypeVar
+from typing import Any, Generic, TypeVar
 
 from .metrics import MetricSpec
 from .world_model_manifest import WorldModelManifest
@@ -301,8 +302,7 @@ class _Registry(Generic[SpecT]):
             existing_name = self._existing_name_for_key(key)
             if existing_name is not None:
                 raise DuplicateRegistryKeyError(
-                    f"duplicate {self._kind} key {key!r}: "
-                    f"{item_name!r} conflicts with {existing_name!r}"
+                    f"duplicate {self._kind} key {key!r}: {item_name!r} conflicts with {existing_name!r}"
                 )
 
     def _existing_name_for_key(self, key: str) -> str | None:

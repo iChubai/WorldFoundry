@@ -1,21 +1,16 @@
-from matplotlib import pyplot as plt
 import numpy as np
 import torch
-from torch import nn
 import torchvision
+from matplotlib import pyplot as plt
+from torch import nn
 from torchvision import transforms
-from torchvision.models import inception_v3, Inception_V3_Weights
-import torchvision.transforms.functional as TF
-
-
+from torchvision.models import Inception_V3_Weights, inception_v3
 from vendi_score import data_utils, vendi
-from vendi_score.data_utils import Example, Group
+from vendi_score.data_utils import Example
 
 
 def get_cifar100(root, split="test"):
-    dataset = torchvision.datasets.CIFAR100(
-        root=root, train=split == "train", download=True
-    )
+    dataset = torchvision.datasets.CIFAR100(root=root, train=split == "train", download=True)
     examples = []
     for x, y in dataset:
         features = {"pixels": np.array(x).flatten()}
@@ -25,9 +20,7 @@ def get_cifar100(root, split="test"):
 
 
 def get_cifar10(root, split="test"):
-    dataset = torchvision.datasets.CIFAR10(
-        root=root, train=split == "train", download=True
-    )
+    dataset = torchvision.datasets.CIFAR10(root=root, train=split == "train", download=True)
     examples = []
     for x, y in dataset:
         features = {"pixels": np.array(x).flatten()}
@@ -37,9 +30,7 @@ def get_cifar10(root, split="test"):
 
 
 def get_mnist(root, split="train", transform=None):
-    dataset = torchvision.datasets.MNIST(
-        root, train=split == "train", download=True, transform=transform
-    )
+    dataset = torchvision.datasets.MNIST(root, train=split == "train", download=True, transform=transform)
     examples = []
     for x, y in dataset:
         features = {"pixels": np.array(x).flatten()}
@@ -53,9 +44,7 @@ def get_inception(pretrained=True, pool=True):
         weights = Inception_V3_Weights.DEFAULT
     else:
         weights = None
-    model = inception_v3(
-        weights=weights, transform_input=True
-    ).eval()
+    model = inception_v3(weights=weights, transform_input=True).eval()
     if pool:
         model.fc = nn.Identity()
     return model
@@ -95,7 +84,7 @@ def get_embeddings(
         if type(output) == list:
             output = output[0]
         output_arr = output.squeeze().cpu().numpy()
-        if output_arr.ndim==1:
+        if output_arr.ndim == 1:
             output_arr = output_arr.reshape(1, output_arr.size)
         embeddings.append(output_arr)
     return np.concatenate(embeddings, 0)
@@ -129,9 +118,7 @@ def pixel_vendi_score(images, resize=32):
     return vendi.score_dual(X)
 
 
-def embedding_vendi_score(
-    images, batch_size=64, device="cpu", model=None, transform=None
-):
+def embedding_vendi_score(images, batch_size=64, device="cpu", model=None, transform=None):
     X = get_embeddings(
         images,
         batch_size=batch_size,

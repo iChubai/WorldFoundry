@@ -22,6 +22,7 @@ class NormalizerSpec:
         kind: The identifier of the normalizer (e.g. 'scale_max').
         args: Optional float parameters for the normalizer calculation.
     """
+
     kind: str
     args: tuple[float, ...] = ()
 

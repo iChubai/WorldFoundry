@@ -113,7 +113,7 @@ class LaqBaseModel(LaryBaseModel):
         frames = [
             cv2.resize(frame, (image_size, image_size), interpolation=cv2.INTER_CUBIC) / 255.0 for frame in frames
         ]
-        pairs = np.stack([np.stack([first, second]) for first, second in zip(frames, frames[1:])])
+        pairs = np.stack([np.stack([first, second]) for first, second in zip(frames, frames[1:], strict=False)])
         tensor = torch.tensor(pairs, dtype=torch.float32).permute(0, 4, 1, 2, 3)
         return global_index, tensor, relative_indices
 

@@ -8,11 +8,12 @@ import csv
 import json
 import os
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import resolve_env_path, bundled_benchmark_asset
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset, resolve_env_path
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 from worldfoundry.runtime.jobs import run_bounded_command
@@ -64,8 +65,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-
-
 def _resolved_layout(args: argparse.Namespace) -> dict[str, Path]:
     output_dir = args.output_dir.expanduser().resolve()
     return {
@@ -73,10 +72,14 @@ def _resolved_layout(args: argparse.Namespace) -> dict[str, Path]:
         "metadata_root": (args.metadata_root or resolve_env_path("LARY_METADATA_DIR") or output_dir / "metadata")
         .expanduser()
         .resolve(),
-        "latent_action_root": (args.latent_action_root or resolve_env_path("LARY_LA_DIR") or output_dir / "latent_actions")
+        "latent_action_root": (
+            args.latent_action_root or resolve_env_path("LARY_LA_DIR") or output_dir / "latent_actions"
+        )
         .expanduser()
         .resolve(),
-        "model_root": (args.model_root or resolve_env_path("MODEL_DIR") or output_dir / "models").expanduser().resolve(),
+        "model_root": (args.model_root or resolve_env_path("MODEL_DIR") or output_dir / "models")
+        .expanduser()
+        .resolve(),
         "log_root": output_dir / "larybench_runtime",
     }
 
@@ -275,7 +278,7 @@ def _confusion_summary(payload: Mapping[str, Any]) -> dict[str, float]:
         "macro_precision": sum(precision) / len(precision),
         "macro_recall": sum(recall) / len(recall),
         "macro_f1": sum(f1) / len(f1),
-        "weighted_f1": sum(value * count for value, count in zip(f1, support)) / total,
+        "weighted_f1": sum(value * count for value, count in zip(f1, support, strict=False)) / total,
         "sample_count": total,
     }
 

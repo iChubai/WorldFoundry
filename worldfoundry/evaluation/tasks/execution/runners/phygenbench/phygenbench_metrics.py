@@ -5,8 +5,9 @@ from __future__ import annotations
 import csv
 import json
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import try_float as _to_float
 from worldfoundry.evaluation.tasks.execution.runners.phygenbench.phygenbench_official_scoring import (

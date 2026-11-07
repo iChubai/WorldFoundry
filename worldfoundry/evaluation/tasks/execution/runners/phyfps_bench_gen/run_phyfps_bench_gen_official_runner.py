@@ -7,15 +7,16 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
-    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
+    resolve_env_path,
 )
-from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl  # noqa: E402
+from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_metrics import (
     METRIC_ORDER,
@@ -37,7 +38,6 @@ from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_pro
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.visual_chronometer_runtime import (
     resolve_chronometer_root,
 )
-from worldfoundry.evaluation.utils import REPO_ROOT
 
 BENCHMARK_ID = "phyfps-bench-gen"
 
@@ -47,7 +47,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--benchmark-id", default="phyfps-bench-gen")
     parser.add_argument("--official-results-path", dest="official_results_path", type=Path)
     parser.add_argument("--from-upstream-results", dest="official_results_path", type=Path, help=argparse.SUPPRESS)
-    parser.add_argument("--run-official", action="store_true", help="Execute Visual Chronometer PhyFPS prediction in-tree.")
+    parser.add_argument(
+        "--run-official", action="store_true", help="Execute Visual Chronometer PhyFPS prediction in-tree."
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--generated-artifact-dir", type=Path)
     parser.add_argument("--prompt-manifest", type=Path)
@@ -66,8 +68,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-
-
 def _env_float(name: str) -> float | None:
     value = os.environ.get(name)
     if not value:
@@ -76,7 +76,6 @@ def _env_float(name: str) -> float | None:
         return float(value)
     except ValueError:
         return None
-
 
 
 def _resolve_phyfps_bench_gen_root(explicit: Path | None = None) -> Path | None:
@@ -226,9 +225,7 @@ def _scorecard(
     integration_evidence = official_verified and full_suite_valid
     normalizer_only = not official_runtime_executed and not integration_evidence
     evaluation_kind = (
-        "phyfps_bench_gen_official_in_tree"
-        if official_runtime_executed
-        else "phyfps_bench_gen_result_normalizer"
+        "phyfps_bench_gen_official_in_tree" if official_runtime_executed else "phyfps_bench_gen_result_normalizer"
     )
     return {
         "schema_version": SCORECARD_SCHEMA_VERSION,
@@ -384,7 +381,9 @@ def normalize_phyfps_results(
         benchmark_id=str(args.benchmark_id),
         output_dir=output_dir,
         official_results_path=Path(official_results_path),
-        prompt_manifest_path=prompt_manifest_path if prompt_manifest_path and Path(prompt_manifest_path).is_file() else None,
+        prompt_manifest_path=prompt_manifest_path
+        if prompt_manifest_path and Path(prompt_manifest_path).is_file()
+        else None,
         manifest_stats=manifest_stats,
         video_coverage=video_coverage,
         metric_rows=rows,
@@ -433,7 +432,9 @@ def run_official_phyfps_bench_gen(args: argparse.Namespace) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     generated_artifact_dir = args.generated_artifact_dir or resolve_env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR")
     if generated_artifact_dir is None:
-        raise ValueError("--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official")
+        raise ValueError(
+            "--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official"
+        )
 
     backend = (os.environ.get("WORLDFOUNDRY_PHYFPS_PREDICT_BACKEND") or "official").lower()
     config = PhyFPSPredictConfig(
@@ -486,7 +487,7 @@ def main(argv: list[str] | None = None) -> int:
             scorecard = run_official_phyfps_bench_gen(args)
         else:
             scorecard = normalize_phyfps_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {
             "schema_version": SCORECARD_SCHEMA_VERSION,
@@ -504,7 +505,11 @@ def main(argv: list[str] | None = None) -> int:
             },
             "benchmark": {"benchmark_id": args.benchmark_id, "name": "PhyFPS-Bench-Gen"},
             "metrics": {"leaderboard": {}, "per_metric": {}, "summary": {"available_metric_count": 0}},
-            "evaluation": {"available": False, "kind": "phyfps_bench_gen_result_normalizer", "blocked_count": len(METRIC_ORDER)},
+            "evaluation": {
+                "available": False,
+                "kind": "phyfps_bench_gen_result_normalizer",
+                "blocked_count": len(METRIC_ORDER),
+            },
             "artifacts": {"scorecard": str((args.output_dir / "scorecard.json").resolve())},
         }
         write_json(args.output_dir / "scorecard.json", scorecard)

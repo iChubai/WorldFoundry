@@ -50,9 +50,7 @@ def compute_nexus_score(
         "WORLDFOUNDRY_GME_MODEL_PATH", "Alibaba-NLP/gme-Qwen2-VL-7B-Instruct/"
     )
 
-    yolo_vision_model, yolo_processor, runner, txt_feats = load_model_and_config(
-        _Args(), yolo_clip_model_path, device
-    )
+    yolo_vision_model, yolo_processor, runner, txt_feats = load_model_and_config(_Args(), yolo_clip_model_path, device)
     gme = GmeQwen2VL(gme_model_path, attn_model="flash_attention_2", device=device)
 
     with open(input_json_file, encoding="utf-8") as handle:

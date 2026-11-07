@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 
@@ -93,21 +94,24 @@ def materialize_embodied_rollout_requests(config: Mapping[str, Any]) -> tuple[Ge
         count = int(max_tasks or params.get("test_num") or 1)
         first_task_id = int(params.get("task_id", 0))
         task_entries.extend(
-            {"task_id": first_task_id + offset, "task_name": str(explicit_task_name)}
-            for offset in range(count)
+            {"task_id": first_task_id + offset, "task_name": str(explicit_task_name)} for offset in range(count)
         )
     elif tasks:
         for index, task in enumerate(tasks):
             if isinstance(task, Mapping):
                 task_id = int(task.get("task_id", task.get("id", index)))
-                task_name = str(task.get("name") or task.get("task_name") or task.get("id") or f"{benchmark_id}/task_{task_id:03d}")
+                task_name = str(
+                    task.get("name") or task.get("task_name") or task.get("id") or f"{benchmark_id}/task_{task_id:03d}"
+                )
             else:
                 task_id = int(task) if isinstance(task, int) or str(task).isdigit() else index
                 task_name = str(task) if not isinstance(task, int) else f"{benchmark_id}/task_{task_id:03d}"
             task_entries.append({"task_id": task_id, "task_name": task_name})
     else:
         count = int(max_tasks or 1)
-        task_entries = [{"task_id": task_index, "task_name": f"{benchmark_id}/task_{task_index:03d}"} for task_index in range(count)]
+        task_entries = [
+            {"task_id": task_index, "task_name": f"{benchmark_id}/task_{task_index:03d}"} for task_index in range(count)
+        ]
     if max_tasks is not None:
         task_entries = task_entries[: int(max_tasks)]
 

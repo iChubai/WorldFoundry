@@ -1,11 +1,10 @@
 # Taken from https://github.com/casey-meehan/data-copying
 import numpy as np
-from sklearn.neighbors import NearestNeighbors as NN
+from fld.metrics.Metric import Metric
 from scipy.stats import mannwhitneyu
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-
-from fld.metrics.Metric import Metric
+from sklearn.neighbors import NearestNeighbors as NN
 
 
 def Zu(Pn, Qm, T):
@@ -81,9 +80,7 @@ def Zu_cells(Pn, Pn_cells, Qm, Qm_cells, T, T_cells):
         # check that the cell has test and training samples present
         if len(Pn_cell_i) * len(T_cell_i) == 0:
             raise ValueError(
-                "Cell {:n} lacks test samples and/or training samples. Consider reducing the number of cells in partition.".format(
-                    i
-                )
+                f"Cell {i:n} lacks test samples and/or training samples. Consider reducing the number of cells in partition."
             )
 
         # if there are no generated samples present, add a 0 for Zu. This cell will be excluded in \Pi_\tau
@@ -91,7 +88,7 @@ def Zu_cells(Pn, Pn_cells, Qm, Qm_cells, T, T_cells):
             Zu_cells[i] = Zu(Pn_cell_i, Qm_cell_i, T_cell_i)
         else:
             Zu_cells[i] = 0
-            print("cell {:n} unrepresented by Qm".format(i))
+            print(f"cell {i:n} unrepresented by Qm")
 
     return Zu_cells
 
@@ -137,9 +134,7 @@ def C_T(Pn, Pn_cells, Qm, Qm_cells, T, T_cells, tau):
     Qm_cts = np.zeros(k)
     Qm_cts[labels.astype(int)] = cts  # put in order of cell label
     Qm_of_pi = Qm_cts / m
-    Pi_tau = (
-        Qm_of_pi > tau
-    )  # binary array selecting which cells have sufficient samples
+    Pi_tau = Qm_of_pi > tau  # binary array selecting which cells have sufficient samples
 
     # Get the fraction of test samples in each cell Pn(pi)
     labels, cts = np.unique(Pn_cells, return_counts=True)

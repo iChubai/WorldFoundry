@@ -7,9 +7,10 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.base_models.capabilities import get_base_model_capability
 from worldfoundry.base_models.llm_mllm_core.mllm.videocon_physics import runtime_root as videocon_runtime_root
@@ -18,7 +19,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.videocon_physics.constants impo
     PROMPT_VTA,
 )
 from worldfoundry.evaluation.tasks.execution.framework.official_runner import default_benchmark_timeout
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, VIDEO_SUFFIXES
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES, resolve_env_path
 from worldfoundry.evaluation.tasks.execution.runners.videophy.videophy_prompts import (
     load_prompt_records,
     official_video_filename_for_record,
@@ -26,7 +27,6 @@ from worldfoundry.evaluation.tasks.execution.runners.videophy.videophy_prompts i
     resolve_videophy_root,
     unique_generation_records,
 )
-
 
 
 @dataclass(frozen=True)
@@ -43,8 +43,6 @@ class VideoPhyJudgeConfig:
     strict: bool = False
 
 
-
-
 def judge_config_from_env(
     *,
     checkpoint: Path | None = None,
@@ -55,10 +53,14 @@ def judge_config_from_env(
     pc_threshold: float | None = None,
 ) -> VideoPhyJudgeConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_VIDEOPHY_JUDGE_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_VIDEOPHY_SCORER_BACKEND")
-        or "videocon_physics"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_VIDEOPHY_JUDGE_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_VIDEOPHY_SCORER_BACKEND")
+            or "videocon_physics"
+        )
+        .strip()
+        .lower()
+    )
     if backend in {"official", "real", "autoeval", "videocon", "videocon-physics"}:
         backend = "videocon_physics"
     repo_root = resolve_videophy_root()
@@ -246,7 +248,9 @@ def _run_videocon_entailment(
             timeout=default_benchmark_timeout(),
         )
     if process.returncode != 0:
-        raise RuntimeError(f"VideoPhy VideoCon-Physics inference failed with code {process.returncode}; log: {log_path}")
+        raise RuntimeError(
+            f"VideoPhy VideoCon-Physics inference failed with code {process.returncode}; log: {log_path}"
+        )
 
 
 def _read_probability_by_video(path: Path) -> dict[str, float]:

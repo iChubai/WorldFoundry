@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from fld.MoG import MoG, compute_dists, preprocess_feat
 from fld.utils import shuffle

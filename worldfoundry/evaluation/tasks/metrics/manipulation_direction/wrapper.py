@@ -7,7 +7,6 @@ from typing import Any
 import numpy as np
 
 from worldfoundry.evaluation.tasks.metrics._shared.clip_embed import (
-    cosine_similarity_vectors,
     encode_clip_images,
     encode_clip_texts,
 )

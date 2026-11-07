@@ -9,8 +9,12 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework import official_runner as ors
-from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric, normalize_unit_score, scalar_number, write_json
-
+from worldfoundry.evaluation.tasks.execution.framework.io import (
+    mean_numeric,
+    normalize_unit_score,
+    scalar_number,
+    write_json,
+)
 
 DIMENSION_METRICS = (
     "perceptual_clip_iqa_metrics",
@@ -144,7 +148,14 @@ def _score_row(metric_id: str, raw_score: float, *, source: str, sample_count: i
     }
 
 
-def _add_score(extracted: dict[str, dict[str, Any]], metric_id: str, score: float | None, *, source: str, sample_count: int | None = None) -> None:
+def _add_score(
+    extracted: dict[str, dict[str, Any]],
+    metric_id: str,
+    score: float | None,
+    *,
+    source: str,
+    sample_count: int | None = None,
+) -> None:
     if score is None:
         return
     extracted[metric_id] = _score_row(metric_id, float(score), source=source, sample_count=sample_count)
@@ -166,7 +177,13 @@ def _extract_one(payload: Any, source: str) -> dict[str, dict[str, Any]]:
             sample_count = scalar_number(payload.get("generated_video_count"))
             if sample_count is None and isinstance(summary, dict):
                 sample_count = scalar_number(summary.get("total_videos"))
-            _add_score(extracted, metric_id, score, source=source, sample_count=None if sample_count is None else int(sample_count))
+            _add_score(
+                extracted,
+                metric_id,
+                score,
+                source=source,
+                sample_count=None if sample_count is None else int(sample_count),
+            )
         metrics = payload.get("metrics")
         if isinstance(metrics, dict):
             for raw_key, raw_value in metrics.items():
@@ -254,7 +271,9 @@ def discover_official_results(output_dir: Path, repo_root: Path | None) -> Path 
     return ors.discover_by_globs([output_dir, output_dir / "upstream"], CONFIG.official_output_globs)
 
 
-def build_official_command(*, config, repo_root: Path, generated_video_dir: Path, output_dir: Path, args: Any) -> list[str] | None:
+def build_official_command(
+    *, config, repo_root: Path, generated_video_dir: Path, output_dir: Path, args: Any
+) -> list[str] | None:
     if args.video_path is None and args.dataset_json is None:
         return None
     output_dir = output_dir.resolve()
@@ -288,7 +307,9 @@ def build_official_command(*, config, repo_root: Path, generated_video_dir: Path
 def extend_parser(parser) -> None:
     parser.add_argument("--dataset-json", "--dataset_json", dest="dataset_json", type=Path)
     parser.add_argument("--model-name", default=os.environ.get("WORLDFOUNDRY_4DWORLDBENCH_MODEL_NAME", "model"))
-    parser.add_argument("--dimension", default=os.environ.get("WORLDFOUNDRY_4DWORLDBENCH_DIMENSION", "perceptual_clip_iqa_metrics"))
+    parser.add_argument(
+        "--dimension", default=os.environ.get("WORLDFOUNDRY_4DWORLDBENCH_DIMENSION", "perceptual_clip_iqa_metrics")
+    )
     parser.add_argument("--device", default=os.environ.get("DEVICE", "cuda:0"))
     parser.add_argument("--video-path", type=Path)
     parser.add_argument("--prompt", default="")

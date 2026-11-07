@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,14 +33,8 @@ def mmd(x, y):
     y_sqnorms = torch.sum(y * y, dim=1)
 
     gamma = 1 / (2 * _SIGMA**2)
-    k_xx = torch.mean(
-        torch.exp(-gamma * (-2 * torch.matmul(x, x.T) + x_sqnorms[:, None] + x_sqnorms[None, :]))
-    )
-    k_xy = torch.mean(
-        torch.exp(-gamma * (-2 * torch.matmul(x, y.T) + x_sqnorms[:, None] + y_sqnorms[None, :]))
-    )
-    k_yy = torch.mean(
-        torch.exp(-gamma * (-2 * torch.matmul(y, y.T) + y_sqnorms[:, None] + y_sqnorms[None, :]))
-    )
+    k_xx = torch.mean(torch.exp(-gamma * (-2 * torch.matmul(x, x.T) + x_sqnorms[:, None] + x_sqnorms[None, :])))
+    k_xy = torch.mean(torch.exp(-gamma * (-2 * torch.matmul(x, y.T) + x_sqnorms[:, None] + y_sqnorms[None, :])))
+    k_yy = torch.mean(torch.exp(-gamma * (-2 * torch.matmul(y, y.T) + y_sqnorms[:, None] + y_sqnorms[None, :])))
 
     return _SCALE * (k_xx + k_yy - 2 * k_xy)

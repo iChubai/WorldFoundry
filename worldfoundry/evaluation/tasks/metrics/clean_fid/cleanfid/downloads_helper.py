@@ -18,9 +18,7 @@ def check_download_inception(fpath="./"):
     inception_path = os.path.join(fpath, "inception-2015-12-05.pt")
     if not os.path.exists(inception_path):
         # download the file
-        with urllib.request.urlopen(inception_url) as response, open(
-            inception_path, "wb"
-        ) as f:
+        with urllib.request.urlopen(inception_url) as response, open(inception_path, "wb") as f:
             shutil.copyfileobj(response, f)
     return inception_path
 

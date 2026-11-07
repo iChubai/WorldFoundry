@@ -27,7 +27,7 @@ def fit_irs_reference_means(images: list[Any]) -> dict[MeasureName, float]:
     """Estimate ImageNet-style raw-measure means from a reference real-image set."""
     if not images:
         raise ValueError("images must be non-empty")
-    totals = {name: 0.0 for name in MEASURE_ORDER}
+    totals = dict.fromkeys(MEASURE_ORDER, 0.0)
     for image in images:
         measures = compute_irs_measures(image)
         for name in MEASURE_ORDER:
@@ -209,9 +209,7 @@ def compute_irs(
 ) -> float:
     """Compute Image Realism Score (Eq. 8–9) for a single image."""
     if reference_raw_means is None:
-        raise ValueError(
-            "reference_raw_means is required; fit them with fit_irs_reference_means(real_images)"
-        )
+        raise ValueError("reference_raw_means is required; fit them with fit_irs_reference_means(real_images)")
     raw = compute_irs_measures(image)
     normalized = _normalize_raw_measures(raw, reference_raw_means)
     calibrated = _calibrate_measures(normalized, eps=eps)

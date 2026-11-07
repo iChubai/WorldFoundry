@@ -22,7 +22,6 @@ from worldfoundry.evaluation.api import (
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
     bundled_benchmark_assets_root,
 )
-
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 
 BENCHMARK_ID = "t2v-compbench"
@@ -119,14 +118,10 @@ def load_t2v_compbench_prompt_records(
             )
         for category_prompt_index, row in enumerate(payload):
             if not isinstance(row, Mapping):
-                raise TypeError(
-                    f"T2V-CompBench metadata row {category_prompt_index} must be an object: {source}"
-                )
+                raise TypeError(f"T2V-CompBench metadata row {category_prompt_index} must be an object: {source}")
             prompt = row.get("prompt")
             if not isinstance(prompt, str) or not prompt.strip():
-                raise ValueError(
-                    f"T2V-CompBench metadata row {category_prompt_index} has no prompt: {source}"
-                )
+                raise ValueError(f"T2V-CompBench metadata row {category_prompt_index} has no prompt: {source}")
             prompt_number = category_prompt_index + 1
             records.append(
                 {
@@ -141,9 +136,7 @@ def load_t2v_compbench_prompt_records(
                 }
             )
     if len(records) != CANONICAL_PROMPT_COUNT:
-        raise ValueError(
-            f"T2V-CompBench materialized {len(records)} prompts; expected {CANONICAL_PROMPT_COUNT}"
-        )
+        raise ValueError(f"T2V-CompBench materialized {len(records)} prompts; expected {CANONICAL_PROMPT_COUNT}")
     return records
 
 
@@ -180,10 +173,7 @@ def materialize_t2v_compbench_generation_requests(
 
 
 def _canonical_records_by_sample_id(*, assets_root: Path | None = None) -> dict[str, dict[str, Any]]:
-    return {
-        str(record["sample_id"]): record
-        for record in load_t2v_compbench_prompt_records(assets_root=assets_root)
-    }
+    return {str(record["sample_id"]): record for record in load_t2v_compbench_prompt_records(assets_root=assets_root)}
 
 
 def _validated_request_record(
@@ -348,9 +338,7 @@ def copy_t2v_compbench_generated_videos(
                 )
             artifact = result.artifacts.get(output_artifact)
             if artifact is None:
-                raise ValueError(
-                    f"T2V-CompBench result {current_sample_id!r} has no {output_artifact!r} artifact"
-                )
+                raise ValueError(f"T2V-CompBench result {current_sample_id!r} has no {output_artifact!r} artifact")
             source = local_path_for_uri(artifact.uri, base_dir=generation_output_dir)
             if source is None or not source.is_file():
                 raise FileNotFoundError(
@@ -412,9 +400,7 @@ def _validate_generation_manifest_row(
         raise ValueError(f"T2V-CompBench manifest {current_sample_id!r} references a placeholder")
     status = str(row.get("status") or "").strip().lower()
     if status not in {"copied", "materialized", "generated", "succeeded"}:
-        raise ValueError(
-            f"T2V-CompBench manifest {current_sample_id!r} has non-success status: {status!r}"
-        )
+        raise ValueError(f"T2V-CompBench manifest {current_sample_id!r} has non-success status: {status!r}")
     relative_path, source = _safe_relative_video_path(row.get("relative_path"), root=generated_video_dir)
     _probe_decodable_mp4(source)
     normalized = _manifest_row_from_canonical(
@@ -462,8 +448,7 @@ def validate_t2v_compbench_generation_manifest(
     )
     if not manifest_path.is_file():
         raise FileNotFoundError(
-            "T2V-CompBench generated artifacts require an explicit mapping manifest; "
-            f"not found: {manifest_path}"
+            f"T2V-CompBench generated artifacts require an explicit mapping manifest; not found: {manifest_path}"
         )
     rows = read_jsonl_objects(manifest_path)
     if not rows:
@@ -499,15 +484,12 @@ def validate_t2v_compbench_generation_manifest(
 
     referenced_paths = {path.resolve() for path in source_by_id.values()}
     actual_video_paths = {
-        path.resolve()
-        for path in root.rglob("*")
-        if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
+        path.resolve() for path in root.rglob("*") if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
     }
     unreferenced = sorted(str(path) for path in actual_video_paths - referenced_paths)
     if unreferenced:
         raise ValueError(
-            "T2V-CompBench generated directory contains videos with no manifest mapping: "
-            f"{unreferenced[:8]}"
+            f"T2V-CompBench generated directory contains videos with no manifest mapping: {unreferenced[:8]}"
         )
 
     by_category = Counter(str(row["category_id"]) for row in validated_rows)
@@ -515,22 +497,17 @@ def validate_t2v_compbench_generation_manifest(
         category_id
         for category_id in CATEGORY_ORDER
         if by_category.get(category_id, 0) == PROMPTS_PER_CATEGORY
-        and {
-            int(row["official_prompt_number"])
-            for row in validated_rows
-            if row["category_id"] == category_id
-        }
+        and {int(row["official_prompt_number"]) for row in validated_rows if row["category_id"] == category_id}
         == set(range(1, PROMPTS_PER_CATEGORY + 1))
     }
-    full_suite = (
-        len(validated_rows) == CANONICAL_PROMPT_COUNT
-        and complete_categories == set(CATEGORY_ORDER)
-    )
+    full_suite = len(validated_rows) == CANONICAL_PROMPT_COUNT and complete_categories == set(CATEGORY_ORDER)
     return {
         "manifest_path": str(manifest_path),
         "generated_video_dir": str(root),
         "sample_count": len(validated_rows),
-        "by_category": {category: by_category.get(category, 0) for category in CATEGORY_ORDER if by_category.get(category)},
+        "by_category": {
+            category: by_category.get(category, 0) for category in CATEGORY_ORDER if by_category.get(category)
+        },
         "categories": [category for category in CATEGORY_ORDER if by_category.get(category)],
         "complete_categories": [category for category in CATEGORY_ORDER if category in complete_categories],
         "canonical_prompt_count": CANONICAL_PROMPT_COUNT,
@@ -567,8 +544,7 @@ def materialize_t2v_compbench_official_layout(
     missing_categories = [category for category in categories if counts.get(category, 0) == 0]
     if missing_categories:
         raise ValueError(
-            "T2V-CompBench generated manifest has zero coverage for selected categories: "
-            f"{missing_categories}"
+            f"T2V-CompBench generated manifest has zero coverage for selected categories: {missing_categories}"
         )
 
     destination = official_layout_dir.expanduser().resolve()

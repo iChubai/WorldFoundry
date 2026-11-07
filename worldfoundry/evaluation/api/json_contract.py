@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Mapping, TypeVar
+from typing import Any, TypeVar
 
 JsonValue = Any
 JsonMapping = Mapping[str, JsonValue]

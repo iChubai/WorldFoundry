@@ -10,9 +10,10 @@ import csv
 import json
 import os
 import shutil
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import iter_jsonl, write_json, write_jsonl
 from worldfoundry.core.media.codecs.video import probe_video_metadata
@@ -39,8 +40,6 @@ LOCAL_METRIC_IDS = (
 OFFICIAL_BLOCKED_REASON = "Official benchmark scoring requires benchmark-specific official assets; WorldFoundry in-tree evaluator does not fabricate this score."
 NO_MANIFEST_REASON = "No prompt/question manifest was supplied, so manifest-dependent checks are not available."
 NO_PROBE_REASON = "Video probe metadata is unavailable; provide ffprobe on PATH or a sidecar JSON metadata file."
-
-
 
 
 def _path_value(values: Mapping[str, JsonValue], *keys: str) -> Path | None:
@@ -169,11 +168,7 @@ def _load_official_records(path: Path | None) -> list[Mapping[str, JsonValue]]:
         return []
     if path.is_dir():
         records: list[Mapping[str, JsonValue]] = []
-        files = (
-            child
-            for child in path.rglob("*")
-            if child.is_file() and child.suffix.lower() in RECORD_FILE_SUFFIXES
-        )
+        files = (child for child in path.rglob("*") if child.is_file() and child.suffix.lower() in RECORD_FILE_SUFFIXES)
         for item in sorted(files):
             records.extend(_load_official_records(item))
         return records
@@ -356,8 +351,14 @@ def _local_metric_rows(
     probes = _probe_samples(samples, kwargs)
     return [
         _manifest_coverage_row(samples, prompt_manifest_path, generated_files),
-        _boolean_row("generated_video_exists", samples, [_sample_video_path(sample) is not None and _sample_video_path(sample).exists() for sample in samples]),
-        _boolean_row("generated_video_nonempty", samples, [_is_nonempty(_sample_video_path(sample)) for sample in samples]),
+        _boolean_row(
+            "generated_video_exists",
+            samples,
+            [_sample_video_path(sample) is not None and _sample_video_path(sample).exists() for sample in samples],
+        ),
+        _boolean_row(
+            "generated_video_nonempty", samples, [_is_nonempty(_sample_video_path(sample)) for sample in samples]
+        ),
         _readability_row(samples, probes),
         _probe_check_row("generated_video_duration_check", samples, probes, kwargs, "duration_seconds"),
         _probe_check_row("generated_video_fps_check", samples, probes, kwargs, "fps"),
@@ -381,7 +382,9 @@ def _manifest_coverage_row(
     """
 
     if prompt_manifest_path is None:
-        return _not_available_row("artifact_manifest_coverage", NO_MANIFEST_REASON, {"generated_video_count": len(generated_files)})
+        return _not_available_row(
+            "artifact_manifest_coverage", NO_MANIFEST_REASON, {"generated_video_count": len(generated_files)}
+        )
     checks = [_sample_video_path(sample) is not None and _sample_video_path(sample).exists() for sample in samples]
     return _boolean_row(
         "artifact_manifest_coverage",
@@ -460,7 +463,12 @@ def _probe_sample(
 
     path = _sample_video_path(sample)
     if path is None or not path.exists():
-        return {"available": False, "readable": False, "source": "missing_video", "reason": "generated video is missing"}
+        return {
+            "available": False,
+            "readable": False,
+            "source": "missing_video",
+            "reason": "generated video is missing",
+        }
     sidecar = _sidecar_path(path)
     if sidecar is not None:
         payload = json.loads(sidecar.read_text(encoding="utf-8"))
@@ -528,7 +536,9 @@ def _sidecar_path(path: Path) -> Path | None:
     return None
 
 
-def _readability_row(samples: list[Mapping[str, JsonValue]], probes: list[Mapping[str, JsonValue]]) -> dict[str, JsonValue]:
+def _readability_row(
+    samples: list[Mapping[str, JsonValue]], probes: list[Mapping[str, JsonValue]]
+) -> dict[str, JsonValue]:
     """Score generated video readability based on local probe evidence.
 
     Args:
@@ -567,11 +577,17 @@ def _probe_check_row(
         field: Probe metadata field to evaluate.
     """
 
-    usable = [probe for probe in probes if probe.get("available") is True and probe.get("readable") is True and probe.get(field) is not None]
+    usable = [
+        probe
+        for probe in probes
+        if probe.get("available") is True and probe.get("readable") is True and probe.get(field) is not None
+    ]
     if not usable:
         return _not_available_row(metric_id, NO_PROBE_REASON, {"field": field, "sample_count": len(samples)})
     checks = [_value_in_bounds(float(probe[field]), kwargs, field) for probe in usable]
-    return _boolean_row(metric_id, samples, checks, evidence={"values": [probe[field] for probe in usable], "field": field})
+    return _boolean_row(
+        metric_id, samples, checks, evidence={"values": [probe[field] for probe in usable], "field": field}
+    )
 
 
 def _resolution_check_row(
@@ -620,9 +636,9 @@ def _value_in_bounds(value: float, constraints: Mapping[str, JsonValue], field: 
     """
 
     expected = optional_float(constraints.get(f"expected_{field}", constraints.get(field)))
-    tolerance = optional_float(
-        constraints.get(f"{field}_tolerance", constraints.get(f"{field}_tolerance_seconds", 0.0))
-    ) or 0.0
+    tolerance = (
+        optional_float(constraints.get(f"{field}_tolerance", constraints.get(f"{field}_tolerance_seconds", 0.0))) or 0.0
+    )
     minimum = optional_float(constraints.get(f"min_{field}"))
     maximum = optional_float(constraints.get(f"max_{field}"))
     expected_ok = True if expected is None else abs(value - expected) <= tolerance
@@ -648,7 +664,9 @@ def _metadata_consistency_row(
     for sample in samples:
         path = _sample_video_path(sample)
         checks.append(path is not None and path.stem == str(sample["sample_id"]))
-    return _boolean_row("metadata_consistency", samples, checks, evidence={"prompt_manifest": str(prompt_manifest_path)})
+    return _boolean_row(
+        "metadata_consistency", samples, checks, evidence={"prompt_manifest": str(prompt_manifest_path)}
+    )
 
 
 def _mcqa_row(samples: list[Mapping[str, JsonValue]]) -> dict[str, JsonValue]:
@@ -708,8 +726,6 @@ def _filter_official_records(
     if filter_fn is None:
         return records
     return filter_fn(records, generated_artifact_dir=generated_artifact_dir, result_model_id=result_model_id)
-
-
 
 
 def _choice(value: JsonValue) -> str | None:
@@ -778,7 +794,11 @@ def _official_blocked_reason(requirements: Mapping[str, JsonValue]) -> str:
 
     spec = requirements
     inputs = spec.get("required_inputs")
-    required = "; ".join(str(item) for item in inputs) if isinstance(inputs, list) else "official judge response or official normalized result file"
+    required = (
+        "; ".join(str(item) for item in inputs)
+        if isinstance(inputs, list)
+        else "official judge response or official normalized result file"
+    )
     return f"{OFFICIAL_BLOCKED_REASON} Required official inputs: {required}."
 
 
@@ -804,7 +824,9 @@ def _blocked_metric_row(
         "status": "blocked",
         "evidence": {
             "reason": spec.get("reason", "judge_required"),
-            "required_inputs": required_inputs if isinstance(required_inputs, list) else ["official judge response or official normalized result file"],
+            "required_inputs": required_inputs
+            if isinstance(required_inputs, list)
+            else ["official judge response or official normalized result file"],
             "official_results_path": None if official_results_path is None else str(official_results_path),
         },
         "blocked_reason": _official_blocked_reason(spec),
@@ -826,6 +848,7 @@ def _per_metric(row: Mapping[str, JsonValue]) -> dict[str, JsonValue]:
         "evidence": row.get("evidence", {}),
         "blocked_reason": row.get("blocked_reason"),
     }
+
 
 def write_video_contract_evaluation(
     *,
@@ -923,9 +946,7 @@ def write_video_contract_evaluation(
         },
         "metrics": {
             "leaderboard": {
-                row["metric_id"]: row["score"]
-                for row in official_available
-                if row.get("score") is not None
+                row["metric_id"]: row["score"] for row in official_available if row.get("score") is not None
             },
             "local": {
                 row["metric_id"]: row["score"]
@@ -947,9 +968,7 @@ def write_video_contract_evaluation(
             "evidence_level": "official_results_normalized" if official_results_normalized else "contract_fixture_only",
             "num_results": len(rows),
             "leaderboard_metrics": {
-                row["metric_id"]: row["score"]
-                for row in official_available
-                if row.get("score") is not None
+                row["metric_id"]: row["score"] for row in official_available if row.get("score") is not None
             },
             "skip_count": len(blocked_rows),
         },

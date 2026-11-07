@@ -8,7 +8,6 @@ from pathlib import Path
 
 from worldfoundry.evaluation.utils import worldfoundry_data_path
 
-
 BENCHMARK_ID = "wrbench"
 VENDORED_REVISION = "629595dc60ec08a29711af0377280c4ac9dd40bc"
 VENDORED_REPOSITORY = "https://github.com/JinPLu/WRBench.git"

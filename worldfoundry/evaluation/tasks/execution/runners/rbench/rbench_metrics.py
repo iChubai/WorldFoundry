@@ -32,8 +32,9 @@ from __future__ import annotations
 import csv
 import json
 import re
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.runners.rbench.rbench_prompts import (
     EMBODIMENT_ORDER,
@@ -462,8 +463,7 @@ def aggregate_embodiment_track(
             per_split[split_id] = summary
 
     total_mean = {
-        column: _mean(summary["means"][column] for summary in per_split.values())
-        for column in EMBODIMENT_ROW_COLUMNS
+        column: _mean(summary["means"][column] for summary in per_split.values()) for column in EMBODIMENT_ROW_COLUMNS
     }
 
     # ``overall_mean``: Task_Completion and Visual_Quality pooled over embodiment rows.
@@ -576,17 +576,13 @@ def compute_rbench_metrics(
     vlm_backend: str,
 ) -> dict[str, Any]:
     """Compute the full RBench metric table from one model's official results."""
-    metrics: dict[str, float | None] = {metric_id: None for metric_id in METRIC_ORDER}
+    metrics: dict[str, float | None] = dict.fromkeys(METRIC_ORDER)
     embodiment = (
         aggregate_embodiment_track(embodiment_track_dir, vlm_backend=vlm_backend)
         if embodiment_track_dir is not None
         else None
     )
-    task = (
-        aggregate_task_track(task_track_dir, vlm_backend=vlm_backend)
-        if task_track_dir is not None
-        else None
-    )
+    task = aggregate_task_track(task_track_dir, vlm_backend=vlm_backend) if task_track_dir is not None else None
     if embodiment is not None:
         metrics.update(embodiment["metrics"])
     if task is not None:

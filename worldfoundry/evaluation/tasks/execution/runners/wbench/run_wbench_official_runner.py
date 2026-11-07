@@ -11,8 +11,9 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:
@@ -67,8 +68,8 @@ METRIC_GROUPS: dict[str, tuple[str, ...]] = {
     "physical": ("visual_plausibility", "causal_fidelity"),
 }
 DIMENSION_METRICS = tuple(f"{group}_score" for group in METRIC_GROUPS)
-METRIC_ORDER = tuple(metric for group in METRIC_GROUPS.values() for metric in group) + DIMENSION_METRICS + (
-    "wbench_average",
+METRIC_ORDER = (
+    tuple(metric for group in METRIC_GROUPS.values() for metric in group) + DIMENSION_METRICS + ("wbench_average",)
 )
 
 METRIC_SPECS: dict[str, dict[str, Any]] = {
@@ -251,14 +252,11 @@ def resolve_model_id(args: argparse.Namespace) -> str:
     """Resolve the submitted model id without coupling WBench to a model registry."""
 
     value = (
-        args.model_name
-        or os.environ.get("WORLDFOUNDRY_MODEL_ID")
-        or os.environ.get("WORLDFOUNDRY_WBENCH_MODEL_NAME")
+        args.model_name or os.environ.get("WORLDFOUNDRY_MODEL_ID") or os.environ.get("WORLDFOUNDRY_WBENCH_MODEL_NAME")
     )
     if not value:
         raise ValueError(
-            "--model-name, WORLDFOUNDRY_MODEL_ID, or "
-            "WORLDFOUNDRY_WBENCH_MODEL_NAME is required for --run-official"
+            "--model-name, WORLDFOUNDRY_MODEL_ID, or WORLDFOUNDRY_WBENCH_MODEL_NAME is required for --run-official"
         )
     return str(value)
 
@@ -377,8 +375,7 @@ def stage_generated_videos(
         )
 
     candidate_signature = sorted(
-        (case_id, str(source.resolve()), size, mtime_ns)
-        for case_id, source, _target_name, size, mtime_ns in candidates
+        (case_id, str(source.resolve()), size, mtime_ns) for case_id, source, _target_name, size, mtime_ns in candidates
     )
     if staging_manifest_path.is_file() and (videos_dir.parent / "evaluation").exists():
         previous = read_json(staging_manifest_path)
@@ -478,9 +475,7 @@ def scorecard_from_scores(
     if not official_runtime_executed:
         comparability_blockers.append("official WBench runtime was not executed by this run")
     if not interaction_protocol_declared:
-        comparability_blockers.append(
-            "the submitted model did not declare a WBench multi-turn interaction protocol"
-        )
+        comparability_blockers.append("the submitted model did not declare a WBench multi-turn interaction protocol")
     else:
         comparability_blockers.append(
             "the declared WBench multi-turn generation provenance was not mechanically verified"
@@ -581,14 +576,18 @@ def normalize_wbench_results(
     results_path = results_path.expanduser().resolve()
     if results_path.is_dir():
         report_path = results_path / "report.json"
-        scores = extract_scores_from_report(read_json(report_path)) if report_path.is_file() else extract_scores_from_eval_dir(results_path)
+        scores = (
+            extract_scores_from_report(read_json(report_path))
+            if report_path.is_file()
+            else extract_scores_from_eval_dir(results_path)
+        )
         source_path = report_path if report_path.is_file() else results_path
     else:
         scores = extract_scores_from_report(read_json(results_path))
         source_path = results_path
     generated_dir = args.generated_artifact_dir or env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR")
-    model_id = args.model_name or os.environ.get("WORLDFOUNDRY_MODEL_ID") or os.environ.get(
-        "WORLDFOUNDRY_WBENCH_MODEL_NAME"
+    model_id = (
+        args.model_name or os.environ.get("WORLDFOUNDRY_MODEL_ID") or os.environ.get("WORLDFOUNDRY_WBENCH_MODEL_NAME")
     )
     return scorecard_from_scores(
         benchmark_id=args.benchmark_id,
@@ -659,9 +658,7 @@ def run_official_wbench(args: argparse.Namespace) -> dict[str, Any]:
     if args.vlm_workers is not None:
         command.extend(["--vlm_workers", str(args.vlm_workers)])
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(
-        path for path in (str(REPO_ROOT), str(root), env.get("PYTHONPATH", "")) if path
-    )
+    env["PYTHONPATH"] = os.pathsep.join(path for path in (str(REPO_ROOT), str(root), env.get("PYTHONPATH", "")) if path)
     env["WBENCH_DATA_DIR"] = str(dataset_root)
     if args.weights_dir is not None:
         env["WBENCH_WEIGHTS_DIR"] = str(args.weights_dir.expanduser().resolve())
@@ -705,7 +702,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run or normalize WBench official outputs.")
     parser.add_argument("--benchmark-id", default=os.environ.get("WORLDFOUNDRY_BENCHMARK_ID", "wbench"))
     parser.add_argument("--official-results-path", dest="official_results_path", type=Path)
-    parser.add_argument("--output-dir", type=Path, default=env_path("WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"), required=False)
+    parser.add_argument(
+        "--output-dir", type=Path, default=env_path("WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"), required=False
+    )
     parser.add_argument("--generated-artifact-dir", "--generated-video-dir", dest="generated_artifact_dir", type=Path)
     parser.add_argument("--run-official", action="store_true")
     parser.add_argument("--wbench-root", type=Path)
@@ -729,7 +728,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-sam2", action="store_true")
     parser.add_argument("--skip-da3", action="store_true")
     parser.add_argument("--skip-megasam", action="store_true")
-    parser.add_argument("--enable-megasam", action="store_true", help="Backward-compatible no-op; MegaSAM runs unless --skip-megasam is set.")
+    parser.add_argument(
+        "--enable-megasam",
+        action="store_true",
+        help="Backward-compatible no-op; MegaSAM runs unless --skip-megasam is set.",
+    )
     parser.add_argument("--json", action="store_true")
     return parser
 
@@ -780,7 +783,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"wbench: failed: {exc}", file=sys.stderr)
         return 1
     if args.json:
-        print(json.dumps({"ok": scorecard.get("normalization_ok") is True, "scorecard": scorecard}, indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {"ok": scorecard.get("normalization_ok") is True, "scorecard": scorecard}, indent=2, ensure_ascii=False
+            )
+        )
     else:
         print(f"wbench: normalized {scorecard['evaluation']['available_metric_count']} metrics")
     return 0 if scorecard.get("normalization_ok") is True else 1

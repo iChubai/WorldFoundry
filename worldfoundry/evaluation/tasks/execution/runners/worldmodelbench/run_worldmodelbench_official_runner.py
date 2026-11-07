@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import json
 import os
@@ -23,7 +19,8 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
     write_json,
     write_jsonl,
 )
-from worldfoundry.runtime.env import resolve_hf_cache_dir  # type: ignore[reportMissingImports]  # noqa: E402
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
+from worldfoundry.runtime.env import resolve_hf_cache_dir  # type: ignore[reportMissingImports]
 
 DEFAULT_WORLDMODELBENCH_ROOT = Path(__file__).resolve().parent / "runtime"
 WORLDMODELBENCH_HF_CACHE_DIR = "datasets--Efficient-Large-Model--worldmodelbench"
@@ -75,7 +72,9 @@ def latest_hf_dataset_snapshot(cache_dir: Path) -> Path | None:
     snapshots_dir = dataset_dir / "snapshots"
     if not snapshots_dir.is_dir():
         return None
-    snapshots = sorted((path for path in snapshots_dir.iterdir() if path.is_dir()), key=lambda path: path.stat().st_mtime)
+    snapshots = sorted(
+        (path for path in snapshots_dir.iterdir() if path.is_dir()), key=lambda path: path.stat().st_mtime
+    )
     return snapshots[-1] if snapshots else None
 
 
@@ -142,7 +141,17 @@ def load_official_manifest(data_root: Path) -> list[dict[str, Any]]:
 
 
 def manifest_item_stem(item: dict[str, Any]) -> str | None:
-    for key in ("first_frame", "image", "image_path", "video", "video_path", "video_name", "sample_id", "id", "prompt_id"):
+    for key in (
+        "first_frame",
+        "image",
+        "image_path",
+        "video",
+        "video_path",
+        "video_name",
+        "sample_id",
+        "id",
+        "prompt_id",
+    ):
         value = item.get(key)
         if isinstance(value, str) and value.strip():
             return Path(value).stem
@@ -288,7 +297,9 @@ def validate_official_acc_shape(raw_results: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def compute_official_category_score(category: str, values: Any, sample_count: int) -> tuple[float | None, dict[str, float]]:
+def compute_official_category_score(
+    category: str, values: Any, sample_count: int
+) -> tuple[float | None, dict[str, float]]:
     if not isinstance(values, list) or not values:
         return None, {}
     numeric_values = [scalar(value) for value in values]
@@ -337,7 +348,8 @@ def extract_scores_from_official_accs(raw_results: dict[str, Any]) -> dict[str, 
     component_scores = [
         item["raw_score"]
         for metric_id, item in extracted.items()
-        if metric_id in {"instruction_following", "common_sense", "physical_adherence"} and item["raw_score"] is not None
+        if metric_id in {"instruction_following", "common_sense", "physical_adherence"}
+        and item["raw_score"] is not None
     ]
     if len(component_scores) == 3:
         extracted["world_model_average"] = {
@@ -467,8 +479,10 @@ def normalize_worldmodelbench_results(
         "schema_version": SCORECARD_SCHEMA_VERSION,
         "run": {
             "status": (
-                "official_verified" if official_verified
-                else "official_results_imported" if normalization_ok
+                "official_verified"
+                if official_verified
+                else "official_results_imported"
+                if normalization_ok
                 else "failed"
             ),
             "started_at": utc_now_iso(),
@@ -507,7 +521,9 @@ def normalize_worldmodelbench_results(
             },
             "per_metric": per_metric,
             "summary": {
-                "sample_count": len(raw_results.get("preds", {})) if isinstance(raw_results.get("preds"), dict) else len(video_files),
+                "sample_count": len(raw_results.get("preds", {}))
+                if isinstance(raw_results.get("preds"), dict)
+                else len(video_files),
                 "metric_count": len(metric_rows),
                 "available_metrics": available_count,
                 "failed_metrics": len(metric_rows) - available_count,
@@ -595,9 +611,13 @@ def run_official_worldmodelbench(args: argparse.Namespace) -> dict[str, Any]:
         )
 
     if args.video_dir is None:
-        raise ValueError("--video-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required unless --official-results-path is used")
+        raise ValueError(
+            "--video-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required unless --official-results-path is used"
+        )
     if args.judge is None:
-        raise ValueError("--judge or WORLDFOUNDRY_WORLDMODELBENCH_JUDGE is required unless --official-results-path is used")
+        raise ValueError(
+            "--judge or WORLDFOUNDRY_WORLDMODELBENCH_JUDGE is required unless --official-results-path is used"
+        )
     if not (runtime_root / "evaluation.py").is_file():
         raise FileNotFoundError(
             "WorldModelBench evaluation.py not found under "
@@ -669,7 +689,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model-name", default=os.environ.get("WORLDFOUNDRY_MODEL_NAME", "worldfoundry-validation"))
     parser.add_argument("--output-dir", type=Path, default=env_path("WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"))
     parser.add_argument("--python", default=sys.executable)
-    parser.add_argument("--timeout", type=int, default=int(os.environ.get("WORLDFOUNDRY_WORLDMODELBENCH_TIMEOUT", "3600")))
+    parser.add_argument(
+        "--timeout", type=int, default=int(os.environ.get("WORLDFOUNDRY_WORLDMODELBENCH_TIMEOUT", "3600"))
+    )
     parser.add_argument("--cot", action="store_true")
     parser.add_argument("--official-results-path", dest="from_upstream_results", type=Path)
     parser.add_argument("--from-upstream-results", dest="from_upstream_results", type=Path, help=argparse.SUPPRESS)

@@ -10,11 +10,11 @@ from pathlib import Path
 
 def main() -> int:
     repo_root = Path(sys.argv[1]).resolve()
+    from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_captions import resolve_caption_base
     from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_judge import (
         judge_config_from_env,
         run_physvidbench_qa,
     )
-    from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_captions import resolve_caption_base
     from worldfoundry.evaluation.tasks.execution.runners.physvidbench.physvidbench_prompts import (
         resolve_prompt_manifest_path,
     )

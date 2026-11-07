@@ -1,20 +1,20 @@
 import os
 import random
 import zipfile
+from collections.abc import Callable
 from glob import glob
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any
 
+import cleanfid
 import numpy as np
 import torch
+from cleanfid.features import build_feature_extractor, get_reference_statistics
+from cleanfid.resize import *
+from cleanfid.utils import *
 from numpy import ndarray
 from scipy import linalg
 from torch import nn
 from tqdm import tqdm
-
-import cleanfid
-from cleanfid.features import build_feature_extractor, get_reference_statistics
-from cleanfid.resize import *
-from cleanfid.utils import *
 
 """
 Numpy implementation of the Frechet Distance.
@@ -34,9 +34,7 @@ Params:
 """
 
 
-def frechet_distance(
-    mu1: ndarray, sigma1: ndarray, mu2: ndarray, sigma2: ndarray, eps: float = 1e-6
-):
+def frechet_distance(mu1: ndarray, sigma1: ndarray, mu2: ndarray, sigma2: ndarray, eps: float = 1e-6):
     """Calculate the Frechet Distance between two Gaussian distributions.
 
     Args:
@@ -55,22 +53,15 @@ def frechet_distance(
     sigma1 = np.atleast_2d(sigma1)
     sigma2 = np.atleast_2d(sigma2)
 
-    assert (
-        mu1.shape == mu2.shape
-    ), "Training and test mean vectors have different lengths"
-    assert (
-        sigma1.shape == sigma2.shape
-    ), "Training and test covariances have different dimensions"
+    assert mu1.shape == mu2.shape, "Training and test mean vectors have different lengths"
+    assert sigma1.shape == sigma2.shape, "Training and test covariances have different dimensions"
 
     diff = mu1 - mu2
 
     # Product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        msg = (
-            "fid calculation produces singular product; "
-            "adding %s to diagonal of cov estimates"
-        ) % eps
+        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -90,6 +81,8 @@ def frechet_distance(
 """
 Compute the KID score given the sets of features
 """
+
+
 def kernel_distance(
     feats1: ndarray,
     feats2: ndarray,
@@ -113,9 +106,9 @@ def kernel_distance(
 """
 Compute the inception features for a batch of images
 """
-def get_batch_features(
-    batch: torch.Tensor, model: nn.Module, device: Union[str, torch.device]
-):
+
+
+def get_batch_features(batch: torch.Tensor, model: nn.Module, device: str | torch.device):
     with torch.no_grad():
         feat = model(batch.to(device))
     return feat.detach().cpu().numpy()
@@ -124,18 +117,20 @@ def get_batch_features(
 """
 Compute the inception features for a list of files
 """
+
+
 def get_files_features(
-    l_files: List[str],
-    model: Optional[torch.nn.Module] = None,
+    l_files: list[str],
+    model: torch.nn.Module | None = None,
     num_workers: int = 12,
     batch_size: int = 128,
     device: torch.device = torch.device("cuda"),
     mode: str = "clean",
-    custom_fn_resize: Optional[Callable[[Any], Any]] = None,
+    custom_fn_resize: Callable[[Any], Any] | None = None,
     description: str = "",
-    fdir: Optional[str] = None,
+    fdir: str | None = None,
     verbose: bool = True,
-    custom_image_tranform: Optional[Callable[[Any], Any]] = None,
+    custom_image_tranform: Callable[[Any], Any] | None = None,
 ) -> np.ndarray:
     """
     Processes a list of file paths to extract features using a specified model.
@@ -191,20 +186,22 @@ def get_files_features(
 """
 Compute the inception features for a folder of image files
 """
+
+
 def get_folder_features(
     fdir: str,
-    model: Optional[torch.nn.Module] = None,
+    model: torch.nn.Module | None = None,
     num_workers: int = 12,
-    num: Optional[int] = None,
+    num: int | None = None,
     shuffle: bool = False,
     seed: int = 0,
     batch_size: int = 128,
     device: torch.device = torch.device("cuda"),
     mode: str = "clean",
-    custom_fn_resize: Optional[Callable] = None,
+    custom_fn_resize: Callable | None = None,
     description: str = "",
     verbose: bool = True,
-    custom_image_tranform: Optional[Callable] = None,
+    custom_image_tranform: Callable | None = None,
 ) -> np.ndarray:
     """
     Extracts features from images in a specified folder or zip file using a given model.
@@ -233,13 +230,7 @@ def get_folder_features(
         # remove the non-image files inside the zip
         files = [x for x in files if os.path.splitext(x)[1].lower()[1:] in EXTENSIONS]
     else:
-        files = sorted(
-            [
-                file
-                for ext in EXTENSIONS
-                for file in glob(os.path.join(fdir, f"**/*.{ext}"), recursive=True)
-            ]
-        )
+        files = sorted([file for ext in EXTENSIONS for file in glob(os.path.join(fdir, f"**/*.{ext}"), recursive=True)])
     if verbose:
         print(f"Found {len(files)} images in the folder {fdir}")
     # use a subset number of files if needed
@@ -267,6 +258,8 @@ def get_folder_features(
 """
 Compute the FID score given the inception features stack
 """
+
+
 def fid_from_feats(feats1, feats2):
     mu1, sig1 = np.mean(feats1, axis=0), np.cov(feats1, rowvar=False)
     mu2, sig2 = np.mean(feats2, axis=0), np.cov(feats2, rowvar=False)
@@ -277,20 +270,22 @@ def fid_from_feats(feats1, feats2):
 Computes the FID score for a folder of images for a specific dataset
 and a specific resolution
 """
+
+
 def fid_folder(
     fdir: str,
     dataset_name: str,
     dataset_res: int,
     dataset_split: str,
-    model: Optional[torch.nn.Module] = None,
+    model: torch.nn.Module | None = None,
     mode: str = "clean",
     model_name: str = "inception_v3",
     num_workers: int = 12,
     batch_size: int = 128,
     device: torch.device = torch.device("cuda"),
     verbose: bool = True,
-    custom_image_tranform: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-    custom_fn_resize: Optional[Callable[[np.ndarray], np.ndarray]] = None,
+    custom_image_tranform: Callable[[np.ndarray], np.ndarray] | None = None,
+    custom_fn_resize: Callable[[np.ndarray], np.ndarray] | None = None,
 ) -> float:
     """
     Calculates the Frechet Inception Distance (FID) between images in a folder
@@ -347,6 +342,8 @@ def fid_folder(
 """
 Compute the FID stats from a generator model
 """
+
+
 def get_model_features(
     G: Callable,
     model: torch.nn.Module,
@@ -358,9 +355,9 @@ def get_model_features(
     desc: str = "FID model: ",
     verbose: bool = True,
     return_z: bool = False,
-    custom_image_tranform: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-    custom_fn_resize: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-) -> Union[np.ndarray, Tuple[np.ndarray, torch.Tensor]]:
+    custom_image_tranform: Callable[[np.ndarray], np.ndarray] | None = None,
+    custom_fn_resize: Callable[[np.ndarray], np.ndarray] | None = None,
+) -> np.ndarray | tuple[np.ndarray, torch.Tensor]:
     """
     Generates model features for evaluating FID (Frechet Inception Distance).
 
@@ -413,9 +410,7 @@ def get_model_features(
                     if custom_image_tranform is not None:
                         img_np = custom_image_tranform(img_np)
                     img_resize = fn_resize(img_np)
-                    l_resized_batch.append(
-                        torch.tensor(img_resize.transpose((2, 0, 1))).unsqueeze(0)
-                    )
+                    l_resized_batch.append(torch.tensor(img_resize.transpose((2, 0, 1))).unsqueeze(0))
                 resized_batch = torch.cat(l_resized_batch, dim=0)
             else:
                 resized_batch = img_batch
@@ -432,6 +427,8 @@ def get_model_features(
 Computes the FID score for a generator model for a specific dataset
 and a specific resolution
 """
+
+
 def fid_model(
     G: Callable,
     dataset_name: str,
@@ -504,6 +501,8 @@ def fid_model(
 """
 Computes the FID score between the two given folders
 """
+
+
 def compare_folders(
     fdir1: str,
     fdir2: str,
@@ -573,9 +572,9 @@ def compare_folders(
 """
 Test if a custom statistic exists
 """
-def test_stats_exists(
-    name: str, mode: str, model_name: str = "inception_v3", metric: str = "FID"
-) -> bool:
+
+
+def test_stats_exists(name: str, mode: str, model_name: str = "inception_v3", metric: str = "FID") -> bool:
     """
     Checks if the statistics file exists for a given dataset, mode, model, and metric.
 
@@ -605,9 +604,9 @@ def test_stats_exists(
 """
 Remove the custom FID features from the stats folder
 """
-def remove_custom_stats(
-    name: str, mode: str = "clean", model_name: str = "inception_v3"
-) -> None:
+
+
+def remove_custom_stats(name: str, mode: str = "clean", model_name: str = "inception_v3") -> None:
     """
     Removes custom FID and KID statistics files for a given dataset and mode.
 
@@ -642,10 +641,12 @@ def remove_custom_stats(
 """
 Cache a custom dataset statistics file
 """
+
+
 def make_custom_stats(
     name: str,
     fdir: str,
-    num: Optional[int] = None,
+    num: int | None = None,
     mode: str = "clean",
     model_name: str = "inception_v3",
     num_workers: int = 0,
@@ -674,9 +675,7 @@ def make_custom_stats(
         model_modifier = ""
     else:
         model_modifier = "_" + model_name
-    outf = os.path.join(
-        stats_folder, f"{name}_{mode}{model_modifier}_{split}_{res}.npz".lower()
-    )
+    outf = os.path.join(stats_folder, f"{name}_{mode}{model_modifier}_{split}_{res}.npz".lower())
     # if the custom stat file already exists
     if os.path.exists(outf):
         msg = f"The statistics file {name} already exists. "
@@ -717,17 +716,15 @@ def make_custom_stats(
     np.savez_compressed(outf, mu=mu, sigma=sigma)
 
     # KID stats
-    outf = os.path.join(
-        stats_folder, f"{name}_{mode}{model_modifier}_{split}_{res}_kid.npz".lower()
-    )
+    outf = os.path.join(stats_folder, f"{name}_{mode}{model_modifier}_{split}_{res}_kid.npz".lower())
     print(f"saving custom KID stats to {outf}")
     np.savez_compressed(outf, feats=np_feats)
 
 
 def compute_kid(
-    fdir1: Optional[str] = None,
-    fdir2: Optional[str] = None,
-    gen: Optional[Callable] = None,
+    fdir1: str | None = None,
+    fdir2: str | None = None,
+    gen: Callable | None = None,
     mode: str = "clean",
     num_workers: int = 12,
     batch_size: int = 32,
@@ -766,9 +763,7 @@ def compute_kid(
         ValueError: If an invalid combination of directories and models is entered.
     """
     # build the feature extractor based on the mode
-    feat_model = build_feature_extractor(
-        mode, device, use_dataparallel=use_dataparallel
-    )
+    feat_model = build_feature_extractor(mode, device, use_dataparallel=use_dataparallel)
 
     # if both dirs are specified, compute KID between folders
     if fdir1 is not None and fdir2 is not None:
@@ -893,10 +888,12 @@ custom_image_tranform:
     function that takes an np_array image as input [0,255] and 
     applies a custom transform such as cropping
 """
+
+
 def compute_fid(
-    fdir1: Optional[str] = None,
-    fdir2: Optional[str] = None,
-    gen: Optional[Callable] = None,
+    fdir1: str | None = None,
+    fdir2: str | None = None,
+    gen: Callable | None = None,
     mode: str = "clean",
     model_name: str = "inception_v3",
     num_workers: int = 12,
@@ -907,10 +904,10 @@ def compute_fid(
     dataset_split: str = "train",
     num_gen: int = 50_000,
     z_dim: int = 512,
-    custom_feat_extractor: Optional[Callable] = None,
+    custom_feat_extractor: Callable | None = None,
     verbose: bool = True,
-    custom_image_tranform: Optional[Callable] = None,
-    custom_fn_resize: Optional[Callable] = None,
+    custom_image_tranform: Callable | None = None,
+    custom_fn_resize: Callable | None = None,
     use_dataparallel: bool = True,
 ) -> float:
     """
@@ -944,9 +941,7 @@ def compute_fid(
     """
     # build the feature extractor based on the mode and the model to be used
     if custom_feat_extractor is None and model_name == "inception_v3":
-        feat_model = build_feature_extractor(
-            mode, device, use_dataparallel=use_dataparallel
-        )
+        feat_model = build_feature_extractor(mode, device, use_dataparallel=use_dataparallel)
     elif custom_feat_extractor is None and model_name == "clip_vit_b_32":
         from cleanfid.clip_features import CLIP_fx, img_preprocess_clip
 
@@ -1037,9 +1032,7 @@ def compute_fid(
     # compute fid for a generator, using reference statistics
     elif gen is not None:
         if verbose:
-            print(
-                f"compute FID of a model with {dataset_name}-{dataset_res} statistics"
-            )
+            print(f"compute FID of a model with {dataset_name}-{dataset_res} statistics")
         score = fid_model(
             gen,
             dataset_name,

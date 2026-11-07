@@ -23,8 +23,9 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -132,8 +133,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--json", action="store_true")
     parser.set_defaults(guidance_scale=True, apply_reported_filter=True)
     return parser.parse_args(argv)
-
-
 
 
 def _strict_enabled(args: argparse.Namespace) -> bool:
@@ -263,9 +262,7 @@ def _scorecard(
         "Reported aggregates drop the variations excluded by the official read_exp_final.py filter_config.",
     ]
     if not official_runtime_executed:
-        notes.append(
-            "This run normalized supplied results_<model>.json artifacts and did not execute the ELBO probe."
-        )
+        notes.append("This run normalized supplied results_<model>.json artifacts and did not execute the ELBO probe.")
     return {
         "schema_version": SCORECARD_SCHEMA_VERSION,
         "official_benchmark_verified": False,
@@ -337,9 +334,7 @@ def normalize_likephys_results(
     output_dir.mkdir(parents=True, exist_ok=True)
     results_path = results_path_override or _resolve_results_path(args)
     if results_path is None:
-        raise ValueError(
-            "--official-results-path, WORLDFOUNDRY_LIKEPHYS_RESULTS_PATH, or --run-official is required"
-        )
+        raise ValueError("--official-results-path, WORLDFOUNDRY_LIKEPHYS_RESULTS_PATH, or --run-official is required")
     scenario_results = load_scenario_results(Path(results_path), model_key=args.probe_model)
     if args.scenarios:
         selected = set(args.scenarios)
@@ -553,7 +548,7 @@ def main(argv: list[str] | None = None) -> int:
             scorecard = run_official_likephys(args)
         else:
             scorecard = normalize_likephys_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = _failure_scorecard(args, exc)
         write_json(args.output_dir / "scorecard.json", scorecard)
@@ -578,7 +573,9 @@ def main(argv: list[str] | None = None) -> int:
     else:
         primary = scorecard.get("metrics", {}).get("leaderboard", {}).get("likephys_misrank_rate")
         rendered = "n/a" if primary is None else f"{primary:.4f}"
-        print(f"likephys: {scorecard.get('evaluation', {}).get('kind', 'unknown')} misrank={rendered} (lower is better)")
+        print(
+            f"likephys: {scorecard.get('evaluation', {}).get('kind', 'unknown')} misrank={rendered} (lower is better)"
+        )
     return 0 if payload["ok"] else 1
 
 

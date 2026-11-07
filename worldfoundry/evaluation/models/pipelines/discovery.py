@@ -137,7 +137,9 @@ def _register_discovered_binding(
     binding_key = _discovery_key(binding.binding_id)
     for candidate in (key, binding_key):
         if candidate in bindings:
-            LOGGER.warning("Skipping duplicate WorldFoundry pipeline binding %r from slug %r.", binding.binding_id, slug)
+            LOGGER.warning(
+                "Skipping duplicate WorldFoundry pipeline binding %r from slug %r.", binding.binding_id, slug
+            )
             return
     bindings[key] = binding
 

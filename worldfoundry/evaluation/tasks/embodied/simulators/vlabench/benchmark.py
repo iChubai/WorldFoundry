@@ -20,7 +20,14 @@ from typing import Any
 import numpy as np
 
 from worldfoundry.evaluation.tasks.embodied.simulators.base import BaseSimulator, StepResult
-from worldfoundry.evaluation.tasks.embodied.simulators.specs import GRIPPER_RAW, IMAGE_RGB, LANGUAGE, POSITION_DELTA, ROTATION_EULER, DimSpec
+from worldfoundry.evaluation.tasks.embodied.simulators.specs import (
+    GRIPPER_RAW,
+    IMAGE_RGB,
+    LANGUAGE,
+    POSITION_DELTA,
+    ROTATION_EULER,
+    DimSpec,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,8 +107,8 @@ class VLABenchBenchmark(BaseSimulator):
         """
         # Importing VLABench modules dynamically to avoid potential issues if not installed
         # and to allow for custom environment setup before imports.
-        import VLABench  # noqa: F401 — triggers VLABENCH_ROOT setup
-        import VLABench.robots  # noqa: F401 — registers robot classes with VLABench
+        import VLABench  # triggers VLABENCH_ROOT setup
+        import VLABench.robots  # registers robot classes with VLABench
         import VLABench.tasks  # noqa: F401 — registers task classes with VLABench
 
         # Monkey-patch to skip PCD generator (Open3D segfaults in headless
@@ -221,7 +228,7 @@ class VLABenchBenchmark(BaseSimulator):
         # VLABench gripper uses a 2D array [state, state] for its state.
         grip_val = 0.04 if gripper_cmd > 0 else 0.0
         gripper_state = np.array([grip_val, grip_val])
-        
+
         # Combine joint positions (from IK) and gripper state into the full environment action.
         env_action = np.concatenate([qpos, gripper_state])
 

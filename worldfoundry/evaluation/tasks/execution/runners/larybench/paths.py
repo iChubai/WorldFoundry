@@ -18,7 +18,6 @@ Required environment variable:
 """
 
 import os
-from typing import Optional
 
 # ---------------------------------------------------------------------------
 # LA subdirectory layout per dataset.
@@ -87,12 +86,12 @@ _REGRESSION_SPLIT_DIR = {
 # ---------------------------------------------------------------------------
 
 
-def get_la_root() -> Optional[str]:
+def get_la_root() -> str | None:
     """Return the latent-action storage root from env var LARY_LA_DIR."""
     return os.environ.get("LARY_LA_DIR")
 
 
-def get_data_root(dataset: str, split: str = "train") -> Optional[str]:
+def get_data_root(dataset: str, split: str = "train") -> str | None:
     """
     Return the data root directory for a given dataset/split.
 
@@ -133,7 +132,7 @@ def get_data_root(dataset: str, split: str = "train") -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
-def _la_prefix(dataset: str, split: str, model: str) -> Optional[str]:
+def _la_prefix(dataset: str, split: str, model: str) -> str | None:
     """
     Build the latent-action directory prefix (pure string ops, no stat calls).
 

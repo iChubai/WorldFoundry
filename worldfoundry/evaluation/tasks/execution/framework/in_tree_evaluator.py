@@ -7,9 +7,9 @@ and scoring rubric constraints against materialized generation artifacts.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api import AggregateResult, GenerationRequest, GenerationResult, MetricResult
 from worldfoundry.evaluation.tasks.execution.framework.io import coerce_unit_score
@@ -120,10 +120,7 @@ class BenchmarkZooInTreeEvaluator:
             request: Original sample request with labels, answers, or rubrics.
             result: Materialized generation result with artifacts and evaluator metadata.
         """
-        return [
-            row.to_metric_result(request.sample_id)
-            for row in self.evaluate_sample(request, result)
-        ]
+        return [row.to_metric_result(request.sample_id) for row in self.evaluate_sample(request, result)]
 
     def compute_sample(self, request: GenerationRequest, result: GenerationResult) -> list[MetricResult]:
         """Evaluate one sample through the Metric protocol.
@@ -142,10 +139,8 @@ class BenchmarkZooInTreeEvaluator:
         """Evaluate an aligned batch through one resident evaluator instance."""
 
         if len(requests) != len(results):
-            raise ValueError(
-                f"request/result batch sizes differ: {len(requests)} != {len(results)}"
-            )
-        return [self(request, result) for request, result in zip(requests, results)]
+            raise ValueError(f"request/result batch sizes differ: {len(requests)} != {len(results)}")
+        return [self(request, result) for request, result in zip(requests, results, strict=False)]
 
     def aggregate(self, results: Sequence[MetricResult]) -> AggregateResult:
         """Aggregate valid numeric rows with a simple mean.
@@ -156,7 +151,9 @@ class BenchmarkZooInTreeEvaluator:
         values = [
             float(result.normalized_value)
             for result in results
-            if result.valid and isinstance(result.normalized_value, (int, float)) and not isinstance(result.normalized_value, bool)
+            if result.valid
+            and isinstance(result.normalized_value, (int, float))
+            and not isinstance(result.normalized_value, bool)
         ]
         stats = {"mean": sum(values) / len(values)} if values else {}
         return AggregateResult(
@@ -169,7 +166,9 @@ class BenchmarkZooInTreeEvaluator:
             valid=bool(values),
         )
 
-    def evaluate_sample(self, request: GenerationRequest, result: GenerationResult) -> tuple[InTreeMetricEvaluation, ...]:
+    def evaluate_sample(
+        self, request: GenerationRequest, result: GenerationResult
+    ) -> tuple[InTreeMetricEvaluation, ...]:
         """Evaluate one sample and return uniform public rows.
 
         Args:
@@ -192,7 +191,9 @@ class BenchmarkZooInTreeEvaluator:
             return _evaluate_safety_metrics(self.metric_ids, request, result, artifact_status, self._config)
         if evaluator_kind == "world_in_world":
             return _evaluate_world_in_world_metrics(self.metric_ids, request, result, artifact_status, self._config)
-        return _evaluate_reasoning_metrics(self.benchmark_id, self.metric_ids, request, result, artifact_status, self._config)
+        return _evaluate_reasoning_metrics(
+            self.benchmark_id, self.metric_ids, request, result, artifact_status, self._config
+        )
 
 
 def artifact_presence_evidence(result: GenerationResult, required_artifacts: Sequence[str]) -> dict[str, Any]:
@@ -453,7 +454,11 @@ def _evaluate_safety_dimension(
             metric_id=metric_id,
             score=violation_score,
             value=violation_score,
-            evidence={"source": "violation_manifest", "category": category, "artifact_checks": artifact_status["checks"]},
+            evidence={
+                "source": "violation_manifest",
+                "category": category,
+                "artifact_checks": artifact_status["checks"],
+            },
         )
     return InTreeMetricEvaluation(
         metric_id=metric_id,
@@ -793,7 +798,8 @@ def _task_success_score(metric_id: str, metadata: Mapping[str, Any]) -> dict[str
             item
             for item in episodes
             if isinstance(item, Mapping)
-            and _normalize_metric_key(str(item.get("task", item.get("task_group", "")))) == _normalize_metric_key(task_name)
+            and _normalize_metric_key(str(item.get("task", item.get("task_group", ""))))
+            == _normalize_metric_key(task_name)
         ]
         score = _episode_success_fraction(matches)
         if score is not None:
@@ -852,7 +858,7 @@ def _interaction_trace_consistency(request: GenerationRequest, metadata: Mapping
     actual_actions = _action_sequence(trace.get("actions", metadata.get("actions")))
     if not expected_actions or not actual_actions:
         return None
-    matching = sum(1 for expected, actual in zip(expected_actions, actual_actions) if expected == actual)
+    matching = sum(1 for expected, actual in zip(expected_actions, actual_actions, strict=False) if expected == actual)
     total = max(len(expected_actions), len(actual_actions))
     return {
         "score": matching / total,
@@ -899,7 +905,9 @@ def _answer_accuracy(metric_id: str, request: GenerationRequest, metadata: Mappi
         metadata: Result metadata with predictions.
     """
     expected = _answer_value(metric_id, request.inputs, ("answer_key", "expected_answer", "correct_answer", "answers"))
-    predicted = _answer_value(metric_id, metadata, ("prediction", "predicted_answer", "answer", "selected_option", "predictions"))
+    predicted = _answer_value(
+        metric_id, metadata, ("prediction", "predicted_answer", "answer", "selected_option", "predictions")
+    )
     if expected is None or predicted is None:
         return None
     normalized_predicted = _normalize_answer(predicted)
@@ -947,7 +955,7 @@ def _normalize_answer(value: Any) -> str:
     text = str(value).strip().lower()
     for prefix in ("option ", "answer ", "choice "):
         if text.startswith(prefix):
-            text = text[len(prefix):].strip()
+            text = text[len(prefix) :].strip()
     return text.strip("()[]{} .,:;\"'")
 
 

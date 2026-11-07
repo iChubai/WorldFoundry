@@ -16,8 +16,9 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import scratch_directory
 from worldfoundry.evaluation.models.runtime.profiles import (
@@ -112,7 +113,7 @@ class RuntimeProfileSynthesis(BaseSynthesis):
         hf_models_root: str | Path | None = None,
         command_template: Sequence[str] | None = None,
         **kwargs: Any,
-    ) -> "RuntimeProfileSynthesis":
+    ) -> RuntimeProfileSynthesis:
         """Load the runtime profile and instantiate a RuntimeProfileSynthesis instance."""
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
@@ -291,10 +292,7 @@ class RuntimeProfileSynthesis(BaseSynthesis):
         # Accepted for backwards compatibility with callers that pass a
         # timeout; there is no execution path that could consume it.
         kwargs.pop("timeout_seconds", None)
-        run_dir = Path(
-            kwargs.pop("run_dir", "")
-            or scratch_directory(f"{_safe_name(self.model_id)}_")
-        )
+        run_dir = Path(kwargs.pop("run_dir", "") or scratch_directory(f"{_safe_name(self.model_id)}_"))
         run_dir = run_dir.expanduser().resolve()
         run_dir.mkdir(parents=True, exist_ok=True)
         context = self._context(
@@ -315,7 +313,9 @@ class RuntimeProfileSynthesis(BaseSynthesis):
             "context": context,
             "command": command,
         }
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         if plan_only:
             artifact_path = plan_path
             if output_path is not None:

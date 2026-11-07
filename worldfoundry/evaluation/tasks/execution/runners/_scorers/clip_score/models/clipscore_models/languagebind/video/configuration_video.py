@@ -1,16 +1,10 @@
 import copy
 import os
-from typing import Union
 
 from transformers import PretrainedConfig
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
-
-
-
-
-
 
 
 class CLIPTextConfig(PretrainedConfig):
@@ -65,6 +59,7 @@ class CLIPTextConfig(PretrainedConfig):
     >>> # Accessing the model configuration
     >>> configuration = model.config
     ```"""
+
     model_type = "clip_text_model"
 
     def __init__(
@@ -105,7 +100,7 @@ class CLIPTextConfig(PretrainedConfig):
         self.add_time_attn = False  ######################################
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Union[str, os.PathLike], **kwargs) -> "PretrainedConfig":
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike, **kwargs) -> "PretrainedConfig":
         cls._set_token_in_kwargs(kwargs)
 
         config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
@@ -121,8 +116,6 @@ class CLIPTextConfig(PretrainedConfig):
             )
 
         return cls.from_dict(config_dict, **kwargs)
-
-
 
 
 class CLIPVisionConfig(PretrainedConfig):
@@ -193,16 +186,15 @@ class CLIPVisionConfig(PretrainedConfig):
         attention_dropout=0.0,
         initializer_range=0.02,
         initializer_factor=1.0,
-
-        add_time_attn=False, ################################
-        num_frames=1, ################################
-        force_patch_dropout=0.0, ################################
-        lora_r=2, ################################
-        lora_alpha=16, ################################
-        lora_dropout=0.0, ################################
-        num_mel_bins=0.0, ################################
-        target_length=0.0, ################################
-        video_decode_backend='decord', #########################
+        add_time_attn=False,  ################################
+        num_frames=1,  ################################
+        force_patch_dropout=0.0,  ################################
+        lora_r=2,  ################################
+        lora_alpha=16,  ################################
+        lora_dropout=0.0,  ################################
+        num_mel_bins=0.0,  ################################
+        target_length=0.0,  ################################
+        video_decode_backend="decord",  #########################
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -232,7 +224,7 @@ class CLIPVisionConfig(PretrainedConfig):
         self.video_decode_backend = video_decode_backend  ################
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Union[str, os.PathLike], **kwargs) -> "PretrainedConfig":
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike, **kwargs) -> "PretrainedConfig":
         cls._set_token_in_kwargs(kwargs)
 
         config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
@@ -411,13 +403,3 @@ class LanguageBindVideoConfig(PretrainedConfig):
         output["vision_config"] = self.vision_config.to_dict()
         output["model_type"] = self.__class__.model_type
         return output
-
-
-
-
-
-
-
-
-
-

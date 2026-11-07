@@ -9,14 +9,14 @@ VMBench checkout.
 from __future__ import annotations
 
 import importlib.util
-import json
 import os
 import subprocess
 import sys
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.runners.vmbench.vmbench_prompts import (
     materialize_vmbench_meta_info,
@@ -101,33 +101,12 @@ def _has_import(module: str) -> bool:
 
 
 def official_runtime_preflight() -> dict[str, Any]:
-    runtime_files = {
-        relative: (OFFICIAL_RUNTIME_ROOT / relative).exists()
-        for relative in REQUIRED_RUNTIME_FILES
-    }
-    base_model_paths = {
-        name: (REPO_ROOT / relative).exists()
-        for name, relative in BASE_MODEL_PATHS.items()
-    }
-    package_imports = {
-        name: _has_import(module)
-        for name, module in PACKAGE_IMPORTS.items()
-    }
-    missing = [
-        f"runtime:{name}"
-        for name, ok in runtime_files.items()
-        if not ok
-    ]
-    missing.extend(
-        f"base_model:{name}"
-        for name, ok in base_model_paths.items()
-        if not ok
-    )
-    missing.extend(
-        f"package:{name}"
-        for name, ok in package_imports.items()
-        if not ok
-    )
+    runtime_files = {relative: (OFFICIAL_RUNTIME_ROOT / relative).exists() for relative in REQUIRED_RUNTIME_FILES}
+    base_model_paths = {name: (REPO_ROOT / relative).exists() for name, relative in BASE_MODEL_PATHS.items()}
+    package_imports = {name: _has_import(module) for name, module in PACKAGE_IMPORTS.items()}
+    missing = [f"runtime:{name}" for name, ok in runtime_files.items() if not ok]
+    missing.extend(f"base_model:{name}" for name, ok in base_model_paths.items() if not ok)
+    missing.extend(f"package:{name}" for name, ok in package_imports.items() if not ok)
     return {
         "runtime_root": str(OFFICIAL_RUNTIME_ROOT),
         "runtime_files": runtime_files,
@@ -170,7 +149,9 @@ def _runtime_env() -> dict[str, str]:
     return env
 
 
-def _metric_command(metric: str, *, config: VMBenchOfficialRuntimeConfig, meta_info_path: Path, output_dir: Path) -> list[str]:
+def _metric_command(
+    metric: str, *, config: VMBenchOfficialRuntimeConfig, meta_info_path: Path, output_dir: Path
+) -> list[str]:
     script = METRIC_SCRIPT[metric]
     if metric == "pas":
         return [
@@ -265,7 +246,9 @@ def _metric_command(metric: str, *, config: VMBenchOfficialRuntimeConfig, meta_i
     raise ValueError(f"Unsupported VMBench metric {metric!r}")
 
 
-def _run_command(command: list[str], *, output_dir: Path, name: str, config: VMBenchOfficialRuntimeConfig) -> dict[str, Any]:
+def _run_command(
+    command: list[str], *, output_dir: Path, name: str, config: VMBenchOfficialRuntimeConfig
+) -> dict[str, Any]:
     stdout_path = output_dir / f"{name}.stdout.log"
     stderr_path = output_dir / f"{name}.stderr.log"
     started = time.monotonic()

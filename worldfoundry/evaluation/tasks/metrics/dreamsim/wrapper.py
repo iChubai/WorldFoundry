@@ -47,11 +47,7 @@ def compute_dreamsim(
 ) -> float:
     """Compute DreamSim perceptual distance between two images (lower is more similar)."""
     device_t = resolve_device(device)
-    model_dir = str(
-        Path(cache_dir).expanduser()
-        if cache_dir is not None
-        else Path("cache/hfd") / "dreamsim"
-    )
+    model_dir = str(Path(cache_dir).expanduser() if cache_dir is not None else Path("cache/hfd") / "dreamsim")
     model, preprocess = _load_dreamsim_model(model_dir, dreamsim_type, str(device_t))
     ref = preprocess(load_rgb_image(reference)).to(device_t)
     gen = preprocess(load_rgb_image(generated)).to(device_t)

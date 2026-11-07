@@ -97,18 +97,27 @@ def calc_metric(
         metric = metric.reshape(1, -1)
 
     if variant == "pairwise_acc_with_tie_optimization":
-        result = tau_optimization.tau_optimization(metric, gold, tau_optimization.TauSufficientStats.acc_23, sample_rate=sample_rate)
+        result = tau_optimization.tau_optimization(
+            metric, gold, tau_optimization.TauSufficientStats.acc_23, sample_rate=sample_rate
+        )
         return result.best_tau, result.best_threshold
     if variant == "pairwise_acc_ignore_tie":
-        result = tau_optimization.tau_optimization(metric, gold, tau_optimization.TauSufficientStats.acc_ignore_tie, sample_rate=sample_rate)
+        result = tau_optimization.tau_optimization(
+            metric, gold, tau_optimization.TauSufficientStats.acc_ignore_tie, sample_rate=sample_rate
+        )
         return result.taus[0], result.thresholds[0]
     if variant == "tau_with_tie_optimization":
-        result = tau_optimization.tau_optimization(metric, gold, tau_optimization.TauSufficientStats.tau_23, sample_rate=sample_rate)
+        result = tau_optimization.tau_optimization(
+            metric, gold, tau_optimization.TauSufficientStats.tau_23, sample_rate=sample_rate
+        )
         return result.best_tau, result.best_threshold
 
     if variant not in {"tau_b", "tau_c"}:
         raise ValueError(f"unknown calc_metric variant: {variant}")
     kind = "b" if variant == "tau_b" else "c"
-    taus = [kendall_variants(gold_row, metric_row, variant=kind)[0] for gold_row, metric_row in zip(gold, metric, strict=True)]
+    taus = [
+        kendall_variants(gold_row, metric_row, variant=kind)[0]
+        for gold_row, metric_row in zip(gold, metric, strict=True)
+    ]
     value = float(np.nanmean(np.asarray(taus, dtype=float))) if taus else 0.0
     return 0.0 if math.isnan(value) else value

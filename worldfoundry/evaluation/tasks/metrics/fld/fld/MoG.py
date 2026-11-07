@@ -1,10 +1,7 @@
-import torch
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from tqdm import tqdm
-
+import torch
 from fld.utils import shuffle
+from tqdm import tqdm
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -64,9 +61,7 @@ class MoG:
         else:
             self.log_sigmas = log_sigmas
 
-        self.origin_log_sigma = torch.tensor(
-            INIT_LOG_SIGMAS, device=DEVICE, requires_grad=True
-        )
+        self.origin_log_sigma = torch.tensor(INIT_LOG_SIGMAS, device=DEVICE, requires_grad=True)
 
         # Optimization hyperparameters
         self.lr = lr
@@ -136,9 +131,7 @@ class MoG:
                 # LL of points relative to origin point (ensures each point has some minimum LL)
                 multiplier = (1 - ORIGIN_DIST_PROP) ** 2
                 origin_dists = multiplier * compute_dists(batch, mean_x)
-                origin_lls = self.pairwise_lls_from_dists(
-                    origin_dists, self.origin_log_sigma
-                )
+                origin_lls = self.pairwise_lls_from_dists(origin_dists, self.origin_log_sigma)
 
                 lls = self.lls_from_pairwise(pairwise_lls, origin_lls)
                 loss = -lls.mean()

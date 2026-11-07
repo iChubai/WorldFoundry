@@ -1,20 +1,19 @@
-import os
 import csv
+import os
 import shutil
 import urllib.request
 
 
-def get_score(model_name=None, dataset_name=None,
-        dataset_res=None, dataset_split=None, task_name=None):
+def get_score(model_name=None, dataset_name=None, dataset_res=None, dataset_split=None, task_name=None):
     # download the csv file from server
     url = "https://www.cs.cmu.edu/~clean-fid/files/leaderboard.csv"
     local_path = "/tmp/leaderboard.csv"
-    with urllib.request.urlopen(url) as response, open(local_path, 'wb') as f:
+    with urllib.request.urlopen(url) as response, open(local_path, "wb") as f:
         shutil.copyfileobj(response, f)
 
     d_field2idx = {}
     l_matches = []
-    with open(local_path, 'r') as f:
+    with open(local_path) as f:
         csvreader = csv.reader(f)
         l_fields = next(csvreader)
         for idx, val in enumerate(l_fields):

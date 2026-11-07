@@ -10,9 +10,10 @@ generation request into invocation → execution → result-mapping.
 from __future__ import annotations
 
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
 
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult
 
@@ -54,7 +55,7 @@ class PipelineRuntimeProfile:
     task_family: str
 
     @classmethod
-    def from_profile(cls, profile: Any) -> "PipelineRuntimeProfile":
+    def from_profile(cls, profile: Any) -> PipelineRuntimeProfile:
         """Instantiate a PipelineRuntimeProfile from a raw profile object."""
         return cls(
             artifact_filename=str(profile.artifact_filename),

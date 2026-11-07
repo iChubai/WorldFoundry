@@ -198,11 +198,7 @@ def discover_result_files(path: Path) -> dict[str, list[Path]]:
         return {"summaries": summaries, "reports": reports}
 
     summaries = sorted(path.rglob("summary.json"))
-    reports = sorted(
-        candidate
-        for candidate in path.rglob("*_report*.json")
-        if _REPORT_KIND_RE.match(candidate.name)
-    )
+    reports = sorted(candidate for candidate in path.rglob("*_report*.json") if _REPORT_KIND_RE.match(candidate.name))
     if not summaries and not reports:
         raise StevoResultError(
             f"no STEVO-Bench results found under {path}; expected summary.json or per_task/<task_id>/*_report*.json"
@@ -227,9 +223,7 @@ def _records_from_summary(summary_path: Path) -> list[dict[str, Any]]:
         llm_evals = entry.get("llm_evals")
         judges: list[tuple[str | None, Mapping[str, Any]]] = []
         if isinstance(llm_evals, Mapping) and llm_evals:
-            judges = [
-                (str(judge), values) for judge, values in llm_evals.items() if isinstance(values, Mapping)
-            ]
+            judges = [(str(judge), values) for judge, values in llm_evals.items() if isinstance(values, Mapping)]
         else:
             # Legacy flat-field runs keep the verdicts directly on the task entry.
             judges = [(None, entry)]
@@ -274,7 +268,7 @@ def _records_from_reports(report_paths: Iterable[Path]) -> list[dict[str, Any]]:
                 "judge": judge,
                 "source_path": str(report_path.parent),
                 "source_kind": "per_task_report",
-                **{field: None for field in VERDICT_KEYS},
+                **dict.fromkeys(VERDICT_KEYS),
             },
         )
         for field in _REPORT_KIND_FIELDS[match.group("kind")]:
@@ -328,11 +322,7 @@ def _bucket(records: Sequence[Mapping[str, Any]]) -> dict[str, float | None]:
     values: dict[str, float | None] = {}
     for metric_id in METRIC_ORDER:
         record_key = METRIC_SPECS[metric_id]["record_key"]
-        observed = [
-            1.0 if record.get(record_key) else 0.0
-            for record in records
-            if record.get(record_key) is not None
-        ]
+        observed = [1.0 if record.get(record_key) else 0.0 for record in records if record.get(record_key) is not None]
         values[metric_id] = mean_numeric(observed)
     return values
 

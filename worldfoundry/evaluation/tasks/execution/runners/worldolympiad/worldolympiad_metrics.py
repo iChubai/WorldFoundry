@@ -18,8 +18,9 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric, scalar_number
 
@@ -301,9 +302,7 @@ def case_record(payload: Mapping[str, Any], *, source: Path | None = None) -> di
         "source_path": None if source is None else str(source),
         "physical_question_counts": counts,
         "tracks_available": sorted(
-            track
-            for track in TRACKS
-            if any(scores.get(metric) is not None for metric in TRACK_METRICS[track])
+            track for track in TRACKS if any(scores.get(metric) is not None for metric in TRACK_METRICS[track])
         ),
         "scores": scores,
     }

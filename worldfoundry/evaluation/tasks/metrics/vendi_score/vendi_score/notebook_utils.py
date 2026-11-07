@@ -1,6 +1,6 @@
 import copy
 
-from IPython.display import display, Markdown, Latex
+from IPython.display import Markdown, display
 
 
 def markdown_table(headers, rows, bold_left=True, do_display=True):

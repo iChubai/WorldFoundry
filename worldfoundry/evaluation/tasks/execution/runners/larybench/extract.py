@@ -68,7 +68,7 @@ def video_collate_fn(batch):
     batch = [value for value in batch if value is not None]
     if not batch:
         return None
-    indices, tensors, relative_indices = zip(*batch)
+    indices, tensors, relative_indices = zip(*batch, strict=False)
     data = list(tensors) if isinstance(tensors[0], list) else torch.stack(tensors)
     return indices, data, torch.stack(relative_indices)
 
@@ -77,7 +77,7 @@ def image_collate_fn(batch):
     batch = [value for value in batch if value is not None]
     if not batch:
         return None
-    indices, tensors = zip(*batch)
+    indices, tensors = zip(*batch, strict=False)
     data = list(tensors) if isinstance(tensors[0], list) else torch.stack(tensors)
     return indices, data
 

@@ -7,13 +7,12 @@ out-of-tree coupling that would break reproducibility or CI gating.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Mapping
 
 from .schema import ModelVariantSpec, ModelZooEntry
 from .zoo_registry import load_model_zoo_registry
-
 
 # ── Constants ────────────────────────────────────────────────
 
@@ -21,6 +20,7 @@ IN_TREE_MODULE_PREFIX = "worldfoundry."
 
 
 # ── Policy issue dataclass ────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class ModelPolicyIssue:
@@ -52,6 +52,7 @@ class ModelPolicyIssue:
 
 
 # ── In-tree target checks ────────────────────────────────────
+
 
 def is_in_tree_target(value: str | None) -> bool:
     """Return true when a ``module:Class`` target resolves under the worldfoundry package."""
@@ -111,6 +112,7 @@ def validate_in_tree_model_entry(entry: ModelZooEntry | Mapping[str, object]) ->
 
 
 # ── Registry-level validation ─────────────────────────────────
+
 
 def validate_in_tree_model_registry(path: str | Path | None = None) -> tuple[ModelPolicyIssue, ...]:
     """Validate policy compliance for all model-zoo entries in a directory."""

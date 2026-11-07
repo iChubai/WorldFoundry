@@ -12,7 +12,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
-import numpy as np
 
 @dataclass
 class StepResult:
@@ -24,10 +23,12 @@ class StepResult:
         done: A boolean flag indicating whether the episode has terminated.
         info: Additional diagnostic information dictionary.
     """
+
     obs: Any
     reward: float
     done: bool
     info: dict[str, Any]
+
 
 class DummyRecorder:
     """A placeholder recorder that performs no operations when tracking is disabled.
@@ -36,12 +37,13 @@ class DummyRecorder:
     allowing simulators to call recording methods without needing to check
     if a recorder is active.
     """
+
     def record_step(self, *args: Any, **kwargs: Any) -> None:
         """Mock method for recording a step. Does nothing."""
-        pass
+
     def record_video(self, *args: Any, **kwargs: Any) -> None:
         """Mock method for recording a video. Does nothing."""
-        pass
+
 
 class BaseSimulator(ABC):
     """Native WorldFoundry Sync Simulator Interface.
@@ -74,7 +76,6 @@ class BaseSimulator(ABC):
         Returns:
             The initial raw observation from the environment.
         """
-        pass
 
     @abstractmethod
     def step(self, action: dict[str, Any]) -> StepResult:
@@ -89,7 +90,6 @@ class BaseSimulator(ABC):
         Returns:
             A StepResult containing the new observation, reward, done flag, and info.
         """
-        pass
 
     @abstractmethod
     def make_obs(self, raw_obs: Any, task: dict[str, Any]) -> dict[str, Any]:
@@ -105,7 +105,6 @@ class BaseSimulator(ABC):
         Returns:
             A standard observation dictionary containing images, proprioception, etc.
         """
-        pass
 
     @abstractmethod
     def get_step_result(self, step_result: StepResult) -> dict[str, Any]:
@@ -120,7 +119,6 @@ class BaseSimulator(ABC):
         Returns:
             A dictionary of evaluation metrics (e.g. success, reward, path length).
         """
-        pass
 
     def check_done(self, step_result: StepResult) -> bool:
         """Check whether the episode should terminate based on the latest step result.
@@ -153,7 +151,6 @@ class BaseSimulator(ABC):
         This method should be called at the end of an evaluation run to ensure
         proper resource management and avoid memory leaks. Defaults to a no-op.
         """
-        pass
 
     def get_action_spec(self) -> dict[str, Any]:
         """Get the expected action specification for the simulator.

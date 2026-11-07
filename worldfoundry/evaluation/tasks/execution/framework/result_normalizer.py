@@ -10,15 +10,14 @@ import csv
 import json
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import MetricResult
-
 from worldfoundry.evaluation.tasks.catalog.schema import BenchmarkMetricSpec, BenchmarkZooEntry
 from worldfoundry.evaluation.tasks.execution.framework.normalizers import apply_normalizer
-
 
 JsonValue = Any
 OFFICIAL_RESULTS_NORMALIZER_SCHEMA_VERSION = "worldfoundry-official-results-normalizer"
@@ -66,6 +65,7 @@ class OfficialMetricMapping:
                      overriding `source_fields` if specified.
         metadata: Additional metadata associated with this mapping.
     """
+
     metric_id: str
     source_fields: tuple[str, ...] = ()
     required_fields: tuple[str, ...] = ()
@@ -97,7 +97,7 @@ class OfficialMetricMapping:
         object.__setattr__(self, "metadata", dict(self.metadata or {}))
 
     @classmethod
-    def from_metric_spec(cls, metric: BenchmarkMetricSpec) -> "OfficialMetricMapping":
+    def from_metric_spec(cls, metric: BenchmarkMetricSpec) -> OfficialMetricMapping:
         """
         Build an official-result mapping from benchmark catalog metric schema.
 
@@ -127,7 +127,8 @@ class OfficialMetricMapping:
             required_fields=required_fields,
             normalizer=hook.get("normalizer", metric.normalizer),
             aggregation=str(hook.get("aggregation", hook.get("aggregator", metric.aggregator))),
-            sample_id_fields=_tuple_of_str(hook.get("sample_id_fields") or hook.get("sample_id_field")) or DEFAULT_SAMPLE_ID_FIELDS,
+            sample_id_fields=_tuple_of_str(hook.get("sample_id_fields") or hook.get("sample_id_field"))
+            or DEFAULT_SAMPLE_ID_FIELDS,
             category_field=_optional_str(hook.get("category_field")),
             category_values=_tuple_of_str(hook.get("category_values") or hook.get("category_value")),
             value_field=_optional_str(value_field),
@@ -154,6 +155,7 @@ class OfficialResultsNormalization:
                            the aggregated scores for each metric.
         schema_version: The version of the normalization schema used.
     """
+
     benchmark_id: str
     source_path: str | None
     records: tuple[Mapping[str, JsonValue], ...]
@@ -184,10 +186,7 @@ class OfficialResultsNormalization:
         Args:
             None.
         """
-        return {
-            result.metric_id: _metric_scorecard_entry(result.to_dict())
-            for result in self.aggregate_results
-        }
+        return {result.metric_id: _metric_scorecard_entry(result.to_dict()) for result in self.aggregate_results}
 
 
 class OfficialResultsNormalizer:
@@ -198,6 +197,7 @@ class OfficialResultsNormalizer:
     (from files or in-memory records) to produce standardized `MetricResult`
     objects, handling field mapping, normalization, and aggregation.
     """
+
     def __init__(
         self,
         benchmark_id: str,
@@ -231,7 +231,7 @@ class OfficialResultsNormalizer:
         entry: BenchmarkZooEntry,
         *,
         requested_metric_ids: Sequence[str] | None = None,
-    ) -> "OfficialResultsNormalizer":
+    ) -> OfficialResultsNormalizer:
         """
         Build a normalizer from benchmark catalog metric declarations.
 
@@ -260,8 +260,7 @@ class OfficialResultsNormalizer:
         # create blocked MetricResult entries for all requested metrics.
         if blocked_reason is not None:
             aggregate_results = tuple(
-                self._blocked_metric(metric_id, blocked_reason, diagnostics)
-                for metric_id in self.requested_metric_ids
+                self._blocked_metric(metric_id, blocked_reason, diagnostics) for metric_id in self.requested_metric_ids
             )
             return OfficialResultsNormalization(
                 benchmark_id=self.benchmark_id,
@@ -430,7 +429,9 @@ class OfficialResultsNormalizer:
         values = [
             float(result.normalized_value)
             for result in sample_results
-            if result.valid and isinstance(result.normalized_value, (int, float)) and not isinstance(result.normalized_value, bool)
+            if result.valid
+            and isinstance(result.normalized_value, (int, float))
+            and not isinstance(result.normalized_value, bool)
         ]
 
         # If no numeric values could be extracted, return a blocked result.
@@ -495,7 +496,9 @@ class OfficialResultsNormalizer:
         )
 
 
-def load_official_result_records(path: str | Path) -> tuple[tuple[Mapping[str, JsonValue], ...], str | None, Mapping[str, JsonValue]]:
+def load_official_result_records(
+    path: str | Path,
+) -> tuple[tuple[Mapping[str, JsonValue], ...], str | None, Mapping[str, JsonValue]]:
     """
     Load JSON, JSONL, or CSV records with explicit preflight checks.
 
@@ -575,11 +578,7 @@ def _load_jsonl_records(path: Path) -> tuple[tuple[Mapping[str, JsonValue], ...]
     """
     lines = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     # Identify lines that do not visually resemble JSON objects.
-    invalid_lines = [
-        index + 1
-        for index, line in enumerate(lines)
-        if not _looks_like_json_object(line.strip())
-    ]
+    invalid_lines = [index + 1 for index, line in enumerate(lines) if not _looks_like_json_object(line.strip())]
     if invalid_lines:
         return (), "official_results_jsonl_record_invalid", {"path": str(path), "lines": invalid_lines}
     # Validate if the collection of lines can be parsed as a valid JSON array.
@@ -698,7 +697,9 @@ def _record_matches_metric(record: Mapping[str, JsonValue], mapping: OfficialMet
     return _metric_key(category) in {_metric_key(item) for item in accepted}
 
 
-def _missing_required_fields(records: Sequence[Mapping[str, JsonValue]], mapping: OfficialMetricMapping) -> tuple[str, ...]:
+def _missing_required_fields(
+    records: Sequence[Mapping[str, JsonValue]], mapping: OfficialMetricMapping
+) -> tuple[str, ...]:
     """Check if any of the mandatory fields required by a metric are missing across matching records.
 
     Args:
@@ -713,7 +714,9 @@ def _missing_required_fields(records: Sequence[Mapping[str, JsonValue]], mapping
         return ()  # No required fields specified, so none are missing.
 
     # Optimization: if any "long-format" record directly supplies a value, assume requirements met.
-    if any(_long_metric_row_matches(record, mapping) and _first_present_value_field(record, mapping) for record in records):
+    if any(
+        _long_metric_row_matches(record, mapping) and _first_present_value_field(record, mapping) for record in records
+    ):
         return ()
 
     # Filter records to only those relevant to this metric based on category.
@@ -793,8 +796,7 @@ def _long_metric_row_matches(record: Mapping[str, JsonValue], mapping: OfficialM
     # Check if any of the common metric ID fields in the record have a value
     # that matches one of the accepted normalized metric identifiers.
     return any(
-        field_name in record and _metric_key(record[field_name]) in normalized
-        for field_name in METRIC_ID_FIELDS
+        field_name in record and _metric_key(record[field_name]) in normalized for field_name in METRIC_ID_FIELDS
     )
 
 
@@ -1028,12 +1030,12 @@ def _json_text_valid(value: str) -> bool:
     """
     completed = subprocess.run(
         (sys.executable, "-m", "json.tool"),  # Execute `python -m json.tool`
-        input=value,                           # Pass the JSON string as stdin
+        input=value,  # Pass the JSON string as stdin
         capture_output=True,
         text=True,
-        check=False,                            # Do not raise an exception for non-zero exit codes
+        check=False,  # Do not raise an exception for non-zero exit codes
     )
-    return completed.returncode == 0            # JSON.tool returns 0 for valid JSON, non-zero for invalid.
+    return completed.returncode == 0  # JSON.tool returns 0 for valid JSON, non-zero for invalid.
 
 
 def _metric_key(value: JsonValue) -> str:

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import enum
 import time
+from dataclasses import dataclass, field
 from typing import Any
-
 
 PROTOCOL_VERSION = 1
 

@@ -8,8 +8,9 @@ and aggregates results over samples.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import (
     AggregateResult,
@@ -302,7 +303,9 @@ def metric_from_id(metric_id: str) -> ResultFieldMetric:
     except KeyError:
         direction = True if metric_id in DEFAULT_METRIC_IDS or metric_id in aliases else None
     return ResultFieldMetric(
-        name=metric_id, field_names=aliases.get(metric_id, (metric_id,)), higher_is_better=direction,
+        name=metric_id,
+        field_names=aliases.get(metric_id, (metric_id,)),
+        higher_is_better=direction,
     )
 
 

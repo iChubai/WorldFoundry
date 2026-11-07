@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Collection, Mapping, Protocol, Sequence, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping
 from worldfoundry.evaluation.api.world_model_manifest import (
@@ -42,7 +43,7 @@ class WorldModelConfig(JsonContract):
         object.__setattr__(self, "metadata", copy_mapping(self.metadata))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "WorldModelConfig":
+    def from_dict(cls, data: Mapping[str, Any]) -> WorldModelConfig:
         manifest = data.get("manifest")
         if manifest is not None and not isinstance(manifest, WorldModelManifest):
             to_dict = getattr(manifest, "to_dict", None)
@@ -73,7 +74,7 @@ class WorldModelRunner(Protocol):
     capabilities: Collection[str]
 
     @classmethod
-    def from_config(cls, config: WorldModelConfig) -> "WorldModelRunner": ...
+    def from_config(cls, config: WorldModelConfig) -> WorldModelRunner: ...
 
     def generate(self, requests: Sequence[GenerationRequest]) -> Sequence[GenerationResult]: ...
 

@@ -16,8 +16,9 @@ recorded in the evidence so partial imports are never mistaken for the published
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.official_result_scoring import OfficialMetricScore
 from worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_metrics import (

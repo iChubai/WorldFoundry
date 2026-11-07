@@ -5,8 +5,9 @@ from __future__ import annotations
 import importlib
 import inspect
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
 from worldfoundry.evaluation.tasks.embodied.adapters.runtime_bridge import (
@@ -102,7 +103,9 @@ class OfficialPolicyPolicyAdapter:
         self.parameters = dict(parameters or {})
         self._runtime: OfficialPolicyRuntime | None = None
         self._artifact_dir = Path(
-            self.parameters.get("artifact_dir") or self.parameters.get("output_dir") or tempfile.mkdtemp(prefix="wf-official-policy-")
+            self.parameters.get("artifact_dir")
+            or self.parameters.get("output_dir")
+            or tempfile.mkdtemp(prefix="wf-official-policy-")
         )
         self._artifact_dir.mkdir(parents=True, exist_ok=True)
         self._counter = 0
@@ -221,7 +224,9 @@ class PipelineSynthesisPolicyAdapter:
             raise RuntimeError(f"{self.model_id} synthesis predict returned non-mapping: {type(result).__name__}")
         status = str(result.get("status") or "")
         if status in {"blocked", "error"}:
-            raise RuntimeError(str(result.get("blocked_reason") or result.get("error") or f"{self.model_id} synthesis predict blocked"))
+            raise RuntimeError(
+                str(result.get("blocked_reason") or result.get("error") or f"{self.model_id} synthesis predict blocked")
+            )
         normalized = normalize_action_payload(extract_action_values(result))
         normalized["_metadata"] = {
             **dict(normalized.get("_metadata") or {}),

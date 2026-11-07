@@ -10,8 +10,8 @@ from worldfoundry.evaluation.tasks.embodied.simulators.registry import (
 )
 
 __all__ = [
-    "BaseSimulator",
     "SIMULATOR_ENTRIES",
+    "BaseSimulator",
     "SimulatorEntry",
     "StepResult",
     "get_simulator_entry",

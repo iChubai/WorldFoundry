@@ -94,9 +94,7 @@ def _select_model_dir(track_root: Path, model_id: str | None, predicate) -> Path
         return None
     if len(candidates) > 1:
         names = ", ".join(child.name for child in candidates)
-        raise RBenchLayoutError(
-            f"multiple RBench models found under {track_root} ({names}); pass --result-model-id"
-        )
+        raise RBenchLayoutError(f"multiple RBench models found under {track_root} ({names}); pass --result-model-id")
     return candidates[0]
 
 
@@ -201,9 +199,7 @@ def resolve_layout(
         available = discover_vlm_backends(_split_dirs_for((embodiment_dir, task_dir)))
         if not available:
             known = ", ".join(VLM_BACKENDS)
-            raise RBenchLayoutError(
-                f"no VLM judge directory found under {root}; expected one of: {known}"
-            )
+            raise RBenchLayoutError(f"no VLM judge directory found under {root}; expected one of: {known}")
         if len(available) > 1:
             names = ", ".join(available)
             raise RBenchLayoutError(

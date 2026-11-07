@@ -24,7 +24,9 @@ def resolve_cache_dir(explicit: str | Path | None = None) -> str:
 
 
 def ensure_ffmpeg() -> None:
-    from worldfoundry.evaluation.tasks.execution.runners._scorers.vqa_score._backend import ensure_ffmpeg as _ensure_ffmpeg
+    from worldfoundry.evaluation.tasks.execution.runners._scorers.vqa_score._backend import (
+        ensure_ffmpeg as _ensure_ffmpeg,
+    )
 
     _ensure_ffmpeg()
 

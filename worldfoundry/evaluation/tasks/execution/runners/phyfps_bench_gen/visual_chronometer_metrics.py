@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_metrics import VideoPhyFPSRecord
 
@@ -81,11 +82,7 @@ def compute_visual_chronometer_metrics(
         "inter_video_cv": inter_video_cv,
         "intra_video_cv": _mean(intra_cvs),
     }
-    consistency_metrics = [
-        value
-        for key, value in direct_metrics.items()
-        if key != "mean_phyfps" and value is not None
-    ]
+    consistency_metrics = [value for key, value in direct_metrics.items() if key != "mean_phyfps" and value is not None]
     direct_metrics["visual_chronometer_average"] = _mean(consistency_metrics) if consistency_metrics else None
 
     return {
@@ -120,7 +117,9 @@ def metric_rows_from_computed(
                 "score": score,
                 "higher_is_better": spec["higher_is_better"],
                 "group": spec["group"],
-                "source": "visual_chronometer_official_runtime" if official_runtime_executed else "visual_chronometer_results_csv",
+                "source": "visual_chronometer_official_runtime"
+                if official_runtime_executed
+                else "visual_chronometer_results_csv",
                 "source_path": str(source_path),
                 "components": components,
                 "reason": None if score is not None else "score_not_available_in_visual_chronometer_results",

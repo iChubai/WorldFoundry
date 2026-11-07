@@ -1,9 +1,7 @@
-from pytorch_fid.inception import InceptionV3
-
-import torchvision.transforms as TF
 import torch
-
+import torchvision.transforms as TF
 from fld.features.ImageFeatureExtractor import ImageFeatureExtractor
+from pytorch_fid.inception import InceptionV3
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -18,9 +16,7 @@ class InceptionFeatureExtractor(ImageFeatureExtractor):
         self.preprocess = TF.ToTensor()
 
         block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[2048]
-        self.model = InceptionV3(
-            [block_idx], resize_input=True, normalize_input=True
-        ).to(DEVICE)
+        self.model = InceptionV3([block_idx], resize_input=True, normalize_input=True).to(DEVICE)
         self.model.eval()
         return
 

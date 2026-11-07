@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import csv
 import hashlib
@@ -30,6 +26,7 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
     write_json,
     write_jsonl,
 )
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.t2v_compbench_prompts import (
     CANONICAL_PROMPT_COUNT,
     GENERATION_MANIFEST_NAME,
@@ -49,9 +46,7 @@ DEFAULT_T2V_COMPBENCH_ROOT = (
     / "runtime"
     / "t2v_compbench"
 )
-DEFAULT_T2V_COMPBENCH_ASSETS = (
-    REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "assets" / "t2v-compbench"
-)
+DEFAULT_T2V_COMPBENCH_ASSETS = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "assets" / "t2v-compbench"
 HF_DATASET_ID = "Kaiyue/T2V-CompBench-Videos"
 HF_DATASET_CONFIG = "default"
 HF_DATASET_SPLIT = "train"
@@ -350,7 +345,9 @@ def row_to_mapping(header: list[str], row: list[str]) -> dict[str, Any]:
     return mapping
 
 
-def parse_per_sample_rows(metric_id: str, path: Path, rows: list[list[str]], final_index: int | None) -> list[dict[str, Any]]:
+def parse_per_sample_rows(
+    metric_id: str, path: Path, rows: list[list[str]], final_index: int | None
+) -> list[dict[str, Any]]:
     if not rows:
         return []
     header = [item.strip() for item in rows[0]]
@@ -462,7 +459,9 @@ def collect_json_results(raw_results: Any) -> list[dict[str, Any]]:
 def build_metric_rows(results: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, float]]:
     by_metric = {item["metric_id"]: item for item in results if item.get("metric_id") in METRIC_ORDER}
     component_scores = [
-        item["raw_score"] for metric_id, item in by_metric.items() if metric_id in COMPONENT_METRICS and item["raw_score"] is not None
+        item["raw_score"]
+        for metric_id, item in by_metric.items()
+        if metric_id in COMPONENT_METRICS and item["raw_score"] is not None
     ]
     if len(component_scores) == len(COMPONENT_METRICS) and "t2v_compbench_average" not in by_metric:
         by_metric["t2v_compbench_average"] = {
@@ -595,36 +594,23 @@ def normalize_t2v_compbench_results(
     normalizer_only = command is None
     result_by_metric = {str(item.get("metric_id")): item for item in results}
     requested = list(
-        dict.fromkeys(
-            requested_categories
-            or [metric for metric in COMPONENT_METRICS if metric in result_by_metric]
-        )
+        dict.fromkeys(requested_categories or [metric for metric in COMPONENT_METRICS if metric in result_by_metric])
     )
     runtime_results_complete = bool(requested) and all(
         result_by_metric.get(metric, {}).get("raw_score") is not None
         and int(result_by_metric.get(metric, {}).get("sample_count") or 0) > 0
         for metric in requested
     )
-    official_component_verified = (
-        command is not None
-        and returncode == 0
-        and runtime_results_complete
-    )
+    official_component_verified = command is not None and returncode == 0 and runtime_results_complete
     full_metric_outputs = set(requested) == set(COMPONENT_METRICS) and all(
         result_by_metric.get(metric, {}).get("raw_score") is not None
         and int(result_by_metric.get(metric, {}).get("sample_count") or 0) >= PROMPTS_PER_CATEGORY
         for metric in COMPONENT_METRICS
     )
-    full_video_coverage = (
-        generated_video_manifest["file_count"] == EXPECTED_PROMPT_COUNT
-        and all(
-            generated_video_manifest["by_category"].get(metric, 0) == PROMPTS_PER_CATEGORY
-            for metric in COMPONENT_METRICS
-        )
+    full_video_coverage = generated_video_manifest["file_count"] == EXPECTED_PROMPT_COUNT and all(
+        generated_video_manifest["by_category"].get(metric, 0) == PROMPTS_PER_CATEGORY for metric in COMPONENT_METRICS
     )
-    official_benchmark_verified = (
-        official_component_verified and full_metric_outputs and full_video_coverage
-    )
+    official_benchmark_verified = official_component_verified and full_metric_outputs and full_video_coverage
     if official_benchmark_verified:
         eligibility_reasons: list[str] = []
     elif normalizer_only:
@@ -731,9 +717,7 @@ def normalize_t2v_compbench_results(
             "generated_video_manifest": str(generated_video_manifest_path.resolve()),
             "dataset_manifest": str(dataset_manifest_path.resolve()),
             "generation_bridge": (
-                str((output_dir / "generation_bridge.json").resolve())
-                if generation_bridge is not None
-                else None
+                str((output_dir / "generation_bridge.json").resolve()) if generation_bridge is not None else None
             ),
             "upstream_results": None if upstream_results_path is None else str(upstream_results_path.resolve()),
             "upstream_stdout": None if stdout_path is None else str(stdout_path.resolve()),
@@ -872,9 +856,7 @@ def category_video_path(args: argparse.Namespace, category: str) -> Path:
     if existing:
         return existing[0]
     rendered = "\n  - ".join(str(candidate) for candidate in candidates)
-    raise FileNotFoundError(
-        f"T2V-CompBench video directory not found for {category}; tried:\n  - {rendered}"
-    )
+    raise FileNotFoundError(f"T2V-CompBench video directory not found for {category}; tried:\n  - {rendered}")
 
 
 def category_prompt_file(args: argparse.Namespace, category: str) -> Path:
@@ -1114,6 +1096,7 @@ for module in modules:
         result = {"module": module, "ok": False, "error": f"{type(exc).__name__}: {exc}"}
     print(json.dumps(result, ensure_ascii=False), flush=True)
 """
+
     def parse_module_results(stdout: str | bytes | None) -> list[dict[str, Any]]:
         if stdout is None:
             return []
@@ -1226,7 +1209,14 @@ def build_t2v_compbench_preflight(args: argparse.Namespace) -> dict[str, Any]:
     video_checks: dict[str, Any] = {}
     if args.csv_dir is None and args.from_upstream_results is None:
         if args.video_root is None:
-            checks.append(preflight_check("video_root", False, path=None, detail="--video-root or WORLDFOUNDRY_T2V_COMPBENCH_VIDEO_ROOT is required for official execution"))
+            checks.append(
+                preflight_check(
+                    "video_root",
+                    False,
+                    path=None,
+                    detail="--video-root or WORLDFOUNDRY_T2V_COMPBENCH_VIDEO_ROOT is required for official execution",
+                )
+            )
         else:
             checks.append(preflight_check("video_root", args.video_root.is_dir(), path=args.video_root))
             for category in categories:
@@ -1255,7 +1245,11 @@ def build_t2v_compbench_preflight(args: argparse.Namespace) -> dict[str, Any]:
     elif args.csv_dir is not None:
         checks.append(preflight_check("csv_dir", args.csv_dir.is_dir(), path=args.csv_dir))
     elif args.from_upstream_results is not None:
-        checks.append(preflight_check("from_upstream_results", args.from_upstream_results.is_file(), path=args.from_upstream_results))
+        checks.append(
+            preflight_check(
+                "from_upstream_results", args.from_upstream_results.is_file(), path=args.from_upstream_results
+            )
+        )
 
     groups = selected_runtime_groups(categories)
     import_reports = [python_import_preflight(args, group) for group in groups]
@@ -1319,21 +1313,13 @@ def build_t2v_compbench_preflight(args: argparse.Namespace) -> dict[str, Any]:
     ready = all(check["ok"] for check in required) and all(report["ok"] for report in import_reports)
     missing_names = {check["name"] for check in required if not check["ok"]}
     next_actions: list[str] = []
-    import_failures = [
-        item
-        for report in import_reports
-        for item in report["modules"]
-        if not item.get("ok")
-    ]
+    import_failures = [item for report in import_reports for item in report["modules"] if not item.get("ok")]
     if any("TimeoutExpired" in str(item.get("error")) for item in import_failures):
         next_actions.append(
             "The selected Python import probe timed out. Increase --preflight-timeout or investigate the "
             "reported slow module before starting the official evaluator."
         )
-    if any(
-        "TimeoutExpired" not in str(item.get("error"))
-        for item in import_failures
-    ):
+    if any("TimeoutExpired" not in str(item.get("error")) for item in import_failures):
         next_actions.append(
             "Install the WorldFoundry benchmark dependencies into the selected Python with "
             "scripts/setup/model_env_install.sh --model evaluation-benchmarks. "
@@ -1506,7 +1492,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--category", action="append", help="Category id, comma-separated ids, or all.")
     parser.add_argument("--output-dir", type=Path, default=env_path("WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"))
     parser.add_argument("--python", default=sys.executable)
-    parser.add_argument("--timeout", type=int, default=int(os.environ.get("WORLDFOUNDRY_T2V_COMPBENCH_TIMEOUT", "7200")))
+    parser.add_argument(
+        "--timeout", type=int, default=int(os.environ.get("WORLDFOUNDRY_T2V_COMPBENCH_TIMEOUT", "7200"))
+    )
     parser.add_argument("--official-results-path", dest="from_upstream_results", type=Path)
     parser.add_argument("--from-upstream-results", dest="from_upstream_results", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--llava-model-path", default=os.environ.get("WORLDFOUNDRY_T2V_COMPBENCH_LLAVA_MODEL_PATH"))
@@ -1534,10 +1522,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--depth-folder", type=Path, default=env_path("WORLDFOUNDRY_T2V_COMPBENCH_DEPTH_DIR"))
     parser.add_argument("--device", default=os.environ.get("WORLDFOUNDRY_T2V_COMPBENCH_DEVICE", "cuda"))
     parser.add_argument("--run-motion-two-stage", action="store_true")
-    parser.add_argument("--motion-standard-video-path", type=Path, default=env_path("WORLDFOUNDRY_T2V_COMPBENCH_MOTION_STANDARD_VIDEO_PATH"))
+    parser.add_argument(
+        "--motion-standard-video-path",
+        type=Path,
+        default=env_path("WORLDFOUNDRY_T2V_COMPBENCH_MOTION_STANDARD_VIDEO_PATH"),
+    )
     parser.add_argument("--total-frame", default=os.environ.get("WORLDFOUNDRY_T2V_COMPBENCH_TOTAL_FRAME", "16"))
     parser.add_argument("--fps", default=os.environ.get("WORLDFOUNDRY_T2V_COMPBENCH_FPS", "8"))
-    parser.add_argument("--preflight", action="store_true", help="Check official T2V-CompBench runtime, assets, and video layout without running metrics.")
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        help="Check official T2V-CompBench runtime, assets, and video layout without running metrics.",
+    )
     parser.add_argument(
         "--preflight-timeout",
         type=int,

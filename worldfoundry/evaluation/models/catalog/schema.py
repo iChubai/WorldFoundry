@@ -11,9 +11,10 @@ that heterogeneous YAML manifests can be coerced into a consistent typed shape.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from ...api.json_contract import JsonContract, require_mapping, to_plain
 from ...api.json_contract import tuple_of_str as _tuple_of_str
@@ -577,7 +578,7 @@ class ModelSource(JsonSerializable):
         object.__setattr__(self, "notes", _tuple_of_str(self.notes))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ModelSource":
+    def from_dict(cls, data: Mapping[str, Any]) -> ModelSource:
         """Deserialize a ModelSource instance from a dictionary."""
         source = _require_mapping(data, "ModelSource.from_dict")
 
@@ -639,7 +640,7 @@ class CheckpointRef(JsonSerializable):
         object.__setattr__(self, "notes", _tuple_of_str(self.notes))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "CheckpointRef":
+    def from_dict(cls, data: Mapping[str, Any]) -> CheckpointRef:
         """Deserialize a CheckpointRef from a mapping dictionary."""
         checkpoint = _require_mapping(data, "CheckpointRef.from_dict")
         return cls(
@@ -778,7 +779,7 @@ class DemoParitySpec(JsonSerializable):
         object.__setattr__(self, "notes", _tuple_of_str(self.notes))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "DemoParitySpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> DemoParitySpec:
         """Deserialize a DemoParitySpec instance from a mapping dictionary."""
         demo = _require_mapping(data, "DemoParitySpec.from_dict")
         raw_status = demo.get("status", "not_applicable")
@@ -882,7 +883,7 @@ class ModelVariantSpec(JsonSerializable):
         return self.runner_entry_kind == "runnable_runner"
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ModelVariantSpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> ModelVariantSpec:
         """Deserialize a ModelVariantSpec from a mapping dictionary."""
         variant = _require_mapping(data, "ModelVariantSpec.from_dict")
         integration = variant.get("integration") if isinstance(variant.get("integration"), Mapping) else {}
@@ -1116,7 +1117,7 @@ class ModelZooEntry(JsonSerializable):
         return self.runner_entry_kind == "runnable_runner"
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ModelZooEntry":
+    def from_dict(cls, data: Mapping[str, Any]) -> ModelZooEntry:
         """Deserialize a ModelZooEntry from a mapping dictionary."""
         entry = _require_mapping(data, "ModelZooEntry.from_dict")
 

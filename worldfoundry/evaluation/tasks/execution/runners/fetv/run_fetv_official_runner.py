@@ -261,7 +261,9 @@ def extend_parser(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def build_official_command(*, config, repo_root: Path, generated_video_dir: Path, output_dir: Path, args: Any) -> list[str] | None:
+def build_official_command(
+    *, config, repo_root: Path, generated_video_dir: Path, output_dir: Path, args: Any
+) -> list[str] | None:
     if args.fetv_runtime_backend == "official":
         runtime_root = resolve_fetv_runtime_root(args.fetv_runtime_root)
         command = [

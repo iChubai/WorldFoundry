@@ -1,12 +1,7 @@
-import itertools
-
 import numpy as np
-
 from rdkit import Chem, DataStructs, rdBase
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
-
-
-from vendi_score.data_utils import Example, Group
+from vendi_score.data_utils import Example
 
 
 def disable_rdkit_log():
@@ -36,7 +31,7 @@ def get_mol(smiles_or_mol):
 
 
 def load_molecules(fn, max_samples=2000, unique=False):
-    with open(fn, "r") as f:
+    with open(fn) as f:
         lines = f.readlines()[1:]
     examples = []
     seen = set()
@@ -71,7 +66,5 @@ def get_tanimoto_K(mols, fp="morgan"):
         fps = [fp(x) for e in mols]
     for i in range(N):
         for j in range(i, N):
-            K[i, j] = K[j, i] = DataStructs.FingerprintSimilarity(
-                fps[i], fps[j]
-            )
+            K[i, j] = K[j, i] = DataStructs.FingerprintSimilarity(fps[i], fps[j])
     return K

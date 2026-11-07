@@ -26,11 +26,12 @@ Reused surfaces:
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
-from worldfoundry.base_models.capabilities import (  # noqa: E402
+from worldfoundry.base_models.capabilities import (
     BASE_MODEL_CAPABILITIES,
     BaseModelCapability,
     expand_capability_path,
@@ -213,19 +214,19 @@ def resolve_all(
 
 
 __all__ = [
-    "ResolvedBaseModels",
-    "QWEN3_VL_CAPABILITY",
     "DA3_CAPABILITY",
-    "SAM3_CAPABILITY",
     "DA3_IMPORT_NAME",
     "DA3_PACKAGE_DIR_NAME",
+    "QWEN3_VL_CAPABILITY",
+    "SAM3_CAPABILITY",
     "SHIM_SUBDIR",
-    "resolve_qwenvl_dir",
-    "resolve_da3_weights_dir",
-    "resolve_sam3_path",
-    "da3_code_dir",
-    "resolve_clip_code_dir",
-    "resolve_clip_cache_dir",
+    "ResolvedBaseModels",
     "build_da3_code_shim",
+    "da3_code_dir",
     "resolve_all",
+    "resolve_clip_cache_dir",
+    "resolve_clip_code_dir",
+    "resolve_da3_weights_dir",
+    "resolve_qwenvl_dir",
+    "resolve_sam3_path",
 ]

@@ -1,21 +1,17 @@
-import torch
-
 import argparse
 import os
 import pickle as pkl
 
-import decord
 import numpy as np
+import torch
 import yaml
 from tqdm import tqdm
 
+from worldfoundry.base_models.perception_core.video_quality.dover import checkpoint_path, config_path
 from worldfoundry.base_models.perception_core.video_quality.dover.dover.datasets.dover_datasets import (
-    UnifiedFrameSampler,
     ViewDecompositionDataset,
-    spatial_temporal_view_decomposition,
 )
 from worldfoundry.base_models.perception_core.video_quality.dover.dover.models.evaluator import DOVER
-from worldfoundry.base_models.perception_core.video_quality.dover import checkpoint_path, config_path
 
 mean, std = (
     torch.FloatTensor([123.675, 116.28, 103.53]),
@@ -43,12 +39,10 @@ def fuse_results(results: list):
     }
 
 
-
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--opt", type=str, default=str(config_path()), help="the option file")
-    parser.add_argument("--dir_videos", type=str, default='', help="Specify the path of generated videos")    
+    parser.add_argument("--dir_videos", type=str, default="", help="Specify the path of generated videos")
     parser.add_argument("-d", "--device", type=str, default="cuda", help="the running device")
     parser.add_argument("--task", type=str, default=None, help="results saving path")
     args = parser.parse_args()
@@ -57,16 +51,14 @@ if __name__ == "__main__":
     results_dir = os.environ.get("WORLDFOUNDRY_EVALCRAFTER_RESULTS_DIR", "../../results")
     os.makedirs(results_dir, exist_ok=True)
     out_path = os.path.join(results_dir, "dover.csv")
-    
-    with open(args.opt, "r") as f:
+
+    with open(args.opt) as f:
         opt = yaml.safe_load(f)
     opt["test_load_path"] = str(checkpoint_path())
 
     ### Load DOVER
     evaluator = DOVER(**opt["model"]["args"]).to(args.device)
-    evaluator.load_state_dict(
-        torch.load(opt["test_load_path"], map_location=args.device)
-    )
+    evaluator.load_state_dict(torch.load(opt["test_load_path"], map_location=args.device))
 
     video_paths = []
     all_results = {}
@@ -75,7 +67,7 @@ if __name__ == "__main__":
     if os.path.exists(out_path):
         os.remove(out_path)
     with open(out_path, "w") as w:
-        w.write(f"path, aesthetic score, technical score, overall/final score\n")
+        w.write("path, aesthetic score, technical score, overall/final score\n")
 
     dopt = opt["data"]["val-l1080p"]["args"]
 
@@ -85,7 +77,10 @@ if __name__ == "__main__":
     dataset = ViewDecompositionDataset(dopt)
 
     dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=1, num_workers=opt["num_workers"], pin_memory=True,
+        dataset,
+        batch_size=1,
+        num_workers=opt["num_workers"],
+        pin_memory=True,
     )
 
     resume_path = f"dover_predictions/val-custom_{dir_videos.split('/')[-1]}.pkl"
@@ -112,13 +107,9 @@ if __name__ == "__main__":
                 b, c, t, h, w = video[key].shape
                 video[key] = (
                     video[key]
-                    .reshape(
-                        b, c, data["num_clips"][key], t // data["num_clips"][key], h, w
-                    )
+                    .reshape(b, c, data["num_clips"][key], t // data["num_clips"][key], h, w)
                     .permute(0, 2, 1, 3, 4, 5)
-                    .reshape(
-                        b * data["num_clips"][key], c, t // data["num_clips"][key], h, w
-                    )
+                    .reshape(b * data["num_clips"][key], c, t // data["num_clips"][key], h, w)
                 )
 
         with torch.no_grad():
@@ -127,19 +118,20 @@ if __name__ == "__main__":
 
         rescaled_results = fuse_results(results)
 
-        with open(os.path.join(results_dir, "zero_shot_res_sensehdr.txt"),"a") as wf:
-            wf.write(f'{data["name"][0].split("/")[-1]},{rescaled_results["aesthetic"]*100:4f}, {rescaled_results["technical"]*100:4f},{rescaled_results["overall"]*100:4f}\n')
+        with open(os.path.join(results_dir, "zero_shot_res_sensehdr.txt"), "a") as wf:
+            wf.write(
+                f"{data['name'][0].split('/')[-1]},{rescaled_results['aesthetic'] * 100:4f}, {rescaled_results['technical'] * 100:4f},{rescaled_results['overall'] * 100:4f}\n"
+            )
 
         with open(out_path, "a") as w:
             w.write(
-                f'{data["name"][0].split("/")[-1].split(".")[0]}, {rescaled_results["aesthetic"]*100:4f}, {rescaled_results["technical"]*100:4f},{rescaled_results["overall"]*100:4f}\n'
+                f"{data['name'][0].split('/')[-1].split('.')[0]}, {rescaled_results['aesthetic'] * 100:4f}, {rescaled_results['technical'] * 100:4f},{rescaled_results['overall'] * 100:4f}\n"
             )
-        aesthetic_sum+=rescaled_results["aesthetic"]*100
-        technical_sum+=rescaled_results["technical"]*100
-        overall_sum+=rescaled_results["overall"]*100
+        aesthetic_sum += rescaled_results["aesthetic"] * 100
+        technical_sum += rescaled_results["technical"] * 100
+        overall_sum += rescaled_results["overall"] * 100
 
-    
     with open(out_path, "a") as w:
-            w.write(
-                f'Avg. scores: {aesthetic_sum/len(dataloader)}, {technical_sum/len(dataloader)},{overall_sum/len(dataloader)}\n'
-            )
+        w.write(
+            f"Avg. scores: {aesthetic_sum / len(dataloader)}, {technical_sum / len(dataloader)},{overall_sum / len(dataloader)}\n"
+        )

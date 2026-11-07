@@ -1,6 +1,7 @@
-from torch.utils.data import Dataset
-from PIL import Image
 from pathlib import Path
+
+from PIL import Image
+from torch.utils.data import Dataset
 
 
 class ImageFilesDataset(Dataset):
@@ -10,9 +11,7 @@ class ImageFilesDataset(Dataset):
     For `conditional=False`, will search recursively for all files that match the extension
     """
 
-    def __init__(
-        self, path, name=None, extension="png", transform=None, conditional=False
-    ):
+    def __init__(self, path, name=None, extension="png", transform=None, conditional=False):
         self.path = path
         self.name = name
         self.extension = extension

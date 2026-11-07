@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.official_result_scoring import (
     OfficialMetricScore,
@@ -54,11 +55,7 @@ def official_scores_from_records(
         scores["physical_commonsense"] = physical
     if joint is not None:
         scores["joint_score"] = joint
-    average = (
-        _score_from_records(records, average_id, official_results_path)
-        if average_id is not None
-        else None
-    )
+    average = _score_from_records(records, average_id, official_results_path) if average_id is not None else None
     if average_id is not None and average is not None:
         scores[average_id] = average
     elif average_id is not None:

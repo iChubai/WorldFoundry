@@ -6,9 +6,10 @@ import hashlib
 import json
 import os
 import subprocess
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.filesystem.file_utils import materialize_file
 from worldfoundry.evaluation.tasks.execution.framework.official_runner import default_benchmark_timeout
@@ -62,7 +63,6 @@ def resolve_phyvideos_dir(
     return (root / "PhyVideos" / resolved_model).resolve()
 
 
-
 @dataclass(frozen=True)
 class PhyGenBenchJudgeConfig:
     backend: str
@@ -74,10 +74,14 @@ class PhyGenBenchJudgeConfig:
 
 def judge_config_from_env(*, repo_root: Path | None = None) -> PhyGenBenchJudgeConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_PHYGENBENCH_JUDGE_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_PHYGENBENCH_SCORER_BACKEND")
-        or "mock"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_PHYGENBENCH_JUDGE_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_PHYGENBENCH_SCORER_BACKEND")
+            or "mock"
+        )
+        .strip()
+        .lower()
+    )
     repo_root = resolve_phygenbench_root(repo_root)
     prompts_json_path = None
     try:
@@ -95,7 +99,7 @@ def judge_config_from_env(*, repo_root: Path | None = None) -> PhyGenBenchJudgeC
 
 
 def _deterministic_stage_score(*, seed: str, offset: int) -> int:
-    digest = hashlib.sha256(f"{seed}:{offset}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(f"{seed}:{offset}".encode()).hexdigest()
     bucket = int(digest[:8], 16) % 4
     return bucket
 

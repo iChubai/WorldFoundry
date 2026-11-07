@@ -33,6 +33,7 @@ class ExternalBenchmarkContract:
             rather than purely via text/json-level parsing.
         notes: Explanatory annotations and developer cautions.
     """
+
     benchmark_id: str
     display_name: str
     input_keys: tuple[str, ...]
@@ -95,7 +96,7 @@ def register_external_benchmark_contract(
     target: dict[str, ExternalBenchmarkContract] | None = None,
 ) -> ExternalBenchmarkContract:
     """Registers one benchmark contract with source-aware collision handling.
-    
+
     If the source is `"builtin"`, ensures no identical system-level benchmark
     is accidentally overwritten by another internal definition.
 
@@ -142,6 +143,7 @@ class ExternalBenchmarkContractRegistry:
     Ensures that benchmark suites (e.g. VBench, RoboTwin) can be instantiated seamlessly
     by providing a global canonical registry that validates inputs against collision risks.
     """
+
     def __init__(
         self,
         contracts: Iterable[ExternalBenchmarkContract] = (),

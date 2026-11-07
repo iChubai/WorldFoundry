@@ -13,8 +13,9 @@ Key abstractions:
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Iterable, Iterator, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api.json_contract import (
     JsonContract,
@@ -40,6 +41,7 @@ class WorldTaskConfig(JsonContract):
     protocol used for evaluation (e.g., open-loop video generation or closed-loop control),
     the associated metric groups, and metadata needed to execute the task safely.
     """
+
     name: str
     protocol: str
     evaluation_protocol: tuple[EvaluationProtocolSpec, ...]
@@ -132,7 +134,7 @@ class WorldTaskConfig(JsonContract):
         return tuple(protocol.name for protocol in self.evaluation_protocol)
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any]) -> "WorldTaskConfig":
+    def from_mapping(cls, data: Mapping[str, Any]) -> WorldTaskConfig:
         """Constructs a `WorldTaskConfig` safely from a raw dictionary/JSON mapping.
 
         Args:
@@ -197,6 +199,7 @@ class BenchmarkSpec(JsonContract):
     Wraps multiple `WorldTaskConfig` instances together along with shared evaluation metadata
     like splits, tags, dataset root locations, and supported metrics.
     """
+
     name: str
     version: str
     tasks: tuple[WorldTaskConfig, ...]
@@ -264,7 +267,7 @@ class BenchmarkSpec(JsonContract):
         return self.name
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any]) -> "BenchmarkSpec":
+    def from_mapping(cls, data: Mapping[str, Any]) -> BenchmarkSpec:
         """Constructs a `BenchmarkSpec` safely from a raw dictionary/JSON mapping.
 
         Args:
@@ -466,8 +469,8 @@ def _protocol_matches(task: WorldTaskConfig, protocol: str, protocol_kind: str) 
 
 class CatalogRegistry:
     """In-memory benchmark catalog with task, tag, and protocol indexes.
-    
-    Provides a rich set of filtering methods to quickly resolve `BenchmarkSpec` and `WorldTaskConfig` 
+
+    Provides a rich set of filtering methods to quickly resolve `BenchmarkSpec` and `WorldTaskConfig`
     instances via tags, execution protocols, or benchmark/task identifiers.
     """
 
@@ -650,9 +653,11 @@ class CatalogRegistry:
                 if task_key is not None and task_spec.name.casefold() != task_key:
                     continue
                 # Check if the tag matches either a benchmark-level tag or a task-level tag.
-                if tag_key is not None and tag_key not in benchmark_tags and tag_key not in {
-                    item.casefold() for item in task_spec.tags
-                }:
+                if (
+                    tag_key is not None
+                    and tag_key not in benchmark_tags
+                    and tag_key not in {item.casefold() for item in task_spec.tags}
+                ):
                     continue
                 if protocol is not None and not _protocol_matches(task_spec, protocol, protocol_kind):
                     continue

@@ -7,16 +7,15 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
-    first_existing_dir,
-    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
+    first_existing_dir,
+    resolve_env_path,
 )
 
 BENCHMARK_ID = "ewmbench"
 IN_TREE_EWMBENCH_ROOT = Path(__file__).resolve().parent / "runtime" / "ewmbench"
 TASK_MANIFEST_REL = Path("task_manifest.json")
-
 
 
 def resolve_ewmbench_root(explicit: Path | None = None) -> Path | None:
@@ -50,8 +49,7 @@ def resolve_task_manifest_path(
     root = repo_root or resolve_ewmbench_root()
     if root is None:
         raise FileNotFoundError(
-            "EWMBench task manifest is missing. Set WORLDFOUNDRY_EWMBENCH_TASK_MANIFEST "
-            "or WORLDFOUNDRY_EWMBENCH_ROOT."
+            "EWMBench task manifest is missing. Set WORLDFOUNDRY_EWMBENCH_TASK_MANIFEST or WORLDFOUNDRY_EWMBENCH_ROOT."
         )
     candidate = root / TASK_MANIFEST_REL
     if not candidate.is_file():

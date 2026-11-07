@@ -8,8 +8,9 @@ the responsibility of the existing runners.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 EVALUATION_PROVENANCE_SCHEMA_VERSION = "worldfoundry-evaluation-provenance-v1"
 
@@ -114,7 +115,7 @@ class EvaluationFidelity:
         }
 
     @classmethod
-    def from_mapping(cls, payload: Mapping[str, Any]) -> "EvaluationFidelity":
+    def from_mapping(cls, payload: Mapping[str, Any]) -> EvaluationFidelity:
         dimensions = payload.get("fidelity")
         dimensions = dimensions if isinstance(dimensions, Mapping) else payload
         return cls(
@@ -197,8 +198,10 @@ def reproduction_fidelity(
         data_fidelity = "official"
 
     protocol_declared_official = reference.get("protocol_fidelity") == "official"
-    if benchmark_mode == "official-run" and benchmark_revision and (
-        protocol_declared_official or not evaluation_parameters
+    if (
+        benchmark_mode == "official-run"
+        and benchmark_revision
+        and (protocol_declared_official or not evaluation_parameters)
     ):
         evaluation_fidelity = "official"
     else:

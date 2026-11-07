@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.utils import mapping_or_empty as _mapping
 from worldfoundry.evaluation.utils import read_json_object, read_jsonl_objects

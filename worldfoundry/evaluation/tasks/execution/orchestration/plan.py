@@ -44,7 +44,7 @@ def _task_payload(entry: TaskRegistryEntry | None) -> dict[str, Any] | None:
     return payload
 
 
-def _materialize_requests_from_task(plan: "RunPlan") -> tuple[GenerationRequest, ...] | None:
+def _materialize_requests_from_task(plan: RunPlan) -> tuple[GenerationRequest, ...] | None:
     """Processes task parameters and datasets from a RunPlan to materialize GenerationRequests.
 
     Locates the underlying dataset manifest or metadata file, reads the raw sample records,
@@ -198,7 +198,7 @@ class RunPlan:
         return payload
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RunPlan":
+    def from_dict(cls, data: Mapping[str, Any]) -> RunPlan:
         """Reconstructs a RunPlan instance from a configuration dictionary, applying safe defaults."""
         return cls(
             runner=str(data.get("runner", "evaluate")),
@@ -224,7 +224,7 @@ class RunPlan:
         )
 
     @classmethod
-    def from_json(cls, payload: str) -> "RunPlan":
+    def from_json(cls, payload: str) -> RunPlan:
         """Loads and reconstructs a RunPlan from a raw JSON string."""
         data = json.loads(payload)
         if not isinstance(data, Mapping):
@@ -483,7 +483,7 @@ def validate_run_plan(plan: RunPlan | Mapping[str, Any]) -> dict[str, Any]:
             "metrics": metric_validation,
             "dataset": dataset_validation,
         }
-    except Exception as exc:  # noqa: BLE001 - validation should return structured errors.
+    except Exception as exc:  # validation should return structured errors.
         return {
             "ok": False,
             "schema_version": None,

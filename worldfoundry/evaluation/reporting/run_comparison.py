@@ -7,8 +7,9 @@ metric.  Results are emitted as a JSON payload and/or a Markdown table.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.utils import (
     escape_markdown_cell as _escape_markdown_cell,
@@ -74,11 +75,7 @@ def build_markdown_comparison(comparison: Mapping[str, Any]) -> str:
         *[
             column
             for metric_id in metric_ids
-            for column in (
-                [metric_id, f"{metric_id} delta"]
-                if comparison.get("baseline") is not None
-                else [metric_id]
-            )
+            for column in ([metric_id, f"{metric_id} delta"] if comparison.get("baseline") is not None else [metric_id])
         ],
     ]
     lines.append("| " + " | ".join(headers) + " |")
@@ -137,6 +134,7 @@ def build_markdown_comparison(comparison: Mapping[str, Any]) -> str:
 
     return "\n".join(lines).rstrip() + "\n"
 
+
 # ── Internal helpers ─────────────────────────────────────────
 def _higher_is_better(summaries: Sequence[Mapping[str, Any]], metric_id: str) -> bool | None:
     """Determine whether higher values are better for *metric_id* across *summmaries*."""
@@ -150,6 +148,7 @@ def _higher_is_better(summaries: Sequence[Mapping[str, Any]], metric_id: str) ->
         values.append(value)
     return values[0] if values and all(value == values[0] for value in values) else None
 
+
 def _best_by_metric(
     *,
     rows: Sequence[Mapping[str, Any]],
@@ -161,7 +160,7 @@ def _best_by_metric(
     for metric_id in metric_ids:
         candidates = []
         candidate_summaries = []
-        for row, summary in zip(rows, summaries):
+        for row, summary in zip(rows, summaries, strict=False):
             metric = _mapping(_mapping(_mapping(summary.get("metrics")).get("per_metric")).get(metric_id))
             if row.get("score_valid") is False or metric.get("valid") is False:
                 continue
@@ -178,9 +177,7 @@ def _best_by_metric(
         if higher_is_better is None:
             continue
         best_value, best_row = (
-            max(candidates, key=lambda item: item[0])
-            if higher_is_better
-            else min(candidates, key=lambda item: item[0])
+            max(candidates, key=lambda item: item[0]) if higher_is_better else min(candidates, key=lambda item: item[0])
         )
         best[metric_id] = {
             "value": best_value,
@@ -190,6 +187,7 @@ def _best_by_metric(
             "higher_is_better": higher_is_better,
         }
     return best
+
 
 def _metric_matrix(
     *,
@@ -223,6 +221,7 @@ def _metric_matrix(
         }
     return metrics
 
+
 def _resolve_baseline_label(rows: Sequence[Mapping[str, Any]], baseline: int | str | None) -> str | None:
     """Resolve a baseline identifier (index, label, run ID, or model ID) to a row label."""
     if baseline is None:
@@ -236,6 +235,7 @@ def _resolve_baseline_label(rows: Sequence[Mapping[str, Any]], baseline: int | s
         if baseline_text in {str(row.get("label")), str(row.get("run_id")), str(row.get("model_id"))}:
             return str(row.get("label"))
     raise ValueError(f"baseline did not match a run label, run_id, or model_id: {baseline_text}")
+
 
 def build_run_comparison(
     runs: Sequence[str | Path],
@@ -284,9 +284,7 @@ def build_run_comparison(
     available_metric_ids = set().union(*metric_ids_by_run)
     common_metric_ids = set.intersection(*metric_ids_by_run) if metric_ids_by_run else set()
     selected_metric_ids = (
-        [str(metric_id) for metric_id in metric_ids]
-        if metric_ids is not None
-        else sorted(common_metric_ids)
+        [str(metric_id) for metric_id in metric_ids] if metric_ids is not None else sorted(common_metric_ids)
     )
     incompatibilities, compatibility_warnings = compare_identities(identities, metric_ids=selected_metric_ids)
     if incompatibilities:
@@ -340,13 +338,11 @@ def build_run_comparison(
         "issues": [
             *mock_backend_issues,
             *[f"metric not found in any run: {metric_id}" for metric_id in unknown_metric_ids],
-            *[
-                f"metric not found in every run: {metric_id}"
-                for metric_id in partially_available_metric_ids
-            ],
+            *[f"metric not found in every run: {metric_id}" for metric_id in partially_available_metric_ids],
         ],
         "artifacts": {},
     }
+
 
 def write_run_comparison(
     runs: Sequence[str | Path],

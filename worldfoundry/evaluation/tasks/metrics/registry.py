@@ -25,6 +25,7 @@ from worldfoundry.evaluation.api.metrics import aggregate_mean
 # Metric module protocol (one-folder-per-metric packages)
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class MetricModuleSpec:
     """Declarative metadata exported by one-folder-per-metric modules."""
@@ -39,7 +40,7 @@ class MetricModuleSpec:
     parameterized_prefix: str | None = None
     implementation: str | None = None
 
-    def registry_entry(self) -> "MetricRegistryEntry":
+    def registry_entry(self) -> MetricRegistryEntry:
         return MetricRegistryEntry(
             id=self.id,
             aliases=self.aliases,
@@ -62,8 +63,7 @@ class MetricModule(Protocol):
 
     METRIC_MODULE: MetricModuleSpec
 
-    def compute(self, *args: Any, **kwargs: Any) -> Any:
-        ...
+    def compute(self, *args: Any, **kwargs: Any) -> Any: ...
 
 
 def metric_module_from_globals(
@@ -95,6 +95,7 @@ def metric_module_from_globals(
 # Artifact normalization
 # ---------------------------------------------------------------------------
 
+
 def _metric_key(value: str) -> str:
     return value.strip().casefold().replace("_", "-")
 
@@ -108,7 +109,13 @@ def _as_mapping(value: Any) -> Mapping[str, Any] | None:
 
 
 def _artifact_record_from_mapping(value: Mapping[str, Any], default_kind: str = "generated_artifact") -> dict[str, Any]:
-    uri = value.get("uri") or value.get("path") or value.get("resolved_path") or value.get("file") or value.get("filename")
+    uri = (
+        value.get("uri")
+        or value.get("path")
+        or value.get("resolved_path")
+        or value.get("file")
+        or value.get("filename")
+    )
     kind = value.get("kind") or value.get("name") or value.get("key") or default_kind
     return {
         "uri": None if uri is None else str(uri),
@@ -129,7 +136,9 @@ def _artifact_record_from_path(value: str | Path, default_kind: str = "generated
     }
 
 
-def _artifact_records_from_sequence(value: Sequence[Any], default_kind: str = "generated_artifact") -> tuple[dict[str, Any], ...]:
+def _artifact_records_from_sequence(
+    value: Sequence[Any], default_kind: str = "generated_artifact"
+) -> tuple[dict[str, Any], ...]:
     records: list[dict[str, Any]] = []
     for item in value:
         mapping = _as_mapping(item)
@@ -212,6 +221,7 @@ def missing_artifacts(
 # Offline existing-results metrics
 # ---------------------------------------------------------------------------
 
+
 def _numeric_container_values(container: Any) -> dict[str, float]:
     if not isinstance(container, Mapping):
         return {}
@@ -244,9 +254,7 @@ def _is_failed(result: GenerationResult) -> bool:
 
 
 #: Canonical metric ids `BuiltinExistingResultsMetric.__call__` actually implements.
-OFFLINE_COMPUTABLE_METRIC_IDS: frozenset[str] = frozenset(
-    {"artifact_count", "required_artifacts_present", "numeric"}
-)
+OFFLINE_COMPUTABLE_METRIC_IDS: frozenset[str] = frozenset({"artifact_count", "required_artifacts_present", "numeric"})
 #: Parameterized prefixes `BuiltinExistingResultsMetric.__call__` actually implements.
 OFFLINE_COMPUTABLE_METRIC_PREFIXES: tuple[str, ...] = ("has_artifact:", "numeric:")
 
@@ -283,35 +291,42 @@ class BuiltinExistingResultsMetric:
             )
         self.required_artifacts = tuple(str(item) for item in (required_artifacts or ()))
         self.parameters = {"metrics": self.metrics}
-        self.metric_ids = tuple(dict.fromkeys([
-            *(key.removeprefix("numeric:") for key in self.metrics),
-            *(f"has_artifact:{key}" for key in self.required_artifacts),
-            *(["required_artifacts_present"] if self.required_artifacts else []),
-            "generation_success",
-        ]))
+        self.metric_ids = tuple(
+            dict.fromkeys(
+                [
+                    *(key.removeprefix("numeric:") for key in self.metrics),
+                    *(f"has_artifact:{key}" for key in self.required_artifacts),
+                    *(["required_artifacts_present"] if self.required_artifacts else []),
+                    "generation_success",
+                ]
+            )
+        )
 
-    def resolve_numeric_fields(self, results: Sequence[GenerationResult]) -> "BuiltinExistingResultsMetric":
+    def resolve_numeric_fields(self, results: Sequence[GenerationResult]) -> BuiltinExistingResultsMetric:
         """Expand the numeric wildcard once for this run without mutating a reusable metric."""
         if "numeric" not in self.metrics:
             return self
-        fields = sorted({
-            key for result in results if is_generation_result_successful(result)
-            for key in _numeric_values(result)
-        })
+        fields = sorted(
+            {key for result in results if is_generation_result_successful(result) for key in _numeric_values(result)}
+        )
         if not fields:
             return self
-        metrics = tuple(dict.fromkeys(
-            value for key in self.metrics
-            for value in ([f"numeric:{field}" for field in fields] if key == "numeric" else [key])
-        ))
+        metrics = tuple(
+            dict.fromkeys(
+                value
+                for key in self.metrics
+                for value in ([f"numeric:{field}" for field in fields] if key == "numeric" else [key])
+            )
+        )
         return BuiltinExistingResultsMetric(metrics, self.required_artifacts)
 
     def metric_definition(self, metric_id: str) -> dict[str, Any]:
         """Keep numeric field selection separate from artifact checks and metric groups."""
-        artifact_metric = (
-            metric_id in {"artifact_count", "required_artifacts_present", "generation_success"}
-            or metric_id.startswith("has_artifact:")
-        )
+        artifact_metric = metric_id in {
+            "artifact_count",
+            "required_artifacts_present",
+            "generation_success",
+        } or metric_id.startswith("has_artifact:")
         direction = True if artifact_metric else None
         if not artifact_metric:
             try:
@@ -327,18 +342,23 @@ class BuiltinExistingResultsMetric:
     def compute_sample(self, request: GenerationRequest, result: GenerationResult) -> list[MetricResult]:
         values = self(request, result)["metrics"]
         rows = [
-            MetricResult(sample_id=request.sample_id, metric_id=key, raw_value=value)
-            for key, value in values.items()
+            MetricResult(sample_id=request.sample_id, metric_id=key, raw_value=value) for key, value in values.items()
         ]
         missing = [
-            key.removeprefix("numeric:") for key in self.metrics
+            key.removeprefix("numeric:")
+            for key in self.metrics
             if key.startswith("numeric:") and key.removeprefix("numeric:") not in values
         ]
         if "numeric" in self.metrics and not _numeric_values(result):
             missing.append("numeric")
         rows.extend(
-            MetricResult(sample_id=request.sample_id, metric_id=key, valid=False, coverage=0,
-                         skip_reason="numeric value not emitted by runner")
+            MetricResult(
+                sample_id=request.sample_id,
+                metric_id=key,
+                valid=False,
+                coverage=0,
+                skip_reason="numeric value not emitted by runner",
+            )
             for key in missing
         )
         return rows
@@ -463,6 +483,7 @@ def discover_metric_registry_entries(
 # Registry
 # ---------------------------------------------------------------------------
 
+
 class MetricRegistryError(ValueError):
     """Base error for metric-registry failures."""
 
@@ -485,7 +506,7 @@ def _normalise_key(value: str, field_name: str = "metric key") -> str:
     return value.casefold().replace("_", "-")
 
 
-def _parameterized_suffix(entry: "MetricRegistryEntry", metric_id: str) -> str | None:
+def _parameterized_suffix(entry: MetricRegistryEntry, metric_id: str) -> str | None:
     """Return parameterized suffix when ``metric_id`` matches ``entry`` prefix."""
     if not entry.parameterized_prefix:
         return None
@@ -530,8 +551,7 @@ class MetricRegistryEntry:
         # BuiltinExistingResultsMetric; claiming it for every registered entry
         # (fid, cmmd, vqa_score, ...) would misdescribe ~55 metric packages.
         offline = is_offline_computable_metric_id(self.id) or (
-            self.parameterized_prefix is not None
-            and self.parameterized_prefix in OFFLINE_COMPUTABLE_METRIC_PREFIXES
+            self.parameterized_prefix is not None and self.parameterized_prefix in OFFLINE_COMPUTABLE_METRIC_PREFIXES
         )
         return MetricSpec(
             id=self.id,
@@ -977,6 +997,8 @@ def validate_metric_ids(
 
 __all__ = [
     "BUILTIN_METRIC_REGISTRY_ENTRIES",
+    "OFFLINE_COMPUTABLE_METRIC_IDS",
+    "OFFLINE_COMPUTABLE_METRIC_PREFIXES",
     "BuiltinExistingResultsMetric",
     "DuplicateMetricRegistryKeyError",
     "MetricModule",
@@ -984,13 +1006,11 @@ __all__ = [
     "MetricRegistry",
     "MetricRegistryEntry",
     "MetricRegistryError",
-    "OFFLINE_COMPUTABLE_METRIC_IDS",
-    "OFFLINE_COMPUTABLE_METRIC_PREFIXES",
     "UnknownMetricRegistryKeyError",
-    "is_offline_computable_metric_id",
     "create_existing_results_metric",
     "default_metric_registry",
     "discover_metric_registry_entries",
+    "is_offline_computable_metric_id",
     "list_metric_registry_entries",
     "load_metric_module_spec",
     "load_metric_module_specs",

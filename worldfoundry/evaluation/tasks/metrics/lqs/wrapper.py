@@ -45,7 +45,7 @@ def _match_boxes(
         pred_centers = np.array([_bbox_center(item["bbox"]) for item in pred_items])
         costs = np.linalg.norm(gt_centers[:, None] - pred_centers[None, :], axis=-1)
         gt_indices, pred_indices = linear_sum_assignment(costs)
-        pairs.extend((gt_items[i], pred_items[j]) for i, j in zip(gt_indices, pred_indices))
+        pairs.extend((gt_items[i], pred_items[j]) for i, j in zip(gt_indices, pred_indices, strict=False))
     return pairs
 
 
@@ -88,7 +88,7 @@ def compute_lqs(
         rel_terms.append(float(np.linalg.norm(gt_rel - pred_rel)))
     rlc = float(np.mean(rel_terms)) if rel_terms else 0.0
     lc = gamma_lc * np.exp(-alc / (2.0 * sigma_l**2)) + (1.0 - gamma_lc) * np.exp(-rlc / (2.0 * sigma_l**2))
-    aac = 1.0 - float(np.mean([abs(p - g) / image_area for g, p in zip(gt_areas, pred_areas)]))
+    aac = 1.0 - float(np.mean([abs(p - g) / image_area for g, p in zip(gt_areas, pred_areas, strict=False)]))
     rac_terms = []
     for i, j in combinations(range(len(pairs)), 2):
         gt_cmp = gt_areas[i] > gt_areas[j]

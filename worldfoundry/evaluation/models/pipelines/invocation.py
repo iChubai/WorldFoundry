@@ -7,8 +7,9 @@ interaction controls, and dispatches calls to pipeline objects.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.contracts import PipelineInvocation
 from worldfoundry.evaluation.api import GenerationRequest
@@ -51,6 +52,7 @@ CONSUMED_INPUT_KEYS = frozenset((*TEXT_INPUT_KEYS, *IMAGE_INPUT_KEYS, *VIDEO_INP
 
 # ── Output path helpers ──────────────────────────────────────────────
 
+
 def request_output_dir(runner_output_dir: Path | None, kwargs: dict[str, Any]) -> Path:
     """Resolve and create the output directory for a request execution."""
     output_dir = runner_output_dir or Path(kwargs.pop("output_dir", "tmp/pipeline_eval"))
@@ -64,6 +66,7 @@ def sample_output_path(output_dir: Path, request: GenerationRequest, artifact_fi
 
 
 # ── Private helpers ──────────────────────────────────────────────────
+
 
 def _first_truthy(source: Mapping[str, Any], keys: tuple[str, ...]) -> Any:
     """Return the first value in ``source`` mapping associated with ``keys`` that evaluates to True."""
@@ -130,6 +133,7 @@ def _operator_specific_inputs(inputs: Mapping[str, Any], controls: Mapping[str, 
 
 # ── Public invocation builders ───────────────────────────────────────
 
+
 def build_pipeline_invocation(
     *,
     request: GenerationRequest,
@@ -168,6 +172,7 @@ def build_pipeline_invocation(
 
 
 # ── Pipeline dispatch ───────────────────────────────────────────────
+
 
 def invoke_pipeline(pipeline: Any, invocation: PipelineInvocation) -> Mapping[str, Any]:
     """Invoke the pipeline using either native ``run_pipeline_invocation`` or standard ``__call__``.
@@ -209,9 +214,9 @@ __all__ = [
     "ACTION_CONTROL_KEYS",
     "CONSUMED_INPUT_KEYS",
     "IMAGE_INPUT_KEYS",
-    "PipelineInvocation",
     "TEXT_INPUT_KEYS",
     "VIDEO_INPUT_KEYS",
+    "PipelineInvocation",
     "build_pipeline_invocation",
     "invoke_pipeline",
     "request_output_dir",

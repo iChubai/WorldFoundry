@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 from .json_contract import JsonContract, copy_mapping, tuple_of_str
 
@@ -41,7 +42,7 @@ class WorldModelManifest(JsonContract):
         object.__setattr__(self, "metadata", copy_mapping(self.metadata))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "WorldModelManifest":
+    def from_dict(cls, data: Mapping[str, Any]) -> WorldModelManifest:
         return cls(
             model_id=str(data["model_id"]),
             name=data.get("name", ""),

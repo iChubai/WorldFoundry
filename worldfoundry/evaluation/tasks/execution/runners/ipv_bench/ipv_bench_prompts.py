@@ -8,10 +8,10 @@ from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
-    first_existing_dir,
-    resolve_env_path,
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
+    first_existing_dir,
+    resolve_env_path,
 )
 
 BENCHMARK_ID = "ipv-bench"
@@ -23,8 +23,6 @@ MCQA_ANSWERS_REL = Path("mcqa_answer.json")
 OPENQA_QUESTIONS_REL = Path("openqa_question.json")
 OPENQA_ANSWERS_REL = Path("openqa_answer.json")
 CANONICAL_PROMPT_COUNT = 260
-
-
 
 
 def resolve_ipv_bench_root(explicit: Path | None = None) -> Path | None:
@@ -56,8 +54,7 @@ def resolve_prompt_suite_path(
     root = repo_root or resolve_ipv_bench_root()
     if root is None:
         raise FileNotFoundError(
-            "IPV prompt suite is missing. Set WORLDFOUNDRY_IPV_BENCH_ROOT or "
-            "WORLDFOUNDRY_IPV_BENCH_PROMPT_MANIFEST."
+            "IPV prompt suite is missing. Set WORLDFOUNDRY_IPV_BENCH_ROOT or WORLDFOUNDRY_IPV_BENCH_PROMPT_MANIFEST."
         )
     candidate = root / PROMPT_SUITE_REL
     if not candidate.is_file():
@@ -84,7 +81,9 @@ def resolve_understanding_file(
     return candidate if candidate.is_file() else None
 
 
-def _traverse_prompt_suite(data: Any, path: list[str] | None = None, result: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+def _traverse_prompt_suite(
+    data: Any, path: list[str] | None = None, result: list[dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
     if path is None:
         path = []
     if result is None:
@@ -122,7 +121,9 @@ def load_prompt_records(*, prompt_suite_path: Path | None = None) -> list[dict[s
 def unique_prompt_records(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     records: list[dict[str, Any]] = []
-    for row in sorted(rows, key=lambda item: int(item["prompt_id"]) if str(item["prompt_id"]).isdigit() else item["prompt_id"]):
+    for row in sorted(
+        rows, key=lambda item: int(item["prompt_id"]) if str(item["prompt_id"]).isdigit() else item["prompt_id"]
+    ):
         prompt_id = str(row["prompt_id"])
         if prompt_id in seen:
             continue

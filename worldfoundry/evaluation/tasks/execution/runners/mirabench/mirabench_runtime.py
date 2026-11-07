@@ -6,9 +6,10 @@ import hashlib
 import json
 import os
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.execution.process import read_text_tail, run_logged_subprocess
 from worldfoundry.core.io import materialize_file
@@ -65,7 +66,6 @@ def resolve_ckpt_path(*, repo_root: Path | None = None) -> Path:
     return (root / "data" / "ckpt").resolve()
 
 
-
 @dataclass(frozen=True)
 class MiraBenchScorerConfig:
     backend: str
@@ -79,10 +79,14 @@ class MiraBenchScorerConfig:
 
 def scorer_config_from_env(*, repo_root: Path | None = None) -> MiraBenchScorerConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_MIRABENCH_SCORER_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_MIRABENCH_JUDGE_BACKEND")
-        or "mock"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_MIRABENCH_SCORER_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_MIRABENCH_JUDGE_BACKEND")
+            or "mock"
+        )
+        .strip()
+        .lower()
+    )
     repo_root = resolve_mirabench_root(repo_root)
     meta_csv_path = None
     gt_meta_csv_path = None
@@ -104,7 +108,7 @@ def scorer_config_from_env(*, repo_root: Path | None = None) -> MiraBenchScorerC
 
 
 def _deterministic_mock_score(*, seed: str, metric_id: str) -> float:
-    digest = hashlib.sha256(f"{seed}:{metric_id}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(f"{seed}:{metric_id}".encode()).hexdigest()
     bucket = int(digest[:8], 16) % 25
     higher_is_better = METRIC_SPECS[metric_id]["higher_is_better"]
     if higher_is_better:
@@ -189,9 +193,7 @@ def _run_upstream_calculate_score(
         )
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(
-        part for part in (str(repo_root.resolve()), env.get("PYTHONPATH")) if part
-    )
+    env["PYTHONPATH"] = os.pathsep.join(part for part in (str(repo_root.resolve()), env.get("PYTHONPATH")) if part)
     timeout_value = os.environ.get("WORLDFOUNDRY_MIRABENCH_TIMEOUT_SECONDS", "").strip()
     timeout_seconds = float(timeout_value) if timeout_value else None
     if timeout_seconds is not None and timeout_seconds <= 0:
@@ -209,16 +211,12 @@ def _run_upstream_calculate_score(
     )
     if completed.returncode != 0:
         detail = read_text_tail(stderr_path) or read_text_tail(stdout_path)
-        raise RuntimeError(
-            "MiraBench upstream calculate_score.py failed "
-            f"(exit={completed.returncode}): {detail}"
-        )
+        raise RuntimeError(f"MiraBench upstream calculate_score.py failed (exit={completed.returncode}): {detail}")
 
     average_score = results_dir / "average_score.csv"
     if not average_score.is_file():
         raise FileNotFoundError(
-            "MiraBench upstream calculate_score.py did not write average_score.csv under "
-            f"{results_dir}"
+            f"MiraBench upstream calculate_score.py did not write average_score.csv under {results_dir}"
         )
     return average_score
 

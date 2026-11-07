@@ -29,6 +29,7 @@ def latest_final_result(results_dir: Path) -> Path:
         return candidates[0]
     raise FileNotFoundError(f"EvalCrafter results must contain final_result.txt: {results_dir}")
 
+
 def run_evalcrafter_scorer(
     *,
     generated_artifact_dir: Path,
@@ -49,10 +50,14 @@ def run_evalcrafter_scorer(
             raise ValueError("--limit must be positive")
         prompt_records = prompt_records[: int(limit)]
     backend = (
-        os.environ.get("WORLDFOUNDRY_EVALCRAFTER_SCORER_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_EVALCRAFTER_RUNTIME_BACKEND")
-        or "raw-video"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_EVALCRAFTER_SCORER_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_EVALCRAFTER_RUNTIME_BACKEND")
+            or "raw-video"
+        )
+        .strip()
+        .lower()
+    )
     if backend not in {"raw-video", "raw_video", "clip"}:
         raise ValueError(
             f"EvalCrafter official-run only supports the raw-video backend, not {backend!r}; "
@@ -79,7 +84,9 @@ def validate_official_inputs(evalcrafter_root: Path, videos_dir: Path) -> dict[s
     from worldfoundry.evaluation.tasks.execution.runners.evalcrafter.evalcrafter_prompts import resolve_prompt700_path
 
     prompt_path = resolve_prompt700_path(repo_root=evalcrafter_root)
-    prompt_lines = [line.strip() for line in prompt_path.read_text(encoding="utf-8", errors="replace").splitlines() if line.strip()]
+    prompt_lines = [
+        line.strip() for line in prompt_path.read_text(encoding="utf-8", errors="replace").splitlines() if line.strip()
+    ]
     prompt = {
         "path": str(prompt_path),
         "exists": prompt_path.is_file(),
@@ -106,7 +113,9 @@ def validate_official_inputs(evalcrafter_root: Path, videos_dir: Path) -> dict[s
     candidate_video_dirs: list[dict[str, Any]] = []
     if videos_dir.is_dir():
         for candidate in sorted(path for path in videos_dir.rglob("*") if path.is_dir()):
-            direct_mp4_count = sum(1 for item in candidate.iterdir() if item.is_file() and item.suffix.lower() == ".mp4")
+            direct_mp4_count = sum(
+                1 for item in candidate.iterdir() if item.is_file() and item.suffix.lower() == ".mp4"
+            )
             if direct_mp4_count:
                 candidate_video_dirs.append({"path": str(candidate), "mp4_count": direct_mp4_count})
     videos = {

@@ -13,13 +13,13 @@ directory, upstream cache, staged videos, logs, result JSON) is written under
 
 from __future__ import annotations
 
-
 import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:  # pragma: no cover - direct script execution
@@ -39,7 +39,6 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (  # noqa: E402
 from worldfoundry.evaluation.tasks.execution.runners.mind.mind_metrics import (  # noqa: E402
     COMPONENT_METRIC_IDS,
     METRIC_ORDER,
-    MindResultError,
     PRIMARY_METRIC_ID,
     aggregate_metrics,
     discover_result_files,
@@ -271,7 +270,7 @@ def run_official_mind(args: argparse.Namespace) -> tuple[Path, dict[str, Any], P
         raise FileNotFoundError(f"generated artifact directory is missing: {test_root}")
     args.generated_artifact_dir = test_root
 
-    dino_path = (args.dino_path or env_path("WORLDFOUNDRY_MIND_DINO_PATH") or weights_dir / "dinov3_vitb16")
+    dino_path = args.dino_path or env_path("WORLDFOUNDRY_MIND_DINO_PATH") or weights_dir / "dinov3_vitb16"
     dino_path = Path(dino_path).expanduser().resolve()
     if _is_inside(dino_path, mind_root):
         raise ValueError(f"DINOv3 weights must not resolve inside the in-tree runtime: {dino_path}")
@@ -326,9 +325,7 @@ def run_official_mind(args: argparse.Namespace) -> tuple[Path, dict[str, Any], P
     }
     write_json(output_dir / "runtime_summary.json", runtime_summary)
     if result.get("returncode") != 0:
-        raise RuntimeError(
-            f"MIND official runtime failed with exit code {result.get('returncode')}; see {log_path}"
-        )
+        raise RuntimeError(f"MIND official runtime failed with exit code {result.get('returncode')}; see {log_path}")
     if not result_path.is_file():
         raise FileNotFoundError(f"MIND runtime completed but wrote no result document: {result_path}")
     return result_path, runtime_summary, output_dir, mind_root
@@ -359,14 +356,10 @@ def build_scorecard(
     available = [row for row in rows if row["available"]]
 
     missing_components = missing_component_metrics(metrics)
-    gt_sample_count = sum(
-        1 for record in records if str(record.get("test_type") or "") in GT_TEST_TYPES
-    )
+    gt_sample_count = sum(1 for record in records if str(record.get("test_type") or "") in GT_TEST_TYPES)
     comparability_blockers: list[str] = []
     if fixture_only:
-        comparability_blockers.append(
-            "scores come from the bundled synthetic MIND fixture, not from a MIND evaluation"
-        )
+        comparability_blockers.append("scores come from the bundled synthetic MIND fixture, not from a MIND evaluation")
     if not official_runtime_executed:
         comparability_blockers.append("official MIND runtime was not executed by this run")
     if missing_components:
@@ -379,9 +372,7 @@ def build_scorecard(
             f"({gt_sample_count}/{EXPECTED_OFFICIAL_SAMPLE_COUNT} mem_test + action_space_test clips)"
         )
     if summary["failed_sample_count"]:
-        comparability_blockers.append(
-            f"{summary['failed_sample_count']} MIND samples reported an upstream error"
-        )
+        comparability_blockers.append(f"{summary['failed_sample_count']} MIND samples reported an upstream error")
 
     official_verified = official_runtime_executed and not comparability_blockers and bool(available)
     leaderboard_blockers = list(comparability_blockers)
@@ -389,9 +380,7 @@ def build_scorecard(
         "MIND publishes no official composite score or leaderboard at the pinned revision; "
         "mind_average is a WorldFoundry-derived aggregate"
     )
-    leaderboard_blockers.append(
-        "official submission packaging and dataset provenance were not validated by this run"
-    )
+    leaderboard_blockers.append("official submission packaging and dataset provenance were not validated by this run")
 
     scorecard_path = output_dir / "scorecard.json"
     raw_metric_table_path = output_dir / "raw_metric_table.jsonl"
@@ -432,9 +421,7 @@ def build_scorecard(
         },
         "benchmark": {"benchmark_id": args.benchmark_id, "name": BENCHMARK_NAME},
         "metrics": {
-            "leaderboard": {
-                row["metric_id"]: row["normalized_score"] for row in rows if row["available"]
-            },
+            "leaderboard": {row["metric_id"]: row["normalized_score"] for row in rows if row["available"]},
             "per_metric": {row["metric_id"]: row for row in rows},
             "summary": {
                 "sample_count": summary["sample_count"],
@@ -568,7 +555,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         else:
             scorecard = normalize_mind_results(args)
-    except (Exception, KeyboardInterrupt) as exc:  # noqa: BLE001 - always emit a scorecard
+    except (Exception, KeyboardInterrupt) as exc:  # always emit a scorecard
         scorecard = failure_scorecard(args, exc)
         if args.output_dir is not None:
             output_dir = Path(args.output_dir).expanduser().resolve()

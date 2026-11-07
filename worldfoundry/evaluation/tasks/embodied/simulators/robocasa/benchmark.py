@@ -21,7 +21,14 @@ from typing import Any
 import numpy as np
 
 from worldfoundry.evaluation.tasks.embodied.simulators.base import BaseSimulator, StepResult
-from worldfoundry.evaluation.tasks.embodied.simulators.specs import GRIPPER_RAW, IMAGE_RGB, LANGUAGE, POSITION_DELTA, ROTATION_EULER, DimSpec
+from worldfoundry.evaluation.tasks.embodied.simulators.specs import (
+    GRIPPER_RAW,
+    IMAGE_RGB,
+    LANGUAGE,
+    POSITION_DELTA,
+    ROTATION_EULER,
+    DimSpec,
+)
 
 # Set the MuJoCo rendering backend to EGL, which is suitable for headless servers
 # and often performs better than GLFW.

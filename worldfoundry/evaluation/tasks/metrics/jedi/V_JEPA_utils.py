@@ -6,18 +6,14 @@
 #
 
 import numpy as np
-
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-
 import vjepa.datasets.utils.video.transforms as video_transforms
 import vjepa.datasets.utils.video.volume_transforms as volume_transforms
-
 from vjepa.datasets.utils.video.randerase import RandomErasing
-
-from vjepa.models.utils.pos_embs import get_1d_sincos_pos_embed
 from vjepa.masks.utils import apply_masks
+from vjepa.models.utils.pos_embs import get_1d_sincos_pos_embed
 
 
 class FrameAggregation(nn.Module):
@@ -25,13 +21,7 @@ class FrameAggregation(nn.Module):
     Process each frame independently and concatenate all tokens
     """
 
-    def __init__(
-        self,
-        model,
-        max_frames=10000,
-        use_pos_embed=False,
-        attend_across_segments=False
-    ):
+    def __init__(self, model, max_frames=10000, use_pos_embed=False, attend_across_segments=False):
         super().__init__()
         self.model = model
         self.embed_dim = embed_dim = model.embed_dim
@@ -40,14 +30,11 @@ class FrameAggregation(nn.Module):
         # 1D-temporal pos-embedding
         self.pos_embed = None
         if use_pos_embed:
-            self.pos_embed = nn.Parameter(
-                torch.zeros(1, max_frames, embed_dim),
-                requires_grad=False)
+            self.pos_embed = nn.Parameter(torch.zeros(1, max_frames, embed_dim), requires_grad=False)
             sincos = get_1d_sincos_pos_embed(embed_dim, max_frames)
             self.pos_embed.copy_(torch.from_numpy(sincos).float().unsqueeze(0))
 
     def forward(self, x, clip_indices=None):
-
         # TODO: implement attend_across_segments=False
         # num_clips = len(x)
         num_views_per_clip = len(x[0])
@@ -59,7 +46,7 @@ class FrameAggregation(nn.Module):
         B, C, T, H, W = x.size()
 
         # Put each frame along the batch dimension
-        x = x.permute(0, 2, 1, 3, 4).reshape(B*T, C, H, W)
+        x = x.permute(0, 2, 1, 3, 4).reshape(B * T, C, H, W)
 
         outputs = self.model(x)
         _, N, D = outputs.size()
@@ -69,7 +56,7 @@ class FrameAggregation(nn.Module):
         B = B // num_views_per_clip
         all_outputs = []
         for i in range(num_views_per_clip):
-            o = outputs[i*B:(i+1)*B]
+            o = outputs[i * B : (i + 1) * B]
             # Compute positional embedding
             if (self.pos_embed is not None) and (clip_indices is not None):
                 pos_embed = self.pos_embed.repeat(B, 1, 1)  # [B, F, D]
@@ -88,14 +75,7 @@ class ClipAggregation(nn.Module):
     Process each clip independently and concatenate all tokens
     """
 
-    def __init__(
-        self,
-        model,
-        tubelet_size=2,
-        max_frames=10000,
-        use_pos_embed=False,
-        attend_across_segments=False
-    ):
+    def __init__(self, model, tubelet_size=2, max_frames=10000, use_pos_embed=False, attend_across_segments=False):
         super().__init__()
         self.model = model
         self.tubelet_size = tubelet_size
@@ -106,14 +86,11 @@ class ClipAggregation(nn.Module):
         self.pos_embed = None
         if use_pos_embed:
             max_T = max_frames // tubelet_size
-            self.pos_embed = nn.Parameter(
-                torch.zeros(1, max_T, embed_dim),
-                requires_grad=False)
+            self.pos_embed = nn.Parameter(torch.zeros(1, max_T, embed_dim), requires_grad=False)
             sincos = get_1d_sincos_pos_embed(embed_dim, max_T)
             self.pos_embed.copy_(torch.from_numpy(sincos).float().unsqueeze(0))
 
     def forward(self, x, clip_indices=None):
-
         num_clips = len(x)
         num_views_per_clip = len(x[0])
         B, C, T, H, W = x[0][0].size()
@@ -131,22 +108,21 @@ class ClipAggregation(nn.Module):
         eff_B = B * num_views_per_clip
         all_outputs = [[] for _ in range(num_views_per_clip)]
         for i in range(num_clips):
-            o = outputs[i*eff_B:(i+1)*eff_B]
+            o = outputs[i * eff_B : (i + 1) * eff_B]
             for j in range(num_views_per_clip):
-                all_outputs[j].append(o[j*B:(j+1)*B])
+                all_outputs[j].append(o[j * B : (j + 1) * B])
 
         if not self.attend_across_segments:
             return all_outputs
 
         for i, outputs in enumerate(all_outputs):
-
             # Concatenate along temporal dimension
             outputs = [o.reshape(B, T, N, D) for o in outputs]
             outputs = torch.cat(outputs, dim=1).flatten(1, 2)
 
             # Compute positional embedding
             if (self.pos_embed is not None) and (clip_indices is not None):
-                clip_indices = [c[:, ::self.tubelet_size] for c in clip_indices]
+                clip_indices = [c[:, :: self.tubelet_size] for c in clip_indices]
                 pos_embed = self.pos_embed.repeat(B, 1, 1)  # [B, F, D]
                 pos_embed = apply_masks(pos_embed, clip_indices, concat=False)  # list(Tensor([B, T, D]))
                 pos_embed = torch.cat(pos_embed, dim=1)  # concatenate along temporal dimension
@@ -162,19 +138,17 @@ class ClipAggregation(nn.Module):
 def make_transforms(
     training=True,
     random_horizontal_flip=True,
-    random_resize_aspect_ratio=(3/4, 4/3),
+    random_resize_aspect_ratio=(3 / 4, 4 / 3),
     random_resize_scale=(0.3, 1.0),
     reprob=0.0,
     auto_augment=False,
     motion_shift=False,
     crop_size=224,
     num_views_per_clip=1,
-    normalize=((0.485, 0.456, 0.406),
-               (0.229, 0.224, 0.225))
+    normalize=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
 ):
-
     if not training and num_views_per_clip > 1:
-        print('Making EvalVideoTransform, multi-view')
+        print("Making EvalVideoTransform, multi-view")
         _frames_augmentation = EvalVideoTransform(
             num_views_per_clip=num_views_per_clip,
             short_side_size=crop_size,
@@ -196,31 +170,30 @@ def make_transforms(
     return _frames_augmentation
 
 
-class VideoTransform(object):
-
+class VideoTransform:
     def __init__(
         self,
         training=True,
         random_horizontal_flip=True,
-        random_resize_aspect_ratio=(3/4, 4/3),
+        random_resize_aspect_ratio=(3 / 4, 4 / 3),
         random_resize_scale=(0.3, 1.0),
         reprob=0.0,
         auto_augment=False,
         motion_shift=False,
         crop_size=224,
-        normalize=((0.485, 0.456, 0.406),
-                   (0.229, 0.224, 0.225))
+        normalize=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ):
-
         self.training = training
 
         short_side_size = int(crop_size * 256 / 224)
-        self.eval_transform = video_transforms.Compose([
-            video_transforms.Resize(short_side_size, interpolation='bilinear'),
-            video_transforms.CenterCrop(size=(crop_size, crop_size)),
-            volume_transforms.ClipToTensor(),
-            video_transforms.Normalize(mean=normalize[0], std=normalize[1])
-        ])
+        self.eval_transform = video_transforms.Compose(
+            [
+                video_transforms.Resize(short_side_size, interpolation="bilinear"),
+                video_transforms.CenterCrop(size=(crop_size, crop_size)),
+                volume_transforms.ClipToTensor(),
+                video_transforms.Normalize(mean=normalize[0], std=normalize[1]),
+            ]
+        )
 
         self.random_horizontal_flip = random_horizontal_flip
         self.random_resize_aspect_ratio = random_resize_aspect_ratio
@@ -232,24 +205,24 @@ class VideoTransform(object):
 
         self.autoaug_transform = video_transforms.create_random_augment(
             input_size=(crop_size, crop_size),
-            auto_augment='rand-m7-n4-mstd0.5-inc1',
-            interpolation='bicubic',
+            auto_augment="rand-m7-n4-mstd0.5-inc1",
+            interpolation="bicubic",
         )
 
-        self.spatial_transform = video_transforms.random_resized_crop_with_shift \
-            if motion_shift else video_transforms.random_resized_crop
+        self.spatial_transform = (
+            video_transforms.random_resized_crop_with_shift if motion_shift else video_transforms.random_resized_crop
+        )
 
         self.reprob = reprob
         self.erase_transform = RandomErasing(
             reprob,
-            mode='pixel',
+            mode="pixel",
             max_count=1,
             num_splits=1,
-            device='cpu',
+            device="cpu",
         )
 
     def __call__(self, buffer):
-
         if not self.training:
             return [self.eval_transform(buffer)]
 
@@ -283,22 +256,16 @@ class VideoTransform(object):
         return [buffer]
 
 
-class EvalVideoTransform(object):
-
+class EvalVideoTransform:
     def __init__(
-        self,
-        num_views_per_clip=1,
-        short_side_size=224,
-        normalize=((0.485, 0.456, 0.406),
-                   (0.229, 0.224, 0.225))
+        self, num_views_per_clip=1, short_side_size=224, normalize=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ):
         self.views_per_clip = num_views_per_clip
         self.short_side_size = short_side_size
-        self.spatial_resize = video_transforms.Resize(short_side_size, interpolation='bilinear')
-        self.to_tensor = video_transforms.Compose([
-            volume_transforms.ClipToTensor(),
-            video_transforms.Normalize(mean=normalize[0], std=normalize[1])
-        ])
+        self.spatial_resize = video_transforms.Resize(short_side_size, interpolation="bilinear")
+        self.to_tensor = video_transforms.Compose(
+            [volume_transforms.ClipToTensor(), video_transforms.Normalize(mean=normalize[0], std=normalize[1])]
+        )
 
     def __call__(self, buffer):
         # Sample several spatial views of each clip
@@ -311,11 +278,11 @@ class EvalVideoTransform(object):
 
         all_views = []
         for i in range(num_views):
-            start = i*spatial_step
+            start = i * spatial_step
             if H > W:
-                view = buffer[:, start:start+side_len, :, :]
+                view = buffer[:, start : start + side_len, :, :]
             else:
-                view = buffer[:, :, start:start+side_len, :]
+                view = buffer[:, :, start : start + side_len, :]
             view = self.to_tensor(view)
             all_views.append(view)
 

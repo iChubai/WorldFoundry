@@ -7,8 +7,9 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -73,9 +74,7 @@ def _metric_rows(
         computed=computed,
         source_path=source_path,
         source_label="mirabench_official_runtime" if official_runtime_executed else "mirabench_results_file",
-        evidence_scope=(
-            "official_runtime_execution" if official_runtime_executed else "result_artifact_import_only"
-        ),
+        evidence_scope=("official_runtime_execution" if official_runtime_executed else "result_artifact_import_only"),
         imported_flag_value=official_runtime_executed,
         reason_template="score_not_available_in_mirabench_results",
     )
@@ -100,14 +99,9 @@ def _scorecard(
         for row in available_rows
         if row.get("normalized_score") is not None
     }
-    video_complete = (
-        video_coverage.get("expected_count", 0) > 0
-        and video_coverage.get("complete") is True
-    )
+    video_complete = video_coverage.get("expected_count", 0) > 0 and video_coverage.get("complete") is True
     full_suite_valid = (
-        prompt_count >= CANONICAL_PROMPT_COUNT
-        and video_complete
-        and len(available_rows) == len(METRIC_ORDER)
+        prompt_count >= CANONICAL_PROMPT_COUNT and video_complete and len(available_rows) == len(METRIC_ORDER)
     )
     normalization_ok = bool(available_rows)
     # The adapter can normalize MiraBench output (and supports a CI mock), but
@@ -173,9 +167,7 @@ def normalize_mirabench_results(
     generated_dir = args.generated_artifact_dir or resolve_env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR")
     official_results_path = args.official_results_path or resolve_env_path("WORLDFOUNDRY_MIRABENCH_RESULTS_PATH")
     if official_results_path is None:
-        raise ValueError(
-            "--official-results-path, WORLDFOUNDRY_MIRABENCH_RESULTS_PATH, or --run-official is required"
-        )
+        raise ValueError("--official-results-path, WORLDFOUNDRY_MIRABENCH_RESULTS_PATH, or --run-official is required")
     meta_csv_path: Path | None = None
     prompt_records: list[dict[str, Any]] = []
     try:
@@ -251,7 +243,9 @@ def run_official_mirabench(args: argparse.Namespace) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     generated_dir = args.generated_artifact_dir or resolve_env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR")
     if generated_dir is None:
-        raise ValueError("--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official")
+        raise ValueError(
+            "--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official"
+        )
     meta_csv_path = resolve_meta_csv_path(
         explicit=args.meta_csv,
         repo_root=args.mirabench_root,
@@ -295,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
             scorecard = run_official_mirabench(args)
         else:
             scorecard = normalize_mirabench_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {
             "schema_version": SCORECARD_SCHEMA_VERSION,

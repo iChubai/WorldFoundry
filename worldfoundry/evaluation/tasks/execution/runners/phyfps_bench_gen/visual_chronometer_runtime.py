@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, VIDEO_SUFFIXES
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES, resolve_env_path
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_metrics import VideoPhyFPSRecord
 
 DEFAULT_CONFIG_REL = Path("inference/configs/config_fps.yaml")
@@ -24,8 +23,6 @@ class VisualChronometerPaths:
     chronometer_root: Path
     config_path: Path
     ckpt_path: Path
-
-
 
 
 def resolve_chronometer_root(explicit: Path | None = None) -> Path | None:
@@ -65,11 +62,7 @@ def resolve_predictor_paths(
 def list_generated_videos(video_dir: Path) -> list[Path]:
     if not video_dir.is_dir():
         return []
-    return sorted(
-        path
-        for path in video_dir.iterdir()
-        if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
-    )
+    return sorted(path for path in video_dir.iterdir() if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES)
 
 
 def ensure_inference_import_path(chronometer_root: Path) -> Path:
@@ -109,7 +102,7 @@ def load_predictor_model(
     ensure_inference_import_path(paths.chronometer_root)
     import torch
     from omegaconf import OmegaConf
-    from utils.common_utils import instantiate_from_config  # type: ignore[import-not-found]  # noqa: WPS433
+    from utils.common_utils import instantiate_from_config  # type: ignore[import-not-found]
 
     ckpt_path = download_checkpoint_if_needed(paths.ckpt_path)
     config = OmegaConf.load(paths.config_path)
@@ -139,7 +132,7 @@ def predict_video_file(
     resolution: int = 216,
 ) -> VideoPhyFPSRecord:
     ensure_inference_import_path(chronometer_root)
-    from predict import predict_video  # type: ignore[import-not-found]  # noqa: WPS433
+    from predict import predict_video  # type: ignore[import-not-found]
 
     segment_results, avg_fps, _total_frames = predict_video(
         model,

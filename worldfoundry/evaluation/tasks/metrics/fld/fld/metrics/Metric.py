@@ -4,7 +4,6 @@ class Metric:
     def __init__(self):
         # To be implemented by each metric
         self.name = None
-        pass
 
     def compute_metric(
         self,
@@ -19,4 +18,3 @@ class Metric:
 
         returns: Metric value
         """
-        pass

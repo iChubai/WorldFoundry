@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping, tuple_of_str
 
@@ -29,7 +30,7 @@ class EvaluationProtocolSpec(JsonContract):
     __hash__ = JsonContract.__hash__
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any]) -> "EvaluationProtocolSpec":
+    def from_mapping(cls, data: Mapping[str, Any]) -> EvaluationProtocolSpec:
         name = data.get("name", data.get("id", data.get("protocol", data.get("type"))))
         if not name:
             raise ValueError("EvaluationProtocolSpec requires name, id, protocol, or type.")
@@ -57,7 +58,7 @@ class EvaluationProtocolSpec(JsonContract):
     from_dict = from_mapping
 
     @classmethod
-    def coerce_many(cls, value: Any) -> tuple["EvaluationProtocolSpec", ...]:
+    def coerce_many(cls, value: Any) -> tuple[EvaluationProtocolSpec, ...]:
         if value is None:
             return ()
         if isinstance(value, EvaluationProtocolSpec):
@@ -142,7 +143,7 @@ class WorldTaskConfig(JsonContract):
         return self.name
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "WorldTaskConfig":
+    def from_dict(cls, data: Mapping[str, Any]) -> WorldTaskConfig:
         return cls(
             name=data.get("name"),
             task_id=data.get("task_id"),
@@ -205,16 +206,14 @@ class BenchmarkSpec(JsonContract):
             self,
             "tasks",
             tuple(
-                task if isinstance(task, WorldTaskConfig) else WorldTaskConfig.from_dict(task)
-                for task in (tasks or ())
+                task if isinstance(task, WorldTaskConfig) else WorldTaskConfig.from_dict(task) for task in (tasks or ())
             ),
         )
         object.__setattr__(
             self,
             "metrics",
             tuple(
-                metric if isinstance(metric, MetricSpec) else MetricSpec.from_dict(metric)
-                for metric in (metrics or ())
+                metric if isinstance(metric, MetricSpec) else MetricSpec.from_dict(metric) for metric in (metrics or ())
             ),
         )
         object.__setattr__(self, "splits", tuple_of_str(splits))
@@ -229,7 +228,7 @@ class BenchmarkSpec(JsonContract):
         return self.name
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "BenchmarkSpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> BenchmarkSpec:
         return cls(
             name=data.get("name"),
             benchmark_id=data.get("benchmark_id"),

@@ -41,9 +41,7 @@ def compute_fjd_from_joint_embeddings(
         image_ref = reference_joint[:, :image_dim]
         cond_ref = reference_joint[:, image_dim:]
         alpha = mod.calculate_alpha(image_ref, cond_ref, cuda=False)
-    m1, s1, m2, s2 = _scale_joint_stats(
-        mu_real, sigma_real, mu_fake, sigma_fake, alpha, image_dim=image_dim
-    )
+    m1, s1, m2, s2 = _scale_joint_stats(mu_real, sigma_real, mu_fake, sigma_fake, alpha, image_dim=image_dim)
     return float(mod.calculate_fd(m1, s1, m2, s2, cuda=False, eps=eps))
 
 

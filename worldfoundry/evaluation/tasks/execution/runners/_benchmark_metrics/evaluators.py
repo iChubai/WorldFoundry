@@ -34,7 +34,7 @@ def _benchmark_key(value: str) -> str:
     return value.strip().casefold()
 
 
-def _blocked_result(request: "ExternalMetricEvaluationRequest", entry: "ExternalMetricEvaluatorEntry") -> MetricResult:
+def _blocked_result(request: ExternalMetricEvaluationRequest, entry: ExternalMetricEvaluatorEntry) -> MetricResult:
     """
     Build a structured blocked metric result for judge/API/upstream metrics.
 

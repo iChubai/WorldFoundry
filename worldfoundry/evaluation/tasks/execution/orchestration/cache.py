@@ -11,12 +11,12 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, is_generation_result_successful
 from worldfoundry.evaluation.api.artifacts import ArtifactRef, local_path_for_uri
@@ -81,7 +81,7 @@ class CacheKey:
         sample_id: str,
         payload: Any,
         version_context: Any | None = None,
-    ) -> "CacheKey":
+    ) -> CacheKey:
         """Generates a deterministic hash key from canonical JSON representations of inputs and context.
 
         Args:
@@ -770,19 +770,19 @@ def run_generation_with_cache(
     if read_keys:
         try:
             records = cache.get_many(read_keys)
-        except Exception as exc:  # noqa: BLE001 - fall back per key after a batch-cache failure.
+        except Exception as exc:  # fall back per key after a batch-cache failure.
             stats.error(f"batch cache read failed: {type(exc).__name__}: {exc}")
             records = []
-            for position, key in zip(read_positions, read_keys):
+            for position, key in zip(read_positions, read_keys, strict=False):
                 request = classified[position][0]
                 try:
                     record = cache.get(key)
-                except Exception as item_exc:  # noqa: BLE001 - cache must not fail generation.
+                except Exception as item_exc:  # cache must not fail generation.
                     stats.error(f"cache read failed for {request.sample_id}: {type(item_exc).__name__}: {item_exc}")
                     record = None
                 records_by_position[position] = record
         else:
-            records_by_position.update(zip(read_positions, records))
+            records_by_position.update(zip(read_positions, records, strict=False))
 
     for position, (request, key) in enumerate(classified):
         if key is None:
@@ -840,12 +840,12 @@ def run_generation_with_cache(
             if write_entries:
                 try:
                     cache.put_many(write_entries)
-                except Exception as exc:  # noqa: BLE001 - cache writes are opportunistic.
+                except Exception as exc:  # cache writes are opportunistic.
                     stats.error(f"batch cache write failed: {type(exc).__name__}: {exc}")
                     for key, result, metadata in write_entries:
                         try:
                             cache.put(key, result, metadata=metadata)
-                        except Exception as item_exc:  # noqa: BLE001 - preserve other cache writes.
+                        except Exception as item_exc:  # preserve other cache writes.
                             stats.error(
                                 f"cache write failed for {key.sample_id}: {type(item_exc).__name__}: {item_exc}"
                             )
@@ -874,10 +874,10 @@ def run_generation_with_cache(
 
 
 __all__ = [
-    "CacheKey",
     "DEFAULT_FILE_CHUNK_SIZE",
     "GENERATION_CACHE_MODES",
     "GENERATION_RESULT_CACHE_SCHEMA_VERSION",
+    "CacheKey",
     "GenerationCacheRecord",
     "GenerationCacheStats",
     "GenerationResultCache",
@@ -891,8 +891,8 @@ __all__ = [
     "json_sha256",
     "make_cache_key",
     "make_generation_cache_key",
-    "normalize_json",
     "normalize_generation_cache_mode",
+    "normalize_json",
     "run_generation_with_cache",
     "sha256_hex",
 ]

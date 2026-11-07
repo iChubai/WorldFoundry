@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 
 from worldfoundry.base_models.llm_mllm_core.mllm.internvideo2 import (
@@ -41,7 +39,7 @@ class InternVideo2CLIPScoreModel(ScoreModel):
             model_name, INTERNVIDEO2_CLIP_PRETRAINED[self.model_name]["pretrained"], self.cache_dir, device=self.device
         )
 
-    def load_images(self, image: List[str]) -> torch.Tensor:
+    def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         # Simply verify if all are videos ending with video formats such as mp4
         if not all([img.endswith((".mp4", ".avi")) for img in image]):
@@ -49,7 +47,7 @@ class InternVideo2CLIPScoreModel(ScoreModel):
         return image
 
     @torch.no_grad()
-    def forward(self, images: List[str], texts: List[str], num_frames: int = 4) -> torch.Tensor:
+    def forward(self, images: list[str], texts: list[str], num_frames: int = 4) -> torch.Tensor:
         """Forward pass of the model to return n scores for n (image, text) pairs (in PyTorch Tensor)"""
         assert len(images) == len(texts)
         if num_frames != self.config.num_frames:

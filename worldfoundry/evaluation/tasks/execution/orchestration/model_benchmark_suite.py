@@ -22,9 +22,10 @@ import pickle
 import sys
 import warnings
 from collections import deque
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass, fields, replace
 from pathlib import Path
-from typing import Any, Callable, Iterator, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import read_jsonl_objects
 from worldfoundry.core.observability.logging_setup import get_logger
@@ -499,7 +500,7 @@ def _benchmark_input_keys(entry: BenchmarkZooEntry) -> tuple[str, ...]:
                 spec = benchmark_zoo_entry_to_benchmark_spec(entry)
                 if spec.tasks:
                     return tuple(spec.tasks[0].input_keys)
-            except Exception:  # noqa: BLE001 - fall back to generated videos.
+            except Exception:  # fall back to generated videos.
                 pass
     return ("generated_video_dir",)
 
@@ -532,7 +533,7 @@ def _model_outputs(model_id: str, model_manifest_dir: str | Path | None) -> tupl
         return (), False, model_id
     try:
         entry = load_model_zoo_registry(manifest_dir).get(model_id)
-    except Exception:  # noqa: BLE001 - custom runner/model id not present in model-zoo.
+    except Exception:  # custom runner/model id not present in model-zoo.
         return (), False, model_id
     manifest = model_zoo_entry_to_world_model_manifest(entry)
     return tuple(manifest.output_artifacts), True, entry.model_id
@@ -715,7 +716,7 @@ def _cleanup_suite_model_runner(resolved: Any | None) -> None:
         if callable(cleanup):
             try:
                 cleanup()
-            except Exception as exc:  # noqa: BLE001 - process exit remains the hard release boundary.
+            except Exception as exc:  # process exit remains the hard release boundary.
                 warnings.warn(f"model runner cleanup failed: {exc}", RuntimeWarning, stacklevel=2)
     finally:
         # Do not import Torch just to clean up a CPU-only worker.  When a model
@@ -1408,7 +1409,7 @@ def _run_model_cells(
                     **memo_deltas,
                 }
                 cells.append({**base_cell, **run_cell})
-            except Exception as exc:  # noqa: BLE001 - keep suite execution moving across cells.
+            except Exception as exc:  # keep suite execution moving across cells.
                 cells.append({**base_cell, "status": "failed", "exit_code": 1, "reason": str(exc)})
     finally:
         _cleanup_suite_model_runner(resolved_runner)
@@ -1486,7 +1487,7 @@ def _run_model_worker(
                 cuda_visible_devices=cuda_devices,
             ),
         }
-    except BaseException as exc:  # noqa: BLE001 - parent needs structured worker failure evidence.
+    except BaseException as exc:  # parent needs structured worker failure evidence.
         payload = {
             "ok": False,
             "model_id": model_id,
@@ -1592,7 +1593,7 @@ def _run_models_in_spawn_workers(
                 )
                 try:
                     process.start()
-                except Exception as exc:  # noqa: BLE001 - record startup failure and continue the suite.
+                except Exception as exc:  # record startup failure and continue the suite.
                     receive_connection.close()
                     send_connection.close()
                     available_devices.append(cuda_devices)
@@ -1617,7 +1618,7 @@ def _run_models_in_spawn_workers(
                 receive_error: str | None = None
                 try:
                     payload = connection.recv()
-                except Exception as exc:  # noqa: BLE001 - turn corrupt/dead worker payloads into failed cells.
+                except Exception as exc:  # turn corrupt/dead worker payloads into failed cells.
                     receive_error = f"{type(exc).__name__}: {exc}"
                 finally:
                     connection.close()

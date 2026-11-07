@@ -8,11 +8,12 @@ routing, and scoring-engine membership all read this loader.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -416,11 +417,11 @@ refresh_compat_views()
 
 __all__ = [
     "BENCHMARK_INTEGRATION_REGISTRY",
-    "BenchmarkIntegrationSpec",
     "CLI_RUNNERS",
+    "VIDEO_RUNNER_REGISTRY",
+    "BenchmarkIntegrationSpec",
     "IntegrationTier",
     "OfficialRunnerSpec",
-    "VIDEO_RUNNER_REGISTRY",
     "VideoRunnerSpec",
     "WorkspaceRunnerSpec",
     "artifact_official_run_benchmarks",
@@ -437,9 +438,9 @@ __all__ = [
     "parse_scoring_hook",
     "pass_generated_artifact_dir_benchmarks",
     "refresh_compat_views",
-    "script_to_module",
     "scoring_benchmark_ids",
     "scoring_hook_table",
+    "script_to_module",
     "specialized_result_normalizer_scripts",
     "video_runner_overrides",
     "video_runner_registry",

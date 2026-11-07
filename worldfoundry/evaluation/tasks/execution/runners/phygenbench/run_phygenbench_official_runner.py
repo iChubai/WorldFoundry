@@ -7,11 +7,16 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
+    SCORECARD_SCHEMA_VERSION,
+    VIDEO_SUFFIXES,
+    resolve_env_path,
+)
 from worldfoundry.evaluation.tasks.execution.runners.phygenbench.phygenbench_metrics import (
     METRIC_ORDER,
     METRIC_SPECS,
@@ -29,7 +34,6 @@ from worldfoundry.evaluation.tasks.execution.runners.phygenbench.phygenbench_run
     run_phygenbench_judge,
 )
 from worldfoundry.evaluation.utils import benchmark_task_sample_path
-
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -55,8 +59,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--json", action="store_true")
     return parser.parse_args(argv)
-
-
 
 
 def _metric_rows(
@@ -150,14 +152,9 @@ def _scorecard(
         for row in available_rows
         if row.get("normalized_score") is not None
     }
-    video_complete = (
-        video_coverage.get("expected_count", 0) > 0
-        and video_coverage.get("complete") is True
-    )
+    video_complete = video_coverage.get("expected_count", 0) > 0 and video_coverage.get("complete") is True
     input_coverage_complete = (
-        prompt_count >= CANONICAL_PROMPT_COUNT
-        and video_complete
-        and len(available_rows) == len(METRIC_ORDER)
+        prompt_count >= CANONICAL_PROMPT_COUNT and video_complete and len(available_rows) == len(METRIC_ORDER)
     )
     normalization_ok = bool(available_rows)
     component_executed = _official_overall_component_executed(
@@ -165,11 +162,7 @@ def _scorecard(
         judge_summary=judge_summary,
     )
     integration_evidence = component_executed and normalization_ok
-    evidence_scope = (
-        "official_overall_aggregation"
-        if integration_evidence
-        else "mock_or_result_import"
-    )
+    evidence_scope = "official_overall_aggregation" if integration_evidence else "mock_or_result_import"
     return {
         "schema_version": SCORECARD_SCHEMA_VERSION,
         "official_benchmark_verified": False,
@@ -335,7 +328,9 @@ def run_official_phygenbench(args: argparse.Namespace) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     generated_dir = args.generated_artifact_dir or resolve_env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR")
     if generated_dir is None:
-        raise ValueError("--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official")
+        raise ValueError(
+            "--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official"
+        )
     prompts_path = resolve_prompts_json_path(
         explicit=args.prompt_manifest,
         repo_root=args.phygenbench_root,
@@ -379,7 +374,7 @@ def main(argv: list[str] | None = None) -> int:
             scorecard = run_official_phygenbench(args)
         else:
             scorecard = normalize_phygenbench_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {
             "schema_version": SCORECARD_SCHEMA_VERSION,

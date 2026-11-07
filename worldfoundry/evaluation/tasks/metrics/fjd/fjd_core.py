@@ -1,9 +1,10 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import os
-import torch
+
 import numpy as np
-from tqdm import tqdm
+import torch
 from scipy import linalg
+from tqdm import tqdm
 
 
 class FJDMetric:
@@ -11,37 +12,39 @@ class FJDMetric:
 
     Args:
         gan: Model that takes in a conditioning tensor and yields image samples.
-        reference_loader: DataLoader that yields (images, conditioning) pairs 
+        reference_loader: DataLoader that yields (images, conditioning) pairs
             to be used as the reference distribution.
         condition_loader: Dataloader that yields (image, conditioning) pairs.
             Images are ignored, and conditions are fed to the GAN.
-        image_embedding: Function that takes in 4D [B, 3, H, W] image tensor 
+        image_embedding: Function that takes in 4D [B, 3, H, W] image tensor
             and yields 2D [B, D] embedding vectors.
-        condition_embedding: Function that takes in conditioning from 
+        condition_embedding: Function that takes in conditioning from
             condition_loader and yields 2D [B, D] embedding vectors.
-        reference_stats_path: File path to save precomputed statistics of 
+        reference_stats_path: File path to save precomputed statistics of
             reference distribution. Default: current directory.
-        save_reference_stats: Boolean indicating whether statistics of 
+        save_reference_stats: Boolean indicating whether statistics of
             reference distribution should be saved. Default: False.
-        samples_per_condition: Integer indicating the number of samples to 
+        samples_per_condition: Integer indicating the number of samples to
             generate for each condition from the condition_loader. Default: 1.
         cuda: Boolean indicating whether to use GPU accelerated FJD or not.
               Default: False.
-        eps: Float value which is added to diagonals of covariance matrices 
+        eps: Float value which is added to diagonals of covariance matrices
              to improve computational stability. Default: 1e-6.
     """
-    def __init__(self,
-                 gan,
-                 reference_loader,
-                 condition_loader,
-                 image_embedding,
-                 condition_embedding,
-                 reference_stats_path='',
-                 save_reference_stats=False,
-                 samples_per_condition=1,
-                 cuda=False,
-                 eps=1e-6):
 
+    def __init__(
+        self,
+        gan,
+        reference_loader,
+        condition_loader,
+        image_embedding,
+        condition_embedding,
+        reference_stats_path="",
+        save_reference_stats=False,
+        samples_per_condition=1,
+        cuda=False,
+        eps=1e-6,
+    ):
         self.gan = gan
         self.reference_loader = reference_loader
         self.condition_loader = condition_loader
@@ -72,9 +75,9 @@ class FJDMetric:
         image_embed = []
         cond_embed = []
 
-        for i, data in tqdm(enumerate(self.condition_loader),
-                            desc='Computing generated distribution',
-                            total=len(self.condition_loader)):
+        for i, data in tqdm(
+            enumerate(self.condition_loader), desc="Computing generated distribution", total=len(self.condition_loader)
+        ):
             _, condition = data  # it is assumed data contains (image, condition)
             condition = condition.cuda()
 
@@ -126,8 +129,7 @@ class FJDMetric:
         image_embed = []
         cond_embed = []
 
-        for data in tqdm(self.reference_loader,
-                         desc='Computing reference distribution'):
+        for data in tqdm(self.reference_loader, desc="Computing reference distribution"):
             image, condition = data
             image = image.cuda()
             condition = condition.cuda()
@@ -165,11 +167,11 @@ class FJDMetric:
         np.savez(self.reference_stats_path, mu=mu, sigma=sigma, alpha=alpha)
 
     def _get_statistics_from_file(self, path):
-        print('Loading reference statistics from {}'.format(path))
-        assert path.endswith('.npz'), 'Invalid filepath "{}". Should be .npz'.format(path)
+        print(f"Loading reference statistics from {path}")
+        assert path.endswith(".npz"), f'Invalid filepath "{path}". Should be .npz'
 
         f = np.load(path)
-        mu, sigma, alpha = f['mu'][:], f['sigma'][:], f['alpha']
+        mu, sigma, alpha = f["mu"][:], f["sigma"][:], f["alpha"]
         f.close()
 
         if self.cuda:
@@ -180,8 +182,8 @@ class FJDMetric:
         return mu, sigma, alpha
 
     def _scale_statistics(self, mu1, sigma1, mu2, sigma2, alpha):
-        # Perform scaling operations directly on the precomputed mean and 
-        # covariance matrices, rather than scaling the conditioning embeddings 
+        # Perform scaling operations directly on the precomputed mean and
+        # covariance matrices, rather than scaling the conditioning embeddings
         # and recomputing mu and sigma
 
         if self.cuda:
@@ -208,10 +210,10 @@ class FJDMetric:
         """Calculate FJD.
 
         Args:
-            alpha (float): Scaling factor for the conditioning embedding. If 
-                None, alpha is set to be the ratio between the average norm of 
+            alpha (float): Scaling factor for the conditioning embedding. If
+                None, alpha is set to be the ratio between the average norm of
                 the image embedding and conditioning embedding. Default: None.
-            resample (bool): If True, draws new samples from GAN and recomputes 
+            resample (bool): If True, draws new samples from GAN and recomputes
                 generated distribution statistics. Default: True.
 
         Returns:
@@ -227,11 +229,7 @@ class FJDMetric:
         if alpha is None:
             alpha = self.alpha
 
-        m1, s1, m2, s2 = self._scale_statistics(self.mu_real,
-                                                self.sigma_real,
-                                                self.mu_fake,
-                                                self.sigma_fake,
-                                                alpha)
+        m1, s1, m2, s2 = self._scale_statistics(self.mu_real, self.sigma_real, self.mu_fake, self.sigma_fake, alpha)
         fjd = calculate_fd(m1, s1, m2, s2, cuda=self.cuda, eps=self.eps)
         return fjd
 
@@ -239,20 +237,20 @@ class FJDMetric:
         """Calculate FID (equivalent to FJD at alpha = 0).
 
         Args:
-            resample (bool): If True, draws new samples from GAN and recomputes 
+            resample (bool): If True, draws new samples from GAN and recomputes
                 generated distribution statistics. Default: True.
 
         Returns:
             FID value.
         """
-        fid = self.get_fjd(alpha=0., resample=resample)
+        fid = self.get_fjd(alpha=0.0, resample=resample)
         return fid
 
     def sweep_alpha(self, alphas=[]):
         """Calculate FJD at a range of alpha values.
 
         Args:
-            alphas (list of floats): Values of alpha with which FJD will be 
+            alphas (list of floats): Values of alpha with which FJD will be
                 calculated.
 
         Returns:
@@ -303,36 +301,36 @@ def calculate_fd(mu1, sigma1, mu2, sigma2, cuda=False, eps=1e-6):
 # A pytorch implementation of cov, from Modar M. Alfadly
 # https://discuss.pytorch.org/t/covariance-and-gradient-support/16217/2
 def torch_cov(m, rowvar=False):
-        '''Estimate a covariance matrix given data.
+    """Estimate a covariance matrix given data.
 
-        Covariance indicates the level to which two variables vary together.
-        If we examine N-dimensional samples, `X = [x_1, x_2, ... x_N]^T`,
-        then the covariance matrix element `C_{ij}` is the covariance of
-        `x_i` and `x_j`. The element `C_{ii}` is the variance of `x_i`.
+    Covariance indicates the level to which two variables vary together.
+    If we examine N-dimensional samples, `X = [x_1, x_2, ... x_N]^T`,
+    then the covariance matrix element `C_{ij}` is the covariance of
+    `x_i` and `x_j`. The element `C_{ii}` is the variance of `x_i`.
 
-        Args:
-                m: A 1-D or 2-D array containing multiple variables and observations.
-                        Each row of `m` represents a variable, and each column a single
-                        observation of all those variables.
-                rowvar: If `rowvar` is True, then each row represents a
-                        variable, with observations in the columns. Otherwise, the
-                        relationship is transposed: each column represents a variable,
-                        while the rows contain observations.
+    Args:
+            m: A 1-D or 2-D array containing multiple variables and observations.
+                    Each row of `m` represents a variable, and each column a single
+                    observation of all those variables.
+            rowvar: If `rowvar` is True, then each row represents a
+                    variable, with observations in the columns. Otherwise, the
+                    relationship is transposed: each column represents a variable,
+                    while the rows contain observations.
 
-        Returns:
-                The covariance matrix of the variables.
-        '''
-        if m.dim() > 2:
-            raise ValueError('m has more than 2 dimensions')
-        if m.dim() < 2:
-            m = m.view(1, -1)
-        if not rowvar and m.size(0) != 1:
-            m = m.t()
-        # m = m.type(torch.double)  # uncomment this line if desired
-        fact = 1.0 / (m.size(1) - 1)
-        m -= torch.mean(m, dim=1, keepdim=True)
-        mt = m.t()  # if complex: mt = m.t().conj()
-        return fact * m.matmul(mt).squeeze()
+    Returns:
+            The covariance matrix of the variables.
+    """
+    if m.dim() > 2:
+        raise ValueError("m has more than 2 dimensions")
+    if m.dim() < 2:
+        m = m.view(1, -1)
+    if not rowvar and m.size(0) != 1:
+        m = m.t()
+    # m = m.type(torch.double)  # uncomment this line if desired
+    fact = 1.0 / (m.size(1) - 1)
+    m -= torch.mean(m, dim=1, keepdim=True)
+    mt = m.t()  # if complex: mt = m.t().conj()
+    return fact * m.matmul(mt).squeeze()
 
 
 # Pytorch implementation of matrix sqrt, from Tsung-Yu Lin, and Subhransu Maji
@@ -381,18 +379,15 @@ def numpy_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     sigma1 = np.atleast_2d(sigma1)
     sigma2 = np.atleast_2d(sigma2)
 
-    assert mu1.shape == mu2.shape, \
-        'Training and test mean vectors have different lengths'
-    assert sigma1.shape == sigma2.shape, \
-        'Training and test covariances have different dimensions'
+    assert mu1.shape == mu2.shape, "Training and test mean vectors have different lengths"
+    assert sigma1.shape == sigma2.shape, "Training and test covariances have different dimensions"
 
     diff = mu1 - mu2
 
     # Product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        msg = ('fid calculation produces singular product; '
-               'adding %s to diagonal of cov estimates') % eps
+        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -401,8 +396,8 @@ def numpy_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            #raise ValueError('Imaginary component {}'.format(m))
-            print('Imaginary component of {}, may affect results'.format(m))
+            # raise ValueError('Imaginary component {}'.format(m))
+            print(f"Imaginary component of {m}, may affect results")
         covmean = covmean.real
 
     tr_covmean = np.trace(covmean)
@@ -424,19 +419,17 @@ def torch_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     -- mu1   : Numpy array containing the activations of a layer of the
              inception net (like returned by the function 'get_predictions')
              for generated samples.
-    -- mu2   : The sample mean over activations, precalculated on an 
+    -- mu2   : The sample mean over activations, precalculated on an
              representive data set.
     -- sigma1: The covariance matrix over activations for generated samples.
-    -- sigma2: The covariance matrix over activations, precalculated on an 
+    -- sigma2: The covariance matrix over activations, precalculated on an
              representive data set.
     Returns:
     --   : The Frechet Distance.
     """
 
-    assert mu1.shape == mu2.shape, \
-        'Training and test mean vectors have different lengths'
-    assert sigma1.shape == sigma2.shape, \
-        'Training and test covariances have different dimensions'
+    assert mu1.shape == mu2.shape, "Training and test mean vectors have different lengths"
+    assert sigma1.shape == sigma2.shape, "Training and test covariances have different dimensions"
 
     # Using double precision instead of float seems to make the GPU FD more stable
     mu1, mu2 = mu1.double(), mu2.double()

@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import csv
 import json
@@ -14,7 +10,6 @@ import sys
 from functools import partial
 from pathlib import Path
 from typing import Any
-
 
 from worldfoundry.evaluation.tasks.execution.framework.artifact_score_runtime import materialize_artifact_scores
 from worldfoundry.evaluation.tasks.execution.framework.io import (
@@ -27,14 +22,17 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
     write_json,
     write_jsonl,
 )
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
+from worldfoundry.evaluation.tasks.execution.runners.vmbench.vmbench_official_runtime import (
+    config_from_env as vmbench_official_config_from_env,
+)
+from worldfoundry.evaluation.tasks.execution.runners.vmbench.vmbench_official_runtime import (
+    run_official_vmbench_runtime,
+)
 from worldfoundry.evaluation.tasks.execution.runners.vmbench.vmbench_prompts import (
     CANONICAL_PROMPT_COUNT,
     materialize_vmbench_meta_info,
     resolve_vmbench_root,
-)
-from worldfoundry.evaluation.tasks.execution.runners.vmbench.vmbench_official_runtime import (
-    config_from_env as vmbench_official_config_from_env,
-    run_official_vmbench_runtime,
 )
 from worldfoundry.evaluation.utils import benchmark_task_sample_path
 
@@ -93,9 +91,7 @@ def extract_from_results_json(raw_results: Any) -> tuple[dict[str, dict[str, Any
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             continue
-        direct_metric_id = canonical_metric_id(
-            str(row.get("metric_id") or row.get("metric") or row.get("name") or "")
-        )
+        direct_metric_id = canonical_metric_id(str(row.get("metric_id") or row.get("metric") or row.get("name") or ""))
         direct_score = normalize_score(
             scalar(row.get("score") if row.get("score") is not None else row.get("raw_score"))
         )
@@ -192,7 +188,9 @@ def load_upstream_results(path: Path) -> tuple[dict[str, dict[str, Any]], list[d
 
 
 def add_average(extracted: dict[str, dict[str, Any]]) -> None:
-    component_scores = [item.get("raw_score") for metric_id, item in extracted.items() if metric_id in COMPONENT_METRICS]
+    component_scores = [
+        item.get("raw_score") for metric_id, item in extracted.items() if metric_id in COMPONENT_METRICS
+    ]
     average = mean(component_scores)
     if average is not None and "vmbench_average" not in extracted:
         extracted["vmbench_average"] = {
@@ -252,7 +250,11 @@ def normalize_vmbench_results(
     scorecard = {
         "schema_version": SCORECARD_SCHEMA_VERSION,
         "run": {
-            "status": "official_verified" if official_verified else "official_results_imported" if normalization_ok else "failed",
+            "status": "official_verified"
+            if official_verified
+            else "official_results_imported"
+            if normalization_ok
+            else "failed",
             "started_at": utc_now_iso(),
             "runner": "benchmark_zoo_vmbench_official_runner",
             "command": command,
@@ -493,7 +495,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--generated-video-dir", dest="video_dir", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--prompt-manifest", type=Path, default=env_path("WORLDFOUNDRY_VMBENCH_PROMPT_MANIFEST"))
     parser.add_argument("--run-fixture", action="store_true", help="Normalize checked-in VMBench sample results.")
-    parser.add_argument("--run-official", action="store_true", help="Run the in-tree VMBench official runtime or artifact importer.")
+    parser.add_argument(
+        "--run-official", action="store_true", help="Run the in-tree VMBench official runtime or artifact importer."
+    )
     parser.add_argument(
         "--runtime-backend",
         choices=("auto", "official", "artifact"),

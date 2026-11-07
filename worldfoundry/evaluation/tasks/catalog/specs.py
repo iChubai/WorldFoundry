@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import importlib
 import json
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api import BenchmarkSpec, MetricSpec, WorldTaskConfig
 
@@ -326,9 +327,7 @@ def benchmark_zoo_entry_to_cli_task_dict(
     task = spec.tasks[0]
     metadata = dict(task.metadata)
     manifest_reference = (
-        f"{manifest_path.resolve()}#{entry.benchmark_id}"
-        if manifest_path is not None
-        else entry.benchmark_id
+        f"{manifest_path.resolve()}#{entry.benchmark_id}" if manifest_path is not None else entry.benchmark_id
     )
     evaluation_protocol_value = task.evaluation_protocol
     if isinstance(evaluation_protocol_value, str):
@@ -446,10 +445,7 @@ def get_benchmark_zoo_cli_task(
             seen.add(entry.benchmark_id)
     if not matches:
         available = registry.keys()
-        raise KeyError(
-            f"Unknown benchmark '{task_type}/{benchmark_name or task_type}'. "
-            f"Available entries: {available}"
-        )
+        raise KeyError(f"Unknown benchmark '{task_type}/{benchmark_name or task_type}'. Available entries: {available}")
     resolved_task_type = registry.resolve_key(task_type)
     for entry in matches:
         aliases = {entry.benchmark_id, *(registry.aliases_for(entry.benchmark_id))}
@@ -460,10 +456,7 @@ def get_benchmark_zoo_cli_task(
         if benchmark_name in aliases or benchmark_name == entry.benchmark_id:
             return benchmark_zoo_entry_to_cli_task_dict(entry)
     available = [f"{item}/{item}" for item in registry.keys()]
-    raise KeyError(
-        f"Unknown benchmark '{task_type}/{benchmark_name}'. "
-        f"Available entries: {available}"
-    )
+    raise KeyError(f"Unknown benchmark '{task_type}/{benchmark_name}'. Available entries: {available}")
 
 
 def build_benchmark_zoo_catalog_registry(
@@ -489,7 +482,6 @@ def build_benchmark_zoo_catalog_registry(
         registry=registry,
     )
     catalog_specs = tuple(
-        CatalogBenchmarkSpec.from_mapping(spec.to_dict())
-        for spec in benchmark_zoo_entries_to_benchmark_specs(entries)
+        CatalogBenchmarkSpec.from_mapping(spec.to_dict()) for spec in benchmark_zoo_entries_to_benchmark_specs(entries)
     )
     return CatalogRegistry(catalog_specs)

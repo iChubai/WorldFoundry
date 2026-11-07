@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import (
     EXCLUDED_BENCHMARK_IDS,
@@ -156,9 +157,11 @@ def extra_readme_issues() -> list[str]:
 def extra_evaluation_doc_issues(candidates: Iterable[str] | None = None) -> list[str]:
     """Fumadocs owns documentation; evaluation trees must not grow markdown guides."""
     issues: list[str] = []
-    paths = candidates if candidates is not None else (_tracked_repo_paths() or tuple(
-        _as_repo_relative(path) for path in _walk_repo_files()
-    ))
+    paths = (
+        candidates
+        if candidates is not None
+        else (_tracked_repo_paths() or tuple(_as_repo_relative(path) for path in _walk_repo_files()))
+    )
     for relative in paths:
         if not relative.startswith("worldfoundry/evaluation/"):
             continue
@@ -441,9 +444,7 @@ def video_catalog_dispatch_issues() -> list[str]:
             )
 
     for benchmark_id in sorted(VIDEO_RUNNER_IDS_OUTSIDE_VIDEO_CATALOG & video_ids):
-        issues.append(
-            f"{benchmark_id}: VIDEO_RUNNER_IDS_OUTSIDE_VIDEO_CATALOG is stale; YAML is under catalog/video/"
-        )
+        issues.append(f"{benchmark_id}: VIDEO_RUNNER_IDS_OUTSIDE_VIDEO_CATALOG is stale; YAML is under catalog/video/")
     for benchmark_id in sorted(VIDEO_RUNNER_IDS_OUTSIDE_VIDEO_CATALOG - registry_ids):
         issues.append(f"{benchmark_id}: VIDEO_RUNNER_IDS_OUTSIDE_VIDEO_CATALOG is not in VIDEO_RUNNER_REGISTRY")
 
@@ -550,12 +551,13 @@ def catalog_runner_table_issues() -> list[str]:
     runners_root = REPO_ROOT / "worldfoundry" / "evaluation" / "tasks" / "execution" / "runners"
     for path in sorted(runners_root.glob("*/README.md")) + sorted(runners_root.glob("*/readme.md")):
         issues.append(f"{_as_repo_relative(path)}: runner-root README must live in fumadocs, not runners/")
-    for path in sorted(runners_root.glob("*/runtime/**/README.md")) + sorted(runners_root.glob("*/runtime/**/readme.md")):
+    for path in sorted(runners_root.glob("*/runtime/**/README.md")) + sorted(
+        runners_root.glob("*/runtime/**/readme.md")
+    ):
         issues.append(f"{_as_repo_relative(path)}: vendor README must not remain under runners/*/runtime/")
     for path in sorted(runners_root.glob("*/runtime/**/requirements.txt")):
         issues.append(
-            f"{_as_repo_relative(path)}: pip requirements must live under "
-            "worldfoundry/data/benchmarks/requirements/"
+            f"{_as_repo_relative(path)}: pip requirements must live under worldfoundry/data/benchmarks/requirements/"
         )
     issues.extend(extra_readme_issues())
     return issues

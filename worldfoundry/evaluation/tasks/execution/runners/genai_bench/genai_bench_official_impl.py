@@ -5,15 +5,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 from pathlib import Path
 from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework import official_runner as ors
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric, utc_now_iso, write_json
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path
+from worldfoundry.evaluation.tasks.execution.framework.video_quality_specs import GENAI_TASK_METRICS
 from worldfoundry.evaluation.tasks.execution.runners.genai_bench.genai_bench_metrics import (
     evaluate_genai_preference_rows,
 )
@@ -25,7 +25,6 @@ from worldfoundry.evaluation.tasks.execution.runners.genai_bench.genai_bench_run
     run_genai_bench_scorer,
     scorer_config_from_env,
 )
-from worldfoundry.evaluation.tasks.execution.framework.video_quality_specs import GENAI_TASK_METRICS
 from worldfoundry.evaluation.utils import benchmark_task_sample_path
 
 BENCHMARK_ID = "genai-bench"
@@ -45,8 +44,6 @@ CONFIG = ors.build_runner_config_from_contract(
         "genai_bench_average": "aggregate",
     },
 )
-
-
 
 
 def build_parser() -> argparse.ArgumentParser:

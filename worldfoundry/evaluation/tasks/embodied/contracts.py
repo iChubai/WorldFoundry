@@ -19,13 +19,13 @@ contracts (`JsonContract`) to ensure interoperability between runners and harnes
 
 from __future__ import annotations
 
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Collection, Mapping, Protocol, Sequence, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, WorldModelConfig
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping, to_plain
-
 
 # Canonical schema version for all contracts in this module.
 VLA_VA_WAM_CONTRACT_SCHEMA_VERSION = "worldfoundry-vla-va-wam-contract"
@@ -58,30 +58,33 @@ CAPABILITY_TAGS = (
 
 class EvaluationTrack(str, Enum):
     """Categorization of evaluation tasks within WorldFoundry Embodied tasks."""
-    VLA = "vla"      # Vision-Language-Action
-    VA = "va"        # Video Action
-    VAM = "vam"      # Video Action Modeling
-    WAM = "wam"      # World Action Modeling (Environment Simulators)
+
+    VLA = "vla"  # Vision-Language-Action
+    VA = "va"  # Video Action
+    VAM = "vam"  # Video Action Modeling
+    WAM = "wam"  # World Action Modeling (Environment Simulators)
 
 
 class RequestKind(str, Enum):
     """Types of runtime requests dispatched to the model runner."""
-    ACTION = "action"          # Predict immediate actions from step observation
+
+    ACTION = "action"  # Predict immediate actions from step observation
     GENERATION = "generation"  # Generate sequence of future actions/frames
-    ROLLOUT = "rollout"        # Execute closed-loop rollout inside a simulator
-    RESET = "reset"            # Hard reset of environmental state
-    BRANCH = "branch"          # Branch/Fork environmental state to start an alternative trajectory
-    SESSION = "session"        # Session handshake and lifecycle management
+    ROLLOUT = "rollout"  # Execute closed-loop rollout inside a simulator
+    RESET = "reset"  # Hard reset of environmental state
+    BRANCH = "branch"  # Branch/Fork environmental state to start an alternative trajectory
+    SESSION = "session"  # Session handshake and lifecycle management
 
 
 class ActionSpaceKind(str, Enum):
     """Supported mathematical formats of the action prediction space."""
-    DISCRETE = "discrete"      # Select from finite discrete actions (e.g., [left, right, grab])
+
+    DISCRETE = "discrete"  # Select from finite discrete actions (e.g., [left, right, grab])
     CONTINUOUS = "continuous"  # N-dimensional floating-point vectors (e.g., Delta-pose control)
-    HYBRID = "hybrid"          # Mix of discrete choices and continuous parameters
-    TEXT = "text"              # Natural language commands or symbolic expressions
-    POSE = "pose"              # Position & Orientation (7D/6D vectors)
-    JOINT = "joint"            # Direct joint angle or torque control vectors
+    HYBRID = "hybrid"  # Mix of discrete choices and continuous parameters
+    TEXT = "text"  # Natural language commands or symbolic expressions
+    POSE = "pose"  # Position & Orientation (7D/6D vectors)
+    JOINT = "joint"  # Direct joint angle or torque control vectors
 
 
 JsonValue = Any
@@ -134,6 +137,7 @@ class ActionSpaceSpec(JsonDataclass):
     This contract dictates how the model runner should structure, clip, scale,
     and output predicted action tokens/vectors.
     """
+
     kind: ActionSpaceKind | str
     actions: tuple[str, ...] = ()
     dimensions: int | None = None
@@ -167,7 +171,7 @@ class ActionSpaceSpec(JsonDataclass):
             object.__setattr__(self, "dimensions", int(self.dimensions))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "ActionSpaceSpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> ActionSpaceSpec:
         """Instantiate ActionSpaceSpec from a raw dictionary mapping.
 
         Args:
@@ -194,6 +198,7 @@ class SessionControl(JsonDataclass):
     Enables simulator reset, deterministic branching, state checkpointing, and
     horizon constraints.
     """
+
     reset_supported: bool = False
     branch_supported: bool = False
     session_id: str | None = None
@@ -230,7 +235,7 @@ class SessionControl(JsonDataclass):
             object.__setattr__(self, "max_session_steps", int(self.max_session_steps))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "SessionControl":
+    def from_dict(cls, data: Mapping[str, Any]) -> SessionControl:
         """Instantiate SessionControl from a raw dictionary mapping.
 
         Args:
@@ -261,6 +266,7 @@ class EmbodiedGenerationSpec(JsonDataclass):
     Defines the track, task context, capabilities, and spatial-temporal constraints (horizon steps)
     which must be satisfied during runner execution.
     """
+
     track: EvaluationTrack | str
     kind: RequestKind | str
     task_name: str
@@ -341,7 +347,7 @@ class EmbodiedGenerationSpec(JsonDataclass):
             raise ValueError("WAM EmbodiedGenerationSpec requires a WAM-compatible request kind.")
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "EmbodiedGenerationSpec":
+    def from_dict(cls, data: Mapping[str, Any]) -> EmbodiedGenerationSpec:
         """Instantiate EmbodiedGenerationSpec from a raw dictionary mapping.
 
         Args:
@@ -407,6 +413,7 @@ class RunnerCapabilities(JsonDataclass):
     Before executing a benchmark, the evaluation harness requests this manifest from the runner
     to verify that the runner possesses the required capabilities and action spaces.
     """
+
     model_id: str
     tracks: tuple[EvaluationTrack | str, ...] = ()
     capabilities: tuple[str, ...] = ()
@@ -441,7 +448,7 @@ class RunnerCapabilities(JsonDataclass):
             object.__setattr__(self, "max_horizon_steps", int(self.max_horizon_steps))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "RunnerCapabilities":
+    def from_dict(cls, data: Mapping[str, Any]) -> RunnerCapabilities:
         """Instantiate RunnerCapabilities from a raw dictionary mapping.
 
         Args:
@@ -489,11 +496,12 @@ class VlaVaWamRunnerContract(Protocol):
     Any model runner participating in VLA, VA, VAM, or WAM evaluations must satisfy this protocol
     to interface with the `worldfoundry` task framework.
     """
+
     model_id: str
     capabilities: Collection[str]
 
     @classmethod
-    def from_config(cls, config: WorldModelConfig) -> "VlaVaWamRunnerContract":
+    def from_config(cls, config: WorldModelConfig) -> VlaVaWamRunnerContract:
         """Instantiate the runner asynchronously or synchronously using a WorldModelConfig.
 
         Args:
@@ -535,8 +543,8 @@ __all__ = [
     "CAPABILITY_MULTIMODAL_OBSERVATION",
     "CAPABILITY_SESSION_CONTROL",
     "CAPABILITY_TAGS",
-    "CAPABILITY_VA_VIDEO_ACTION",
     "CAPABILITY_VAM_VIDEO_ACTION_MODELING",
+    "CAPABILITY_VA_VIDEO_ACTION",
     "CAPABILITY_VLA_ACTION_PREDICTION",
     "CAPABILITY_VLA_POLICY_ROLLOUT",
     "CAPABILITY_WAM_BRANCH",

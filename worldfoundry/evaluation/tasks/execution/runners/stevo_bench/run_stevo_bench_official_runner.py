@@ -10,15 +10,15 @@ videos, upstream ``runs/`` directories, logs, manifests) is written under
 
 from __future__ import annotations
 
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
+
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
 
 REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:  # pragma: no cover - direct script execution
@@ -130,9 +130,7 @@ def _is_inside(path: Path, root: Path) -> bool:
 def resolve_output_dir(args: argparse.Namespace, *, runtime_root: Path) -> Path:
     output_dir = args.output_dir.expanduser().resolve()
     if _is_inside(output_dir, runtime_root):
-        raise ValueError(
-            f"--output-dir must not resolve inside the read-only STEVO-Bench runtime tree: {output_dir}"
-        )
+        raise ValueError(f"--output-dir must not resolve inside the read-only STEVO-Bench runtime tree: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
 
@@ -140,14 +138,10 @@ def resolve_output_dir(args: argparse.Namespace, *, runtime_root: Path) -> Path:
 def resolve_weights_dir(args: argparse.Namespace, *, runtime_root: Path) -> Path:
     weights_dir = args.weights_dir or env_path("WORLDFOUNDRY_STEVO_BENCH_WEIGHTS_DIR")
     if weights_dir is None:
-        weights_dir = checkpoint_root_path(
-            "stevo_bench", specific_env="WORLDFOUNDRY_STEVO_BENCH_WEIGHTS_DIR"
-        )
+        weights_dir = checkpoint_root_path("stevo_bench", specific_env="WORLDFOUNDRY_STEVO_BENCH_WEIGHTS_DIR")
     weights_dir = Path(weights_dir).expanduser().resolve()
     if _is_inside(weights_dir, runtime_root):
-        raise ValueError(
-            f"STEVO-Bench judge assets must not resolve inside the vendored runtime tree: {weights_dir}"
-        )
+        raise ValueError(f"STEVO-Bench judge assets must not resolve inside the vendored runtime tree: {weights_dir}")
     return weights_dir
 
 
@@ -226,7 +220,9 @@ def stage_generated_videos(
         except OSError:
             target.write_bytes(source.read_bytes())
             method = "copy"
-        rows.append({"task_id": source.stem, "source": str(source.resolve()), "destination": str(target), "method": method})
+        rows.append(
+            {"task_id": source.stem, "source": str(source.resolve()), "destination": str(target), "method": method}
+        )
 
     map_candidates = sorted(path for path in source_root.glob("*.json"))
     if explicit_output_map is not None:
@@ -382,9 +378,7 @@ def run_official(args: argparse.Namespace, *, runtime_root: Path, output_dir: Pa
         )
         if result.get("returncode") != 0:
             log_path.write_text("\n".join(log_chunks), encoding="utf-8")
-            raise RuntimeError(
-                f"STEVO-Bench official runtime exited with {result.get('returncode')}; see {log_path}"
-            )
+            raise RuntimeError(f"STEVO-Bench official runtime exited with {result.get('returncode')}; see {log_path}")
 
     run_root = run_dir / Path(staging["output_map"]).stem
     if args.summarize and run_root.is_dir():
@@ -455,9 +449,7 @@ def _comparability_blockers(
         blockers.append(f"official task coverage is partial ({task_count}/{EXPECTED_TASK_COUNT} tasks)")
     if runtime_summary is not None:
         if runtime_summary.get("output_map_origin") == "derived_from_video_filenames":
-            blockers.append(
-                "the task_id -> video map was derived from filenames rather than an official output map"
-            )
+            blockers.append("the task_id -> video map was derived from filenames rather than an official output map")
         if int(runtime_summary.get("ensemble_size") or 0) < 3:
             blockers.append("the paper ensemble configuration (ensemble_size 3) was not used")
     return blockers
@@ -513,9 +505,7 @@ def build_scorecard(
         "benchmark": {"benchmark_id": args.benchmark_id, "name": BENCHMARK_NAME},
         "metrics": {
             "leaderboard": {
-                row["metric_id"]: row["normalized_score"]
-                for row in available
-                if row["normalized_score"] is not None
+                row["metric_id"]: row["normalized_score"] for row in available if row["normalized_score"] is not None
             },
             "per_metric": {row["metric_id"]: row for row in rows},
             "summary": {
@@ -665,7 +655,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             metrics=metrics,
             runtime_summary=runtime_summary,
         )
-    except BaseException as exc:  # noqa: BLE001 - a failure must still produce a scorecard
+    except BaseException as exc:  # a failure must still produce a scorecard
         output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = failure_scorecard(args, output_dir, exc)
         if args.json:

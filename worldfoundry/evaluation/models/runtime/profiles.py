@@ -15,10 +15,11 @@ from __future__ import annotations
 import os
 import shutil
 import warnings
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 from worldfoundry.evaluation.models.catalog.schema import iter_model_zoo_payloads
@@ -157,7 +158,9 @@ def _primary_source_context(source_repos: Sequence[Mapping[str, Any]]) -> dict[s
     source_workdir = str(Path(source_dir) / subdir) if source_dir and subdir else source_dir
     return {
         "source_repo_url": str(source.get("url") or ""),
-        "source_repo_revision": str(source.get("revision") or source.get("head_sha") or source.get("confirmed_ref") or ""),
+        "source_repo_revision": str(
+            source.get("revision") or source.get("head_sha") or source.get("confirmed_ref") or ""
+        ),
         "source_repo_dir": source_dir,
         "source_repo_subdir": subdir,
         "source_repo_workdir": source_workdir,
@@ -273,7 +276,7 @@ class RuntimeProfile:
     schema_version: int | None = None
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any]) -> "RuntimeProfile":
+    def from_mapping(cls, data: Mapping[str, Any]) -> RuntimeProfile:
         """Build a :class:`RuntimeProfile` from a raw YAML mapping.
 
         Supports multiple legacy key names (e.g. ``"id"`` → ``"model_id"``) and
@@ -320,7 +323,10 @@ class RuntimeProfile:
             backend_stage=str(execution.get("backend_stage") or data.get("backend_stage") or "profile_only"),
             runtime_status=str(execution.get("runtime_status") or data.get("runtime_status") or "profiled"),
             integration_status=str(
-                integration.get("status") or execution.get("integration_status") or data.get("integration_status") or "planned"
+                integration.get("status")
+                or execution.get("integration_status")
+                or data.get("integration_status")
+                or "planned"
             ),
             execution=dict(execution),
             output=dict(output),
@@ -341,7 +347,9 @@ class RuntimeProfile:
     def validate(self) -> None:
         """Raise ``ValueError`` if the profile is missing required fields or has an unsupported schema."""
         if self.schema_version is not None and self.schema_version != 2:
-            raise ValueError(f"runtime profile {self.model_id!r} uses unsupported schema_version {self.schema_version!r}.")
+            raise ValueError(
+                f"runtime profile {self.model_id!r} uses unsupported schema_version {self.schema_version!r}."
+            )
         if not self.model_id:
             raise ValueError("runtime profile requires model_id.")
         if not self.display_name:
@@ -502,8 +510,7 @@ def _catalog_payload_to_runtime_target(entry: Mapping[str, Any]) -> Mapping[str,
         official_sources = {
             **dict(official_sources),
             "huggingface_models": [
-                dict(ref) if isinstance(ref, Mapping) else {"repo_id": str(ref)}
-                for ref in huggingface_sources
+                dict(ref) if isinstance(ref, Mapping) else {"repo_id": str(ref)} for ref in huggingface_sources
             ],
         }
 
@@ -522,8 +529,7 @@ def _catalog_payload_to_runtime_target(entry: Mapping[str, Any]) -> Mapping[str,
         official_sources = {
             **dict(official_sources),
             "huggingface_models": [
-                dict(ref) if isinstance(ref, Mapping) else {"repo_id": str(ref)}
-                for ref in checkpoint_refs
+                dict(ref) if isinstance(ref, Mapping) else {"repo_id": str(ref)} for ref in checkpoint_refs
             ],
         }
 
@@ -752,9 +758,7 @@ def _load_runtime_profiles_uncached(
             conda_env=env_spec.to_dict(check_exists=check_conda_env_exists) if env_spec is not None else {},
         )
         profiles[profile.model_id] = profile
-    resolved_target_profile_path = (
-        DEFAULT_RUNTIME_PROFILES_ROOT if target_profile_path is None else target_profile_path
-    )
+    resolved_target_profile_path = DEFAULT_RUNTIME_PROFILES_ROOT if target_profile_path is None else target_profile_path
     for target_profile in load_runtime_profile_manifests(resolved_target_profile_path):
         existing_profile = profiles.get(target_profile.model_id)
         if existing_profile is not None:

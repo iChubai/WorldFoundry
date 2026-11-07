@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -125,7 +126,10 @@ def canonicalize_embodied_config(
         if not isinstance(item, Mapping):
             raise ValueError("each embodied benchmark config must be a mapping")
         entry = dict(item)
-        entry.setdefault("benchmark_id", entry.get("id") or entry.get("benchmark") or config.get("benchmark_id") or _first_benchmark_id(config))
+        entry.setdefault(
+            "benchmark_id",
+            entry.get("id") or entry.get("benchmark") or config.get("benchmark_id") or _first_benchmark_id(config),
+        )
         entry.setdefault("id", entry.get("benchmark_id"))
         entry.setdefault("params", entry.get("benchmark_kwargs") or {})
         entry.setdefault("episodes_per_task", config.get("episodes_per_task", 1))

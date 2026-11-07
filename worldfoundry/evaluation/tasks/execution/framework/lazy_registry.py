@@ -8,14 +8,14 @@ supported ids, error text, and cached attributes are derived from it.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import lru_cache
+from functools import cache
 from importlib import import_module
 from typing import Any
 
 from worldfoundry.evaluation.tasks.catalog.benchmark_id import normalize_benchmark_id
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_module_attr(module_name: str, attr: str) -> Any:
     """Import ``module_name`` once and return ``attr``."""
     return getattr(import_module(module_name), attr)

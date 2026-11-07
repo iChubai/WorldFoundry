@@ -8,8 +8,9 @@ as Euler-vs-axis-angle rotation, inverted gripper signs, or missing robot state.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -80,7 +81,7 @@ class DimSpec:
         return payload
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> "DimSpec":
+    def from_dict(cls, payload: Mapping[str, Any]) -> DimSpec:
         """Instantiate a DimSpec instance from a serializable dictionary mapping.
 
         Args:
@@ -98,7 +99,7 @@ class DimSpec:
             description=str(payload.get("description") or ""),
         )
 
-    def is_compatible(self, consumer: "DimSpec") -> tuple[bool, str]:
+    def is_compatible(self, consumer: DimSpec) -> tuple[bool, str]:
         """Check whether this producer spec can be safely consumed by ``consumer``.
 
         Args:
@@ -203,25 +204,25 @@ RAW = DimSpec("raw", 0, "raw")
 
 
 __all__ = [
-    "DimSpec",
-    "check_specs",
-    "POSITION_DELTA",
-    "POSITION_ABSOLUTE",
-    "ROTATION_EULER",
-    "ROTATION_AA",
-    "ROTATION_QUAT",
-    "ROTATION_ROT6D_INTERLEAVED",
-    "ROTATION_EULER_ACCEPTS_AA",
-    "GRIPPER_CLOSE_POS",
-    "GRIPPER_CLOSE_NEG",
     "GRIPPER_01",
+    "GRIPPER_CLOSE_NEG",
+    "GRIPPER_CLOSE_POS",
     "GRIPPER_RAW",
     "IMAGE_RGB",
-    "STATE_EEF_POS_QUAT_GRIP",
+    "LANGUAGE",
+    "POSITION_ABSOLUTE",
+    "POSITION_DELTA",
+    "RAW",
+    "ROTATION_AA",
+    "ROTATION_EULER",
+    "ROTATION_EULER_ACCEPTS_AA",
+    "ROTATION_QUAT",
+    "ROTATION_ROT6D_INTERLEAVED",
     "STATE_EEF_POS_AA_GRIP",
     "STATE_EEF_POS_EULER_GRIP",
-    "STATE_ROT6D_PROPRIO_20D",
+    "STATE_EEF_POS_QUAT_GRIP",
     "STATE_JOINT",
-    "LANGUAGE",
-    "RAW",
+    "STATE_ROT6D_PROPRIO_20D",
+    "DimSpec",
+    "check_specs",
 ]

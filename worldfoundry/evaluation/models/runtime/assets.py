@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.models.runtime.profiles import RuntimeProfile, load_runtime_profiles
 from worldfoundry.evaluation.utils import DATA_ROOT
@@ -31,11 +32,7 @@ def _mapping_of_mapping(value: Any) -> Mapping[str, Mapping[str, Any]]:
     """Coerce any mapping input to a dictionary of string-to-dictionary mappings."""
     if not isinstance(value, Mapping):
         return {}
-    return {
-        str(key): dict(item)
-        for key, item in value.items()
-        if isinstance(item, Mapping)
-    }
+    return {str(key): dict(item) for key, item in value.items() if isinstance(item, Mapping)}
 
 
 # Module-local alias for the shared runtime loader helper.
@@ -93,7 +90,7 @@ class RuntimeAsset:
         default_id: str,
         default_kind: str = "checkpoint",
         source: str = "target",
-    ) -> "RuntimeAsset":
+    ) -> RuntimeAsset:
         """Build a :class:`RuntimeAsset` from a raw YAML mapping.
 
         Supports multiple legacy key names (``"id"``, ``"name"``, ``"type"``)
@@ -180,7 +177,7 @@ class RuntimeAssetProfile:
     schema_version: int | None = None
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any], *, source: str = "target") -> "RuntimeAssetProfile":
+    def from_mapping(cls, data: Mapping[str, Any], *, source: str = "target") -> RuntimeAssetProfile:
         """Build a :class:`RuntimeAssetProfile` from a raw YAML mapping.
 
         Args:
@@ -214,7 +211,7 @@ class RuntimeAssetProfile:
         return profile
 
     @classmethod
-    def from_runtime_profile(cls, profile: RuntimeProfile, *, source: str = "runtime_profile") -> "RuntimeAssetProfile":
+    def from_runtime_profile(cls, profile: RuntimeProfile, *, source: str = "runtime_profile") -> RuntimeAssetProfile:
         """Derive a :class:`RuntimeAssetProfile` from a :class:`RuntimeProfile`'s checkpoints.
 
         Args:
@@ -370,8 +367,7 @@ def load_runtime_asset_profiles(
     """
     source_profiles = runtime_profiles or load_runtime_profiles(**dict(runtime_profile_kwargs or {}))
     profiles = {
-        model_id: RuntimeAssetProfile.from_runtime_profile(profile)
-        for model_id, profile in source_profiles.items()
+        model_id: RuntimeAssetProfile.from_runtime_profile(profile) for model_id, profile in source_profiles.items()
     }
     for path in _manifest_paths(root):
         for data in _iter_asset_profile_mappings(path):

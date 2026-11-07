@@ -1,24 +1,24 @@
-from dataclasses import asdict, dataclass, field
 import random
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
 class Example:
     x: Any
-    features: Dict[str, Any] = field(default_factory=dict)
-    labels: Dict[str, Any] = field(default_factory=dict)
+    features: dict[str, Any] = field(default_factory=dict)
+    labels: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class Group:
     name: str = ""
-    examples: List[Example] = field(default_factory=list)
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    features: Dict[str, Any] = field(default_factory=dict)
-    Ks: Dict[str, Any] = field(default_factory=dict)
-    ws: Dict[str, Any] = field(default_factory=dict)
-    vs: Dict[str, Any] = field(default_factory=dict)
+    examples: list[Example] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    features: dict[str, Any] = field(default_factory=dict)
+    Ks: dict[str, Any] = field(default_factory=dict)
+    ws: dict[str, Any] = field(default_factory=dict)
+    vs: dict[str, Any] = field(default_factory=dict)
 
 
 def to_batches(lst, batch_size):
@@ -38,7 +38,7 @@ def mode_dropping_groups(label_to_examples, categories, N):
             j = random.choice(range(len(Ns)))
             Ns[j] += 1
         group = Group(i, [])
-        for n, cat in zip(Ns, categories):
+        for n, cat in zip(Ns, categories, strict=False):
             group.examples += random.sample(label_to_examples[cat], n)
         lst.append(group)
     return lst

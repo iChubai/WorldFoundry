@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -74,19 +75,11 @@ def iter_benchmark_catalog_manifest_paths(root: str | Path | None = None) -> tup
                 )
         if paths:
             return tuple(paths)
-        paths = [
-            resolved_root / name
-            for name in _LEGACY_CATALOG_SHARDS
-            if (resolved_root / name).is_file()
-        ]
+        paths = [resolved_root / name for name in _LEGACY_CATALOG_SHARDS if (resolved_root / name).is_file()]
         return tuple(paths)
 
     return tuple(
-        sorted(
-            candidate
-            for candidate in manifest_paths(resolved_root)
-            if not is_catalog_metadata_manifest(candidate)
-        )
+        sorted(candidate for candidate in manifest_paths(resolved_root) if not is_catalog_metadata_manifest(candidate))
     )
 
 

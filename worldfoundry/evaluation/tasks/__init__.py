@@ -5,7 +5,6 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-
 _EXPORT_MODULES: dict[str, str] = {
     "BENCHMARK_YAML_SCHEMA_VERSION": "worldfoundry.evaluation.tasks.catalog.yaml",
     "TASK_YAML_SCHEMA_VERSION": "worldfoundry.evaluation.tasks.catalog.yaml",

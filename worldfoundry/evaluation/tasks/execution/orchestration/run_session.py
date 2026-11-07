@@ -8,11 +8,12 @@ directory setup.
 from __future__ import annotations
 
 from asyncio import CancelledError
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import iter_jsonl
 from worldfoundry.evaluation.api import (

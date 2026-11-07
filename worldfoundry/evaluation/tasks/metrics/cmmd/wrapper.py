@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
@@ -44,12 +43,10 @@ def compute_cmmd(
     if ref_embed_file is not None:
         ref_embs = np.load(ref_embed_file).astype("float32")
     else:
-        ref_embs = io_util.compute_embeddings_for_dir(
-            str(reference_dir), model, batch_size, max_count
-        ).astype("float32")
-    eval_embs = io_util.compute_embeddings_for_dir(
-        str(eval_dir), model, batch_size, max_count
-    ).astype("float32")
+        ref_embs = io_util.compute_embeddings_for_dir(str(reference_dir), model, batch_size, max_count).astype(
+            "float32"
+        )
+    eval_embs = io_util.compute_embeddings_for_dir(str(eval_dir), model, batch_size, max_count).astype("float32")
     value = distance.mmd(ref_embs, eval_embs)
     if hasattr(value, "item"):
         return float(value.item())

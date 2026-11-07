@@ -11,9 +11,10 @@ import base64
 import json
 import os
 import shutil
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.filesystem.file_utils import materialize_file
 from worldfoundry.core.io.formats.serialization import read_jsonl_objects

@@ -5,7 +5,6 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-
 _EXPORT_MODULES: dict[str, str] = {
     "SourceFamilyMaps": "worldfoundry.evaluation.models.catalog.manifest",
     "SourceModelMap": "worldfoundry.evaluation.models.catalog.manifest",

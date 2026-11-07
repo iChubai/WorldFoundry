@@ -34,7 +34,7 @@ def compute_distribution_metrics(
 ) -> dict[str, float]:
     """Run distribution metrics with backend input1=generated, input2=reference."""
     ref, gen = resolve_distribution_inputs(reference, generated)
-    metric_flags = {name: True for name in metrics}
+    metric_flags = dict.fromkeys(metrics, True)
     result = calculate_metrics()(
         input1=prepare_image_input(gen, **kwargs),
         input2=prepare_image_input(ref, **kwargs),

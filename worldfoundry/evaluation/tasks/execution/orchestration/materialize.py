@@ -7,9 +7,10 @@ control actions, expected output definitions, and caching directives.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.datasets import (
@@ -46,6 +47,7 @@ class MaterializedRequests:
         split: The dataset evaluation split (e.g. "default", "validation").
         requests: The underlying flat list of standard GenerationRequests.
     """
+
     schema_version: str
     task_type: str
     benchmark_name: str
@@ -136,7 +138,7 @@ def materialize_generation_requests(
 ) -> tuple[GenerationRequest, ...]:
     """Constructs standardized immutable `GenerationRequest` instances from polymorphic dictionaries.
 
-    Provides a clean, uniform translation layer bridging unstructured JSON datasets to the 
+    Provides a clean, uniform translation layer bridging unstructured JSON datasets to the
     rigid, schema-enforced inputs consumed by active model runners.
 
     Args:

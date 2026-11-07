@@ -7,7 +7,12 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, is_generation_result_successful, local_path_for_uri
+from worldfoundry.evaluation.api import (
+    GenerationRequest,
+    GenerationResult,
+    is_generation_result_successful,
+    local_path_for_uri,
+)
 
 BENCHMARK_ID = "sana-wm-bench"
 SPLITS = {

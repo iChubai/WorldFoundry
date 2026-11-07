@@ -7,11 +7,12 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, SCORECARD_SCHEMA_VERSION
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, resolve_env_path
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_predict import (
     PhyFPSPredictConfig,
     parse_results_csv,
@@ -28,13 +29,14 @@ from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.visual_chr
 )
 
 
-
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run or normalize Visual Chronometer official outputs.")
     parser.add_argument("--benchmark-id", default="visual-chronometer")
     parser.add_argument("--official-results-path", dest="official_results_path", type=Path)
     parser.add_argument("--from-upstream-results", dest="official_results_path", type=Path, help=argparse.SUPPRESS)
-    parser.add_argument("--run-official", action="store_true", help="Execute Visual Chronometer PhyFPS prediction in-tree.")
+    parser.add_argument(
+        "--run-official", action="store_true", help="Execute Visual Chronometer PhyFPS prediction in-tree."
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--generated-artifact-dir", type=Path)
     parser.add_argument("--visual-chronometer-root", type=Path)
@@ -46,8 +48,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--json", action="store_true")
     return parser.parse_args(argv)
-
-
 
 
 def _resolve_predict_backend() -> str:
@@ -111,9 +111,7 @@ def _scorecard(
     integration_evidence = official_verified and full_suite_valid
     normalizer_only = not official_runtime_executed and not integration_evidence
     evaluation_kind = (
-        "visual_chronometer_official_in_tree"
-        if official_runtime_executed
-        else "visual_chronometer_result_normalizer"
+        "visual_chronometer_official_in_tree" if official_runtime_executed else "visual_chronometer_result_normalizer"
     )
     return {
         "schema_version": SCORECARD_SCHEMA_VERSION,
@@ -168,11 +166,12 @@ def normalize_visual_chronometer_results(
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     generated_dir = args.generated_artifact_dir or resolve_env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR")
-    official_results_path = args.official_results_path or resolve_env_path("WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH")
+    official_results_path = args.official_results_path or resolve_env_path(
+        "WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH"
+    )
     if official_results_path is None:
         raise ValueError(
-            "--official-results-path, WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH, "
-            "or --run-official is required"
+            "--official-results-path, WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH, or --run-official is required"
         )
     records = parse_results_csv(Path(official_results_path))
     computed = compute_visual_chronometer_metrics(video_records=records)
@@ -230,7 +229,9 @@ def run_official_visual_chronometer(args: argparse.Namespace) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     generated_artifact_dir = args.generated_artifact_dir or resolve_env_path("WORLDFOUNDRY_GENERATED_ARTIFACT_DIR")
     if generated_artifact_dir is None:
-        raise ValueError("--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official")
+        raise ValueError(
+            "--generated-artifact-dir or WORLDFOUNDRY_GENERATED_ARTIFACT_DIR is required for --run-official"
+        )
 
     config = PhyFPSPredictConfig(
         backend=_resolve_predict_backend(),
@@ -277,7 +278,7 @@ def main(argv: list[str] | None = None) -> int:
             scorecard = run_official_visual_chronometer(args)
         else:
             scorecard = normalize_visual_chronometer_results(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {
             "schema_version": SCORECARD_SCHEMA_VERSION,

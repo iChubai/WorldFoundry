@@ -16,9 +16,10 @@ import os
 import re
 import statistics
 import time
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -252,7 +253,7 @@ class ApplePICase:
     metadata: Mapping[str, Any]
 
     @classmethod
-    def load(cls, case_id: str, case_dir: Path) -> "ApplePICase":
+    def load(cls, case_id: str, case_dir: Path) -> ApplePICase:
         metadata_path = case_dir / "metadata.json"
         if not metadata_path.is_file():
             raise FileNotFoundError(f"Missing Apple-PI case metadata: {metadata_path}")
@@ -304,7 +305,7 @@ class ApplePIGeminiJudge:
             "formulation_graphic": "annotations_removed object_position_match object_appearance_match arrow_is_borderless_orange arrow_from_center arrow_direction_match velocity_label_present_and_format velocity_value_match velocity_label_no_unit",
             "deduction": "visual_quality motion_smoothness physics_accuracy gen_annotations_removed object_consistency",
         }
-        return {field: 0.5 for field in fields[subtrack].split()}
+        return dict.fromkeys(fields[subtrack].split(), 0.5)
 
     def complete(self, prompt: str, assets: list[Path], subtrack: str = "deduction") -> str:
         if self.backend == "mock":
@@ -592,7 +593,7 @@ class NativeApplePIModelStack:
                     1.0 if union == 0 else float(np.logical_and(spatial_pred, spatial_gt).sum() / union)
                 )
                 frame_ious = []
-                for pred_frame, gt_frame in zip(pred_mask, gt_mask):
+                for pred_frame, gt_frame in zip(pred_mask, gt_mask, strict=False):
                     union = np.logical_or(pred_frame, gt_frame).sum()
                     frame_ious.append(1.0 if union == 0 else float(np.logical_and(pred_frame, gt_frame).sum() / union))
                 result["spatiotemporal_iou"] = float(np.mean(frame_ious)) if frame_ious else 0.0

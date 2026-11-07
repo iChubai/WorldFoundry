@@ -132,11 +132,7 @@ def _runtime_manifest_metadata(request: GenerationRequest) -> dict[str, Any]:
     metadata: dict[str, Any] = {}
     for values in (request.inputs, request.controls):
         metadata.update(
-            {
-                str(key): value
-                for key, value in values.items()
-                if str(key) not in _UNVERIFIED_CAMERA_ARTIFACT_FIELDS
-            }
+            {str(key): value for key, value in values.items() if str(key) not in _UNVERIFIED_CAMERA_ARTIFACT_FIELDS}
         )
 
     prompt = request.inputs.get("prompt")
@@ -198,8 +194,7 @@ def copy_wrbench_generated_videos(
         prior_sample = target_names.get(target_name)
         if prior_sample is not None:
             raise ValueError(
-                f"duplicate WRBench official video name {target_name!r} for "
-                f"{prior_sample!r} and {request.sample_id!r}"
+                f"duplicate WRBench official video name {target_name!r} for {prior_sample!r} and {request.sample_id!r}"
             )
         target_names[target_name] = request.sample_id
         target_path = generated_artifact_dir / target_name

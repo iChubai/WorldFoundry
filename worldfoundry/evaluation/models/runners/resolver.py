@@ -10,21 +10,22 @@ Provides two resolution paths:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api import WorldModelConfig
-from worldfoundry.evaluation.models.runners.registry import default_model_runner_registry
 from worldfoundry.evaluation.models.import_target import load_attr
-from worldfoundry.evaluation.models.runners.builtins import (
-    list_builtin_runtime_runners,
-)
 from worldfoundry.evaluation.models.pipelines.bindings import (
     first_text,
     resolve_pipeline_route,
     runtime_profile_execution_metadata,
 )
+from worldfoundry.evaluation.models.runners.builtins import (
+    list_builtin_runtime_runners,
+)
+from worldfoundry.evaluation.models.runners.registry import default_model_runner_registry
 
 
 class ModelResolutionError(ValueError):
@@ -256,9 +257,7 @@ def resolve_model_zoo_config(
         candidates = difflib.get_close_matches(model_id, [item.model_id for item in registry.list()], n=3)
         hint = f"; did you mean: {', '.join(candidates)}?" if candidates else ""
         raise ModelResolutionError(f"unknown model-zoo entry {model_id!r}{hint}") from exc
-    if not variant_id and model_id != entry.model_id and any(
-        item.variant_id == model_id for item in entry.variants
-    ):
+    if not variant_id and model_id != entry.model_id and any(item.variant_id == model_id for item in entry.variants):
         variant_id = model_id
     selected_variant = None
     runner_target = entry.runner_target
@@ -360,15 +359,9 @@ def resolve_model_zoo_config(
         "entry_integration_status": entry.integration_status,
         "entry_runner_entry_kind": entry.runner_entry_kind,
         "entry_verification_status": entry.verification_status,
-        "variant_integration_status": (
-            selected_variant.integration_status if selected_variant is not None else None
-        ),
-        "variant_runner_entry_kind": (
-            selected_variant.runner_entry_kind if selected_variant is not None else None
-        ),
-        "variant_verification_status": (
-            selected_variant.verification_status if selected_variant is not None else None
-        ),
+        "variant_integration_status": (selected_variant.integration_status if selected_variant is not None else None),
+        "variant_runner_entry_kind": (selected_variant.runner_entry_kind if selected_variant is not None else None),
+        "variant_verification_status": (selected_variant.verification_status if selected_variant is not None else None),
         "runtime_profile": runtime_profile,
         **profile_metadata,
         "pipeline_target": resolved_pipeline_target,

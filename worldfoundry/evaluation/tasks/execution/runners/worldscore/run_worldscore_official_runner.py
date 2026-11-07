@@ -24,7 +24,7 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
 )
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 from worldfoundry.evaluation.utils import HFD_DATASET_CACHE_ROOT, REPO_ROOT, worldfoundry_hfd_dataset_root
-from worldfoundry.runtime.env import (  # type: ignore[reportMissingImports]  # noqa: E402
+from worldfoundry.runtime.env import (  # type: ignore[reportMissingImports]
     first_env_value,
     resolve_hf_cache_dir,
 )
@@ -1242,7 +1242,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         scorecard = run_official_worldscore(args)
-    except Exception as exc:  # noqa: BLE001 - failure contract: any failure still writes a failed scorecard.
+    except Exception as exc:  # failure contract: any failure still writes a failed scorecard.
         try:
             from worldfoundry.evaluation.tasks.execution.framework.official_runner import write_failed_scorecard
 
@@ -1253,7 +1253,7 @@ def main(argv: list[str] | None = None) -> int:
                 output_dir=args.output_dir,
                 reason=f"{type(exc).__name__}: {exc}",
             )
-        except Exception:  # noqa: BLE001 - never mask the original failure with a scorecard write error.
+        except Exception:  # never mask the original failure with a scorecard write error.
             pass
         print(f"error: {exc}", file=sys.stderr)
         return 1

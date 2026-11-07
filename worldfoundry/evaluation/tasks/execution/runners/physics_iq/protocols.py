@@ -65,7 +65,6 @@ def resolve_protocol(
     explicit = PROTOCOLS[normalized]  # type: ignore[index]
     if by_id is not None and by_id.protocol != explicit.protocol:
         raise ValueError(
-            f"Benchmark {benchmark_id!r} selects {by_id.protocol!r}, but --protocol selects "
-            f"{explicit.protocol!r}."
+            f"Benchmark {benchmark_id!r} selects {by_id.protocol!r}, but --protocol selects {explicit.protocol!r}."
         )
     return explicit

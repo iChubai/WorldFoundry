@@ -58,4 +58,4 @@ def package_root() -> Path:
     return Path(__file__).resolve().parent
 
 
-__all__ = ["CLIPScore", "FALLBACK_CLIPSCORE_MODELS", "list_all_clipscore_models", "package_root"]
+__all__ = ["FALLBACK_CLIPSCORE_MODELS", "CLIPScore", "list_all_clipscore_models", "package_root"]

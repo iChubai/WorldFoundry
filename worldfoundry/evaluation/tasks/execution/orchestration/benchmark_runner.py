@@ -20,9 +20,10 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping
+from typing import Any
 
 from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.core.io.formats.serialization import write_json
@@ -857,8 +858,8 @@ class ManifestBenchmarkRunner:
         contract = get_external_benchmark_contract(self.benchmark_id)
         yield BenchmarkSample(
             sample_id=f"{self.benchmark_id}:manifest",
-            inputs={key: None for key in contract.input_keys},
-            expected_outputs={key: None for key in contract.output_keys},
+            inputs=dict.fromkeys(contract.input_keys),
+            expected_outputs=dict.fromkeys(contract.output_keys),
             metadata={
                 "benchmark_id": self.benchmark_id,
                 "integration_status": self.entry.integration_status,

@@ -1,16 +1,15 @@
 import itertools
 
 import datasets
+import numpy as np
+import torch
 from nltk.tokenize import word_tokenize
 from nltk.translate import bleu_score
-import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
-import torch
 from transformers import AutoModel, AutoTokenizer
-
 from vendi_score import data_utils, vendi
-from vendi_score.data_utils import Example, Group
+from vendi_score.data_utils import Example
 
 
 def get_tokenizer(model="roberta-base"):
@@ -65,11 +64,9 @@ def get_ngrams(
     return X
 
 
-def add_ngrams_to_examples(
-    examples, n=1, tokenizer=None, return_vectorizer=False, **kwargs
-):
+def add_ngrams_to_examples(examples, n=1, tokenizer=None, return_vectorizer=False, **kwargs):
     X = get_ngrams([e.x for e in examples], n=n, tokenizer=tokenizer, **kwargs)
-    for e, x in zip(examples, X):
+    for e, x in zip(examples, X, strict=False):
         e.features[f"{n}-grams"] = x
     return examples
 
@@ -83,11 +80,7 @@ def get_embeddings(
     model_path="princeton-nlp/unsup-simcse-roberta-base",
 ):
     if device is None:
-        device = (
-            torch.device("cuda")
-            if torch.cuda.is_available()
-            else torch.device("cpu")
-        )
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     if type(device) == str:
         device = torch.device(device)
     if model is None:
@@ -112,7 +105,7 @@ def get_embeddings(
         if type(output) == list:
             output = output[0]
         output_arr = output.squeeze().cpu().numpy()
-        if output_arr.ndim==1:
+        if output_arr.ndim == 1:
             output_arr = output_arr.reshape(1, output_arr.size)
         embeddings.append(output_arr)
     return np.concatenate(embeddings, 0)
@@ -135,7 +128,7 @@ def add_embeddings_to_examples(
         device=device,
         model_name=model_name,
     )
-    for e, x in zip(examples, X):
+    for e, x in zip(examples, X, strict=False):
         e.features[feature_name] = x
     return examples
 
@@ -150,12 +143,7 @@ def single_ngram_diversity(sents, n, tokenizer=None, **kwargs):
 
 
 def ngram_diversity(sents, ns=[1, 2, 3, 4], tokenizer=None, **kwargs):
-    return np.mean(
-        [
-            single_ngram_diversity(sents, n, tokenizer=tokenizer, **kwargs)
-            for n in ns
-        ]
-    )
+    return np.mean([single_ngram_diversity(sents, n, tokenizer=tokenizer, **kwargs) for n in ns])
 
 
 def bleu(hyps, refs, tokenizer=None):
@@ -168,12 +156,7 @@ def bleu(hyps, refs, tokenizer=None):
         hyp_tokens = hyps
         ref_tokens = refs
     smoothing = bleu_score.SmoothingFunction().method1
-    return np.mean(
-        [
-            bleu_score.sentence_bleu(refs, hyp, smoothing_function=smoothing)
-            for hyp in hyps
-        ]
-    )
+    return np.mean([bleu_score.sentence_bleu(refs, hyp, smoothing_function=smoothing) for hyp in hyps])
 
 
 def self_bleu(sents, tokenizer):
@@ -183,9 +166,7 @@ def self_bleu(sents, tokenizer):
     for i in range(len(examples)):
         hyp = examples[i]
         ref = examples[:i] + examples[i + 1 :]
-        scores.append(
-            bleu_score.sentence_bleu(ref, hyp, smoothing_function=smoothing)
-        )
+        scores.append(bleu_score.sentence_bleu(ref, hyp, smoothing_function=smoothing))
     return np.mean(scores)
 
 
@@ -200,9 +181,7 @@ def pairwise_bleu(sents, tokenizer):
                 continue
             hyp = examples[i]
             ref = [examples[j]]
-            lst.append(
-                bleu_score.sentence_bleu(ref, hyp, smoothing_function=smoothing)
-            )
+            lst.append(bleu_score.sentence_bleu(ref, hyp, smoothing_function=smoothing))
         scores.append(np.mean(lst))
     return np.mean(scores)
 

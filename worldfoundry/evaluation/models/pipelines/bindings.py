@@ -9,10 +9,11 @@ contributions.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -56,7 +57,7 @@ class PipelineBinding:
     schema_version: int | None = None
 
     @classmethod
-    def from_mapping(cls, data: Mapping[str, Any]) -> "PipelineBinding":
+    def from_mapping(cls, data: Mapping[str, Any]) -> PipelineBinding:
         """Instantiate a PipelineBinding from a mapping dictionary."""
         pipeline = data.get("pipeline") if isinstance(data.get("pipeline"), Mapping) else {}
         loading = pipeline.get("loading") if isinstance(pipeline.get("loading"), Mapping) else {}
@@ -87,9 +88,7 @@ class PipelineBinding:
         if not self.model_id:
             raise ValueError(f"pipeline binding {self.binding_id!r} requires model_id.")
         if ":" not in self.pipeline_target:
-            raise ValueError(
-                f"pipeline binding {self.binding_id!r} requires pipeline.target in 'module:Class' form."
-            )
+            raise ValueError(f"pipeline binding {self.binding_id!r} requires pipeline.target in 'module:Class' form.")
 
 
 # ── Registry ───────────────────────────────────────────────────────────
@@ -443,11 +442,11 @@ def resolve_pipeline_route(
 
 __all__ = [
     "DEFAULT_PIPELINE_BINDINGS_ROOT",
-    "PipelineRoute",
     "PipelineBinding",
     "PipelineBindingRegistry",
-    "first_text",
+    "PipelineRoute",
     "clear_pipeline_binding_registry_cache",
+    "first_text",
     "load_pipeline_binding",
     "load_pipeline_binding_registry",
     "load_pipeline_binding_registry_with_plugins",

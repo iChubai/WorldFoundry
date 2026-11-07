@@ -108,10 +108,10 @@ def score_samples(
             batch_results = results[start : start + batch_size]
             collected: list[list[MetricResult]] = [[] for _ in batch_requests]
             errors: list[list[dict[str, str]]] = [[] for _ in batch_requests]
-            for metric, identity in zip(metrics, identities):
+            for metric, identity in zip(metrics, identities, strict=False):
                 pending = []
                 name = metric_name(metric)
-                for index, (request, result) in enumerate(zip(batch_requests, batch_results)):
+                for index, (request, result) in enumerate(zip(batch_requests, batch_results, strict=False)):
                     if not is_generation_result_successful(result):
                         # Generation success counts every attempt; quality metrics need an output.
                         collected[index].extend(
@@ -212,7 +212,7 @@ def score_samples(
                 writer.flush()
 
             batch = []
-            for request, result, rows, failures in zip(batch_requests, batch_results, collected, errors):
+            for request, result, rows, failures in zip(batch_requests, batch_results, collected, errors, strict=False):
                 seen = set()
                 for output in rows:
                     if output.metric_id in seen:

@@ -5,8 +5,9 @@ from __future__ import annotations
 import csv
 import json
 import math
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric, normalize_unit_score, scalar_number
 
@@ -142,7 +143,7 @@ def spearman(xs: list[float], ys: list[float]) -> float | None:
         return None
     rx, ry = _rank(xs), _rank(ys)
     mx, my = sum(rx) / len(rx), sum(ry) / len(ry)
-    numerator = sum((x - mx) * (y - my) for x, y in zip(rx, ry))
+    numerator = sum((x - mx) * (y - my) for x, y in zip(rx, ry, strict=False))
     denominator = math.sqrt(sum((x - mx) ** 2 for x in rx) * sum((y - my) ** 2 for y in ry))
     return numerator / denominator if denominator else 0.0
 

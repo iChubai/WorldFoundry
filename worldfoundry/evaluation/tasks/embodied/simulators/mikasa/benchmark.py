@@ -166,6 +166,7 @@ class MIKASABenchmark(BaseSimulator):
             # Wrap the environment to convert state observations (which MIKASA uses)
             # into a dictionary format compatible with the expected API.
             from mikasa_robo_suite.utils.wrappers import StateOnlyTensorToDictWrapper
+
             self._env = StateOnlyTensorToDictWrapper(self._env)
             self._current_task = env_name
 

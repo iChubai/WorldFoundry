@@ -11,7 +11,9 @@ from worldfoundry.evaluation.tasks.metrics._shared.lazy import lazy_export
 from worldfoundry.evaluation.tasks.metrics.registry import metric_module_from_globals
 
 compute_vs_similarity = lazy_export(f"{__name__}.wrapper", "compute_vs_similarity", owner=__name__)
-compute_vs_similarity_from_scores = lazy_export(f"{__name__}.wrapper", "compute_vs_similarity_from_scores", owner=__name__)
+compute_vs_similarity_from_scores = lazy_export(
+    f"{__name__}.wrapper", "compute_vs_similarity_from_scores", owner=__name__
+)
 compute_vs_similarity_matrix = lazy_export(f"{__name__}.wrapper", "compute_vs_similarity_matrix", owner=__name__)
 
 METRIC_ID = "vs_similarity"

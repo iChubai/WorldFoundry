@@ -8,9 +8,9 @@ data into `WorldTaskConfig` and `BenchmarkSpec` objects.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api.json_contract import require_mapping as _require_mapping
 from worldfoundry.evaluation.api.json_contract import tuple_of_str as _string_tuple

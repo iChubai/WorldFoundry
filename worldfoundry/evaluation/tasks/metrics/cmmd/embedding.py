@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2024 The Google Research Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +14,12 @@
 
 """Embedding models used in the CMMD calculation."""
 
-from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
 import torch
-import numpy as np
+from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
 
 _CLIP_MODEL_NAME = "openai/clip-vit-large-patch14-336"
+
+
 def _resolve_device(device: str | None = None) -> torch.device:
     if device is not None:
         return torch.device(device)

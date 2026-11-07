@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.evaluation.tasks.embodied.metrics import metric_suite
 from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import (
@@ -73,7 +74,7 @@ def merge_embodied_results(
     model_cfg = dict((config or {}).get("model") or {})
     benchmark_ids = []
     for row in results:
-        task_spec = ((row.get("metadata") or {}).get("task_spec") or {})
+        task_spec = (row.get("metadata") or {}).get("task_spec") or {}
         suite = task_spec.get("suite")
         if suite:
             benchmark_ids.append(str(suite))

@@ -7,11 +7,8 @@ WorldFoundry scorecard format. This includes extracting scores for various aspec
 (e.g., visual quality, temporal consistency, text-to-video alignment) and calculating
 an overall average, along with detailed metadata about the run and artifacts.
 """
+
 from __future__ import annotations
-
-
-
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
 
 import argparse
 import ast
@@ -21,9 +18,10 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_data import (
@@ -40,6 +38,7 @@ from worldfoundry.evaluation.tasks.execution.framework.io import (
     write_json,
     write_jsonl,
 )
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 
 # Import utility functions from worldfoundry.
 from worldfoundry.evaluation.utils import REPO_ROOT, worldfoundry_hfd_dataset_root
@@ -703,7 +702,9 @@ def bench_split_root(bench_data_root: Path, bench_name: str) -> Path:
         Path: The determined root directory for the benchmark split.
     """
     # Check if key files exist directly in bench_data_root, indicating it's already the split root.
-    if (bench_data_root / f"frames_{bench_name}_test.zip").is_file() or (bench_data_root / "test-00000-of-00001.parquet").is_file():
+    if (bench_data_root / f"frames_{bench_name}_test.zip").is_file() or (
+        bench_data_root / "test-00000-of-00001.parquet"
+    ).is_file():
         return bench_data_root
     # Otherwise, assume the split data is in a subdirectory named after the benchmark.
     return bench_data_root / bench_name
@@ -884,7 +885,9 @@ def run_bounded_videoscore(args: argparse.Namespace, result_file: Path) -> tuple
         ValueError: If `bench_data_root` is not provided or `bounded_sample_count` is invalid.
     """
     if args.bench_data_root is None:
-        raise ValueError("--bench-data-root or WORLDFOUNDRY_VIDEOSCORE_BENCH_ROOT is required for --bounded-sample-count")
+        raise ValueError(
+            "--bench-data-root or WORLDFOUNDRY_VIDEOSCORE_BENCH_ROOT is required for --bounded-sample-count"
+        )
     if args.bounded_sample_count < 1:
         raise ValueError("--bounded-sample-count must be positive")
 
@@ -971,7 +974,7 @@ def run_official_videoscore(args: argparse.Namespace) -> dict[str, Any]:
             frames_dir=args.frames_dir,
             command=None,  # No command executed if loading from existing results.
             duration_seconds=None,
-            returncode=0, # Assume success if results are provided.
+            returncode=0,  # Assume success if results are provided.
         )
 
     # Case 2: Run bounded in-process evaluation.
@@ -1017,7 +1020,9 @@ def run_official_videoscore(args: argparse.Namespace) -> dict[str, Any]:
 
     # Case 3: Run official VideoScore script as a subprocess.
     if args.frames_dir is None:
-        raise ValueError("--frames-dir or WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR is required unless --official-results-path is used")
+        raise ValueError(
+            "--frames-dir or WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR is required unless --official-results-path is used"
+        )
     if not (args.videoscore_root / "benchmark" / "eval_videoscore.py").is_file():
         raise FileNotFoundError(f"VideoScore eval_videoscore.py not found under: {args.videoscore_root}")
 
@@ -1025,13 +1030,17 @@ def run_official_videoscore(args: argparse.Namespace) -> dict[str, Any]:
     command = build_official_command(args, result_file)
     env = os.environ.copy()
     # Modify PYTHONPATH to include VideoScore's benchmark and root directories.
-    env["PYTHONPATH"] = f"{args.videoscore_root / 'benchmark'}{os.pathsep}{args.videoscore_root}{os.pathsep}{env.get('PYTHONPATH', '')}".rstrip(os.pathsep)
+    env["PYTHONPATH"] = (
+        f"{args.videoscore_root / 'benchmark'}{os.pathsep}{args.videoscore_root}{os.pathsep}{env.get('PYTHONPATH', '')}".rstrip(
+            os.pathsep
+        )
+    )
     start = time.monotonic()
     completed = run_logged_subprocess(
         command,
         stdout_path=stdout_path,
         stderr_path=stderr_path,
-        cwd=args.videoscore_root / "benchmark", # Run from the benchmark directory as expected by VideoScore.
+        cwd=args.videoscore_root / "benchmark",  # Run from the benchmark directory as expected by VideoScore.
         env=env,
         timeout=args.timeout,
         start_new_session=False,
@@ -1069,14 +1078,26 @@ def build_parser() -> argparse.ArgumentParser:
     Returns:
         argparse.ArgumentParser: The configured argument parser.
     """
-    parser = argparse.ArgumentParser(description="Run official VideoScore and normalize its output to a WorldFoundry scorecard.")
+    parser = argparse.ArgumentParser(
+        description="Run official VideoScore and normalize its output to a WorldFoundry scorecard."
+    )
     parser.add_argument("--benchmark-id", default=os.environ.get("WORLDFOUNDRY_BENCHMARK_ID", "videoscore"))
-    parser.add_argument("--videoscore-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOSCORE_ROOT", default_videoscore_root()))
-    parser.add_argument("--model-repo-name", default=os.environ.get("WORLDFOUNDRY_VIDEOSCORE_MODEL_REPO", default_model_repo_name()))
-    parser.add_argument("--data-repo-name", default=os.environ.get("WORLDFOUNDRY_VIDEOSCORE_DATA_REPO", "TIGER-Lab/VideoScore-Bench"))
+    parser.add_argument(
+        "--videoscore-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOSCORE_ROOT", default_videoscore_root())
+    )
+    parser.add_argument(
+        "--model-repo-name", default=os.environ.get("WORLDFOUNDRY_VIDEOSCORE_MODEL_REPO", default_model_repo_name())
+    )
+    parser.add_argument(
+        "--data-repo-name", default=os.environ.get("WORLDFOUNDRY_VIDEOSCORE_DATA_REPO", "TIGER-Lab/VideoScore-Bench")
+    )
     parser.add_argument("--bench-name", default=os.environ.get("WORLDFOUNDRY_VIDEOSCORE_BENCH_NAME", "video_feedback"))
     parser.add_argument("--frames-dir", type=Path, default=env_path("WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR"))
-    parser.add_argument("--bench-data-root", type=Path, default=env_path("WORLDFOUNDRY_VIDEOSCORE_BENCH_ROOT", default_bench_data_root()))
+    parser.add_argument(
+        "--bench-data-root",
+        type=Path,
+        default=env_path("WORLDFOUNDRY_VIDEOSCORE_BENCH_ROOT", default_bench_data_root()),
+    )
     parser.add_argument("--bounded-sample-count", type=int)
     parser.add_argument(
         "--dataset-root",

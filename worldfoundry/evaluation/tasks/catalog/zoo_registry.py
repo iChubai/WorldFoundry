@@ -8,9 +8,10 @@ various metadata fields like domain, modality, and integration status.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator, Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api.registry import AliasRegistryStore, lookup_key, require_text
 from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import iter_benchmark_catalog_manifest_paths
@@ -136,7 +137,7 @@ class BenchmarkZooRegistry:
         return len(self._store)
 
     @classmethod
-    def from_path(cls, path: str | Path | None = None) -> "BenchmarkZooRegistry":
+    def from_path(cls, path: str | Path | None = None) -> BenchmarkZooRegistry:
         """Factory method to construct a registry from catalog shards under a target path.
 
         If no path is provided, it defaults to the standard benchmark zoo directory.
@@ -152,7 +153,7 @@ class BenchmarkZooRegistry:
         return cls.from_paths(_manifest_paths(root))
 
     @classmethod
-    def from_paths(cls, paths: Iterable[str | Path]) -> "BenchmarkZooRegistry":
+    def from_paths(cls, paths: Iterable[str | Path]) -> BenchmarkZooRegistry:
         """Factory method to construct a registry from multiple catalog shard file paths.
 
         This method loads entries from a list of specified YAML/JSON manifest files.

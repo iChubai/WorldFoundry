@@ -6,10 +6,11 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.execution.process import read_text_tail, run_logged_subprocess
 from worldfoundry.core.io.paths import project_root
@@ -661,9 +662,15 @@ def _run_cli_command(
     stderr_log = output_dir_path / "workspace_runner_stderr.log"
     paths = session_paths(output_dir_path)
     run_id = f"workspace-{uuid4().hex[:12]}"
-    with run_stage(paths, "evaluate", manifest={
-        "run_id": run_id, "runner": delegate_runner, "benchmark": {"benchmark_id": benchmark_id},
-    }):
+    with run_stage(
+        paths,
+        "evaluate",
+        manifest={
+            "run_id": run_id,
+            "runner": delegate_runner,
+            "benchmark": {"benchmark_id": benchmark_id},
+        },
+    ):
         try:
             completed = run_logged_subprocess(
                 command,
@@ -691,7 +698,9 @@ def _run_cli_command(
         if completed.returncode != 0:
             run["status"] = "failed"
             scorecard.setdefault("eligibility", {}).update(
-                score_valid=False, leaderboard_valid=False, leaderboard_eligible=False,
+                score_valid=False,
+                leaderboard_valid=False,
+                leaderboard_eligible=False,
             )
             # Keep partial scores, but discard any completed reports emitted before the failure.
             for key in ("run_summary", "report"):
@@ -705,8 +714,9 @@ def _run_cli_command(
             delegate_runner=delegate_runner,
         )
         manifest = read_json_object(paths["manifest"])
-        manifest.update(run_id=run["run_id"], status=result["status"], exit_code=result["exit_code"],
-                        finished_at=utcnow_iso())
+        manifest.update(
+            run_id=run["run_id"], status=result["status"], exit_code=result["exit_code"], finished_at=utcnow_iso()
+        )
         write_json(paths["manifest"], manifest)
         result["manifest_path"] = str(paths["manifest"])
         return result
@@ -740,9 +750,7 @@ def validate_workspace_registry() -> list[str]:
 
     from worldfoundry.evaluation.tasks.catalog.dispatch import official_runner_registry, script_to_module
 
-    workspace_ids = {
-        key for key, spec in official_runner_registry().items() if spec.module or spec.workspace_dispatch
-    }
+    workspace_ids = {key for key, spec in official_runner_registry().items() if spec.module or spec.workspace_dispatch}
     for benchmark_id, video_spec in sorted(VIDEO_RUNNER_REGISTRY.items()):
         if benchmark_id not in workspace_ids:
             issues.append(f"{benchmark_id}: missing Workspace benchmark runtime entry")
@@ -753,8 +761,7 @@ def validate_workspace_registry() -> list[str]:
         expected_module = script_to_module(video_spec.script)
         if spec.module != expected_module:
             issues.append(
-                f"{benchmark_id}: Workspace module {spec.module} "
-                f"does not match framework runner {expected_module}"
+                f"{benchmark_id}: Workspace module {spec.module} does not match framework runner {expected_module}"
             )
 
     for benchmark_id, spec in sorted(CLI_RUNNERS.items()):

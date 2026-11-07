@@ -7,11 +7,12 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import resolve_env_path, SCORECARD_SCHEMA_VERSION
+from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, resolve_env_path
 from worldfoundry.evaluation.tasks.execution.runners.evalcrafter.evalcrafter_metrics import (
     METRIC_ORDER,
     METRIC_SPECS,
@@ -41,13 +42,13 @@ INPUT_KEYS = ("generated_video_dir", "prompt700_txt", "official_results_path")
 OUTPUT_KEYS = ("scorecard", "raw_metric_table", "per_sample_metrics", "benchmark_contract")
 
 
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run or normalize the official EvalCrafter benchmark runtime.")
     parser.add_argument("--benchmark-id", default=BENCHMARK_ID)
     parser.add_argument("--evalcrafter-root", type=Path)
-    parser.add_argument("--videos-dir", "--generated-artifact-dir", "--generated-video-dir", dest="videos_dir", type=Path)
+    parser.add_argument(
+        "--videos-dir", "--generated-artifact-dir", "--generated-video-dir", dest="videos_dir", type=Path
+    )
     parser.add_argument(
         "--results-dir",
         "--official-results-path",
@@ -189,7 +190,10 @@ def write_scorecard(
     if video_coverage is None:
         expected_ids = set()
         if prompt700_path is not None:
-            expected_ids = {record["prompt_id"] for record in unique_prompt_records(load_prompt_records(prompt700_path=prompt700_path))}
+            expected_ids = {
+                record["prompt_id"]
+                for record in unique_prompt_records(load_prompt_records(prompt700_path=prompt700_path))
+            }
         video_coverage = _coverage(expected_ids, videos_dir)
 
     per_metric = {str(row["metric_id"]): row for row in metric_rows}
@@ -209,14 +213,9 @@ def write_scorecard(
     )
     raw_video_component = scorer_backend == "raw_video" and normalization_ok and bool(executed_metrics)
     official_results_imported = normalization_ok and not raw_video_component
-    video_complete = (
-        video_coverage.get("expected_count", 0) > 0
-        and video_coverage.get("complete") is True
-    )
+    video_complete = video_coverage.get("expected_count", 0) > 0 and video_coverage.get("complete") is True
     full_suite_valid = (
-        prompt_count >= CANONICAL_PROMPT_COUNT
-        and video_complete
-        and available_count == len(METRIC_ORDER)
+        prompt_count >= CANONICAL_PROMPT_COUNT and video_complete and available_count == len(METRIC_ORDER)
     )
     official_verified = raw_video_component and full_suite_valid
     integration_evidence = raw_video_component
@@ -260,7 +259,9 @@ def write_scorecard(
             "contract_only": False,
             "evidence_level": evidence_level,
             "evidence_scope": (
-                "bounded_official_clip_metric_subset" if raw_video_component and not full_suite_valid else evidence_level
+                "bounded_official_clip_metric_subset"
+                if raw_video_component and not full_suite_valid
+                else evidence_level
             ),
             "official_benchmark_verified": official_verified,
         },
@@ -543,9 +544,7 @@ def main(argv: list[str] | None = None) -> int:
             "evaluation": {
                 "available": False,
                 "kind": (
-                    "evalcrafter_official_raw_video_metrics"
-                    if args.run_official
-                    else "evalcrafter_result_normalizer"
+                    "evalcrafter_official_raw_video_metrics" if args.run_official else "evalcrafter_result_normalizer"
                 ),
                 "blocked_count": len(METRIC_ORDER),
             },

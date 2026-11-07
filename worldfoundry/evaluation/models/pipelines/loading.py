@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import importlib
 import inspect
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.api import WorldModelConfig
 
@@ -21,6 +22,7 @@ GENERATION_DEFAULTS_PARAMETER = "_worldfoundry_generation_defaults"
 
 
 # ── Route resolution ────────────────────────────────────────────────
+
 
 def pipeline_route_from_config(
     config: WorldModelConfig,
@@ -94,6 +96,7 @@ def pipeline_route_from_config(
 
 # ── Runner spec dataclass ───────────────────────────────────────────
 
+
 @dataclass(frozen=True)
 class PipelineRunnerSpec:
     """Resolved, side-effect-free inputs needed to construct a pipeline runner.
@@ -123,6 +126,7 @@ class PipelineRunnerSpec:
 
 
 # ── Dynamic import & HFD cache resolution ───────────────────────────
+
 
 def import_pipeline_target(target: str) -> Any:
     """Import a dynamic pipeline target class by ``module:Class`` string.
@@ -201,6 +205,7 @@ def resolve_hfd_cached_repo(reference_path: Any, repo_id: str) -> str:
 
 # ── Model-path entry helpers ────────────────────────────────────────
 
+
 def resolve_model_path_entry(model_path: Any, key: str) -> Any:
     """Resolve a required model-path entry from either a single path or a mapping.
 
@@ -240,6 +245,7 @@ def load_named_pipeline(model_path: Any, device: str, pipeline_cls: Any, model_i
 
 
 # ── Spec building ───────────────────────────────────────────────────
+
 
 def pipeline_target_from_config(
     config: WorldModelConfig,
@@ -321,6 +327,7 @@ def build_pipeline_runner_spec(config: WorldModelConfig) -> PipelineRunnerSpec:
 
 
 # ── from_pretrained dispatch ────────────────────────────────────────
+
 
 def call_pipeline_from_pretrained(
     pipeline_cls: Any,
@@ -447,6 +454,7 @@ def call_pipeline_from_pretrained(
 
 
 # ── Pipeline loading ────────────────────────────────────────────────
+
 
 def load_pipeline_from_spec(spec: PipelineRunnerSpec) -> Any:
     """Import and instantiate a pipeline based on a resolved :class:`PipelineRunnerSpec`.

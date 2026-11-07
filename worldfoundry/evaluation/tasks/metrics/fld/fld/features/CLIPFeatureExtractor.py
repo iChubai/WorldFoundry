@@ -1,7 +1,8 @@
 import torch
 import torchvision.transforms as transforms
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from fld.features.ImageFeatureExtractor import ImageFeatureExtractor
+
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
 
 class CLIPFeatureExtractor(ImageFeatureExtractor):
@@ -13,9 +14,7 @@ class CLIPFeatureExtractor(ImageFeatureExtractor):
         self.features_size = 512
         self.preprocess = transforms.Compose(
             [
-                transforms.Resize(
-                    224, interpolation=transforms.InterpolationMode.BICUBIC
-                ),
+                transforms.Resize(224, interpolation=transforms.InterpolationMode.BICUBIC),
                 transforms.CenterCrop(224),
                 transforms.ToTensor(),
                 transforms.Normalize(

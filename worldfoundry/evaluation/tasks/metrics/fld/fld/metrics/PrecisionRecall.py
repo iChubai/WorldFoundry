@@ -1,5 +1,7 @@
-""" PyTorch reimplementation from https://github.com/kynkaat/improved-precision-and-recall-metric """
+"""PyTorch reimplementation from https://github.com/kynkaat/improved-precision-and-recall-metric"""
+
 import math
+
 import torch
 from fld.metrics.Metric import Metric
 
@@ -22,9 +24,7 @@ class PrecisionRecall(Metric):
         for i in range(math.ceil(feat.shape[0] / BATCH_SIZE)):
             start, end = i * BATCH_SIZE, (i + 1) * BATCH_SIZE
             curr_dists = torch.cdist(feat[start:end], feat)
-            curr_dists = curr_dists.topk(
-                self.num_neighbors, dim=1, largest=False
-            ).values
+            curr_dists = curr_dists.topk(self.num_neighbors, dim=1, largest=False).values
             dists[start:end] = curr_dists[:, -1]
         return dists
 

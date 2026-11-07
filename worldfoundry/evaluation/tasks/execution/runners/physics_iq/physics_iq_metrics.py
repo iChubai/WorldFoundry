@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import csv
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .physics_iq_runtime import score_raw_metrics_csv
 from .protocols import ORIGINAL, PhysicsIQProtocolSpec

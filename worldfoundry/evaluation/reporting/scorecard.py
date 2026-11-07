@@ -7,9 +7,10 @@ consumption (indexing, comparison, reporting).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from importlib import metadata
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.utils import write_json
 

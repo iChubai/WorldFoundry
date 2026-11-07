@@ -7,9 +7,10 @@ metric calculation remain in their established runners.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
-from typing import Any, Mapping, Sequence, TypeAlias
+from typing import Any, TypeAlias
 
 import yaml
 
@@ -169,7 +170,7 @@ class ReproductionRecipe:
     schema_version: str = REPRODUCTION_RECIPE_SCHEMA_VERSION
 
     @classmethod
-    def from_path(cls, path: str | Path) -> "ReproductionRecipe":
+    def from_path(cls, path: str | Path) -> ReproductionRecipe:
         source = Path(path).expanduser().resolve()
         payload = yaml.safe_load(source.read_text(encoding="utf-8"))
         if not isinstance(payload, Mapping):
@@ -306,7 +307,7 @@ def _resolve_relative(value: Any, source: Path) -> str | None:
 def _resolve_benchmark(benchmark_id: str, manifest_dir: str | Path, issues: list[PreparationIssue]):
     try:
         entry = load_benchmark_zoo_registry(manifest_dir).get(benchmark_id)
-    except Exception as exc:  # noqa: BLE001 - returned as an actionable preflight issue.
+    except Exception as exc:  # returned as an actionable preflight issue.
         _issue(issues, "error", "benchmark_not_found", str(exc))
         return None
     if entry.integration_status != "integrated":
@@ -334,7 +335,7 @@ def _resolve_model(
 ):
     try:
         entry = load_model_zoo_registry(manifest_dir).get(model_id)
-    except Exception as exc:  # noqa: BLE001 - returned as an actionable preflight issue.
+    except Exception as exc:  # returned as an actionable preflight issue.
         _issue(issues, "error", "model_not_found", str(exc))
         return None
     variants = {variant.variant_id: variant for variant in entry.variants}
@@ -457,7 +458,7 @@ def _prepare_model_benchmark(
             try:
                 if not adapter.materialize_requests(limit=1, dataset_root=intent.dataset_root):
                     _issue(issues, "error", "benchmark_prompts_empty", adapter.missing_requests_hint)
-            except Exception as exc:  # noqa: BLE001 - asset readiness belongs in preflight.
+            except Exception as exc:  # asset readiness belongs in preflight.
                 _issue(issues, "error", "benchmark_prompts_unavailable", f"{type(exc).__name__}: {exc}")
 
     resolved_fidelity = fidelity or model_benchmark_fidelity(
@@ -587,7 +588,7 @@ def _prepare_generate_and_score(intent: GenerateAndScoreIntent) -> PreparedEvalu
                 dataset_id = materialized.benchmark_name
                 if not requests:
                     _issue(issues, "error", "dataset_empty", "dataset manifest produced zero requests")
-        except Exception as exc:  # noqa: BLE001 - dataset errors are preflight diagnostics.
+        except Exception as exc:  # dataset errors are preflight diagnostics.
             _issue(issues, "error", "dataset_materialization_failed", f"{type(exc).__name__}: {exc}")
     request = None
     if model is not None and requests and metrics:
@@ -659,7 +660,7 @@ def _prepare_score_results(intent: ScoreResultsIntent) -> PreparedEvaluation:
 def _prepare_reproduction(intent: ReproduceIntent) -> PreparedEvaluation:
     try:
         recipe = ReproductionRecipe.from_path(intent.recipe_path)
-    except Exception as exc:  # noqa: BLE001 - malformed recipes are returned as preflight issues.
+    except Exception as exc:  # malformed recipes are returned as preflight issues.
         issue = PreparationIssue("error", "recipe_invalid", f"{type(exc).__name__}: {exc}")
         fidelity = EvaluationFidelity(
             producer="catalog_model",
@@ -790,14 +791,14 @@ def execute_evaluation(intent: EvaluationIntent) -> Any:
 
 
 __all__ = [
-    "EvaluationIntent",
+    "PREPARED_EVALUATION_SCHEMA_VERSION",
+    "REPRODUCTION_RECIPE_SCHEMA_VERSION",
     "EvaluationFidelity",
+    "EvaluationIntent",
     "GenerateAndScoreIntent",
     "ModelBenchmarkIntent",
-    "PREPARED_EVALUATION_SCHEMA_VERSION",
-    "PreparedEvaluation",
     "PreparationIssue",
-    "REPRODUCTION_RECIPE_SCHEMA_VERSION",
+    "PreparedEvaluation",
     "ReproduceIntent",
     "ReproductionRecipe",
     "ScoreArtifactsIntent",

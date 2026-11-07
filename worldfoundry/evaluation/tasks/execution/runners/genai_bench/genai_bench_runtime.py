@@ -29,14 +29,19 @@ class GenAIBenchScorerConfig:
 
 def scorer_config_from_env() -> GenAIBenchScorerConfig:
     backend = (
-        os.environ.get("WORLDFOUNDRY_GENAI_BENCH_SCORER_BACKEND")
-        or os.environ.get("WORLDFOUNDRY_T2V_METRICS_BACKEND")
-        or "mock"
-    ).strip().lower()
+        (
+            os.environ.get("WORLDFOUNDRY_GENAI_BENCH_SCORER_BACKEND")
+            or os.environ.get("WORLDFOUNDRY_T2V_METRICS_BACKEND")
+            or "mock"
+        )
+        .strip()
+        .lower()
+    )
     strict = os.environ.get("WORLDFOUNDRY_GENAI_BENCH_STRICT", "").strip().lower() in {"1", "true", "yes", "on"}
     return GenAIBenchScorerConfig(
         backend=backend,
-        model_name=os.environ.get("WORLDFOUNDRY_T2V_METRICS_MODEL", DEFAULT_VQASCORE_MODEL).strip() or DEFAULT_VQASCORE_MODEL,
+        model_name=os.environ.get("WORLDFOUNDRY_T2V_METRICS_MODEL", DEFAULT_VQASCORE_MODEL).strip()
+        or DEFAULT_VQASCORE_MODEL,
         device=os.environ.get("WORLDFOUNDRY_T2V_METRICS_DEVICE", "cuda").strip() or "cuda",
         cache_dir=os.environ.get("WORLDFOUNDRY_T2V_METRICS_CACHE_DIR") or os.environ.get("WORLDFOUNDRY_HFD_ROOT"),
         strict=strict,
@@ -44,7 +49,7 @@ def scorer_config_from_env() -> GenAIBenchScorerConfig:
 
 
 def _deterministic_prediction(*, pair_id: str, human_label: str | None) -> str:
-    digest = hashlib.sha256(f"{pair_id}:{human_label or ''}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(f"{pair_id}:{human_label or ''}".encode()).hexdigest()
     bucket = int(digest[:8], 16) % 100
     if human_label and bucket < 72:
         return human_label
@@ -93,7 +98,9 @@ def _official_preference_rows(rows: list[dict[str, Any]], *, config: GenAIBenchS
                 {
                     "task": row.get("task") or "unknown",
                     "human_label": human,
-                    "prediction": _deterministic_prediction(pair_id=str(index), human_label=str(human) if human else None),
+                    "prediction": _deterministic_prediction(
+                        pair_id=str(index), human_label=str(human) if human else None
+                    ),
                     "pair_id": row.get("pair_id") or index,
                     "source": "genai_bench_official_fallback",
                 }

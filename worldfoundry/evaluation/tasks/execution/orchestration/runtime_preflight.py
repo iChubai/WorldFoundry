@@ -57,10 +57,7 @@ def _expand_env(value: str, environ: Mapping[str, str]) -> tuple[str, tuple[str,
 def _redact_text(value: str, environ: Mapping[str, str]) -> str:
     redacted = value
     for name, secret in environ.items():
-        if (
-            len(secret) >= _MIN_REDACTABLE_SECRET_LENGTH
-            and is_sensitive_key(name)
-        ):
+        if len(secret) >= _MIN_REDACTABLE_SECRET_LENGTH and is_sensitive_key(name):
             redacted = redacted.replace(secret, "<redacted>")
     return redacted
 

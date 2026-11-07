@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import math
 import os
 from typing import Any
-
-import math
 
 import numpy as np
 

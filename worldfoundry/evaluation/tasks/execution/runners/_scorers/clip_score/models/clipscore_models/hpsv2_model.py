@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 
 from worldfoundry.base_models.perception_core.video_text.vqa_score.constants import HF_CACHE_DIR
@@ -24,13 +22,13 @@ class HPSV2ScoreModel(ScoreModel):
 
         self.hpsv2 = hpsv2
 
-    def load_images(self, image: List[str]):
+    def load_images(self, image: list[str]):
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
         images = [self.image_loader(x) for x in image]
         return images
 
     @torch.no_grad()
-    def forward(self, images: List[str], texts: List[str]) -> torch.Tensor:
+    def forward(self, images: list[str], texts: list[str]) -> torch.Tensor:
         """Forward pass of the model to return n scores for n (image, text) pairs (in PyTorch Tensor)"""
         assert len(images) == len(texts)
         images = self.load_images(images)

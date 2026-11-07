@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.framework.official_result_scoring import (
     OfficialMetricScore,
     _first_nested_value,
     _first_record_field,
-    _float_list,
-    _loose_id,
     _looks_likert,
     _score_from_records,
     _unit_score,
@@ -91,8 +90,6 @@ def _phyground_scores(
     return scores
 
 
-
-
 def _phyground_general_score(
     records: list[Mapping[str, JsonValue]],
     metric_id: str,
@@ -138,8 +135,6 @@ def _phyground_general_score(
     )
 
 
-
-
 def _phyground_law_group_score(
     records: list[Mapping[str, JsonValue]],
     metric_id: str,
@@ -183,8 +178,6 @@ def _phyground_law_group_score(
     )
 
 
-
-
 def _phyground_law_scores(record: Mapping[str, JsonValue], laws: tuple[str, ...]) -> dict[str, float]:
     """Extract normalized PhyGround law scores from one row.
 
@@ -214,8 +207,6 @@ def _phyground_law_scores(record: Mapping[str, JsonValue], laws: tuple[str, ...]
     return result
 
 
-
-
 def _phyground_sample_key(record: Mapping[str, JsonValue]) -> str:
     """Return a PhyGround sample key, including model id when present."""
 
@@ -226,8 +217,6 @@ def _phyground_sample_key(record: Mapping[str, JsonValue]) -> str:
     if sample_id not in (None, ""):
         return str(sample_id)
     return json.dumps(record, sort_keys=True, ensure_ascii=False)
-
-
 
 
 official_scores_from_records = _phyground_scores

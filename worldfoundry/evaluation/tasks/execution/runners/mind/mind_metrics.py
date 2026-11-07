@@ -187,10 +187,7 @@ METRIC_SPECS: dict[str, dict[str, Any]] = {
         "native_scale": "Sim(3)-aligned translation units (lower is better)",
         "normalization": "inverse_offset",
         "aggregate_component": False,
-        "description": (
-            "Mean translation RPE restricted to pure translation actions "
-            "(forward/backward/left/right)."
-        ),
+        "description": ("Mean translation RPE restricted to pure translation actions (forward/backward/left/right)."),
     },
     "action_rotation_rpe_rot_mean_deg": {
         "name": "Rotation-Action RPE Rotation",
@@ -615,9 +612,7 @@ def aggregate_metrics(records: Sequence[Mapping[str, Any]]) -> dict[str, dict[st
             "normalized_score": average,
             "sample_count": len(group_scores),
             "source_paths": [],
-            "component_metric_ids": [
-                group_id for group_id in GROUP_SCORE_IDS if group_id in metrics
-            ],
+            "component_metric_ids": [group_id for group_id in GROUP_SCORE_IDS if group_id in metrics],
         }
     return metrics
 
@@ -625,17 +620,15 @@ def aggregate_metrics(records: Sequence[Mapping[str, Any]]) -> dict[str, dict[st
 def missing_component_metrics(metrics: Mapping[str, Mapping[str, Any]]) -> list[str]:
     """Return the declared component metrics that the results did not provide."""
     return [
-        metric_id
-        for metric_id in COMPONENT_METRIC_IDS
-        if metrics.get(metric_id, {}).get("normalized_score") is None
+        metric_id for metric_id in COMPONENT_METRIC_IDS if metrics.get(metric_id, {}).get("normalized_score") is None
     ]
 
 
 def sample_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """Summarize sample coverage and upstream per-sample errors."""
     failed = [record for record in records if record.get("error")]
-    by_test_type = {test_type: 0 for test_type in MIND_TEST_TYPES}
-    by_perspective = {perspective: 0 for perspective in MIND_PERSPECTIVES}
+    by_test_type = dict.fromkeys(MIND_TEST_TYPES, 0)
+    by_perspective = dict.fromkeys(MIND_PERSPECTIVES, 0)
     for record in records:
         test_type = str(record.get("test_type") or "")
         perspective = str(record.get("perspective") or "")
@@ -707,9 +700,9 @@ __all__ = [
     "METRIC_SPECS",
     "MIND_PERSPECTIVES",
     "MIND_TEST_TYPES",
-    "MindResultError",
     "PRIMARY_METRIC_ID",
     "PSNR_SATURATION_DB",
+    "MindResultError",
     "aggregate_metrics",
     "discover_result_files",
     "extract_sample_record",

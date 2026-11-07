@@ -1,10 +1,10 @@
 """
-    mid.metric 
-    Copyright (c) 2022-present NAVER Corp.
-    Apache-2.0
+mid.metric
+Copyright (c) 2022-present NAVER Corp.
+Apache-2.0
 """
+
 from typing import *
-import random
 
 import torch
 from torch import Tensor
@@ -33,8 +33,9 @@ def exp_smd(a, b, reduction=True):
         return (b @ a_inv @ b.t()).diag()
 
 
-def _compute_pmi(x: Tensor, y: Tensor, x0: Tensor, limit: int = 30000,
-                 reduction: bool = True, full: bool = False) -> Tensor:
+def _compute_pmi(
+    x: Tensor, y: Tensor, x0: Tensor, limit: int = 30000, reduction: bool = True, full: bool = False
+) -> Tensor:
     r"""
     A numerical stable version of the MID score.
 
@@ -51,7 +52,7 @@ def _compute_pmi(x: Tensor, y: Tensor, x0: Tensor, limit: int = 30000,
     """
     N = x.shape[0]
     excess = N - limit
-    if 0 < excess:
+    if excess > 0:
         if not full:
             x = x[:-excess]
             y = y[:-excess]
@@ -59,13 +60,12 @@ def _compute_pmi(x: Tensor, y: Tensor, x0: Tensor, limit: int = 30000,
     N = x.shape[0]
     M = x0.shape[0]
 
-    assert N >= x.shape[1], "not full rank for matrix inversion!"
+    assert x.shape[1] <= N, "not full rank for matrix inversion!"
     if x.shape[0] < 30000:
-        _rank_zero_info("if it underperforms, please consider to use "
-                       "the epsilon of 5e-4 or something else.")
+        _rank_zero_info("if it underperforms, please consider to use the epsilon of 5e-4 or something else.")
 
     z = torch.cat([x, y], dim=-1)
-    z0 = torch.cat([x0, y[:x0.shape[0]]], dim=-1)
+    z0 = torch.cat([x0, y[: x0.shape[0]]], dim=-1)
     x_mean = x.mean(dim=0, keepdim=True)
     y_mean = y.mean(dim=0, keepdim=True)
     z_mean = torch.cat([x_mean, y_mean], dim=-1)
@@ -81,9 +81,11 @@ def _compute_pmi(x: Tensor, y: Tensor, x0: Tensor, limit: int = 30000,
     alternative_comp = False
     # notice that it may have numerical unstability. we don't use this.
     if alternative_comp:
+
         def factorized_cov(x, m):
             N = x.shape[0]
             return (x.t() @ x - N * m.t() @ m) / (N - 1)
+
         X0 = factorized_cov(x0, x_mean)
         Z0 = factorized_cov(z0, z_mean)
 
@@ -99,8 +101,7 @@ def _compute_pmi(x: Tensor, y: Tensor, x0: Tensor, limit: int = 30000,
     if reduction:
         smd = (exp_smd(X, X0) + exp_smd(Y, Y) - exp_smd(Z, Z0)) / 2
     else:
-        smd = (exp_smd(X, x0 - x_mean, False) + exp_smd(Y, y - y_mean, False)
-               - exp_smd(Z, z0 - z_mean, False)) / 2
+        smd = (exp_smd(X, x0 - x_mean, False) + exp_smd(Y, y - y_mean, False) - exp_smd(Z, z0 - z_mean, False)) / 2
         mi = mi.unsqueeze(0)  # for broadcasting
 
     return mi + smd

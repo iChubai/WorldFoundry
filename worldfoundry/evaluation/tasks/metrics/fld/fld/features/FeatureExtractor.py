@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import torch
-import os
 import json
+import os
+
+import torch
 from tqdm import tqdm
 
 NUM_WORKERS = 4
@@ -32,7 +33,7 @@ class FeatureExtractor:
             curr_path = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(curr_path, "config.json")
             if os.path.exists(config_path):
-                with open(config_path, "r") as f:
+                with open(config_path) as f:
                     config = json.load(f)
                 save_path = config["feature_cache_path"]
                 save_path = os.path.join(save_path, self.name)
@@ -49,7 +50,6 @@ class FeatureExtractor:
 
     def get_feature_batch(self, img_batch: torch.Tensor):
         """TO BE IMPLEMENTED BY EACH MODULE"""
-        pass
 
     def get_features(self, imgs: torch.utils.data.Dataset, name=None, recompute=False):
         """
@@ -67,9 +67,7 @@ class FeatureExtractor:
         if isinstance(imgs, torch.utils.data.Dataset):
             features = self.get_dataset_features(imgs)
         else:
-            raise NotImplementedError(
-                f"Cannot get features from '{type(imgs)}'. Expected torch.utils.data.Dataset"
-            )
+            raise NotImplementedError(f"Cannot get features from '{type(imgs)}'. Expected torch.utils.data.Dataset")
 
         if self.save_path and name:
             torch.save(features, file_path)

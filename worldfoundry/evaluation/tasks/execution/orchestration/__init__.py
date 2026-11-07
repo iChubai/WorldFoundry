@@ -23,6 +23,7 @@ _ALIASES = (
     "service",
 )
 
+
 def __getattr__(name: str) -> ModuleType:
     if name not in _ALIASES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -30,5 +31,6 @@ def __getattr__(name: str) -> ModuleType:
     sys.modules[f"{__name__}.{name}"] = module
     globals()[name] = module
     return module
+
 
 __all__ = list(_ALIASES)

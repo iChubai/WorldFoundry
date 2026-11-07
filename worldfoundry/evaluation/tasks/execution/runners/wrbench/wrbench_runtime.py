@@ -14,12 +14,12 @@ from worldfoundry.evaluation.tasks.execution.framework.runner_common import reso
 from .wrbench_paths import resolve_wrbench_root
 
 
-
-
 def discover_video_manifest(generated_artifact_dir: Path | None, explicit: Path | None = None) -> Path:
     if explicit is not None and explicit.is_file():
         return explicit.expanduser().resolve()
-    env_manifest = resolve_env_path("WORLDFOUNDRY_WRBENCH_VIDEO_MANIFEST") or resolve_env_path("WORLDFOUNDRY_PROMPT_MANIFEST")
+    env_manifest = resolve_env_path("WORLDFOUNDRY_WRBENCH_VIDEO_MANIFEST") or resolve_env_path(
+        "WORLDFOUNDRY_PROMPT_MANIFEST"
+    )
     if env_manifest is not None and env_manifest.is_file():
         return env_manifest
     if generated_artifact_dir is not None:
@@ -28,8 +28,7 @@ def discover_video_manifest(generated_artifact_dir: Path | None, explicit: Path 
             if candidate.is_file():
                 return candidate.resolve()
     raise FileNotFoundError(
-        "WRBench video manifest is required; pass --video-manifest or set "
-        "WORLDFOUNDRY_WRBENCH_VIDEO_MANIFEST"
+        "WRBench video manifest is required; pass --video-manifest or set WORLDFOUNDRY_WRBENCH_VIDEO_MANIFEST"
     )
 
 
@@ -48,8 +47,7 @@ def run_wrbench_evaluator(
     runtime_config = runtime_config or resolve_env_path("WORLDFOUNDRY_WRBENCH_RUNTIME_CONFIG")
     if runtime_config is None or not runtime_config.is_file():
         raise FileNotFoundError(
-            "WRBench scorer configuration is required; pass --runtime-config or set "
-            "WORLDFOUNDRY_WRBENCH_RUNTIME_CONFIG"
+            "WRBench scorer configuration is required; pass --runtime-config or set WORLDFOUNDRY_WRBENCH_RUNTIME_CONFIG"
         )
     eval_dir = output_dir / "wrbench_official"
     command = [
@@ -85,9 +83,7 @@ def run_wrbench_evaluator(
     stdout_path.write_text(completed.stdout, encoding="utf-8")
     stderr_path.write_text(completed.stderr, encoding="utf-8")
     if completed.returncode != 0:
-        raise RuntimeError(
-            f"WRBench D1-D6 runtime failed (exit={completed.returncode}); see {stderr_path}"
-        )
+        raise RuntimeError(f"WRBench D1-D6 runtime failed (exit={completed.returncode}); see {stderr_path}")
     results_path = eval_dir / "main_table.csv"
     if not results_path.is_file():
         raise FileNotFoundError(f"WRBench runtime did not produce {results_path}")

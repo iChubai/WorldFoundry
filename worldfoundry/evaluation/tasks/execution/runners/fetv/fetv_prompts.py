@@ -166,7 +166,8 @@ def decode_fetv_uniform_frames(
 
     try:
         import numpy as np
-        from moviepy.editor import VideoFileClip
+
+        VideoFileClip = __import__("moviepy.editor", fromlist=["VideoFileClip"]).VideoFileClip
         from PIL import Image
     except ImportError as exc:
         raise RuntimeError("FETV video staging requires numpy, Pillow, moviepy==1.0.3, and its ffmpeg backend") from exc

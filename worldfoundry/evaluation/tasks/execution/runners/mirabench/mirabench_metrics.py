@@ -185,7 +185,7 @@ def _is_summary_rows(rows: Sequence[Mapping[str, Any]]) -> bool:
     )
 
 
-def _summary_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
+def _summary_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, float | None]:
     buckets: dict[str, list[float]] = {}
     for row in rows:
         metric_id = _canonical_metric_id(str(row.get("metric_id") or row.get("Metric") or row.get("metric") or ""))
@@ -201,7 +201,7 @@ def _summary_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
     return metrics
 
 
-def _aggregate_sample_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
+def _aggregate_sample_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, float | None]:
     buckets: dict[str, list[float]] = {metric_id: [] for metric_id in METRIC_ORDER if metric_id != "mirabench_average"}
     for row in rows:
         for raw_key, raw_value in row.items():

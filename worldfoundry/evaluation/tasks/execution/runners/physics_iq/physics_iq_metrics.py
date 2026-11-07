@@ -63,7 +63,7 @@ def metric_values_from_scores(
 
 def _summary_scores(rows: list[dict[str, Any]], spec: PhysicsIQProtocolSpec) -> dict[str, float]:
     direct: dict[str, float] = {}
-    reverse = {metric_id: score_key for metric_id, score_key in metric_key_map(spec).items()}
+    reverse = dict(metric_key_map(spec).items())
     for row in rows:
         key = str(row.get("metric_id") or row.get("metric") or row.get("Metric") or "").strip()
         value = row.get("score", row.get("value"))

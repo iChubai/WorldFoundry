@@ -288,10 +288,7 @@ def run_official_phyeduvideo(args: argparse.Namespace) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
-        if args.run_official:
-            scorecard = run_official_phyeduvideo(args)
-        else:
-            scorecard = normalize_phyeduvideo_results(args)
+        scorecard = run_official_phyeduvideo(args) if args.run_official else normalize_phyeduvideo_results(args)
     except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {

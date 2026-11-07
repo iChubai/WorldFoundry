@@ -482,10 +482,7 @@ def rows_from_container(value: Any, *, source_path: Path, context_key: Any = Non
         if value and all(metric_id_for_key(key, context_key) is not None for key in value):
             return rows
         for index, (sample_id, item) in enumerate(sorted(value.items(), key=lambda pair: str(pair[0]))):
-            if isinstance(item, dict):
-                candidate = dict(item)
-            else:
-                candidate = {"raw_response": item}
+            candidate = dict(item) if isinstance(item, dict) else {"raw_response": item}
             if looks_like_sample_row(candidate) or not isinstance(item, dict):
                 rows.append(
                     normalize_sample_row(

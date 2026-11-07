@@ -149,10 +149,7 @@ if __name__ == "__main__":
         video_path = video_paths[i]
         prompt_path = prompt_paths[i]
         basename = os.path.basename(video_path)[:4]
-        if basename in face_vid:
-            score = calculate_celebrity_id_score(video_path, image_paths[basename])
-        else:
-            score = None
+        score = calculate_celebrity_id_score(video_path, image_paths[basename]) if basename in face_vid else None
 
         if score is not None:
             scores.append(score)

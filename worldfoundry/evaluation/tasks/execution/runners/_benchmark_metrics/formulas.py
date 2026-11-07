@@ -1048,7 +1048,7 @@ def _success_trial_counts(record: Mapping[str, JsonValue]) -> tuple[int, int]:
             return int(bool(record[key])), 1
     if "success_rate" in record:
         trials = int(float(record.get("num_trials", record.get("trials", 1)) or 1))
-        return int(round(float(record["success_rate"]) * trials)), trials
+        return round(float(record["success_rate"]) * trials), trials
     return 0, 0
 
 

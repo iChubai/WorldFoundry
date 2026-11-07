@@ -34,7 +34,7 @@ import json
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.runners.rbench.rbench_prompts import (
     EMBODIMENT_ORDER,
@@ -599,7 +599,9 @@ def compute_rbench_metrics(
         and metrics.get("task_track_overall") is not None
     )
     metrics["rbench_overall"] = (
-        (metrics["embodiment_overall"] + metrics["task_track_overall"]) / 2 if both_complete else None
+        (cast(float, metrics["embodiment_overall"]) + cast(float, metrics["task_track_overall"])) / 2
+        if both_complete
+        else None
     )
 
     return {

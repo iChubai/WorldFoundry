@@ -7,10 +7,10 @@ import json
 import os
 import subprocess
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.base_models.capabilities import get_base_model_capability
 from worldfoundry.base_models.llm_mllm_core.mllm.videophy2_autoeval import runtime_root as autoeval_runtime_root
@@ -141,7 +141,7 @@ def _video_path_for_record(generated_artifact_dir: Path, record: Mapping[str, An
 def _records_with_videos(
     *,
     generated_artifact_dir: Path,
-    prompt_records: list[Mapping[str, Any]],
+    prompt_records: Sequence[Mapping[str, Any]],
     strict: bool,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     rows: list[dict[str, Any]] = []
@@ -163,7 +163,7 @@ def _records_with_videos(
     return rows, missing
 
 
-def _write_csv(path: Path, rows: list[Mapping[str, Any]], fieldnames: list[str]) -> None:
+def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]], fieldnames: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -172,7 +172,7 @@ def _write_csv(path: Path, rows: list[Mapping[str, Any]], fieldnames: list[str])
             writer.writerow({field: row.get(field, "") for field in fieldnames})
 
 
-def _write_autoeval_inputs(output_dir: Path, prompt_records: list[Mapping[str, Any]]) -> dict[str, Path | None]:
+def _write_autoeval_inputs(output_dir: Path, prompt_records: Sequence[Mapping[str, Any]]) -> dict[str, Path | None]:
     input_dir = output_dir / "videophy2_autoeval_inputs"
     sa_pc_rows = [
         {
@@ -184,7 +184,7 @@ def _write_autoeval_inputs(output_dir: Path, prompt_records: list[Mapping[str, A
     ]
     rule_rows: list[dict[str, Any]] = []
     for record in prompt_records:
-        rules = record.get("physics_rules") if isinstance(record.get("physics_rules"), list) else []
+        rules = cast(list[Any], record.get("physics_rules")) if isinstance(record.get("physics_rules"), list) else []
         for rule_index, rule in enumerate(rules):
             rule_rows.append(
                 {
@@ -297,7 +297,7 @@ def _rule_lists_by_prompt(path: Path) -> dict[str, tuple[list[str], list[str], l
 
 def _merge_autoeval_outputs(
     *,
-    prompt_records: list[Mapping[str, Any]],
+    prompt_records: Sequence[Mapping[str, Any]],
     sa_csv: Path,
     pc_csv: Path,
     rule_csv: Path | None,
@@ -362,7 +362,7 @@ def run_videophy2_judge(
         config=config,
         checkpoint=checkpoint,
         task="sa",
-        input_csv=Path(inputs["sa_pc"]),
+        input_csv=Path(cast(Path, inputs["sa_pc"])),
         output_csv=sa_csv,
         log_path=log_dir / "videophy2_autoeval_sa.log",
     )
@@ -370,7 +370,7 @@ def run_videophy2_judge(
         config=config,
         checkpoint=checkpoint,
         task="pc",
-        input_csv=Path(inputs["sa_pc"]),
+        input_csv=Path(cast(Path, inputs["sa_pc"])),
         output_csv=pc_csv,
         log_path=log_dir / "videophy2_autoeval_pc.log",
     )

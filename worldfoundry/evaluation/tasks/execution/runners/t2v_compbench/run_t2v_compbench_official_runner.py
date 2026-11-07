@@ -812,10 +812,7 @@ def dedupe_paths(paths: list[Path]) -> list[Path]:
 def path_has_video_files(path: Path) -> bool:
     if not path.is_dir():
         return False
-    for child in path.iterdir():
-        if child.is_file() and child.suffix.lower() in VIDEO_EXTENSIONS:
-            return True
-    return False
+    return any(child.is_file() and child.suffix.lower() in VIDEO_EXTENSIONS for child in path.iterdir())
 
 
 def category_video_candidates(args: argparse.Namespace, category: str) -> list[Path]:

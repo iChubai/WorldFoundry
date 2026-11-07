@@ -19,7 +19,7 @@ import time
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -238,7 +238,7 @@ class ApplePIScores:
         }[subtrack]()
 
     def as_details(self, subtrack: str) -> dict[str, Any]:
-        payload = dict(self.values)
+        payload: dict[str, Any] = dict(self.values)
         payload.update(self.programmatic)
         payload["score"] = round(self.score(subtrack), 4)
         if self.feedback:
@@ -315,7 +315,7 @@ class ApplePIGeminiJudge:
         if not self.api_key:
             raise RuntimeError("Apple-PI Gemini judge requires GEMINI_API_KEY or GOOGLE_API_KEY")
         try:
-            from google import genai
+            genai = __import__("google", fromlist=["genai"]).genai
         except ImportError as exc:
             raise RuntimeError("Install google-genai to run the native Apple-PI Gemini judge") from exc
 
@@ -409,7 +409,8 @@ def _resize_mask(mask: np.ndarray, shape: tuple[int, int]) -> np.ndarray:
     h, w = shape
     if mask.shape == (h, w):
         return mask.astype(bool)
-    return cv2.resize(mask.astype(np.uint8), (w, h), interpolation=cv2.INTER_NEAREST) > 0
+    opencv = cast(Any, cv2)
+    return opencv.resize(mask.astype(np.uint8), (w, h), interpolation=opencv.INTER_NEAREST) > 0
 
 
 def _simple_programmatic_metrics(pred_path: Path, case: ApplePICase) -> dict[str, float]:
@@ -422,9 +423,10 @@ def _simple_programmatic_metrics(pred_path: Path, case: ApplePICase) -> dict[str
     if pred_path.suffix.lower() not in {".mp4", ".mov", ".mkv", ".webm", ".avi"}:
         return {}
     pred, pred_fps = _read_video(pred_path)
+    opencv = cast(Any, cv2)
     gt_dir = case.path("gt_frames_dir")
     gt_files = sorted(gt_dir.glob("*.png")) if gt_dir else []
-    gt_frames = [cv2.imread(str(path), cv2.IMREAD_COLOR) for path in gt_files]
+    gt_frames = [opencv.imread(str(path), opencv.IMREAD_COLOR) for path in gt_files]
     gt_frames = [frame for frame in gt_frames if frame is not None]
     if len(pred) < 2 or len(gt_frames) < 2:
         return {}
@@ -436,7 +438,7 @@ def _simple_programmatic_metrics(pred_path: Path, case: ApplePICase) -> dict[str
     for index in range(n):
         target = gt_physics[index]
         source = pred_physics[min(len(pred_physics) - 1, round(index * len(pred_physics) / n))]
-        source = cv2.resize(source, (target.shape[1], target.shape[0]), interpolation=cv2.INTER_LANCZOS4)
+        source = opencv.resize(source, (target.shape[1], target.shape[0]), interpolation=opencv.INTER_LANCZOS4)
         mse = float(np.mean((source.astype(np.float64) - target.astype(np.float64)) ** 2))
         scores.append(40.0 if mse == 0 else 20.0 * math.log10(255.0 / math.sqrt(mse)))
     result: dict[str, float] = {"psnr": float(np.mean(scores))}
@@ -481,7 +483,9 @@ class NativeApplePIModelStack:
                 device = "cuda" if torch.cuda.is_available() else "cpu"
                 self._sam3_image = build_sam3_image_model(checkpoint_path=self._sam3_checkpoint(), device=device)
                 self._sam3_processor = Sam3Processor(self._sam3_image, device=device)
-            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            opencv = cast(Any, cv2)
+            processor = cast(Sam3Processor, self._sam3_processor)
+            rgb = opencv.cvtColor(image, opencv.COLOR_BGR2RGB)
             pil = Image.fromarray(rgb)
             height, width = rgb.shape[:2]
             combined = np.zeros((height, width), dtype=bool)
@@ -493,8 +497,8 @@ class NativeApplePIModelStack:
                     min(width, 2 * size) / width,
                     min(height, 2 * size) / height,
                 ]
-                state = self._sam3_processor.set_image(pil)
-                state = self._sam3_processor.add_geometric_prompt(box, True, state)
+                state = processor.set_image(pil)
+                state = processor.add_geometric_prompt(box, True, state)
                 masks = state.get("masks")
                 if masks is not None and len(masks):
                     mask = masks[0]
@@ -583,7 +587,7 @@ class NativeApplePIModelStack:
                     if mask.size:
                         count = min(pred_mask.shape[0], mask.shape[0])
                         for index in range(count):
-                            pred_mask[index] |= _resize_mask(mask[index], pred_mask.shape[1:])
+                            pred_mask[index] |= _resize_mask(mask[index], cast(tuple[int, int], pred_mask.shape[1:]))
                 count = min(pred_mask.shape[0], gt_masks.shape[0])
                 pred_mask = pred_mask[:count] > 0
                 gt_mask = gt_masks[:count] > 0
@@ -616,11 +620,12 @@ class NativeApplePIModelStack:
                 frames, _ = _read_video(pred_path)
                 n = min(len(frames), len(depth_maps))
                 estimated = []
+                opencv = cast(Any, cv2)
                 for index in range(n):
-                    frame = cv2.resize(
-                        frames[index], (depth_maps.shape[2], depth_maps.shape[1]), interpolation=cv2.INTER_LANCZOS4
+                    frame = opencv.resize(
+                        frames[index], (depth_maps.shape[2], depth_maps.shape[1]), interpolation=opencv.INTER_LANCZOS4
                     )
-                    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    rgb = opencv.cvtColor(frame, opencv.COLOR_BGR2RGB)
                     tensor = torch.from_numpy(rgb.astype(np.float32) / 255.0).permute(2, 0, 1).to(moge.device)
                     estimated.append(
                         moge.infer(tensor, use_fp16=torch.cuda.is_available())["depth"].detach().cpu().numpy()
@@ -647,7 +652,9 @@ class NativeApplePIModelStack:
                         continue
                     yy, xx = np.where(mask)
 
-                    def center(depth):
+                    def center(
+                        depth: np.ndarray, mask: np.ndarray, xx: np.ndarray, yy: np.ndarray
+                    ) -> np.ndarray | None:
                         z = depth[mask]
                         valid = np.isfinite(z) & (z > 0)
                         if valid.sum() < 10:
@@ -655,7 +662,7 @@ class NativeApplePIModelStack:
                         z, x, y = z[valid], xx[valid], yy[valid]
                         return np.array([float((x * z).mean()), float((y * z).mean()), float(z.mean())])
 
-                    current, previous = center(aligned[index]), center(aligned[index - 1])
+                    current, previous = center(aligned[index], mask, xx, yy), center(aligned[index - 1], mask, xx, yy)
                     if current is not None and previous is not None:
                         estimate = (current - previous) * case.fps
                         target = velocity_maps[min(index, len(velocity_maps) - 1)][mask].mean(axis=0)
@@ -692,13 +699,13 @@ def _dataset_cases(gt_root: Path) -> tuple[str, str, list[tuple[str, Path]]]:
 
 
 def _judge_scores(judge: ApplePIGeminiJudge, subtrack: str, case: ApplePICase, output: Path) -> ApplePIScores:
-    assets = [case.first_frame]
+    assets: list[Path] = [case.first_frame]
     if subtrack in {"perception_text", "perception_graphic"}:
         assets.extend(
             path for path in (case.path("annotations_only_reference"), case.path("objects_only_reference")) if path
         )
     if subtrack == "formulation_graphic" and case.path("future_state_reference"):
-        assets.append(case.path("future_state_reference"))
+        assets.append(cast(Path, case.path("future_state_reference")))
     if subtrack == "deduction" and output.is_dir():
         assets.extend(sorted(output.glob("*.png")))
     prompt = _prompt_for(subtrack, case)

@@ -303,7 +303,11 @@ def runtime_env(*, root: Path, da3_src: Path | None, resolved: ResolvedBaseModel
     # Dedup while preserving order; the DA3 shim can arrive both as effective_da3_src
     # and as an entry of resolved.pythonpath_entries().
     seen: set[str] = set()
-    unique = [entry for entry in entries if entry and not (entry in seen or seen.add(entry))]
+    unique: list[str] = []
+    for entry in entries:
+        if entry and entry not in seen:
+            seen.add(entry)
+            unique.append(entry)
     env: dict[str, str] = {"PYTHONPATH": os.pathsep.join(unique)}
     if resolved is not None:
         for name, value in resolved.env_overrides().items():

@@ -22,7 +22,7 @@ import os
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
@@ -128,8 +128,10 @@ def _resolve_results_path(args: argparse.Namespace) -> Path | None:
 
 
 def _metric_rows(computed: Mapping[str, Any], *, source_path: Path) -> list[dict[str, Any]]:
-    metrics = computed.get("metrics") if isinstance(computed.get("metrics"), Mapping) else {}
-    components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
+    metrics = cast(Mapping[str, Any], computed.get("metrics")) if isinstance(computed.get("metrics"), Mapping) else {}
+    components = (
+        cast(Mapping[str, Any], computed.get("components")) if isinstance(computed.get("components"), Mapping) else {}
+    )
     rows: list[dict[str, Any]] = []
     for metric_id in METRIC_ORDER:
         spec = METRIC_SPECS[metric_id]
@@ -380,7 +382,9 @@ def aggregate_rbench_results(args: argparse.Namespace) -> dict[str, Any]:
         generated_artifact_dir=args.generated_artifact_dir,
     )
     metric_rows = _metric_rows(computed, source_path=results_path)
-    components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
+    components = (
+        cast(Mapping[str, Any], computed.get("components")) if isinstance(computed.get("components"), Mapping) else {}
+    )
     scorecard = _scorecard(
         args=args,
         layout=layout.to_dict(),

@@ -6,7 +6,7 @@ import csv
 import hashlib
 import os
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -135,7 +135,7 @@ def _matching_videos(*, generated_artifact_dir: Path, prompt_ids: set[str]) -> l
     return matched
 
 
-def _write_mock_csv(*, output_path: Path, seed: str, prompt_records: list[Mapping[str, Any]]) -> Path:
+def _write_mock_csv(*, output_path: Path, seed: str, prompt_records: Sequence[Mapping[str, Any]]) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, Any]] = []
     for record in prompt_records:

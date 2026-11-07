@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     sample_types = ["aesthetic", "technical"]
 
-    for i, data in enumerate(tqdm(dataloader, desc="Testing")):
+    for _i, data in enumerate(tqdm(dataloader, desc="Testing")):
         if len(data.keys()) == 1:
             ##  failed data
             continue
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
         with torch.no_grad():
             results = evaluator(video, reduce_scores=False)
-            results = [np.mean(l.cpu().numpy()) for l in results]
+            results = [np.mean(result.cpu().numpy()) for result in results]
 
         rescaled_results = fuse_results(results)
 

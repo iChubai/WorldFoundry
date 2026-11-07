@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import json
 import math
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -156,7 +156,7 @@ def _published_aggregates(metadata: Mapping[str, Any] | None) -> dict[str, tuple
 
 
 def compute_wrbench_metrics(
-    *, rows: list[Mapping[str, Any]], metadata: Mapping[str, Any] | None = None
+    *, rows: Sequence[Mapping[str, Any]], metadata: Mapping[str, Any] | None = None
 ) -> dict[str, Any]:
     """Aggregate official WRBench table columns with their published denominators."""
     published = _published_aggregates(metadata)

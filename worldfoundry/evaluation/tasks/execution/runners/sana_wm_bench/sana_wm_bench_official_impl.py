@@ -18,7 +18,10 @@ from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    import numpy as np
 
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION
 
@@ -130,7 +133,7 @@ def _torch_load_compat():
         kwargs.setdefault("weights_only", False)
         return original(*args, **kwargs)
 
-    torch.load = compatible
+    torch.load = cast(Any, compatible)
     try:
         yield
     finally:
@@ -363,7 +366,7 @@ def _temporal(
     windows: dict[str, Path] = {}
     for video in _video_files(video_dir):
         fps, frame, count = _frame_reader(video)
-        size = max(16, int(round(fps * window_seconds)))
+        size = max(16, round(fps * window_seconds))
         for index, start in enumerate(range(0, count, size)):
             end = min(start + size, count)
             if end - start < 16:
@@ -372,7 +375,7 @@ def _temporal(
             destination = output_dir / "windows" / name / video.name
             destination.parent.mkdir(parents=True, exist_ok=True)
             if not destination.exists():
-                iio.imwrite(destination, np.stack([frame(i) for i in range(start, end)]), fps=max(1, int(round(fps))))
+                iio.imwrite(destination, np.stack([frame(i) for i in range(start, end)]), fps=max(1, round(fps)))
             windows[name] = destination.parent
     scores = {
         name: _vbench_scores(path, output_dir / "vbench" / name, prompts, TEMPORAL_DIMS)
@@ -607,7 +610,7 @@ def main(argv: list[str] | None = None) -> int:
             if not videos:
                 raise FileNotFoundError(f"no *_generated.mp4 files found for {split}: {split_videos}")
             prompts = {str(row["id"]): str(row.get("prompt") or row["id"]) for row in manifest}
-            values: dict[str, float] = {}
+            values: dict[str, float | None] = {}
             eval_root = output_dir / "eval" / split
             if "vbench" in wanted:
                 values.update(

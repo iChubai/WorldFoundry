@@ -9,7 +9,7 @@ import json
 import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -82,8 +82,12 @@ def _metric_rows(
     source_path: Path,
     official_component_executed: bool,
 ) -> list[dict[str, Any]]:
-    direct_metrics = computed.get("metrics") if isinstance(computed.get("metrics"), Mapping) else {}
-    components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
+    direct_metrics = (
+        cast(Mapping[str, Any], computed.get("metrics")) if isinstance(computed.get("metrics"), Mapping) else {}
+    )
+    components = (
+        cast(Mapping[str, Any], computed.get("components")) if isinstance(computed.get("components"), Mapping) else {}
+    )
     rows: list[dict[str, Any]] = []
     for metric_id in METRIC_ORDER:
         spec = METRIC_SPECS[metric_id]
@@ -360,10 +364,7 @@ def run_official_physvidbench(args: argparse.Namespace) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
-        if args.run_official:
-            scorecard = run_official_physvidbench(args)
-        else:
-            scorecard = normalize_physvidbench_results(args)
+        scorecard = run_official_physvidbench(args) if args.run_official else normalize_physvidbench_results(args)
     except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {

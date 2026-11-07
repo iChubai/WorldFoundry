@@ -125,7 +125,7 @@ def _pc_score(row: Mapping[str, Any], model_prefix: str | None = None) -> float 
     return None
 
 
-def _aggregate_sample_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
+def _aggregate_sample_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, float | None]:
     sa_values: list[float] = []
     pc_values: list[float] = []
     ms_values: list[float] = []

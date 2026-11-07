@@ -509,10 +509,7 @@ def main(argv: list[str] | None = None) -> int:
                 for reason in input_validation["reasons"]:
                     print(f"- {reason}")
             return 0 if input_validation["ok"] else 1
-        if args.run_official:
-            scorecard = run_official_evalcrafter(args)
-        else:
-            scorecard = normalize_evalcrafter_results(args)
+        scorecard = run_official_evalcrafter(args) if args.run_official else normalize_evalcrafter_results(args)
     except (ImportError, OSError, RuntimeError, ValueError, SyntaxError) as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {

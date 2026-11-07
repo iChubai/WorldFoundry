@@ -346,10 +346,7 @@ def materialize_bounded_fetv_prompt_file(
 def _parse_ints(raw: str | Iterable[int] | None, default: tuple[int, ...]) -> tuple[int, ...]:
     if raw is None:
         return default
-    if isinstance(raw, str):
-        tokens = raw.replace(",", " ").split()
-    else:
-        tokens = [str(item) for item in raw]
+    tokens = raw.replace(",", " ").split() if isinstance(raw, str) else [str(item) for item in raw]
     values = tuple(int(token) for token in tokens if token.strip())
     return values or default
 

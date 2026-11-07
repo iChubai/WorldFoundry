@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
@@ -88,7 +88,7 @@ DIMENSION_SPECS: dict[str, dict[str, Any]] = {
         "max_score": 3.0,
     },
 }
-METRIC_ORDER = tuple(spec["metric_id"] for spec in DIMENSION_SPECS.values()) + ("videobench_average",)
+METRIC_ORDER = (*tuple(spec["metric_id"] for spec in DIMENSION_SPECS.values()), "videobench_average")
 
 
 def first_env_path(*names: str) -> Path | None:
@@ -803,7 +803,7 @@ def resolve_full_json_path(
     if annotation_root is None:
         annotation_root = resolve_annotation_root(args, required=True)
     return build_full_json_from_annotations(
-        annotation_root, output_dir / "VideoBench_full.from_annotations.json", dimensions
+        cast(Path, annotation_root), output_dir / "VideoBench_full.from_annotations.json", dimensions
     )
 
 

@@ -11,7 +11,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.io.filesystem.file_utils import materialize_file
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
@@ -492,7 +492,7 @@ def scalar(value: Any) -> float | None:
             return float(value)
         except ValueError:
             return None
-    if isinstance(value, list) or isinstance(value, tuple):
+    if isinstance(value, (list, tuple)):
         values = [scalar(item) for item in value]
         values = [item for item in values if item is not None]
         if values:
@@ -581,7 +581,7 @@ def extract_scores(raw_results: dict[str, Any]) -> dict[str, dict[str, Any]]:
         if all(scalar(payload.get(aspect)) is not None for aspect in aspects):
             mean, sub_scores = score_from_aspects(payload, aspects)
             extracted["worldscore_average"] = {
-                "raw_score": round(mean, 2),
+                "raw_score": round(cast(float, mean), 2),
                 "sub_scores": sub_scores,
                 "source": "computed_from_worldscore_aspects",
             }

@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework import official_runner as ors
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
@@ -245,7 +245,7 @@ def build_official_command(
     save_dir.mkdir(parents=True, exist_ok=True)
     command = [
         args.python,
-        str(repo_root / config.official_entry),
+        str(repo_root / cast(str, config.official_entry)),
         "--video-model",
         model_name,
         "--video-dir",

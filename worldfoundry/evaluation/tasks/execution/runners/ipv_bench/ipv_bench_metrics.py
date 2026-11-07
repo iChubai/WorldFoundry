@@ -6,7 +6,7 @@ import csv
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric as _mean
 from worldfoundry.evaluation.tasks.execution.framework.io import try_float as _to_float
@@ -112,14 +112,18 @@ def _extract_generation_sample_rows(rows: Sequence[Mapping[str, Any]]) -> dict[s
             quality_values.append(quality)
         if following is not None:
             following_values.append(following)
-        if quality is not None and following is not None:
-            if quality >= IPV_QUALITY_THRESHOLD and following >= IPV_FOLLOWING_THRESHOLD:
-                passing += 1
+        if (
+            quality is not None
+            and following is not None
+            and quality >= IPV_QUALITY_THRESHOLD
+            and following >= IPV_FOLLOWING_THRESHOLD
+        ):
+            passing += 1
     metrics: dict[str, float] = {}
     if quality_values:
-        metrics["visual_quality"] = float(_mean(quality_values))
+        metrics["visual_quality"] = float(cast(float, _mean(quality_values)))
     if following_values:
-        metrics["prompt_following"] = float(_mean(following_values))
+        metrics["prompt_following"] = float(cast(float, _mean(following_values)))
     if total > 0:
         metrics["impossible_video_score"] = passing / total
     return metrics

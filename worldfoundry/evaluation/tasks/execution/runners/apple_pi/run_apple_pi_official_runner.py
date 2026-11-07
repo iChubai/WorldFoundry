@@ -16,7 +16,7 @@ import statistics
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -97,7 +97,7 @@ def _selected_subtracks(args: argparse.Namespace) -> tuple[str, ...]:
 
 def _summary(payload: Mapping[str, Any], subtracks: tuple[str, ...]) -> dict[str, dict[str, Any]]:
     raw_summary = payload.get("summary")
-    cases = payload.get("cases") if isinstance(payload.get("cases"), Mapping) else {}
+    cases = cast(Mapping[str, Any], payload.get("cases")) if isinstance(payload.get("cases"), Mapping) else {}
     summary: dict[str, dict[str, Any]] = {}
     for subtrack in subtracks:
         entry = raw_summary.get(subtrack) if isinstance(raw_summary, Mapping) else None
@@ -122,7 +122,7 @@ def _summary(payload: Mapping[str, Any], subtracks: tuple[str, ...]) -> dict[str
 
 
 def _rollout_coverage(payload: Mapping[str, Any], subtracks: tuple[str, ...]) -> dict[str, Any]:
-    cases = payload.get("cases") if isinstance(payload.get("cases"), Mapping) else {}
+    cases = cast(Mapping[str, Any], payload.get("cases")) if isinstance(payload.get("cases"), Mapping) else {}
     expected = len(cases) * len(subtracks) * 3
     successful = 0
     for case in cases.values():
@@ -147,7 +147,7 @@ def _rollout_coverage(payload: Mapping[str, Any], subtracks: tuple[str, ...]) ->
 
 
 def _per_sample_rows(payload: Mapping[str, Any], subtracks: tuple[str, ...]) -> list[dict[str, Any]]:
-    cases = payload.get("cases") if isinstance(payload.get("cases"), Mapping) else {}
+    cases = cast(Mapping[str, Any], payload.get("cases")) if isinstance(payload.get("cases"), Mapping) else {}
     rows = []
     for case_id, case in cases.items():
         if not isinstance(case, Mapping):

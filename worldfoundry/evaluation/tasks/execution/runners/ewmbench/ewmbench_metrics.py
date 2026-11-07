@@ -73,7 +73,7 @@ def _canonical_metric_id(raw: str) -> str | None:
     return UPSTREAM_METRIC_ALIASES.get(key) or UPSTREAM_METRIC_ALIASES.get(key.replace(" ", "_"))
 
 
-def _aggregate_csv_columns(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
+def _aggregate_csv_columns(rows: Sequence[Mapping[str, Any]]) -> dict[str, float | None]:
     buckets: dict[str, list[float]] = {metric_id: [] for metric_id in CSV_COLUMN_MAP.values()}
     for row in rows:
         if not isinstance(row, Mapping):
@@ -89,7 +89,7 @@ def _aggregate_csv_columns(rows: Sequence[Mapping[str, Any]]) -> dict[str, float
     return metrics
 
 
-def _summary_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
+def _summary_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, float | None]:
     buckets: dict[str, list[float]] = {}
     for row in rows:
         metric_id = _canonical_metric_id(str(row.get("metric_id") or row.get("Metric") or row.get("metric") or ""))

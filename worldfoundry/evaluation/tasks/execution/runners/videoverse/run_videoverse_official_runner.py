@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
@@ -506,7 +506,9 @@ def _metric_rows(
     subquestion: Mapping[str, Any],
     source_path: Path,
 ) -> list[dict[str, Any]]:
-    direct_metrics = computed.get("metrics") if isinstance(computed.get("metrics"), Mapping) else {}
+    direct_metrics = (
+        cast(Mapping[str, Any], computed.get("metrics")) if isinstance(computed.get("metrics"), Mapping) else {}
+    )
     components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
     rows: list[dict[str, Any]] = []
     for metric_id in METRIC_ORDER:
@@ -883,10 +885,7 @@ def run_official_videoverse(args: argparse.Namespace) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
-        if args.run_official:
-            scorecard = run_official_videoverse(args)
-        else:
-            scorecard = normalize_videoverse_results(args)
+        scorecard = run_official_videoverse(args) if args.run_official else normalize_videoverse_results(args)
     except Exception as exc:  # CLI should always emit a scorecard-shaped failure.
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.io.filesystem.file_utils import materialize_file
 from worldfoundry.evaluation.api import GenerationRequest
@@ -123,8 +123,8 @@ def load_prompt_records(
     records: list[dict[str, Any]] = []
     for index, prompt in enumerate(lines):
         prompt_id = f"{index:04d}"
-        entry = metadata.get(prompt_id) if isinstance(metadata.get(prompt_id), dict) else {}
-        attributes = entry.get("attributes") if isinstance(entry.get("attributes"), dict) else {}
+        entry = cast(dict[str, Any], metadata.get(prompt_id)) if isinstance(metadata.get(prompt_id), dict) else {}
+        attributes = cast(dict[str, Any], entry.get("attributes")) if isinstance(entry.get("attributes"), dict) else {}
         records.append(
             {
                 "prompt_id": prompt_id,

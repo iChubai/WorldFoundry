@@ -40,10 +40,7 @@ def parse_raw_metrics(value: str | Sequence[str] | None) -> tuple[str, ...]:
     selected: list[str] = []
     for raw in raw_values:
         for metric in str(raw).replace(",", " ").split():
-            if metric == "all":
-                metric_values = SUPPORTED_RAW_METRICS
-            else:
-                metric_values = (metric,)
+            metric_values = SUPPORTED_RAW_METRICS if metric == "all" else (metric,)
             for item in metric_values:
                 if item not in SUPPORTED_RAW_METRICS:
                     supported = ", ".join(SUPPORTED_RAW_METRICS)

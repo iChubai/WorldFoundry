@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.execution.process import read_text_tail, run_logged_subprocess
 from worldfoundry.core.io.paths import cache_root_path
@@ -102,7 +102,7 @@ def hf_cache_dir_candidates(explicit_cache_dir: Path | None) -> list[Path]:
         explicit_cache_dir,
         env_path("WORLDFOUNDRY_HF_CACHE_DIR"),
         env_path("HF_HUB_CACHE"),
-        (env_path("HF_HOME") / "hub") if env_path("HF_HOME") else None,
+        (cast(Path, env_path("HF_HOME")) / "hub") if env_path("HF_HOME") else None,
         REPO_ROOT / "cache" / "benchmark_zoo" / "hf_datasets",
     ]
     paths: list[Path] = []
@@ -296,7 +296,7 @@ def discover_vbench2_datasets(args: argparse.Namespace, output_dir: Path) -> dic
 
     for key, spec in specs.items():
         dataset_id = str(spec["dataset_id"])
-        expected_files = tuple(str(item) for item in spec["expected_files"])
+        expected_files = tuple(str(item) for item in cast(tuple[str, ...], spec["expected_files"]))
         root = select_vbench2_root(
             vbench2_dataset_candidates(dataset_id, dataset_root=dataset_root, hf_cache_dir=hf_cache_dir),
             expected_files,

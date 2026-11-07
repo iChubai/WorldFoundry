@@ -8,7 +8,7 @@ import json
 import shutil
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework import official_runner as ors
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric, utc_now_iso, write_json
@@ -174,7 +174,7 @@ def run_official_genai_bench(args: argparse.Namespace) -> dict[str, Any]:
 
 def run_fixture_genai_bench(args: argparse.Namespace) -> dict[str, Any]:
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    fixture_source = benchmark_task_sample_path(BENCHMARK_ID)
+    fixture_source = cast(Path, benchmark_task_sample_path(BENCHMARK_ID))
     if not fixture_source.is_file():
         fixture_source = resolve_preference_pairs_path()
     fixture_copy = args.output_dir / "upstream" / fixture_source.name

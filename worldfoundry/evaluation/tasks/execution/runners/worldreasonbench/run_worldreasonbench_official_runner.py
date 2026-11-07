@@ -221,7 +221,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValueError("--official-results-path or WORLDFOUNDRY_WORLDREASONBENCH_RESULTS_PATH is required")
             protocol = args.protocol
         results = normalize_results(results_path, protocol)
-        scorecard = _scorecard(args, results_path, results, runtime)
+        scorecard: dict[str, Any] = _scorecard(args, results_path, results, runtime)
     except Exception as exc:
         scorecard = {
             "schema_version": "worldfoundry-scorecard",

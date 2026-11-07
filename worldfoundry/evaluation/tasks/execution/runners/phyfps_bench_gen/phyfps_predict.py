@@ -8,7 +8,7 @@ import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_SUFFIXES
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_metrics import VideoPhyFPSRecord
@@ -184,7 +184,7 @@ def parse_results_csv(results_path: Path) -> list[VideoPhyFPSRecord]:
             segment = str(row.get("segment") or "").strip()
             value = row.get("predicted_phyfps")
             try:
-                phyfps = float(value)
+                phyfps = float(cast(Any, value))
             except (TypeError, ValueError):
                 continue
             bucket = by_video.setdefault(video, {"segments": [], "avg": None})

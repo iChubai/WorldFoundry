@@ -25,7 +25,7 @@ import os
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -163,8 +163,10 @@ def _metric_rows(
     source_path: Path,
     official_runtime_executed: bool,
 ) -> list[dict[str, Any]]:
-    metrics = computed.get("metrics") if isinstance(computed.get("metrics"), Mapping) else {}
-    components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
+    metrics = cast(Mapping[str, Any], computed.get("metrics")) if isinstance(computed.get("metrics"), Mapping) else {}
+    components = (
+        cast(Mapping[str, Any], computed.get("components")) if isinstance(computed.get("components"), Mapping) else {}
+    )
     rows: list[dict[str, Any]] = []
     for metric_id in METRIC_ORDER:
         spec = METRIC_SPECS[metric_id]
@@ -196,7 +198,9 @@ def _per_scenario_rows(computed: Mapping[str, Any]) -> list[dict[str, Any]]:
         return []
     rows: list[dict[str, Any]] = []
     for scenario_id, summary in per_scenario.items():
-        variations = summary.get("variations") if isinstance(summary.get("variations"), Mapping) else {}
+        variations = (
+            cast(Mapping[str, Any], summary.get("variations")) if isinstance(summary.get("variations"), Mapping) else {}
+        )
         for variation, payload in variations.items():
             rows.append(
                 {
@@ -212,7 +216,11 @@ def _per_scenario_rows(computed: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def _scenario_coverage(computed: Mapping[str, Any]) -> dict[str, Any]:
-    per_scenario = computed.get("per_scenario") if isinstance(computed.get("per_scenario"), Mapping) else {}
+    per_scenario = (
+        cast(Mapping[str, Any], computed.get("per_scenario"))
+        if isinstance(computed.get("per_scenario"), Mapping)
+        else {}
+    )
     scored = sorted(str(scenario_id) for scenario_id in per_scenario)
     missing = [scenario_id for scenario_id in SCENARIO_ORDER if scenario_id not in per_scenario]
     complete_subgroups = all(
@@ -356,7 +364,9 @@ def normalize_likephys_results(
         official_runtime_executed=official_runtime_executed,
     )
     scenario_coverage = _scenario_coverage(computed)
-    components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
+    components = (
+        cast(Mapping[str, Any], computed.get("components")) if isinstance(computed.get("components"), Mapping) else {}
+    )
     scorecard = _scorecard(
         benchmark_id=args.benchmark_id,
         output_dir=output_dir,
@@ -544,10 +554,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         args.official_results_path = sample_path
     try:
-        if args.run_official:
-            scorecard = run_official_likephys(args)
-        else:
-            scorecard = normalize_likephys_results(args)
+        scorecard = run_official_likephys(args) if args.run_official else normalize_likephys_results(args)
     except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = _failure_scorecard(args, exc)

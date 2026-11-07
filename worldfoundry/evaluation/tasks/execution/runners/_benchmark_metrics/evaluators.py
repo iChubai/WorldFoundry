@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import MetricResult
 from worldfoundry.evaluation.api.json_contract import to_plain
@@ -181,7 +181,7 @@ class ExternalMetricEvaluatorEntry:
                 diagnostics={"local_evaluator": self.local_evaluator},
             )
         # If all checks pass, execute the local evaluator
-        return LOCAL_EVALUATORS[self.local_evaluator](request, self)
+        return LOCAL_EVALUATORS[cast(str, self.local_evaluator)](request, self)
 
 
 class ExternalMetricEvaluatorRegistry:

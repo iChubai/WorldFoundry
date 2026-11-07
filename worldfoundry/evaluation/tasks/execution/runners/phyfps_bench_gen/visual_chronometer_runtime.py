@@ -80,7 +80,7 @@ def download_checkpoint_if_needed(ckpt_path: Path) -> Path:
         return ckpt_path
     ckpt_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        from huggingface_hub import hf_hub_download
+        hf_hub_download = __import__("huggingface_hub", fromlist=["hf_hub_download"]).hf_hub_download
     except ImportError as exc:
         raise RuntimeError(
             "Visual Chronometer checkpoint is missing and huggingface_hub is not installed. "
@@ -102,7 +102,10 @@ def load_predictor_model(
     ensure_inference_import_path(paths.chronometer_root)
     import torch
     from omegaconf import OmegaConf
-    from utils.common_utils import instantiate_from_config  # type: ignore[import-not-found]
+
+    instantiate_from_config = __import__(
+        "utils.common_utils", fromlist=["instantiate_from_config"]
+    ).instantiate_from_config
 
     ckpt_path = download_checkpoint_if_needed(paths.ckpt_path)
     config = OmegaConf.load(paths.config_path)
@@ -132,7 +135,7 @@ def predict_video_file(
     resolution: int = 216,
 ) -> VideoPhyFPSRecord:
     ensure_inference_import_path(chronometer_root)
-    from predict import predict_video  # type: ignore[import-not-found]
+    predict_video = __import__("predict", fromlist=["predict_video"]).predict_video
 
     segment_results, avg_fps, _total_frames = predict_video(
         model,

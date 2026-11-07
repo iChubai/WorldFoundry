@@ -74,10 +74,10 @@ def video_detection(
     reset_image,
 ):
     cap = cv2.VideoCapture(io_args["input_video"])
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    _fps = cap.get(cv2.CAP_PROP_FPS)
     pred_list = []
-    masked_pred_list = []
-    det_count_one = []
+    _masked_pred_list = []
+    _det_count_one = []
     det_count_frames = []
     frames = []
 
@@ -91,7 +91,8 @@ def video_detection(
 
     Num = 5  # Set the value of Num as per your requirement
 
-    with torch.cuda.amp.autocast():
+    # The evaluator's precision contract uses the CUDA AMP defaults.
+    with torch.cuda.amp.autocast():  # ty: ignore[deprecated]
         while cap.isOpened():
             ret, frame = cap.read()
             if (frame_idx % Num) == 0:

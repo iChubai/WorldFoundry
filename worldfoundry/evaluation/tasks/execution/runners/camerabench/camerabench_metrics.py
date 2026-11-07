@@ -7,6 +7,7 @@ the in-tree runner.
 
 from __future__ import annotations
 
+import itertools
 import json
 import math
 import os
@@ -15,7 +16,7 @@ import time
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -53,7 +54,7 @@ def find_caption_score_files(score_dir: Path) -> list[Path]:
 
 
 def _score_file_identity(score_file: Path, score_data: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-    metadata = score_data.get("metadata") if isinstance(score_data.get("metadata"), dict) else {}
+    metadata = cast(dict[str, Any], score_data.get("metadata")) if isinstance(score_data.get("metadata"), dict) else {}
     model_name = str(metadata.get("model_name") or "Unknown_Model")
     checkpoint = str(metadata.get("checkpoint") or "")
     split_name = str(metadata.get("split_name") or metadata.get("skill_name") or score_file.stem)
@@ -250,15 +251,16 @@ def calculate_bleu2_score(reference: Any, candidate: Any) -> float:
     if not ref_tokens or not cand_tokens:
         return 0.0
     try:
-        from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
+        bleu_score = __import__("nltk.translate.bleu_score", fromlist=["SmoothingFunction", "sentence_bleu"])
+        SmoothingFunction, sentence_bleu = bleu_score.SmoothingFunction, bleu_score.sentence_bleu
 
         return float(
             sentence_bleu([ref_tokens], cand_tokens, weights=(0.5, 0.5), smoothing_function=SmoothingFunction().method1)
         )
     except Exception:
         unigram_precision = len(set(ref_tokens) & set(cand_tokens)) / len(cand_tokens)
-        ref_bigrams = set(zip(ref_tokens[:-1], ref_tokens[1:], strict=False))
-        cand_bigrams = set(zip(cand_tokens[:-1], cand_tokens[1:], strict=False))
+        ref_bigrams = set(itertools.pairwise(ref_tokens))
+        cand_bigrams = set(itertools.pairwise(cand_tokens))
         bigram_precision = len(ref_bigrams & cand_bigrams) / len(cand_bigrams) if cand_bigrams else 0.0
         return math.sqrt(max(unigram_precision, 0.0) * max(bigram_precision, 0.0))
 
@@ -277,7 +279,7 @@ def calculate_rouge_l_score(reference: Any, candidate: Any) -> float:
     if not reference or not candidate:
         return 0.0
     try:
-        from rouge_score import rouge_scorer
+        rouge_scorer = __import__("rouge_score", fromlist=["rouge_scorer"]).rouge_scorer
 
         scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
         return float(scorer.score(str(reference), str(candidate))["rougeL"].fmeasure)
@@ -299,8 +301,8 @@ def calculate_meteor_score(reference: Any, candidate: Any) -> float:
         return 0.0
     ref_unigrams = set(ref_tokens)
     cand_unigrams = set(cand_tokens)
-    ref_bigrams = set(zip(ref_tokens[:-1], ref_tokens[1:], strict=False))
-    cand_bigrams = set(zip(cand_tokens[:-1], cand_tokens[1:], strict=False))
+    ref_bigrams = set(itertools.pairwise(ref_tokens))
+    cand_bigrams = set(itertools.pairwise(cand_tokens))
     unigram_matches = len(ref_unigrams & cand_unigrams)
     bigram_matches = len(ref_bigrams & cand_bigrams)
     unigram_precision = unigram_matches / len(cand_unigrams) if cand_unigrams else 0.0
@@ -358,7 +360,7 @@ def evaluate_caption_file(score_file: Path, *, api_key: str | None = None) -> di
     captions = data.get("captions")
     if not isinstance(captions, list):
         raise ValueError(f"missing list field 'captions' in {score_file}")
-    metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else {}
+    metadata = cast(dict[str, Any], data.get("metadata")) if isinstance(data.get("metadata"), dict) else {}
     spice_scores: list[float] = []
     cider_scores: list[float] = []
     bleu2_scores: list[float] = []

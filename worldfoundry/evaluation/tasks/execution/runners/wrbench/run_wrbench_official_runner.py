@@ -8,7 +8,7 @@ import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json, write_jsonl
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -81,9 +81,9 @@ def _coverage(expected_ids: set[str], generated_dir: Path | None) -> dict[str, A
 def _metric_rows(
     *, computed: Mapping[str, Any], source_path: Path, official_runtime_executed: bool
 ) -> list[dict[str, Any]]:
-    metrics = computed.get("metrics") if isinstance(computed.get("metrics"), Mapping) else {}
-    counts = computed.get("counts") if isinstance(computed.get("counts"), Mapping) else {}
-    sources = computed.get("sources") if isinstance(computed.get("sources"), Mapping) else {}
+    metrics = cast(Mapping[str, Any], computed.get("metrics")) if isinstance(computed.get("metrics"), Mapping) else {}
+    counts = cast(Mapping[str, Any], computed.get("counts")) if isinstance(computed.get("counts"), Mapping) else {}
+    sources = cast(Mapping[str, Any], computed.get("sources")) if isinstance(computed.get("sources"), Mapping) else {}
     rows: list[dict[str, Any]] = []
     for metric_id in METRIC_ORDER:
         score = metrics.get(metric_id)

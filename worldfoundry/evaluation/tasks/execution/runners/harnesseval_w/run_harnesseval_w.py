@@ -12,6 +12,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import cast
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[6]))
@@ -339,7 +340,7 @@ def main(argv: list[str] | None = None) -> int:
                     "summary": {
                         "sample_count": normalized["case_count"],
                         "metric_count": len(rows),
-                        "available_metrics": sum(row["available"] for row in rows),
+                        "available_metrics": sum(cast(bool, row["available"]) for row in rows),
                     },
                 }
             )

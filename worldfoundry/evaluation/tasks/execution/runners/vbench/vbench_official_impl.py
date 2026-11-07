@@ -242,7 +242,7 @@ def extract_scalar(value: Any) -> float | None:
     if isinstance(value, (int, float)):
         scalar = float(value)
         return scalar if math.isfinite(scalar) else None
-    if isinstance(value, list) or isinstance(value, tuple):
+    if isinstance(value, (list, tuple)):
         for item in value:
             scalar = extract_scalar(item)
             if scalar is not None:
@@ -293,7 +293,7 @@ def _payload_dimensions(payload: dict[str, Any]) -> set[str]:
     raw_dimensions = payload.get("dimension", payload.get("dimensions"))
     if isinstance(raw_dimensions, str):
         return {canonical_dimension_id(raw_dimensions)}
-    if isinstance(raw_dimensions, list) or isinstance(raw_dimensions, tuple):
+    if isinstance(raw_dimensions, (list, tuple)):
         return {canonical_dimension_id(str(item)) for item in raw_dimensions if str(item).strip()}
     return set()
 

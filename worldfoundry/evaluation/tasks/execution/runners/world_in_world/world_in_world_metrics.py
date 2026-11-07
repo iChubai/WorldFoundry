@@ -6,7 +6,7 @@ import csv
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric as _mean
 
@@ -173,13 +173,16 @@ def _canonical_metric_id(raw: str) -> str | None:
 def _normalize_unit(value: float, metric_id: str) -> float:
     if metric_id in {"active_embodied_qa_score", "active_embodied_qa_spl"} and value > 1.0:
         return value / 100.0
-    if metric_id in {
-        "image_goal_navigation_success_rate",
-        "image_goal_navigation_spl",
-        "active_recognition_success_rate",
-    }:
-        if value > 1.0:
-            return value / 100.0
+    if (
+        metric_id
+        in {
+            "image_goal_navigation_success_rate",
+            "image_goal_navigation_spl",
+            "active_recognition_success_rate",
+        }
+        and value > 1.0
+    ):
+        return value / 100.0
     if metric_id == "psnr" and value > 1.0:
         return value
     if metric_id in {"fvd", "lpips", "ssim"} and value > 1.0 and metric_id != "psnr":
@@ -239,7 +242,7 @@ def _summary_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
         if metric_id is None or score is None:
             continue
         buckets.setdefault(metric_id, []).append(_normalize_unit(score, metric_id))
-    metrics = {metric_id: _mean(values) for metric_id, values in buckets.items() if values}
+    metrics = {metric_id: cast(float, _mean(values)) for metric_id, values in buckets.items() if values}
     average = _compute_average(metrics)
     if average is not None:
         metrics["world_in_world_average"] = average
@@ -254,7 +257,7 @@ def compute_world_in_world_metrics(
 ) -> dict[str, Any]:
     if len(rows) == 1 and isinstance(rows[0], Mapping):
         payload = rows[0]
-        if isinstance(payload.get("summary"), Mapping) or any(_canonical_metric_id(str(key)) for key in payload.keys()):
+        if isinstance(payload.get("summary"), Mapping) or any(_canonical_metric_id(str(key)) for key in payload):
             direct_metrics = _summary_from_evaluator(payload, task=task)
             video_quality = {
                 metric_id: direct_metrics[metric_id]

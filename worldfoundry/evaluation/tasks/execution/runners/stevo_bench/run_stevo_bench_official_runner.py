@@ -18,8 +18,6 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.tasks.execution.framework.runner_common import SCORECARD_SCHEMA_VERSION, VIDEO_SUFFIXES
-
 REPO_ROOT = Path(__file__).resolve().parents[6]
 if str(REPO_ROOT) not in sys.path:  # pragma: no cover - direct script execution
     sys.path.insert(0, str(REPO_ROOT))

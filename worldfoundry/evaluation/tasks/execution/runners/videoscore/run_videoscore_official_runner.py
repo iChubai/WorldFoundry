@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import contextlib
 import importlib
 import json
 import os
@@ -21,7 +22,7 @@ import time
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.execution.process import run_logged_subprocess
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_data import (
@@ -273,7 +274,9 @@ def extract_scores_from_mapping(raw_results: dict[str, Any]) -> dict[str, dict[s
                                     'source' (original key), and 'sample_count'.
     """
     # Prioritize a nested "scores" dictionary if present, otherwise use the top-level dict.
-    payload = raw_results.get("scores") if isinstance(raw_results.get("scores"), dict) else raw_results
+    payload = (
+        cast(dict[str, Any], raw_results.get("scores")) if isinstance(raw_results.get("scores"), dict) else raw_results
+    )
     extracted: dict[str, dict[str, Any]] = {}
     for raw_key, raw_value in payload.items():
         # Map raw keys to standardized metric IDs using METRIC_ALIASES.
@@ -824,10 +827,8 @@ def load_official_videoscore_module(videoscore_root: Path) -> Any:
         return importlib.import_module("eval_videoscore")
     finally:
         for item in inserted:
-            try:
+            with contextlib.suppress(ValueError):
                 sys.path.remove(item)
-            except ValueError:
-                pass
 
 
 def patch_transformers_dynamic_cache_api() -> Callable[[], None] | None:
@@ -855,11 +856,12 @@ def patch_transformers_dynamic_cache_api() -> Callable[[], None] | None:
         return self.get_seq_length(layer_idx)
 
     # Apply the patch.
-    DynamicCache.get_usable_length = get_usable_length  # type: ignore[attr-defined]
+    cache_class = cast(Any, DynamicCache)
+    cache_class.get_usable_length = get_usable_length
 
     def undo_patch() -> None:
-        if getattr(DynamicCache, "get_usable_length", None) is get_usable_length:
-            del DynamicCache.get_usable_length  # type: ignore[attr-defined]
+        if getattr(cache_class, "get_usable_length", None) is get_usable_length:
+            del cache_class.get_usable_length
 
     return undo_patch
 

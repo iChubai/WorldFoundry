@@ -14,9 +14,10 @@ import os
 import time
 from operator import itemgetter
 from pathlib import Path
+from typing import cast
 
 import torch
-from transformers import AutoTokenizer, CLIPModel
+from transformers import AutoTokenizer, CLIPModel, PreTrainedTokenizerBase
 
 from worldfoundry.base_models.perception_core.action_recognition.videomae_mmaction import (
     checkpoint_path,
@@ -53,8 +54,9 @@ def _clip_model_id(checkpoints_dir: Path) -> str:
 
 def _load_action_runtime():
     try:
-        from mmaction.apis import inference_recognizer, init_recognizer
-        from mmengine import Config
+        apis = __import__("mmaction.apis", fromlist=["inference_recognizer", "init_recognizer"])
+        inference_recognizer, init_recognizer = apis.inference_recognizer, apis.init_recognizer
+        Config = __import__("mmengine", fromlist=["Config"]).Config
     except ImportError as exc:
         raise RuntimeError(
             "EvalCrafter action_score requires the optional MMAction2 runtime. "
@@ -99,16 +101,14 @@ def _calculate_action_score(
     action: str,
     action_model,
     clip_model: CLIPModel,
-    clip_tokenizer: AutoTokenizer,
+    clip_tokenizer: PreTrainedTokenizerBase,
     labels: list[str],
     inference_recognizer,
     device: str,
 ) -> float:
     pred_result = inference_recognizer(action_model, str(video_path))
     pred_scores = pred_result.pred_scores.item.tolist()
-    score_sorted = sorted(
-        tuple(zip(range(len(pred_scores)), pred_scores, strict=False)), key=itemgetter(1), reverse=True
-    )
+    score_sorted = sorted(zip(range(len(pred_scores)), pred_scores, strict=False), key=itemgetter(1), reverse=True)
     top5_label = score_sorted[:5]
 
     results = [(labels[index], score) for index, score in top5_label]
@@ -154,7 +154,7 @@ def main() -> None:
 
     clip_model_id = _clip_model_id(checkpoints_dir)
     clip_model = CLIPModel.from_pretrained(clip_model_id).to(device)
-    clip_tokenizer = AutoTokenizer.from_pretrained(clip_model_id)
+    clip_tokenizer = cast(PreTrainedTokenizerBase, AutoTokenizer.from_pretrained(clip_model_id))
 
     video_mae_checkpoint = checkpoint_path(checkpoint_dir=checkpoints_dir / "VideoMAE")
     if not video_mae_checkpoint.is_file():

@@ -83,9 +83,9 @@ def build_judge_fn(config: PhysVidBenchJudgeConfig) -> JudgeFn:
 
         def _gemini_judge(prompt: str) -> str:
             try:
-                from google import genai
-                from google.genai import types
-                from google.genai.errors import ServerError
+                genai = __import__("google", fromlist=["genai"]).genai
+                types = __import__("google.genai", fromlist=["types"]).types
+                ServerError = __import__("google.genai.errors", fromlist=["ServerError"]).ServerError
             except ImportError as exc:
                 raise RuntimeError(
                     "PhysVidBench Gemini judge requires google-genai. "

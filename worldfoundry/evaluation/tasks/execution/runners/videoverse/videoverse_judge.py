@@ -15,7 +15,7 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import write_json, write_jsonl
 
@@ -118,7 +118,7 @@ def resolve_video_path(prompt_id: str, generated_video_dir: Path, *, video_base_
 
 def _gemini_generate(*, prompt: str, video: Path | str, model_name: str, api_key: str) -> str:
     try:
-        from google import genai
+        genai = __import__("google", fromlist=["genai"]).genai
     except ImportError as exc:
         raise VideoVerseJudgeError(
             "Gemini judge requires the google-genai package. Install google-genai or set "
@@ -177,7 +177,9 @@ def build_judge_fn(config: VideoVerseJudgeConfig, *, override: JudgeFn | None = 
                 if not config.video_base_url:
                     raise VideoVerseJudgeError("URL judge requires WORLDFOUNDRY_VIDEOVERSE_VIDEO_BASE_URL")
                 target = config.video_base_url.rstrip("/") + f"/{video.stem}.mp4"
-            return _gemini_generate(prompt=prompt, video=target, model_name=config.model_name, api_key=config.api_key)
+            return _gemini_generate(
+                prompt=prompt, video=target, model_name=config.model_name, api_key=cast(str, config.api_key)
+            )
 
         return _gemini_judge
 
@@ -195,7 +197,7 @@ def build_judge_fn(config: VideoVerseJudgeConfig, *, override: JudgeFn | None = 
             return local_vlm_generate(
                 prompt=prompt,
                 video_path=video,
-                model_path=Path(config.local_vlm_path),
+                model_path=Path(cast(str, config.local_vlm_path)),
             )
 
         return _local_vlm_judge
@@ -205,7 +207,7 @@ def build_judge_fn(config: VideoVerseJudgeConfig, *, override: JudgeFn | None = 
 
 def _evaluate_event_order(
     *,
-    record: dict[str, Any],
+    record: Mapping[str, Any],
     judge_fn: JudgeFn,
     video: Path | str,
     max_attempts: int,
@@ -248,7 +250,7 @@ def _evaluate_event_order(
 
 def _evaluate_verification_checks(
     *,
-    record: dict[str, Any],
+    record: Mapping[str, Any],
     judge_fn: JudgeFn,
     video: Path | str,
     max_attempts: int,

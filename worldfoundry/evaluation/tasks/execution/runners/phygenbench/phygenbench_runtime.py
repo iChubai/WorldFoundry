@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 import subprocess
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -117,7 +117,7 @@ def _video_stems(generated_artifact_dir: Path) -> set[str]:
 def _mock_results_payload(
     *,
     generated_artifact_dir: Path,
-    prompt_records: list[Mapping[str, Any]],
+    prompt_records: Sequence[Mapping[str, Any]],
     model_name: str,
     limit: int | None,
 ) -> list[dict[str, Any]]:
@@ -173,7 +173,7 @@ def _mock_results_payload(
 def _materialize_phyvideos(
     *,
     generated_artifact_dir: Path,
-    prompt_records: list[Mapping[str, Any]],
+    prompt_records: Sequence[Mapping[str, Any]],
     repo_root: Path,
     model_name: str,
 ) -> Path:

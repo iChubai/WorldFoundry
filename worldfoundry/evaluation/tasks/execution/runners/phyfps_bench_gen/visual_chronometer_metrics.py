@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.phyfps_metrics import VideoPhyFPSRecord
 
@@ -101,8 +101,12 @@ def metric_rows_from_computed(
     source_path: Path,
     official_runtime_executed: bool,
 ) -> list[dict[str, Any]]:
-    direct_metrics = computed.get("metrics") if isinstance(computed.get("metrics"), Mapping) else {}
-    components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
+    direct_metrics = (
+        cast(Mapping[str, Any], computed.get("metrics")) if isinstance(computed.get("metrics"), Mapping) else {}
+    )
+    components = (
+        cast(Mapping[str, Any], computed.get("components")) if isinstance(computed.get("components"), Mapping) else {}
+    )
     rows: list[dict[str, Any]] = []
     for metric_id in METRIC_ORDER:
         spec = METRIC_SPECS[metric_id]

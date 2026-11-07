@@ -285,10 +285,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         args.official_results_path = sample_path
     try:
-        if args.run_official:
-            scorecard = run_official_mirabench(args)
-        else:
-            scorecard = normalize_mirabench_results(args)
+        scorecard = run_official_mirabench(args) if args.run_official else normalize_mirabench_results(args)
     except Exception as exc:
         args.output_dir.mkdir(parents=True, exist_ok=True)
         scorecard = {

@@ -204,7 +204,7 @@ def scalar(value: Any) -> float | None:
             return float(value)
         except ValueError:
             return None
-    if isinstance(value, list) or isinstance(value, tuple):
+    if isinstance(value, (list, tuple)):
         numeric = [scalar(item) for item in value]
         numeric = [item for item in numeric if item is not None]
         if numeric:

@@ -7,7 +7,7 @@ import json
 import math
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.io import mean_numeric, normalize_unit_score, scalar_number
 
@@ -80,7 +80,11 @@ def normalize_qa(path: Path) -> dict[str, Any]:
     if not isinstance(value, Mapping):
         raise ValueError(f"QA result must be a JSON object: {path}")
     summary = _summary_mapping(value)
-    process = summary.get("process_aware") if isinstance(summary.get("process_aware"), Mapping) else {}
+    process = (
+        cast(Mapping[str, Any], summary.get("process_aware"))
+        if isinstance(summary.get("process_aware"), Mapping)
+        else {}
+    )
     qa_accuracy = scalar_number(
         next(
             (summary[key] for key in ("qa_accuracy", "acc_qa", "overall_average_score", "accuracy") if key in summary),
@@ -167,7 +171,7 @@ def normalize_pointwise(path: Path, induced_pairs_path: Path | None = None) -> d
             a = scalar_number(row.get("aesthetics_score"))
         score = scalar_number(row.get("score_weighted"))
         if score is None and None not in (r, c, a):
-            score = 0.4 * float(r) + 0.3 * float(c) + 0.3 * float(a)
+            score = 0.4 * float(cast(float, r)) + 0.3 * float(cast(float, c)) + 0.3 * float(cast(float, a))
         reasoning.append(r)
         content.append(c)
         aesthetics.append(a)
@@ -296,7 +300,7 @@ def normalize_results(path: Path, protocol: str = "auto") -> list[dict[str, Any]
 def metric_rows(protocol_results: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
     observed: dict[str, tuple[Any, Mapping[str, Any]]] = {}
     for result in protocol_results:
-        metrics = result.get("metrics") if isinstance(result.get("metrics"), Mapping) else {}
+        metrics = cast(Mapping[str, Any], result.get("metrics")) if isinstance(result.get("metrics"), Mapping) else {}
         for metric_id, value in metrics.items():
             if metric_id in METRIC_SPECS and value is not None:
                 observed[metric_id] = (value, result)

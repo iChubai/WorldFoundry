@@ -179,15 +179,10 @@ def calculate_motion_ac_score(video_path, amp, model):
     # Calculate the average optical flow for the entire video
     mean_optical_flow_video = np.mean(optical_flows)
     print(f"Mean optical flow for the video: {mean_optical_flow_video}")
-    if np.abs(mean_optical_flow_video) > 5:
-        amp_pred = "large"
-    else:
-        amp_pred = "slow"
+    amp_pred = "large" if np.abs(mean_optical_flow_video) > 5 else "slow"
 
-    if amp_pred == amp:  # may use a distance to 3?
-        amp_recognition_score = 1
-    else:
-        amp_recognition_score = 0
+    # may use a distance to 3?
+    amp_recognition_score = 1 if amp_pred == amp else 0
 
     return amp_recognition_score
 
@@ -244,7 +239,7 @@ def compute_video_warping_error(video_path, model):
             fw_occ = torch.tensor(fw_occ).float().to(device)
 
             ### load flow
-            flow = fw_flow
+            _flow = fw_flow
 
             ### load occlusion mask
             occ_mask = fw_occ

@@ -98,10 +98,10 @@ def _traverse_prompt_suite(
                                 "prompt_id": str(example.get("prompt_id")),
                                 "prompt": str(example.get("prompt_text") or "").strip(),
                                 "prompt_taxonomy_label": example.get("prompt_taxonomy_label")
-                                or " - ".join(path + [key]),
+                                or " - ".join([*path, key]),
                             }
                         )
-            _traverse_prompt_suite(value, path + [key], result)
+            _traverse_prompt_suite(value, [*path, key], result)
     elif isinstance(data, list):
         for item in data:
             _traverse_prompt_suite(item, path, result)

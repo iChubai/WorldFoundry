@@ -7,7 +7,7 @@ import json
 import os
 import subprocess
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -151,7 +151,7 @@ def _video_path_for_record(generated_artifact_dir: Path, record: Mapping[str, An
 def _records_with_videos(
     *,
     generated_artifact_dir: Path,
-    prompt_records: list[Mapping[str, Any]],
+    prompt_records: Sequence[Mapping[str, Any]],
     strict: bool,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     rows: list[dict[str, Any]] = []
@@ -173,7 +173,7 @@ def _records_with_videos(
     return rows, missing
 
 
-def _write_csv(path: Path, rows: list[Mapping[str, Any]], fieldnames: list[str]) -> None:
+def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]], fieldnames: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
@@ -182,7 +182,7 @@ def _write_csv(path: Path, rows: list[Mapping[str, Any]], fieldnames: list[str])
             writer.writerow({field: row.get(field, "") for field in fieldnames})
 
 
-def _write_official_inputs(output_dir: Path, prompt_records: list[Mapping[str, Any]]) -> dict[str, Path]:
+def _write_official_inputs(output_dir: Path, prompt_records: Sequence[Mapping[str, Any]]) -> dict[str, Path]:
     input_dir = output_dir / "videocon_physics_inputs"
     source_rows = [
         {
@@ -268,7 +268,7 @@ def _read_probability_by_video(path: Path) -> dict[str, float]:
 
 def _merge_videocon_outputs(
     *,
-    prompt_records: list[Mapping[str, Any]],
+    prompt_records: Sequence[Mapping[str, Any]],
     sa_csv: Path,
     pc_csv: Path,
     sa_threshold: float,

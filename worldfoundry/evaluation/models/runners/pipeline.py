@@ -7,13 +7,14 @@ handling per-sample failure isolation and runtime profile resolution.
 
 from __future__ import annotations
 
+import contextlib
 import gc
 import inspect
 import sys
 import warnings
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar, cast
 
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, WorldModelConfig
 
@@ -66,7 +67,7 @@ class WorldFoundryPipelineRunner:
         cleaned: Flag indicating whether :meth:`cleanup` has been called.
     """
 
-    capabilities = {"worldfoundry.pipeline"}
+    capabilities: ClassVar[set[str]] = {"worldfoundry.pipeline"}
 
     def __init__(
         self,
@@ -287,10 +288,8 @@ class WorldFoundryPipelineRunner:
             cuda = getattr(torch, "cuda", None)
             is_initialized = getattr(cuda, "is_initialized", None)
             if callable(is_initialized) and is_initialized():
-                try:
-                    torch.cuda.empty_cache()
-                except RuntimeError:
-                    pass
+                with contextlib.suppress(RuntimeError):
+                    cast(Any, torch).cuda.empty_cache()
 
 
 __all__ = [

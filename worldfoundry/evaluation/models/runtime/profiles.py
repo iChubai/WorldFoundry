@@ -19,7 +19,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from worldfoundry.evaluation.models.catalog.schema import iter_model_zoo_payloads
@@ -133,7 +133,7 @@ def _tuple_of_mapping(value: Any) -> tuple[Mapping[str, Any], ...]:
 
 def _profile_notes(data: Mapping[str, Any]) -> tuple[str, ...]:
     """Extract and compile notes or evidence notes from profile data mapping."""
-    evidence = data.get("evidence") if isinstance(data.get("evidence"), Mapping) else {}
+    evidence = cast(Mapping[str, Any], data.get("evidence")) if isinstance(data.get("evidence"), Mapping) else {}
     return _tuple_of_str(data.get("notes") or evidence.get("notes"))
 
 
@@ -289,14 +289,18 @@ class RuntimeProfile:
         Returns:
             A validated :class:`RuntimeProfile` instance.
         """
-        artifact = data.get("artifact") if isinstance(data.get("artifact"), Mapping) else {}
-        inputs = data.get("inputs") if isinstance(data.get("inputs"), Mapping) else {}
-        execution = data.get("execution") if isinstance(data.get("execution"), Mapping) else {}
-        output = data.get("output") if isinstance(data.get("output"), Mapping) else {}
-        integration = data.get("integration") if isinstance(data.get("integration"), Mapping) else {}
+        artifact = cast(Mapping[str, Any], data.get("artifact")) if isinstance(data.get("artifact"), Mapping) else {}
+        inputs = cast(Mapping[str, Any], data.get("inputs")) if isinstance(data.get("inputs"), Mapping) else {}
+        execution = cast(Mapping[str, Any], data.get("execution")) if isinstance(data.get("execution"), Mapping) else {}
+        output = cast(Mapping[str, Any], data.get("output")) if isinstance(data.get("output"), Mapping) else {}
+        integration = (
+            cast(Mapping[str, Any], data.get("integration")) if isinstance(data.get("integration"), Mapping) else {}
+        )
         profile_id = str(data.get("profile_id") or data.get("id") or data.get("model_id") or "")
         model_id = str(data.get("model_id") or data.get("id") or profile_id)
-        input_schema = data.get("input_schema") if isinstance(data.get("input_schema"), Mapping) else {}
+        input_schema = (
+            cast(Mapping[str, Any], data.get("input_schema")) if isinstance(data.get("input_schema"), Mapping) else {}
+        )
         # NOTE: Derive input_schema from legacy ``inputs`` mapping when not explicit.
         if not input_schema and inputs:
             input_schema = {
@@ -319,7 +323,9 @@ class RuntimeProfile:
                 artifact.get("filename") or data.get("artifact_filename") or _artifact_filename(artifact_kind)
             ),
             command_template=_tuple_of_str(execution.get("command_template") or data.get("command_template")),
-            conda_env=dict(data.get("conda_env")) if isinstance(data.get("conda_env"), Mapping) else {},
+            conda_env=dict(cast(Mapping[str, Any], data.get("conda_env")))
+            if isinstance(data.get("conda_env"), Mapping)
+            else {},
             backend_stage=str(execution.get("backend_stage") or data.get("backend_stage") or "profile_only"),
             runtime_status=str(execution.get("runtime_status") or data.get("runtime_status") or "profiled"),
             integration_status=str(
@@ -444,7 +450,7 @@ def load_runtime_profile_manifest(path: str | Path) -> RuntimeProfile:
     return RuntimeProfile.from_mapping(entries[0])
 
 
-def load_runtime_profile_manifests(root: str | Path | None = None) -> tuple[RuntimeProfile, ...]:
+def load_runtime_profile_manifests(root: str | Path | Sequence[str | Path] | None = None) -> tuple[RuntimeProfile, ...]:
     """Load and parse all target RuntimeProfile manifests under the given root."""
     profiles: list[RuntimeProfile] = []
     for path in _target_profile_paths(root):
@@ -473,12 +479,16 @@ def _is_catalog_manifest_root(path: Path) -> bool:
 def _catalog_payload_to_runtime_target(entry: Mapping[str, Any]) -> Mapping[str, Any]:
     """Convert a catalog YAML payload into the legacy runtime-target shape."""
     model_id = str(entry.get("id") or entry.get("model_id") or "")
-    official_sources = entry.get("official_sources") if isinstance(entry.get("official_sources"), Mapping) else {}
-    sources = entry.get("sources") if isinstance(entry.get("sources"), Mapping) else {}
+    official_sources = (
+        cast(Mapping[str, Any], entry.get("official_sources"))
+        if isinstance(entry.get("official_sources"), Mapping)
+        else {}
+    )
+    sources = cast(Mapping[str, Any], entry.get("sources")) if isinstance(entry.get("sources"), Mapping) else {}
     if not official_sources and sources:
         official_sources = dict(sources)
 
-    source = entry.get("source") if isinstance(entry.get("source"), Mapping) else {}
+    source = cast(Mapping[str, Any], entry.get("source")) if isinstance(entry.get("source"), Mapping) else {}
     github = official_sources.get("github")
     if isinstance(github, str):
         official_sources = {**dict(official_sources), "github": {"url": github}}
@@ -533,14 +543,18 @@ def _catalog_payload_to_runtime_target(entry: Mapping[str, Any]) -> Mapping[str,
             ],
         }
 
-    capabilities = entry.get("capabilities") if isinstance(entry.get("capabilities"), Mapping) else {}
+    capabilities = (
+        cast(Mapping[str, Any], entry.get("capabilities")) if isinstance(entry.get("capabilities"), Mapping) else {}
+    )
     groups = [str(item) for item in entry.get("tasks") or entry.get("groups") or ()]
     if not groups and capabilities.get("modalities"):
         groups = [str(item) for item in capabilities.get("modalities") or ()]
     catalog_category = str(entry.get("catalog_category") or "").strip()
     if catalog_category and catalog_category not in groups:
         groups.append(catalog_category)
-    integration = entry.get("integration") if isinstance(entry.get("integration"), Mapping) else {}
+    integration = (
+        cast(Mapping[str, Any], entry.get("integration")) if isinstance(entry.get("integration"), Mapping) else {}
+    )
     return {
         "id": model_id,
         "taxonomy_name": str(entry.get("name") or entry.get("taxonomy_name") or model_id),
@@ -577,9 +591,7 @@ def _is_runtime_target(target: Mapping[str, Any]) -> bool:
     if not target_id:
         return False
     kind = str(target.get("kind") or "model").lower()
-    if kind in {"benchmark", "benchmark_runtime", "dataset", "framework", "simulator"}:
-        return False
-    return True
+    return kind not in {"benchmark", "benchmark_runtime", "dataset", "framework", "simulator"}
 
 
 def _iter_runtime_targets(paths: Sequence[Path]) -> tuple[Mapping[str, Any], ...]:
@@ -644,7 +656,11 @@ def _profile_from_target(
     groups = tuple(str(item) for item in target.get("groups") or ())
     task_family = str(override.get("task_family") or _task_family(groups))
     artifact_kind = str(override.get("artifact_kind") or _artifact_kind(task_family))
-    official_sources = target.get("official_sources") if isinstance(target.get("official_sources"), Mapping) else {}
+    official_sources = (
+        cast(Mapping[str, Any], target.get("official_sources"))
+        if isinstance(target.get("official_sources"), Mapping)
+        else {}
+    )
 
     source_repos: list[dict[str, Any]] = []
     for source in _iter_source_mappings(official_sources.get("github"), string_key="url"):
@@ -668,8 +684,10 @@ def _profile_from_target(
             continue
         checkpoints.append(dict(source))
 
-    integration = target.get("integration") if isinstance(target.get("integration"), Mapping) else {}
-    notes = list(override.get("notes") or ())
+    integration = (
+        cast(Mapping[str, Any], target.get("integration")) if isinstance(target.get("integration"), Mapping) else {}
+    )
+    notes: list[str] = list(override.get("notes") or ())
     notes.extend(str(item) for item in integration.get("blocked_reasons") or ())
     command_template_items = ()
 
@@ -855,7 +873,7 @@ def clear_runtime_profiles_cache() -> None:
     _load_runtime_profiles_no_exists_cached.cache_clear()
 
 
-load_runtime_profiles.cache_clear = clear_runtime_profiles_cache  # type: ignore[attr-defined]
+cast(Any, load_runtime_profiles).cache_clear = clear_runtime_profiles_cache
 
 
 def load_runtime_profile(model_id: str, **kwargs: Any) -> RuntimeProfile:

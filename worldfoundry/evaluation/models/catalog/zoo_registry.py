@@ -7,6 +7,7 @@ and de-duplicating entries across multiple YAML sources.
 
 from __future__ import annotations
 
+import builtins
 import logging
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
@@ -361,11 +362,11 @@ class ModelZooRegistry:
         """Retrieve a model entry by its exact model ID or alias."""
         return self.get(key)
 
-    def list(self) -> list[ModelZooEntry]:
+    def list(self) -> builtins.list[ModelZooEntry]:
         """List all unique registered model entries."""
         return self._store.list()
 
-    def keys(self) -> list[str]:
+    def keys(self) -> builtins.list[str]:
         """Get all primary registered model IDs."""
         return self._store.keys(lambda entry: entry.model_id)
 

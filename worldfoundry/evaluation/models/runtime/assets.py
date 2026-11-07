@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.models.runtime.profiles import RuntimeProfile, load_runtime_profiles
 from worldfoundry.evaluation.utils import DATA_ROOT
@@ -105,7 +105,7 @@ class RuntimeAsset:
         Returns:
             A validated :class:`RuntimeAsset` instance.
         """
-        metadata = data.get("metadata") if isinstance(data.get("metadata"), Mapping) else {}
+        metadata = cast(Mapping[str, Any], data.get("metadata")) if isinstance(data.get("metadata"), Mapping) else {}
         asset = cls(
             asset_id=str(data.get("asset_id") or data.get("id") or data.get("name") or default_id),
             kind=str(data.get("kind") or data.get("type") or default_kind),
@@ -189,7 +189,7 @@ class RuntimeAssetProfile:
         """
         profile_id = str(data.get("asset_profile_id") or data.get("id") or data.get("model_id") or "")
         model_id = str(data.get("model_id") or data.get("id") or profile_id)
-        metadata = data.get("metadata") if isinstance(data.get("metadata"), Mapping) else {}
+        metadata = cast(Mapping[str, Any], data.get("metadata")) if isinstance(data.get("metadata"), Mapping) else {}
         roots = {str(key): _expand_asset_path(value) for key, value in dict(data.get("roots") or {}).items()}
         assets = tuple(
             RuntimeAsset.from_mapping(item, default_id=f"{model_id}-{index}", source=source)

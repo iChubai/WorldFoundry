@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from collections.abc import Callable as CollectionsCallable
 from typing import Any, Generic, TypeVar
@@ -100,10 +101,10 @@ class AliasRegistryStore(Generic[ItemT]):
     def get(self, key: str) -> ItemT:
         return self._entries[self.resolve_key(key)]
 
-    def list(self) -> list[ItemT]:
+    def list(self) -> builtins.list[ItemT]:
         return [self._entries[key] for key in self._order]
 
-    def keys(self, key_name: CollectionsCallable[[ItemT], str]) -> list[str]:
+    def keys(self, key_name: CollectionsCallable[[ItemT], str]) -> builtins.list[str]:
         return [key_name(self._entries[key]) for key in self._order]
 
 
@@ -176,7 +177,7 @@ def _model_key(manifest: WorldModelManifest) -> str:
 
 def _model_aliases(manifest: WorldModelManifest) -> tuple[str, ...]:
     """Compute all aliases and names for a WorldModelManifest."""
-    aliases = list(getattr(manifest, "aliases", ()))
+    aliases: list[str] = list(getattr(manifest, "aliases", ()))
     aliases.extend(_metadata_aliases(manifest))
     # Compare with the same casefold normalization used at registration; a
     # name differing from model_id only in case is the same key, and adding it
@@ -193,7 +194,7 @@ def _metric_key(metric: MetricSpec) -> str:
 
 def _metric_aliases(metric: MetricSpec) -> tuple[str, ...]:
     """Compute all aliases for a MetricSpec."""
-    aliases = list(getattr(metric, "aliases", ()))
+    aliases: list[str] = list(getattr(metric, "aliases", ()))
     aliases.extend(_metadata_aliases(metric))
     return tuple(aliases)
 
@@ -237,7 +238,7 @@ class _Registry(Generic[SpecT]):
         return self._store._aliases
 
     @property
-    def _order(self) -> list[str]:
+    def _order(self) -> builtins.list[str]:
         return self._store._order
 
     def __contains__(self, key: object) -> bool:
@@ -279,10 +280,10 @@ class _Registry(Generic[SpecT]):
     def get(self, key: str) -> SpecT:
         return self._store.get(key)
 
-    def list(self) -> list[SpecT]:
+    def list(self) -> builtins.list[SpecT]:
         return self._store.list()
 
-    def keys(self) -> list[str]:
+    def keys(self) -> builtins.list[str]:
         return self._store.keys(self._key_fn)
 
     def resolve_key(self, key: str) -> str:

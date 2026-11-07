@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -59,9 +59,15 @@ class PipelineBinding:
     @classmethod
     def from_mapping(cls, data: Mapping[str, Any]) -> PipelineBinding:
         """Instantiate a PipelineBinding from a mapping dictionary."""
-        pipeline = data.get("pipeline") if isinstance(data.get("pipeline"), Mapping) else {}
-        loading = pipeline.get("loading") if isinstance(pipeline.get("loading"), Mapping) else {}
-        invocation = pipeline.get("invocation") if isinstance(pipeline.get("invocation"), Mapping) else {}
+        pipeline = cast(Mapping[str, Any], data.get("pipeline")) if isinstance(data.get("pipeline"), Mapping) else {}
+        loading = (
+            cast(Mapping[str, Any], pipeline.get("loading")) if isinstance(pipeline.get("loading"), Mapping) else {}
+        )
+        invocation = (
+            cast(Mapping[str, Any], pipeline.get("invocation"))
+            if isinstance(pipeline.get("invocation"), Mapping)
+            else {}
+        )
         aliases = data.get("aliases") or ()
         if isinstance(aliases, str):
             aliases = (aliases,)

@@ -8,6 +8,7 @@ all zoo entries into a single registry).
 
 from __future__ import annotations
 
+import builtins
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
@@ -76,11 +77,11 @@ class ModelRegistry:
                 index.setdefault(lookup_key(alias, "model registry alias"), item)
         self._index = index
 
-    def families(self) -> list[str]:
+    def families(self) -> builtins.list[str]:
         """Get all unique family names present in the registry."""
         return sorted({item.family for item in self._definitions})
 
-    def list(self, family: str | None = None) -> list[ModelDefinition]:
+    def list(self, family: str | None = None) -> builtins.list[ModelDefinition]:
         """List registered model definitions, optionally filtered by family."""
         if family is None:
             return list(self._definitions)

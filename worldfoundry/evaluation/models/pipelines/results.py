@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import (
     ArtifactRef,
@@ -157,7 +157,7 @@ def generation_result_from_pipeline(
         artifacts=artifacts,
         status=status,
         error=pipeline_result_error(result, status),
-        timings=dict(timings) if timings else None,
+        timings=cast(Mapping[str, Any], dict(timings) if timings else None),
         metadata=pipeline_metadata(result=result, context=context),
     )
 

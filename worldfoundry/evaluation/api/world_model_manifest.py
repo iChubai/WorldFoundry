@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from .json_contract import JsonContract, copy_mapping, tuple_of_str
 
@@ -54,6 +54,6 @@ class WorldModelManifest(JsonContract):
             required_artifacts=tuple_of_str(data.get("required_artifacts")),
             output_artifacts=tuple_of_str(data.get("output_artifacts")),
             tags=tuple_of_str(data.get("tags")),
-            metadata=data.get("metadata"),
+            metadata=cast(Mapping[str, Any], data.get("metadata")),
             schema_version=data.get("schema_version", WORLD_MODEL_MANIFEST_SCHEMA_VERSION),
         )

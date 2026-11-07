@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping
 from worldfoundry.evaluation.api.world_model_manifest import (
@@ -52,11 +52,11 @@ class WorldModelConfig(JsonContract):
             model_id=str(data["model_id"]),
             runner=str(data["runner"]),
             variant=data.get("variant", ""),
-            parameters=data.get("parameters"),
-            runtime=data.get("runtime"),
+            parameters=cast(Mapping[str, Any], data.get("parameters")),
+            runtime=cast(Mapping[str, Any], data.get("runtime")),
             seed=data.get("seed"),
             manifest=WorldModelManifest.from_dict(manifest) if isinstance(manifest, Mapping) else manifest,
-            metadata=data.get("metadata"),
+            metadata=cast(Mapping[str, Any], data.get("metadata")),
             schema_version=data.get("schema_version", WORLD_MODEL_CONFIG_SCHEMA_VERSION),
         )
 

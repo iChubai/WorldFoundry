@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from math import isfinite
 from numbers import Real
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping, tuple_of_str
 
@@ -194,13 +194,13 @@ class MetricResult(JsonContract):
             metric_id=str(data["metric_id"]),
             raw_value=data.get("raw_value"),
             normalized_value=data.get("normalized_value"),
-            components=data.get("components"),
+            components=cast(Mapping[str, Any], data.get("components")),
             valid=data.get("valid", True),
             coverage=data.get("coverage", 1.0),
             skip_reason=data.get("skip_reason"),
-            diagnostics=data.get("diagnostics"),
-            artifact_refs=data.get("artifact_refs"),
-            judge_trace=data.get("judge_trace"),
+            diagnostics=cast(Mapping[str, Any], data.get("diagnostics")),
+            artifact_refs=cast(Mapping[str, ArtifactRef], data.get("artifact_refs")),
+            judge_trace=cast(Mapping[str, Any], data.get("judge_trace")),
             schema_version=data.get("schema_version", METRIC_RESULT_SCHEMA_VERSION),
         )
 
@@ -255,13 +255,13 @@ class AggregateResult(JsonContract):
             n_total=data.get("n_total", 0),
             n_valid=data.get("n_valid", 0),
             n_skipped=data.get("n_skipped", 0),
-            raw_stats=data.get("raw_stats"),
-            normalized_stats=data.get("normalized_stats"),
-            confidence_interval=data.get("confidence_interval"),
+            raw_stats=cast(Mapping[str, Any], data.get("raw_stats")),
+            normalized_stats=cast(Mapping[str, Any], data.get("normalized_stats")),
+            confidence_interval=cast(Mapping[str, Any], data.get("confidence_interval")),
             stderr=data.get("stderr"),
-            skip_breakdown=data.get("skip_breakdown"),
+            skip_breakdown=cast(Mapping[str, int], data.get("skip_breakdown")),
             valid=data.get("valid", True),
-            diagnostics=data.get("diagnostics"),
+            diagnostics=cast(Mapping[str, Any], data.get("diagnostics")),
             schema_version=data.get("schema_version", AGGREGATE_RESULT_SCHEMA_VERSION),
         )
 

@@ -110,7 +110,7 @@ def get_builtin_runtime_runner_class(name: str) -> type | None:
     """
     key = _runner_key(name)
     for entry in BUILTIN_RUNTIME_RUNNERS:
-        if key in {_runner_key(item) for item in entry.keys()}:
+        if key in {_runner_key(item) for item in entry.keys()}:  # noqa: SIM118 - Entry keys are not dictionary keys.
             return entry.resolve_runner_class()
     return None
 
@@ -132,7 +132,7 @@ def __getattr__(name: str) -> Any:
 __all__ = [
     "BUILTIN_RUNTIME_RUNNERS",
     "BuiltinRuntimeRunnerEntry",
-    "EmbodiedClosedLoopRunner",
+    "EmbodiedClosedLoopRunner",  # noqa: F822 - Resolved lazily by __getattr__.
     "WorldFoundryPipelineRunner",
     "get_builtin_runtime_runner_class",
     "list_builtin_runtime_runners",

@@ -178,7 +178,7 @@ class ModelRunnerRegistry:
         if not isinstance(entry, ModelRunnerRegistryEntry):
             entry = ModelRunnerRegistryEntry.from_mapping(entry)
 
-        normalized_keys = tuple(_runner_key(key) for key in entry.keys())
+        normalized_keys = tuple(_runner_key(key) for key in entry.keys())  # noqa: SIM118 - Entry keys are not dictionary keys.
         if not replace:
             for key in normalized_keys:
                 if key in self._by_key:
@@ -208,10 +208,7 @@ class ModelRunnerRegistry:
     ) -> ModelRunnerRegistryEntry:
         """Register a runner by name with optional target/class metadata."""
         if runner_target is None:
-            if runner_class is None:
-                runner_target = name
-            else:
-                runner_target = f"{runner_class.__module__}:{runner_class.__qualname__}"
+            runner_target = name if runner_class is None else f"{runner_class.__module__}:{runner_class.__qualname__}"
         return self.register(
             ModelRunnerRegistryEntry(
                 name=name,

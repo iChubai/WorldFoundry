@@ -14,7 +14,7 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from ...api.json_contract import JsonContract, require_mapping, to_plain
 from ...api.json_contract import tuple_of_str as _tuple_of_str
@@ -470,10 +470,7 @@ def _hf_repo_ids_from_entry(entry: Mapping[str, Any]) -> list[str]:
                 add(repo)
 
     raw_checkpoints = entry.get("checkpoints")
-    if isinstance(raw_checkpoints, Mapping):
-        checkpoint_items = raw_checkpoints.values()
-    else:
-        checkpoint_items = raw_checkpoints or ()
+    checkpoint_items = raw_checkpoints.values() if isinstance(raw_checkpoints, Mapping) else raw_checkpoints or ()
     for checkpoint_item in checkpoint_items:
         if isinstance(checkpoint_item, Mapping):
             add(checkpoint_item.get("repo_id") or checkpoint_item.get("id"))
@@ -715,10 +712,7 @@ def _checkpoint_refs_from_entry(
                 refs.append(CheckpointRef(hf_repo_id=str(repo)))
 
     raw_checkpoints = entry.get("checkpoints")
-    if isinstance(raw_checkpoints, Mapping):
-        checkpoint_items = raw_checkpoints.values()
-    else:
-        checkpoint_items = raw_checkpoints or ()
+    checkpoint_items = raw_checkpoints.values() if isinstance(raw_checkpoints, Mapping) else raw_checkpoints or ()
     for item in checkpoint_items:
         if isinstance(item, Mapping):
             refs.append(_checkpoint_ref_from_repo_mapping(item))
@@ -886,7 +880,11 @@ class ModelVariantSpec(JsonSerializable):
     def from_dict(cls, data: Mapping[str, Any]) -> ModelVariantSpec:
         """Deserialize a ModelVariantSpec from a mapping dictionary."""
         variant = _require_mapping(data, "ModelVariantSpec.from_dict")
-        integration = variant.get("integration") if isinstance(variant.get("integration"), Mapping) else {}
+        integration = (
+            cast(Mapping[str, Any], variant.get("integration"))
+            if isinstance(variant.get("integration"), Mapping)
+            else {}
+        )
         checkpoint_refs: list[CheckpointRef] = []
         for key in ("checkpoint_refs", "checkpoints"):
             for item in variant.get(key) or ():
@@ -1187,7 +1185,9 @@ class ModelZooEntry(JsonSerializable):
         if "runner_expected_artifacts" in entry and "expected_artifacts" not in runner_data:
             runner_data["expected_artifacts"] = entry["runner_expected_artifacts"]
 
-        integration = entry.get("integration") if isinstance(entry.get("integration"), Mapping) else {}
+        integration = (
+            cast(Mapping[str, Any], entry.get("integration")) if isinstance(entry.get("integration"), Mapping) else {}
+        )
 
         return cls(
             model_id=str(entry.get("model_id", entry.get("id", ""))),

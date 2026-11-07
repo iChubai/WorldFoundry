@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping
 
@@ -166,10 +166,10 @@ class GenerationResult(JsonContract):
             sample_id=str(data["sample_id"]),
             request_id=data.get("request_id"),
             model_id=data.get("model_id", ""),
-            artifacts=data.get("artifacts"),
+            artifacts=cast(Mapping[str, ArtifactRef], data.get("artifacts")),
             status=data.get("status") or GENERATION_UNKNOWN_STATUS,
             error=data.get("error"),
-            timings=data.get("timings"),
-            metadata=data.get("metadata"),
+            timings=cast(Mapping[str, Any], data.get("timings")),
+            metadata=cast(Mapping[str, Any], data.get("metadata")),
             schema_version=data.get("schema_version", GENERATION_RESULT_SCHEMA_VERSION),
         )

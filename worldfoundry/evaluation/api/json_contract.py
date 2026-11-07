@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 JsonValue = Any
 JsonMapping = Mapping[str, JsonValue]
@@ -157,7 +157,7 @@ class JsonContract:
         data = json.loads(payload)
         if not isinstance(data, Mapping):
             raise ValueError(f"{cls.__name__}.from_json expected a JSON object.")
-        return cls.from_dict(data)  # type: ignore[attr-defined]
+        return cast(Any, cls).from_dict(data)
 
     def __hash__(self) -> int:
         return int(self.stable_hash()[:16], 16)

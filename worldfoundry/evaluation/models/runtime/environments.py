@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.utils import (
     MODEL_RUNTIME_ENVIRONMENTS_ROOT,
@@ -97,14 +97,18 @@ class RuntimeEnvironmentProfile:
         Returns:
             A validated :class:`RuntimeEnvironmentProfile` instance.
         """
-        conda = data.get("conda") if isinstance(data.get("conda"), Mapping) else {}
-        system = data.get("system") if isinstance(data.get("system"), Mapping) else {}
-        top_packages = data.get("packages") if isinstance(data.get("packages"), Mapping) else {}
-        env = data.get("env") if isinstance(data.get("env"), Mapping) else {}
-        commands = data.get("commands") if isinstance(data.get("commands"), Mapping) else {}
-        validation = data.get("validation") if isinstance(data.get("validation"), Mapping) else {}
-        metadata = data.get("metadata") if isinstance(data.get("metadata"), Mapping) else {}
-        packages = conda.get("packages") if isinstance(conda.get("packages"), Mapping) else {}
+        conda = cast(Mapping[str, Any], data.get("conda")) if isinstance(data.get("conda"), Mapping) else {}
+        system = cast(Mapping[str, Any], data.get("system")) if isinstance(data.get("system"), Mapping) else {}
+        top_packages = (
+            cast(Mapping[str, Any], data.get("packages")) if isinstance(data.get("packages"), Mapping) else {}
+        )
+        env = cast(Mapping[str, Any], data.get("env")) if isinstance(data.get("env"), Mapping) else {}
+        commands = cast(Mapping[str, Any], data.get("commands")) if isinstance(data.get("commands"), Mapping) else {}
+        validation = (
+            cast(Mapping[str, Any], data.get("validation")) if isinstance(data.get("validation"), Mapping) else {}
+        )
+        metadata = cast(Mapping[str, Any], data.get("metadata")) if isinstance(data.get("metadata"), Mapping) else {}
+        packages = cast(Mapping[str, Any], conda.get("packages")) if isinstance(conda.get("packages"), Mapping) else {}
         environment_id = str(data.get("environment_id") or data.get("id") or data.get("model_id") or "")
         model_id = str(data.get("model_id") or data.get("id") or environment_id)
         env_name = str(conda.get("env_name") or data.get("env_name") or f"worldfoundry-{model_id}")

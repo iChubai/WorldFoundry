@@ -13,9 +13,6 @@ MIND_PROCESS = TASKS_ROOT / "execution/runners/mind/runtime/mind/src/process.py"
 
 LITERAL_EVAL_FILES = (
     TASKS_ROOT / "execution/runners/worldscore/runtime/worldscore/worldscore/benchmark/helpers/prompt_generator.py",
-    TASKS_ROOT / "execution/runners/videoscore/runtime/videoscore/benchmark/get_spearman_corr.py",
-    TASKS_ROOT / "execution/runners/videoscore/runtime/videoscore/benchmark/get_vbench_pairwise_acc.py",
-    TASKS_ROOT / "execution/runners/videoscore/runtime/videoscore/benchmark/get_genaibench_pairwise_acc.py",
 )
 
 

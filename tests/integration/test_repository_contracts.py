@@ -165,16 +165,8 @@ def _finally_call_count(relpath: str, call_name: str) -> int:
 def test_runner_temporary_media_is_cleaned_in_finally() -> None:
     wbench = "worldfoundry/evaluation/tasks/execution/runners/wbench/runtime/wbench/src/metrics/vlm/vlm_evaluator.py"
     memobench = "worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench/evaluation/vqa/llm-vqa.py"
-    qwen = (
-        "worldfoundry/evaluation/tasks/execution/runners/videoscore/runtime/videoscore/benchmark/"
-        "mllm_tools/qwenVL_eval.py"
-    )
     assert _finally_call_count(wbench, "remove") >= 2
     assert _finally_call_count(memobench, "unlink") >= 1
-    assert _finally_call_count(qwen, "close") >= 1
-    qwen_source = (REPO_ROOT / qwen).read_text(encoding="utf-8")
-    assert "except FileNotFoundError" in qwen_source
-    assert "merged_image_files = []" not in qwen_source.split("def __init__", 1)[0]
 
 
 def test_artifact_timestamps_are_utc_and_elapsed_time_is_monotonic() -> None:

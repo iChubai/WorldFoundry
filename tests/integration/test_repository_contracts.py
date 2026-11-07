@@ -6,6 +6,7 @@ import ast
 import os
 import re
 import runpy
+import sys
 from pathlib import Path
 
 import pytest
@@ -54,9 +55,9 @@ def test_runtime_modules_do_not_import_evaluation_utils() -> None:
 
 
 def _load_pyproject() -> dict:
-    try:
+    if sys.version_info >= (3, 11):
         import tomllib
-    except ImportError:
+    else:
         tomllib = pytest.importorskip("tomli")
     return tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
@@ -209,7 +210,7 @@ def test_workspace_app_loop_vars_do_not_shadow_dataclasses_field() -> None:
             shadowed.append(node.lineno)
         for target in _comprehension_targets(node):
             if isinstance(target, ast.Name) and target.id == "field":
-                shadowed.append(node.lineno)
+                shadowed.append(target.lineno)
     assert shadowed == []
 
 

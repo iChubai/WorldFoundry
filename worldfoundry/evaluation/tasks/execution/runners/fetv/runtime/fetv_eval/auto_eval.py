@@ -250,6 +250,7 @@ def compute_blipscore(model, data_loader, tokenizer, device, config, utils, use_
         return (x * y).sum(dim=-1)
 
     dot_sims = dot(video_embeds, text_embeds)
+    itm_scores = None
 
     if use_itm:
         print("Computing itm scores...")

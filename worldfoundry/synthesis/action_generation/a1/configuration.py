@@ -109,11 +109,7 @@ class A1Config:
             root = _mapping(root["model"])
 
         action_block = _mapping(root.get("action_head"))
-        action_head = (
-            _first(action_block, "type", "name", "kind")
-            if action_block
-            else root.get("action_head")
-        )
+        action_head = _first(action_block, "type", "name", "kind") if action_block else root.get("action_head")
         vision = _mapping(root.get("vision_backbone"))
         tokenizer = _mapping(root.get("tokenizer"))
 
@@ -121,12 +117,8 @@ class A1Config:
         merged.update(action_block)
         aliases = {
             "action_head": action_head or "l1_regression",
-            "tokenizer_identifier": _first(
-                tokenizer, "identifier", "name_or_path", default=cls.tokenizer_identifier
-            ),
-            "image_size": int(
-                tuple(_first(vision, "image_default_input_size", default=(336, 336)))[0]
-            ),
+            "tokenizer_identifier": _first(tokenizer, "identifier", "name_or_path", default=cls.tokenizer_identifier),
+            "image_size": int(tuple(_first(vision, "image_default_input_size", default=(336, 336)))[0]),
             "image_patch_size": _first(vision, "image_patch_size", default=14),
             "image_emb_dim": _first(vision, "image_emb_dim", default=1024),
             "image_num_heads": _first(vision, "image_num_heads", default=16),
@@ -156,9 +148,7 @@ class A1Config:
                 if not isinstance(payload, Mapping):
                     raise TypeError(f"A1 configuration must be a mapping: {path}")
                 return cls.from_mapping(payload)
-        raise FileNotFoundError(
-            f"A1 checkpoint requires model.yaml or config.yaml under {root}"
-        )
+        raise FileNotFoundError(f"A1 checkpoint requires model.yaml or config.yaml under {root}")
 
     def with_weight_shapes(self, shapes: Mapping[str, tuple[int, ...]]) -> "A1Config":
         """Resolve ambiguous action dimensions from checkpoint tensors."""
@@ -168,9 +158,7 @@ class A1Config:
         l1_output = shapes.get("action_head.model.fc2.weight")
         if l1_input:
             if l1_input[0] % self.d_model:
-                raise ValueError(
-                    "A1 L1 action head input width is not divisible by the language hidden size"
-                )
+                raise ValueError("A1 L1 action head input width is not divisible by the language hidden size")
             updates["action_token_dim"] = l1_input[0] // self.d_model
             updates["action_head"] = "l1_regression"
         if l1_output:

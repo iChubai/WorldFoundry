@@ -105,10 +105,16 @@ def load_weights(model, high_noise_ckpt: str, low_noise_ckpt: str):
     """Load the high-noise and low-noise transformer weights into a BerniniRendererModel."""
     high, prefix = load_transformer_state_dict(high_noise_ckpt, HIGH_NOISE_PREFIXES)
     miss, unexpected = model.diff_dec.transformer.load_state_dict(high, strict=False, assign=False)
-    logger.info("high-noise: %d tensors via prefix '%s', missing=%d unexpected=%d",
-                len(high), prefix, len(miss), len(unexpected))
+    logger.info(
+        "high-noise: %d tensors via prefix '%s', missing=%d unexpected=%d",
+        len(high),
+        prefix,
+        len(miss),
+        len(unexpected),
+    )
 
     low, prefix = load_transformer_state_dict(low_noise_ckpt, LOW_NOISE_PREFIXES)
     miss, unexpected = model.diff_dec.transformer_2.load_state_dict(low, strict=False, assign=False)
-    logger.info("low-noise: %d tensors via prefix '%s', missing=%d unexpected=%d",
-                len(low), prefix, len(miss), len(unexpected))
+    logger.info(
+        "low-noise: %d tensors via prefix '%s', missing=%d unexpected=%d", len(low), prefix, len(miss), len(unexpected)
+    )

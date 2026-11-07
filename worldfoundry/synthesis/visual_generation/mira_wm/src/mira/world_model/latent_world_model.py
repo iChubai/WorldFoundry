@@ -125,8 +125,7 @@ class LatentWorldModel(nn.Module):
         self.bos = None
         if config.use_clean_past:
             self.bos = nn.Parameter(
-                0.02
-                * torch.randn(self.world_model.latent_height, self.world_model.latent_width, self.latent_dim)
+                0.02 * torch.randn(self.world_model.latent_height, self.world_model.latent_width, self.latent_dim)
             )
 
     def forward(self, batch: VideoActionBatch, *args, **kwargs) -> dict[str, Tensor]:
@@ -333,9 +332,7 @@ class LatentWorldModel(nn.Module):
         if noise_level is not None:
             # update streaming kv cache
             # add noise on last frame
-            current_tau = (1 - noise_level) * torch.ones(
-                (batch_size, 1, 1, 1, 1), device=device, dtype=z_t.dtype
-            )
+            current_tau = (1 - noise_level) * torch.ones((batch_size, 1, 1, 1, 1), device=device, dtype=z_t.dtype)
             current_z_t = current_tau * z_t[:, -1:] + (1 - current_tau) * torch.randn_like(z_t[:, -1:])
             current_z_t = current_z_t.to(dtype=z_t.dtype)
             _, last_kv_cache = self.world_model(
@@ -383,8 +380,7 @@ class LatentWorldModel(nn.Module):
             )
         if n_context_frames < 1 or n_context_frames >= self.config.video.timesteps:
             raise ValueError(
-                f"n_context_frames ({n_context_frames}) must be in [1, video.timesteps="
-                f"{self.config.video.timesteps})."
+                f"n_context_frames ({n_context_frames}) must be in [1, video.timesteps={self.config.video.timesteps})."
             )
         self.config.n_context_frames = n_context_frames
         self.n_context_frames = n_context_frames
@@ -592,9 +588,7 @@ class LatentWorldModel(nn.Module):
 
         # Load via OmegaConf (already a dependency) so the config's ${..} interpolations resolve.
         config_raw = OmegaConf.load(config_path)
-        config = LatentWorldModelConfig.model_validate(
-            _config_dict_from_yaml(config_raw.model.architecture.config)
-        )
+        config = LatentWorldModelConfig.model_validate(_config_dict_from_yaml(config_raw.model.architecture.config))
         model = cls(config)
         model.to(device)
 

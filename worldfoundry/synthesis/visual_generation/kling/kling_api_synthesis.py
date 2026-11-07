@@ -23,7 +23,7 @@ class KlingApiSynthesis(ApiVideoSynthesis):
         negative_prompt: Optional[str] = None,
         callback_url: Optional[str] = None,
         external_task_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         payload = self._payload(
             input_prompt=input_prompt,
@@ -49,7 +49,7 @@ class KlingApiSynthesis(ApiVideoSynthesis):
         negative_prompt: Optional[str] = None,
         callback_url: Optional[str] = None,
         external_task_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         payload = self._payload(
             input_prompt=input_prompt,
@@ -76,7 +76,7 @@ class KlingApiSynthesis(ApiVideoSynthesis):
         negative_prompt: Optional[str],
         callback_url: Optional[str],
         external_task_id: Optional[str],
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Build the request body shared by the text and image generation routes."""
         payload: Dict[str, Any] = {
@@ -109,7 +109,7 @@ class KlingApiSynthesis(ApiVideoSynthesis):
         negative_prompt: Optional[str] = None,
         callback_url: Optional[str] = None,
         external_task_id: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         prompt = processed_data.get("prompt", "")
         image_payload = processed_data.get("image_payload")

@@ -136,8 +136,12 @@ class FantasyWorldWan22Synthesis(BaseSynthesis):
 
         # Determine the specific paths for high and low noise model checkpoints.
         # If not provided, default to paths within the resolved checkpoint_dir.
-        high_ckpt = Path(model_ckpt_high).expanduser().resolve() if model_ckpt_high else checkpoint_dir / "high_noise_model.pth"
-        low_ckpt = Path(model_ckpt_low).expanduser().resolve() if model_ckpt_low else checkpoint_dir / "low_noise_model.pth"
+        high_ckpt = (
+            Path(model_ckpt_high).expanduser().resolve() if model_ckpt_high else checkpoint_dir / "high_noise_model.pth"
+        )
+        low_ckpt = (
+            Path(model_ckpt_low).expanduser().resolve() if model_ckpt_low else checkpoint_dir / "low_noise_model.pth"
+        )
 
         # Validate that the necessary checkpoint files exist.
         if not high_ckpt.is_file():

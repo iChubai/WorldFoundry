@@ -38,6 +38,7 @@ def _flash_attn_varlen_v3_compat(**kwargs):
         kwargs.setdefault("seqused_k", None)
     return flash_attn_varlen_func_v3(**kwargs)
 
+
 try:
     from .moe_pack_kernels import reorder_tokens_triton_pack
     from .moe_restore_kernels import restore_tokens_triton
@@ -106,10 +107,7 @@ def _all_to_all_split_cat(
     group: dist.ProcessGroup,
 ) -> torch.Tensor:
     world_size = dist.get_world_size(group)
-    input_list = [
-        tensor.contiguous()
-        for tensor in torch.tensor_split(local_input, world_size, scatter_dim)
-    ]
+    input_list = [tensor.contiguous() for tensor in torch.tensor_split(local_input, world_size, scatter_dim)]
     output_list = [torch.empty_like(input_list[0]) for _ in range(world_size)]
     dist.all_to_all(output_list, input_list, group=group)
     return torch.cat(output_list, dim=gather_dim).contiguous()
@@ -153,9 +151,7 @@ class LingBotVideoRotaryEmbedding(nn.Module):
     def precompute_freqs_cis(dim: Tuple[int, ...], end: Tuple[int, ...], theta: float):
         freqs_cis = []
         for d, e in zip(dim, end):
-            freqs = 1.0 / (
-                theta ** (torch.arange(0, d, 2, dtype=torch.float64, device="cpu") / d)
-            )
+            freqs = 1.0 / (theta ** (torch.arange(0, d, 2, dtype=torch.float64, device="cpu") / d))
             timestep = torch.arange(e, device=freqs.device, dtype=torch.float64)
             freqs = torch.outer(timestep, freqs).float()
             freqs_cis.append(torch.polar(torch.ones_like(freqs), freqs).to(torch.complex64))
@@ -170,9 +166,7 @@ class LingBotVideoRotaryEmbedding(nn.Module):
             for i in range(len(self.axes_lens)):
                 if max_vals[i] >= self.axes_lens[i]:
                     self.axes_lens[i] = int(max_vals[i] * 1.5) + 1
-            self.freqs_cis = self.precompute_freqs_cis(
-                self.axes_dims, tuple(self.axes_lens), theta=self.theta
-            )
+            self.freqs_cis = self.precompute_freqs_cis(self.axes_dims, tuple(self.axes_lens), theta=self.theta)
             self.freqs_cis = [freqs_cis.to(device) for freqs_cis in self.freqs_cis]
         elif self.freqs_cis[0].device != device:
             self.freqs_cis = [freqs_cis.to(device) for freqs_cis in self.freqs_cis]
@@ -180,9 +174,7 @@ class LingBotVideoRotaryEmbedding(nn.Module):
         return torch.cat([self.freqs_cis[i][position_ids[:, i]] for i in range(len(self.axes_dims))], dim=-1)
 
 
-def make_joint_position_ids(
-    text_len: int, grid_t: int, grid_h: int, grid_w: int, device: torch.device
-) -> torch.Tensor:
+def make_joint_position_ids(text_len: int, grid_t: int, grid_h: int, grid_w: int, device: torch.device) -> torch.Tensor:
     """3D positions in [video; text] order. Text t-axis is 1..text_len; video t-axis starts at text_len+1.
 
     Matches patchify_and_embed: cap start (1,0,0); vision start (cap_len+1,0,0);
@@ -193,9 +185,7 @@ def make_joint_position_ids(
     ww = torch.arange(grid_w, device=device, dtype=torch.int32)
     grid = torch.stack(torch.meshgrid(tt, hh, ww, indexing="ij"), dim=-1).flatten(0, 2)
     text_t = torch.arange(text_len, device=device, dtype=torch.int32) + 1
-    text_pos = torch.stack(
-        [text_t, torch.zeros_like(text_t), torch.zeros_like(text_t)], dim=-1
-    )
+    text_pos = torch.stack([text_t, torch.zeros_like(text_t), torch.zeros_like(text_t)], dim=-1)
     return torch.cat([grid, text_pos], dim=0)  # (Nx + L, 3)
 
 
@@ -354,8 +344,7 @@ class LingBotVideoRouter(nn.Module):
     weights gather the bias-free score.
     """
 
-    def __init__(self, hidden_size, num_experts, top_k, score_func, norm_topk_prob,
-                 n_group, topk_group, route_scale):
+    def __init__(self, hidden_size, num_experts, top_k, score_func, norm_topk_prob, n_group, topk_group, route_scale):
         super().__init__()
         self.num_experts = num_experts
         self.top_k = top_k
@@ -375,11 +364,7 @@ class LingBotVideoRouter(nn.Module):
         group_idx = torch.topk(group_scores, k=self.topk_group, dim=-1, sorted=False)[1]
         group_mask = torch.zeros_like(group_scores)
         group_mask.scatter_(1, group_idx, 1)
-        score_mask = (
-            group_mask.unsqueeze(-1)
-            .expand(seq_len, self.n_group, experts_per_group)
-            .reshape(seq_len, -1)
-        )
+        score_mask = group_mask.unsqueeze(-1).expand(seq_len, self.n_group, experts_per_group).reshape(seq_len, -1)
         masked = scores_for_choice.masked_fill(~score_mask.bool(), float("-inf"))
         return torch.topk(masked, k=self.top_k, dim=-1, sorted=False)[1]
 
@@ -418,15 +403,32 @@ def _round_up_to_multiple(value: int, multiple: int) -> int:
 
 
 class LingBotVideoSparseMoeBlock(nn.Module):
-    def __init__(self, hidden_size, intermediate_size, num_experts, top_k,
-                 moe_intermediate_size, score_func, norm_topk_prob, n_group, topk_group,
-                 routed_scaling_factor, n_shared_experts):
+    def __init__(
+        self,
+        hidden_size,
+        intermediate_size,
+        num_experts,
+        top_k,
+        moe_intermediate_size,
+        score_func,
+        norm_topk_prob,
+        n_group,
+        topk_group,
+        routed_scaling_factor,
+        n_shared_experts,
+    ):
         super().__init__()
         self.hidden_size = hidden_size
         self.num_experts = num_experts
         self.router = LingBotVideoRouter(
-            hidden_size, num_experts, top_k, score_func, norm_topk_prob,
-            n_group, topk_group, routed_scaling_factor,
+            hidden_size,
+            num_experts,
+            top_k,
+            score_func,
+            norm_topk_prob,
+            n_group,
+            topk_group,
+            routed_scaling_factor,
         )
         self.experts = LingBotVideoGroupedExperts(num_experts, hidden_size, moe_intermediate_size)
         self._sglang_w13_cache: Optional[torch.Tensor] = None
@@ -435,9 +437,7 @@ class LingBotVideoSparseMoeBlock(nn.Module):
         self._sglang_fp8_cache_key = None
         self.shared_experts = None
         if n_shared_experts is not None and n_shared_experts > 0:
-            self.shared_experts = LingBotVideoMLP(
-                hidden_size, moe_intermediate_size * n_shared_experts
-            )
+            self.shared_experts = LingBotVideoMLP(hidden_size, moe_intermediate_size * n_shared_experts)
 
     @staticmethod
     def _reorder_tokens(tokens: torch.Tensor, top_scores: torch.Tensor, top_indices: torch.Tensor, num_experts: int):
@@ -445,10 +445,7 @@ class LingBotVideoSparseMoeBlock(nn.Module):
         if backend in {"triton_pack", "pack", "triton"}:
             return reorder_tokens_triton_pack(tokens, top_scores, top_indices, num_experts)
         if backend not in {"sort", "argsort", "default"}:
-            raise ValueError(
-                f"Unsupported LINGBOT_MOE_REORDER_BACKEND={backend!r}; "
-                "expected sort or triton_pack"
-            )
+            raise ValueError(f"Unsupported LINGBOT_MOE_REORDER_BACKEND={backend!r}; expected sort or triton_pack")
         num_tokens = tokens.shape[0]
         top_k = top_indices.shape[1]
         flat_scores = top_scores.reshape(-1)
@@ -473,23 +470,19 @@ class LingBotVideoSparseMoeBlock(nn.Module):
         max_len = _round_up_to_multiple(num_tokens + num_experts * align, align)
         counts_i64 = counts.to(torch.int64)
         total_per_expert = torch.clamp_min(counts_i64, align)
-        aligned_counts = (
-            (total_per_expert + align - 1) // align * align
-        ).to(torch.int32)
+        aligned_counts = ((total_per_expert + align - 1) // align * align).to(torch.int32)
         write_offsets = torch.cumsum(aligned_counts, dim=0) - aligned_counts
         start_indices = torch.cumsum(counts_i64, dim=0) - counts_i64
 
         fill_value = num_tokens
-        permuted_indices = torch.full(
-            (max_len,), fill_value, dtype=torch.int64, device=tokens.device
-        )
+        permuted_indices = torch.full((max_len,), fill_value, dtype=torch.int64, device=tokens.device)
         for expert_idx in range(num_experts):
             length = int(counts_i64[expert_idx].item())
             if length == 0:
                 continue
             write_start = int(write_offsets[expert_idx].item())
             start = int(start_indices[expert_idx].item())
-            permuted_indices[write_start:write_start + length] = torch.arange(
+            permuted_indices[write_start : write_start + length] = torch.arange(
                 start, start + length, device=tokens.device, dtype=torch.int64
             )
 
@@ -535,9 +528,7 @@ class LingBotVideoSparseMoeBlock(nn.Module):
             return LingBotVideoSparseMoeBlock._pad_grouped_tokens_loop(tokens, counts, align)
         if backend in {"vectorized", "torch"}:
             return LingBotVideoSparseMoeBlock._pad_grouped_tokens_vectorized(tokens, counts, align)
-        raise ValueError(
-            f"Unsupported LINGBOT_MOE_PAD_BACKEND={backend!r}; expected loop or vectorized"
-        )
+        raise ValueError(f"Unsupported LINGBOT_MOE_PAD_BACKEND={backend!r}; expected loop or vectorized")
 
     @staticmethod
     def _unpad_grouped_tokens(output: torch.Tensor, input_shape: torch.Size, permuted_indices: torch.Tensor):
@@ -811,9 +802,7 @@ class LingBotVideoSparseMoeBlock(nn.Module):
             )
             unsorted[sorted_positions] = expert_output[:, start:end]
             unsorted = unsorted.reshape(num_tokens, top_k, end - start)
-            output[:, start:end] = (unsorted.float() * scores_unsorted).sum(dim=1).to(
-                expert_output.dtype
-            )
+            output[:, start:end] = (unsorted.float() * scores_unsorted).sum(dim=1).to(expert_output.dtype)
         return output
 
     @staticmethod
@@ -915,19 +904,22 @@ class LingBotVideoBlock(nn.Module):
         h = hidden_size
         self.scale_shift_table = nn.Parameter(torch.zeros(1, 6 * h))
         self.norm1 = LingBotVideoRMSNorm(h, norm_eps)
-        self.attn = LingBotVideoAttention(
-            h, num_attention_heads, norm_eps, qkv_bias, out_bias
-        )
+        self.attn = LingBotVideoAttention(h, num_attention_heads, norm_eps, qkv_bias, out_bias)
         self.norm_post_attn = LingBotVideoRMSNorm(h, norm_eps)
         self.norm2 = LingBotVideoRMSNorm(h, norm_eps)
         # Sparsity decision matches MoEBlock: mlp_only_layers + decoder_sparse_step + num_experts
-        if layer_idx not in mlp_only_layers and (
-            num_experts > 0 and (layer_idx + 1) % decoder_sparse_step == 0
-        ):
+        if layer_idx not in mlp_only_layers and (num_experts > 0 and (layer_idx + 1) % decoder_sparse_step == 0):
             self.ffn = LingBotVideoSparseMoeBlock(
-                h, intermediate_size, num_experts, num_experts_per_tok,
-                moe_intermediate_size, score_func, norm_topk_prob,
-                n_group, topk_group, routed_scaling_factor,
+                h,
+                intermediate_size,
+                num_experts,
+                num_experts_per_tok,
+                moe_intermediate_size,
+                score_func,
+                norm_topk_prob,
+                n_group,
+                topk_group,
+                routed_scaling_factor,
                 n_shared_experts,
             )
         else:
@@ -1051,13 +1043,9 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
         assert head_dim == sum(axes_dims), f"head_dim {head_dim} != sum(axes_dims) {sum(axes_dims)}"
         mlp_only_layers = tuple(mlp_only_layers)
 
-        self.patch_embedder = nn.Linear(
-            in_channels * math.prod(patch_size), hidden_size, bias=patch_embed_bias
-        )
+        self.patch_embedder = nn.Linear(in_channels * math.prod(patch_size), hidden_size, bias=patch_embed_bias)
         self.time_proj = Timesteps(freq_dim, flip_sin_to_cos=True, downscale_freq_shift=0)
-        self.time_embedder = TimestepEmbedding(
-            freq_dim, hidden_size, act_fn="silu", sample_proj_bias=timestep_mlp_bias
-        )
+        self.time_embedder = TimestepEmbedding(freq_dim, hidden_size, act_fn="silu", sample_proj_bias=timestep_mlp_bias)
         self.time_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 6 * hidden_size))
         self.text_embedder = LingBotVideoTextEmbedder(text_dim, hidden_size)
         self.rope = LingBotVideoRotaryEmbedding(axes_dims, axes_lens, rope_theta)
@@ -1112,9 +1100,9 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
 
     def forward(
         self,
-        hidden_states: torch.Tensor,             # (B, C, T, H, W)
-        timestep: torch.Tensor,                  # (B,) ∈ [0, 1000](= sigma*1000)
-        encoder_hidden_states: torch.Tensor,     # (B, L, text_dim)
+        hidden_states: torch.Tensor,  # (B, C, T, H, W)
+        timestep: torch.Tensor,  # (B,) ∈ [0, 1000](= sigma*1000)
+        encoder_hidden_states: torch.Tensor,  # (B, L, text_dim)
         encoder_attention_mask: Optional[torch.Tensor] = None,  # (B, L) 1=valid
         return_dict: bool = True,
     ):
@@ -1149,8 +1137,7 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
 
         if packed_batch:
             text_parts = [
-                self.text_embedder(encoder_hidden_states[i : i + 1, : text_lens_list[i], :])
-                for i in range(B)
+                self.text_embedder(encoder_hidden_states[i : i + 1, : text_lens_list[i], :]) for i in range(B)
             ]
             text = torch.cat(text_parts, dim=1)
             joint = _cat_interleave(
@@ -1165,10 +1152,7 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
         joint_seq_len = joint.shape[1]
 
         # Per-sample RoPE: video t-axis start = real text length of this sample + 1
-        rotary_parts = [
-            self.rope(make_joint_position_ids(text_lens_list[i], gt, gh, gw, device))
-            for i in range(B)
-        ]
+        rotary_parts = [self.rope(make_joint_position_ids(text_lens_list[i], gt, gh, gw, device)) for i in range(B)]
         if packed_batch:
             rotary = torch.cat(rotary_parts, dim=0).unsqueeze(0)
         else:
@@ -1195,11 +1179,10 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
             has_padding = False
         if has_padding:
             key_mask = torch.cat(
-                [torch.ones(B, n_video, dtype=torch.bool, device=device),
-                 encoder_attention_mask.bool()],
+                [torch.ones(B, n_video, dtype=torch.bool, device=device), encoder_attention_mask.bool()],
                 dim=1,
             )
-            attention_mask = key_mask[:, None, None, :]      # (B,1,1,S) → SDPA broadcast
+            attention_mask = key_mask[:, None, None, :]  # (B,1,1,S) → SDPA broadcast
             moe_padding_mask = key_mask.reshape(-1).float()  # (B*S,)
         packed_cp = packed_indices is not None and parallel_config is not None
         padding_size = 0
@@ -1251,13 +1234,10 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
 
         timestep_for_embed = timestep.float()
         timestep_proj = self.time_proj(timestep_for_embed)
-        t_emb = self.time_embedder(timestep_proj)                            # (B, D)
+        t_emb = self.time_embedder(timestep_proj)  # (B, D)
         if packed_batch:
             temb_input = torch.cat(
-                [
-                    t_emb[i : i + 1].unsqueeze(1).expand(1, n_video + text_lens_list[i], -1)
-                    for i in range(B)
-                ],
+                [t_emb[i : i + 1].unsqueeze(1).expand(1, n_video + text_lens_list[i], -1) for i in range(B)],
                 dim=1,
             )
             if padding_size:
@@ -1277,9 +1257,9 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
             temb6 = self.time_modulation(temb_input.reshape(joint_seq_len, -1))
             temb6 = temb6.reshape(1, joint_seq_len, -1)
         else:
-            temb_input = t_emb.unsqueeze(1).expand(B, joint_seq_len, -1)       # (B, S, D)
+            temb_input = t_emb.unsqueeze(1).expand(B, joint_seq_len, -1)  # (B, S, D)
             temb6 = self.time_modulation(temb_input.reshape(B * joint_seq_len, -1))
-            temb6 = temb6.reshape(B, joint_seq_len, -1)                        # (B, S, 6D)
+            temb6 = temb6.reshape(B, joint_seq_len, -1)  # (B, S, 6D)
 
         joint = self.cp_joint(joint)
         rotary = self.cp_rotary(rotary)

@@ -3,6 +3,7 @@
 This module converts event videos into event point clouds and supports
 projection of those point clouds into arbitrary camera views.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

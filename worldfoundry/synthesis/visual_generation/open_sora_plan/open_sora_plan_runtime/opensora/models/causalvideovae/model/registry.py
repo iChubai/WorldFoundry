@@ -6,6 +6,7 @@ class ModelRegistry:
         def decorator(model_class):
             cls._models[model_name] = model_class
             return model_class
+
         return decorator
 
     @classmethod

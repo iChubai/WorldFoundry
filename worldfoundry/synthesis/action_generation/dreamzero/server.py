@@ -32,6 +32,7 @@ from .websocket import PolicyServerConfig
 
 logger = logging.getLogger(__name__)
 
+
 @dataclasses.dataclass
 class Args:
     port: int = 8000
@@ -233,7 +234,7 @@ class ARDroidRoboarenaPolicy:
         data_size = len(serialized)
 
         # Broadcast size first
-        size_tensor = torch.tensor([data_size], dtype=torch.int64, device='cuda')
+        size_tensor = torch.tensor([data_size], dtype=torch.int64, device="cuda")
         dist.broadcast(size_tensor, src=0)
 
         # Broadcast data
@@ -267,7 +268,7 @@ class ARDroidRoboarenaPolicy:
         converted_obs = self._convert_observation(obs)
 
         # Signal workers to continue (0 = continue)
-        signal_tensor = torch.zeros(1, dtype=torch.int32, device='cpu')
+        signal_tensor = torch.zeros(1, dtype=torch.int32, device="cpu")
         dist.broadcast(signal_tensor, src=0, group=self._signal_group)
 
         # Broadcast obs to workers
@@ -317,8 +318,14 @@ class ARDroidRoboarenaPolicy:
                     video_across_time_cat,
                     device=video_across_time_cat.device,
                     tiled=self._policy.trained_model.action_head.tiled,
-                    tile_size=(self._policy.trained_model.action_head.tile_size_height, self._policy.trained_model.action_head.tile_size_width),
-                    tile_stride=(self._policy.trained_model.action_head.tile_stride_height, self._policy.trained_model.action_head.tile_stride_width),
+                    tile_size=(
+                        self._policy.trained_model.action_head.tile_size_height,
+                        self._policy.trained_model.action_head.tile_size_width,
+                    ),
+                    tile_stride=(
+                        self._policy.trained_model.action_head.tile_stride_height,
+                        self._policy.trained_model.action_head.tile_stride_width,
+                    ),
                 )
                 frames = rearrange(frames, "B C T H W -> B T H W C")
                 frames = frames[0]
@@ -335,8 +342,8 @@ class ARDroidRoboarenaPolicy:
                         timestamp = datetime.datetime.now().strftime("%m_%d_%H_%M_%S")
                         num_frames = len(frame_list)
                         n = (num_frames - 1) // 8
-                        output_path = os.path.join(save_dir, f'{len(all_mp4_files):06}_{timestamp}_n{n}.mp4')
-                        imageio.mimsave(output_path, frame_list, fps=5, codec='libx264')
+                        output_path = os.path.join(save_dir, f"{len(all_mp4_files):06}_{timestamp}_n{n}.mp4")
+                        imageio.mimsave(output_path, frame_list, fps=5, codec="libx264")
                         logger.info(f"Saved video on reset to: {output_path}")
             except Exception as e:
                 logger.warning(f"Failed to save video on reset: {e}")
@@ -452,8 +459,6 @@ class WebsocketPolicyServer:
                 logger.warning(f"Failed to save obs key '{key}': {e}")
                 continue
 
-
-
     def serve_forever(self, rank: int = 0) -> None:
         asyncio.run(self.run(rank))
 
@@ -476,7 +481,7 @@ class WebsocketPolicyServer:
     async def _worker_loop(self):
         """Worker loop for non-rank-0 processes to participate in distributed inference."""
         logger.info(f"Worker loop started for rank {dist.get_rank()}")
-        signal_tensor = torch.zeros(1, dtype=torch.int32, device='cpu')
+        signal_tensor = torch.zeros(1, dtype=torch.int32, device="cpu")
         while True:
             try:
                 # Wait for obs broadcast from rank 0
@@ -513,12 +518,12 @@ class WebsocketPolicyServer:
     def _receive_batch_from_rank0(self):
         """Receive batch data from rank 0 using torch.distributed primitives."""
         # Receive the size of the msgpack data first.
-        size_tensor = torch.zeros(1, dtype=torch.int64, device='cuda')
+        size_tensor = torch.zeros(1, dtype=torch.int64, device="cuda")
         dist.broadcast(size_tensor, src=0)
         data_size = size_tensor.item()
 
         # Receive the actual data
-        data_tensor = torch.zeros(data_size, dtype=torch.uint8, device='cuda')
+        data_tensor = torch.zeros(data_size, dtype=torch.uint8, device="cuda")
         dist.broadcast(data_tensor, src=0)
 
         obs = msgpack_numpy.unpackb(data_tensor.cpu().numpy().tobytes())
@@ -530,7 +535,7 @@ class WebsocketPolicyServer:
         data_size = len(serialized)
 
         # Broadcast size first
-        size_tensor = torch.tensor([data_size], dtype=torch.int64, device='cuda')
+        size_tensor = torch.tensor([data_size], dtype=torch.int64, device="cuda")
         dist.broadcast(size_tensor, src=0)
 
         # Broadcast data
@@ -544,7 +549,7 @@ class WebsocketPolicyServer:
         await websocket.send(packer.pack(self._metadata))
 
         prev_total_time = None
-        signal_tensor = torch.zeros(1, dtype=torch.int32, device='cpu')
+        signal_tensor = torch.zeros(1, dtype=torch.int32, device="cpu")
 
         try:
             while True:
@@ -560,7 +565,7 @@ class WebsocketPolicyServer:
 
                     # Signal other ranks to continue (0 = continue)
                     signal_tensor.zero_()
-                    dist.broadcast(signal_tensor, src=0, group=self._signal_group) # <-- USE GLOO GROUP
+                    dist.broadcast(signal_tensor, src=0, group=self._signal_group)  # <-- USE GLOO GROUP
 
                     # Broadcast the obs to all ranks for distributed inference
                     self._broadcast_batch_to_workers(obs)
@@ -588,8 +593,14 @@ class WebsocketPolicyServer:
                             video_across_time_cat,
                             device=video_across_time_cat.device,
                             tiled=self._policy.trained_model.action_head.tiled,
-                            tile_size=(self._policy.trained_model.action_head.tile_size_height, self._policy.trained_model.action_head.tile_size_width),
-                            tile_stride=(self._policy.trained_model.action_head.tile_stride_height, self._policy.trained_model.action_head.tile_stride_width),
+                            tile_size=(
+                                self._policy.trained_model.action_head.tile_size_height,
+                                self._policy.trained_model.action_head.tile_size_width,
+                            ),
+                            tile_stride=(
+                                self._policy.trained_model.action_head.tile_stride_height,
+                                self._policy.trained_model.action_head.tile_stride_width,
+                            ),
                         )
                         frames = rearrange(frames, "B C T H W -> B T H W C")
                         frames = frames[0]
@@ -607,14 +618,20 @@ class WebsocketPolicyServer:
                             timestamp = datetime.datetime.now().strftime("%m_%d_%H_%M_%S")
                             num_frames = len(frame_list)
                             n = (num_frames - 1) // 8  # num_frames = 8n+1, so n = (num_frames-1)/8
-                            output_path = os.path.join(save_dir, f'{len(all_mp4_files):06}_{timestamp}_n{n}.mp4')
-                            imageio.mimsave(output_path, frame_list, fps=5, codec='libx264')
+                            output_path = os.path.join(save_dir, f"{len(all_mp4_files):06}_{timestamp}_n{n}.mp4")
+                            imageio.mimsave(output_path, frame_list, fps=5, codec="libx264")
                             print(f"Saved video to: {output_path}")
                         else:
-                            print(f"Warning: Invalid frame shape {sample_frame.shape}. Expected (H, W, C) with C in [1, 3, 4]. Skipping video save.")
+                            print(
+                                f"Warning: Invalid frame shape {sample_frame.shape}. Expected (H, W, C) with C in [1, 3, 4]. Skipping video save."
+                            )
 
                         self.video_across_time = []
-                    elif self._policy.trained_model.action_head.current_start_frame == 1 + self._policy.trained_model.action_head.num_frame_per_block and len(self.video_across_time) > 1:
+                    elif (
+                        self._policy.trained_model.action_head.current_start_frame
+                        == 1 + self._policy.trained_model.action_head.num_frame_per_block
+                        and len(self.video_across_time) > 1
+                    ):
                         print("current_start_frame == 1 + num_frame_per_block and len(self.video_across_time) > 1")
                         frame_list = []
                         video_across_time_cat = torch.cat(self.video_across_time[:-1], dim=2)
@@ -622,8 +639,14 @@ class WebsocketPolicyServer:
                             video_across_time_cat,
                             device=video_across_time_cat.device,
                             tiled=self._policy.trained_model.action_head.tiled,
-                            tile_size=(self._policy.trained_model.action_head.tile_size_height, self._policy.trained_model.action_head.tile_size_width),
-                            tile_stride=(self._policy.trained_model.action_head.tile_stride_height, self._policy.trained_model.action_head.tile_stride_width),
+                            tile_size=(
+                                self._policy.trained_model.action_head.tile_size_height,
+                                self._policy.trained_model.action_head.tile_size_width,
+                            ),
+                            tile_stride=(
+                                self._policy.trained_model.action_head.tile_stride_height,
+                                self._policy.trained_model.action_head.tile_stride_width,
+                            ),
                         )
                         frames = rearrange(frames, "B C T H W -> B T H W C")
                         frames = frames[0]
@@ -640,11 +663,10 @@ class WebsocketPolicyServer:
                             timestamp = datetime.datetime.now().strftime("%m_%d_%H_%M_%S")
                             num_frames = len(frame_list)
                             n = (num_frames - 1) // 8  # num_frames = 8n+1, so n = (num_frames-1)/8
-                            output_path = os.path.join(save_dir, f'{len(all_mp4_files):06}_{timestamp}_n{n}.mp4')
-                            imageio.mimsave(output_path, frame_list, fps=5, codec='libx264')
+                            output_path = os.path.join(save_dir, f"{len(all_mp4_files):06}_{timestamp}_n{n}.mp4")
+                            imageio.mimsave(output_path, frame_list, fps=5, codec="libx264")
                             print(f"Saved video to: {output_path}")
                         self.video_across_time = [video_chunk]
-
 
                     def batch_to_dict(batch):
                         out = {}
@@ -653,6 +675,7 @@ class WebsocketPolicyServer:
                                 continue
                             out[k] = getattr(batch, k)
                         return out
+
                     action_chunk_dict = batch_to_dict(action_chunk_dict)
                     await websocket.send(packer.pack(action_chunk_dict))
 
@@ -665,8 +688,14 @@ class WebsocketPolicyServer:
                             video_across_time_cat,
                             device=video_across_time_cat.device,
                             tiled=self._policy.trained_model.action_head.tiled,
-                            tile_size=(self._policy.trained_model.action_head.tile_size_height, self._policy.trained_model.action_head.tile_size_width),
-                            tile_stride=(self._policy.trained_model.action_head.tile_stride_height, self._policy.trained_model.action_head.tile_stride_width),
+                            tile_size=(
+                                self._policy.trained_model.action_head.tile_size_height,
+                                self._policy.trained_model.action_head.tile_size_width,
+                            ),
+                            tile_stride=(
+                                self._policy.trained_model.action_head.tile_stride_height,
+                                self._policy.trained_model.action_head.tile_stride_width,
+                            ),
                         )
                         frames = rearrange(frames, "B C T H W -> B T H W C")
                         frames = frames[0]
@@ -684,11 +713,13 @@ class WebsocketPolicyServer:
                             timestamp = datetime.datetime.now().strftime("%m_%d_%H_%M_%S")
                             num_frames = len(frame_list)
                             n = (num_frames - 1) // 8  # num_frames = 8n+1, so n = (num_frames-1)/8
-                            output_path = os.path.join(save_dir, f'{len(all_mp4_files):06}_{timestamp}_n{n}.mp4')
-                            imageio.mimsave(output_path, frame_list, fps=5, codec='libx264')
+                            output_path = os.path.join(save_dir, f"{len(all_mp4_files):06}_{timestamp}_n{n}.mp4")
+                            imageio.mimsave(output_path, frame_list, fps=5, codec="libx264")
                             print(f"Saved video to: {output_path}")
                         else:
-                            print(f"Warning: Invalid frame shape {sample_frame.shape}. Expected (H, W, C) with C in [1, 3, 4]. Skipping video save.")
+                            print(
+                                f"Warning: Invalid frame shape {sample_frame.shape}. Expected (H, W, C) with C in [1, 3, 4]. Skipping video save."
+                            )
 
                     self.video_across_time = []
                     break
@@ -719,12 +750,13 @@ def init_mesh() -> DeviceMesh:
 
     mesh = init_device_mesh(
         device_type="cuda",
-        mesh_shape=(world_size, ),
-        mesh_dim_names=("ip", ),
+        mesh_shape=(world_size,),
+        mesh_dim_names=("ip",),
     )
     print(f"Rank {rank}/{world_size} (PID: {os.getpid()}) using device {device}")
 
     return mesh
+
 
 def _health_check(connection: _server.ServerConnection, request: _server.Request) -> _server.Response | None:
     if request.path == "/healthz":
@@ -823,7 +855,6 @@ def main(args: Args) -> None:
             signal_group=signal_group,
         )
         asyncio.run(server._worker_loop())
-
 
 
 if __name__ == "__main__":

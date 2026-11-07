@@ -45,6 +45,8 @@ EXAMPLE_DOC_STRING = """
         pass
         ```
 """
+
+
 @dataclass
 class WanPipelineOutput(BaseOutput):
     r"""
@@ -173,9 +175,19 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
         # Return trimmed embeddings based on actual sequence lengths
         return [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
+
     def prepare_latents(
-        self, batch_size, num_channels_latents, num_frames, height, width, dtype, device, generator,
-        latents=None, num_length_latents=None
+        self,
+        batch_size,
+        num_channels_latents,
+        num_frames,
+        height,
+        width,
+        dtype,
+        device,
+        generator,
+        latents=None,
+        num_length_latents=None,
     ):
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -187,9 +199,9 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             batch_size,
             num_channels_latents,
             (
-            (num_frames - 1) // self.vae.temporal_compression_ratio + 1
-            if num_length_latents is None
-            else num_length_latents
+                (num_frames - 1) // self.vae.temporal_compression_ratio + 1
+                if num_length_latents is None
+                else num_length_latents
             ),
             height // self.vae.spatial_compression_ratio,
             width // self.vae.spatial_compression_ratio,
@@ -288,7 +300,9 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             if refs is not None:
                 ref_latent = self._vae_encode_mode(vae, refs)
                 # Pad reference latent with zeros for non-reference control frames
-                ref_latent = [torch.cat([u] + [torch.zeros_like(u)] * (len(multi_frames)-1), dim=0) for u in ref_latent]
+                ref_latent = [
+                    torch.cat([u] + [torch.zeros_like(u)] * (len(multi_frames) - 1), dim=0) for u in ref_latent
+                ]
                 assert all([x.shape[1] == 1 for x in ref_latent])
                 latent = torch.cat([*ref_latent, latent], dim=1)
             cat_latents.append(latent)
@@ -322,18 +336,14 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
             # Reshape mask to separate patch dimensions (depth, height, 8, width, 8)
             mask = mask[0, :, :, :]
-            mask = mask.view(
-                depth, height, vae_stride[1], width, vae_stride[1]
-            )  # depth, height, 8, width, 8
+            mask = mask.view(depth, height, vae_stride[1], width, vae_stride[1])  # depth, height, 8, width, 8
             # Permute to group patch dimensions: (8, 8, depth, height, width)
             mask = mask.permute(2, 4, 0, 1, 3)  # 8, 8, depth, height, width
             # Flatten patch dimensions: (8*8, depth, height, width)
-            mask = mask.reshape(
-                vae_stride[1] * vae_stride[2], depth, height, width
-            )  # 8*8, depth, height, width
+            mask = mask.reshape(vae_stride[1] * vae_stride[2], depth, height, width)  # 8*8, depth, height, width
 
             # Interpolate to target latent dimensions
-            mask = F.interpolate(mask.unsqueeze(0), size=(new_depth, height, width), mode='nearest-exact').squeeze(0)
+            mask = F.interpolate(mask.unsqueeze(0), size=(new_depth, height, width), mode="nearest-exact").squeeze(0)
 
             # Add reference image padding if provided
             if refs is not None:
@@ -383,7 +393,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
                 # Encode to latent space using VAE
                 control_bs = self._vae_encode_mode(self.vae, control_bs)
                 new_control.append(control_bs)
-            control = torch.cat(new_control, dim = 0)
+            control = torch.cat(new_control, dim=0)
 
         if control_image is not None:
             control_image = control_image.to(device=device, dtype=dtype)
@@ -393,11 +403,9 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             for i in range(0, control_image.shape[0], bs):
                 control_pixel_values_bs = control_image[i : i + bs]
                 # Encode to latent space using VAE
-                control_pixel_values_bs = self._vae_encode_mode(
-                    self.vae, control_pixel_values_bs
-                )
+                control_pixel_values_bs = self._vae_encode_mode(self.vae, control_pixel_values_bs)
                 new_control_pixel_values.append(control_pixel_values_bs)
-            control_image_latents = torch.cat(new_control_pixel_values, dim = 0)
+            control_image_latents = torch.cat(new_control_pixel_values, dim=0)
         else:
             control_image_latents = None
 
@@ -411,6 +419,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloa16
         frames = frames.cpu().float().numpy()
         return frames
+
     def check_inputs(
         self,
         prompt,
@@ -427,10 +436,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         if callback_on_step_end_tensor_inputs is not None and not all(
             k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
         ):
-            invalid_inputs = [
-                k for k in callback_on_step_end_tensor_inputs
-                if k not in self._callback_tensor_inputs
-            ]
+            invalid_inputs = [k for k in callback_on_step_end_tensor_inputs if k not in self._callback_tensor_inputs]
             raise ValueError(
                 f"`callback_on_step_end_tensor_inputs` has to be in {self._callback_tensor_inputs}, "
                 f"but found {invalid_inputs}"
@@ -515,7 +521,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         max_sequence_length: int = 512,
         comfyui_progressbar: bool = False,
         shift: int = 5,
-        geoada_context_scale: float = 1.0
+        geoada_context_scale: float = 1.0,
     ) -> Union[WanPipelineOutput, Tuple]:
         """
         Function invoked when calling the pipeline for generation.
@@ -591,6 +597,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         self._num_timesteps = len(timesteps)
         if comfyui_progressbar:
             from comfy.utils import ProgressBar
+
             pbar = ProgressBar(num_inference_steps + 2)
 
         latent_channels = self.vae.config.latent_channels
@@ -602,9 +609,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         if mask_video is not None:
             bs, _, video_length, height, width = mask_video.size()
             mask_condition = self.mask_processor.preprocess(
-                rearrange(mask_video, "b c f h w -> (b f) c h w"),
-                height=height,
-                width=width
+                rearrange(mask_video, "b c f h w -> (b f) c h w"), height=height, width=width
             )
             mask_condition = mask_condition.to(dtype=torch.float32)
             mask_condition = rearrange(mask_condition, "(b f) c h w -> b c f h w", f=video_length)
@@ -617,9 +622,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             for cv in control_video:
                 # Preprocess and convert to latent dtype
                 cv_processed = self.image_processor.preprocess(
-                    rearrange(cv, "b c f h w -> (b f) c h w"),
-                    height=height,
-                    width=width
+                    rearrange(cv, "b c f h w -> (b f) c h w"), height=height, width=width
                 )
                 cv_processed = cv_processed.to(dtype=torch.float32)
                 cv_processed = rearrange(cv_processed, "(b f) c h w -> b c f h w", f=video_length)
@@ -630,14 +633,12 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         elif video is not None:
             video_length = video.shape[2]
             init_video = self.image_processor.preprocess(
-                rearrange(video, "b c f h w -> (b f) c h w"),
-                height=height,
-                width=width
+                rearrange(video, "b c f h w -> (b f) c h w"), height=height, width=width
             )
             init_video = init_video.to(dtype=torch.float32)
-            init_video = rearrange(
-                init_video, "(b f) c h w -> b c f h w", f=video_length
-            ).to(dtype=weight_dtype, device=device)
+            init_video = rearrange(init_video, "(b f) c h w -> b c f h w", f=video_length).to(
+                dtype=weight_dtype, device=device
+            )
 
             # Apply mask to zero out regions that should be generated
             input_video = init_video * (mask_condition < 0.5)
@@ -647,9 +648,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         if subject_ref_images is not None:
             video_length = subject_ref_images.shape[2]
             subject_ref_images = self.image_processor.preprocess(
-                rearrange(subject_ref_images, "b c f h w -> (b f) c h w"),
-                height=height,
-                width=width
+                rearrange(subject_ref_images, "b c f h w -> (b f) c h w"), height=height, width=width
             )
             subject_ref_images = subject_ref_images.to(dtype=torch.float32)
             subject_ref_images = rearrange(subject_ref_images, "(b f) c h w -> b c f h w", f=video_length)
@@ -661,7 +660,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             for i in range(bs):
                 new_subject_ref_images.append([])
                 for j in range(f):
-                    new_subject_ref_images[i].append(subject_ref_images[i, :, j:j+1])
+                    new_subject_ref_images[i].append(subject_ref_images[i, :, j : j + 1])
             subject_ref_images = new_subject_ref_images
 
         # Encode control videos and masks to latent space for GeoAda
@@ -682,7 +681,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             device,
             generator,
             latents,
-            num_length_latents=geoada_latents[0].size(1)
+            num_length_latents=geoada_latents[0].size(1),
         )
 
         # 6. Prepare extra step kwargs for scheduler (e.g., eta for DDIM, generator)
@@ -717,9 +716,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
                 # Duplicate GeoAda context for classifier-free guidance
                 geoada_context_input = (
-                    torch.stack(geoada_context * 2)
-                    if do_classifier_free_guidance
-                    else geoada_context
+                    torch.stack(geoada_context * 2) if do_classifier_free_guidance else geoada_context
                 )
 
                 # Broadcast timestep to batch dimension in ONNX/Core ML compatible way
@@ -733,7 +730,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
                         t=timestep,
                         geoada_context=geoada_context_input,
                         seq_len=seq_len,
-                        geoada_context_scale=geoada_context_scale
+                        geoada_context_scale=geoada_context_scale,
                     )
 
                 # Apply classifier-free guidance to noise prediction

@@ -68,9 +68,7 @@ class InternVLAA1Config:
             max_state_dim=int(values["max_state_dim"]),
             max_action_dim=int(values["max_action_dim"]),
             num_inference_steps=int(
-                num_inference_steps
-                if num_inference_steps is not None
-                else values["num_inference_steps"]
+                num_inference_steps if num_inference_steps is not None else values["num_inference_steps"]
             ),
             time_sampling_beta_alpha=float(values["time_sampling_beta_alpha"]),
             time_sampling_beta_beta=float(values["time_sampling_beta_beta"]),

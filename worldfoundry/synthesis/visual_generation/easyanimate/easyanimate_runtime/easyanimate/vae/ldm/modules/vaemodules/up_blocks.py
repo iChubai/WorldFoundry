@@ -4,8 +4,7 @@ import torch.nn as nn
 from .attention import SpatialAttention, TemporalAttention
 from .common import ResidualBlock3D
 from .gc_block import GlobalContextBlock
-from .upsamplers import (SpatialTemporalUpsampler3D, SpatialUpsampler3D,
-                         TemporalUpsampler3D)
+from .upsamplers import SpatialTemporalUpsampler3D, SpatialUpsampler3D, TemporalUpsampler3D
 
 
 def get_up_block(

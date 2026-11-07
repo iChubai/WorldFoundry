@@ -346,7 +346,9 @@ class LingBotVASynthesis(ActionModelSynthesis):
             save_root=save_root,
         )
         # Determine the server wait timeout, capped at 900 seconds (15 minutes).
-        wait_timeout_seconds = int(runtime_options.get("server_wait_timeout_seconds") or min(int(timeout_seconds or 900), 900))
+        wait_timeout_seconds = int(
+            runtime_options.get("server_wait_timeout_seconds") or min(int(timeout_seconds or 900), 900)
+        )
         # Check if the server should be automatically started.
         auto_start_server = bool(runtime_options.get("start_server", runtime_options.get("auto_start_server", True)))
         # Read the transformer attention mode from the checkpoint directory.
@@ -385,7 +387,9 @@ class LingBotVASynthesis(ActionModelSynthesis):
             },
         }
         # Write the plan payload to a JSON file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         if plan_only:
             # If plan_only is true, return the plan details without performing inference.

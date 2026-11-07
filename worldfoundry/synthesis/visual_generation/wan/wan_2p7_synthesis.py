@@ -23,7 +23,7 @@ class Wan2p7Synthesis(DashScopeVideoSynthesis):
         prompt_extend: bool = True,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit an image-to-video task.
 
@@ -62,7 +62,7 @@ class Wan2p7Synthesis(DashScopeVideoSynthesis):
         prompt_extend: bool = True,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a generation task.
 

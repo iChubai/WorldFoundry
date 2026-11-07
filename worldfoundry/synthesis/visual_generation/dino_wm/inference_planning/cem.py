@@ -68,12 +68,8 @@ class CEMPlanner(BasePlanner):
         Returns:
             actions: (B, T, action_dim) torch.Tensor, T <= self.horizon
         """
-        trans_obs_0 = move_to_device(
-            self.preprocessor.transform_obs(obs_0), self.device
-        )
-        trans_obs_g = move_to_device(
-            self.preprocessor.transform_obs(obs_g), self.device
-        )
+        trans_obs_0 = move_to_device(self.preprocessor.transform_obs(obs_0), self.device)
+        trans_obs_g = move_to_device(self.preprocessor.transform_obs(obs_g), self.device)
         z_obs_g = self.wm.encode_obs(trans_obs_g)
 
         mu, sigma = self.init_mu_sigma(obs_0, actions)
@@ -85,22 +81,15 @@ class CEMPlanner(BasePlanner):
             losses = []
             for traj in range(n_evals):
                 cur_trans_obs_0 = {
-                    key: repeat(
-                        arr[traj].unsqueeze(0), "1 ... -> n ...", n=self.num_samples
-                    )
+                    key: repeat(arr[traj].unsqueeze(0), "1 ... -> n ...", n=self.num_samples)
                     for key, arr in trans_obs_0.items()
                 }
                 cur_z_obs_g = {
-                    key: repeat(
-                        arr[traj].unsqueeze(0), "1 ... -> n ...", n=self.num_samples
-                    )
+                    key: repeat(arr[traj].unsqueeze(0), "1 ... -> n ...", n=self.num_samples)
                     for key, arr in z_obs_g.items()
                 }
                 action = (
-                    torch.randn(self.num_samples, self.horizon, self.action_dim).to(
-                        self.device
-                    )
-                    * sigma[traj]
+                    torch.randn(self.num_samples, self.horizon, self.action_dim).to(self.device) * sigma[traj]
                     + mu[traj]
                 )
                 action[0] = mu[traj]  # optional: make the first one mu itself
@@ -117,12 +106,10 @@ class CEMPlanner(BasePlanner):
                 mu[traj] = topk_action.mean(dim=0)
                 sigma[traj] = topk_action.std(dim=0)
 
-            self.wandb_run.log(
-                {f"{self.logging_prefix}/loss": np.mean(losses), "step": i + 1}
-            )
+            self.wandb_run.log({f"{self.logging_prefix}/loss": np.mean(losses), "step": i + 1})
             if self.evaluator is not None and i % self.eval_every == 0:
                 logs, successes, _, _ = self.evaluator.eval_actions(
-                    mu, filename=f"{self.logging_prefix}_output_{i+1}"
+                    mu, filename=f"{self.logging_prefix}_output_{i + 1}"
                 )
                 logs = {f"{self.logging_prefix}/{k}": v for k, v in logs.items()}
                 logs.update({"step": i + 1})

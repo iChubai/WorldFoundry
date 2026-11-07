@@ -143,8 +143,10 @@ class DepthAnything3Reconstructor(nn.Module):
         """State dict converter."""
         return ModelDictConverter()
 
+
 class ModelDictConverter:
     """Model dict converter implementation."""
+
     def __init__(self):
         """Init."""
         pass
@@ -155,7 +157,7 @@ class ModelDictConverter:
         Args:
             state_dict: The state dict.
         """
-        if hash_state_dict_keys(state_dict) == '252f1c3923a62665aee9b32f1b18afb5':
+        if hash_state_dict_keys(state_dict) == "252f1c3923a62665aee9b32f1b18afb5":
             config = {
                 "model_name": "da3-giant",
                 "gaussian_scale": 0.001,

@@ -142,19 +142,21 @@ class FantasyWorldWan22Runner:
             is_i2v=True,
             pose_encoding_to_extri_intri=pose_encoding_to_extri_intri,
         )
-        self.moge = MoGeModel.from_pretrained(
-            resolve_moge_pretrained(moge_pretrained)
-        ).to(self.moge_device).eval()
+        self.moge = MoGeModel.from_pretrained(resolve_moge_pretrained(moge_pretrained)).to(self.moge_device).eval()
 
     def _prepare_control_latents(
         self,
         plucker_embedding: torch.Tensor,
         target_device: str,
     ) -> torch.Tensor:
-        camera_video = plucker_embedding.to(
-            device=target_device,
-            dtype=self.torch_dtype,
-        )[0].permute(3, 0, 1, 2).unsqueeze(0)
+        camera_video = (
+            plucker_embedding.to(
+                device=target_device,
+                dtype=self.torch_dtype,
+            )[0]
+            .permute(3, 0, 1, 2)
+            .unsqueeze(0)
+        )
         values = torch.cat(
             (
                 torch.repeat_interleave(camera_video[:, :, :1], repeats=4, dim=2),
@@ -195,25 +197,13 @@ class FantasyWorldWan22Runner:
         ).to(device=self.high_device, dtype=self.torch_dtype)
 
         devices = {self.high_device, self.low_device}
-        control_by_device = {
-            target: self._prepare_control_latents(plucker_embedding, target)
-            for target in devices
-        }
-        y_by_device = {
-            target: y.to(device=target, dtype=self.torch_dtype)
-            for target in devices
-        }
-        positive_by_device = {
-            target: context_pos.to(device=target, dtype=self.torch_dtype)
-            for target in devices
-        }
+        control_by_device = {target: self._prepare_control_latents(plucker_embedding, target) for target in devices}
+        y_by_device = {target: y.to(device=target, dtype=self.torch_dtype) for target in devices}
+        positive_by_device = {target: context_pos.to(device=target, dtype=self.torch_dtype) for target in devices}
         negative_by_device = (
             None
             if context_neg is None
-            else {
-                target: context_neg.to(device=target, dtype=self.torch_dtype)
-                for target in devices
-            }
+            else {target: context_neg.to(device=target, dtype=self.torch_dtype) for target in devices}
         )
         final_prediction = None
 
@@ -268,13 +258,9 @@ class FantasyWorldWan22Runner:
             moge_output = self.moge.infer(input_image_tensor)
             moge = {key: value.cpu().contiguous() for key, value in moge_output.items()}
             intrinsics = torch.from_numpy(
-                np.stack([self._fw_utils.get_intrinsic_matrix(camera) for camera in camera_params]).astype(
-                    np.float32
-                )
+                np.stack([self._fw_utils.get_intrinsic_matrix(camera) for camera in camera_params]).astype(np.float32)
             )
-            extrinsics = torch.from_numpy(
-                np.stack([camera.w2c_mat for camera in camera_params]).astype(np.float32)
-            )
+            extrinsics = torch.from_numpy(np.stack([camera.w2c_mat for camera in camera_params]).astype(np.float32))
             if using_scale:
                 first_world, first_mask = self._fw_utils.batch_depth_to_world(
                     prediction=moge,

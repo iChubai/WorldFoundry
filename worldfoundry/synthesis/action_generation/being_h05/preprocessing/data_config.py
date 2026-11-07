@@ -11,7 +11,12 @@ from .schema import RotationType
 from .transform_base import ComposedModalityTransform, ModalityTransform
 from .transform_concat import ConcatTransform
 from .transform_state_action import StateActionToTensor, StateActionTransform
-from .constants import TARGET_STATE_ROTATION_TYPE, TARGET_ACTION_ROTATION_TYPE, TARGET_STATE_ROTATION_DIM, TARGET_ACTION_ROTATION_DIM
+from .constants import (
+    TARGET_STATE_ROTATION_TYPE,
+    TARGET_ACTION_ROTATION_TYPE,
+    TARGET_STATE_ROTATION_DIM,
+    TARGET_ACTION_ROTATION_DIM,
+)
 
 
 class ModalityConfig(BaseModel):
@@ -34,8 +39,14 @@ class ModalityDef(BaseModel):
 
 
 class BaseDataConfig(ABC):
-    def __init__(self, embodiment_tag, use_fixed_view, max_view_num, 
-                obs_indices=[0], action_indices=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]):
+    def __init__(
+        self,
+        embodiment_tag,
+        use_fixed_view,
+        max_view_num,
+        obs_indices=[0],
+        action_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    ):
         self.embodiment_tag = embodiment_tag
         self.use_fixed_view = use_fixed_view
         self.max_view_num = max_view_num
@@ -77,7 +88,7 @@ class BaseDataConfig(ABC):
         else:
             max_view_num = min(self.max_view_num, len(self.VIDEO_SOURCE_COLUMNS))
             video_keys = random.sample(self.VIDEO_SOURCE_COLUMNS.keys(), max_view_num)
-   
+
         for video_key in video_keys:
             modalities[video_key] = ModalityDef(source_column=self.VIDEO_SOURCE_COLUMNS[video_key], start=0, end=0)
 
@@ -85,26 +96,27 @@ class BaseDataConfig(ABC):
 
 
 class LiberoOriginDataConfig(BaseDataConfig):
-    VIDEO_KEYS = ['video.top_view']
-    VIDEO_SOURCE_COLUMNS = {'video.top_view': 'observation.images.image'}
-    STATE_KEYS = ['state.state']
-    ACTION_KEYS = ['action.action']
+    VIDEO_KEYS = ["video.top_view"]
+    VIDEO_SOURCE_COLUMNS = {"video.top_view": "observation.images.image"}
+    STATE_KEYS = ["state.state"]
+    ACTION_KEYS = ["action.action"]
 
-    LANGUAGE_KEYS = ['language.instruction']
+    LANGUAGE_KEYS = ["language.instruction"]
 
-    state_normalization_modes = {'state.state': 'min_max'} 
-    action_normalization_modes = {'action.action': 'min_max'}
+    state_normalization_modes = {"state.state": "min_max"}
+    action_normalization_modes = {"action.action": "min_max"}
 
-    state_action_type = {'state.state': "7-d absolute state (xyz,roll,pitch,yaw,pad) + 1-d gripper pos", 
-                         'action.action': "6-d relative action (xyz,roll,pitch,yaw) + 1-d gripper pos"
-                        }
-    
+    state_action_type = {
+        "state.state": "7-d absolute state (xyz,roll,pitch,yaw,pad) + 1-d gripper pos",
+        "action.action": "6-d relative action (xyz,roll,pitch,yaw) + 1-d gripper pos",
+    }
+
     def define_modalities(self) -> Dict[str, ModalityDef]:
         """Extract modalities from Parquet columns"""
         modalities = {
-            'language.instruction': ModalityDef(source_column='task_index', start=0, end=0),
-            'state.state': ModalityDef(source_column='observation.state', start=0, end=8),
-            'action.action': ModalityDef(source_column='action', start=0, end=7, absolute=False),
+            "language.instruction": ModalityDef(source_column="task_index", start=0, end=0),
+            "state.state": ModalityDef(source_column="observation.state", start=0, end=8),
+            "action.action": ModalityDef(source_column="action", start=0, end=7, absolute=False),
         }
         modalities = self.add_video_modality(modalities)
         return modalities
@@ -112,67 +124,66 @@ class LiberoOriginDataConfig(BaseDataConfig):
     def get_transforms(self) -> ModalityTransform:
         transforms = [
             StateActionToTensor(apply_to=self.STATE_KEYS),
-            StateActionTransform(
-                apply_to=self.STATE_KEYS,
-                normalization_modes=self.state_normalization_modes
-            ),
-
+            StateActionTransform(apply_to=self.STATE_KEYS, normalization_modes=self.state_normalization_modes),
             StateActionToTensor(apply_to=self.ACTION_KEYS),
-            StateActionTransform(
-                apply_to=self.ACTION_KEYS,
-                normalization_modes=self.action_normalization_modes
-            ),
+            StateActionTransform(apply_to=self.ACTION_KEYS, normalization_modes=self.action_normalization_modes),
         ]
 
         return ComposedModalityTransform(transforms=transforms)
 
 
 class LiberoNoNormDataConfig(LiberoOriginDataConfig):
-    VIDEO_KEYS = ['video.top_view', 'video.wrist_view']
+    VIDEO_KEYS = ["video.top_view", "video.wrist_view"]
     VIDEO_SOURCE_COLUMNS = {
-        'video.top_view': 'observation.images.image',
-        'video.wrist_view': 'observation.images.wrist_image',
+        "video.top_view": "observation.images.image",
+        "video.wrist_view": "observation.images.wrist_image",
     }
-    STATE_KEYS = ['state.eef_position', 'state.eef_rotation', 'state.libero_gripper_position']
-    ACTION_KEYS = ['action.eef_position', 'action.eef_rotation', 'action.gripper_position']
+    STATE_KEYS = ["state.eef_position", "state.eef_rotation", "state.libero_gripper_position"]
+    ACTION_KEYS = ["action.eef_position", "action.eef_rotation", "action.gripper_position"]
 
     UNIFIED_MAPPING: Dict[str, Tuple[int, int]] = {
-        'state.eef_position':     (0, 3),
-        'state.eef_rotation':  (3, 6),
-        'state.libero_gripper_position': (44, 46),
-
-        'action.eef_position':    (0, 3),
-        'action.eef_rotation': (3, 6),
-        'action.gripper_position':(18, 19),
+        "state.eef_position": (0, 3),
+        "state.eef_rotation": (3, 6),
+        "state.libero_gripper_position": (44, 46),
+        "action.eef_position": (0, 3),
+        "action.eef_rotation": (3, 6),
+        "action.gripper_position": (18, 19),
     }
 
-    state_normalization_modes = {
-    }
-    
-    action_normalization_modes = {
-    }
+    state_normalization_modes = {}
+
+    action_normalization_modes = {}
 
     def get_feature_meta(self):
-        return {'state.eef_position': ("3-d absolute eef position (xyz)", 3), 
-                'state.eef_rotation': (f"{TARGET_STATE_ROTATION_DIM}-d absolute eef rotation ({TARGET_STATE_ROTATION_TYPE})", TARGET_STATE_ROTATION_DIM),
-                'state.libero_gripper_position': ("2-d gripper position", 2),
-                'action.eef_position': ("3-d relative eef position (xyz)", 3), 
-                'action.eef_rotation': (f"{TARGET_ACTION_ROTATION_DIM}-d relative eef rotation ({TARGET_ACTION_ROTATION_TYPE})", TARGET_ACTION_ROTATION_DIM),
-                'action.gripper_position': ("1-d gripper position"),
-            }
-    
+        return {
+            "state.eef_position": ("3-d absolute eef position (xyz)", 3),
+            "state.eef_rotation": (
+                f"{TARGET_STATE_ROTATION_DIM}-d absolute eef rotation ({TARGET_STATE_ROTATION_TYPE})",
+                TARGET_STATE_ROTATION_DIM,
+            ),
+            "state.libero_gripper_position": ("2-d gripper position", 2),
+            "action.eef_position": ("3-d relative eef position (xyz)", 3),
+            "action.eef_rotation": (
+                f"{TARGET_ACTION_ROTATION_DIM}-d relative eef rotation ({TARGET_ACTION_ROTATION_TYPE})",
+                TARGET_ACTION_ROTATION_DIM,
+            ),
+            "action.gripper_position": ("1-d gripper position"),
+        }
+
     def define_modalities(self) -> Dict[str, ModalityDef]:
         """Extract modalities from Parquet columns"""
         modalities = {
-            'language.instruction': ModalityDef(source_column='task_index', start=0, end=0),
-
-            'state.eef_position': ModalityDef(source_column='observation.state', start=0, end=3),
-            'state.eef_rotation': ModalityDef(source_column='observation.state', start=3, end=6, rotation_type="axis_angle"),
-            'state.libero_gripper_position': ModalityDef(source_column='observation.state', start=6, end=8),
-
-            'action.eef_position': ModalityDef(source_column='action', start=0, end=3, absolute=False),
-            'action.eef_rotation': ModalityDef(source_column='action', start=3, end=6, absolute=False, rotation_type="axis_angle"),
-            'action.gripper_position': ModalityDef(source_column='action', start=6, end=7),
+            "language.instruction": ModalityDef(source_column="task_index", start=0, end=0),
+            "state.eef_position": ModalityDef(source_column="observation.state", start=0, end=3),
+            "state.eef_rotation": ModalityDef(
+                source_column="observation.state", start=3, end=6, rotation_type="axis_angle"
+            ),
+            "state.libero_gripper_position": ModalityDef(source_column="observation.state", start=6, end=8),
+            "action.eef_position": ModalityDef(source_column="action", start=0, end=3, absolute=False),
+            "action.eef_rotation": ModalityDef(
+                source_column="action", start=3, end=6, absolute=False, rotation_type="axis_angle"
+            ),
+            "action.gripper_position": ModalityDef(source_column="action", start=6, end=7),
         }
         modalities = self.add_video_modality(modalities)
 
@@ -180,11 +191,11 @@ class LiberoNoNormDataConfig(LiberoOriginDataConfig):
 
 
 class RobocasaHumanDataConfig(BaseDataConfig):
-    VIDEO_KEYS = ['video.left_view', 'video.right_view', 'video.wrist_view']
+    VIDEO_KEYS = ["video.left_view", "video.right_view", "video.wrist_view"]
     VIDEO_SOURCE_COLUMNS = {
-        'video.left_view': 'observation.images.left_view',
-        'video.right_view': 'observation.images.right_view',
-        'video.wrist_view': 'observation.images.wrist_view',
+        "video.left_view": "observation.images.left_view",
+        "video.right_view": "observation.images.right_view",
+        "video.wrist_view": "observation.images.wrist_view",
     }
     STATE_KEYS = [
         "state.eef_position",
@@ -202,22 +213,21 @@ class RobocasaHumanDataConfig(BaseDataConfig):
     ]
 
     UNIFIED_MAPPING: Dict[str, Tuple[int, int]] = {
-        'state.eef_position':  (0, 3),
-        'state.eef_rotation':  (3, 6),
-        'state.gripper_qpos': (44, 46),
-        'state.base_position': (70, 73),
-        'state.base_rotation': (73, 76),
-
-        'action.eef_position': (0, 3),
-        'action.eef_rotation': (3, 6),
-        'action.gripper_position': (18, 19),
-        'action.base_motion': (70, 74),
-        'action.control_mode': (74, 75),
+        "state.eef_position": (0, 3),
+        "state.eef_rotation": (3, 6),
+        "state.gripper_qpos": (44, 46),
+        "state.base_position": (70, 73),
+        "state.base_rotation": (73, 76),
+        "action.eef_position": (0, 3),
+        "action.eef_rotation": (3, 6),
+        "action.gripper_position": (18, 19),
+        "action.base_motion": (70, 74),
+        "action.control_mode": (74, 75),
     }
 
-    LANGUAGE_KEYS = ['language.instruction']
+    LANGUAGE_KEYS = ["language.instruction"]
 
-    state_normalization_modes = {} 
+    state_normalization_modes = {}
     # action_normalization_modes = {}
 
     action_normalization_modes = {
@@ -229,30 +239,41 @@ class RobocasaHumanDataConfig(BaseDataConfig):
     }
 
     def get_feature_meta(self):
-        return {'state.eef_position': ("3-d absolute eef position (xyz)", 3), 
-                'state.eef_rotation': (f"{TARGET_STATE_ROTATION_DIM}-d absolute eef rotation ({TARGET_STATE_ROTATION_TYPE})", TARGET_STATE_ROTATION_DIM),
-                'state.gripper_qpos': ("2-d gripper position", 2),
-                'action.eef_position': ("3-d relative eef position (xyz)", 3), 
-                'action.eef_rotation': (f"{TARGET_ACTION_ROTATION_DIM}-d relative eef rotation ({TARGET_ACTION_ROTATION_TYPE})", TARGET_ACTION_ROTATION_DIM),
-                'action.gripper_position': ("1-d gripper position"),
-            }
-    
+        return {
+            "state.eef_position": ("3-d absolute eef position (xyz)", 3),
+            "state.eef_rotation": (
+                f"{TARGET_STATE_ROTATION_DIM}-d absolute eef rotation ({TARGET_STATE_ROTATION_TYPE})",
+                TARGET_STATE_ROTATION_DIM,
+            ),
+            "state.gripper_qpos": ("2-d gripper position", 2),
+            "action.eef_position": ("3-d relative eef position (xyz)", 3),
+            "action.eef_rotation": (
+                f"{TARGET_ACTION_ROTATION_DIM}-d relative eef rotation ({TARGET_ACTION_ROTATION_TYPE})",
+                TARGET_ACTION_ROTATION_DIM,
+            ),
+            "action.gripper_position": ("1-d gripper position"),
+        }
+
     def define_modalities(self) -> Dict[str, ModalityDef]:
         """Extract modalities from Parquet columns"""
         modalities = {
-            'language.instruction': ModalityDef(source_column='task_index', start=0, end=0),
-
-            'state.eef_position': ModalityDef(source_column='world_abs_state', start=0, end=3),
-            'state.eef_rotation': ModalityDef(source_column='world_abs_state', start=3, end=6, rotation_type="axis_angle"),
-            'state.gripper_qpos': ModalityDef(source_column='world_abs_state', start=6, end=8),
-            'state.base_position': ModalityDef(source_column='observation.state', start=0, end=3),
-            'state.base_rotation': ModalityDef(source_column='observation.state', start=3, end=7, rotation_type="quaternion"),
-
-            'action.eef_position': ModalityDef(source_column='world_delta_action', start=0, end=3, absolute=False),
-            'action.eef_rotation': ModalityDef(source_column='world_delta_action', start=3, end=6, absolute=False, rotation_type="axis_angle"),
-            'action.gripper_position': ModalityDef(source_column='world_delta_action', start=6, end=7),
-            'action.base_motion': ModalityDef(source_column='action', start=7, end=11, absolute=False),
-            'action.control_mode': ModalityDef(source_column='action', start=11, end=12),
+            "language.instruction": ModalityDef(source_column="task_index", start=0, end=0),
+            "state.eef_position": ModalityDef(source_column="world_abs_state", start=0, end=3),
+            "state.eef_rotation": ModalityDef(
+                source_column="world_abs_state", start=3, end=6, rotation_type="axis_angle"
+            ),
+            "state.gripper_qpos": ModalityDef(source_column="world_abs_state", start=6, end=8),
+            "state.base_position": ModalityDef(source_column="observation.state", start=0, end=3),
+            "state.base_rotation": ModalityDef(
+                source_column="observation.state", start=3, end=7, rotation_type="quaternion"
+            ),
+            "action.eef_position": ModalityDef(source_column="world_delta_action", start=0, end=3, absolute=False),
+            "action.eef_rotation": ModalityDef(
+                source_column="world_delta_action", start=3, end=6, absolute=False, rotation_type="axis_angle"
+            ),
+            "action.gripper_position": ModalityDef(source_column="world_delta_action", start=6, end=7),
+            "action.base_motion": ModalityDef(source_column="action", start=7, end=11, absolute=False),
+            "action.control_mode": ModalityDef(source_column="action", start=11, end=12),
         }
         modalities = self.add_video_modality(modalities)
         return modalities
@@ -268,7 +289,6 @@ class RobocasaHumanDataConfig(BaseDataConfig):
                 },
                 # normalization_modes=self.action_normalization_modes,
             ),
-
             StateActionToTensor(apply_to=self.ACTION_KEYS),
             StateActionTransform(
                 apply_to=self.ACTION_KEYS,

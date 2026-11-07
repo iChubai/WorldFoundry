@@ -151,9 +151,7 @@ class HunyuanWorldPlanSynthesis(BaseSynthesis):
         """
         # These parameters are intentionally ignored as API initialization is not supported.
         del api_key, endpoint
-        raise HunyuanWorldIntegrationError(
-            f"{self.status.model_id} has no in-tree API synthesis backend."
-        )
+        raise HunyuanWorldIntegrationError(f"{self.status.model_id} has no in-tree API synthesis backend.")
 
 
 class HunyuanWorld1Synthesis(HunyuanWorldPlanSynthesis):
@@ -279,7 +277,11 @@ class HunyuanWorldMirrorSynthesis(HunyuanWorldPlanSynthesis):
         run_dir = None
         if output_path:
             requested = Path(str(output_path)).expanduser()
-            run_dir = requested.with_suffix("") if requested.suffix.lower() in {".mp4", ".mov", ".webm", ".ply", ".zip"} else requested
+            run_dir = (
+                requested.with_suffix("")
+                if requested.suffix.lower() in {".mp4", ".mov", ".webm", ".ply", ".zip"}
+                else requested
+            )
             kwargs["output_path"] = str(run_dir)
 
         results = self.pipeline(*args, **kwargs)
@@ -311,7 +313,9 @@ class HunyuanWorldMirrorSynthesis(HunyuanWorldPlanSynthesis):
             "artifact_kind": "generated_3d_asset",
             "artifact_path": str(run_dir),
             "run_dir": str(run_dir),
-            "preview_video": preview_video if isinstance(preview_video, str) and Path(preview_video).is_file() else None,
+            "preview_video": preview_video
+            if isinstance(preview_video, str) and Path(preview_video).is_file()
+            else None,
             "preview_image": preview_image,
             "model_path": preview_model if isinstance(preview_model, str) and Path(preview_model).is_file() else None,
             "metadata": {

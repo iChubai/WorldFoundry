@@ -90,7 +90,5 @@ def _resize(frames: torch.Tensor, frame_size: tuple[int, int]) -> torch.Tensor:
 
     if tuple(frames.shape[-2:]) == tuple(frame_size):
         return frames
-    resized = F.interpolate(
-        frames.float(), size=frame_size, mode="bilinear", align_corners=False, antialias=True
-    )
+    resized = F.interpolate(frames.float(), size=frame_size, mode="bilinear", align_corners=False, antialias=True)
     return resized.round().clamp_(0, 255).to(torch.uint8)

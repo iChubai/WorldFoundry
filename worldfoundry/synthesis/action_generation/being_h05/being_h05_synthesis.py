@@ -203,16 +203,14 @@ class BeingH05Synthesis(ActionModelSynthesis):
             dataset_name=dataset_name,
             embodiment_tag=embodiment_tag,
             instruction_template=str(
-                explicit_options.get("instruction_template")
-                or runtime_defaults["instruction_template"]
+                explicit_options.get("instruction_template") or runtime_defaults["instruction_template"]
             ),
             device=str(merged.get("device") or self.device),
             torch_dtype=str(merged.get("torch_dtype") or merged.get("dtype") or "auto"),
             enable_rtc=bool(merged["enable_rtc"]),
             metadata_variant=str(metadata_variant) if metadata_variant is not None else None,
             stats_selection_mode=str(
-                explicit_options.get("stats_selection_mode")
-                or runtime_defaults["stats_selection_mode"]
+                explicit_options.get("stats_selection_mode") or runtime_defaults["stats_selection_mode"]
             ),
             attention_mask_kind=str(
                 explicit_options.get("attention_mask_kind")
@@ -378,7 +376,9 @@ class BeingH05Synthesis(ActionModelSynthesis):
             },
         }
         # Write the plan payload to a JSON file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         # If `plan_only` is true, return the plan details without executing the model.
         if plan_only:

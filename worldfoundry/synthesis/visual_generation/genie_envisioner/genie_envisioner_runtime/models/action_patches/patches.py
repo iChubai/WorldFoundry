@@ -28,7 +28,6 @@ class ActionRotaryPosEmbed(nn.Module):
         hidden_states: torch.Tensor,
         seq_length: int,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-
         # Always compute rope in fp32
         grid = torch.arange(seq_length, dtype=torch.float32, device=hidden_states.device).unsqueeze(0)
 
@@ -58,8 +57,6 @@ class ActionRotaryPosEmbed(nn.Module):
             sin_freqs = torch.cat([sin_padding, sin_freqs], dim=-1)
 
         return cos_freqs, sin_freqs
-
-
 
 
 @maybe_allow_in_graph
@@ -96,8 +93,8 @@ class ActionTransformerBlock(nn.Module):
         attention_out_bias: bool = True,
         eps: float = 1e-6,
         elementwise_affine: bool = False,
-        attn3_cross_attention_dim = 2048,
-        num_latent_downsample_block = 0,
+        attn3_cross_attention_dim=2048,
+        num_latent_downsample_block=0,
     ):
         super().__init__()
 
@@ -119,10 +116,7 @@ class ActionTransformerBlock(nn.Module):
         if self.num_latent_downsample_block > 0:
             self.latent_downsample_block = nn.ModuleList()
             for _i in range(self.num_latent_downsample_block):
-                self.latent_downsample_block.append(
-                    downsampling_block()
-                )
-
+                self.latent_downsample_block.append(downsampling_block())
 
     def forward(
         self,
@@ -141,7 +135,6 @@ class ActionTransformerBlock(nn.Module):
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = ada_values.unbind(dim=2)
         norm_hidden_states = norm_hidden_states * (1 + scale_msa) + shift_msa
 
-        
         attn_hidden_states = self.attn1(
             hidden_states=norm_hidden_states,
             encoder_hidden_states=None,
@@ -150,7 +143,6 @@ class ActionTransformerBlock(nn.Module):
         )
         hidden_states = hidden_states + attn_hidden_states * gate_msa
 
-        
         attn_hidden_states = self.attn2(
             hidden_states,
             encoder_hidden_states=encoder_hidden_states,
@@ -161,14 +153,11 @@ class ActionTransformerBlock(nn.Module):
         hidden_states = hidden_states + attn_hidden_states
 
         norm_hidden_states = self.norm2(hidden_states) * (1 + scale_mlp) + shift_mlp
-        
 
         ff_output = self.ff(norm_hidden_states)
         hidden_states = hidden_states + ff_output * gate_mlp
-        
 
         return hidden_states
-
 
 
 def add_action_expert(
@@ -188,11 +177,10 @@ def add_action_expert(
     attention_bias: bool = True,
     attention_out_bias: bool = True,
     qk_norm: str = "rms_norm_across_heads",
-    attention_class = None,
-    attention_processor = None,
+    attention_class=None,
+    attention_processor=None,
     **kwargs,
 ):
-
     if action_out_channels is None:
         action_out_channels = action_in_channels
 
@@ -216,34 +204,38 @@ def add_action_expert(
     )
 
     attention_args = []
-    attention_args.append(dict(
-        query_dim=self.action_inner_dim,
-        heads=action_num_attention_heads,
-        kv_heads=action_num_attention_heads,
-        dim_head=action_attention_head_dim,
-        bias=attention_bias,
-        cross_attention_dim=None,
-        out_bias=attention_out_bias,
-        qk_norm=qk_norm,
-        processor=attention_processor,
-    ))
-    attention_args.append(dict(
-        query_dim=self.action_inner_dim,
-        heads=action_num_attention_heads,
-        kv_heads=action_num_attention_heads,
-        dim_head=action_attention_head_dim,
-        bias=attention_bias,
-        cross_attention_dim=inner_dim,
-        out_bias=attention_out_bias,
-        qk_norm=qk_norm,
-        processor=attention_processor,
-    ))
+    attention_args.append(
+        dict(
+            query_dim=self.action_inner_dim,
+            heads=action_num_attention_heads,
+            kv_heads=action_num_attention_heads,
+            dim_head=action_attention_head_dim,
+            bias=attention_bias,
+            cross_attention_dim=None,
+            out_bias=attention_out_bias,
+            qk_norm=qk_norm,
+            processor=attention_processor,
+        )
+    )
+    attention_args.append(
+        dict(
+            query_dim=self.action_inner_dim,
+            heads=action_num_attention_heads,
+            kv_heads=action_num_attention_heads,
+            dim_head=action_attention_head_dim,
+            bias=attention_bias,
+            cross_attention_dim=inner_dim,
+            out_bias=attention_out_bias,
+            qk_norm=qk_norm,
+            processor=attention_processor,
+        )
+    )
 
     self.action_blocks = nn.ModuleList(
         [
             ActionTransformerBlock(
-                attention_class = attention_class,
-                attention_args = attention_args,
+                attention_class=attention_class,
+                attention_args=attention_args,
                 dim=self.action_inner_dim,
                 num_attention_heads=action_num_attention_heads,
                 attention_head_dim=action_attention_head_dim,
@@ -259,7 +251,7 @@ def add_action_expert(
         ]
     )
 
-    self.action_proj_out = nn.Linear(self.action_inner_dim, action_out_channels) 
+    self.action_proj_out = nn.Linear(self.action_inner_dim, action_out_channels)
     self.action_final_embeddings = action_final_embeddings
     if not self.action_final_embeddings:
         self.action_proj_extra = nn.Linear(self.action_inner_dim, self.action_inner_dim)
@@ -272,7 +264,6 @@ def preprocessing_action_states(
     action_states: torch.Tensor = None,
     action_timestep: torch.LongTensor = None,
 ):
-
     assert self.action_expert == True
     assert action_states is not None and action_timestep is not None
 
@@ -281,7 +272,9 @@ def preprocessing_action_states(
     action_seq_length = action_states.shape[1]
 
     if getattr(self, "learnable_action_state") and self.learnable_action_state:
-        action_states = self.action_state.repeat(batch_size, action_seq_length, 1).to(dtype=action_states.dtype, device=action_states.device)
+        action_states = self.action_state.repeat(batch_size, action_seq_length, 1).to(
+            dtype=action_states.dtype, device=action_states.device
+        )
 
     action_rotary_emb = self.action_rope(action_states, action_seq_length)
     action_hidden_states = self.action_proj_in(action_states)
@@ -294,5 +287,5 @@ def preprocessing_action_states(
 
     action_temb = action_temb.view(batch_size, -1, action_temb.size(-1))
     action_embedded_timestep = action_embedded_timestep.view(batch_size, -1, action_embedded_timestep.size(-1))
-    
+
     return action_temb, action_embedded_timestep, action_rotary_emb, action_hidden_states

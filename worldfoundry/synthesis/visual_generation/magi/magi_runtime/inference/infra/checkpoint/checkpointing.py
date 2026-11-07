@@ -60,9 +60,9 @@ def load_state_dict(runtime_config, engine_config):
     inference_weight_dir = os.path.join(load_dir, default_subdir)
 
     print_rank_0(f"load {default_subdir} weight from {inference_weight_dir}")
-    assert (
-        os.path.exists(inference_weight_dir) and len(os.listdir(inference_weight_dir)) > 0
-    ), f"Ckpt directory {inference_weight_dir} does not exist or empty. If you are using fp8_quant, please run calibration first."
+    assert os.path.exists(inference_weight_dir) and len(os.listdir(inference_weight_dir)) > 0, (
+        f"Ckpt directory {inference_weight_dir} does not exist or empty. If you are using fp8_quant, please run calibration first."
+    )
     state_dict = load_sharded_safetensors_parallel_with_progress(inference_weight_dir)
     return state_dict
 

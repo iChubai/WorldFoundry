@@ -6,6 +6,7 @@ This module configures the specific parameters required to integrate the
 VideoCrafter2 T2V model into the worldfoundry synthesis framework, including
 model identification, generation type, runtime class, and configuration paths.
 """
+
 from __future__ import annotations
 
 from .worldfoundry_runtime import VideoCrafter

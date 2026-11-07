@@ -40,6 +40,7 @@ class TokenizedVisionData:
 @dataclasses.dataclass
 class TensorSpec:
     """The expected shape and dtype of a tensor"""
+
     shape: Tuple[int]
     dtype: np.dtype
 
@@ -53,7 +54,7 @@ class TensorSpec:
 
     def __mul__(self, other):
         assert isinstance(other, int)
-        return TensorSpec(tuple(s*other for s in self.shape), dtype=self.dtype)
+        return TensorSpec(tuple(s * other for s in self.shape), dtype=self.dtype)
 
     @classmethod
     def build(cls, data):
@@ -62,7 +63,7 @@ class TensorSpec:
         return TensorSpec(data.shape, data.dtype)
 
     @classmethod
-    def get_spec(cls, src: TokenizedVisionData) -> Dict[str, 'TensorSpec']:
+    def get_spec(cls, src: TokenizedVisionData) -> Dict[str, "TensorSpec"]:
         spec = {} if src.other_data is None else src.other_data
         for k in ["tokens", "images", "image_masks", "token_pooling", "low_res_token_pooling"]:
             v = getattr(src, k)
@@ -71,7 +72,7 @@ class TensorSpec:
         return spec
 
     @staticmethod
-    def max(*other: 'TensorSpec'):
+    def max(*other: "TensorSpec"):
         other = [o for o in other if o is not None]
         if not other:
             return None
@@ -79,12 +80,9 @@ class TensorSpec:
         dtype = other[0].dtype
         assert all(rank == len(o.shape) for o in other)
         assert all(dtype == o.dtype for o in other)
-        return TensorSpec(
-            [max([o.shape[i] for o in other]) for i in range(rank)],
-            dtype
-        )
+        return TensorSpec([max([o.shape[i] for o in other]) for i in range(rank)], dtype)
 
-    def max_dictionaries(*other: Dict[str, 'TensorSpec']):
+    def max_dictionaries(*other: Dict[str, "TensorSpec"]):
         return {k: TensorSpec.max(*(o[k] for o in other if k in o)) for k in get_all_keys(other)}
 
 
@@ -103,26 +101,26 @@ def batch_pixels_to_patches(array, patch_size):
     """Reshape images of [n_images, h, w, 3] -> [n_images, n_patches, pixels_per_patch]"""
     if len(array.shape) == 3:
         n_crops, h, w = array.shape
-        h_patches = h//patch_size
-        w_patches = w//patch_size
+        h_patches = h // patch_size
+        w_patches = w // patch_size
         array = np.reshape(array, [n_crops, h_patches, patch_size, w_patches, patch_size])
         array = np.transpose(array, [0, 1, 3, 2, 4])
-        array = np.reshape(array, [n_crops, h_patches*w_patches, patch_size*patch_size])
+        array = np.reshape(array, [n_crops, h_patches * w_patches, patch_size * patch_size])
         return array
     else:
         n_crops, h, w, c = array.shape
-        h_patches = h//patch_size
-        w_patches = w//patch_size
+        h_patches = h // patch_size
+        w_patches = w // patch_size
         array = np.reshape(array, [n_crops, h_patches, patch_size, w_patches, patch_size, c])
         array = np.transpose(array, [0, 1, 3, 2, 4, 5])
-        array = np.reshape(array, [n_crops, h_patches*w_patches, patch_size*patch_size*c])
+        array = np.reshape(array, [n_crops, h_patches * w_patches, patch_size * patch_size * c])
         return array
 
 
 def arange_for_pooling(idx_arr, pool_h, pool_w):
     h_pad = pool_h * ((idx_arr.shape[0] + pool_h - 1) // pool_h) - idx_arr.shape[0]
     w_pad = pool_w * ((idx_arr.shape[1] + pool_w - 1) // pool_w) - idx_arr.shape[1]
-    idx_arr = np.pad(idx_arr, [[h_pad//2, (h_pad+1)//2], [w_pad//2, (w_pad+1)//2]],
-                     mode='constant',constant_values=-1)
-    return einops.rearrange(
-        idx_arr, "(h dh) (w dw) -> h w (dh dw)", dh=pool_h, dw=pool_w)
+    idx_arr = np.pad(
+        idx_arr, [[h_pad // 2, (h_pad + 1) // 2], [w_pad // 2, (w_pad + 1) // 2]], mode="constant", constant_values=-1
+    )
+    return einops.rearrange(idx_arr, "(h dh) (w dw) -> h w (dh dw)", dh=pool_h, dw=pool_w)

@@ -99,7 +99,7 @@ def prompt_clean(text):
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
 def retrieve_latents(
-        encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
+    encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
 ):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
         return encoder_output.latent_dist.sample(generator)
@@ -142,14 +142,14 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
     _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
 
     def __init__(
-            self,
-            tokenizer: AutoTokenizer,
-            text_encoder: UMT5EncoderModel,
-            image_encoder: CLIPVisionModel,
-            image_processor: CLIPImageProcessor,
-            transformer: RealisDanceDiT,
-            vae: AutoencoderKLWan,
-            scheduler: FlowMatchEulerDiscreteScheduler,
+        self,
+        tokenizer: AutoTokenizer,
+        text_encoder: UMT5EncoderModel,
+        image_encoder: CLIPVisionModel,
+        image_processor: CLIPImageProcessor,
+        transformer: RealisDanceDiT,
+        vae: AutoencoderKLWan,
+        scheduler: FlowMatchEulerDiscreteScheduler,
     ):
         super().__init__()
 
@@ -194,14 +194,14 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             raise ValueError(f"Unsupported `resize_type`: {resize_type}")
 
         video = rearrange(video, "b f c h w -> (b f) c h w")
-        video = F.interpolate(video, size=(h, w), mode='bicubic', align_corners=False)
+        video = F.interpolate(video, size=(h, w), mode="bicubic", align_corners=False)
         video = rearrange(video, "(b f) c h w -> b c f h w", f=num_frame)
-        video = video[..., i:i + tgt_h, j:j + tgt_w]
+        video = video[..., i : i + tgt_h, j : j + tgt_w]
         return video
 
     def _image_trans_for_clip(self, image: torch.Tensor) -> torch.Tensor:
         clip_image = image.squeeze(2) * 0.5 + 0.5  # B C 1 H W -> B C H W; [-1, 1] -> [0, 1]
-        clip_image = F.interpolate(clip_image, size=(224, 224), mode='bicubic', align_corners=False)
+        clip_image = F.interpolate(clip_image, size=(224, 224), mode="bicubic", align_corners=False)
         clip_mean = (
             torch.tensor(OPENAI_CLIP_MEAN)
             .reshape(1, clip_image.shape[1], 1, 1)
@@ -216,12 +216,12 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         return clip_image
 
     def _get_t5_prompt_embeds(
-            self,
-            prompt: Union[str, List[str]] = None,
-            num_videos_per_prompt: int = 1,
-            max_sequence_length: int = 512,
-            device: Optional[torch.device] = None,
-            dtype: Optional[torch.dtype] = None,
+        self,
+        prompt: Union[str, List[str]] = None,
+        num_videos_per_prompt: int = 1,
+        max_sequence_length: int = 512,
+        device: Optional[torch.device] = None,
+        dtype: Optional[torch.dtype] = None,
     ):
         device = device or self._execution_device
         dtype = dtype or self.text_encoder.dtype
@@ -257,9 +257,9 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         return prompt_embeds
 
     def encode_image(
-            self,
-            image: torch.Tensor,
-            device: Optional[torch.device] = None,
+        self,
+        image: torch.Tensor,
+        device: Optional[torch.device] = None,
     ):
         device = device or self._execution_device
         image = self.image_processor(images=image, return_tensors="pt").to(device)
@@ -269,16 +269,16 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     # Copied from diffusers.pipelines.wan.pipeline_wan.WanPipeline.encode_prompt
     def encode_prompt(
-            self,
-            prompt: Union[str, List[str]],
-            negative_prompt: Optional[Union[str, List[str]]] = None,
-            do_classifier_free_guidance: bool = True,
-            num_videos_per_prompt: int = 1,
-            prompt_embeds: Optional[torch.Tensor] = None,
-            negative_prompt_embeds: Optional[torch.Tensor] = None,
-            max_sequence_length: int = 512,
-            device: Optional[torch.device] = None,
-            dtype: Optional[torch.dtype] = None,
+        self,
+        prompt: Union[str, List[str]],
+        negative_prompt: Optional[Union[str, List[str]]] = None,
+        do_classifier_free_guidance: bool = True,
+        num_videos_per_prompt: int = 1,
+        prompt_embeds: Optional[torch.Tensor] = None,
+        negative_prompt_embeds: Optional[torch.Tensor] = None,
+        max_sequence_length: int = 512,
+        device: Optional[torch.device] = None,
+        dtype: Optional[torch.dtype] = None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -350,17 +350,17 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         return prompt_embeds, negative_prompt_embeds
 
     def check_inputs(
-            self,
-            prompt,
-            negative_prompt,
-            image,
-            smpl,
-            hamer,
-            height,
-            width,
-            prompt_embeds=None,
-            negative_prompt_embeds=None,
-            callback_on_step_end_tensor_inputs=None,
+        self,
+        prompt,
+        negative_prompt,
+        image,
+        smpl,
+        hamer,
+        height,
+        width,
+        prompt_embeds=None,
+        negative_prompt_embeds=None,
+        callback_on_step_end_tensor_inputs=None,
     ):
         if image is not None and not isinstance(image, torch.Tensor) and not isinstance(image, PIL.Image.Image):
             raise ValueError(f"`image` has to be of type `torch.Tensor` or `PIL.Image.Image` but is {type(image)}")
@@ -372,7 +372,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             raise ValueError(f"`height` and `width` have to be divisible by 16 but are {height} and {width}.")
 
         if callback_on_step_end_tensor_inputs is not None and not all(
-                k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
+            k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
         ):
             raise ValueError(
                 f"`callback_on_step_end_tensor_inputs` has to be in {self._callback_tensor_inputs}, but found {[k for k in callback_on_step_end_tensor_inputs if k not in self._callback_tensor_inputs]}"
@@ -395,24 +395,24 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         elif prompt is not None and (not isinstance(prompt, str) and not isinstance(prompt, list)):
             raise ValueError(f"`prompt` has to be of type `str` or `list` but is {type(prompt)}")
         elif negative_prompt is not None and (
-                not isinstance(negative_prompt, str) and not isinstance(negative_prompt, list)
+            not isinstance(negative_prompt, str) and not isinstance(negative_prompt, list)
         ):
             raise ValueError(f"`negative_prompt` has to be of type `str` or `list` but is {type(negative_prompt)}")
 
     def prepare_latents(
-            self,
-            image: torch.Tensor,
-            smpl: torch.Tensor,
-            hamer: torch.Tensor,
-            batch_size: int,
-            num_channels_latents: int = 16,
-            height: int = 480,
-            width: int = 832,
-            num_frames: int = 81,
-            dtype: Optional[torch.dtype] = None,
-            device: Optional[torch.device] = None,
-            generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-            latents: Optional[torch.Tensor] = None,
+        self,
+        image: torch.Tensor,
+        smpl: torch.Tensor,
+        hamer: torch.Tensor,
+        batch_size: int,
+        num_channels_latents: int = 16,
+        height: int = 480,
+        width: int = 832,
+        num_frames: int = 81,
+        dtype: Optional[torch.dtype] = None,
+        device: Optional[torch.device] = None,
+        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+        latents: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         num_latent_frames = (num_frames - 1) // self.vae_scale_factor_temporal + 1
         latent_height = height // self.vae_scale_factor_spatial
@@ -431,9 +431,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             latents = latents.to(device=device, dtype=dtype)
 
         image = image.to(device=device, dtype=dtype)
-        video_condition = torch.zeros(
-            image.shape[0], image.shape[1], num_frames, height, width
-        )
+        video_condition = torch.zeros(image.shape[0], image.shape[1], num_frames, height, width)
         video_condition = video_condition.to(device=device, dtype=dtype)
         smpl = smpl.to(device=device, dtype=dtype)
         hamer = hamer.to(device=device, dtype=dtype)
@@ -448,10 +446,9 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         )
 
         if isinstance(generator, list):
+
             def vae_encode_1(x):
-                latent_x = [
-                    retrieve_latents(self.vae.encode(x), sample_mode="argmax") for _ in generator
-                ]
+                latent_x = [retrieve_latents(self.vae.encode(x), sample_mode="argmax") for _ in generator]
                 return (torch.cat(latent_x) - latents_mean) * latents_std
 
             latent_condition = vae_encode_1(video_condition)
@@ -463,6 +460,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             else:
                 latent_null_ref = None
         else:
+
             def vae_encode_2(x):
                 latent_x = retrieve_latents(self.vae.encode(x), sample_mode="argmax")
                 return (latent_x.repeat(batch_size, 1, 1, 1, 1) - latents_mean) * latents_std
@@ -478,9 +476,7 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
         mask_lat_size = torch.zeros(batch_size, 4, num_latent_frames, latent_height, latent_width)
         mask_lat_size = mask_lat_size.to(latent_condition.device)
-        latent_i2v_condition = torch.cat(
-            [mask_lat_size, latent_condition], dim=1
-        )
+        latent_i2v_condition = torch.cat([mask_lat_size, latent_condition], dim=1)
 
         latent_pose = torch.cat((latent_smpl, latent_hamer), dim=1)
 
@@ -513,35 +509,35 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
     @torch.no_grad()
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
-            self,
-            image: PipelineImageInput,
-            smpl: torch.Tensor,
-            hamer: torch.Tensor,
-            render_video: torch.Tensor,
-            render_mask: torch.Tensor,
-            camera_embedding: torch.Tensor = None,
-            prompt: Union[str, List[str]] = None,
-            negative_prompt: Union[str, List[str]] = None,
-            height: Optional[int] = None,
-            width: Optional[int] = None,
-            max_resolution: int = 768 * 768,
-            num_frames: int = 81,
-            num_inference_steps: int = 40,
-            guidance_scale: float = 2.0,
-            num_videos_per_prompt: Optional[int] = 1,
-            generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-            latents: Optional[torch.Tensor] = None,
-            prompt_embeds: Optional[torch.Tensor] = None,
-            negative_prompt_embeds: Optional[torch.Tensor] = None,
-            output_type: Optional[str] = "np",
-            return_dict: bool = True,
-            attention_kwargs: Optional[Dict[str, Any]] = None,
-            callback_on_step_end: Optional[
-                Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-            ] = None,
-            callback_on_step_end_tensor_inputs: List[str] = ["latents"],
-            max_sequence_length: int = 512,
-            use_timestep_proj: bool = True,
+        self,
+        image: PipelineImageInput,
+        smpl: torch.Tensor,
+        hamer: torch.Tensor,
+        render_video: torch.Tensor,
+        render_mask: torch.Tensor,
+        camera_embedding: torch.Tensor = None,
+        prompt: Union[str, List[str]] = None,
+        negative_prompt: Union[str, List[str]] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        max_resolution: int = 768 * 768,
+        num_frames: int = 81,
+        num_inference_steps: int = 40,
+        guidance_scale: float = 2.0,
+        num_videos_per_prompt: Optional[int] = 1,
+        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+        latents: Optional[torch.Tensor] = None,
+        prompt_embeds: Optional[torch.Tensor] = None,
+        negative_prompt_embeds: Optional[torch.Tensor] = None,
+        output_type: Optional[str] = "np",
+        return_dict: bool = True,
+        attention_kwargs: Optional[Dict[str, Any]] = None,
+        callback_on_step_end: Optional[
+            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
+        ] = None,
+        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        max_sequence_length: int = 512,
+        use_timestep_proj: bool = True,
     ):
         r"""
         The call function to the pipeline for generation.
@@ -818,10 +814,8 @@ class RealisDanceDiTPipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 .view(1, self.vae.config.z_dim, 1, 1, 1)
                 .to(latents.device, latents.dtype)
             )
-            latents_std = (
-                    1.0 / torch.tensor(self.vae.config.latents_std)
-                    .view(1, self.vae.config.z_dim, 1, 1, 1)
-                    .to(latents.device, latents.dtype)
+            latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(1, self.vae.config.z_dim, 1, 1, 1).to(
+                latents.device, latents.dtype
             )
             latents = latents / latents_std + latents_mean
             video = self.vae.decode(latents, return_dict=False)[0]

@@ -90,10 +90,7 @@ def predict_action(
     )
     checkpoint = select_openvla_checkpoint(
         checkpoint_dir=(
-            checkpoint_path
-            or merged.get("checkpoint_dir")
-            or merged.get("checkpoint_path")
-            or merged.get("ckpt_path")
+            checkpoint_path or merged.get("checkpoint_dir") or merged.get("checkpoint_path") or merged.get("ckpt_path")
         ),
         checkpoints=profile.checkpoints,
         unnorm_key=unnorm_key,

@@ -22,15 +22,24 @@ import torch
 
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.image_utils import ImageInput
-from transformers.processing_utils import ImagesKwargs, MultiModalData, ProcessingKwargs, ProcessorMixin, Unpack, VideosKwargs
+from transformers.processing_utils import (
+    ImagesKwargs,
+    MultiModalData,
+    ProcessingKwargs,
+    ProcessorMixin,
+    Unpack,
+    VideosKwargs,
+)
 from transformers.tokenization_utils_base import PreTokenizedInput, TextInput
 from transformers.utils import logging
 from transformers.video_utils import VideoInput
 
 logger = logging.get_logger(__name__)
 
+
 class Qwen3VLVideosProcessorKwargs(VideosKwargs, total=False):
     pass
+
 
 class Qwen3VLImagesKwargs(ImagesKwargs):
     min_pixels: Optional[int]
@@ -38,6 +47,7 @@ class Qwen3VLImagesKwargs(ImagesKwargs):
     patch_size: Optional[int]
     temporal_patch_size: Optional[int]
     merge_size: Optional[int]
+
 
 class Qwen3VLProcessorKwargs(ProcessingKwargs, total=False):
     images_kwargs: Qwen3VLImagesKwargs
@@ -50,6 +60,7 @@ class Qwen3VLProcessorKwargs(ProcessingKwargs, total=False):
         },
         "videos_kwargs": {"return_metadata": True},
     }
+
 
 class MiBotProcessor(ProcessorMixin):
     r"""
@@ -66,6 +77,7 @@ class MiBotProcessor(ProcessorMixin):
         chat_template (`str`, *optional*): A Jinja template which will be used to convert lists of messages
             in a chat into a tokenizable string.
     """
+
     attributes = ["image_processor", "tokenizer", "video_processor"]
     image_processor_class = "AutoImageProcessor"
     video_processor_class = "AutoVideoProcessor"
@@ -110,7 +122,7 @@ class MiBotProcessor(ProcessorMixin):
             std = config.get("std", 1.0)
             self.action_config[robot_type] = {
                 "mean": torch.tensor(mean, dtype=torch.float32)[None],
-                "std": torch.tensor(std, dtype=torch.float32)[None]
+                "std": torch.tensor(std, dtype=torch.float32)[None],
             }
 
     def list_robot_types(self) -> List[str]:
@@ -272,6 +284,7 @@ class MiBotProcessor(ProcessorMixin):
             mm_token_type_ids[array_ids == self.image_token_id] = 1
             text_inputs["mm_token_type_ids"] = mm_token_type_ids.tolist()
         return BatchFeature(data={**text_inputs, **image_inputs, **videos_inputs}, tensor_type=return_tensors)
+
     def _get_num_multimodal_tokens(self, image_sizes=None, video_sizes=None, **kwargs):
         """
         Computes the number of placeholder tokens needed for multimodal inputs with the given sizes.
@@ -305,6 +318,7 @@ class MiBotProcessor(ProcessorMixin):
             num_video_tokens = [(num_patches // merge_size**2) for num_patches in num_video_patches]
             vision_data["num_video_tokens"] = num_video_tokens
         return MultiModalData(**vision_data)
+
     def post_process_image_text_to_text(
         self, generated_outputs, skip_special_tokens=True, clean_up_tokenization_spaces=False, **kwargs
     ):
@@ -329,6 +343,7 @@ class MiBotProcessor(ProcessorMixin):
             clean_up_tokenization_spaces=clean_up_tokenization_spaces,
             **kwargs,
         )
+
     def _calculate_timestamps(self, indices: Union[list[int], np.ndarray], video_fps: float, merge_size: int = 2):
         if not isinstance(indices, list):
             indices = indices.tolist()
@@ -341,5 +356,6 @@ class MiBotProcessor(ProcessorMixin):
             (timestamps[i] + timestamps[i + merge_size - 1]) / 2 for i in range(0, len(timestamps), merge_size)
         ]
         return timestamps
+
 
 __all__ = ["MiBotProcessor"]

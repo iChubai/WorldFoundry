@@ -67,9 +67,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
     missing: list[dict[str, str]] = []
 
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append(
-            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "MIRA infer.py is missing"}
-        )
+        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "MIRA infer.py is missing"})
 
     checkpoint = _option(options, "checkpoint", "checkpoint_path", "checkpoint_dir", "model_path")
     if not checkpoint:

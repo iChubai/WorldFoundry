@@ -15,11 +15,11 @@ class CubemapFaces(NamedTuple):
     """Container for 6 cubemap face images."""
 
     front: torch.Tensor  # +Z direction
-    back: torch.Tensor   # -Z direction
+    back: torch.Tensor  # -Z direction
     right: torch.Tensor  # +X direction
-    left: torch.Tensor   # -X direction
-    up: torch.Tensor     # -Y direction (looking up)
-    down: torch.Tensor   # +Y direction (looking down)
+    left: torch.Tensor  # -X direction
+    up: torch.Tensor  # -Y direction (looking up)
+    down: torch.Tensor  # +Y direction (looking down)
 
 
 class PerspectiveView(NamedTuple):
@@ -59,11 +59,13 @@ def equirectangular_to_direction(
 
     return dx, dy, dz
 
+
 def rotate_quaternions(quaternions: torch.Tensor, rotation: torch.Tensor) -> torch.Tensor:
     from sharp.utils.linalg import (
         quaternions_from_rotation_matrices,
         rotation_matrices_from_quaternions,
     )
+
     rot_matrices = rotation_matrices_from_quaternions(quaternions)
     rot_matrices_world = rotation @ rot_matrices
     return quaternions_from_rotation_matrices(rot_matrices_world)
@@ -128,7 +130,7 @@ def get_cubemap_face_params(device: torch.device) -> dict:
     """
     return {
         "front": (
-            torch.tensor([0.0, 0.0, 1.0], device=device),   # Looking at +Z
+            torch.tensor([0.0, 0.0, 1.0], device=device),  # Looking at +Z
             torch.tensor([0.0, -1.0, 0.0], device=device),  # World -Y is up in image
         ),
         "back": (
@@ -136,7 +138,7 @@ def get_cubemap_face_params(device: torch.device) -> dict:
             torch.tensor([0.0, -1.0, 0.0], device=device),  # World -Y is up in image
         ),
         "right": (
-            torch.tensor([1.0, 0.0, 0.0], device=device),   # Looking at +X
+            torch.tensor([1.0, 0.0, 0.0], device=device),  # Looking at +X
             torch.tensor([0.0, -1.0, 0.0], device=device),  # World -Y is up in image
         ),
         "left": (
@@ -148,8 +150,8 @@ def get_cubemap_face_params(device: torch.device) -> dict:
             torch.tensor([0.0, 0.0, -1.0], device=device),  # World -Z is up in image
         ),
         "down": (
-            torch.tensor([0.0, 1.0, 0.0], device=device),   # Looking at +Y (down in world)
-            torch.tensor([0.0, 0.0, 1.0], device=device),   # World +Z is up in image
+            torch.tensor([0.0, 1.0, 0.0], device=device),  # Looking at +Y (down in world)
+            torch.tensor([0.0, 0.0, 1.0], device=device),  # World +Z is up in image
         ),
     }
 
@@ -386,12 +388,16 @@ def get_cubemap_intrinsics(face_size: int, device: torch.device) -> torch.Tensor
     cx = (face_size - 1) / 2.0
     cy = (face_size - 1) / 2.0
 
-    intrinsics = torch.tensor([
-        [f_px, 0.0, cx, 0.0],
-        [0.0, f_px, cy, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0],
-    ], device=device, dtype=torch.float32)
+    intrinsics = torch.tensor(
+        [
+            [f_px, 0.0, cx, 0.0],
+            [0.0, f_px, cy, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+        device=device,
+        dtype=torch.float32,
+    )
 
     return intrinsics
 
@@ -433,11 +439,15 @@ def get_overlapping_view_params(
     # Horizontal ring at horizon (elevation = 0)
     for i in range(num_horizontal):
         angle = 2 * math.pi * i / num_horizontal
-        forward = torch.tensor([
-            math.sin(angle),
-            0.0,
-            math.cos(angle),
-        ], device=device, dtype=torch.float32)
+        forward = torch.tensor(
+            [
+                math.sin(angle),
+                0.0,
+                math.cos(angle),
+            ],
+            device=device,
+            dtype=torch.float32,
+        )
         up = torch.tensor([0.0, -1.0, 0.0], device=device, dtype=torch.float32)
         views[f"h{i}"] = (forward, up)
 
@@ -460,22 +470,30 @@ def get_overlapping_view_params(
         # Upper ring
         for i in range(num_horizontal // 2):
             angle = 2 * math.pi * i / (num_horizontal // 2)
-            forward = torch.tensor([
-                cos_el * math.sin(angle),
-                -sin_el,  # Looking upward
-                cos_el * math.cos(angle),
-            ], device=device, dtype=torch.float32)
+            forward = torch.tensor(
+                [
+                    cos_el * math.sin(angle),
+                    -sin_el,  # Looking upward
+                    cos_el * math.cos(angle),
+                ],
+                device=device,
+                dtype=torch.float32,
+            )
             up = torch.tensor([0.0, -1.0, 0.0], device=device, dtype=torch.float32)
             views[f"upper{i}"] = (forward, up)
 
         # Lower ring
         for i in range(num_horizontal // 2):
             angle = 2 * math.pi * i / (num_horizontal // 2)
-            forward = torch.tensor([
-                cos_el * math.sin(angle),
-                sin_el,  # Looking downward
-                cos_el * math.cos(angle),
-            ], device=device, dtype=torch.float32)
+            forward = torch.tensor(
+                [
+                    cos_el * math.sin(angle),
+                    sin_el,  # Looking downward
+                    cos_el * math.cos(angle),
+                ],
+                device=device,
+                dtype=torch.float32,
+            )
             up = torch.tensor([0.0, -1.0, 0.0], device=device, dtype=torch.float32)
             views[f"lower{i}"] = (forward, up)
 
@@ -506,16 +524,16 @@ def extract_overlapping_views(
 
     views = []
     for name, (forward, up) in view_params.items():
-        image = extract_perspective_from_equirectangular(
-            equirect, forward, up, fov_deg=fov_deg, output_size=view_size
+        image = extract_perspective_from_equirectangular(equirect, forward, up, fov_deg=fov_deg, output_size=view_size)
+        views.append(
+            OverlappingView(
+                name=name,
+                image=image,
+                forward=forward,
+                up=up,
+                fov_deg=fov_deg,
+            )
         )
-        views.append(OverlappingView(
-            name=name,
-            image=image,
-            forward=forward,
-            up=up,
-            fov_deg=fov_deg,
-        ))
 
     return views
 
@@ -644,16 +662,14 @@ def merge_with_consensus(
     view_weights = torch.cat(all_view_weights, dim=0)
 
     n_total = positions.shape[0]
-    
+
     depths = positions.norm(dim=-1)
     voxel_indices = (positions / voxel_size).long()
     voxel_min = voxel_indices.min(dim=0).values
     voxel_indices = voxel_indices - voxel_min
     voxel_max = voxel_indices.max(dim=0).values + 1
     voxel_1d = (
-        voxel_indices[:, 0] * voxel_max[1] * voxel_max[2] +
-        voxel_indices[:, 1] * voxel_max[2] +
-        voxel_indices[:, 2]
+        voxel_indices[:, 0] * voxel_max[1] * voxel_max[2] + voxel_indices[:, 1] * voxel_max[2] + voxel_indices[:, 2]
     )
 
     # Get unique voxels and inverse mapping

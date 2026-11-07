@@ -16,9 +16,9 @@ from .convert_lora_safetensor_to_diffusers import convert_lora, load_diffusers_l
 
 
 MOTION_MODULES = [
-    "mm_sd_v14.ckpt", 
-    "mm_sd_v15.ckpt", 
-    "mm_sd_v15_v2.ckpt", 
+    "mm_sd_v14.ckpt",
+    "mm_sd_v15.ckpt",
+    "mm_sd_v15_v2.ckpt",
     "v3_sd15_mm.ckpt",
 ]
 
@@ -55,7 +55,8 @@ BACKUP_DREAMBOOTH_MODELS = [
 
 
 def zero_rank_print(s):
-    if (not dist.is_initialized()) and (dist.is_initialized() and dist.get_rank() == 0): print("### " + s)
+    if (not dist.is_initialized()) and (dist.is_initialized() and dist.get_rank() == 0):
+        print("### " + s)
 
 
 def _remap_vae_attention_keys_for_current_diffusers(state_dict):
@@ -81,8 +82,10 @@ def auto_download(local_path, is_dreambooth_lora=False):
     if not os.path.exists(local_path):
         print(f"local file {local_path} does not exist. trying to download from {hf_repo}")
 
-        if is_dreambooth_lora: assert filename in BACKUP_DREAMBOOTH_MODELS, f"{filename} dose not exist in {hf_repo}"
-        else: assert filename in MOTION_MODULES + ADAPTERS, f"{filename} dose not exist in {hf_repo}"
+        if is_dreambooth_lora:
+            assert filename in BACKUP_DREAMBOOTH_MODELS, f"{filename} dose not exist in {hf_repo}"
+        else:
+            assert filename in MOTION_MODULES + ADAPTERS, f"{filename} dose not exist in {hf_repo}"
 
         folder = "." if folder == "" else folder
         os.makedirs(folder, exist_ok=True)
@@ -92,15 +95,15 @@ def auto_download(local_path, is_dreambooth_lora=False):
 def load_weights(
     animation_pipeline,
     # motion module
-    motion_module_path         = "",
-    motion_module_lora_configs = [],
+    motion_module_path="",
+    motion_module_lora_configs=[],
     # domain adapter
-    adapter_lora_path          = "",
-    adapter_lora_scale         = 1.0,
+    adapter_lora_path="",
+    adapter_lora_scale=1.0,
     # image layers
-    dreambooth_model_path      = "",
-    lora_model_path            = "",
-    lora_alpha                 = 0.8,
+    dreambooth_model_path="",
+    lora_model_path="",
+    lora_alpha=0.8,
 ):
     # motion module
     unet_state_dict = {}
@@ -113,14 +116,20 @@ def load_weights(
             map_location="cpu",
             weights_only=True,
         )
-        motion_module_state_dict = motion_module_state_dict["state_dict"] if "state_dict" in motion_module_state_dict else motion_module_state_dict
+        motion_module_state_dict = (
+            motion_module_state_dict["state_dict"]
+            if "state_dict" in motion_module_state_dict
+            else motion_module_state_dict
+        )
         # filter parameters
         for name, param in motion_module_state_dict.items():
-            if not "motion_modules." in name: continue
-            if "pos_encoder.pe" in name: continue
+            if not "motion_modules." in name:
+                continue
+            if "pos_encoder.pe" in name:
+                continue
             unet_state_dict.update({name: param})
         unet_state_dict.pop("animatediff_config", "")
-    
+
     missing, unexpected = animation_pipeline.unet.load_state_dict(unet_state_dict, strict=False)
     assert len(unexpected) == 0
     del unet_state_dict
@@ -141,7 +150,7 @@ def load_weights(
                 map_location="cpu",
                 weights_only=True,
             )
-            
+
         # 1. vae
         converted_vae_checkpoint = convert_ldm_vae_checkpoint(dreambooth_state_dict, animation_pipeline.vae.config)
         converted_vae_checkpoint = _remap_vae_attention_keys_for_current_diffusers(converted_vae_checkpoint)
@@ -152,7 +161,7 @@ def load_weights(
         # 3. text_model
         animation_pipeline.text_encoder = convert_ldm_clip_checkpoint(dreambooth_state_dict)
         del dreambooth_state_dict
-        
+
     # lora layers
     if lora_model_path != "":
         auto_download(lora_model_path, is_dreambooth_lora=True)
@@ -163,7 +172,7 @@ def load_weights(
         with safe_open(lora_model_path, framework="pt", device="cpu") as f:
             for key in f.keys():
                 lora_state_dict[key] = f.get_tensor(key)
-                
+
         animation_pipeline = convert_lora(animation_pipeline, lora_state_dict, alpha=lora_alpha)
         del lora_state_dict
 
@@ -177,7 +186,9 @@ def load_weights(
             map_location="cpu",
             weights_only=True,
         )
-        domain_lora_state_dict = domain_lora_state_dict["state_dict"] if "state_dict" in domain_lora_state_dict else domain_lora_state_dict
+        domain_lora_state_dict = (
+            domain_lora_state_dict["state_dict"] if "state_dict" in domain_lora_state_dict else domain_lora_state_dict
+        )
         domain_lora_state_dict.pop("animatediff_config", "")
 
         animation_pipeline = load_diffusers_lora(animation_pipeline, domain_lora_state_dict, alpha=adapter_lora_scale)
@@ -190,7 +201,9 @@ def load_weights(
 
         print(f"load motion LoRA from {path}")
         motion_lora_state_dict = torch.load(path, map_location="cpu", weights_only=True)
-        motion_lora_state_dict = motion_lora_state_dict["state_dict"] if "state_dict" in motion_lora_state_dict else motion_lora_state_dict
+        motion_lora_state_dict = (
+            motion_lora_state_dict["state_dict"] if "state_dict" in motion_lora_state_dict else motion_lora_state_dict
+        )
         motion_lora_state_dict.pop("animatediff_config", "")
 
         animation_pipeline = load_diffusers_lora(animation_pipeline, motion_lora_state_dict, alpha)

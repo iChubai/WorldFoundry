@@ -17,8 +17,7 @@ import torch
 import torch.nn as nn
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders.single_file_model import FromOriginalModelMixin
-from diffusers.models.autoencoders.vae import (DecoderOutput,
-                                               DiagonalGaussianDistribution)
+from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
 from diffusers.models.modeling_outputs import AutoencoderKLOutput
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import logging
@@ -32,16 +31,23 @@ except:
     from diffusers.loaders import FromOriginalModelMixin as FromOriginalVAEMixin
 
 from diffusers.models.attention_processor import (
-    ADDED_KV_ATTENTION_PROCESSORS, CROSS_ATTENTION_PROCESSORS, Attention,
-    AttentionProcessor, AttnAddedKVProcessor, AttnProcessor)
+    ADDED_KV_ATTENTION_PROCESSORS,
+    CROSS_ATTENTION_PROCESSORS,
+    Attention,
+    AttentionProcessor,
+    AttnAddedKVProcessor,
+    AttnProcessor,
+)
 from diffusers import AutoencoderKL
 
 from .hf_loading import resolve_pretrained_subfolder
 
-from ..vae.ldm.models.cogvideox_enc_dec import (CogVideoXCausalConv3d,
-                                                CogVideoXDecoder3D,
-                                                CogVideoXEncoder3D,
-                                                CogVideoXSafeConv3d)
+from ..vae.ldm.models.cogvideox_enc_dec import (
+    CogVideoXCausalConv3d,
+    CogVideoXDecoder3D,
+    CogVideoXEncoder3D,
+    CogVideoXSafeConv3d,
+)
 from ..vae.ldm.models.omnigen_enc_dec import CausalConv3d
 from ..vae.ldm.models.omnigen_enc_dec import Decoder as omnigen_Mag_Decoder
 from ..vae.ldm.models.omnigen_enc_dec import Encoder as omnigen_Mag_Encoder
@@ -54,6 +60,7 @@ def str_eval(item):
         return eval(item)
     else:
         return item
+
 
 class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
     r"""
@@ -94,10 +101,10 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
         self,
         in_channels: int = 3,
         out_channels: int = 3,
-        ch =  128,
-        ch_mult = [ 1,2,4,4 ],
-        block_out_channels = [128, 256, 512, 512],
-        use_gc_blocks = None,
+        ch=128,
+        ch_mult=[1, 2, 4, 4],
+        block_out_channels=[128, 256, 512, 512],
+        use_gc_blocks=None,
         down_block_types: tuple = None,
         up_block_types: tuple = None,
         mid_block_type: str = "MidBlock3D",
@@ -248,7 +255,9 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
         if self.use_tiling and (x.shape[-1] > self.tile_sample_min_size or x.shape[-2] > self.tile_sample_min_size):
             x = self.tiled_encode(x, return_dict=return_dict)
             return x
-        if self.use_tiling_encoder and (x.shape[-1] > self.tile_sample_min_size or x.shape[-2] > self.tile_sample_min_size):
+        if self.use_tiling_encoder and (
+            x.shape[-1] > self.tile_sample_min_size or x.shape[-2] > self.tile_sample_min_size
+        ):
             x = self.tiled_encode(x, return_dict=return_dict)
             return x
 
@@ -274,7 +283,9 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
             self.post_quant_conv = self.post_quant_conv.float()
         if self.use_tiling and (z.shape[-1] > self.tile_latent_min_size or z.shape[-2] > self.tile_latent_min_size):
             return self.tiled_decode(z, return_dict=return_dict)
-        if self.use_tiling_decoder and (z.shape[-1] > self.tile_latent_min_size or z.shape[-2] > self.tile_latent_min_size):
+        if self.use_tiling_decoder and (
+            z.shape[-1] > self.tile_latent_min_size or z.shape[-2] > self.tile_latent_min_size
+        ):
             return self.tiled_decode(z, return_dict=return_dict)
 
         z = self.post_quant_conv(z)
@@ -315,24 +326,20 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
 
         return DecoderOutput(sample=decoded)
 
-    def blend_v(
-        self, a: torch.Tensor, b: torch.Tensor, blend_extent: int
-    ) -> torch.Tensor:
+    def blend_v(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
         blend_extent = min(a.shape[3], b.shape[3], blend_extent)
         for y in range(blend_extent):
-            b[:, :, :, y, :] = a[:, :, :, -blend_extent + y, :] * (
-                1 - y / blend_extent
-            ) + b[:, :, :, y, :] * (y / blend_extent)
+            b[:, :, :, y, :] = a[:, :, :, -blend_extent + y, :] * (1 - y / blend_extent) + b[:, :, :, y, :] * (
+                y / blend_extent
+            )
         return b
 
-    def blend_h(
-        self, a: torch.Tensor, b: torch.Tensor, blend_extent: int
-    ) -> torch.Tensor:
+    def blend_h(self, a: torch.Tensor, b: torch.Tensor, blend_extent: int) -> torch.Tensor:
         blend_extent = min(a.shape[4], b.shape[4], blend_extent)
         for x in range(blend_extent):
-            b[:, :, :, :, x] = a[:, :, :, :, -blend_extent + x] * (
-                1 - x / blend_extent
-            ) + b[:, :, :, :, x] * (x / blend_extent)
+            b[:, :, :, :, x] = a[:, :, :, :, -blend_extent + x] * (1 - x / blend_extent) + b[:, :, :, :, x] * (
+                x / blend_extent
+            )
         return b
 
     def tiled_encode(self, x: torch.FloatTensor, return_dict: bool = True) -> AutoencoderKLOutput:
@@ -413,15 +420,9 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
             result_rows.append(torch.cat(result_row, dim=4))
 
         dec = torch.cat(result_rows, dim=3)
-    
+
         # Handle the lower right corner tile separately
-        lower_right_original = z[
-            :,
-            :,
-            :,
-            -self.tile_latent_min_size:,
-            -self.tile_latent_min_size:
-        ]
+        lower_right_original = z[:, :, :, -self.tile_latent_min_size :, -self.tile_latent_min_size :]
         quantized_lower_right = self.decoder(self.post_quant_conv(lower_right_original))
 
         # Combine
@@ -478,9 +479,10 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
     def from_pretrained(cls, pretrained_model_path, subfolder=None, **vae_additional_kwargs):
         import json
         import os
+
         pretrained_model_path = resolve_pretrained_subfolder(pretrained_model_path, subfolder)
 
-        config_file = os.path.join(pretrained_model_path, 'config.json')
+        config_file = os.path.join(pretrained_model_path, "config.json")
         if not os.path.isfile(config_file):
             raise RuntimeError(f"{config_file} does not exist")
         with open(config_file, "r") as f:
@@ -488,10 +490,12 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
 
         model = cls.from_config(config, **vae_additional_kwargs)
         from diffusers.utils import WEIGHTS_NAME
+
         model_file = os.path.join(pretrained_model_path, WEIGHTS_NAME)
         model_file_safetensors = model_file.replace(".bin", ".safetensors")
         if os.path.exists(model_file_safetensors):
             from safetensors.torch import load_file, safe_open
+
             state_dict = load_file(model_file_safetensors)
         else:
             if not os.path.isfile(model_file):

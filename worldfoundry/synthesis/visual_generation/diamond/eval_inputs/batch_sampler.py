@@ -51,8 +51,10 @@ class BatchSampler(torch.utils.data.Sampler):
             weights = [w / s for (w, s) in zip(weights, sizes) for _ in range(s)]
 
         episodes_partition = np.arange(self.rank, num_episodes, self.world_size)
-        weights = np.array(weights[self.rank::self.world_size])
-        episode_ids = np.random.choice(episodes_partition, size=self.batch_size, replace=True, p=weights / weights.sum())
+        weights = np.array(weights[self.rank :: self.world_size])
+        episode_ids = np.random.choice(
+            episodes_partition, size=self.batch_size, replace=True, p=weights / weights.sum()
+        )
         timesteps = np.random.randint(low=0, high=self.dataset.lengths[episode_ids])
 
         # padding allowed, both before start and after end

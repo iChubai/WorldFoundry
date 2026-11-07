@@ -599,7 +599,6 @@ class WANPolicyHead(ActionHead):
         return kv_caches
 
     def _prepare_text_inputs(self, data: BatchFeature) -> list[tuple[torch.Tensor, torch.Tensor]]:
-
         if self.ip_size > 1:
             assert self.cfg_scale != 1.0, "cfg_scale must be != 1.0 when ip_size > 1"
             if self.ip_rank == 0:
@@ -706,7 +705,6 @@ class WANPolicyHead(ActionHead):
         return cast(list[tuple[torch.Tensor, torch.Tensor]], output_predictions)
 
     def should_run_model(self, index, current_timestep, prev_predictions):
-
         if not self.dynamic_cache_schedule:
             return self.dit_step_mask[index]
 
@@ -1147,7 +1145,9 @@ class WANPolicyHead(ActionHead):
         # Torch compile the modules. Skip _forward_blocks: Dynamo with fullgraph can fail on
         # shape variation (e.g. x [1,50,C] vs e [1,200,C]); the block aligns e to x at runtime.
         if not ENABLE_TENSORRT:
-            print("Torch compiling the TextEncoder and VAE modules (CLIP attention and Wan _forward_blocks remain eager).")
+            print(
+                "Torch compiling the TextEncoder and VAE modules (CLIP attention and Wan _forward_blocks remain eager)."
+            )
 
             self.text_encoder.forward = torch.compile(
                 mode="reduce-overhead",

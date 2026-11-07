@@ -55,11 +55,13 @@ class CustomPipelineOutput(BaseOutput):
             denoised PIL image sequences of length `num_frames.` It can also be a NumPy array or Torch tensor of shape
             `(batch_size, num_frames, channels, height, width)`.
     """
+
     frames: torch.Tensor
 
 
 def cross_attn_judgement(timesteps):
-    return timesteps>=0
+    return timesteps >= 0
+
 
 # Copied from diffusers.pipelines.flux.pipeline_flux.calculate_shift
 def calculate_shift(
@@ -136,7 +138,9 @@ def retrieve_timesteps(
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
-def retrieve_latents(encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"):
+def retrieve_latents(
+    encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
+):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
         return encoder_output.latent_dist.sample(generator)
     elif hasattr(encoder_output, "latent_dist") and sample_mode == "argmax":
@@ -170,7 +174,6 @@ def update_init_latents(init_latents, n_prev, new_latents):
 
 ### Modified From diffusers/pipelines/ltx/pipeline_ltx.py
 class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
-
     model_cpu_offload_seq = "text_encoder->transformer->vae"
     _optional_components = []
     _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
@@ -208,11 +211,11 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                 if hasattr(self.transformer.config, "patch_size"):
                     if isinstance(self.transformer.config.patch_size, (list, tuple)):
                         if len(self.transformer.config.patch_size) == 3:
-                            assert(self.transformer.config.patch_size[1] ==  self.transformer.config.patch_size[2])
+                            assert self.transformer.config.patch_size[1] == self.transformer.config.patch_size[2]
                             self.transformer_spatial_patch_size = self.transformer.config.patch_size[1]
                             self.transformer_temporal_patch_size = self.transformer.config.patch_size[0]
                         elif len(self.transformer.config.patch_size) == 2:
-                            assert(self.transformer.config.patch_size[0] ==  self.transformer.config.patch_size[1])
+                            assert self.transformer.config.patch_size[0] == self.transformer.config.patch_size[1]
                             self.transformer_spatial_patch_size = self.transformer.config.patch_size[0]
                     else:
                         self.transformer_spatial_patch_size = self.transformer.config.patch_size
@@ -224,9 +227,9 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         if self.transformer_temporal_patch_size is None:
             self.transformer_temporal_patch_size = 1
 
-
-        self.tokenizer_max_length = self.tokenizer.model_max_length if hasattr(self, "tokenizer") and self.tokenizer is not None else 128
-
+        self.tokenizer_max_length = (
+            self.tokenizer.model_max_length if hasattr(self, "tokenizer") and self.tokenizer is not None else 128
+        )
 
     def _get_t5_prompt_embeds(
         self,
@@ -338,7 +341,10 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
             negative_prompt = batch_size * [negative_prompt] if isinstance(negative_prompt, str) else negative_prompt
 
             if prompt is not None and type(prompt) is not type(negative_prompt):
-                raise TypeError(f"`negative_prompt` should be the same type to `prompt`, but got {type(negative_prompt)} !=" f" {type(prompt)}.")
+                raise TypeError(
+                    f"`negative_prompt` should be the same type to `prompt`, but got {type(negative_prompt)} !="
+                    f" {type(prompt)}."
+                )
             elif batch_size != len(negative_prompt):
                 raise ValueError(
                     f"`negative_prompt`: {negative_prompt} has batch size {len(negative_prompt)}, but `prompt`:"
@@ -371,17 +377,22 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         if height % 32 != 0 or width % 32 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 32 but are {height} and {width}.")
 
-        if callback_on_step_end_tensor_inputs is not None and not all(k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs):
+        if callback_on_step_end_tensor_inputs is not None and not all(
+            k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
+        ):
             raise ValueError(
                 f"`callback_on_step_end_tensor_inputs` has to be in {self._callback_tensor_inputs}, but found {[k for k in callback_on_step_end_tensor_inputs if k not in self._callback_tensor_inputs]}"
             )
 
         if prompt is not None and prompt_embeds is not None:
             raise ValueError(
-                f"Cannot forward both `prompt`: {prompt} and `prompt_embeds`: {prompt_embeds}. Please make sure to" " only forward one of the two."
+                f"Cannot forward both `prompt`: {prompt} and `prompt_embeds`: {prompt_embeds}. Please make sure to"
+                " only forward one of the two."
             )
         elif prompt is None and prompt_embeds is None:
-            raise ValueError("Provide either `prompt` or `prompt_embeds`. Cannot leave both `prompt` and `prompt_embeds` undefined.")
+            raise ValueError(
+                "Provide either `prompt` or `prompt_embeds`. Cannot leave both `prompt` and `prompt_embeds` undefined."
+            )
         elif prompt is not None and (not isinstance(prompt, str) and not isinstance(prompt, list)):
             raise ValueError(f"`prompt` has to be of type `str` or `list` but is {type(prompt)}")
 
@@ -431,7 +442,9 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
 
     @staticmethod
     # Copied from diffusers.pipelines.ltx.pipeline_ltx.LTXPipeline._unpack_latents
-    def _unpack_latents(latents: torch.Tensor, num_frames: int, height: int, width: int, patch_size: int = 1, patch_size_t: int = 1) -> torch.Tensor:
+    def _unpack_latents(
+        latents: torch.Tensor, num_frames: int, height: int, width: int, patch_size: int = 1, patch_size_t: int = 1
+    ) -> torch.Tensor:
         # Packed latents of shape [B, S, D] (S is the effective video sequence length, D is the effective feature dimensions)
         # are unpacked and reshaped into a video tensor of shape [B, C, F, H, W]. This is the inverse operation of
         # what happens in the `_pack_latents` method.
@@ -442,7 +455,9 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
 
     @staticmethod
     # Copied from diffusers.pipelines.ltx.pipeline_ltx.LTXPipeline._normalize_latents
-    def _normalize_latents(latents: torch.Tensor, latents_mean: torch.Tensor, latents_std: torch.Tensor, scaling_factor: float = 1.0) -> torch.Tensor:
+    def _normalize_latents(
+        latents: torch.Tensor, latents_mean: torch.Tensor, latents_std: torch.Tensor, scaling_factor: float = 1.0
+    ) -> torch.Tensor:
         # Normalize latents across the channel dimension [B, C, F, H, W]
         latents_mean = latents_mean.view(1, -1, 1, 1, 1).to(latents.device, latents.dtype)
         latents_std = latents_std.view(1, -1, 1, 1, 1).to(latents.device, latents.dtype)
@@ -483,7 +498,9 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         if latents is not None:
             conditioning_mask = latents.new_zeros(shape)
             conditioning_mask[:, :, 0] = 1.0
-            conditioning_mask = self._pack_latents(conditioning_mask, self.transformer_spatial_patch_size, self.transformer_temporal_patch_size)
+            conditioning_mask = self._pack_latents(
+                conditioning_mask, self.transformer_spatial_patch_size, self.transformer_temporal_patch_size
+            )
             return latents.to(device=device, dtype=dtype), conditioning_mask
 
         if isinstance(generator, list):
@@ -493,9 +510,14 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                     f" size of {batch_size}. Make sure the batch size matches the length of the generators."
                 )
 
-            init_latents = [retrieve_latents(self.vae.encode(image[i].unsqueeze(0).unsqueeze(2)), generator[i]) for i in range(batch_size)]
+            init_latents = [
+                retrieve_latents(self.vae.encode(image[i].unsqueeze(0).unsqueeze(2)), generator[i])
+                for i in range(batch_size)
+            ]
         else:
-            init_latents = [retrieve_latents(self.vae.encode(img.unsqueeze(0).unsqueeze(2)), generator) for img in image]
+            init_latents = [
+                retrieve_latents(self.vae.encode(img.unsqueeze(0).unsqueeze(2)), generator) for img in image
+            ]
 
         init_latents = torch.cat(init_latents, dim=0).to(dtype)
         init_latents = self._normalize_latents(init_latents, self.vae.latents_mean, self.vae.latents_std)
@@ -506,9 +528,9 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         latents = init_latents * conditioning_mask + noise * (1 - conditioning_mask)
 
-        conditioning_mask = self._pack_latents(conditioning_mask, self.transformer_spatial_patch_size, self.transformer_temporal_patch_size).squeeze(
-            -1
-        )
+        conditioning_mask = self._pack_latents(
+            conditioning_mask, self.transformer_spatial_patch_size, self.transformer_temporal_patch_size
+        ).squeeze(-1)
         latents = self._pack_latents(latents, self.transformer_spatial_patch_size, self.transformer_temporal_patch_size)
 
         return latents, conditioning_mask
@@ -533,9 +555,10 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
     def interrupt(self):
         return self._interrupt
 
-
     def decode_to_frames(self, latents, dtype, generator, device, batch_size, decode_timestep, decode_noise_scale):
-        latents = self._denormalize_latents(latents, self.vae.latents_mean, self.vae.latents_std, getattr(self.vae.config, "scaling_factor", 1.0))
+        latents = self._denormalize_latents(
+            latents, self.vae.latents_mean, self.vae.latents_std, getattr(self.vae.config, "scaling_factor", 1.0)
+        )
         latents = latents.to(dtype)
 
         if not getattr(self.vae.config, "timestep_conditioning", False):
@@ -550,15 +573,15 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                 decode_noise_scale = [decode_noise_scale] * batch_size
 
             timestep = torch.tensor(decode_timestep, device=device, dtype=latents.dtype)
-            decode_noise_scale = torch.tensor(decode_noise_scale, device=device, dtype=latents.dtype)[:, None, None, None, None]
+            decode_noise_scale = torch.tensor(decode_noise_scale, device=device, dtype=latents.dtype)[
+                :, None, None, None, None
+            ]
             latents = (1 - decode_noise_scale) * latents + decode_noise_scale * noise
 
         video = self.vae.decode(latents, temb=timestep, return_dict=False)[0]
 
         # return latents shape b,c,t,h,w ranging from -1 to 1
         return video.clamp(-1, 1)
-
-
 
     @torch.no_grad()
     def infer(
@@ -679,10 +702,8 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                 returned where the first element is a list with the generated images.
         """
 
-
         if return_action:
-            assert n_chunk==1, "action-inference pipeline only support single chunk prediction now"
-        
+            assert n_chunk == 1, "action-inference pipeline only support single chunk prediction now"
 
         # pre-compute latent shape
         self.transformer.eval()
@@ -751,7 +772,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         image = rearrange(image, "bv c t h w -> (bv t) c h w").unsqueeze(2)
         init_latents = retrieve_latents(self.vae.encode(image), generator, sample_mode=sample_mode)
         init_latents = self._normalize_latents(init_latents, self.vae.latents_mean, self.vae.latents_std)
-        
+
         if mem_size == 1 and n_prev > 1:
             init_latents = init_latents.repeat(1, 1, n_prev, 1, 1)
         else:
@@ -762,10 +783,14 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                 action_generator = torch.Generator(device=device).manual_seed(noise_seed)
             else:
                 action_generator = generator
-            actions = randn_tensor((batch_size, action_chunk, action_dim), device=device, dtype=prompt_embeds.dtype, generator=action_generator)
+            actions = randn_tensor(
+                (batch_size, action_chunk, action_dim),
+                device=device,
+                dtype=prompt_embeds.dtype,
+                generator=action_generator,
+            )
         else:
             actions = None
-
 
         # 5. Prepare timesteps
         sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
@@ -808,7 +833,6 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
             self.vae_spatial_compression_ratio,
         )
 
-
         # 7. Denoising loop
         if noise_seed:
             video_generator = torch.Generator(device=device).manual_seed(noise_seed)
@@ -816,10 +840,14 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
             video_generator = generator
         video_attention_mask = None
         for i_chunk in range(n_chunk):
-
             video_states_buffer = None
             latents, conditioning_mask, cond_indicator = gen_noise_from_condition_frame_latent(
-                init_latents, latent_num_frames, latent_height, latent_width, video_generator, noise_to_condition_frames=0
+                init_latents,
+                latent_num_frames,
+                latent_height,
+                latent_width,
+                video_generator,
+                noise_to_condition_frames=0,
             )
 
             if self.do_classifier_free_guidance:
@@ -828,13 +856,14 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
             if not show_progress:
                 self.set_progress_bar_config(disable=True)
             with self.progress_bar(total=num_inference_steps) as progress_bar:
-                
                 for i, t in enumerate(timesteps):
                     if self.interrupt:
                         continue
 
                     # (g b v) l c
-                    latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents.clone()
+                    latent_model_input = (
+                        torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents.clone()
+                    )
                     latent_model_input = latent_model_input.to(prompt_embeds.dtype)
 
                     # TODO: only compute video in the first most noisy timestep
@@ -855,10 +884,12 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                             actions_in = actions.clone()
                             if history_action_state is not None:
                                 history_action_state_in = history_action_state.clone()
-                            
+
                         actions_in = actions_in.to(prompt_embeds.dtype)
                         if history_action_state is not None:
-                            history_action_state_in = history_action_state_in.to(device=device, dtype=prompt_embeds.dtype)
+                            history_action_state_in = history_action_state_in.to(
+                                device=device, dtype=prompt_embeds.dtype
+                            )
 
                     else:
                         actions_in = None
@@ -867,15 +898,14 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
 
                     # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                     timestep = t.expand(latent_model_input.shape[0])
-                    
+
                     if pixel_wise_timestep:
                         # shape: bv, thw
                         timestep = timestep.unsqueeze(-1) * (1 - conditioning_mask)
                     else:
                         # shape: bv, t
                         timestep = timestep.unsqueeze(-1) * (1 - cond_indicator)
-                        
-                    
+
                     noise_pred = self.transformer(
                         hidden_states=latent_model_input,
                         encoder_hidden_states=prompt_embeds,
@@ -899,25 +929,28 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                         condition_mask=conditioning_mask,
                     )[0]
 
-
                     if store_buffer:
                         video_states_buffer = noise_pred["video_states_buffer"]
 
                     if return_action:
                         if self.do_classifier_free_guidance:
                             action_noise_pred_uncond, action_noise_pred = noise_pred["action"].float().chunk(2)
-                            action_noise_pred = action_noise_pred_uncond + self.guidance_scale * (action_noise_pred - action_noise_pred_uncond)
+                            action_noise_pred = action_noise_pred_uncond + self.guidance_scale * (
+                                action_noise_pred - action_noise_pred_uncond
+                            )
                         else:
                             action_noise_pred = noise_pred["action"].float()
-                        
+
                         actions = self.scheduler_action.step(action_noise_pred, t, actions, return_dict=False)[0]
-                        
+
                     if return_video:
                         video_noise_pred = noise_pred["video"].float()
 
                         if self.do_classifier_free_guidance:
                             noise_pred_uncond, noise_pred_text = video_noise_pred.chunk(2)
-                            video_noise_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
+                            video_noise_pred = noise_pred_uncond + self.guidance_scale * (
+                                noise_pred_text - noise_pred_uncond
+                            )
                             timestep, _ = timestep.chunk(2)
 
                         # compute the previous noisy sample x_t -> x_t-1
@@ -940,12 +973,12 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
 
                         video_noise_pred = video_noise_pred[:, :, n_prev:]
                         noise_latents = latents[:, :, n_prev:]
-                        pred_latents = self.scheduler.step(
-                            video_noise_pred, t, noise_latents, return_dict=False
-                        )[0]
+                        pred_latents = self.scheduler.step(video_noise_pred, t, noise_latents, return_dict=False)[0]
 
                         latents = torch.cat([latents[:, :, :n_prev], pred_latents], dim=2)
-                        latents = self._pack_latents(latents, self.transformer_spatial_patch_size, self.transformer_temporal_patch_size)
+                        latents = self._pack_latents(
+                            latents, self.transformer_spatial_patch_size, self.transformer_temporal_patch_size
+                        )
 
                     progress_bar.update()
 
@@ -953,7 +986,6 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                         xm.mark_step()
 
             if return_video:
-                
                 ### clean_frames: (b v) c t h w, -1~1
                 clean_frames = self.decode_to_frames(
                     pred_latents,
@@ -969,19 +1001,17 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                 else:
                     video_list = torch.cat((video_list, clean_frames), dim=2)
 
-                if i_chunk < n_chunk-1:
-                    
+                if i_chunk < n_chunk - 1:
                     ### reset scheduler
                     self.scheduler._step_index = None
 
                     ### prepare memories for next chunk
-                    new_mem_idxs = torch.linspace(0, video_list.shape[2]-1, n_prev).round().long()
+                    new_mem_idxs = torch.linspace(0, video_list.shape[2] - 1, n_prev).round().long()
                     new_mems = video_list[:, :, new_mem_idxs, :, :].clone()
                     new_mems = rearrange(new_mems, "bv c t h w -> (bv t) c h w").unsqueeze(2)
                     init_latents = retrieve_latents(self.vae.encode(new_mems), generator, sample_mode=sample_mode)
                     init_latents = self._normalize_latents(init_latents, self.vae.latents_mean, self.vae.latents_std)
                     init_latents = rearrange(init_latents, "(b t) c f h w -> b c (t f) h w", t=mem_size)
-        
 
         # Offload all models
         self.maybe_free_model_hooks()

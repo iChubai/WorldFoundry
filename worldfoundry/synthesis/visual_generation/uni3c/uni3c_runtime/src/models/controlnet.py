@@ -24,12 +24,12 @@ class WanAttnProcessorSP:
             raise ImportError("WanAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
 
     def __call__(
-            self,
-            attn: Attention,
-            hidden_states: torch.Tensor,
-            encoder_hidden_states: Optional[torch.Tensor] = None,
-            attention_mask: Optional[torch.Tensor] = None,
-            rotary_emb: Optional[torch.Tensor] = None,
+        self,
+        attn: Attention,
+        hidden_states: torch.Tensor,
+        encoder_hidden_states: Optional[torch.Tensor] = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        rotary_emb: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         encoder_hidden_states_img = None
         if attn.add_k_proj is not None:
@@ -72,6 +72,7 @@ class WanAttnProcessorSP:
             hidden_states_img = hidden_states_img.type_as(query)
 
         if self.sp_size > 1:
+
             def half(x):
                 return x if x.dtype in (torch.float16, torch.bfloat16) else x.to(torch.bfloat16)
 
@@ -103,14 +104,13 @@ class SimpleAttnProcessor2_0:
             raise ImportError("SimpleAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
 
     def __call__(
-            self,
-            attn: Attention,
-            hidden_states: torch.Tensor,
-            attention_mask: Optional[torch.Tensor] = None,
-            rotary_emb: Optional[torch.Tensor] = None,
-            **kwargs
+        self,
+        attn: Attention,
+        hidden_states: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        rotary_emb: Optional[torch.Tensor] = None,
+        **kwargs,
     ) -> torch.Tensor:
-
         query = attn.to_q(hidden_states)
         key = attn.to_k(hidden_states)
         value = attn.to_v(hidden_states)
@@ -129,6 +129,7 @@ class SimpleAttnProcessor2_0:
             key = apply_rotary_embedding_bhld(key, rotary_emb)
 
         if self.sp_size > 1:
+
             def half(x):
                 return x if x.dtype in (torch.float16, torch.bfloat16) else x.to(torch.bfloat16)
 
@@ -151,12 +152,12 @@ class SimpleAttnProcessor2_0:
 
 class SimpleCogVideoXLayerNormZero(nn.Module):
     def __init__(
-            self,
-            conditioning_dim: int,
-            embedding_dim: int,
-            elementwise_affine: bool = True,
-            eps: float = 1e-5,
-            bias: bool = True,
+        self,
+        conditioning_dim: int,
+        embedding_dim: int,
+        elementwise_affine: bool = True,
+        eps: float = 1e-5,
+        bias: bool = True,
     ) -> None:
         super().__init__()
 
@@ -171,16 +172,7 @@ class SimpleCogVideoXLayerNormZero(nn.Module):
 
 
 class SingleAttentionBlock(nn.Module):
-
-    def __init__(
-            self,
-            dim,
-            ffn_dim,
-            num_heads,
-            time_embed_dim=512,
-            qk_norm="rms_norm_across_heads",
-            eps=1e-6
-    ):
+    def __init__(self, dim, ffn_dim, num_heads, time_embed_dim=512, qk_norm="rms_norm_across_heads", eps=1e-6):
         super().__init__()
         self.dim = dim
         self.ffn_dim = ffn_dim
@@ -189,9 +181,7 @@ class SingleAttentionBlock(nn.Module):
         self.eps = eps
 
         # layers
-        self.norm1 = SimpleCogVideoXLayerNormZero(
-            time_embed_dim, dim, elementwise_affine=True, eps=1e-5, bias=True
-        )
+        self.norm1 = SimpleCogVideoXLayerNormZero(time_embed_dim, dim, elementwise_affine=True, eps=1e-5, bias=True)
         self.self_attn = Attention(
             query_dim=dim,
             heads=num_heads,
@@ -204,27 +194,20 @@ class SingleAttentionBlock(nn.Module):
             out_bias=True,
             processor=SimpleAttnProcessor2_0(),
         )
-        self.norm2 = SimpleCogVideoXLayerNormZero(
-            time_embed_dim, dim, elementwise_affine=True, eps=1e-5, bias=True
-        )
-        self.ffn = nn.Sequential(
-            nn.Linear(dim, ffn_dim),
-            nn.GELU(approximate='tanh'),
-            nn.Linear(ffn_dim, dim)
-        )
+        self.norm2 = SimpleCogVideoXLayerNormZero(time_embed_dim, dim, elementwise_affine=True, eps=1e-5, bias=True)
+        self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), nn.GELU(approximate="tanh"), nn.Linear(ffn_dim, dim))
 
     def forward(
-            self,
-            hidden_states,
-            temb,
-            rotary_emb,
+        self,
+        hidden_states,
+        temb,
+        rotary_emb,
     ):
         # norm & modulate
         norm_hidden_states, gate_msa = self.norm1(hidden_states, temb)
 
         # attention
-        attn_hidden_states = self.self_attn(hidden_states=norm_hidden_states,
-                                            rotary_emb=rotary_emb)
+        attn_hidden_states = self.self_attn(hidden_states=norm_hidden_states, rotary_emb=rotary_emb)
 
         hidden_states = hidden_states + gate_msa * attn_hidden_states
 
@@ -262,10 +245,7 @@ class WanXControlNet(ModelMixin):
             ]
         )
         self.proj_out = nn.ModuleList(
-            [
-                zero_module(nn.Linear(controlnet_cfg.dim, 5120))
-                for _ in range(controlnet_cfg.num_layers)
-            ]
+            [zero_module(nn.Linear(controlnet_cfg.dim, 5120)) for _ in range(controlnet_cfg.num_layers)]
         )
 
         self.gradient_checkpointing = False
@@ -276,17 +256,10 @@ class WanXControlNet(ModelMixin):
         for i, block in enumerate(self.controlnet_blocks):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 hidden_states = self._gradient_checkpointing_func(
-                    block,
-                    hidden_states=hidden_states,
-                    temb=temb,
-                    rotary_emb=rotary_emb
+                    block, hidden_states=hidden_states, temb=temb, rotary_emb=rotary_emb
                 )
             else:
-                hidden_states = block(
-                    hidden_states=hidden_states,
-                    temb=temb,
-                    rotary_emb=rotary_emb
-                )
+                hidden_states = block(hidden_states=hidden_states, temb=temb, rotary_emb=rotary_emb)
             controlnet_states.append(self.proj_out[i](hidden_states))
 
         return controlnet_states

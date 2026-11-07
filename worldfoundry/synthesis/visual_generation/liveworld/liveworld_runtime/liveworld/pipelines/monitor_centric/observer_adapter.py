@@ -2,6 +2,7 @@
 
 This module keeps LiveWorld-specific logic isolated from the event-centric flow.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,6 +18,7 @@ from liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipelin
 @dataclass
 class ObserverIterationInput:
     """Inputs for a single observer iteration."""
+
     # Preceding frames used for P1/P9 conditioning (required).
     preceding_frames: np.ndarray
     prompt: str
@@ -37,6 +39,7 @@ class ObserverIterationInput:
 @dataclass
 class ObserverIterationOutput:
     """Outputs from a single observer iteration."""
+
     frames: torch.Tensor
     # Optional static point cloud update (points, colors).
     static_update: Optional[Tuple[np.ndarray, np.ndarray]]

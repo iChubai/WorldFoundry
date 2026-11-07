@@ -35,7 +35,13 @@ try:
     )
 except ImportError:  # pragma: no cover - upstream-only checkout
     _DEFAULT_SPECIAL_TOKEN_PATH = str(
-        Path(__file__).resolve().parents[6] / "data" / "test_cases" / "magi" / "example" / "assets" / "special_tokens.npz"
+        Path(__file__).resolve().parents[6]
+        / "data"
+        / "test_cases"
+        / "magi"
+        / "example"
+        / "assets"
+        / "special_tokens.npz"
     )
 SPECIAL_TOKEN_PATH = os.getenv("SPECIAL_TOKEN_PATH", _DEFAULT_SPECIAL_TOKEN_PATH)
 SPECIAL_TOKEN = np.load(SPECIAL_TOKEN_PATH)
@@ -46,7 +52,9 @@ HQ_TOKEN = torch.tensor(SPECIAL_TOKEN["other_tokens"][1:2].astype(np.float16))
 STATIC_FIRST_FRAMES_TOKEN = torch.tensor(SPECIAL_TOKEN["other_tokens"][2:3].astype(np.float16))  # static first frames
 DYNAMIC_FIRST_FRAMES_TOKEN = torch.tensor(SPECIAL_TOKEN["other_tokens"][3:4].astype(np.float16))  # dynamic first frames
 BORDERNESS_TOKEN = torch.tensor(SPECIAL_TOKEN["other_tokens"][4:5].astype(np.float16))
-DURATION_TOKEN_LIST = [torch.tensor(SPECIAL_TOKEN["other_tokens"][i : i + 1].astype(np.float16)) for i in range(0 + 7, 8 + 7)]
+DURATION_TOKEN_LIST = [
+    torch.tensor(SPECIAL_TOKEN["other_tokens"][i : i + 1].astype(np.float16)) for i in range(0 + 7, 8 + 7)
+]
 THREE_D_MODEL_TOKEN = torch.tensor(SPECIAL_TOKEN["other_tokens"][15:16].astype(np.float16))
 TWO_D_ANIME_TOKEN = torch.tensor(SPECIAL_TOKEN["other_tokens"][16:17].astype(np.float16))
 
@@ -64,7 +72,7 @@ SPECIAL_TOKEN_DICT = {
 
 for i, token in enumerate(DURATION_TOKEN_LIST):
     # DURATION_TOKEN_N represents N chunk(s) remain in the future
-    SPECIAL_TOKEN_DICT[f"DURATION_TOKEN_{i+1}"] = token
+    SPECIAL_TOKEN_DICT[f"DURATION_TOKEN_{i + 1}"] = token
 
 
 def pad_duration_token_keys(special_token_keys: List[str]) -> List[str]:

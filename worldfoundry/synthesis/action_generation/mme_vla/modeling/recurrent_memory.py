@@ -69,12 +69,9 @@ class RecurrentMemory(nnx.Module):
         else:
             _memory_state = memory_state
 
-        hidden_states = self.feature_encoder.encode_recurrent_memory(
-            recur_image_emb, recur_pos_emb, recur_state_emb
-        )
+        hidden_states = self.feature_encoder.encode_recurrent_memory(recur_image_emb, recur_pos_emb, recur_state_emb)
         _, t, v, p, _ = hidden_states.shape
-        hidden_states = einops.rearrange(
-            hidden_states, "b t v p d -> b (t v p) d")
+        hidden_states = einops.rearrange(hidden_states, "b t v p d -> b (t v p) d")
         assert self.max_seq_len == t * v * p
 
         num_mini_batches = self.max_seq_len // self.mini_batch_size
@@ -86,15 +83,13 @@ class RecurrentMemory(nnx.Module):
             nm=num_mini_batches,
         )
 
-        output, memory_state_new, stats = self.recur_layer(
-            hidden_states, recur_mask, _memory_state
-        )
+        output, memory_state_new, stats = self.recur_layer(hidden_states, recur_mask, _memory_state)
 
-        final_output = self.proj(output[:, -self.budget:])
+        final_output = self.proj(output[:, -self.budget :])
 
         if self.recur_type == "ttt":
             mask_repeat = einops.repeat(recur_mask, "b t -> b (t mb)", mb=self.mini_batch_size)
-            final_mask = mask_repeat[:, -self.budget:]
+            final_mask = mask_repeat[:, -self.budget :]
         else:
             final_mask = jnp.ones((hidden_states.shape[0], self.budget), dtype=jnp.bool_)
 

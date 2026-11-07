@@ -60,11 +60,11 @@ class LayerNorm_FP32(nn.LayerNorm):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         origin_dtype = inputs.dtype
         out = F.layer_norm(
-            inputs.float(), 
-            self.normalized_shape, 
-            None if self.weight is None else self.weight.float(), 
-            None if self.bias is None else self.bias.float() ,
-            self.eps
+            inputs.float(),
+            self.normalized_shape,
+            None if self.weight is None else self.weight.float(),
+            None if self.bias is None else self.bias.float(),
+            self.eps,
         ).to(origin_dtype)
         return out
 
@@ -156,8 +156,8 @@ class FinalLayer_FP32(nn.Module):
         B, N, C = x.shape
         T, _, _ = latent_shape
 
-        with amp.autocast('cuda', dtype=torch.float32):
-            shift, scale = self.adaLN_modulation(t).unsqueeze(2).chunk(2, dim=-1) # [B, T, 1, C]
+        with amp.autocast("cuda", dtype=torch.float32):
+            shift, scale = self.adaLN_modulation(t).unsqueeze(2).chunk(2, dim=-1)  # [B, T, 1, C]
             x = modulate_fp32(self.norm_final, x.view(B, T, -1, C), shift, scale).view(B, N, C)
             x = self.linear(x)
         return x

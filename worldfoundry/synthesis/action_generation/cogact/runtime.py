@@ -37,9 +37,7 @@ def _checkpoint_location(location: str) -> str:
 def _runtime_for(location: str, device: str, options: Mapping[str, Any]) -> Any:
     location = _checkpoint_location(location)
     cache_options = {
-        key: value
-        for key, value in options.items()
-        if key not in {"hf_token", "huggingface_token", "token"}
+        key: value for key, value in options.items() if key not in {"hf_token", "huggingface_token", "token"}
     }
     key = (
         location,

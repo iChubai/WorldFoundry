@@ -33,19 +33,14 @@ class Dust3rPipeline(object):
                 from dust3r.model import AsymmetricCroCo3DStereo  # type: ignore[import]
                 from dust3r.utils.image import load_images  # type: ignore[import]
         except ImportError:
-            raise ImportError(
-                "Missing in-tree DUSt3R package required by VMem. Expected it under "
-                f"{dust3r_parent}."
-            )
+            raise ImportError(f"Missing in-tree DUSt3R package required by VMem. Expected it under {dust3r_parent}.")
 
         self.device = torch.device(device)
         local_model = resolve_local_hf_model_path(
             model_path,
             required_files=("config.json", "model.safetensors"),
         )
-        self.model = AsymmetricCroCo3DStereo.from_pretrained(
-            str(local_model)
-        ).to(self.device)
+        self.model = AsymmetricCroCo3DStereo.from_pretrained(str(local_model)).to(self.device)
 
         self._GlobalAlignerMode = GlobalAlignerMode
         self._global_aligner = global_aligner
@@ -63,9 +58,7 @@ class Dust3rPipeline(object):
         lr: float = 0.01,
         niter: int = 500,
         min_conf_thr: int = 3,
-    ) -> tuple[
-        list[np.ndarray], np.ndarray, np.ndarray, list[np.ndarray], list[np.ndarray]
-    ]:
+    ) -> tuple[list[np.ndarray], np.ndarray, np.ndarray, list[np.ndarray], list[np.ndarray]]:
         num_img = len(img_paths)
         if num_img == 1:
             print("Only one image found, duplicating it to create a stereo pair.")
@@ -101,9 +94,7 @@ class Dust3rPipeline(object):
         if c2ws is not None:
             scene.preset_pose(c2ws)
 
-        _ = scene.compute_global_alignment(
-            init="msp", niter=niter, schedule=schedule, lr=lr
-        )
+        _ = scene.compute_global_alignment(init="msp", niter=niter, schedule=schedule, lr=lr)
 
         imgs = cast(list, scene.imgs)
         Ks = scene.get_intrinsics().detach().cpu().numpy().copy()

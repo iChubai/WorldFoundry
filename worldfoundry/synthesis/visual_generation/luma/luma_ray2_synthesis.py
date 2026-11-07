@@ -22,7 +22,7 @@ class LumaRay2Synthesis(ApiVideoSynthesis):
         loop: bool = False,
         concepts: Optional[Any] = None,
         callback_url: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Start a generation from a text prompt alone."""
         payload = self._payload(
@@ -49,7 +49,7 @@ class LumaRay2Synthesis(ApiVideoSynthesis):
         loop: bool = False,
         concepts: Optional[Any] = None,
         callback_url: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Start a generation anchored on ``keyframes``."""
         payload = self._payload(
@@ -77,7 +77,7 @@ class LumaRay2Synthesis(ApiVideoSynthesis):
         loop: bool,
         concepts: Optional[Any],
         callback_url: Optional[str],
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Build the request body shared by both generation routes."""
         payload: Dict[str, Any] = {
@@ -111,7 +111,7 @@ class LumaRay2Synthesis(ApiVideoSynthesis):
         loop: bool = False,
         concepts: Optional[Any] = None,
         callback_url: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Start a generation, choosing the route from the presence of keyframes.
 

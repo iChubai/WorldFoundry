@@ -5,6 +5,7 @@ from scipy.optimize import linear_sum_assignment
 try:
     import triton
     import triton.language as tl
+
     HAS_TRITON = True
 except Exception:
     triton = None
@@ -12,6 +13,7 @@ except Exception:
     HAS_TRITON = False
 
 __all__ = ["frustum_frontmost_mask", "frustum_frontmost_mask_triton", "find_mask_matches"]
+
 
 def _ensure_homogeneous_w2c(w2c: torch.Tensor) -> torch.Tensor:
     """
@@ -47,7 +49,6 @@ def _broadcast_intrinsics(
     else:
         assert K.shape == (T, 4), f"intrinsics must be [T,4], got {tuple(K.shape)}"
     return K
-
 
 
 @torch.no_grad()
@@ -121,10 +122,14 @@ def frustum_frontmost_mask(
 
 
 if HAS_TRITON:
+
     @triton.jit
     def _zbuffer_min_kernel(
-        z_ptr, pix_ptr, depth_ptr,
-        N, HxW,
+        z_ptr,
+        pix_ptr,
+        depth_ptr,
+        N,
+        HxW,
         BLOCK_SIZE: tl.constexpr,
     ):
         pid_t = tl.program_id(0)  # view id
@@ -162,7 +167,7 @@ def frustum_frontmost_mask_triton(
     device = w2c_matrices.device
     dtype = w2c_matrices.dtype
     # Triton path requires CUDA + float32 for bitcast
-    if device.type != 'cuda' or dtype != torch.float32:
+    if device.type != "cuda" or dtype != torch.float32:
         return frustum_frontmost_mask(points_xyz_rgb, w2c_matrices, intrinsics, image_size, near, far, background_depth)
     H, W = image_size
     points_world = points_xyz_rgb[..., :3].to(device=device, dtype=dtype)
@@ -200,8 +205,11 @@ def frustum_frontmost_mask_triton(
     BLOCK_SIZE = 1024
     grid = (T, triton.cdiv(N, BLOCK_SIZE))
     _zbuffer_min_kernel[grid](
-        Z_eff.contiguous(), pix.contiguous(), depth_buf,
-        N, H * W,
+        Z_eff.contiguous(),
+        pix.contiguous(),
+        depth_buf,
+        N,
+        H * W,
         BLOCK_SIZE,
     )
     # Read min depth for points
@@ -210,7 +218,9 @@ def frustum_frontmost_mask_triton(
     return front
 
 
-def find_mask_matches(A: torch.Tensor, B: torch.Tensor, method: str = 'independent', bf16: bool = True) -> Dict[int, int]:
+def find_mask_matches(
+    A: torch.Tensor, B: torch.Tensor, method: str = "independent", bf16: bool = True
+) -> Dict[int, int]:
     """
     Match each mask in `B` to the best mask in `A`.
 
@@ -248,11 +258,11 @@ def find_mask_matches(A: torch.Tensor, B: torch.Tensor, method: str = 'independe
     intersection_matrix = torch.matmul(B_float, A_float.transpose(0, 1))
     intersection_matrix = intersection_matrix.to(torch.float32)
 
-    if method == 'independent':
+    if method == "independent":
         best_indices = torch.argmax(intersection_matrix, dim=1)
         matches = {b_idx: a_idx.item() for b_idx, a_idx in enumerate(best_indices)}
 
-    elif method == 'hungarian':
+    elif method == "hungarian":
         cost_matrix = -intersection_matrix
         cost_matrix_np = cost_matrix.cpu().numpy()
         row_ind, col_ind = linear_sum_assignment(cost_matrix_np)

@@ -55,9 +55,7 @@ def invert_transformation(T: NDArray[np.float64]) -> NDArray[np.float64]:
     return T_inv
 
 
-def relative_transformation(
-    T0: NDArray[np.float64], Tt: NDArray[np.float64]
-) -> NDArray[np.float64]:
+def relative_transformation(T0: NDArray[np.float64], Tt: NDArray[np.float64]) -> NDArray[np.float64]:
     """
     Compute the relative transformation between two poses.
 
@@ -230,8 +228,7 @@ class JointPose(Pose):
         else:
             if len(joint_names) != len(self.joints):
                 raise ValueError(
-                    f"Number of joint names ({len(joint_names)}) must match "
-                    f"number of joints ({len(self.joints)})"
+                    f"Number of joint names ({len(joint_names)}) must match number of joints ({len(self.joints)})"
                 )
             self.joint_names = joint_names
 
@@ -292,9 +289,7 @@ class JointPose(Pose):
         if len(self.joints) <= 6:
             joints_str = np.array2string(self.joints, precision=4, suppress_small=True)
         else:
-            joints_str = (
-                f"[{self.joints[0]:.4f}, ..., {self.joints[-1]:.4f}] ({len(self.joints)} joints)"
-            )
+            joints_str = f"[{self.joints[0]:.4f}, ..., {self.joints[-1]:.4f}] ({len(self.joints)} joints)"
 
         return f"JointPose(joints={joints_str})"
 

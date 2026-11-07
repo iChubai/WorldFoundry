@@ -1308,7 +1308,9 @@ class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
         unsupported = {key for key in ("labels", "logits_to_keep") if key in kwargs}
         if unsupported:
             names = ", ".join(sorted(unsupported))
-            raise TypeError(f"training/text-generation arguments are unavailable in the inference-only runtime: {names}")
+            raise TypeError(
+                f"training/text-generation arguments are unavailable in the inference-only runtime: {names}"
+            )
         outputs = self.model(
             input_ids=input_ids,
             pixel_values=pixel_values,
@@ -1329,17 +1331,22 @@ class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
             attention_mask=attention_mask,
         )
 
+
 # ================================================================================ #
+
 
 @dataclass
 class ActionGenerationOutput(ModelOutput):
     """
     Output type of MiBoTForActionGeneration.
     """
+
     actions: torch.FloatTensor = None
+
 
 def modulate(x, shift, scale):
     return x * (1 + scale) + shift
+
 
 class TimestepEmbedder(nn.Module):
     def __init__(self, hidden_size, frequency_embedding_size=256, dtype=None):
@@ -1372,6 +1379,7 @@ class TimestepEmbedder(nn.Module):
         t_freq = self.timestep_embedding(t, self.frequency_embedding_size)
         t_emb = self.mlp(t_freq)
         return t_emb[:, None]
+
 
 class MLPProjector(nn.Module):
     def __init__(self, input_dim: int, output_dim: int, num_layers: int = 1, bias: bool = False):
@@ -1462,6 +1470,7 @@ class Attention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous().view(batch_size, q_len, -1)
         return self.o_proj(attn_output)
 
+
 class ActionMLP(nn.Module):
     def __init__(
         self,
@@ -1476,6 +1485,7 @@ class ActionMLP(nn.Module):
 
     def forward(self, hidden_state):
         return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
+
 
 class DecoderLayer(nn.Module):
     def __init__(self, config: DiTConfig):
@@ -1493,7 +1503,9 @@ class DecoderLayer(nn.Module):
         self.adaln_table = nn.Parameter(torch.randn(6, hidden_size) / hidden_size**0.5)
 
     def forward(self, hidden_states, past_key_values, position_embeds, t_embeds, attn_mask=None):
-        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (self.adaln_table[None] + t_embeds).chunk(6, dim=1)
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (self.adaln_table[None] + t_embeds).chunk(
+            6, dim=1
+        )
 
         residual = hidden_states
         hidden_states = self.input_layernorm(hidden_states)
@@ -1511,6 +1523,7 @@ class DecoderLayer(nn.Module):
 
         return hidden_states
 
+
 class DiT(PreTrainedModel):
     config_class = DiTConfig
     _supports_flash_attn = True
@@ -1519,9 +1532,7 @@ class DiT(PreTrainedModel):
 
     def __init__(self, config: DiTConfig):
         super().__init__(config)
-        self.layers = nn.ModuleList(
-            [DecoderLayer(config) for _ in range(config.num_hidden_layers)]
-        )
+        self.layers = nn.ModuleList([DecoderLayer(config) for _ in range(config.num_hidden_layers)])
         self.post_init()
 
     def forward(self, hidden_states, past_key_values, attn_mask, position_embeds, t_embeds):
@@ -1565,27 +1576,19 @@ class MiBoTForActionGeneration(PreTrainedModel):
 
         # Projectors
         self.state_projector = MLPProjector(
-            input_dim=config.state_dim,
-            output_dim=config.dit_config.hidden_size,
-            num_layers=2
+            input_dim=config.state_dim, output_dim=config.dit_config.hidden_size, num_layers=2
         )
         self.action_projector = MLPProjector(
-            input_dim=config.action_dim,
-            output_dim=config.dit_config.hidden_size,
-            num_layers=2
+            input_dim=config.action_dim, output_dim=config.dit_config.hidden_size, num_layers=2
         )
         self.action_output_layer = MLPProjector(
-            input_dim=config.dit_config.hidden_size,
-            output_dim=config.action_dim,
-            num_layers=2
+            input_dim=config.dit_config.hidden_size, output_dim=config.action_dim, num_layers=2
         )
 
         # Time Embedding
         self.t_embedder = TimestepEmbedder(config.dit_config.hidden_size)
         self.t_projector = MLPProjector(
-            input_dim=config.dit_config.hidden_size,
-            output_dim=6 * config.dit_config.hidden_size,
-            bias=True
+            input_dim=config.dit_config.hidden_size, output_dim=6 * config.dit_config.hidden_size, bias=True
         )
 
         # RoPE
@@ -1619,13 +1622,7 @@ class MiBoTForActionGeneration(PreTrainedModel):
         return output
 
     @torch.no_grad()
-    def forward(
-        self,
-        state,
-        action_mask,
-        num_steps=5,
-        **kwargs
-    ):
+    def forward(self, state, action_mask, num_steps=5, **kwargs):
         vlm_outputs = self.vlm(**kwargs, use_cache=True)
 
         action_bs, action_length, _ = action_mask.shape
@@ -1642,7 +1639,9 @@ class MiBoTForActionGeneration(PreTrainedModel):
         position_embeds = self.rotary_emb(action_mask, position_ids)
 
         ## cache attention mask
-        dit_mask = torch.tril(torch.ones((action_bs, dit_query_length, dit_query_length), device=action_mask.device), diagonal=0)
+        dit_mask = torch.tril(
+            torch.ones((action_bs, dit_query_length, dit_query_length), device=action_mask.device), diagonal=0
+        )
         cache_mask = vlm_outputs.attention_mask[:, None, :].expand(-1, dit_query_length, -1)
         attn_mask = torch.cat([cache_mask, dit_mask], dim=-1)[:, None]
         attn_mask = attn_mask.bool()
@@ -1684,7 +1683,6 @@ class MiBoTForActionGeneration(PreTrainedModel):
             x = x + v * dt
 
         return ActionGenerationOutput(actions=x)
-
 
 
 __all__ = ["MiBoTForActionGeneration"]

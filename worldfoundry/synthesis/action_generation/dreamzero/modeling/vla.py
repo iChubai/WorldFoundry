@@ -56,15 +56,10 @@ def _checkpoint_state_dict(checkpoint_dir: str) -> dict[str, torch.Tensor]:
     elif os.path.isfile(single_path):
         state_dict = dict(load_file(single_path))
     else:
-        raise FileNotFoundError(
-            f"No model.safetensors checkpoint found in {checkpoint_dir!r}"
-        )
+        raise FileNotFoundError(f"No model.safetensors checkpoint found in {checkpoint_dir!r}")
 
     if any(".base_layer." in key for key in state_dict):
-        state_dict = {
-            key.replace(".base_layer.", "."): value
-            for key, value in state_dict.items()
-        }
+        state_dict = {key.replace(".base_layer.", "."): value for key, value in state_dict.items()}
     return state_dict
 
 
@@ -102,11 +97,7 @@ class VLA(PreTrainedModel):
         if action is not None:
             if not isinstance(action, torch.Tensor):
                 raise TypeError(f"action must be a tensor, got {type(action)!r}")
-            if (
-                action.ndim != 3
-                or action.shape[1] % self.action_horizon
-                or action.shape[2] != self.action_dim
-            ):
+            if action.ndim != 3 or action.shape[1] % self.action_horizon or action.shape[2] != self.action_dim:
                 raise ValueError(f"invalid action shape: {tuple(action.shape)}")
 
         video = inputs.get("video")

@@ -29,7 +29,7 @@ class ActionExpertAttention(nn.Module):
         self.hidden_size = hidden_size
         self.num_heads = num_heads
         self.head_dim = hidden_size // num_heads
-        self.scale = self.head_dim ** -0.5
+        self.scale = self.head_dim**-0.5
 
         self.q_proj = nn.Linear(hidden_size, hidden_size, bias=True)
         self.kv_proj = nn.Linear(hidden_size, hidden_size * 2, bias=True)
@@ -184,8 +184,7 @@ class SinusoidalTimeEmbedding(nn.Module):
         device = timesteps.device
         half_dim = self.dim // 2
         freq = torch.exp(
-            torch.arange(half_dim, device=device, dtype=timesteps.dtype)
-            * (-math.log(10000.0) / max(half_dim - 1, 1))
+            torch.arange(half_dim, device=device, dtype=timesteps.dtype) * (-math.log(10000.0) / max(half_dim - 1, 1))
         )
         args = timesteps[:, None] * freq[None, :]
         emb = torch.cat([torch.sin(args), torch.cos(args)], dim=-1)
@@ -244,9 +243,7 @@ class ActionExpert(nn.Module):
         self.config = config
         self.hidden_size = config.hidden_size
         self.action_embed = nn.Linear(config.action_dim, config.hidden_size, device=device)
-        self.action_pos_embed = nn.Parameter(
-            torch.zeros(1, config.max_horizon, config.hidden_size, device=device)
-        )
+        self.action_pos_embed = nn.Parameter(torch.zeros(1, config.max_horizon, config.hidden_size, device=device))
         nn.init.trunc_normal_(self.action_pos_embed, std=0.02)
 
         self.time_embed = nn.Sequential(
@@ -256,7 +253,9 @@ class ActionExpert(nn.Module):
             nn.Linear(config.hidden_size, config.hidden_size, device=device),
         )
         self.context_proj = nn.Linear(llm_dim, config.hidden_size, bias=False, device=device)
-        self.context_norm = nn.LayerNorm(config.hidden_size, elementwise_affine=False) if config.context_layer_norm else nn.Identity()
+        self.context_norm = (
+            nn.LayerNorm(config.hidden_size, elementwise_affine=False) if config.context_layer_norm else nn.Identity()
+        )
         self.state_encoder = nn.Linear(config.hidden_size, config.hidden_size, device=device)
         self.state_norm = nn.LayerNorm(config.hidden_size, elementwise_affine=False, eps=1e-6)
 
@@ -396,9 +395,7 @@ class ActionExpert(nn.Module):
 
         # Ensure the number of encoder hidden states matches the number of transformer blocks
         if len(encoder_hidden_states) != len(self.blocks):
-            raise ValueError(
-                f"Expected {len(self.blocks)} encoder hidden states, got {len(encoder_hidden_states)}"
-            )
+            raise ValueError(f"Expected {len(self.blocks)} encoder hidden states, got {len(encoder_hidden_states)}")
 
         # Embed diffusion timesteps to condition the model
         timestep_embed = self.time_embed(timesteps)

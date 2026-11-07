@@ -1,4 +1,6 @@
 from PIL import Image
+
+
 def black_image(width, height):
     """generate a black image
 
@@ -11,6 +13,7 @@ def black_image(width, height):
     """
     black_image = Image.new("RGB", (width, height), (0, 0, 0))
     return black_image
+
 
 def numpy_to_pil(images):
     if images.ndim == 3:

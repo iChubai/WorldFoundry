@@ -35,7 +35,7 @@ class RunwayGen4p5Synthesis(ApiVideoSynthesis):
         duration: int = 5,
         seed: Optional[int] = None,
         public_figure_threshold: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a text-to-video generation task."""
         payload = self._payload(
@@ -58,7 +58,7 @@ class RunwayGen4p5Synthesis(ApiVideoSynthesis):
         duration: int = 5,
         seed: Optional[int] = None,
         public_figure_threshold: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit an image-to-video generation task anchored on ``prompt_image``."""
         payload = self._payload(
@@ -82,7 +82,7 @@ class RunwayGen4p5Synthesis(ApiVideoSynthesis):
         duration: int,
         seed: Optional[int],
         public_figure_threshold: Optional[str],
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Build the request body shared by both generation routes."""
         payload: Dict[str, Any] = {
@@ -111,7 +111,7 @@ class RunwayGen4p5Synthesis(ApiVideoSynthesis):
         duration: int = 5,
         seed: Optional[int] = None,
         public_figure_threshold: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a generation, choosing the route from the presence of a prompt image.
 

@@ -19,12 +19,15 @@ def _trusted_staged_mpt_code(lang_encoder_path: str) -> bool:
         return False
     official_dir = Path(__file__).resolve().parents[6] / "ckpts" / model_dir.name
     code_files = (
-        "config.json", "attention.py", "configuration_mosaic_gpt.py", "gpt_blocks.py",
-        "low_precision_layernorm.py", "mosaic_gpt.py", "param_init_fns.py",
+        "config.json",
+        "attention.py",
+        "configuration_mosaic_gpt.py",
+        "gpt_blocks.py",
+        "low_precision_layernorm.py",
+        "mosaic_gpt.py",
+        "param_init_fns.py",
     )
-    if model_dir != official_dir and any(
-        (model_dir / name).resolve() != official_dir / name for name in code_files
-    ):
+    if model_dir != official_dir and any((model_dir / name).resolve() != official_dir / name for name in code_files):
         return False
     config_path = model_dir / "config.json"
     if not config_path.is_file():
@@ -34,10 +37,6 @@ def _trusted_staged_mpt_code(lang_encoder_path: str) -> bool:
         "AutoConfig": "configuration_mosaic_gpt.MosaicGPTConfig",
         "AutoModelForCausalLM": "mosaic_gpt.MosaicGPT",
     }
-
-
-
-
 
 
 def create_model_and_transforms(
@@ -53,18 +52,18 @@ def create_model_and_transforms(
     use_gripper=False,
     use_state=False,
     last_action=False,
-    fusion_mode='',
+    fusion_mode="",
     pad_length=-1,
     sep_resampler=False,
     sep_lm_head=False,
     return_feature=False,
     multi_step_action=1,
-    llm_name='llama_9b',
-    pooling='max',
+    llm_name="llama_9b",
+    pooling="max",
     residual=False,
     tcp_rel=False,
     replan=-1,
-    decoder_type='lstm',
+    decoder_type="lstm",
     hidden_size=None,
     fwd_pred=False,
     fwd_pred_hand=False,
@@ -104,9 +103,7 @@ def create_model_and_transforms(
         trust_remote_code=False,
     )
     # add Flamingo special tokens to the tokenizer
-    text_tokenizer.add_special_tokens(
-        {"additional_special_tokens": ["<|endofchunk|>", "<image>"]}
-    )
+    text_tokenizer.add_special_tokens({"additional_special_tokens": ["<|endofchunk|>", "<image>"]})
     if text_tokenizer.pad_token is None:
         # Issue: GPT models don't have a pad token, which we use to
         # modify labels for the loss.
@@ -125,6 +122,7 @@ def create_model_and_transforms(
 
             def set_input_embeddings(self, new_embeddings):
                 self.transformer.wte = new_embeddings
+
         extend_instance(lang_encoder, EmbeddingFnMixin)
 
     extend_instance(lang_encoder, FlamingoLMMixin)
@@ -137,9 +135,9 @@ def create_model_and_transforms(
     # print(lang_encoder)
     lang_encoder.resize_token_embeddings(len(text_tokenizer))
 
-    if 'llama' in llm_name:
+    if "llama" in llm_name:
         Model_fn = BCFlamingo
-    elif 'mpt' in llm_name:
+    elif "mpt" in llm_name:
         Model_fn = MPTFlamingo
     else:
         raise NotImplementedError
@@ -149,9 +147,7 @@ def create_model_and_transforms(
         lang_encoder,
         text_tokenizer.encode("<|endofchunk|>")[-1],
         text_tokenizer.encode("<image>")[-1],
-        vis_dim=open_clip.get_model_config(clip_vision_encoder_path)["vision_cfg"][
-            "width"
-        ],
+        vis_dim=open_clip.get_model_config(clip_vision_encoder_path)["vision_cfg"]["width"],
         cross_attn_every_n_layers=cross_attn_every_n_layers,
         window_size=window_size,
         use_gripper=use_gripper,

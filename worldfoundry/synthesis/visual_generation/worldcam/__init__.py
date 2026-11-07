@@ -6,6 +6,7 @@ It provides a convenient way to access essential classes like `WorldCamSynthesis
 and `WorldCamRuntime`, along with various default parameters and helper functions
 used throughout the WorldCam synthesis and evaluation framework.
 """
+
 from __future__ import annotations
 
 from worldfoundry.synthesis.visual_generation.worldcam.worldcam_synthesis import WorldCamSynthesis

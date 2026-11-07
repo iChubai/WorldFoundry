@@ -133,9 +133,7 @@ class MultiWrapperWorldModel(nn.Module):
         swm.codec.preprocess_batch(batch)
 
         with torch.no_grad():
-            z_flat = swm.encode_video(
-                batch.slice_time(0, swm.config.video.timesteps, fps=swm.config.video.fps)
-            )
+            z_flat = swm.encode_video(batch.slice_time(0, swm.config.video.timesteps, fps=swm.config.video.fps))
 
         # (b*p, t, h, w, c) per-player latents -> tiled frame (b, t, p*h, w, c), stacked along height.
         z = rearrange(z_flat, "(b p) t h w c -> b t (p h) w c", p=self.n_players)
@@ -287,18 +285,14 @@ class MultiWrapperWorldModel(nn.Module):
         swm = self.single_world_model
         preprocessed_batch = outputs.preprocessed_batch
 
-        output_video_per_player = rearrange(
-            outputs.output_video, "b t c (p h) w -> (b p) t c h w", p=self.n_players
-        )
+        output_video_per_player = rearrange(outputs.output_video, "b t c (p h) w -> (b p) t c h w", p=self.n_players)
         pred_video_per_player = visualize_batch(
             output_video_per_player, preprocessed_batch.actions, swm.actions_per_video_frame
         )
         pred_video = rearrange(pred_video_per_player, "(b p) t c h w -> b t c (p h) w", p=self.n_players)
         output_video_viz = add_prediction_border(pred_video, swm.n_context_frames)
 
-        gt_video_split = rearrange(
-            preprocessed_batch.video, "(b p) t c h w -> b t c (p h) w", p=self.n_players
-        )
+        gt_video_split = rearrange(preprocessed_batch.video, "(b p) t c h w -> b t c (p h) w", p=self.n_players)
         viz_video = torch.cat(
             [
                 output_video_viz,  # Prediction first so it's visible if the clip is cropped vertically.
@@ -334,9 +328,7 @@ class MultiWrapperWorldModel(nn.Module):
         state_dict = dict(state_dict)
         reinitialised = []
         for k, v in self.state_dict().items():
-            if k.startswith(self._WARMSTART_EXEMPT) and (
-                k not in state_dict or state_dict[k].shape != v.shape
-            ):
+            if k.startswith(self._WARMSTART_EXEMPT) and (k not in state_dict or state_dict[k].shape != v.shape):
                 state_dict[k] = v  # keep our init; makes the load a no-op for this param
                 reinitialised.append(k)
         if reinitialised:

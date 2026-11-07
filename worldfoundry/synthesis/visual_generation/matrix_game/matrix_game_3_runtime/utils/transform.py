@@ -7,20 +7,18 @@ from torchvision import transforms
 import math
 from PIL import Image
 
-def get_video_transform(resize_height, resize_width, norm_fun):
 
-    alignd_factor = 32 
+def get_video_transform(resize_height, resize_width, norm_fun):
+    alignd_factor = 32
     resize_height = round(resize_height / alignd_factor) * alignd_factor
     resize_width = round(resize_width / alignd_factor) * alignd_factor
 
- 
-    resize = [CenterCropResizeVideo((resize_height, resize_width), interpolation_mode='bicubic'), ]
-    transform = transforms.Compose([
-        ToTensorVideo(),
-        *resize, 
-        norm_fun
-    ])
+    resize = [
+        CenterCropResizeVideo((resize_height, resize_width), interpolation_mode="bicubic"),
+    ]
+    transform = transforms.Compose([ToTensorVideo(), *resize, norm_fun])
     return transform
+
 
 def _is_tensor_video_clip(clip):
     if not torch.is_tensor(clip):
@@ -38,19 +36,15 @@ def center_crop_arr(pil_image, image_size):
     https://github.com/openai/guided-diffusion/blob/8fb3ad9197f16bbc40620447b2742e13458d2831/guided_diffusion/image_datasets.py#L126
     """
     while min(*pil_image.size) >= 2 * image_size:
-        pil_image = pil_image.resize(
-            tuple(x // 2 for x in pil_image.size), resample=Image.BOX
-        )
+        pil_image = pil_image.resize(tuple(x // 2 for x in pil_image.size), resample=Image.BOX)
 
     scale = image_size / min(*pil_image.size)
-    pil_image = pil_image.resize(
-        tuple(round(x * scale) for x in pil_image.size), resample=Image.BICUBIC
-    )
+    pil_image = pil_image.resize(tuple(round(x * scale) for x in pil_image.size), resample=Image.BICUBIC)
 
     arr = np.array(pil_image)
     crop_y = (arr.shape[0] - image_size) // 2
     crop_x = (arr.shape[1] - image_size) // 2
-    return Image.fromarray(arr[crop_y: crop_y + image_size, crop_x: crop_x + image_size])
+    return Image.fromarray(arr[crop_y : crop_y + image_size, crop_x : crop_x + image_size])
 
 
 def crop(clip, i, j, h, w):
@@ -60,17 +54,18 @@ def crop(clip, i, j, h, w):
     """
     if len(clip.size()) != 4:
         raise ValueError("clip should be a 4D tensor")
-    return clip[..., i: i + h, j: j + w]
+    return clip[..., i : i + h, j : j + w]
 
 
 def resize(clip, target_size, interpolation_mode):
     if len(target_size) != 2:
         raise ValueError(f"target size should be tuple (height, width), instead got {target_size}")
-    if interpolation_mode == 'nearest':
+    if interpolation_mode == "nearest":
         return torch.nn.functional.interpolate(clip, size=target_size)
     else:
-        return torch.nn.functional.interpolate(clip, size=target_size, mode=interpolation_mode, align_corners=True, antialias=True)
-
+        return torch.nn.functional.interpolate(
+            clip, size=target_size, mode=interpolation_mode, align_corners=True, antialias=True
+        )
 
 
 def resize_scale(clip, target_size, interpolation_mode):
@@ -78,7 +73,9 @@ def resize_scale(clip, target_size, interpolation_mode):
         raise ValueError(f"target size should be tuple (height, width), instead got {target_size}")
     H, W = clip.size(-2), clip.size(-1)
     scale_ = target_size[0] / min(H, W)
-    return torch.nn.functional.interpolate(clip, scale_factor=scale_, mode=interpolation_mode, align_corners=True, antialias=True)
+    return torch.nn.functional.interpolate(
+        clip, scale_factor=scale_, mode=interpolation_mode, align_corners=True, antialias=True
+    )
 
 
 def resized_crop(clip, i, j, h, w, size, interpolation_mode="bilinear"):
@@ -129,11 +126,10 @@ def center_crop_using_short_edge(clip):
     return crop(clip, i, j, th, tw)
 
 
-
 def center_crop_th_tw(clip, th, tw, top_crop):
     if not _is_tensor_video_clip(clip):
         raise ValueError("clip should be a 4D torch.tensor")
-    
+
     # import ipdb;ipdb.set_trace()
     h, w = clip.size(-2), clip.size(-1)
     tr = th / tw
@@ -143,15 +139,16 @@ def center_crop_th_tw(clip, th, tw, top_crop):
     else:
         new_h = h
         new_w = int(h / tr)
-    
+
     i = 0 if top_crop else int(round((h - new_h) / 2.0))
     j = int(round((w - new_w) / 2.0))
     return crop(clip, i, j, new_h, new_w)
 
+
 def random_shift_crop(clip):
-    '''
+    """
     Slide along the long edge, with the short edge as crop size
-    '''
+    """
     if not _is_tensor_video_clip(clip):
         raise ValueError("clip should be a 4D torch.tensor")
     h, w = clip.size(-2), clip.size(-1)
@@ -257,7 +254,7 @@ class RandomCropVideo:
 
 class SpatialStrideCropVideo:
     def __init__(self, stride):
-            self.stride = stride
+        self.stride = stride
 
     def __call__(self, clip):
         """
@@ -280,17 +277,18 @@ class SpatialStrideCropVideo:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(size={self.size})"
 
+
 class LongSideResizeVideo:
-    '''
+    """
     First use the long side,
     then resize to the specified size
-    '''
+    """
 
     def __init__(
-            self,
-            size,
-            skip_low_resolution=False, 
-            interpolation_mode="bilinear",
+        self,
+        size,
+        skip_low_resolution=False,
+        interpolation_mode="bilinear",
     ):
         self.size = size
         self.skip_low_resolution = skip_low_resolution
@@ -313,24 +311,24 @@ class LongSideResizeVideo:
         else:
             h = int(h * self.size / w)
             w = self.size
-        resize_clip = resize(clip, target_size=(h, w),
-                                         interpolation_mode=self.interpolation_mode)
+        resize_clip = resize(clip, target_size=(h, w), interpolation_mode=self.interpolation_mode)
         return resize_clip
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(size={self.size}, interpolation_mode={self.interpolation_mode}"
 
+
 class CenterCropResizeVideo:
-    '''
+    """
     First use the short side for cropping length,
     center crop video, then resize to the specified size
-    '''
+    """
 
     def __init__(
-            self,
-            size,
-            top_crop=False, 
-            interpolation_mode="bilinear",
+        self,
+        size,
+        top_crop=False,
+        interpolation_mode="bilinear",
     ):
         if len(size) != 2:
             raise ValueError(f"size should be tuple (height, width), instead got {size}")
@@ -349,8 +347,9 @@ class CenterCropResizeVideo:
         # clip_center_crop = center_crop_using_short_edge(clip)
         clip_center_crop = center_crop_th_tw(clip, self.size[0], self.size[1], top_crop=self.top_crop)
         # import ipdb;ipdb.set_trace()
-        clip_center_crop_resize = resize(clip_center_crop, target_size=self.size,
-                                         interpolation_mode=self.interpolation_mode)
+        clip_center_crop_resize = resize(
+            clip_center_crop, target_size=self.size, interpolation_mode=self.interpolation_mode
+        )
         return clip_center_crop_resize
 
     def __repr__(self) -> str:
@@ -358,15 +357,15 @@ class CenterCropResizeVideo:
 
 
 class UCFCenterCropVideo:
-    '''
+    """
     First scale to the specified size in equal proportion to the short edge,
     then center cropping
-    '''
+    """
 
     def __init__(
-            self,
-            size,
-            interpolation_mode="bilinear",
+        self,
+        size,
+        interpolation_mode="bilinear",
     ):
         if isinstance(size, tuple):
             if len(size) != 2:
@@ -394,14 +393,14 @@ class UCFCenterCropVideo:
 
 
 class KineticsRandomCropResizeVideo:
-    '''
+    """
     Slide along the long edge, with the short edge as crop size. And resie to the desired size.
-    '''
+    """
 
     def __init__(
-            self,
-            size,
-            interpolation_mode="bilinear",
+        self,
+        size,
+        interpolation_mode="bilinear",
     ):
         if isinstance(size, tuple):
             if len(size) != 2:
@@ -420,9 +419,9 @@ class KineticsRandomCropResizeVideo:
 
 class CenterCropVideo:
     def __init__(
-            self,
-            size,
-            interpolation_mode="bilinear",
+        self,
+        size,
+        interpolation_mode="bilinear",
     ):
         if isinstance(size, tuple):
             if len(size) != 2:
@@ -533,13 +532,14 @@ class TemporalRandomCrop(object):
     def __init__(self, size):
         self.size = size
 
-    def __call__(self, total_frames, target_frames, num_pre_frames = 0):
+    def __call__(self, total_frames, target_frames, num_pre_frames=0):
         size = target_frames
         rand_end = max(0, total_frames - size - 1)
         num_pre_frames = min(num_pre_frames, rand_end)
         begin_index = random.randint(num_pre_frames, rand_end)
         end_index = min(begin_index + size, total_frames)
         return begin_index, end_index
+
 
 class DynamicSampleDuration(object):
     """Temporally crop the given frame indices at a random location.
@@ -555,32 +555,31 @@ class DynamicSampleDuration(object):
     def __call__(self, t, h, w):
         if self.extra_1:
             t = t - 1
-        truncate_t_list = list(range(t+1))[t//2:][::self.t_stride]  # need half at least
+        truncate_t_list = list(range(t + 1))[t // 2 :][:: self.t_stride]  # need half at least
         truncate_t = random.choice(truncate_t_list)
         if self.extra_1:
             truncate_t = truncate_t + 1
         return 0, truncate_t
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     from torchvision import transforms
     import torchvision.io as io
     import numpy as np
     from torchvision.utils import save_image
     import os
 
-    vframes, aframes, info = io.read_video(
-        filename='./v_Archery_g01_c03.avi',
-        pts_unit='sec',
-        output_format='TCHW'
-    )
+    vframes, aframes, info = io.read_video(filename="./v_Archery_g01_c03.avi", pts_unit="sec", output_format="TCHW")
 
-    trans = transforms.Compose([
-        ToTensorVideo(),
-        RandomHorizontalFlipVideo(),
-        UCFCenterCropVideo(512),
-        # NormalizeVideo(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True)
-    ])
+    trans = transforms.Compose(
+        [
+            ToTensorVideo(),
+            RandomHorizontalFlipVideo(),
+            UCFCenterCropVideo(512),
+            # NormalizeVideo(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True),
+        ]
+    )
 
     target_video_len = 32
     frame_interval = 1
@@ -609,8 +608,9 @@ if __name__ == '__main__':
     print(select_vframes_trans_int.dtype)
     print(select_vframes_trans_int.permute(0, 2, 3, 1).shape)
 
-    io.write_video('./test.avi', select_vframes_trans_int.permute(0, 2, 3, 1), fps=8)
+    io.write_video("./test.avi", select_vframes_trans_int.permute(0, 2, 3, 1), fps=8)
 
     for i in range(target_video_len):
-        save_image(select_vframes_trans[i], os.path.join('./test000', '%04d.png' % i), normalize=True,
-                   value_range=(-1, 1))
+        save_image(
+            select_vframes_trans[i], os.path.join("./test000", "%04d.png" % i), normalize=True, value_range=(-1, 1)
+        )

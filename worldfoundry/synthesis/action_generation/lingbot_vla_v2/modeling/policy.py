@@ -189,8 +189,6 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
             for idx in token_moe_layers:
                 self.qwen_expert.model.layers[idx].mlp = Qwen2TokenMoeBlock(token_config)
 
-
-
     def get_image_features(
         self,
         pixel_values: torch.FloatTensor,
@@ -218,14 +216,10 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
             split_sizes = (image_grid_thw.prod(-1) // self.qwenvl.visual.spatial_merge_size**2).tolist()
         image_chunks = list(torch.split(image_embeds, split_sizes))
         deepstack_chunks = [
-            list(torch.split(deepstack_embeds, split_sizes))
-            for deepstack_embeds in deepstack_image_embeds
+            list(torch.split(deepstack_embeds, split_sizes)) for deepstack_embeds in deepstack_image_embeds
         ]
         image_embeds = torch.stack(image_chunks, dim=0)
-        deepstack_image_embeds = [
-            torch.stack(chunks, dim=0)
-            for chunks in deepstack_chunks
-        ]
+        deepstack_image_embeds = [torch.stack(chunks, dim=0) for chunks in deepstack_chunks]
         return image_embeds, deepstack_image_embeds
 
     def embed_image(self, image: torch.Tensor, image_grid_thw: torch.LongTensor):
@@ -242,8 +236,7 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
         emb = self.embed_language_tokens(token).to(dtype=dtype)
         return emb.view(1, 1, 1, -1).expand(batch, count, 1, -1)
 
-    def build_prefix_position_ids(self, input_ids, attention_mask,
-                                   image_grid_thw=None, video_grid_thw=None):
+    def build_prefix_position_ids(self, input_ids, attention_mask, image_grid_thw=None, video_grid_thw=None):
         position_ids, _ = self.qwenvl.model.get_rope_index(
             input_ids=input_ids,
             image_grid_thw=image_grid_thw,
@@ -319,9 +312,7 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
                 if hidden_states is None:
                     continue
                 if i == 1:
-                    q, k, v = models[i].layers[layer_idx](
-                        hidden_states, compute_kqv=True, ada_cond=ada_cond
-                    )
+                    q, k, v = models[i].layers[layer_idx](hidden_states, compute_kqv=True, ada_cond=ada_cond)
                 else:
                     q, k, v = models[i].layers[layer_idx](hidden_states, compute_kqv=True)
                 query_states.append(q.float())
@@ -374,9 +365,7 @@ class QwenvlWithExpertV2Model(PreTrainedModel):
                     if router_logits is not None:
                         router_logits_list.append(router_logits)
                 else:
-                    out_emb = models[i].layers[layer_idx](
-                        hidden_states, att_output, start, end, output_atten=True
-                    )
+                    out_emb = models[i].layers[layer_idx](hidden_states, att_output, start, end, output_atten=True)
                     out_emb = self._apply_deepstack(out_emb, layer_idx, visual_pos_masks, deepstack_visual_embeds)
                 outputs_embeds.append(out_emb)
                 start = end
@@ -474,7 +463,6 @@ class FlowMatchingV2(FlowMatchingV1):
             self.future_video_share_future_depth_query = False
             self.block_future_depth_to_action = False
 
-
     def embed_prefix(
         self,
         images,
@@ -509,10 +497,7 @@ class FlowMatchingV2(FlowMatchingV1):
         embed_dtype = img_emb.dtype
         num_patch = img_emb.shape[1]
         img_emb = einops.rearrange(img_emb, "(b n) l d -> b n l d", b=bsize, n=num_images)
-        deepstack_embs = [
-            einops.rearrange(x, "(b n) l d -> b n l d", b=bsize, n=num_images)
-            for x in deepstack_embs
-        ]
+        deepstack_embs = [einops.rearrange(x, "(b n) l d -> b n l d", b=bsize, n=num_images) for x in deepstack_embs]
         if img_masks.ndim == 1:
             img_masks = img_masks.unsqueeze(0)
 
@@ -559,22 +544,15 @@ class FlowMatchingV2(FlowMatchingV1):
         lang_emb = self.qwenvl_with_expert.embed_language_tokens(lang_tokens).to(dtype=embed_dtype)
 
         if self.use_depth_align and self.align_type == "query":
+
             def _get_align_tokens(tokens):
                 tk_weights = tokens.view(self.num_task_tokens, tokens.shape[0] // self.num_task_tokens, tokens.shape[1])
                 tk_weights = tk_weights.mean(dim=1)
                 return tk_weights
 
-            align_pad_masks = torch.ones(
-                bsize,
-                self.num_task_tokens,
-                device=device,
-                dtype=lang_masks.dtype
-            )
+            align_pad_masks = torch.ones(bsize, self.num_task_tokens, device=device, dtype=lang_masks.dtype)
             fake_align_ids = torch.full(
-                (bsize, self.num_task_tokens),
-                cfg.text_config.eos_token_id,
-                dtype=torch.long,
-                device=device
+                (bsize, self.num_task_tokens), cfg.text_config.eos_token_id, dtype=torch.long, device=device
             )
 
             current_task = _get_align_tokens(self.depth_align_embs)
@@ -584,9 +562,7 @@ class FlowMatchingV2(FlowMatchingV1):
                 and getattr(self, "use_current_shared_task_proj", False)
             ):
                 current_video_task = _get_align_tokens(self.current_video_align_embs)
-                current_task = self.current_shared_task_proj(
-                    torch.cat([current_task, current_video_task], dim=-1)
-                )
+                current_task = self.current_shared_task_proj(torch.cat([current_task, current_video_task], dim=-1))
             align_embs = current_task.repeat(img_emb.size(0), 1, 1).to(img_emb.device, img_emb.dtype)
             parts = [img_emb]
             masks = [image_pad_masks]
@@ -616,9 +592,7 @@ class FlowMatchingV2(FlowMatchingV1):
                     and getattr(self, "use_shared_future_task_proj", False)
                 ):
                     future_video_task = _get_align_tokens(self.future_video_align_embs)
-                    future_task = self.future_shared_task_proj(
-                        torch.cat([future_task, future_video_task], dim=-1)
-                    )
+                    future_task = self.future_shared_task_proj(torch.cat([future_task, future_video_task], dim=-1))
                 future_align_embs = future_task.repeat(img_emb.size(0), 1, 1).to(img_emb.device, img_emb.dtype)
 
             if (
@@ -626,9 +600,7 @@ class FlowMatchingV2(FlowMatchingV1):
                 and getattr(self, "use_future_video", False)
                 and getattr(self, "future_video_share_future_depth_query", False)
             ):
-                raise ValueError(
-                    "share_future_depth_query=True requires depth.use_future_depth=True."
-                )
+                raise ValueError("share_future_depth_query=True requires depth.use_future_depth=True.")
 
             for segment_name in prefix_query_segments(
                 use_depth_align=True,
@@ -668,9 +640,11 @@ class FlowMatchingV2(FlowMatchingV1):
                     )
                     _append(future_video_cls_align_emb, cls_align_pad_masks, fake_cls_align_ids)
                 elif segment_name == "future_video":
-                    future_video_align_embs = _get_align_tokens(self.future_video_align_embs).repeat(
-                        img_emb.size(0), 1, 1
-                    ).to(img_emb.device, img_emb.dtype)
+                    future_video_align_embs = (
+                        _get_align_tokens(self.future_video_align_embs)
+                        .repeat(img_emb.size(0), 1, 1)
+                        .to(img_emb.device, img_emb.dtype)
+                    )
                     _append(future_video_align_embs, align_pad_masks, fake_align_ids)
                 elif segment_name == "future_depth":
                     _append(future_align_embs, align_pad_masks, fake_align_ids)
@@ -742,7 +716,6 @@ class FlowMatchingV2(FlowMatchingV1):
         )
         start, end = query_spans["current_depth"]
         return hidden_states[:, start:end, :]
-
 
     def sample_actions(
         self,
@@ -895,7 +868,6 @@ class FlowMatchingV2(FlowMatchingV1):
         return v_t
 
 
-
 class LingbotVlaV2Policy(PreTrainedModel):
     config_class = LingbotVLAV2Config
     name = "torch_lingbot_vla_v2"
@@ -909,9 +881,6 @@ class LingbotVlaV2Policy(PreTrainedModel):
             del self.model.qwenvl_with_expert.qwenvl.lm_head
         del self.model.qwenvl_with_expert.qwen_expert.lm_head
         torch.set_float32_matmul_precision("high")
-
-
-
 
     def sample_actions(self, *args, **kwargs) -> Tensor:
         return self.model.sample_actions(*args, **kwargs)

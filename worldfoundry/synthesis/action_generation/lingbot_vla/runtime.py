@@ -74,7 +74,10 @@ class _LingBotV1Runtime:
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
         from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
-        from worldfoundry.core.execution.inference import compile_module_if_enabled, install_worldfoundry_inference_infra
+        from worldfoundry.core.execution.inference import (
+            compile_module_if_enabled,
+            install_worldfoundry_inference_infra,
+        )
         from worldfoundry.core.io.assets.hf import materialize_hf_snapshot
         from worldfoundry.core.utils.tensors.torch import freeze_params, set_random_seed
 
@@ -240,9 +243,7 @@ class _LingBotV1Runtime:
                 if array.dtype.kind == "f" and array.max(initial=0) <= 1.0:
                     array = array * 255.0
                 array = np.clip(array, 0, 255).astype(np.uint8)
-            resized = Image.fromarray(array).convert("RGB").resize(
-                (image_size, image_size), Image.Resampling.BILINEAR
-            )
+            resized = Image.fromarray(array).convert("RGB").resize((image_size, image_size), Image.Resampling.BILINEAR)
             raw[key] = np.transpose(np.asarray(resized), (2, 0, 1)) / 255.0
 
         for key, value in list(raw.items()):

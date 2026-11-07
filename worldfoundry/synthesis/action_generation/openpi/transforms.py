@@ -190,8 +190,6 @@ class ResizeImages(DataTransformFn):
         return data
 
 
-
-
 @dataclasses.dataclass(frozen=True)
 class DeltaActions(DataTransformFn):
     """Repacks absolute actions into delta action space."""
@@ -295,8 +293,6 @@ class ExtractFASTActions(DataTransformFn):
             **data,
             "actions": actions,
         }
-
-
 
 
 @dataclasses.dataclass(frozen=True)

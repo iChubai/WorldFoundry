@@ -21,22 +21,22 @@ class Transformer3DModelOutput(BaseOutput):
 class Transformer3DModel(ModelMixin, ConfigMixin):
     @register_to_config
     def __init__(
-            self,
-            num_attention_heads: int = 16,
-            attention_head_dim: int = 88,
-            in_channels: Optional[int] = None,
-            num_layers: int = 1,
-            dropout: float = 0.0,
-            norm_num_groups: int = 32,
-            cross_attention_dim: Optional[int] = None,
-            attention_bias: bool = False,
-            activation_fn: str = "geglu",
-            num_embeds_ada_norm: Optional[int] = None,
-            use_linear_projection: bool = False,
-            only_cross_attention: bool = False,
-            upcast_attention: bool = False,
-            norm_type: str = "layer_norm",
-            norm_elementwise_affine: bool = True,
+        self,
+        num_attention_heads: int = 16,
+        attention_head_dim: int = 88,
+        in_channels: Optional[int] = None,
+        num_layers: int = 1,
+        dropout: float = 0.0,
+        norm_num_groups: int = 32,
+        cross_attention_dim: Optional[int] = None,
+        attention_bias: bool = False,
+        activation_fn: str = "geglu",
+        num_embeds_ada_norm: Optional[int] = None,
+        use_linear_projection: bool = False,
+        only_cross_attention: bool = False,
+        upcast_attention: bool = False,
+        norm_type: str = "layer_norm",
+        norm_elementwise_affine: bool = True,
     ):
         super().__init__()
         self.use_linear_projection = use_linear_projection
@@ -87,7 +87,7 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w")
 
         if encoder_hidden_states.shape[0] == batch_size:
-            encoder_hidden_states = repeat(encoder_hidden_states, 'b n c -> (b f) n c', f=video_length)
+            encoder_hidden_states = repeat(encoder_hidden_states, "b n c -> (b f) n c", f=video_length)
 
         elif encoder_hidden_states.shape[0] == batch_size * video_length:
             pass
@@ -117,15 +117,11 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
 
         # Output
         if not self.use_linear_projection:
-            hidden_states = (
-                hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
-            )
+            hidden_states = hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
             hidden_states = self.proj_out(hidden_states)
         else:
             hidden_states = self.proj_out(hidden_states)
-            hidden_states = (
-                hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
-            )
+            hidden_states = hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
 
         output = hidden_states + residual
 

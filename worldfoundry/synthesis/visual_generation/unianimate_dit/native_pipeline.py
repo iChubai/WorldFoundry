@@ -110,7 +110,10 @@ class WanUniAnimateVideoPipeline(WanStagedPipeline):
 
         if use_usp:
             from xfuser.core.distributed import get_sequence_parallel_world_size
-            from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import usp_attn_forward, usp_dit_forward
+            from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import (
+                usp_attn_forward,
+                usp_dit_forward,
+            )
 
             for block in pipe.dit.blocks:
                 block.self_attn.forward = types.MethodType(usp_attn_forward, block.self_attn)
@@ -224,9 +227,11 @@ class WanUniAnimateVideoPipeline(WanStagedPipeline):
         dwpose_data = self.dwpose_embedding(
             (torch.cat([dwpose_data[:, :, :1].repeat(1, 1, 3, 1, 1), dwpose_data], dim=2) / 255.0).to(self.device)
         ).to(torch.bfloat16)
-        random_ref_dwpose_data = self.randomref_embedding_pose(
-            (random_ref_dwpose.unsqueeze(0) / 255.0).to(self.device).permute(0, 3, 1, 2)
-        ).unsqueeze(2).to(torch.bfloat16)
+        random_ref_dwpose_data = (
+            self.randomref_embedding_pose((random_ref_dwpose.unsqueeze(0) / 255.0).to(self.device).permute(0, 3, 1, 2))
+            .unsqueeze(2)
+            .to(torch.bfloat16)
+        )
 
         image_emb["y"] = image_emb["y"] + random_ref_dwpose_data
         condition = rearrange(dwpose_data, "b c f h w -> b (f h w) c").contiguous()

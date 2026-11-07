@@ -59,6 +59,7 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
     import re
 
     import tensorflow as tf
+
     tf_path = os.path.abspath(gpt2_checkpoint_path)
     logger.info("Converting TensorFlow checkpoint from {}".format(tf_path))
     # Load weights from TF model
@@ -105,9 +106,7 @@ class Attention(nn.Module):
         n_state = nx  # in Attention: n_state=768 (nx=n_embd)
         # [switch nx => n_state from Block to Attention to keep identical to TF implem]
         assert n_state % config.n_head == 0
-        self.register_buffer(
-            "bias", torch.tril(torch.ones((n_ctx, n_ctx), dtype=torch.uint8)).view(1, 1, n_ctx, n_ctx)
-        )
+        self.register_buffer("bias", torch.tril(torch.ones((n_ctx, n_ctx), dtype=torch.uint8)).view(1, 1, n_ctx, n_ctx))
         self.register_buffer("masked_bias", torch.tensor(-1e4))
         self.n_head = config.n_head
         self.split_size = n_state
@@ -148,7 +147,7 @@ class Attention(nn.Module):
 
         if not self.is_cross_attention:
             # if only "normal" attention layer implements causal mask
-            mask = self.bias[:, :, ns - nd: ns, :ns]
+            mask = self.bias[:, :, ns - nd : ns, :ns]
             w = torch.where(mask.bool(), w, self.masked_bias.to(w.dtype))
 
         if attention_mask is not None:
@@ -181,20 +180,20 @@ class Attention(nn.Module):
             return x.permute(0, 2, 1, 3)  # (batch, head, seq_length, head_features)
 
     def forward(
-            self,
-            hidden_states,
-            layer_past=None,
-            attention_mask=None,
-            head_mask=None,
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            use_cache=False,
-            output_attentions=False,
+        self,
+        hidden_states,
+        layer_past=None,
+        attention_mask=None,
+        head_mask=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        use_cache=False,
+        output_attentions=False,
     ):
         if encoder_hidden_states is not None:
-            assert hasattr(
-                self, "q_attn"
-            ), "If class is used as cross attention, the weights `q_attn` have to be defined. Please make sure to instantiate class with `Attention(..., is_cross_attention=True)`."
+            assert hasattr(self, "q_attn"), (
+                "If class is used as cross attention, the weights `q_attn` have to be defined. Please make sure to instantiate class with `Attention(..., is_cross_attention=True)`."
+            )
             query = self.q_attn(hidden_states)
             key, value = self.c_attn(encoder_hidden_states).split(self.split_size, dim=2)
             attention_mask = encoder_attention_mask
@@ -269,15 +268,15 @@ class Block(nn.Module):
         self.mlp = MLP(inner_dim, config)
 
     def forward(
-            self,
-            hidden_states,
-            layer_past=None,
-            attention_mask=None,
-            head_mask=None,
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            use_cache=False,
-            output_attentions=False,
+        self,
+        hidden_states,
+        layer_past=None,
+        attention_mask=None,
+        head_mask=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        use_cache=False,
+        output_attentions=False,
     ):
         attn_outputs = self.attn(
             self.ln_1(hidden_states),
@@ -294,9 +293,9 @@ class Block(nn.Module):
 
         if encoder_hidden_states is not None:
             # add one self-attention block for cross-attention
-            assert hasattr(
-                self, "crossattention"
-            ), f"If `encoder_hidden_states` are passed, {self} has to be instantiated with cross-attention layers by setting `config.add_cross_attention=True`"
+            assert hasattr(self, "crossattention"), (
+                f"If `encoder_hidden_states` are passed, {self} has to be instantiated with cross-attention layers by setting `config.add_cross_attention=True`"
+            )
             cross_attn_outputs = self.crossattention(
                 self.ln_cross_attn(hidden_states),
                 attention_mask=attention_mask,
@@ -343,8 +342,6 @@ class GPT2PreTrainedModel(PreTrainedModel):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
             # module.weight.data.fill_(.01)  # KL: Adapter change
-
-
 
 
 GPT2_START_DOCSTRING = r"""
@@ -479,10 +476,8 @@ class GPT2Model(GPT2PreTrainedModel):
         if num_layers is not None:
             num_layers -= 1
         self.use_layers = num_layers
-    
-    def get_head_mask(
-        self, head_mask, num_hidden_layers: int, is_attention_chunked: bool = False
-    ):
+
+    def get_head_mask(self, head_mask, num_hidden_layers: int, is_attention_chunked: bool = False):
         """
         Prepare the head mask if needed.
 
@@ -506,7 +501,7 @@ class GPT2Model(GPT2PreTrainedModel):
             head_mask = [None] * num_hidden_layers
 
         return head_mask
-    
+
     def _convert_head_mask_to_5d(self, head_mask, num_hidden_layers):
         """-> [num_hidden_layers x batch x num_heads x seq_length x seq_length]"""
         if head_mask.dim() == 1:
@@ -526,18 +521,18 @@ class GPT2Model(GPT2PreTrainedModel):
     #     config_class=_CONFIG_FOR_DOC,
     # )
     def forward(
-            self,
-            inputs_embeds=None,
-            position_ids=None,
-            attention_mask=None,
-            past_key_values=None,
-            head_mask=None,
-            encoder_hidden_states=None,
-            encoder_attention_mask=None,
-            use_cache=None,
-            output_attentions=None,
-            output_hidden_states=None,
-            return_dict=None
+        self,
+        inputs_embeds=None,
+        position_ids=None,
+        attention_mask=None,
+        past_key_values=None,
+        head_mask=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        use_cache=None,
+        output_attentions=None,
+        output_hidden_states=None,
+        return_dict=None,
     ):
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -605,7 +600,6 @@ class GPT2Model(GPT2PreTrainedModel):
         all_cross_attentions = () if output_attentions and self.config.add_cross_attention else None
         all_hidden_states = () if output_hidden_states else None
         for i, (block, layer_past) in enumerate(zip(self.h, past_key_values)):
-
             if self.use_layers is not None and i >= self.use_layers:
                 break
 
@@ -671,18 +665,20 @@ class GPT2Model(GPT2PreTrainedModel):
         return hidden_states
 
 
-def get_gpt_model(input_dim=4096, window_size=32, hidden_size=None, n_layer=8, n_head=8, use_pe=True,
+def get_gpt_model(
+    input_dim=4096,
+    window_size=32,
+    hidden_size=None,
+    n_layer=8,
+    n_head=8,
+    use_pe=True,
 ):
-    
     import transformers
+
     config = transformers.GPT2Config(
-        n_layer=n_layer,
-        n_head=n_head,
-        n_embd=input_dim,
-        n_ctx = input_dim,
-        n_positions=window_size
+        n_layer=n_layer, n_head=n_head, n_embd=input_dim, n_ctx=input_dim, n_positions=window_size
     )
-    
+
     model = GPT2Model(config, use_pe=use_pe)
-    
+
     return model

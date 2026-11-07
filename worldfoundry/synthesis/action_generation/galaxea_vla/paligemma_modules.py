@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 class GemmaRMSNorm(nn.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
         super().__init__()
@@ -42,21 +43,16 @@ class GemmaRotaryEmbedding(nn.Module):
         # x: [bs, num_attention_heads, seq_len, head_size]
         # Copy the inv_freq tensor for batch in the sequence
         # put this in the forward for dtype safety
-        inv_freq = 1.0 / (
-            self.base
-            ** (torch.arange(0, self.dim, 2, dtype=torch.int64).float() / self.dim)
-        ).to(x.device)
-        # inv_freq_expanded: [Batch_Size, Head_Dim // 2, 1]
-        inv_freq_expanded = (
-            inv_freq[None, :, None].expand(position_ids.shape[0], -1, 1)
+        inv_freq = 1.0 / (self.base ** (torch.arange(0, self.dim, 2, dtype=torch.int64).float() / self.dim)).to(
+            x.device
         )
+        # inv_freq_expanded: [Batch_Size, Head_Dim // 2, 1]
+        inv_freq_expanded = inv_freq[None, :, None].expand(position_ids.shape[0], -1, 1)
         # position_ids_expanded: [Batch_Size, 1, Seq_Len]
         position_ids_expanded = position_ids[:, None, :].float()
         # Multiply each theta by the position (which is the argument of the sin and cos functions)
         # freqs: [Batch_Size, Head_Dim // 2, 1] @ [Batch_Size, 1, Seq_Len] --> [Batch_Size, Seq_Len, Head_Dim // 2]
-        freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(
-            1, 2
-        )
+        freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)
         # emb: [Batch_Size, Seq_Len, Head_Dim]
         emb = torch.cat((freqs, freqs), dim=-1)
         # cos, sin: [Batch_Size, Seq_Len, Head_Dim]
@@ -84,6 +80,4 @@ class GemmaMLP(nn.Module):
         # j = self.up_proj(x) # [Batch_Size, Seq_Len, Hidden_Size] -> [Batch_Size, Seq_Len, Intermediate_Size]
         # z = y * j # [Batch_Size, Seq_Len, Intermediate_Size]
         # z = self.down_proj(z) # [Batch_Size, Seq_Len, Intermediate_Size] -> [Batch_Size, Seq_Len, Hidden_Size]
-        return self.down_proj(
-            nn.functional.gelu(self.gate_proj(x), approximate="tanh") * self.up_proj(x)
-        )
+        return self.down_proj(nn.functional.gelu(self.gate_proj(x), approximate="tanh") * self.up_proj(x))

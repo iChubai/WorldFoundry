@@ -25,7 +25,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--width", type=int, default=512)
     parser.add_argument("--motion-bucket-id", type=int, default=180)
     parser.add_argument(
-        "--variant", choices=("25dof", "3dof"), default="25dof",
+        "--variant",
+        choices=("25dof", "3dof"),
+        default="25dof",
         help="Checkpoint action/state contract (default: 25dof).",
     )
     parser.add_argument(
@@ -79,7 +81,9 @@ def _validate_args(args: argparse.Namespace) -> None:
     if args.variant == "25dof" and args.actions_path:
         raise ValueError("3-DoF actions-path cannot be used with a 25-DoF checkpoint")
     if args.variant == "3dof" and (args.conditions_path or args.smoke_synthetic):
-        raise ValueError("3-DoF EgoWM uses --actions-path or --action-scale; 25-DoF conditions and smoke mode are unsupported")
+        raise ValueError(
+            "3-DoF EgoWM uses --actions-path or --action-scale; 25-DoF conditions and smoke mode are unsupported"
+        )
     for label, path in (
         ("official source", args.source_dir),
         ("checkpoint", args.checkpoint_path),
@@ -107,8 +111,10 @@ def _numbers(value: object, *, label: str, count: int) -> list[float]:
 
 def _normalize(values: list[float], stats: dict[str, list[float]]) -> list[float]:
     # Official SVD_25dof_nav_1xval.py: (value - min) / (max - min) * 2 - 1.
-    return [(value - low) / (high - low) * 2 - 1
-            for value, low, high in zip(values, stats["min"], stats["max"], strict=True)]
+    return [
+        (value - low) / (high - low) * 2 - 1
+        for value, low, high in zip(values, stats["min"], stats["max"], strict=True)
+    ]
 
 
 def _load_25dof_stats() -> dict[str, dict[str, list[float]]]:
@@ -144,12 +150,9 @@ def load_25dof_conditions(path: Path, num_frames: int) -> tuple[list[float], lis
     raw_actions = payload.get("physical_actions")
     if not isinstance(raw_actions, list) or len(raw_actions) != num_frames:
         raise ValueError(f"physical_actions must contain exactly {num_frames} 25D rows")
-    actions = [_numbers(row, label=f"physical_actions[{index}]", count=25)
-               for index, row in enumerate(raw_actions)]
+    actions = [_numbers(row, label=f"physical_actions[{index}]", count=25) for index, row in enumerate(raw_actions)]
     stats = _load_25dof_stats()
-    return _normalize(state, stats["state_stats"]), [
-        _normalize(row, stats["action_stats_6"]) for row in actions
-    ]
+    return _normalize(state, stats["state_stats"]), [_normalize(row, stats["action_stats_6"]) for row in actions]
 
 
 def load_3dof_actions(path: Path, num_frames: int) -> list[list[float]]:
@@ -160,8 +163,7 @@ def load_3dof_actions(path: Path, num_frames: int) -> list[list[float]]:
     raw_actions = payload.get("normalized_actions")
     if not isinstance(raw_actions, list) or len(raw_actions) != num_frames:
         raise ValueError(f"normalized_actions must contain exactly {num_frames} 3D rows")
-    return [_numbers(row, label=f"normalized_actions[{index}]", count=3)
-            for index, row in enumerate(raw_actions)]
+    return [_numbers(row, label=f"normalized_actions[{index}]", count=3) for index, row in enumerate(raw_actions)]
 
 
 def checkpoint_action_dims(state_dict: dict) -> int:

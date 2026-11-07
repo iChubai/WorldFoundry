@@ -300,11 +300,7 @@ def build_runtime_config(
     """
     # Merge defaults and options, with options taking precedence.
     merged = {**dict(defaults), **dict(options)}
-    option_checkpoint_path = (
-        options.get("checkpoint_path")
-        or options.get("checkpoint_dir")
-        or options.get("ckpt_path")
-    )
+    option_checkpoint_path = options.get("checkpoint_path") or options.get("checkpoint_dir") or options.get("ckpt_path")
     option_checkpoint_ref = (
         options.get("checkpoint_ref")
         or options.get("checkpoint_repo_id")
@@ -312,9 +308,7 @@ def build_runtime_config(
         or options.get("hf_repo_id")
     )
     configured_checkpoint_path = (
-        merged.get("checkpoint_path")
-        or merged.get("checkpoint_dir")
-        or merged.get("ckpt_path")
+        merged.get("checkpoint_path") or merged.get("checkpoint_dir") or merged.get("ckpt_path")
     )
     configured_checkpoint_ref = (
         merged.get("checkpoint_ref")
@@ -350,21 +344,15 @@ def build_runtime_config(
     )
     requested_remote_code = _as_bool(merged.get("trust_remote_code"), False)
     if requested_remote_code:
-        raise ValueError(
-            f"{model_id} requests remote checkpoint code, which is forbidden for in-tree inference"
-        )
+        raise ValueError(f"{model_id} requests remote checkpoint code, which is forbidden for in-tree inference")
     external_source = (
         merged.get("source_repo")
         or merged.get("source_subdir")
         or merged.get("source_workdir")
         or merged.get("pythonpath_dirs")
     )
-    if external_source and (
-        not isinstance(external_source, str) or external_source.strip()
-    ):
-        raise ValueError(
-            f"{model_id} requests an external source checkout, which is forbidden for in-tree inference"
-        )
+    if external_source and (not isinstance(external_source, str) or external_source.strip()):
+        raise ValueError(f"{model_id} requests an external source checkout, which is forbidden for in-tree inference")
     return OfficialPolicyRuntimeConfig(
         model_id=model_id,
         # Default backend to "hf_auto_action_model" if not specified.
@@ -423,9 +411,7 @@ class OfficialPolicyRuntime:
                 reason = "configured checkpoint path does not exist"
                 if self.config.checkpoint_ref:
                     reason += " and checkpoint repository is not cached locally"
-                missing.append(
-                    {"kind": "checkpoint", "path": str(self.config.checkpoint_path), "reason": reason}
-                )
+                missing.append({"kind": "checkpoint", "path": str(self.config.checkpoint_path), "reason": reason})
             elif self.config.checkpoint_ref:
                 missing.append(
                     {
@@ -436,7 +422,11 @@ class OfficialPolicyRuntime:
                 )
             else:
                 missing.append(
-                    {"kind": "checkpoint", "path": "", "reason": "no checkpoint_path/checkpoint_dir/checkpoint_ref configured"}
+                    {
+                        "kind": "checkpoint",
+                        "path": "",
+                        "reason": "no checkpoint_path/checkpoint_dir/checkpoint_ref configured",
+                    }
                 )
 
         # Check for other required assets
@@ -744,7 +734,7 @@ class OfficialPolicyRuntime:
                 generated = model.generate(**inputs, max_new_tokens=256, use_cache=True)
             output_ids = generated[:, input_length:]
             return processor.batch_decode(output_ids, skip_special_tokens=True)
-        
+
         # Generic fallback for other backends: try configured predict method or 'select_action'.
         method = getattr(policy, self.config.predict_method, None) or getattr(policy, "select_action", None)
         if not callable(method):
@@ -808,8 +798,10 @@ class OfficialPolicyRuntime:
             observation=observation,
             action_context=action_context,
         )
-        action_values = raw_actions.get("actions") if isinstance(raw_actions, Mapping) and "actions" in raw_actions else raw_actions
-        
+        action_values = (
+            raw_actions.get("actions") if isinstance(raw_actions, Mapping) and "actions" in raw_actions else raw_actions
+        )
+
         # Prepare the output path and ensure its parent directory exists.
         output = Path(output_path).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -830,7 +822,7 @@ class OfficialPolicyRuntime:
             "metadata": _jsonable(dict(extra_metadata or {})),
             "elapsed_seconds": time.time() - started,
         }
-        
+
         # Write the action trace payload to the specified output file.
         output.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 

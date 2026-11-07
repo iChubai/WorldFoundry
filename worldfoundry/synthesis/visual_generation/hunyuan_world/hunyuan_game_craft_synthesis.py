@@ -4,6 +4,7 @@ the `HunyuanGameCraftRuntime` to integrate with the `BaseSynthesis` interface.
 It also re-exports various components and utilities from the `hunyuan_game_craft.runtime`
 module for direct access.
 """
+
 from __future__ import annotations
 
 from typing import Any

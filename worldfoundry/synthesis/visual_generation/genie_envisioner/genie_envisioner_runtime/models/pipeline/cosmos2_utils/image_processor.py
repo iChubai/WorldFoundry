@@ -1349,9 +1349,7 @@ class PixArtImageProcessor(VaeImageProcessor):
             resized_height = int(orig_height * ratio)
 
             # Resize
-            samples = F.interpolate(
-                samples, size=(resized_height, resized_width), mode="bilinear", align_corners=False
-            )
+            samples = F.interpolate(samples, size=(resized_height, resized_width), mode="bilinear", align_corners=False)
 
             # Center Crop
             start_x = (resized_width - new_width) // 2

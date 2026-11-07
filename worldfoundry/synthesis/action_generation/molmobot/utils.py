@@ -67,9 +67,7 @@ def resource_path(
         if candidate.is_file():
             return candidate
         if is_url(folder_value):
-            raise FileNotFoundError(
-                f"Remote URL access is disabled for MolmoBot inference: {folder_value}"
-            )
+            raise FileNotFoundError(f"Remote URL access is disabled for MolmoBot inference: {folder_value}")
         raise FileNotFoundError(f"Resource does not exist: {folder_value}")
 
     if local_cache is not None:
@@ -93,9 +91,7 @@ def resource_path(
         from worldfoundry.core.io.paths import resolve_local_hf_model_path
 
         return resolve_local_hf_model_path(folder_value, required_files=(fname,)) / fname
-    raise FileNotFoundError(
-        f"Cannot resolve {fname!r} from local folder or model repository {folder_value!r}."
-    )
+    raise FileNotFoundError(f"Cannot resolve {fname!r} from local folder or model repository {folder_value!r}.")
 
 
 def rank0_resource_path(device, *args, **kwargs) -> Optional[Path]:

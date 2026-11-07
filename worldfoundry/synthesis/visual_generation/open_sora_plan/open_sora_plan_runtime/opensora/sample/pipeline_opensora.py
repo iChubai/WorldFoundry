@@ -1,4 +1,3 @@
-
 import inspect
 from typing import Callable, Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
@@ -24,6 +23,7 @@ from diffusers.utils.torch_utils import randn_tensor
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 
 from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3
+
 try:
     import torch_npu
     from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info
@@ -33,9 +33,11 @@ except:
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
+
 @dataclass
 class OpenSoraPipelineOutput(BaseOutput):
     videos: Union[List[torch.FloatTensor], np.ndarray]
+
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.rescale_noise_cfg
 def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=0.0):
@@ -113,7 +115,6 @@ def retrieve_timesteps(
 
 
 class OpenSoraPipeline(DiffusionPipeline):
-
     model_cpu_offload_seq = "text_encoder->text_encoder_2->transformer->vae"
     _optional_components = [
         "text_encoder_2",
@@ -208,8 +209,7 @@ class OpenSoraPipeline(DiffusionPipeline):
                 dtype = None
 
         if device is None:
-            device = getattr(self, '_execution_device', None) or getattr(self, 'device', None) or torch.device('cuda')
-
+            device = getattr(self, "_execution_device", None) or getattr(self, "device", None) or torch.device("cuda")
 
         tokenizers = [self.tokenizer, self.tokenizer_2]
         text_encoders = [self.text_encoder, self.text_encoder_2]
@@ -266,7 +266,6 @@ class OpenSoraPipeline(DiffusionPipeline):
             prompt_attention_mask = prompt_attention_mask.repeat(num_samples_per_prompt, 1)
 
         prompt_embeds = prompt_embeds.to(dtype=dtype, device=device)
-
 
         bs_embed, seq_len, _ = prompt_embeds.shape
         # duplicate text embeddings for each generation per prompt, using mps friendly method
@@ -422,11 +421,13 @@ class OpenSoraPipeline(DiffusionPipeline):
                 )
 
     # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.StableDiffusionPipeline.prepare_latents
-    def prepare_latents(self, batch_size, num_channels_latents, num_frames, height, width, dtype, device, generator, latents=None):
+    def prepare_latents(
+        self, batch_size, num_channels_latents, num_frames, height, width, dtype, device, generator, latents=None
+    ):
         shape = (
             batch_size,
             num_channels_latents,
-            (int(num_frames) - 1) // self.vae.vae_scale_factor[0] + 1, 
+            (int(num_frames) - 1) // self.vae.vae_scale_factor[0] + 1,
             int(height) // self.vae.vae_scale_factor[1],
             int(width) // self.vae.vae_scale_factor[2],
         )
@@ -497,9 +498,8 @@ class OpenSoraPipeline(DiffusionPipeline):
         callback_on_step_end_tensor_inputs: List[str] = ["latents"],
         guidance_rescale: float = 0.0,
         max_sequence_length: int = 512,
-        device = None, 
+        device=None,
     ):
-        
         if isinstance(callback_on_step_end, (PipelineCallback, MultiPipelineCallbacks)):
             callback_on_step_end_tensor_inputs = callback_on_step_end.tensor_inputs
 
@@ -511,7 +511,7 @@ class OpenSoraPipeline(DiffusionPipeline):
         # 1. Check inputs. Raise error if not correct
         self.check_inputs(
             prompt,
-            num_frames, 
+            num_frames,
             height,
             width,
             negative_prompt,
@@ -537,8 +537,9 @@ class OpenSoraPipeline(DiffusionPipeline):
         else:
             batch_size = prompt_embeds.shape[0]
 
-        device = device or getattr(self, '_execution_device', None) or getattr(self, 'device', None) or torch.device('cuda')
-
+        device = (
+            device or getattr(self, "_execution_device", None) or getattr(self, "device", None) or torch.device("cuda")
+        )
 
         # 3. Encode input prompt
 
@@ -604,7 +605,7 @@ class OpenSoraPipeline(DiffusionPipeline):
         latents = self.prepare_latents(
             batch_size * num_samples_per_prompt,
             num_channels_latents,
-            (num_frames + world_size - 1) // world_size if get_sequence_parallel_state() else num_frames, 
+            (num_frames + world_size - 1) // world_size if get_sequence_parallel_state() else num_frames,
             height,
             width,
             prompt_embeds.dtype,
@@ -632,15 +633,11 @@ class OpenSoraPipeline(DiffusionPipeline):
             prompt_embeds_2 = prompt_embeds_2.to(device=device)
             prompt_attention_mask_2 = prompt_attention_mask_2.to(device=device)
 
-
         # ==================make sp=====================================
         if get_sequence_parallel_state():
             prompt_embeds = rearrange(
-                prompt_embeds, 
-                'b (n x) h -> b n x h', 
-                n=world_size,
-                x=prompt_embeds.shape[1] // world_size
-                ).contiguous()
+                prompt_embeds, "b (n x) h -> b n x h", n=world_size, x=prompt_embeds.shape[1] // world_size
+            ).contiguous()
             rank = hccl_info.rank if torch_npu is not None else nccl_info.rank
             prompt_embeds = prompt_embeds[:, rank, :, :]
         # ==================make sp=====================================
@@ -672,7 +669,7 @@ class OpenSoraPipeline(DiffusionPipeline):
                     prompt_attention_mask = prompt_attention_mask.unsqueeze(1)  # b l -> b 1 l
                 if prompt_embeds_2 is not None and prompt_embeds_2.ndim == 2:
                     prompt_embeds = prompt_embeds.unsqueeze(1)  # b d -> b 1 d
-                
+
                 attention_mask = torch.ones_like(latent_model_input)[:, 0].to(device=device)
                 # ==================prepare my shape=====================================
 
@@ -683,7 +680,7 @@ class OpenSoraPipeline(DiffusionPipeline):
 
                 noise_pred = self.transformer(
                     latent_model_input,
-                    attention_mask=attention_mask, 
+                    attention_mask=attention_mask,
                     encoder_hidden_states=prompt_embeds,
                     encoder_attention_mask=prompt_attention_mask,
                     timestep=timestep,
@@ -696,7 +693,11 @@ class OpenSoraPipeline(DiffusionPipeline):
                     noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
                     noise_pred = noise_pred_uncond + guidance_scale * (noise_pred_text - noise_pred_uncond)
 
-                if self.do_classifier_free_guidance and guidance_rescale > 0.0 and not isinstance(self.scheduler, FlowMatchEulerDiscreteScheduler):
+                if (
+                    self.do_classifier_free_guidance
+                    and guidance_rescale > 0.0
+                    and not isinstance(self.scheduler, FlowMatchEulerDiscreteScheduler)
+                ):
                     # Based on 3.4. in https://arxiv.org/pdf/2305.08891.pdf
                     noise_pred = rescale_noise_cfg(noise_pred, noise_pred_text, guidance_rescale=guidance_rescale)
 
@@ -740,14 +741,27 @@ class OpenSoraPipeline(DiffusionPipeline):
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return (videos, )
+            return (videos,)
 
         return OpenSoraPipelineOutput(videos=videos)
 
-    
     def decode_latents(self, latents):
-        print(f'before vae decode {latents.shape}', torch.max(latents).item(), torch.min(latents).item(), torch.mean(latents).item(), torch.std(latents).item())
+        print(
+            f"before vae decode {latents.shape}",
+            torch.max(latents).item(),
+            torch.min(latents).item(),
+            torch.mean(latents).item(),
+            torch.std(latents).item(),
+        )
         video = self.vae.decode(latents.to(self.vae.vae.dtype))
-        print(f'after vae decode {latents.shape}', torch.max(video).item(), torch.min(video).item(), torch.mean(video).item(), torch.std(video).item())
-        video = ((video / 2.0 + 0.5).clamp(0, 1) * 255).to(dtype=torch.uint8).cpu().permute(0, 1, 3, 4, 2).contiguous() # b t h w c
+        print(
+            f"after vae decode {latents.shape}",
+            torch.max(video).item(),
+            torch.min(video).item(),
+            torch.mean(video).item(),
+            torch.std(video).item(),
+        )
+        video = (
+            ((video / 2.0 + 0.5).clamp(0, 1) * 255).to(dtype=torch.uint8).cpu().permute(0, 1, 3, 4, 2).contiguous()
+        )  # b t h w c
         return video

@@ -85,9 +85,7 @@ def forward_mixture_layers(
     # [Batch_Size, Seq_Len, Hidden_Size]
     hidden_states_post_res = {}
     for name in active_mixture_names:
-        hidden_states_post_res[name] = (
-            residuals_pre_attn[name] + hidden_states_pre_res[name]
-        )
+        hidden_states_post_res[name] = residuals_pre_attn[name] + hidden_states_pre_res[name]
     hidden_states_pre_post_attn = hidden_states_post_res
 
     # [Batch_Size, Seq_Len, Hidden_Size]
@@ -172,7 +170,9 @@ def forward_mixture_attn(
             )  # note: rope already applied before they were cached
 
         # always add to cache in append mode, or kv cache does not have the layer yet (in no_append mode)
-        flag_to_cache_mixture = (name in kv_caches and not kv_caches[name].has_item(layer_idx)) or cache_mode == "append"
+        flag_to_cache_mixture = (
+            name in kv_caches and not kv_caches[name].has_item(layer_idx)
+        ) or cache_mode == "append"
 
         # calculate kv for new tokens if in append mode or this layer is not cached
         key_states_new, value_states_new = None, None
@@ -338,11 +338,7 @@ class JointModel(nn.Module):
                 )
                 embeds_all[name] = embeds_all[name] * normalizer
 
-        intermediates = (
-            {k: [embeds_all[k]] for k in embeds_all.keys()}
-            if return_intermediate_layers
-            else None
-        )
+        intermediates = {k: [embeds_all[k]] for k in embeds_all.keys()} if return_intermediate_layers else None
         # layers
         for layer_idx in range(self.num_hidden_layers):
             embeds_all = forward_mixture_layers(

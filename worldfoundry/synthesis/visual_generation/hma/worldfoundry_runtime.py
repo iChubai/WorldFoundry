@@ -144,7 +144,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
     if trajectory_path not in (None, ""):
         trajectory = expand_worldfoundry_path(str(trajectory_path))
         if not trajectory.is_file() or trajectory.stat().st_size == 0:
-            missing.append({"kind": "asset", "path": str(trajectory), "reason": "HMA trajectory JSON is missing or empty"})
+            missing.append(
+                {"kind": "asset", "path": str(trajectory), "reason": "HMA trajectory JSON is missing or empty"}
+            )
     image_path = _option(options, "image_path", "input_image")
     if trajectory_path in (None, "") and image_path not in (None, ""):
         image = expand_worldfoundry_path(str(image_path))

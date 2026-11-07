@@ -17,6 +17,8 @@ _GEN3C_CHECKPOINT_COMPONENT_REPOS = {
     "Cosmos-Tokenize1-CV8x8x8-720p": "nvidia/Cosmos-Tokenize1-CV8x8x8-720p",
     os.path.join("google-t5", "t5-11b"): "google-t5/t5-11b",
 }
+
+
 def _env_truthy(key: str) -> bool:
     """Helper function to env truthy.
 

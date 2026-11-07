@@ -36,6 +36,7 @@ class InflatedGroupNorm(nn.GroupNorm):
 
         return x
 
+
 def zero_module(module):
     # Zero out the parameters of a module and return it.
     for p in module.parameters():
@@ -75,29 +76,28 @@ class FusionBlock2D(nn.Module):
     """
 
     def __init__(
-            self,
-            *,
-            in_channels,
-            out_channels=None,
-            conv_shortcut=False,
-            dropout=0.0,
-            temb_channels=512,
-            groups=32,
-            groups_out=None,
-            pre_norm=True,
-            eps=1e-6,
-            non_linearity="swish",
-            skip_time_act=False,
-            time_embedding_norm="default",  # default, scale_shift, ada_group, spatial
-            kernel=None,
-            output_scale_factor=1.0,
-            use_in_shortcut=None,
-            up=False,
-            down=False,
-            conv_shortcut_bias: bool = True,
-            conv_2d_out_channels: Optional[int] = None,
-
-            zero_init=True,
+        self,
+        *,
+        in_channels,
+        out_channels=None,
+        conv_shortcut=False,
+        dropout=0.0,
+        temb_channels=512,
+        groups=32,
+        groups_out=None,
+        pre_norm=True,
+        eps=1e-6,
+        non_linearity="swish",
+        skip_time_act=False,
+        time_embedding_norm="default",  # default, scale_shift, ada_group, spatial
+        kernel=None,
+        output_scale_factor=1.0,
+        use_in_shortcut=None,
+        up=False,
+        down=False,
+        conv_shortcut_bias: bool = True,
+        conv_2d_out_channels: Optional[int] = None,
+        zero_init=True,
     ):
         super().__init__()
         self.pre_norm = pre_norm
@@ -180,7 +180,11 @@ class FusionBlock2D(nn.Module):
             )
 
         conv_out = torch.nn.Conv2d(
-            conv_2d_out_channels, conv_2d_out_channels, kernel_size=1, stride=1, padding=0,
+            conv_2d_out_channels,
+            conv_2d_out_channels,
+            kernel_size=1,
+            stride=1,
+            padding=0,
         )
         self.conv_out = zero_module(conv_out) if zero_init else conv_out
 
@@ -255,6 +259,7 @@ class FusionBlock2D(nn.Module):
         output_tensor = scale_1 * repeated_init_hidden_state + (1 + scale_2) * post_hidden_states + shift
 
         return output_tensor
+
 
 class Upsample3D(nn.Module):
     def __init__(self, channels, use_conv=False, use_conv_transpose=False, out_channels=None, name="conv"):
@@ -335,21 +340,21 @@ class Downsample3D(nn.Module):
 
 class ResnetBlock3D(nn.Module):
     def __init__(
-            self,
-            *,
-            in_channels,
-            out_channels=None,
-            conv_shortcut=False,
-            dropout=0.0,
-            temb_channels=512,
-            groups=32,
-            groups_out=None,
-            pre_norm=True,
-            eps=1e-6,
-            non_linearity="swish",
-            time_embedding_norm="default",
-            output_scale_factor=1.0,
-            use_in_shortcut=None,
+        self,
+        *,
+        in_channels,
+        out_channels=None,
+        conv_shortcut=False,
+        dropout=0.0,
+        temb_channels=512,
+        groups=32,
+        groups_out=None,
+        pre_norm=True,
+        eps=1e-6,
+        non_linearity="swish",
+        time_embedding_norm="default",
+        output_scale_factor=1.0,
+        use_in_shortcut=None,
     ):
         super().__init__()
         self.pre_norm = pre_norm

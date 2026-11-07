@@ -61,9 +61,7 @@ class MPCPlanner(BasePlanner):
         device = actions.device
         mask = torch.tensor(self.is_success).bool()
         actions[mask] = 0
-        masked_actions = rearrange(
-            actions[mask], "... (f d) -> ... f d", f=self.evaluator.frameskip
-        )
+        masked_actions = rearrange(actions[mask], "... (f d) -> ... f d", f=self.evaluator.frameskip)
         masked_actions = self.preprocessor.normalize_actions(masked_actions.cpu())
         masked_actions = rearrange(masked_actions, "... f d -> ... (f d)")
         actions[mask] = masked_actions.to(device)
@@ -107,12 +105,10 @@ class MPCPlanner(BasePlanner):
                 save_video=True,
             )
             new_successes = successes & ~self.is_success  # Identify new successes
-            self.is_success = (
-                self.is_success | successes
-            )  # Update overall success status
+            self.is_success = self.is_success | successes  # Update overall success status
             self.action_len[new_successes] = (
-                (self.iter + 1) * self.n_taken_actions
-            )  # Update only for the newly successful trajectories
+                self.iter + 1
+            ) * self.n_taken_actions  # Update only for the newly successful trajectories
 
             print("self.is_success: ", self.is_success)
             logs = {f"{self.logging_prefix}/{k}": v for k, v in logs.items()}

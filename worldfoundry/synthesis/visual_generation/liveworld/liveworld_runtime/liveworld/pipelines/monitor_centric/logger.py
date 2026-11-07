@@ -2,6 +2,7 @@
 
 Provides structured, stage-based logging that makes pipeline progress clear at a glance.
 """
+
 from __future__ import annotations
 
 import logging
@@ -25,9 +26,9 @@ os.environ.setdefault("LOG_LEVEL", "WARNING")
 def suppress_verbose_logs():
     """Suppress verbose logs from SAM3, Stream3R, and other noisy modules."""
     logging.getLogger("sam3").setLevel(logging.WARNING)
-    logging.getLogger(
-        "worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_predictor"
-    ).setLevel(logging.WARNING)
+    logging.getLogger("worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_predictor").setLevel(
+        logging.WARNING
+    )
     logging.getLogger("stream3r").setLevel(logging.WARNING)
     logging.getLogger("transformers").setLevel(logging.WARNING)
     logging.getLogger("diffusers").setLevel(logging.WARNING)
@@ -177,7 +178,11 @@ class PipelineLogger:
     # --- Convenience (kept for compatibility) ---
 
     def stage(self, stage_name: str, description: str = ""):
-        msg = self._clean_text(stage_name) if not description else f"{self._clean_text(stage_name)}: {self._clean_text(description)}"
+        msg = (
+            self._clean_text(stage_name)
+            if not description
+            else f"{self._clean_text(stage_name)}: {self._clean_text(description)}"
+        )
         self._emit("STAGE", msg, color=self.BOLD + self.CYAN, blank_before=True)
 
     def detection(self, entities: List[str]):

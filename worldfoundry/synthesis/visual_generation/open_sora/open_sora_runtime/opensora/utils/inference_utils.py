@@ -215,9 +215,9 @@ def append_generated(vae, generated_video, refs_x, mask_strategy, loop_i, condit
             mask_strategy[j] = ""
         else:
             mask_strategy[j] += ";"
-        mask_strategy[
-            j
-        ] += f"{loop_i},{len(refs)-1},-{condition_frame_length},0,{condition_frame_length},{condition_frame_edit}"
+        mask_strategy[j] += (
+            f"{loop_i},{len(refs) - 1},-{condition_frame_length},0,{condition_frame_length},{condition_frame_edit}"
+        )
     return refs_x, mask_strategy
 
 

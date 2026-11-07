@@ -61,7 +61,6 @@ class ZeroScopeRuntime:
             model_path=synthesis.model_path,
         )
 
-
     def ensure_pipe(self):
         """Ensures the Diffusers pipeline is loaded and returns it.
 
@@ -160,7 +159,6 @@ class ZeroScopeRuntime:
 
         # Export the generated frames to a video file.
         export_to_video(frames, str(target), fps=fps or int(kwargs.get("fps", 8)))
-
 
         return {
             "status": "success",

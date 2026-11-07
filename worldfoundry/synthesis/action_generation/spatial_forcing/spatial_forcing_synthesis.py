@@ -73,8 +73,7 @@ class SpatialForcingSynthesis(OfficialPolicySynthesis, ActionModelSynthesis):
         }
         selector = requested.get("checkpoint_variant") or requested.get("variant_id") or requested.get("variant")
         has_explicit_path = any(
-            requested.get(key) not in (None, "")
-            for key in ("checkpoint_path", "checkpoint_dir", "ckpt_path")
+            requested.get(key) not in (None, "") for key in ("checkpoint_path", "checkpoint_dir", "ckpt_path")
         )
         has_explicit_ref = any(
             requested.get(key) not in (None, "")

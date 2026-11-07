@@ -31,7 +31,6 @@ from .model_utils import apply_rotary_pos_emb, repeat_kv
 from .paligemma_modules import GemmaMLP, GemmaRMSNorm, GemmaRotaryEmbedding
 
 
-
 class Mixture(nn.Module):
     def __init__(self, config):
         super().__init__()

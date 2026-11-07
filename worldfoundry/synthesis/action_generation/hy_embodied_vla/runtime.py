@@ -22,14 +22,10 @@ _VARIANTS = _DATA_CONFIG.get("variants")
 if not isinstance(_VARIANTS, Mapping):
     raise TypeError("hy-embodied-vla data config requires a variants mapping")
 OFFICIAL_REPOSITORIES = {
-    str(name): str(payload["repo_id"])
-    for name, payload in _VARIANTS.items()
-    if isinstance(payload, Mapping)
+    str(name): str(payload["repo_id"]) for name, payload in _VARIANTS.items() if isinstance(payload, Mapping)
 }
 OFFICIAL_REVISIONS = {
-    str(name): str(payload["revision"])
-    for name, payload in _VARIANTS.items()
-    if isinstance(payload, Mapping)
+    str(name): str(payload["revision"]) for name, payload in _VARIANTS.items() if isinstance(payload, Mapping)
 }
 REQUIRED_CHECKPOINT_FILES = tuple(str(item) for item in _DATA_CONFIG["required_checkpoint_files"])
 DEFAULT_VARIANT = str(_DATA_CONFIG.get("default_variant") or "")
@@ -72,17 +68,13 @@ def select_hy_embodied_vla_checkpoint(
     selected_variant = _normalize_variant(variant)
     records = [dict(item) for item in checkpoints]
     for record in records:
-        haystack = " ".join(
-            str(record.get(key) or "") for key in ("id", "role", "repo_id", "local_dir")
-        ).lower()
+        haystack = " ".join(str(record.get(key) or "") for key in ("id", "role", "repo_id", "local_dir")).lower()
         if selected_variant not in haystack:
             continue
         local = record.get("local_dir")
         if local:
             expanded = resolve_worldfoundry_path(str(local))
-            if expanded.is_dir() and all(
-                (expanded / filename).is_file() for filename in REQUIRED_CHECKPOINT_FILES
-            ):
+            if expanded.is_dir() and all((expanded / filename).is_file() for filename in REQUIRED_CHECKPOINT_FILES):
                 return str(expanded.resolve())
         if record.get("repo_id"):
             return str(record["repo_id"])
@@ -119,9 +111,7 @@ class HyEmbodiedVLARuntimeConfig:
             object.__setattr__(self, "revision", OFFICIAL_REVISIONS[self.variant])
         state_format = self.state_format.strip().lower().replace("-", "_")
         if state_format not in {"normalized", "posrot20", "robotwin_wxyz"}:
-            raise ValueError(
-                "Hy-VLA state_format must be normalized, posrot20, or robotwin_wxyz"
-            )
+            raise ValueError("Hy-VLA state_format must be normalized, posrot20, or robotwin_wxyz")
         object.__setattr__(self, "state_format", state_format)
         blend_mode = self.blend_mode.strip().lower().replace("-", "_")
         if blend_mode not in {"auto", "rel_only", "abs_only", "rel_abs"}:
@@ -147,8 +137,7 @@ def build_plan_payload(
         "runtime": {
             **jsonable(asdict(config)),
             "backend": (
-                "worldfoundry.synthesis.action_generation.hy_embodied_vla.runtime:"
-                "HyEmbodiedVLARuntime.predict_action"
+                "worldfoundry.synthesis.action_generation.hy_embodied_vla.runtime:HyEmbodiedVLARuntime.predict_action"
             ),
             "official_entrypoint": "HyVLA.forward_evaluate(batch)['pred']",
             "required_checkpoint_files": list(REQUIRED_CHECKPOINT_FILES),
@@ -247,9 +236,7 @@ class HyEmbodiedVLARuntime:
             value = pose16_wxyz_to_posrot20(value)
         if self.config.state_format in {"robotwin_wxyz", "posrot20"}:
             if self.stats is None:
-                raise FileNotFoundError(
-                    "Raw Hy-VLA state normalization requires norm_stats.pkl next to the checkpoint"
-                )
+                raise FileNotFoundError("Raw Hy-VLA state normalization requires norm_stats.pkl next to the checkpoint")
             value = self.stats.normalize_state(value)
         if value.ndim != 1:
             raise ValueError(f"Hy-VLA state must resolve to one vector, got {value.shape}")
@@ -284,9 +271,7 @@ class HyEmbodiedVLARuntime:
             result["absolute_actions"] = absolute
         else:
             if normalized.shape[0] != horizon:
-                raise ValueError(
-                    f"Hy-VLA checkpoint returned {normalized.shape[0]} steps; expected {horizon}"
-                )
+                raise ValueError(f"Hy-VLA checkpoint returned {normalized.shape[0]} steps; expected {horizon}")
             relative_normalized = normalized
             absolute = None
 

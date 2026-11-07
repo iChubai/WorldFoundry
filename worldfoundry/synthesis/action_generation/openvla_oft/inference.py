@@ -27,10 +27,7 @@ _VARIANT_CONFIGS = _DATA_CONFIG.get("variants")
 if not isinstance(_VARIANT_CONFIGS, Mapping):
     raise TypeError("openvla-oft data config requires a variants mapping")
 OFFICIAL_COMPONENT_FILES = {
-    str(payload["repo_id"]): {
-        str(kind): str(filename)
-        for kind, filename in payload.get("component_files", {}).items()
-    }
+    str(payload["repo_id"]): {str(kind): str(filename) for kind, filename in payload.get("component_files", {}).items()}
     for payload in _VARIANT_CONFIGS.values()
     if isinstance(payload, Mapping)
 }
@@ -92,19 +89,12 @@ def _is_hf_repo_id(value: str) -> bool:
 def _load_component_state_dict(torch: Any, checkpoint_path: Path) -> dict[str, Any]:
     state_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     if not isinstance(state_dict, Mapping):
-        raise ValueError(
-            f"OpenVLA-OFT component checkpoint must contain a state dict: {checkpoint_path}"
-        )
+        raise ValueError(f"OpenVLA-OFT component checkpoint must contain a state dict: {checkpoint_path}")
     if isinstance(state_dict.get("state_dict"), Mapping):
         state_dict = state_dict["state_dict"]
     if not all(isinstance(key, str) and torch.is_tensor(value) for key, value in state_dict.items()):
-        raise ValueError(
-            f"OpenVLA-OFT component checkpoint contains non-tensor entries: {checkpoint_path}"
-        )
-    return {
-        key[7:] if key.startswith("module.") else key: value
-        for key, value in state_dict.items()
-    }
+        raise ValueError(f"OpenVLA-OFT component checkpoint contains non-tensor entries: {checkpoint_path}")
+    return {key[7:] if key.startswith("module.") else key: value for key, value in state_dict.items()}
 
 
 def _find_component_file(checkpoint_dir: Path, repo_id: str | None, kind: str) -> Path:
@@ -129,9 +119,7 @@ def _snapshot_or_local_dir(
 ) -> tuple[Path, str | None]:
     del cache_dir
     if not local_files_only:
-        raise ValueError(
-            "OpenVLA-OFT inference is local-only; stage checkpoints with the hfd workflow"
-        )
+        raise ValueError("OpenVLA-OFT inference is local-only; stage checkpoints with the hfd workflow")
     local_dir = resolve_local_hf_model_path(
         checkpoint_location,
         required_files=("config.json",),
@@ -239,9 +227,7 @@ def _select_images(image: Any, observation: Mapping[str, Any], *, num_images: in
         if len(images) >= num_images:
             break
     if len(images) < num_images:
-        raise ValueError(
-            f"OpenVLA-OFT checkpoint expects {num_images} images, but only {len(images)} were provided."
-        )
+        raise ValueError(f"OpenVLA-OFT checkpoint expects {num_images} images, but only {len(images)} were provided.")
     return images[:num_images]
 
 
@@ -401,7 +387,9 @@ class OpenVLAOFTRuntime:
 
         action_head = None
         if self.config.use_l1_regression:
-            action_head = L1RegressionActionHead(input_dim=model.llm_dim, hidden_dim=model.llm_dim, action_dim=ACTION_DIM)
+            action_head = L1RegressionActionHead(
+                input_dim=model.llm_dim, hidden_dim=model.llm_dim, action_dim=ACTION_DIM
+            )
         elif self.config.use_diffusion:
             action_head = DiffusionActionHead(
                 input_dim=model.llm_dim,

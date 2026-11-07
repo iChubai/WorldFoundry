@@ -11,10 +11,7 @@ from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_
 _DATA_CONFIG = load_vla_va_wam_runtime_config("hy-embodied-vla")
 _CAMERA_CONFIG = _DATA_CONFIG["camera_keys"]
 CAMERA_KEYS = tuple(str(key) for key in _CAMERA_CONFIG)
-_CAMERA_ALIASES = {
-    str(key): tuple(str(alias) for alias in aliases)
-    for key, aliases in _CAMERA_CONFIG.items()
-}
+_CAMERA_ALIASES = {str(key): tuple(str(alias) for alias in aliases) for key, aliases in _CAMERA_CONFIG.items()}
 
 
 def _frame_tensor(frame: Any):

@@ -60,12 +60,11 @@ class FastWAMPolicy(nn.Module):
             proprio = proprio.unsqueeze(0)
         if proprio.ndim != 2 or proprio.shape != (context.shape[0], self.proprio_dim):
             raise ValueError(
-                f"FastWAM proprio must have shape [{context.shape[0]}, {self.proprio_dim}], "
-                f"got {tuple(proprio.shape)}"
+                f"FastWAM proprio must have shape [{context.shape[0]}, {self.proprio_dim}], got {tuple(proprio.shape)}"
             )
-        token = self.proprio_encoder(
-            proprio.to(device=self.device, dtype=context.dtype).unsqueeze(1)
-        ).to(dtype=context.dtype)
+        token = self.proprio_encoder(proprio.to(device=self.device, dtype=context.dtype).unsqueeze(1)).to(
+            dtype=context.dtype
+        )
         mask = torch.ones((context.shape[0], 1), dtype=torch.bool, device=self.device)
         return torch.cat([context, token], dim=1), torch.cat([context_mask, mask], dim=1)
 
@@ -158,9 +157,7 @@ class FastWAMPolicy(nn.Module):
             context=context,
             context_mask=context_mask,
             action=None,
-            fuse_vae_embedding_in_latents=bool(
-                getattr(self.video_expert, "fuse_vae_embedding_in_latents", False)
-            ),
+            fuse_vae_embedding_in_latents=bool(getattr(self.video_expert, "fuse_vae_embedding_in_latents", False)),
         )
         video_seq_len = int(video_pre["tokens"].shape[1])
         attention_mask = self._attention_mask(
@@ -245,7 +242,9 @@ class FastWAMPolicy(nn.Module):
         generator = None if seed is None else torch.Generator(device=rand_device).manual_seed(seed)
         video = torch.randn(
             (1, first_frame.shape[1], latent_frames, *first_frame.shape[-2:]),
-            generator=generator, device=rand_device, dtype=torch.float32,
+            generator=generator,
+            device=rand_device,
+            dtype=torch.float32,
         ).to(device=self.device, dtype=self.torch_dtype)
         video[:, :, :1] = first_frame
         video_steps, video_deltas = self.infer_video_scheduler.build_inference_schedule(
@@ -261,9 +260,7 @@ class FastWAMPolicy(nn.Module):
                 context=context,
                 context_mask=context_mask,
                 action=None,
-                fuse_vae_embedding_in_latents=bool(
-                    getattr(self.video_expert, "fuse_vae_embedding_in_latents", False)
-                ),
+                fuse_vae_embedding_in_latents=bool(getattr(self.video_expert, "fuse_vae_embedding_in_latents", False)),
             )
             video = self.infer_video_scheduler.step(prediction, delta, video)
             video[:, :, :1] = first_frame
@@ -274,9 +271,7 @@ class FastWAMPolicy(nn.Module):
             context=context,
             context_mask=context_mask,
             action=None,
-            fuse_vae_embedding_in_latents=bool(
-                getattr(self.video_expert, "fuse_vae_embedding_in_latents", False)
-            ),
+            fuse_vae_embedding_in_latents=bool(getattr(self.video_expert, "fuse_vae_embedding_in_latents", False)),
         )
         video_seq_len = int(video_pre["tokens"].shape[1])
         attention_mask = self._attention_mask(
@@ -297,7 +292,9 @@ class FastWAMPolicy(nn.Module):
         action_generator = None if seed is None else torch.Generator(device=rand_device).manual_seed(seed)
         action = torch.randn(
             (1, action_horizon, self.action_expert.action_dim),
-            generator=action_generator, device=rand_device, dtype=torch.float32,
+            generator=action_generator,
+            device=rand_device,
+            dtype=torch.float32,
         ).to(device=self.device, dtype=self.torch_dtype)
         action_steps, action_deltas = self.infer_action_scheduler.build_inference_schedule(
             num_inference_steps=num_inference_steps,

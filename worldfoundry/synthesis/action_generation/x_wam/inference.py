@@ -914,8 +914,7 @@ class XWAMRuntime:
         if not isinstance(state_dict, Mapping):
             raise TypeError(f"X-WAM DeepSpeed checkpoint has no mapping-valued 'module' state: {weight_path}")
         if not state_dict or not all(
-            isinstance(key, str) and isinstance(value, torch.Tensor)
-            for key, value in state_dict.items()
+            isinstance(key, str) and isinstance(value, torch.Tensor) for key, value in state_dict.items()
         ):
             raise TypeError(
                 f"X-WAM DeepSpeed 'module' state must be a non-empty string-to-tensor mapping: {weight_path}"
@@ -1040,9 +1039,7 @@ class XWAMRuntime:
         }
         if videos is not None:
             if not self.config.world_video_path:
-                raise ValueError(
-                    "X-WAM generate_world=True requires world_video_path to avoid embedding video in JSON"
-                )
+                raise ValueError("X-WAM generate_world=True requires world_video_path to avoid embedding video in JSON")
             from worldfoundry.core.media.codecs.video import write_video
 
             video_path = Path(self.config.world_video_path).expanduser().resolve()

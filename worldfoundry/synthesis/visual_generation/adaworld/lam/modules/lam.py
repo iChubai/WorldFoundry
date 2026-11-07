@@ -15,21 +15,21 @@ class LatentActionModel(nn.Module):
     """
 
     def __init__(
-            self,
-            in_dim: int,
-            model_dim: int,
-            latent_dim: int,
-            patch_size: int,
-            enc_blocks: int,
-            dec_blocks: int,
-            num_heads: int,
-            dropout: float = 0.0
+        self,
+        in_dim: int,
+        model_dim: int,
+        latent_dim: int,
+        patch_size: int,
+        enc_blocks: int,
+        dec_blocks: int,
+        num_heads: int,
+        dropout: float = 0.0,
     ) -> None:
         super(LatentActionModel, self).__init__()
         self.model_dim = model_dim
         self.latent_dim = latent_dim
         self.patch_size = patch_size
-        patch_token_dim = in_dim * patch_size ** 2
+        patch_token_dim = in_dim * patch_size**2
 
         self.action_prompt = nn.Parameter(torch.empty(1, 1, 1, patch_token_dim))
         nn.init.uniform_(self.action_prompt, a=-1, b=1)
@@ -39,7 +39,7 @@ class LatentActionModel(nn.Module):
             out_dim=model_dim,
             num_blocks=enc_blocks,
             num_heads=num_heads,
-            dropout=dropout
+            dropout=dropout,
         )
         self.fc = nn.Linear(model_dim, latent_dim * 2)
         del dec_blocks

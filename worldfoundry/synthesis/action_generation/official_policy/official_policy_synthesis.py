@@ -30,9 +30,7 @@ def _looks_like_hub_repo_id(value: str) -> bool:
     if not separator or not owner or not repository or "/" in repository:
         return False
     allowed = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
-    return all(character in allowed for character in owner) and all(
-        character in allowed for character in repository
-    )
+    return all(character in allowed for character in owner) and all(character in allowed for character in repository)
 
 
 class OfficialPolicySynthesis(ActionModelSynthesis):
@@ -327,7 +325,9 @@ class OfficialPolicySynthesis(ActionModelSynthesis):
             },
         )
         # Write the plan payload to a JSON file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         # If only planning is requested, return the plan details.
         if plan_only:

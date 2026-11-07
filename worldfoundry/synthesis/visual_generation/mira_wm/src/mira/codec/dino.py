@@ -123,9 +123,7 @@ class DinoModel(nn.Module):
                 )
                 self.dino_model = torch.hub.load(**hub_kwargs, pretrained=False)
             if compile:
-                self.dino_model.get_intermediate_layers = torch.compile(
-                    self.dino_model.get_intermediate_layers
-                )
+                self.dino_model.get_intermediate_layers = torch.compile(self.dino_model.get_intermediate_layers)
 
         self.register_buffer(
             "mean",
@@ -154,9 +152,7 @@ class DinoModel(nn.Module):
         x = torch.nn.functional.interpolate(x, (new_height, new_width), mode="bilinear", antialias=True)
 
         dino_features = self.dino_model.get_intermediate_layers(x, n=self.layers, norm=True, reshape=True)  # type: ignore
-        dino_features = [
-            rearrange(feature, "(b t) c h w -> b t c h w", b=b, t=t) for feature in dino_features
-        ]
+        dino_features = [rearrange(feature, "(b t) c h w -> b t c h w", b=b, t=t) for feature in dino_features]
         return dino_features
 
 

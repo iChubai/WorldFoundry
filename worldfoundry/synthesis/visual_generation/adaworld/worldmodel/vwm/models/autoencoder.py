@@ -16,10 +16,7 @@ class AbstractAutoencoder(LightningModule):
     (e.g. discriminator training, encoding, decoding) must be implemented in subclasses.
     """
 
-    def __init__(
-            self,
-            input_key: str = "img"
-    ):
+    def __init__(self, input_key: str = "img"):
         super(AbstractAutoencoder, self).__init__()
         self.input_key = input_key
 
@@ -43,14 +40,7 @@ class AutoencodingEngine(AbstractAutoencoder):
     Regularizations such as KL or VQ are moved to the regularizer class.
     """
 
-    def __init__(
-            self,
-            *args,
-            encoder_config: Dict,
-            decoder_config: Dict,
-            regularizer_config: Dict,
-            **kwargs
-    ):
+    def __init__(self, *args, encoder_config: Dict, decoder_config: Dict, regularizer_config: Dict, **kwargs):
         super(AutoencodingEngine, self).__init__(*args, **kwargs)
         self.encoder: nn.Module = instantiate_from_config(encoder_config)
         self.decoder: nn.Module = instantiate_from_config(decoder_config)
@@ -64,10 +54,7 @@ class AutoencodingEngine(AbstractAutoencoder):
         return self.decoder.get_last_layer()
 
     def encode(
-            self,
-            x: torch.Tensor,
-            return_reg_log: bool = False,
-            unregularized: bool = False
+        self, x: torch.Tensor, return_reg_log: bool = False, unregularized: bool = False
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, dict]]:
         z = self.encoder(x)
         if unregularized:
@@ -83,9 +70,7 @@ class AutoencodingEngine(AbstractAutoencoder):
         x = self.decoder(z, **kwargs)
         return x
 
-    def forward(
-            self, x: torch.Tensor, **additional_decode_kwargs
-    ) -> Tuple[torch.Tensor, torch.Tensor, Dict]:
+    def forward(self, x: torch.Tensor, **additional_decode_kwargs) -> Tuple[torch.Tensor, torch.Tensor, Dict]:
         z, reg_log = self.encode(x, return_reg_log=True)
         dec = self.decode(z, **additional_decode_kwargs)
         return z, dec, reg_log
@@ -96,23 +81,15 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
         self.max_batch_size = kwargs.pop("max_batch_size", None)
         ddconfig = kwargs.pop("ddconfig")
         super(AutoencodingEngineLegacy, self).__init__(
-            encoder_config={
-                "target": "vwm.modules.diffusionmodules.model.Encoder",
-                "params": ddconfig
-            },
-            decoder_config={
-                "target": "vwm.modules.diffusionmodules.model.Decoder",
-                "params": ddconfig
-            },
-            **kwargs
+            encoder_config={"target": "vwm.modules.diffusionmodules.model.Encoder", "params": ddconfig},
+            decoder_config={"target": "vwm.modules.diffusionmodules.model.Decoder", "params": ddconfig},
+            **kwargs,
         )
         self.quant_conv = nn.Conv2d(2 * ddconfig["z_channels"], 2 * embed_dim, 1)
         self.post_quant_conv = nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
         self.embed_dim = embed_dim
 
-    def encode(
-            self, x: torch.Tensor, return_reg_log: bool = False
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, dict]]:
+    def encode(self, x: torch.Tensor, return_reg_log: bool = False) -> Union[torch.Tensor, Tuple[torch.Tensor, dict]]:
         if self.max_batch_size is None:
             z = self.encoder(x)
             z = self.quant_conv(z)
@@ -122,7 +99,7 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
             n_batches = int(math.ceil(N / bs))
             z = []
             for i_batch in range(n_batches):
-                z_batch = self.encoder(x[i_batch * bs: (i_batch + 1) * bs])
+                z_batch = self.encoder(x[i_batch * bs : (i_batch + 1) * bs])
                 z_batch = self.quant_conv(z_batch)
                 z.append(z_batch)
             z = torch.cat(z, 0)
@@ -143,7 +120,7 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
             n_batches = int(math.ceil(N / bs))
             dec = []
             for i_batch in range(n_batches):
-                dec_batch = self.post_quant_conv(z[i_batch * bs: (i_batch + 1) * bs])
+                dec_batch = self.post_quant_conv(z[i_batch * bs : (i_batch + 1) * bs])
                 dec_batch = self.decoder(dec_batch, **decoder_kwargs)
                 dec.append(dec_batch)
             dec = torch.cat(dec, 0)
@@ -153,12 +130,8 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
 class AutoencoderKL(AutoencodingEngineLegacy):
     def __init__(self, **kwargs):
         super(AutoencoderKL, self).__init__(
-            regularizer_config={
-                "target": (
-                    "vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer"
-                )
-            },
-            **kwargs
+            regularizer_config={"target": ("vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer")},
+            **kwargs,
         )
 
 
@@ -166,10 +139,8 @@ class AutoencoderKLModeOnly(AutoencodingEngineLegacy):
     def __init__(self, **kwargs):
         super(AutoencoderKLModeOnly, self).__init__(
             regularizer_config={
-                "target": (
-                    "vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer"
-                ),
+                "target": ("vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer"),
                 "params": {"sample": False},
             },
-            **kwargs
+            **kwargs,
         )

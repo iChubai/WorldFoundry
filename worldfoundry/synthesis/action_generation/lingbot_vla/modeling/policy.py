@@ -214,6 +214,7 @@ class Qwen2Attention(nn.Module):
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights
 
+
 class Qwen2RMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-6):
         """
@@ -233,6 +234,7 @@ class Qwen2RMSNorm(nn.Module):
     def extra_repr(self):
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
+
 class FixQwen2RMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-6):
         """
@@ -251,6 +253,7 @@ class FixQwen2RMSNorm(nn.Module):
 
     def extra_repr(self):
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
+
 
 class Qwen2DecoderLayer(nn.Module):
     def __init__(self, config: Qwen2Config, layer_idx: int):
@@ -315,7 +318,7 @@ class Qwen2DecoderLayer(nn.Module):
             after_first_residual = out_emb.clone()
             if ada_cond is not None:
                 out_emb = self.post_attention_layernorm(out_emb, ada_cond)
-                after_gate= None
+                after_gate = None
             else:
                 out_emb = self.post_attention_layernorm(out_emb)
                 after_gate = None
@@ -330,7 +333,10 @@ class Qwen2DecoderLayer(nn.Module):
             return out_emb
 
         else:
-            raise ValueError(f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2DecoderLayer in LingBot-VLA")
+            raise ValueError(
+                f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2DecoderLayer in LingBot-VLA"
+            )
+
 
 class Qwen2RotaryEmbedding(nn.Module):
     def __init__(self, config: Qwen2Config, device=None):
@@ -382,6 +388,7 @@ QWEN2_START_DOCSTRING = r"""
             [`~PreTrainedModel.from_pretrained`] method to load the model weights.
 """
 
+
 @add_start_docstrings(
     "The bare Qwen2 Model outputting raw hidden-states without any specific head on top.",
     QWEN2_START_DOCSTRING,
@@ -410,6 +417,7 @@ class Qwen2PreTrainedModel(PreTrainedModel):
             module.weight.data.normal_(mean=0.0, std=std)
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
+
 
 QWEN2_INPUTS_DOCSTRING = r"""
     Args:
@@ -476,6 +484,7 @@ QWEN2_INPUTS_DOCSTRING = r"""
             this tensor is not affected by padding. It is used to update the cache in the correct position and to infer
             the complete sequence length.
 """
+
 
 @add_start_docstrings(
     "The bare Qwen2 Model outputting raw hidden-states without any specific head on top.",
@@ -746,9 +755,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
             causal_mask = attention_mask
         else:
             min_dtype = torch.finfo(dtype).min
-            causal_mask = torch.full(
-                (sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device
-            )
+            causal_mask = torch.full((sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device)
             diagonal_attend_mask = torch.arange(target_length, device=device) > cache_position.reshape(-1, 1)
             if config.sliding_window is not None:
                 # if we have sliding window, we should not attend to tokens beyond sliding window length, so we mask them out also
@@ -777,6 +784,8 @@ class Qwen2Model(Qwen2PreTrainedModel):
 
 class KwargsForCausalLM(FlashAttentionKwargs):
     """Attention keyword annotations for the inference-only causal LM."""
+
+
 class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     _tied_weights_keys = ["lm_head.weight"]
     _tp_plan = {"lm_head": "colwise_rep"}
@@ -895,6 +904,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
             attentions=outputs.attentions,
         )
 
+
 class QwenvlWithExpertConfig(PretrainedConfig):
     model_type = "QwenvlWithExpertModel"
     sub_configs = {"qwenvl_config": AutoConfig, "qwen_expert_config": AutoConfig}
@@ -958,23 +968,11 @@ class QwenvlWithExpertConfig(PretrainedConfig):
                     "spatial_merge_size": 2,
                     "spatial_patch_size": 14,
                     "window_size": 112,
-                    "fullatt_block_indexes": [
-                        7,
-                        15,
-                        23,
-                        31
-                    ],
+                    "fullatt_block_indexes": [7, 15, 23, 31],
                     "tokens_per_second": 2,
-                    "temporal_patch_size": 2
+                    "temporal_patch_size": 2,
                 },
-                rope_scaling={
-                                "type": "mrope",
-                                "mrope_section": [
-                                    16,
-                                    24,
-                                    24
-                                ]
-                                },
+                rope_scaling={"type": "mrope", "mrope_section": [16, 24, 24]},
                 vocab_size=151936,
             )
         elif isinstance(self.qwenvl_config, dict):
@@ -1031,6 +1029,7 @@ class QwenvlWithExpertConfig(PretrainedConfig):
                 f"Wrong value provided for `attention_implementation` ({self.attention_implementation}). Expected 'eager', 'fa2' or 'flex'."
             )
 
+
 class AdaRMSNorm(nn.Module):
     def __init__(self, hidden_size, cond_dim, eps=1e-6):
         """
@@ -1062,19 +1061,24 @@ class AdaRMSNorm(nn.Module):
 
         hidden_states = self.weight * hidden_states
         gamma = self.gamma(cond).unsqueeze(1)  # [B, 1, H]
-        beta  = self.beta(cond).unsqueeze(1)   # [B, 1, H]
+        beta = self.beta(cond).unsqueeze(1)  # [B, 1, H]
         hidden_states = (1 + gamma.to(torch.float32)) * hidden_states + beta.to(torch.float32)
         return hidden_states.to(input_dtype)
 
 
 # HACK: show directly use this norm during initialization
-def replace_lnorm_with_adanorm(module, hidden_size, cond_dim, split_gate_liner, no_split_gate_liner, final_norm_adanorm):
+def replace_lnorm_with_adanorm(
+    module, hidden_size, cond_dim, split_gate_liner, no_split_gate_liner, final_norm_adanorm
+):
     for name, child in module.named_children():
         if isinstance(child, Qwen2RMSNorm):
-            if 'q_layernorm' not in name and 'k_layernorm' not in name:
+            if "q_layernorm" not in name and "k_layernorm" not in name:
                 setattr(module, name, AdaRMSNorm(hidden_size, cond_dim))
         else:
-            replace_lnorm_with_adanorm(child, hidden_size, cond_dim, split_gate_liner, no_split_gate_liner, final_norm_adanorm)
+            replace_lnorm_with_adanorm(
+                child, hidden_size, cond_dim, split_gate_liner, no_split_gate_liner, final_norm_adanorm
+            )
+
 
 class QwenvlWithExpertModel(PreTrainedModel):
     config_class = QwenvlWithExpertConfig
@@ -1089,7 +1093,11 @@ class QwenvlWithExpertModel(PreTrainedModel):
         )
         vlm_config.vision_config.initializer_range = 0.02
         vlm_config.norm_qkv = self.config.norm_qkv
-        if self.config.vocab_size != 0 and self.config.vocab_size != 257152 and vlm_config.vocab_size != self.config.vocab_size:
+        if (
+            self.config.vocab_size != 0
+            and self.config.vocab_size != 257152
+            and vlm_config.vocab_size != self.config.vocab_size
+        ):
             vlm_config.vocab_size = self.config.vocab_size
 
         backbone_attention = getattr(self.config, "vit_attn_implementation", "flash_attention_2")
@@ -1114,16 +1122,20 @@ class QwenvlWithExpertModel(PreTrainedModel):
         self.cu_window_seqlens = None
         self.cu_seqlens = None
 
-        if getattr(self.config, 'adanorm_time', False):
-            replace_lnorm_with_adanorm(self.qwen_expert, self.config.qwen_expert_config.hidden_size, self.config.qwen_expert_config.hidden_size, config.split_gate_liner, config.no_split_gate_liner, config.final_norm_adanorm)
+        if getattr(self.config, "adanorm_time", False):
+            replace_lnorm_with_adanorm(
+                self.qwen_expert,
+                self.config.qwen_expert_config.hidden_size,
+                self.config.qwen_expert_config.hidden_size,
+                config.split_gate_liner,
+                config.no_split_gate_liner,
+                config.final_norm_adanorm,
+            )
         # Remove unused embed_tokens
         del self.qwen_expert.model.embed_tokens
         self.attention_interface = self.get_attention_interface()
 
         # self.to_bfloat16_like_physical_intelligence()
-
-
-
 
     def get_image_features(self, pixel_values: torch.FloatTensor, image_grid_thw: Optional[torch.LongTensor] = None):
         """
@@ -1141,13 +1153,8 @@ class QwenvlWithExpertModel(PreTrainedModel):
             or self.cu_window_seqlens is None
             or self.cu_seqlens is None
         ):
-            (
-                self.rotary_pos_emb,
-                self.window_index,
-                self.cu_window_seqlens,
-                self.cu_seqlens
-            ) = self.qwenvl.visual.preprcess_grid_thw(
-                grid_thw=image_grid_thw
+            (self.rotary_pos_emb, self.window_index, self.cu_window_seqlens, self.cu_seqlens) = (
+                self.qwenvl.visual.preprcess_grid_thw(grid_thw=image_grid_thw)
             )
         image_embeds = self.qwenvl.visual(
             pixel_values,
@@ -1164,7 +1171,7 @@ class QwenvlWithExpertModel(PreTrainedModel):
 
     def embed_image(self, image: torch.Tensor, patch_size=14, temporal_patch_size=2):
         h = w = int(image.shape[1] ** 0.5)
-        image_grid_thw = torch.tensor([[1, h, w]]*image.shape[0], device=image.device)
+        image_grid_thw = torch.tensor([[1, h, w]] * image.shape[0], device=image.device)
         image_embeds = self.get_image_features(image, image_grid_thw=image_grid_thw)
         return image_embeds
         # return torch.randn(72, 64, 2048).to(device=image.device, dtype=torch.bfloat16)
@@ -1191,9 +1198,7 @@ class QwenvlWithExpertModel(PreTrainedModel):
                     "value_states": value_states,
                 }
             else:
-                key_states = torch.cat(
-                    [past_key_values[layer_idx]["key_states"], key_states], dim=1
-                )
+                key_states = torch.cat([past_key_values[layer_idx]["key_states"], key_states], dim=1)
                 value_states = torch.cat(
                     [past_key_values[layer_idx]["value_states"], value_states],
                     dim=1,
@@ -1235,7 +1240,7 @@ class QwenvlWithExpertModel(PreTrainedModel):
         models = [self.qwenvl.model, self.qwen_expert.model]
 
         # RMSNorm
-        num_layers = self.qwenvl.config.num_hidden_layers # 36
+        num_layers = self.qwenvl.config.num_hidden_layers  # 36
         for layer_idx in range(num_layers):
             query_states = []
             key_states = []
@@ -1244,14 +1249,22 @@ class QwenvlWithExpertModel(PreTrainedModel):
             for i, hidden_states in enumerate(inputs_embeds):
                 if hidden_states is None:
                     continue
-                if i == 1: # For action expert
-                    query_state, key_state, value_state, gate = models[i].layers[layer_idx](hidden_states, compute_kqv=True, ada_cond = ada_cond, norm_qkv=norm_qkv)
-                else:   # For VLM
-                    query_state, key_state, value_state = models[i].layers[layer_idx](hidden_states, compute_kqv=True, norm_qkv=norm_qkv)
+                if i == 1:  # For action expert
+                    query_state, key_state, value_state, gate = models[i].layers[layer_idx](
+                        hidden_states, compute_kqv=True, ada_cond=ada_cond, norm_qkv=norm_qkv
+                    )
+                else:  # For VLM
+                    query_state, key_state, value_state = models[i].layers[layer_idx](
+                        hidden_states, compute_kqv=True, norm_qkv=norm_qkv
+                    )
                     gate = None
 
                 if query_state.dtype != torch.float32:
-                    query_state, key_state, value_state = query_state.to(torch.float32), key_state.to(torch.float32), value_state.to(torch.float32)
+                    query_state, key_state, value_state = (
+                        query_state.to(torch.float32),
+                        key_state.to(torch.float32),
+                        value_state.to(torch.float32),
+                    )
                 query_states.append(query_state)
                 key_states.append(key_state)
                 value_states.append(value_state)
@@ -1284,7 +1297,15 @@ class QwenvlWithExpertModel(PreTrainedModel):
                 if hidden_states is not None:
                     end = start + hidden_states.shape[1]
                     if i == 1:
-                        out_emb = models[i].layers[layer_idx](hidden_states, att_output, start, end, output_atten=True, ada_cond = ada_cond, gate=(gates[0] if len(gates) == 1 else gates[i]))
+                        out_emb = models[i].layers[layer_idx](
+                            hidden_states,
+                            att_output,
+                            start,
+                            end,
+                            output_atten=True,
+                            ada_cond=ada_cond,
+                            gate=(gates[0] if len(gates) == 1 else gates[i]),
+                        )
                     else:
                         out_emb = models[i].layers[layer_idx](hidden_states, att_output, start, end, output_atten=True)
                     outputs_embeds.append(out_emb)
@@ -1328,19 +1349,22 @@ class QwenvlWithExpertModel(PreTrainedModel):
             )
         return attention_interface
 
+
 class QwenVLA_Config(PretrainedConfig):
     model_type = "torch_qwenvla"
     architectures = ["LingbotVlaPolicy"]
+
 
 class LingbotVlaPolicy(nn.Module):
     config_class = QwenVLA_Config
     name = "torch_lingbot_vla"
     _no_split_modules = ["Qwen2DecoderLayer", "FixQwen2RMSNorm"]
+
     def __init__(
         self,
         config: PretrainedConfig,
         tokenizer_path: str,
-        eval: bool=False,
+        eval: bool = False,
     ):
         """
         Args:
@@ -1355,15 +1379,11 @@ class LingbotVlaPolicy(nn.Module):
         del tokenizer_path
         self.model = FlowMatching(config, eval)
 
-        if not getattr(self.config,"use_lm_head", False):
+        if not getattr(self.config, "use_lm_head", False):
             del self.model.qwenvl_with_expert.qwenvl.lm_head
         del self.model.qwenvl_with_expert.qwen_expert.lm_head
 
         torch.set_float32_matmul_precision("high")
-
-
-
-
 
 
 class FlowMatching(nn.Module):
@@ -1374,11 +1394,11 @@ class FlowMatching(nn.Module):
         qwenvl_with_export_config = QwenvlWithExpertConfig(
             freeze_vision_encoder=self.config.freeze_vision_encoder,
             train_expert_only=self.config.train_expert_only,
-            vocab_size=getattr(self.config,"vocab_size", 0),
-            use_lm_head=getattr(self.config,"use_lm_head", False),
+            vocab_size=getattr(self.config, "vocab_size", 0),
+            use_lm_head=getattr(self.config, "use_lm_head", False),
             attention_implementation=self.config.attention_implementation,
             tokenizer_path=self.config.tokenizer_path,
-            use_cache=getattr(self.config,"use_cache", True),
+            use_cache=getattr(self.config, "use_cache", True),
         )
         qwenvl_with_export_config.adanorm_time = getattr(config, "adanorm_time", False)
         qwenvl_with_export_config.split_gate_liner = getattr(config, "split_gate_liner", False)
@@ -1389,72 +1409,57 @@ class FlowMatching(nn.Module):
         qwenvl_with_export_config.vit_attn_implementation = getattr(
             config, "vit_attn_implementation", "flash_attention_2"
         )
-        self.qwenvl_with_expert = QwenvlWithExpertModel(
-            qwenvl_with_export_config, eval
-        )
+        self.qwenvl_with_expert = QwenvlWithExpertModel(qwenvl_with_export_config, eval)
         self.config.proj_width = qwenvl_with_export_config.qwen_expert_config.hidden_size
         self.config.initializer_range = getattr(qwenvl_with_export_config.qwen_expert_config, "initializer_range", None)
         # projection layers
         self.state_proj = nn.Linear(self.config.max_state_dim, self.config.proj_width)
-        self.action_in_proj = nn.Linear(
-            self.config.max_action_dim, self.config.proj_width
-        )
-        self.action_out_proj = nn.Linear(
-            self.config.proj_width, self.config.max_action_dim
-        )
+        self.action_in_proj = nn.Linear(self.config.max_action_dim, self.config.proj_width)
+        self.action_out_proj = nn.Linear(self.config.proj_width, self.config.max_action_dim)
         if getattr(config, "separate_time_proj", False):
             self.time_mlp_in = nn.Linear(self.config.proj_width, self.config.proj_width)
             self.time_mlp_out = nn.Linear(self.config.proj_width, self.config.proj_width)
         else:
-            self.action_time_mlp_in = nn.Linear(
-                self.config.proj_width * 2, self.config.proj_width
-            )
-            self.action_time_mlp_out = nn.Linear(
-                self.config.proj_width, self.config.proj_width
-            )
-        self.config.align_params = getattr(self.config, 'align_params', {})
+            self.action_time_mlp_in = nn.Linear(self.config.proj_width * 2, self.config.proj_width)
+            self.action_time_mlp_out = nn.Linear(self.config.proj_width, self.config.proj_width)
+        self.config.align_params = getattr(self.config, "align_params", {})
         if self.config.align_params != {}:
-            self.steps=0
+            self.steps = 0
             self.use_depth_align = True
             self.init_depth_heads(self.config.align_params)
         else:
             self.use_depth_align = False
 
-
     def init_depth_heads(self, config):
-        self.llm_image_token_size = config['llm']['image_token_size']
-        self.llm_image_input_size = config['llm']['image_input_size']
-        self.depth_token_size = config['depth']['token_size']
-        self.depth_input_size = config['depth']['input_size']
-        self.align_type = config.get('mode', None)
-        self.model_type = config['depth']['model_type']
+        self.llm_image_token_size = config["llm"]["image_token_size"]
+        self.llm_image_input_size = config["llm"]["image_input_size"]
+        self.depth_token_size = config["depth"]["token_size"]
+        self.depth_input_size = config["depth"]["input_size"]
+        self.align_type = config.get("mode", None)
+        self.model_type = config["depth"]["model_type"]
 
         if self.align_type == "direct":
             self.depth_align_head = nn.Sequential(
-                nn.Linear(config['llm']['dim_out'], config['depth']['dim_out']*2),
+                nn.Linear(config["llm"]["dim_out"], config["depth"]["dim_out"] * 2),
                 nn.GELU(),
-                nn.Linear(config['depth']['dim_out']*2, config['depth']['dim_out'])
+                nn.Linear(config["depth"]["dim_out"] * 2, config["depth"]["dim_out"]),
             )
             for p in self.depth_align_head.parameters():
                 p.requires_grad = True
         elif self.align_type == "query":
-            self.num_task_tokens = config['num_task_tokens']
-            assert config['depth']['num_backbone_tokens'] % self.num_task_tokens == 0
+            self.num_task_tokens = config["num_task_tokens"]
+            assert config["depth"]["num_backbone_tokens"] % self.num_task_tokens == 0
             self.depth_align_embs = nn.Parameter(
-                torch.randn(
-                   config['depth']['num_backbone_tokens'], config['llm']['dim_out']
-                )
+                torch.randn(config["depth"]["num_backbone_tokens"], config["llm"]["dim_out"])
             ).to(dtype=torch.bfloat16)
             self.depth_align_embs.requires_grad_ = True
 
-            self.depth_align_head = TaskTokenDepthHead(config['depth'], llm_hidden_size=config['llm']['dim_out']).to(dtype=torch.bfloat16)
+            self.depth_align_head = TaskTokenDepthHead(config["depth"], llm_hidden_size=config["llm"]["dim_out"]).to(
+                dtype=torch.bfloat16
+            )
 
             for p in self.depth_align_head.parameters():
                 p.requires_grad = True
-
-
-
-
 
     def embed_prefix(
         self, images, img_masks, lang_tokens, lang_masks, vlm_causal, label=None
@@ -1468,14 +1473,14 @@ class FlowMatching(nn.Module):
             images = einops.rearrange(images, "b n c h w -> (b n) c h w")
         elif images.ndim == 4:
             images = einops.rearrange(images, "b n l d -> (b n) l d")
-        elif images.ndim == 3: # For inference bs=1
+        elif images.ndim == 3:  # For inference bs=1
             bsize = 1
 
         img_emb = self.qwenvl_with_expert.embed_image(images)
         num_patch = img_emb.shape[1]
-        img_emb = einops.rearrange(img_emb, "(b n) l d -> b (n l) d", b=bsize) # bsize = 24
+        img_emb = einops.rearrange(img_emb, "(b n) l d -> b (n l) d", b=bsize)  # bsize = 24
         num_img_embs = img_emb.shape[1]
-        if img_masks.ndim ==1: # For inference bs=1
+        if img_masks.ndim == 1:  # For inference bs=1
             img_masks = img_masks.unsqueeze(0)
         if self.use_depth_align and self.align_type == "query":
             align_masks = einops.repeat(img_masks, "b n -> b (n l)", l=self.num_task_tokens)
@@ -1486,12 +1491,15 @@ class FlowMatching(nn.Module):
         num_lang_embs = lang_emb.shape[1]
 
         if self.use_depth_align and self.align_type == "query":
+
             def _get_align_tokens(tokens):
                 tk_weights = tokens.view(self.num_task_tokens, tokens.shape[0] // self.num_task_tokens, tokens.shape[1])
                 tk_weights = tk_weights.mean(dim=1)
                 return tk_weights
 
-            align_embs = _get_align_tokens(self.depth_align_embs).repeat(img_emb.size(0), 1, 1).to(img_emb.device, img_emb.dtype)
+            align_embs = (
+                _get_align_tokens(self.depth_align_embs).repeat(img_emb.size(0), 1, 1).to(img_emb.device, img_emb.dtype)
+            )
             # align_masks = einops.rearrange(img_masks, "b (n l) -> b n l", n=3)
             # align_masks = align_masks[:, :, 0]
             # align_masks = einops.repeat(align_masks, "b n -> b (n l)", l=self.num_task_tokens)
@@ -1506,7 +1514,9 @@ class FlowMatching(nn.Module):
         if not vlm_causal:
             if self.use_depth_align and self.align_type == "query":
                 att_masks = torch.zeros(
-                    (img_emb.size(0), num_img_embs + 3 * self.num_task_tokens + num_lang_embs), device=device, dtype=torch.bool
+                    (img_emb.size(0), num_img_embs + 3 * self.num_task_tokens + num_lang_embs),
+                    device=device,
+                    dtype=torch.bool,
                 )
             else:
                 att_masks = torch.zeros(
@@ -1515,25 +1525,25 @@ class FlowMatching(nn.Module):
         else:
             if self.use_depth_align and self.align_type == "query":
                 att_masks = torch.ones(
-                    (img_emb.size(0), num_img_embs + 3 * self.num_task_tokens + num_lang_embs), device=device, dtype=torch.bool
+                    (img_emb.size(0), num_img_embs + 3 * self.num_task_tokens + num_lang_embs),
+                    device=device,
+                    dtype=torch.bool,
                 )
             else:
-                att_masks = torch.ones(
-                    (img_emb.size(0), num_img_embs + num_lang_embs), device=device, dtype=torch.bool
-                )
+                att_masks = torch.ones((img_emb.size(0), num_img_embs + num_lang_embs), device=device, dtype=torch.bool)
         return embs, pad_masks, att_masks
 
     def embed_suffix(self, state, noisy_actions, timestep):
-        bsize = state.shape[0] # state_bs = img_bs
+        bsize = state.shape[0]  # state_bs = img_bs
         device = state.device
         dtype = state.dtype
         # embed state
-        state_emb = self.state_proj(state) # torch.Size([state_bs, 1024])
+        state_emb = self.state_proj(state)  # torch.Size([state_bs, 1024])
 
         # embed timestep using sine-cosine positional encoding with sensitivity in the range [0, 1]
-        time_emb = create_sinusoidal_pos_embedding( # 1, 1024
-            timestep, # torch.Size([1]))
-            self.config.proj_width, # 1024
+        time_emb = create_sinusoidal_pos_embedding(  # 1, 1024
+            timestep,  # torch.Size([1]))
+            self.config.proj_width,  # 1024
             min_period=4e-3,
             max_period=4.0,
             device=device,
@@ -1543,39 +1553,36 @@ class FlowMatching(nn.Module):
         time_emb_ori = time_emb
 
         # Fuse timestep + action information using an MLP
-        action_emb = self.action_in_proj(noisy_actions) # torch.Size([1, state_bs*50, 1024])
+        action_emb = self.action_in_proj(noisy_actions)  # torch.Size([1, state_bs*50, 1024])
         if getattr(self.config, "separate_time_proj", False):
             time_emb = self.time_mlp_in(time_emb)
             time_emb = F.silu(time_emb)
-            time_emb_ori = F.silu(self.time_mlp_out(time_emb)) # [1, 1024]
+            time_emb_ori = F.silu(self.time_mlp_out(time_emb))  # [1, 1024]
             action_time_emb = action_emb
         else:
-            time_emb = einops.repeat(time_emb, "b d -> b n d", n=action_emb.shape[1]) # [1, 1024] -> [1, state_bs*50, 1024]
-            action_time_emb = torch.cat([action_emb, time_emb], dim=-1) # [1, state_bs*50, 2048]
+            time_emb = einops.repeat(
+                time_emb, "b d -> b n d", n=action_emb.shape[1]
+            )  # [1, 1024] -> [1, state_bs*50, 1024]
+            action_time_emb = torch.cat([action_emb, time_emb], dim=-1)  # [1, state_bs*50, 2048]
 
             action_time_emb = self.action_time_mlp_in(action_time_emb)
             action_time_emb = F.silu(action_time_emb)  # swish == silu
-            action_time_emb = self.action_time_mlp_out(action_time_emb) # [1, state_bs*50, 1024]
+            action_time_emb = self.action_time_mlp_out(action_time_emb)  # [1, state_bs*50, 1024]
         action_time_dim = action_time_emb.shape[1]
 
         embs = torch.cat([state_emb[:, None], action_time_emb], dim=1)
-        pad_masks = torch.ones(
-            (bsize, action_time_dim + 1), device=device, dtype=torch.bool
-        )
+        pad_masks = torch.ones((bsize, action_time_dim + 1), device=device, dtype=torch.bool)
 
         # Set attention masks for suffix tokens so that prefix tokens cannot attend to suffix tokens.
         # And state token cannot attend action tokens.
         # Action tokens use a bidirectional attention.
-        att_masks = torch.zeros(
-            (bsize, action_time_dim + 1), device=device, dtype=torch.bool
-        )
+        att_masks = torch.zeros((bsize, action_time_dim + 1), device=device, dtype=torch.bool)
         att_masks[:, :2] = True
 
         return time_emb_ori, embs, pad_masks, att_masks
 
-
     def sample_actions(
-        self, images, img_masks, lang_tokens, lang_masks, state, vlm_causal=False, noise=None, num_steps = None
+        self, images, img_masks, lang_tokens, lang_masks, state, vlm_causal=False, noise=None, num_steps=None
     ) -> Tensor:
         """Do a full inference forward and compute the action (batch_size x num_steps x num_motors)"""
         bsize = state.shape[0]
@@ -1593,9 +1600,11 @@ class FlowMatching(nn.Module):
         prefix_embs, prefix_pad_masks, prefix_att_masks = self.embed_prefix(
             images, img_masks, lang_tokens, lang_masks, vlm_causal
         )
-        prefix_att_2d_masks = make_att_2d_masks(prefix_pad_masks, prefix_att_masks) # bs, prefix_len, prefix_len
+        prefix_att_2d_masks = make_att_2d_masks(prefix_pad_masks, prefix_att_masks)  # bs, prefix_len, prefix_len
         if self.use_depth_align and self.align_type == "query":
-            prefix_att_2d_masks = self.make_att_2d_masks_with_query(prefix_att_2d_masks, prefix_pad_masks.shape[-1], img_masks)
+            prefix_att_2d_masks = self.make_att_2d_masks_with_query(
+                prefix_att_2d_masks, prefix_pad_masks.shape[-1], img_masks
+            )
         prefix_position_ids = torch.cumsum(prefix_pad_masks, dim=1) - 1
 
         # Compute image and language key value cache
@@ -1617,9 +1626,7 @@ class FlowMatching(nn.Module):
             count += 1
             expanded_time = time.expand(bsize)
 
-            v_t = self.predict_velocity(
-                state, prefix_pad_masks, past_key_values, x_t, expanded_time
-            )
+            v_t = self.predict_velocity(state, prefix_pad_masks, past_key_values, x_t, expanded_time)
 
             # Euler step
             x_t += dt * v_t
@@ -1628,20 +1635,18 @@ class FlowMatching(nn.Module):
 
     def predict_velocity(self, state, prefix_pad_masks, past_key_values, x_t, timestep):
         """predict velocity at time t using the suffix model."""
-        time_embs, suffix_embs, suffix_pad_masks, suffix_att_masks = self.embed_suffix(
-            state, x_t, timestep
-        )
+        time_embs, suffix_embs, suffix_pad_masks, suffix_att_masks = self.embed_suffix(state, x_t, timestep)
 
         suffix_len = suffix_pad_masks.shape[1]
         batch_size = prefix_pad_masks.shape[0]
         prefix_len = prefix_pad_masks.shape[1]
-        prefix_pad_2d_masks = prefix_pad_masks[:, None, :].expand(
-            batch_size, suffix_len, prefix_len
-        )
+        prefix_pad_2d_masks = prefix_pad_masks[:, None, :].expand(batch_size, suffix_len, prefix_len)
 
         suffix_att_2d_masks = make_att_2d_masks(suffix_pad_masks, suffix_att_masks)
 
-        full_att_2d_masks = torch.cat([prefix_pad_2d_masks, suffix_att_2d_masks], dim=2) # bs, suffix_len, prefix_len+suffix_len
+        full_att_2d_masks = torch.cat(
+            [prefix_pad_2d_masks, suffix_att_2d_masks], dim=2
+        )  # bs, suffix_len, prefix_len+suffix_len
 
         prefix_offsets = torch.sum(prefix_pad_masks, dim=-1)[:, None]
         position_ids = prefix_offsets + torch.cumsum(suffix_pad_masks, dim=1) - 1
@@ -1653,7 +1658,7 @@ class FlowMatching(nn.Module):
             inputs_embeds=[None, suffix_embs],
             use_cache=self.config.use_cache,
             fill_kv_cache=False,
-            ada_cond = time_embs if getattr(self.config, 'adanorm_time', False) else None,
+            ada_cond=time_embs if getattr(self.config, "adanorm_time", False) else None,
         )
         suffix_out = outputs_embeds[1]
         suffix_out = suffix_out[:, -self.config.n_action_steps :]
@@ -1666,21 +1671,54 @@ class FlowMatching(nn.Module):
 
         num_image_tokens = self.llm_image_token_size * self.llm_image_token_size
 
-        att_2d_masks[:, num_image_tokens * 0 : num_image_tokens * 3, num_image_tokens * 3 + self.num_task_tokens * 0: num_image_tokens * 3 + self.num_task_tokens * 3] = False
-        att_2d_masks[:, num_image_tokens * 3 + self.num_task_tokens * 3: prefix_len, num_image_tokens * 3 + self.num_task_tokens * 0: num_image_tokens * 3 + self.num_task_tokens * 3] = False
+        att_2d_masks[
+            :,
+            num_image_tokens * 0 : num_image_tokens * 3,
+            num_image_tokens * 3 + self.num_task_tokens * 0 : num_image_tokens * 3 + self.num_task_tokens * 3,
+        ] = False
+        att_2d_masks[
+            :,
+            num_image_tokens * 3 + self.num_task_tokens * 3 : prefix_len,
+            num_image_tokens * 3 + self.num_task_tokens * 0 : num_image_tokens * 3 + self.num_task_tokens * 3,
+        ] = False
 
-        att_2d_masks[:, num_image_tokens * 3 + self.num_task_tokens * 0: num_image_tokens * 3 + self.num_task_tokens * 3, :] = False
+        att_2d_masks[
+            :, num_image_tokens * 3 + self.num_task_tokens * 0 : num_image_tokens * 3 + self.num_task_tokens * 3, :
+        ] = False
 
-        att_2d_masks[img_masks[:, 0], num_image_tokens * 3 + self.num_task_tokens * 0: num_image_tokens * 3 + self.num_task_tokens * 1, num_image_tokens * 0: num_image_tokens * 1] = True
-        att_2d_masks[img_masks[:, 1], num_image_tokens * 3 + self.num_task_tokens * 1: num_image_tokens * 3 + self.num_task_tokens * 2, num_image_tokens * 1: num_image_tokens * 2] = True
-        att_2d_masks[img_masks[:, 2], num_image_tokens * 3 + self.num_task_tokens * 2: num_image_tokens * 3 + self.num_task_tokens * 3, num_image_tokens * 2: num_image_tokens * 3] = True
+        att_2d_masks[
+            img_masks[:, 0],
+            num_image_tokens * 3 + self.num_task_tokens * 0 : num_image_tokens * 3 + self.num_task_tokens * 1,
+            num_image_tokens * 0 : num_image_tokens * 1,
+        ] = True
+        att_2d_masks[
+            img_masks[:, 1],
+            num_image_tokens * 3 + self.num_task_tokens * 1 : num_image_tokens * 3 + self.num_task_tokens * 2,
+            num_image_tokens * 1 : num_image_tokens * 2,
+        ] = True
+        att_2d_masks[
+            img_masks[:, 2],
+            num_image_tokens * 3 + self.num_task_tokens * 2 : num_image_tokens * 3 + self.num_task_tokens * 3,
+            num_image_tokens * 2 : num_image_tokens * 3,
+        ] = True
 
-        att_2d_masks[img_masks[:, 0], num_image_tokens * 3 + self.num_task_tokens * 0: num_image_tokens * 3 + self.num_task_tokens * 1, num_image_tokens * 3 + self.num_task_tokens * 0: num_image_tokens * 3 + self.num_task_tokens * 1] = True
-        att_2d_masks[img_masks[:, 1], num_image_tokens * 3 + self.num_task_tokens * 1: num_image_tokens * 3 + self.num_task_tokens * 2, num_image_tokens * 3 + self.num_task_tokens * 1: num_image_tokens * 3 + self.num_task_tokens * 2] = True
-        att_2d_masks[img_masks[:, 2], num_image_tokens * 3 + self.num_task_tokens * 2: num_image_tokens * 3 + self.num_task_tokens * 3, num_image_tokens * 3 + self.num_task_tokens * 2: num_image_tokens * 3 + self.num_task_tokens * 3] = True
+        att_2d_masks[
+            img_masks[:, 0],
+            num_image_tokens * 3 + self.num_task_tokens * 0 : num_image_tokens * 3 + self.num_task_tokens * 1,
+            num_image_tokens * 3 + self.num_task_tokens * 0 : num_image_tokens * 3 + self.num_task_tokens * 1,
+        ] = True
+        att_2d_masks[
+            img_masks[:, 1],
+            num_image_tokens * 3 + self.num_task_tokens * 1 : num_image_tokens * 3 + self.num_task_tokens * 2,
+            num_image_tokens * 3 + self.num_task_tokens * 1 : num_image_tokens * 3 + self.num_task_tokens * 2,
+        ] = True
+        att_2d_masks[
+            img_masks[:, 2],
+            num_image_tokens * 3 + self.num_task_tokens * 2 : num_image_tokens * 3 + self.num_task_tokens * 3,
+            num_image_tokens * 3 + self.num_task_tokens * 2 : num_image_tokens * 3 + self.num_task_tokens * 3,
+        ] = True
 
         return att_2d_masks
-
 
 
 ModelClass = LingbotVlaPolicy

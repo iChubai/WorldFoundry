@@ -85,12 +85,11 @@ def load_r3m(modelid):
     cleancfg = cleanup_config(modelcfg)
     rep = hydra.utils.instantiate(cleancfg)
     rep = torch.nn.DataParallel(rep)
-    r3m_state_dict = remove_language_head(
-        torch.load(modelpath, map_location=torch.device(device))["r3m"]
-    )
+    r3m_state_dict = remove_language_head(torch.load(modelpath, map_location=torch.device(device))["r3m"])
     rep.load_state_dict(r3m_state_dict)
     rep = rep.module
     return rep
+
 
 def load_r3m_reproduce(modelid):
     home = os.path.join(expanduser("~"), ".r3m")
@@ -125,9 +124,7 @@ def load_r3m_reproduce(modelid):
     cleancfg = cleanup_config(modelcfg)
     rep = hydra.utils.instantiate(cleancfg)
     rep = torch.nn.DataParallel(rep)
-    r3m_state_dict = remove_language_head(
-        torch.load(modelpath, map_location=torch.device(device))["r3m"]
-    )
+    r3m_state_dict = remove_language_head(torch.load(modelpath, map_location=torch.device(device))["r3m"])
 
     rep.load_state_dict(r3m_state_dict)
     rep = rep.module

@@ -22,18 +22,6 @@ class IdentityWrapper(nn.Module):
 
 
 class OpenAIWrapper(IdentityWrapper):
-    def forward(
-            self,
-            x: torch.Tensor,
-            t: torch.Tensor,
-            c: Dict,
-            **kwargs
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, t: torch.Tensor, c: Dict, **kwargs) -> torch.Tensor:
         x = torch.cat([x, c.get("concat", torch.Tensor([]).type_as(x))], dim=1)
-        return self.diffusion_model(
-            x,
-            timesteps=t,
-            context=c.get("crossattn", None),
-            y=c.get("vector", None),
-            **kwargs
-        )
+        return self.diffusion_model(x, timesteps=t, context=c.get("crossattn", None), y=c.get("vector", None), **kwargs)

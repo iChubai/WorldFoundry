@@ -97,9 +97,7 @@ class HyEmbodiedVLASynthesis(ActionModelSynthesis):
         merged = {**self.runtime_options, **dict(options)}
         variant = str(merged.get("variant") or merged.get("variant_id") or DEFAULT_VARIANT)
         checkpoint = select_hy_embodied_vla_checkpoint(
-            checkpoint=merged.get("checkpoint")
-            or merged.get("checkpoint_dir")
-            or merged.get("ckpt_path"),
+            checkpoint=merged.get("checkpoint") or merged.get("checkpoint_dir") or merged.get("ckpt_path"),
             checkpoints=self.profile.checkpoints,
             variant=variant,
         )
@@ -115,14 +113,10 @@ class HyEmbodiedVLASynthesis(ActionModelSynthesis):
                 merged.get("allow_checkpoint_download"), DEFAULT_ALLOW_CHECKPOINT_DOWNLOAD
             ),
             history_size=int(history_size) if history_size is not None else None,
-            replicate_single_image=_as_bool(
-                merged.get("replicate_single_image"), DEFAULT_REPLICATE_SINGLE_IMAGE
-            ),
+            replicate_single_image=_as_bool(merged.get("replicate_single_image"), DEFAULT_REPLICATE_SINGLE_IMAGE),
             state_format=str(merged.get("state_format") or DEFAULT_STATE_FORMAT),
             blend_mode=str(merged.get("blend_mode") or DEFAULT_BLEND_MODE),
-            strict_checkpoint=_as_bool(
-                merged.get("strict_checkpoint"), DEFAULT_STRICT_CHECKPOINT
-            ),
+            strict_checkpoint=_as_bool(merged.get("strict_checkpoint"), DEFAULT_STRICT_CHECKPOINT),
         )
 
     def _runtime_for(self, config: HyEmbodiedVLARuntimeConfig) -> HyEmbodiedVLARuntime:

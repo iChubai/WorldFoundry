@@ -329,6 +329,7 @@ class DiTConfig(PretrainedConfig):
         self.head_dim = head_dim
         self.num_key_value_heads = num_key_value_heads
 
+
 class MiBoTConfig(PretrainedConfig):
     r"""
     This is the configuration class to store the configuration of a [`MiBoTModel`]. It is used to instantiate a MiBoT
@@ -384,5 +385,6 @@ class MiBoTConfig(PretrainedConfig):
         self.action_dim = action_dim
 
         super().__init__(**kwargs)
+
 
 __all__ = ["MiBoTConfig", "DiTConfig"]

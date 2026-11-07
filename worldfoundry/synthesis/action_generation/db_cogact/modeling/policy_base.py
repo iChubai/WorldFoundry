@@ -92,9 +92,7 @@ class BasePolicy(ABC):
         for k, v in observation.items():
             if isinstance(v, list):
                 if len(v) != batch_size:
-                    raise ValueError(
-                        f"obs['{k}'] has length {len(v)}, expected {batch_size}"
-                    )
+                    raise ValueError(f"obs['{k}'] has length {len(v)}, expected {batch_size}")
                 out[k] = v
             else:
                 out[k] = [v] * batch_size
@@ -121,18 +119,14 @@ class BasePolicy(ABC):
         sampling: Optional[GenSamplingConfig] = None,
     ) -> GenerationOutput:
         raise NotImplementedError(
-            f"{type(self).__name__} does not support VLM generation. "
-            "Override generate() and set supports_vlm() → True."
+            f"{type(self).__name__} does not support VLM generation. Override generate() and set supports_vlm() → True."
         )
 
     # ── Image helpers (A-family shared) ──────────────────────────────────────
 
     def _load_images(self, raw_images: list) -> list:
         """Normalize image inputs: open file paths as PIL, pass PIL Images through."""
-        return [
-            Image.open(p).convert("RGB") if isinstance(p, str) else p
-            for p in raw_images
-        ]
+        return [Image.open(p).convert("RGB") if isinstance(p, str) else p for p in raw_images]
 
     def _images_to_tensor(self, pil_images: list):
         """Convert PIL images → model input tensor; unsqueeze batch dim for >1 image."""

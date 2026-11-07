@@ -26,7 +26,7 @@ def t2i_modulate(x, shift, scale):
 
 
 class MultiHeadCrossAttention(nn.Module):
-    def __init__(self, d_model, num_heads, attn_drop=0., proj_drop=0., **block_kwargs):
+    def __init__(self, d_model, num_heads, attn_drop=0.0, proj_drop=0.0, **block_kwargs):
         super(MultiHeadCrossAttention, self).__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
 
@@ -35,7 +35,7 @@ class MultiHeadCrossAttention(nn.Module):
         self.head_dim = d_model // num_heads
 
         self.q_linear = nn.Linear(d_model, d_model)
-        self.kv_linear = nn.Linear(d_model, d_model*2)
+        self.kv_linear = nn.Linear(d_model, d_model * 2)
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(d_model, d_model)
         self.proj_drop = nn.Dropout(proj_drop)
@@ -50,12 +50,16 @@ class MultiHeadCrossAttention(nn.Module):
         attn_bias = None
         if mask is not None:
             # Debug: check types (OFF by default; enable with env CROSS_ATTN_MASK_DEBUG=1)
-            if (os.environ.get("CROSS_ATTN_MASK_DEBUG", "0") == "1") and (not hasattr(self, '_cross_attn_mask_debug_logged')):
+            if (os.environ.get("CROSS_ATTN_MASK_DEBUG", "0") == "1") and (
+                not hasattr(self, "_cross_attn_mask_debug_logged")
+            ):
                 self._cross_attn_mask_debug_logged = True
                 logger = get_root_logger()
                 logger.info(f"[CrossAttnMask] N={N}, type(N)={type(N)}, B={B}, type(B)={type(B)}")
-                if hasattr(mask, 'shape'):
-                    logger.info(f"[CrossAttnMask] mask type: {type(mask)}, mask shape: {mask.shape}, mask dtype: {mask.dtype}")
+                if hasattr(mask, "shape"):
+                    logger.info(
+                        f"[CrossAttnMask] mask type: {type(mask)}, mask shape: {mask.shape}, mask dtype: {mask.dtype}"
+                    )
                     if mask.numel() <= 10:
                         logger.info(f"[CrossAttnMask] mask value: {mask.tolist()}")
                     else:
@@ -63,7 +67,9 @@ class MultiHeadCrossAttention(nn.Module):
                 else:
                     logger.info(f"[CrossAttnMask] mask type: {type(mask)}, mask value: {mask}")
                 seqlens_list = [N] * B
-                logger.info(f"[CrossAttnMask] [N] * B = {seqlens_list[:5]}... (total {len(seqlens_list)}), type of first element: {type(seqlens_list[0])}")
+                logger.info(
+                    f"[CrossAttnMask] [N] * B = {seqlens_list[:5]}... (total {len(seqlens_list)}), type of first element: {type(seqlens_list[0])}"
+                )
             # Ensure N is int, not tensor
             N_int = int(N) if isinstance(N, torch.Tensor) else N
             B_int = int(B) if isinstance(B, torch.Tensor) else B
@@ -92,7 +98,7 @@ class AttentionKVCompress(Attention_):
         dim,
         num_heads=8,
         qkv_bias=True,
-        sampling='conv',
+        sampling="conv",
         sr_ratio=1,
         qk_norm=False,
         **block_kwargs,
@@ -105,12 +111,12 @@ class AttentionKVCompress(Attention_):
         """
         super().__init__(dim, num_heads=num_heads, qkv_bias=qkv_bias, **block_kwargs)
 
-        self.sampling=sampling    # ['conv', 'ave', 'uniform', 'uniform_every']
+        self.sampling = sampling  # ['conv', 'ave', 'uniform', 'uniform_every']
         self.sr_ratio = sr_ratio
-        if sr_ratio > 1 and sampling == 'conv':
+        if sr_ratio > 1 and sampling == "conv":
             # Avg Conv Init.
             self.sr = nn.Conv2d(dim, dim, groups=dim, kernel_size=sr_ratio, stride=sr_ratio)
-            self.sr.weight.data.fill_(1/sr_ratio**2)
+            self.sr.weight.data.fill_(1 / sr_ratio**2)
             self.sr.bias.data.zero_()
             self.norm = nn.LayerNorm(dim)
         if qk_norm:
@@ -125,20 +131,18 @@ class AttentionKVCompress(Attention_):
             return tensor
         B, N, C = tensor.shape
 
-        if sampling == 'uniform_every':
+        if sampling == "uniform_every":
             return tensor[:, ::scale_factor], int(N // scale_factor)
 
         tensor = tensor.reshape(B, H, W, C).permute(0, 3, 1, 2)
         new_H, new_W = int(H / scale_factor), int(W / scale_factor)
         new_N = new_H * new_W
 
-        if sampling == 'ave':
-            tensor = F.interpolate(
-                tensor, scale_factor=1 / scale_factor, mode='nearest'
-            ).permute(0, 2, 3, 1)
-        elif sampling == 'uniform':
+        if sampling == "ave":
+            tensor = F.interpolate(tensor, scale_factor=1 / scale_factor, mode="nearest").permute(0, 2, 3, 1)
+        elif sampling == "uniform":
             tensor = tensor[:, :, ::scale_factor, ::scale_factor].permute(0, 2, 3, 1)
-        elif sampling == 'conv':
+        elif sampling == "conv":
             tensor = self.sr(tensor).reshape(B, C, -1).permute(0, 2, 1)
             tensor = self.norm(tensor)
         else:
@@ -154,7 +158,7 @@ class AttentionKVCompress(Attention_):
         block_id=None,
         *,
         kv_tokens=None,  # optional: asymmetric self-attn KV stream (Q comes from `x`)
-        HW_kv=None,      # optional: spatial HW for kv_tokens (only used for KV compression)
+        HW_kv=None,  # optional: spatial HW for kv_tokens (only used for KV compression)
         # PRoPE (Projective Relative Positional Encoding) - optional
         use_prope: bool = False,
         prope_viewmats=None,  # (B, cameras, 4, 4)
@@ -168,7 +172,7 @@ class AttentionKVCompress(Attention_):
         new_N = Nk
 
         if HW is None:
-            Hq = Wq = int(Nq ** 0.5)
+            Hq = Wq = int(Nq**0.5)
         else:
             Hq, Wq = HW
         if HW_kv is None:
@@ -198,7 +202,7 @@ class AttentionKVCompress(Attention_):
         k = k.reshape(B, new_N, self.num_heads, C // self.num_heads).to(dtype)
         v = v.reshape(B, new_N, self.num_heads, C // self.num_heads).to(dtype)
 
-        use_fp32_attention = getattr(self, 'fp32_attention', False)     # necessary for NAN loss
+        use_fp32_attention = getattr(self, "fp32_attention", False)  # necessary for NAN loss
         if use_fp32_attention:
             q, k, v = q.float(), k.float(), v.float()
 
@@ -210,13 +214,7 @@ class AttentionKVCompress(Attention_):
         # -----------------------
         _prope_apply_fn_o = None
         _prope_reorder_back = None
-        if (
-            use_prope
-            and (prope_viewmats is not None)
-            and (new_N == Nq)
-            and (Nk == Nq)
-            and (HW is not None)
-        ):
+        if use_prope and (prope_viewmats is not None) and (new_N == Nq) and (Nk == Nq) and (HW is not None):
             try:
                 # Debug logger: only rank0 prints; gated by env to avoid overhead.
                 _debug = os.environ.get("PROPE_CACHE_DEBUG", "0") == "1"
@@ -224,8 +222,9 @@ class AttentionKVCompress(Attention_):
                 if _debug:
                     try:
                         import torch.distributed as dist
+
                         if dist.is_available() and dist.is_initialized():
-                            _rank0 = (dist.get_rank() == 0)
+                            _rank0 = dist.get_rank() == 0
                     except Exception:
                         _rank0 = True
                 # Print at most once per module to avoid slowing training with log I/O.
@@ -248,7 +247,13 @@ class AttentionKVCompress(Attention_):
                         reorder_to = prope_cache.get("reorder_to", None)
                         reorder_from = prope_cache.get("reorder_from", None)
 
-                    if apply_fn_q is None or apply_fn_kv is None or apply_fn_o is None or reorder_to is None or reorder_from is None:
+                    if (
+                        apply_fn_q is None
+                        or apply_fn_kv is None
+                        or apply_fn_o is None
+                        or reorder_to is None
+                        or reorder_from is None
+                    ):
                         if _log_this:
                             logger = get_root_logger()
                             logger.info(
@@ -341,7 +346,7 @@ class AttentionKVCompress(Attention_):
         attn_bias = None
         if mask is not None:
             attn_bias = torch.zeros([B * self.num_heads, q.shape[1], k.shape[1]], dtype=q.dtype, device=q.device)
-            attn_bias.masked_fill_(mask.squeeze(1).repeat(self.num_heads, 1, 1) == 0, float('-inf'))
+            attn_bias.masked_fill_(mask.squeeze(1).repeat(self.num_heads, 1, 1) == 0, float("-inf"))
         # Prefer xFormers on CUDA (matches original repo behavior). Fallback to PyTorch SDPA when unsupported.
         # This is important for stability when `fp32_attention=True` (q/k/v cast to fp32).
         try:
@@ -387,7 +392,7 @@ class Attention(Attention_):
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)  # make torchscript happy (cannot use tensor as tuple)
-        use_fp32_attention = getattr(self, 'fp32_attention', False)
+        use_fp32_attention = getattr(self, "fp32_attention", False)
         if use_fp32_attention:
             q, k = q.float(), k.float()
         with torch.cuda.amp.autocast(enabled=not use_fp32_attention):
@@ -411,10 +416,7 @@ class FinalLayer(nn.Module):
         super().__init__()
         self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels, bias=True)
-        self.adaLN_modulation = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(hidden_size, 2 * hidden_size, bias=True)
-        )
+        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True))
 
     def forward(self, x, c):
         shift, scale = self.adaLN_modulation(c).chunk(2, dim=1)
@@ -432,7 +434,7 @@ class T2IFinalLayer(nn.Module):
         super().__init__()
         self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels, bias=True)
-        self.scale_shift_table = nn.Parameter(torch.randn(2, hidden_size) / hidden_size ** 0.5)
+        self.scale_shift_table = nn.Parameter(torch.randn(2, hidden_size) / hidden_size**0.5)
         self.out_channels = out_channels
 
     def forward(self, x, t):
@@ -451,10 +453,8 @@ class MaskFinalLayer(nn.Module):
         super().__init__()
         self.norm_final = nn.LayerNorm(final_hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(final_hidden_size, patch_size * patch_size * out_channels, bias=True)
-        self.adaLN_modulation = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(c_emb_size, 2 * final_hidden_size, bias=True)
-        )
+        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(c_emb_size, 2 * final_hidden_size, bias=True))
+
     def forward(self, x, t):
         shift, scale = self.adaLN_modulation(t).chunk(2, dim=1)
         x = modulate(self.norm_final(x), shift, scale)
@@ -471,10 +471,8 @@ class DecoderLayer(nn.Module):
         super().__init__()
         self.norm_decoder = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(hidden_size, decoder_hidden_size, bias=True)
-        self.adaLN_modulation = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(hidden_size, 2 * hidden_size, bias=True)
-        )
+        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True))
+
     def forward(self, x, t):
         shift, scale = self.adaLN_modulation(t).chunk(2, dim=1)
         x = modulate(self.norm_decoder(x), shift, scale)
@@ -512,7 +510,8 @@ class TimestepEmbedder(nn.Module):
         # https://github.com/openai/glide-text2im/blob/main/glide_text2im/nn.py
         half = dim // 2
         freqs = torch.exp(
-            -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32, device=t.device) / half)
+            -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32, device=t.device) / half
+        )
         args = t[:, None].float() * freqs[None]
         embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
         if dim % 2:
@@ -550,7 +549,7 @@ class SizeEmbedder(TimestepEmbedder):
             s = s[:, None]
         assert s.ndim == 2
         if s.shape[0] != bs:
-            s = s.repeat(bs//s.shape[0], 1)
+            s = s.repeat(bs // s.shape[0], 1)
             assert s.shape[0] == bs
         b, dims = s.shape[0], s.shape[1]
         s = rearrange(s, "b d -> (b d)")
@@ -573,10 +572,12 @@ class CaptionEmbedder(nn.Module):
     Embeds class labels into vector representations. Also handles label dropout for classifier-free guidance.
     """
 
-    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate='tanh'), token_num=120):
+    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):
         super().__init__()
-        self.y_proj = Mlp(in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0)
-        self.register_buffer("y_embedding", nn.Parameter(torch.randn(token_num, in_channels) / in_channels ** 0.5))
+        self.y_proj = Mlp(
+            in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0
+        )
+        self.register_buffer("y_embedding", nn.Parameter(torch.randn(token_num, in_channels) / in_channels**0.5))
         self.uncond_prob = uncond_prob
 
     def token_drop(self, caption, force_drop_ids=None):
@@ -605,11 +606,13 @@ class CaptionEmbedderDoubleBr(nn.Module):
     Embeds class labels into vector representations. Also handles label dropout for classifier-free guidance.
     """
 
-    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate='tanh'), token_num=120):
+    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):
         super().__init__()
-        self.proj = Mlp(in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0)
-        self.embedding = nn.Parameter(torch.randn(1, in_channels) / 10 ** 0.5)
-        self.y_embedding = nn.Parameter(torch.randn(token_num, in_channels) / 10 ** 0.5)
+        self.proj = Mlp(
+            in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0
+        )
+        self.embedding = nn.Parameter(torch.randn(1, in_channels) / 10**0.5)
+        self.y_embedding = nn.Parameter(torch.randn(token_num, in_channels) / 10**0.5)
         self.uncond_prob = uncond_prob
 
     def token_drop(self, global_caption, caption, force_drop_ids=None):
@@ -625,7 +628,7 @@ class CaptionEmbedderDoubleBr(nn.Module):
         return global_caption, caption
 
     def forward(self, caption, train, force_drop_ids=None):
-        assert caption.shape[2: ] == self.y_embedding.shape
+        assert caption.shape[2:] == self.y_embedding.shape
         global_caption = caption.mean(dim=2).squeeze()
         use_dropout = self.uncond_prob > 0
         if (train and use_dropout) or (force_drop_ids is not None):

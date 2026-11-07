@@ -54,16 +54,23 @@ class LastR1Synthesis(ActionModelSynthesis):
         ).resolve()
         if not options.get("source_root") and not os.environ.get("WORLDFOUNDRY_LAST_R1_SOURCE_DIR"):
             sibling_source = (project_root().parent / "model" / "LaST-R1").resolve()
-            if not (source / "transformers/models/qwen3_vl/modeling_qwen3_vl.py").is_file() and (
-                sibling_source / "transformers/models/qwen3_vl/modeling_qwen3_vl.py"
-            ).is_file():
+            if (
+                not (source / "transformers/models/qwen3_vl/modeling_qwen3_vl.py").is_file()
+                and (sibling_source / "transformers/models/qwen3_vl/modeling_qwen3_vl.py").is_file()
+            ):
                 source = sibling_source
         executable = str(options.get("python_executable") or sys.executable)
         executable = str(Path(shutil.which(executable) or executable).expanduser().absolute())
         selected_device = str(device or options.get("device") or "cuda")
         if selected_device != "cuda" and not (selected_device.startswith("cuda:") and selected_device[5:].isdigit()):
             raise ValueError("LaST-R1 requires device='cuda' or a single explicit CUDA index")
-        return cls(profile, checkpoint_path=checkpoint, source_root=source, python_executable=executable, device=selected_device)
+        return cls(
+            profile,
+            checkpoint_path=checkpoint,
+            source_root=source,
+            python_executable=executable,
+            device=selected_device,
+        )
 
     def preflight(self) -> dict[str, Any]:
         required = [
@@ -171,7 +178,8 @@ class LastR1Synthesis(ActionModelSynthesis):
                     "center_crop": bool(kwargs.get("center_crop", True)),
                 },
                 indent=2,
-            ) + "\n"
+            )
+            + "\n"
         )
         env = os.environ.copy()
         env.update(
@@ -184,14 +192,32 @@ class LastR1Synthesis(ActionModelSynthesis):
         )
         if self.device.startswith("cuda:"):
             env["CUDA_VISIBLE_DEVICES"] = self.device[5:]
-        command = [self.python_executable, "-m", "worldfoundry.synthesis.action_generation.last_r1.worker", str(request_path)]
-        (run_dir / "plan.json").write_text(json.dumps({"command": command, "workdir": str(project_root()), "source_revision": self.REVISION, "preflight": preflight}, indent=2) + "\n")
+        command = [
+            self.python_executable,
+            "-m",
+            "worldfoundry.synthesis.action_generation.last_r1.worker",
+            str(request_path),
+        ]
+        (run_dir / "plan.json").write_text(
+            json.dumps(
+                {
+                    "command": command,
+                    "workdir": str(project_root()),
+                    "source_revision": self.REVISION,
+                    "preflight": preflight,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
         stdout_path, stderr_path = run_dir / "stdout.log", run_dir / "stderr.log"
         timeout = int(kwargs.get("timeout_seconds", 3600))
         if timeout <= 0:
             raise ValueError("timeout_seconds must be positive")
         with stdout_path.open("w") as stdout, stderr_path.open("w") as stderr:
-            process = subprocess.Popen(command, cwd=project_root(), env=env, stdout=stdout, stderr=stderr, start_new_session=True)
+            process = subprocess.Popen(
+                command, cwd=project_root(), env=env, stdout=stdout, stderr=stderr, start_new_session=True
+            )
             try:
                 code = process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:

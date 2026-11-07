@@ -20,7 +20,7 @@ def worker_init_fn(_):
     if isinstance(dataset, Txt2ImgIterableBaseDataset):
         split_size = dataset.num_records // worker_info.num_workers
         # reset num_records to the true number to retain reliable length information
-        dataset.sample_ids = dataset.valid_ids[worker_id * split_size:(worker_id + 1) * split_size]
+        dataset.sample_ids = dataset.valid_ids[worker_id * split_size : (worker_id + 1) * split_size]
         current_id = np.random.choice(len(np.random.get_state()[1]), 1)
         return np.random.seed(np.random.get_state()[1][current_id] + worker_id)
     else:
@@ -63,16 +63,16 @@ class DataModuleFromConfig(pl.LightningDataModule):
             for k in self.datasets:
                 self.datasets[k] = WrappedDataset(self.datasets[k])
 
-
     def _val_dataloader(self, shuffle=False):
-        if isinstance(self.datasets['validation'], Txt2ImgIterableBaseDataset) or self.use_worker_init_fn:
+        if isinstance(self.datasets["validation"], Txt2ImgIterableBaseDataset) or self.use_worker_init_fn:
             init_fn = worker_init_fn
         else:
             init_fn = None
-        return DataLoader(self.datasets["validation"],
-                          batch_size=self.batch_size,
-                          num_workers=self.num_workers,
-                          worker_init_fn=init_fn,
-                          shuffle=shuffle,
-                          collate_fn=self.collate_fn,
-                          )
+        return DataLoader(
+            self.datasets["validation"],
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            worker_init_fn=init_fn,
+            shuffle=shuffle,
+            collate_fn=self.collate_fn,
+        )

@@ -58,26 +58,23 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 EXAMPLE_DOC_STRING = """"""
 
 PRECISION_TO_TYPE = {
-    'fp32': torch.float32,
-    'fp16': torch.float16,
-    'bf16': torch.bfloat16,
+    "fp32": torch.float32,
+    "fp16": torch.float16,
+    "bf16": torch.bfloat16,
 }
+
 
 def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=0.0):
     """
     Rescale `noise_cfg` according to `guidance_rescale`. Based on findings of [Common Diffusion Noise Schedules and
     Sample Steps are Flawed](https://arxiv.org/pdf/2305.08891.pdf). See Section 3.4
     """
-    std_text = noise_pred_text.std(
-        dim=list(range(1, noise_pred_text.ndim)), keepdim=True
-    )
+    std_text = noise_pred_text.std(dim=list(range(1, noise_pred_text.ndim)), keepdim=True)
     std_cfg = noise_cfg.std(dim=list(range(1, noise_cfg.ndim)), keepdim=True)
     # rescale the results from guidance (fixes overexposure)
     noise_pred_rescaled = noise_cfg * (std_text / std_cfg)
     # mix with the original results from guidance by factor guidance_rescale to avoid "plain looking" images
-    noise_cfg = (
-        guidance_rescale * noise_pred_rescaled + (1 - guidance_rescale) * noise_cfg
-    )
+    noise_cfg = guidance_rescale * noise_pred_rescaled + (1 - guidance_rescale) * noise_cfg
     return noise_cfg
 
 
@@ -113,13 +110,9 @@ def retrieve_timesteps(
         second element is the number of inference steps.
     """
     if timesteps is not None and sigmas is not None:
-        raise ValueError(
-            "Only one of `timesteps` or `sigmas` can be passed. Please choose one to set custom values"
-        )
+        raise ValueError("Only one of `timesteps` or `sigmas` can be passed. Please choose one to set custom values")
     if timesteps is not None:
-        accepts_timesteps = "timesteps" in set(
-            inspect.signature(scheduler.set_timesteps).parameters.keys()
-        )
+        accepts_timesteps = "timesteps" in set(inspect.signature(scheduler.set_timesteps).parameters.keys())
         if not accepts_timesteps:
             raise ValueError(
                 f"The current scheduler class {scheduler.__class__}'s `set_timesteps` does not support custom"
@@ -129,9 +122,7 @@ def retrieve_timesteps(
         timesteps = scheduler.timesteps
         num_inference_steps = len(timesteps)
     elif sigmas is not None:
-        accept_sigmas = "sigmas" in set(
-            inspect.signature(scheduler.set_timesteps).parameters.keys()
-        )
+        accept_sigmas = "sigmas" in set(inspect.signature(scheduler.set_timesteps).parameters.keys())
         if not accept_sigmas:
             raise ValueError(
                 f"The current scheduler class {scheduler.__class__}'s `set_timesteps` does not support custom"
@@ -186,7 +177,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         super().__init__()
 
         # ==========================================================================================
-        
+
         progress_bar_config = {}
         if not hasattr(self, "_progress_bar_config"):
             self._progress_bar_config = {}
@@ -194,10 +185,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
 
         # ==========================================================================================
 
-        if (
-            hasattr(scheduler.config, "steps_offset")
-            and scheduler.config.steps_offset != 1
-        ):
+        if hasattr(scheduler.config, "steps_offset") and scheduler.config.steps_offset != 1:
             deprecation_message = (
                 f"The configuration file of this scheduler: {scheduler} is outdated. `steps_offset`"
                 f" should be set to 1 instead of {scheduler.config.steps_offset}. Please make sure "
@@ -206,17 +194,12 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                 " it would be very nice if you could open a Pull request for the `scheduler/scheduler_config.json`"
                 " file"
             )
-            deprecate(
-                "steps_offset!=1", "1.0.0", deprecation_message, standard_warn=False
-            )
+            deprecate("steps_offset!=1", "1.0.0", deprecation_message, standard_warn=False)
             new_config = dict(scheduler.config)
             new_config["steps_offset"] = 1
             scheduler._internal_dict = FrozenDict(new_config)
 
-        if (
-            hasattr(scheduler.config, "clip_sample")
-            and scheduler.config.clip_sample is True
-        ):
+        if hasattr(scheduler.config, "clip_sample") and scheduler.config.clip_sample is True:
             deprecation_message = (
                 f"The configuration file of this scheduler: {scheduler} has not set the configuration `clip_sample`."
                 " `clip_sample` should be set to False in the configuration file. Please make sure to update the"
@@ -224,24 +207,16 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                 " future versions. If you have downloaded this checkpoint from the Hugging Face Hub, it would be very"
                 " nice if you could open a Pull request for the `scheduler/scheduler_config.json` file"
             )
-            deprecate(
-                "clip_sample not set", "1.0.0", deprecation_message, standard_warn=False
-            )
+            deprecate("clip_sample not set", "1.0.0", deprecation_message, standard_warn=False)
             new_config = dict(scheduler.config)
             new_config["clip_sample"] = False
             scheduler._internal_dict = FrozenDict(new_config)
 
-        self.register_modules(
-            vae=vae,
-            text_encoder=text_encoder,
-            transformer=transformer,
-            scheduler=scheduler
-        )
+        self.register_modules(vae=vae, text_encoder=text_encoder, transformer=transformer, scheduler=scheduler)
         self.vae_scale_factor = 2 ** (len(self.vae.config.block_out_channels) - 1)
         self.image_processor = VaeImageProcessor(vae_scale_factor=self.vae_scale_factor)
 
         self.video_processor = VideoProcessor(vae_scale_factor=self.vae_scale_factor)
-
 
     def encode_prompt(
         self,
@@ -258,7 +233,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         clip_skip: Optional[int] = None,
         text_encoder: Optional[TextEncoder] = None,
         data_type: Optional[str] = "image",
-        semantic_images=None
+        semantic_images=None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -297,9 +272,11 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         if not isinstance(semantic_images, list):
             semantic_images = [semantic_images]
         uncond_image = [black_image(img.size[0], img.size[1]) for img in semantic_images]
-        #uncond_image = semantic_images
-        prompt_embeds, attention_mask, _ = text_encoder(prompt, device = device, semantic_images = semantic_images)
-        negative_prompt_embeds, negative_attention_mask, _ = text_encoder(negative_prompt, device = device, semantic_images = uncond_image)
+        # uncond_image = semantic_images
+        prompt_embeds, attention_mask, _ = text_encoder(prompt, device=device, semantic_images=semantic_images)
+        negative_prompt_embeds, negative_attention_mask, _ = text_encoder(
+            negative_prompt, device=device, semantic_images=uncond_image
+        )
 
         return (
             prompt_embeds,
@@ -348,32 +325,22 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         vae_ver="88-4c-sd",
     ):
         if height % 8 != 0 or width % 8 != 0:
-            raise ValueError(
-                f"`height` and `width` have to be divisible by 8 but are {height} and {width}."
-            )
+            raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
         if video_length is not None:
             if "884" in vae_ver:
                 if video_length != 1 and (video_length - 1) % 4 != 0:
-                    raise ValueError(
-                        f"`video_length` has to be 1 or a multiple of 4 but is {video_length}."
-                    )
+                    raise ValueError(f"`video_length` has to be 1 or a multiple of 4 but is {video_length}.")
             elif "888" in vae_ver:
                 if video_length != 1 and (video_length - 1) % 8 != 0:
-                    raise ValueError(
-                        f"`video_length` has to be 1 or a multiple of 8 but is {video_length}."
-                    )
+                    raise ValueError(f"`video_length` has to be 1 or a multiple of 8 but is {video_length}.")
 
-        if callback_steps is not None and (
-            not isinstance(callback_steps, int) or callback_steps <= 0
-        ):
+        if callback_steps is not None and (not isinstance(callback_steps, int) or callback_steps <= 0):
             raise ValueError(
-                f"`callback_steps` has to be a positive integer but is {callback_steps} of type"
-                f" {type(callback_steps)}."
+                f"`callback_steps` has to be a positive integer but is {callback_steps} of type {type(callback_steps)}."
             )
         if callback_on_step_end_tensor_inputs is not None and not all(
-            k in self._callback_tensor_inputs
-            for k in callback_on_step_end_tensor_inputs
+            k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
         ):
             raise ValueError(
                 f"`callback_on_step_end_tensor_inputs` has to be in {self._callback_tensor_inputs}, but found {[k for k in callback_on_step_end_tensor_inputs if k not in self._callback_tensor_inputs]}"
@@ -388,12 +355,8 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
             raise ValueError(
                 "Provide either `prompt` or `prompt_embeds`. Cannot leave both `prompt` and `prompt_embeds` undefined."
             )
-        elif prompt is not None and (
-            not isinstance(prompt, str) and not isinstance(prompt, list)
-        ):
-            raise ValueError(
-                f"`prompt` has to be of type `str` or `list` but is {type(prompt)}"
-            )
+        elif prompt is not None and (not isinstance(prompt, str) and not isinstance(prompt, list)):
+            raise ValueError(f"`prompt` has to be of type `str` or `list` but is {type(prompt)}")
 
         if negative_prompt is not None and negative_prompt_embeds is not None:
             raise ValueError(
@@ -409,7 +372,6 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                     f" {negative_prompt_embeds.shape}."
                 )
 
-
     def prepare_latents(
         self,
         initial_image,
@@ -420,9 +382,9 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         video_length,
         dtype,
         device,
-        generator, 
+        generator,
         latents=None,
-        i2v_type = 'refiner'
+        i2v_type="refiner",
     ):
         shape = (
             batch_size,
@@ -438,9 +400,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
             )
 
         if latents is None:
-            latents = randn_tensor(
-                shape, generator=generator, device=device, dtype=dtype
-            )
+            latents = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         else:
             latents = latents.to(device)
 
@@ -455,9 +415,9 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                 initial_image = initial_image.unsqueeze(0).permute(0, 2, 1, 3, 4)
             else:
                 initial_image = initial_image.unsqueeze(2)
-            if self.args and self.args.num_pre_frames >0: 
-                past_frames = initial_image[:,:,1:]
-                initial_image = initial_image[:,:,:1]
+            if self.args and self.args.num_pre_frames > 0:
+                past_frames = initial_image[:, :, 1:]
+                initial_image = initial_image[:, :, :1]
 
                 image_latents = self.vae.encode(initial_image).latent_dist.sample()
                 past_frames_latents = self.vae.encode(past_frames).latent_dist.sample()
@@ -469,41 +429,50 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                 image_latents = (image_latents - self.vae.config.shift_factor) * self.vae.config.scaling_factor
             else:
                 image_latents = image_latents * self.vae.config.scaling_factor
-            x1 = image_latents[:,:,:1,...].repeat(1, 1, video_length, 1, 1)
+            x1 = image_latents[:, :, :1, ...].repeat(1, 1, video_length, 1, 1)
             x0 = latents
             t = torch.tensor([0.999]).to(device=device)
             latents = x0 * t + x1 * (1 - t)
             latents = latents.to(dtype=dtype)
 
-
             #
 
-            if i2v_type == 'concat':
+            if i2v_type == "concat":
                 padding_shape = (
                     batch_size,
                     num_channels_latents,
-                    video_length-image_latents.shape[2],
+                    video_length - image_latents.shape[2],
                     int(height) // self.vae_scale_factor,
                     int(width) // self.vae_scale_factor,
                 )
                 latent_padding = torch.zeros(padding_shape, device=device, dtype=dtype)
                 image_latents = torch.cat([image_latents, latent_padding], dim=2)
-                mask_concat = torch.ones(batch_size, 1, image_latents.shape[2], image_latents.shape[3], image_latents.shape[4]).to(device=image_latents.device, dtype=image_latents.dtype)
+                mask_concat = torch.ones(
+                    batch_size, 1, image_latents.shape[2], image_latents.shape[3], image_latents.shape[4]
+                ).to(device=image_latents.device, dtype=image_latents.dtype)
                 mask_concat[:, :, num_frames:, ...] = 0.0
                 image_latents = torch.cat([image_latents, mask_concat], dim=1)
-            elif i2v_type == 'refiner':
+            elif i2v_type == "refiner":
                 image_latents = image_latents
                 if self.args.num_pre_frames > 0:
-                    past_frame_latents = image_latents[:,:,1:,...]
+                    past_frame_latents = image_latents[:, :, 1:, ...]
 
                     num_pre_frames = past_frames_latents.shape[2]
-                    image_latents = image_latents[:,:,:1,...]
-                    padding_shape = (batch_size, num_channels_latents, video_length-num_pre_frames, latents.shape[3], latents.shape[4])     
+                    image_latents = image_latents[:, :, :1, ...]
+                    padding_shape = (
+                        batch_size,
+                        num_channels_latents,
+                        video_length - num_pre_frames,
+                        latents.shape[3],
+                        latents.shape[4],
+                    )
                     latent_padding = image_latents.new_zeros(padding_shape)
                     concat_latents = torch.cat([past_frame_latents, latent_padding], dim=2)
-                    mask_concat = torch.ones(latents.shape[0], 1, latents.shape[2], latents.shape[3], latents.shape[4]).to(device=latents.device, dtype=latents.dtype)
+                    mask_concat = torch.ones(
+                        latents.shape[0], 1, latents.shape[2], latents.shape[3], latents.shape[4]
+                    ).to(device=latents.device, dtype=latents.dtype)
                     mask_concat[:, :, num_pre_frames:, ...] = 0.0
-                    concat_latents = torch.cat([concat_latents, mask_concat], dim=1) 
+                    concat_latents = torch.cat([concat_latents, mask_concat], dim=1)
         else:
             image_latents = None
         # Check existence to make it compatible with FlowMatchEulerDiscreteScheduler
@@ -515,7 +484,6 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
             return latents, image_latents, concat_latents
         else:
             return latents, image_latents
-
 
     # Copied from diffusers.pipelines.latent_consistency_models.pipeline_latent_consistency_text2img.LatentConsistencyModelPipeline.get_guidance_scale_embedding
     def get_guidance_scale_embedding(
@@ -590,9 +558,9 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         height: int,
         width: int,
         video_length: int,
-        initial_image = None,
-        mouse_condition = None,
-        keyboard_condition = None,
+        initial_image=None,
+        mouse_condition=None,
+        keyboard_condition=None,
         data_type: str = "video",
         num_inference_steps: int = 50,
         timesteps: List[int] = None,
@@ -623,11 +591,11 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         vae_ver: str = "88-4c-sd",
         enable_tiling: bool = False,
         embedded_guidance_scale: Optional[float] = None,
-        i2v_type = 'refiner',
-        args = None, 
+        i2v_type="refiner",
+        args=None,
         semantic_images=None,
-        prompt = "N.o.n.e",
-        negative_prompt = ['N.o.n.e'],
+        prompt="N.o.n.e",
+        negative_prompt=["N.o.n.e"],
         **kwargs,
     ):
         r"""
@@ -677,7 +645,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
             negative_prompt_embeds (`torch.Tensor`, *optional*):
                 Pre-generated negative text embeddings. Can be used to easily tweak text inputs (prompt weighting). If
                 not provided, `negative_prompt_embeds` are generated from the `negative_prompt` input argument.
-                
+
             output_type (`str`, *optional*, defaults to `"pil"`):
                 The output format of the generated image. Choose between `PIL.Image` or `np.array`.
             return_dict (`bool`, *optional*, defaults to `True`):
@@ -768,18 +736,16 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         device = self._execution_device
 
         # 3. Encode input prompt
-        lora_scale = (
-            self.cross_attention_kwargs.get("scale", None)
-            if self.cross_attention_kwargs is not None
-            else None
-        )
-        n_tokens = (height//16 * width // 16 * ((video_length-1)//4+1))
+        lora_scale = self.cross_attention_kwargs.get("scale", None) if self.cross_attention_kwargs is not None else None
+        n_tokens = height // 16 * width // 16 * ((video_length - 1) // 4 + 1)
 
         if semantic_images is None:
-            if args.num_pre_frames > 0: 
-                semantic_images = initial_image[:1,...] #semantic_images torch.Size([1, 3, 352, 640])  #
-                # print("semantic_images", semantic_images.shape)   
-                semantic_images = (semantic_images / 2 + 0.5).clamp(0, 1).cpu().permute(0, 2, 3, 1).float().numpy() # b c h w -> b h w c
+            if args.num_pre_frames > 0:
+                semantic_images = initial_image[:1, ...]  # semantic_images torch.Size([1, 3, 352, 640])  #
+                # print("semantic_images", semantic_images.shape)
+                semantic_images = (
+                    (semantic_images / 2 + 0.5).clamp(0, 1).cpu().permute(0, 2, 3, 1).float().numpy()
+                )  # b c h w -> b h w c
                 semantic_images = numpy_to_pil(semantic_images)
             else:
                 semantic_images = initial_image
@@ -802,16 +768,16 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
             lora_scale=lora_scale,
             clip_skip=self.clip_skip,
             data_type=data_type,
-            semantic_images=semantic_images
+            semantic_images=semantic_images,
         )
         prompt_embeds, prompt_embeds_2 = prompt_embeds
         negative_prompt_embeds, negative_prompt_embeds_2 = negative_prompt_embeds
         prompt_mask, prompt_mask_2 = prompt_mask
         negative_prompt_mask, negative_prompt_mask_2 = negative_prompt_mask
-        prompt_embeds  = prompt_embeds[:,:144, ...]  # 144 is the number of img tokens after MLLM
-        prompt_mask  = prompt_mask[:,:144, ...]
-        negative_prompt_embeds = negative_prompt_embeds[:,:144, ...]
-        negative_prompt_mask = negative_prompt_mask[:,:144, ...] 
+        prompt_embeds = prompt_embeds[:, :144, ...]  # 144 is the number of img tokens after MLLM
+        prompt_mask = prompt_mask[:, :144, ...]
+        negative_prompt_embeds = negative_prompt_embeds[:, :144, ...]
+        negative_prompt_mask = negative_prompt_mask[:, :144, ...]
 
         # For classifier free guidance, we need to do two forward passes.
         # Here we concatenate the unconditional and text embeddings into a single batch
@@ -824,7 +790,6 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                 prompt_embeds_2 = torch.cat([negative_prompt_embeds_2, prompt_embeds_2])
             if prompt_mask_2 is not None:
                 prompt_mask_2 = torch.cat([negative_prompt_mask_2, prompt_mask_2])
-
 
         # 4. Prepare timesteps
         extra_set_timesteps_kwargs = self.prepare_extra_func_kwargs(
@@ -846,12 +811,9 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         else:
             video_length = video_length
 
-
         if initial_image is not None:
-            initial_image = initial_image.to(
-                device, dtype=prompt_embeds.dtype
-            )
-            if i2v_type == 'concat':
+            initial_image = initial_image.to(device, dtype=prompt_embeds.dtype)
+            if i2v_type == "concat":
                 num_channels_latents = self.transformer.config.in_channels // 2
             else:
                 num_channels_latents = self.transformer.config.in_channels // 2
@@ -861,32 +823,32 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         # 5. Prepare latent variables
         if args.num_pre_frames > 0:
             latents, image_latents, concat_latents = self.prepare_latents(
-            initial_image,
-            batch_size * num_videos_per_prompt,
-            num_channels_latents,
-            height,
-            width,
-            video_length,
-            prompt_embeds.dtype,
-            device,
-            generator,
-            latents,
-            i2v_type, 
-        )
-        else: 
+                initial_image,
+                batch_size * num_videos_per_prompt,
+                num_channels_latents,
+                height,
+                width,
+                video_length,
+                prompt_embeds.dtype,
+                device,
+                generator,
+                latents,
+                i2v_type,
+            )
+        else:
             latents, image_latents = self.prepare_latents(
-            initial_image,
-            batch_size * num_videos_per_prompt,
-            num_channels_latents,
-            height,
-            width,
-            video_length,
-            prompt_embeds.dtype,
-            device,
-            generator,
-            latents,
-            i2v_type, 
-        )
+                initial_image,
+                batch_size * num_videos_per_prompt,
+                num_channels_latents,
+                height,
+                width,
+                video_length,
+                prompt_embeds.dtype,
+                device,
+                generator,
+                latents,
+                i2v_type,
+            )
 
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_func_kwargs(
@@ -902,12 +864,12 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         # 7. Denoising loop
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
         self._num_timesteps = len(timesteps)
-        if args.num_pre_frames > 0 and i2v_type != 'concat':
+        if args.num_pre_frames > 0 and i2v_type != "concat":
             concat_latents = (
-                torch.cat([torch.zeros_like(concat_latents), concat_latents]) 
+                torch.cat([torch.zeros_like(concat_latents), concat_latents])
                 if self.do_classifier_free_guidance
                 else concat_latents
-            )        
+            )
         # if is_progress_bar:
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
@@ -915,30 +877,32 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                     continue
 
                 # expand the latents if we are doing classifier free guidance
-                latent_model_input = (
-                    torch.cat([latents] * 2)
-                    if self.do_classifier_free_guidance
-                    else latents
-                )                
-                latent_model_input = self.scheduler.scale_model_input( #do nothing
+                latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
+                latent_model_input = self.scheduler.scale_model_input(  # do nothing
                     latent_model_input, t
                 )
                 if image_latents is not None:
-                    latent_image_input = torch.cat([image_latents] * 2) if self.do_classifier_free_guidance else image_latents
-                    if i2v_type == 'concat':
+                    latent_image_input = (
+                        torch.cat([image_latents] * 2) if self.do_classifier_free_guidance else image_latents
+                    )
+                    if i2v_type == "concat":
                         latent_model_input = torch.cat([latent_model_input, latent_image_input], dim=1)
                     else:
-                        if args.num_pre_frames > 0:       
+                        if args.num_pre_frames > 0:
                             num_pre = latent_image_input.shape[2]
-                            #print("latent_image_input", latent_image_input.shape)  #latent_image_input torch.Size([2, 16, 1, 44, 80])
-                            #print("latent_model_input", latent_model_input.shape)   #latent_model_input torch.Size([2, 16, 5, 44, 80])
-                            #print("concat_latents", concat_latents.shape)  #concat_latents torch.Size([1, 17, 5, 44, 80])
-                            latent_model_input = torch.cat([latent_image_input, latent_model_input[:,:,num_pre:,...]], dim=2)
+                            # print("latent_image_input", latent_image_input.shape)  #latent_image_input torch.Size([2, 16, 1, 44, 80])
+                            # print("latent_model_input", latent_model_input.shape)   #latent_model_input torch.Size([2, 16, 5, 44, 80])
+                            # print("concat_latents", concat_latents.shape)  #concat_latents torch.Size([1, 17, 5, 44, 80])
+                            latent_model_input = torch.cat(
+                                [latent_image_input, latent_model_input[:, :, num_pre:, ...]], dim=2
+                            )
 
-                            latent_model_input = torch.cat([latent_model_input, concat_latents], dim=1) 
+                            latent_model_input = torch.cat([latent_model_input, concat_latents], dim=1)
                         else:
-                            num_pre = latent_image_input.shape[2]   # 如果多帧past frame需要修改
-                            latent_model_input = torch.cat([latent_image_input, latent_model_input[:,:,num_pre:,...]], dim=2)
+                            num_pre = latent_image_input.shape[2]  # 如果多帧past frame需要修改
+                            latent_model_input = torch.cat(
+                                [latent_image_input, latent_model_input[:, :, num_pre:, ...]], dim=2
+                            )
 
                 t_expand = t.repeat(latent_model_input.shape[0])
                 guidance_expand = (
@@ -964,8 +928,8 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                         if self.do_classifier_free_guidance
                         else keyboard_condition
                     )
-                    #torch.full_like(keyboard_condition, -1.0)
-                    #torch.zeros_like(keyboard_condition)
+                    # torch.full_like(keyboard_condition, -1.0)
+                    # torch.zeros_like(keyboard_condition)
                     # mouse_condition = torch.full_like(mouse_condition, 999.0)
                     # keyboard 是 6维，改成 -1
                     # keyboard_condition = torch.full_like(keyboard_condition, -1.0)
@@ -975,29 +939,25 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                 _, _, ot, oh, ow = latent_model_input.shape
                 freqs_cos, freqs_sin = self.transformer.get_rotary_pos_embed(ot, oh, ow)
                 # predict the noise residual
-                with torch.autocast(
-                    device_type="cuda", dtype=target_dtype, enabled=autocast_enabled
-                ):
+                with torch.autocast(device_type="cuda", dtype=target_dtype, enabled=autocast_enabled):
                     # import ipdb;ipdb.set_trace()
                     noise_pred = self.transformer(  # For an input image (129, 192, 336) (1, 256, 256)
-                        hidden_states = latent_model_input,  # [2, 16, 33, 24, 42]
-                        timestep = t_expand,  # [2]
+                        hidden_states=latent_model_input,  # [2, 16, 33, 24, 42]
+                        timestep=t_expand,  # [2]
                         encoder_hidden_states=(prompt_embeds, prompt_embeds_2),  # [2, 256, 4096]
                         encoder_attention_mask=(prompt_mask, prompt_mask_2),  # [2, 256]
-                        freqs_cos = freqs_cos,
-                        freqs_sin = freqs_sin,
+                        freqs_cos=freqs_cos,
+                        freqs_sin=freqs_sin,
                         guidance=guidance_expand,
                         return_dict=True,
-                        mouse_condition = mouse_condition_input,
-                        keyboard_condition = keyboard_condition_input,
+                        mouse_condition=mouse_condition_input,
+                        keyboard_condition=keyboard_condition_input,
                     )["x"]
 
                 # perform guidance
                 if self.do_classifier_free_guidance:
                     noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-                    noise_pred = noise_pred_uncond + self.guidance_scale * (
-                        noise_pred_text - noise_pred_uncond
-                    )
+                    noise_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
 
                 if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
                     # Based on 3.4. in https://arxiv.org/pdf/2305.08891.pdf
@@ -1009,16 +969,12 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 if i2v_type == "concat":
-                    latents = self.scheduler.step(
-                        noise_pred, t, latents, **extra_step_kwargs, return_dict=False
-                    )[0]
+                    latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
                 else:
                     latents = self.scheduler.step(
-                        noise_pred[:,:,1:,...], t, latents[:,:,1:,...], **extra_step_kwargs, return_dict=False
+                        noise_pred[:, :, 1:, ...], t, latents[:, :, 1:, ...], **extra_step_kwargs, return_dict=False
                     )[0]
-                    latents = torch.concat(
-                        [image_latents, latents], dim=2
-                    )
+                    latents = torch.concat([image_latents, latents], dim=2)
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -1028,14 +984,10 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
 
                     latents = callback_outputs.pop("latents", latents)
                     prompt_embeds = callback_outputs.pop("prompt_embeds", prompt_embeds)
-                    negative_prompt_embeds = callback_outputs.pop(
-                        "negative_prompt_embeds", negative_prompt_embeds
-                    )
+                    negative_prompt_embeds = callback_outputs.pop("negative_prompt_embeds", negative_prompt_embeds)
 
                 # call the callback, if provided
-                if i == len(timesteps) - 1 or (
-                    (i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0
-                ):
+                if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     if progress_bar is not None:
                         progress_bar.update()
                     if callback is not None and i % callback_steps == 0:
@@ -1055,29 +1007,17 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                     f"Only support latents with shape (b, c, h, w) or (b, c, f, h, w), but got {latents.shape}."
                 )
 
-            if (
-                hasattr(self.vae.config, "shift_factor")
-                and self.vae.config.shift_factor
-            ):
-                latents = (
-                    latents / self.vae.config.scaling_factor
-                    + self.vae.config.shift_factor
-                )
+            if hasattr(self.vae.config, "shift_factor") and self.vae.config.shift_factor:
+                latents = latents / self.vae.config.scaling_factor + self.vae.config.shift_factor
             else:
                 latents = latents / self.vae.config.scaling_factor
 
-            with torch.autocast(
-                device_type="cuda", dtype=vae_dtype, enabled=vae_autocast_enabled
-            ):
+            with torch.autocast(device_type="cuda", dtype=vae_dtype, enabled=vae_autocast_enabled):
                 if enable_tiling:
                     self.vae.enable_tiling()
-                    image = self.vae.decode(
-                        latents, return_dict=False, generator=generator
-                    )[0]
+                    image = self.vae.decode(latents, return_dict=False, generator=generator)[0]
                 else:
-                    image = self.vae.decode(
-                        latents, return_dict=False, generator=generator
-                    )[0]
+                    image = self.vae.decode(latents, return_dict=False, generator=generator)[0]
 
             if expand_temporal_dim or image.shape[2] == 1:
                 image = image.squeeze(2)

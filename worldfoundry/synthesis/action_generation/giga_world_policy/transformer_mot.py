@@ -35,6 +35,7 @@ from .action_projectors import EmbodimentSpecificActionDecoder, EmbodimentSpecif
 
 logger = logging.get_logger(__name__)
 
+
 def _copy_param_sliced(dst: torch.Tensor, src: torch.Tensor) -> None:
     """Copy ``src`` into ``dst``, taking leading slices when ``src`` is larger."""
     if dst.shape == src.shape:
@@ -45,7 +46,10 @@ def _copy_param_sliced(dst: torch.Tensor, src: torch.Tensor) -> None:
     slc = tuple(slice(0, d) for d in dst.shape)
     dst.copy_(src[slc])
 
-def _load_module_state_dict_sliced(module: nn.Module, state_dict: Dict[str, torch.Tensor], prefix: str = "", skip=False) -> Tuple[list, list]:
+
+def _load_module_state_dict_sliced(
+    module: nn.Module, state_dict: Dict[str, torch.Tensor], prefix: str = "", skip=False
+) -> Tuple[list, list]:
     """Load *state_dict* into *module*, slicing tensors when shapes differ."""
     loaded, skipped = [], []
     module_state = module.state_dict()
@@ -63,6 +67,7 @@ def _load_module_state_dict_sliced(module: nn.Module, state_dict: Dict[str, torc
             skipped.append(full_key)
     return loaded, skipped
 
+
 def _apply_rotary_emb(
     hidden_states: torch.Tensor,
     freqs_cos: torch.Tensor,
@@ -76,9 +81,8 @@ def _apply_rotary_emb(
     out[..., 1::2] = x1 * sin + x2 * cos
     return out.type_as(hidden_states)
 
-def _chunk_temb(
-    temb: torch.Tensor, scale_shift_table: torch.Tensor
-) -> Tuple[torch.Tensor, ...]:
+
+def _chunk_temb(temb: torch.Tensor, scale_shift_table: torch.Tensor) -> Tuple[torch.Tensor, ...]:
     if temb.ndim == 4:
         shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = (
             scale_shift_table.unsqueeze(0) + temb.float()
@@ -95,6 +99,7 @@ def _chunk_temb(
         6, dim=1
     )
     return shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa
+
 
 def build_mot_attention_mask(
     num_state_tokens: int,
@@ -139,6 +144,7 @@ def build_mot_attention_mask(
 
     return mask.unsqueeze(0).unsqueeze(0).expand(batch_size, num_heads, l_total, l_total).to(dtype=dtype)
 
+
 class ActionExpertBlock(nn.Module):
     def __init__(self, action_expert_dim: int, wan_dim: int, action_ffn_dim: int, num_heads: int, eps: float = 1e-6):
         super().__init__()
@@ -172,6 +178,7 @@ class ActionExpertBlock(nn.Module):
     def load_from_dense_block(self, dense_block: "WanTransformerBlock") -> Tuple[list, list]:
         return self.load_from_dense_state_dict(dense_block.state_dict())
 
+
 class WanMoTTransformerBlock(nn.Module):
     """MoT block with separate action/visual experts and global self-attention."""
 
@@ -188,9 +195,7 @@ class WanMoTTransformerBlock(nn.Module):
         added_kv_proj_dim: Optional[int] = None,
     ):
         super().__init__()
-        self.action_expert = ActionExpertBlock(
-            action_expert_dim, wan_dim, action_ffn_dim, num_heads, eps
-        )
+        self.action_expert = ActionExpertBlock(action_expert_dim, wan_dim, action_ffn_dim, num_heads, eps)
         self.visual_expert = WanTransformerBlock(
             wan_dim, ffn_dim, num_heads, qk_norm, cross_attn_norm, eps, added_kv_proj_dim
         )
@@ -352,12 +357,12 @@ class WanMoTTransformerBlock(nn.Module):
         out_action = self._expert_out_proj(attn_action, self.action_expert)
         out_visual = self._expert_out_proj(attn_visual, self.visual_expert)
 
-        action_hidden_states = (
-            action_hidden_states.float() + out_action.float() * a_gate
-        ).type_as(action_hidden_states)
-        visual_hidden_states = (
-            visual_hidden_states.float() + out_visual.float() * v_gate
-        ).type_as(visual_hidden_states)
+        action_hidden_states = (action_hidden_states.float() + out_action.float() * a_gate).type_as(
+            action_hidden_states
+        )
+        visual_hidden_states = (visual_hidden_states.float() + out_visual.float() * v_gate).type_as(
+            visual_hidden_states
+        )
 
         action_hidden_states = self._expert_cross_attn_ffn(
             action_hidden_states,
@@ -423,16 +428,14 @@ class WanMoTTransformerBlock(nn.Module):
         out_action = self._expert_out_proj(attn_action, self.action_expert)
         out_visual = self._expert_out_proj(attn_visual, self.visual_expert)
 
-        action_prefix_hidden_states = (
-            action_prefix_hidden_states.float() + out_action.float() * a_gate
-        ).type_as(action_prefix_hidden_states)
-        visual_hidden_states = (
-            visual_hidden_states.float() + out_visual.float() * v_gate
-        ).type_as(visual_hidden_states)
-
-        action_encoder_kv_cache = self._build_cross_attn_kv_cache(
-            self.action_expert, encoder_action_hidden_states
+        action_prefix_hidden_states = (action_prefix_hidden_states.float() + out_action.float() * a_gate).type_as(
+            action_prefix_hidden_states
         )
+        visual_hidden_states = (visual_hidden_states.float() + out_visual.float() * v_gate).type_as(
+            visual_hidden_states
+        )
+
+        action_encoder_kv_cache = self._build_cross_attn_kv_cache(self.action_expert, encoder_action_hidden_states)
         action_prefix_hidden_states = self._expert_cross_attn_ffn(
             action_prefix_hidden_states,
             self.action_expert,
@@ -485,9 +488,9 @@ class WanMoTTransformerBlock(nn.Module):
         )
 
         out_action = self._expert_out_proj(attn_output, self.action_expert)
-        action_hidden_states = (
-            action_hidden_states.float() + out_action.float() * a_gate
-        ).type_as(action_hidden_states)
+        action_hidden_states = (action_hidden_states.float() + out_action.float() * a_gate).type_as(
+            action_hidden_states
+        )
 
         action_encoder_kv_cache = None
         if "action_encoder_key" in prefix_cache and "action_encoder_value" in prefix_cache:
@@ -506,13 +509,17 @@ class WanMoTTransformerBlock(nn.Module):
         )
         return action_hidden_states
 
-    def load_from_dense_state_dict(self, dense_sd: Dict[str, torch.Tensor], skip_action_expert: bool = False) -> Tuple[list, list]:
+    def load_from_dense_state_dict(
+        self, dense_sd: Dict[str, torch.Tensor], skip_action_expert: bool = False
+    ) -> Tuple[list, list]:
         visual_loaded, visual_skipped = _load_module_state_dict_sliced(self.visual_expert, dense_sd)
         if skip_action_expert:
             print("--------------------------------")
-            print('WARNING: Action expert weights are skipped')
+            print("WARNING: Action expert weights are skipped")
             print("--------------------------------")
-        action_loaded, action_skipped = _load_module_state_dict_sliced(self.action_expert, dense_sd, skip=skip_action_expert)
+        action_loaded, action_skipped = _load_module_state_dict_sliced(
+            self.action_expert, dense_sd, skip=skip_action_expert
+        )
         action_loaded = [f"action_expert.{k}" for k in action_loaded]
         action_skipped = [f"action_expert.{k}" for k in action_skipped]
         visual_loaded = [f"visual_expert.{k}" for k in visual_loaded]
@@ -521,6 +528,7 @@ class WanMoTTransformerBlock(nn.Module):
 
     def load_from_dense_block(self, dense_block: WanTransformerBlock) -> Tuple[list, list]:
         return self.load_from_dense_state_dict(dense_block.state_dict())
+
 
 class CasualWorldActionTransformer_MoT(
     ModelMixin, ConfigMixin, PeftAdapterMixin, FromOriginalModelMixin, CacheMixin, AttentionMixin
@@ -537,7 +545,14 @@ class CasualWorldActionTransformer_MoT(
     _supports_gradient_checkpointing = True
     _skip_layerwise_casting_patterns = ["patch_embedding", "condition_embedder", "action_condition_embedder", "norm"]
     _no_split_modules = ["WanMoTTransformerBlock"]
-    _keep_in_fp32_modules = ["time_embedder", "scale_shift_table", "action_scale_shift_table", "norm1", "norm2", "norm3"]
+    _keep_in_fp32_modules = [
+        "time_embedder",
+        "scale_shift_table",
+        "action_scale_shift_table",
+        "norm1",
+        "norm2",
+        "norm3",
+    ]
     _repeated_blocks = ["WanMoTTransformerBlock"]
 
     @register_to_config
@@ -637,12 +652,16 @@ class CasualWorldActionTransformer_MoT(
             return self.state_encoder(state, embodiment_id=embodiment_id)
         return self.state_encoder(state)
 
-    def _encode_action_tokens_only(self, action: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def _encode_action_tokens_only(
+        self, action: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         if getattr(self.action_encoder, "uses_embodiment_id", False):
             return self.action_encoder(action, embodiment_id=embodiment_id)
         return self.action_encoder(action)
 
-    def _decode_action_tokens(self, action_states: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def _decode_action_tokens(
+        self, action_states: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         if getattr(self.action_decoder, "uses_embodiment_id", False):
             return self.action_decoder(action_states, embodiment_id=embodiment_id)
         return self.action_decoder(action_states)
@@ -687,7 +706,11 @@ class CasualWorldActionTransformer_MoT(
         for key, tensor in state_dict.items():
             if key.startswith("blocks."):
                 continue
-            if key.startswith("state_encoder.") or key.startswith("action_encoder.") or key.startswith("action_decoder."):
+            if (
+                key.startswith("state_encoder.")
+                or key.startswith("action_encoder.")
+                or key.startswith("action_decoder.")
+            ):
                 if skip_action_expert:
                     skipped_keys.append(key)
                 continue
@@ -713,12 +736,14 @@ class CasualWorldActionTransformer_MoT(
                 if verbose:
                     logger.warning("No Wan weights found for %s", prefix)
                 continue
-            block_loaded, block_skipped = block.load_from_dense_state_dict(block_sd, skip_action_expert=skip_action_expert)
+            block_loaded, block_skipped = block.load_from_dense_state_dict(
+                block_sd, skip_action_expert=skip_action_expert
+            )
             loaded_keys.extend(f"{prefix}{k}" for k in block_loaded)
             skipped_keys.extend(f"{prefix}{k}" for k in block_skipped)
         if skip_action_expert:
             print("--------------------------------")
-            print('WARNING: Action I/O weights are skipped')
+            print("WARNING: Action I/O weights are skipped")
             print("--------------------------------")
         else:
             # Action/state I/O (optional in WAM policy checkpoints).  Older
@@ -736,7 +761,7 @@ class CasualWorldActionTransformer_MoT(
                 module_sd = {}
                 for source_prefix in source_prefixes:
                     source_sd = {
-                        f"{module_name}.{k[len(source_prefix) + 1:]}": v
+                        f"{module_name}.{k[len(source_prefix) + 1 :]}": v
                         for k, v in state_dict.items()
                         if k.startswith(f"{source_prefix}.")
                     }
@@ -745,9 +770,7 @@ class CasualWorldActionTransformer_MoT(
                         break
                 if not module_sd:
                     continue
-                mod_loaded, mod_skipped = _load_module_state_dict_sliced(
-                    module, module_sd, prefix=module_name
-                )
+                mod_loaded, mod_skipped = _load_module_state_dict_sliced(module, module_sd, prefix=module_name)
                 loaded_keys.extend(mod_loaded)
                 skipped_keys.extend(mod_skipped)
 
@@ -761,14 +784,12 @@ class CasualWorldActionTransformer_MoT(
                         logger.warning("Skip action_scale_shift_table from scale_shift_table: %s", exc)
                     skipped_keys.append("action_scale_shift_table")
 
-            cond_sd = {k[len("condition_embedder.") :]: v for k, v in state_dict.items() if k.startswith("condition_embedder.")}
+            cond_sd = {
+                k[len("condition_embedder.") :]: v for k, v in state_dict.items() if k.startswith("condition_embedder.")
+            }
             if cond_sd:
-                cond_loaded, cond_skipped = _load_module_state_dict_sliced(
-                    self.action_condition_embedder, cond_sd
-                )
-                loaded_keys.extend(
-                    f"action_condition_embedder.{k}" for k in cond_loaded
-                )
+                cond_loaded, cond_skipped = _load_module_state_dict_sliced(self.action_condition_embedder, cond_sd)
+                loaded_keys.extend(f"action_condition_embedder.{k}" for k in cond_loaded)
                 skipped_keys.extend(f"action_condition_embedder.{k}" for k in cond_skipped)
 
         # Commit in-place updates back to parameters.
@@ -783,9 +804,12 @@ class CasualWorldActionTransformer_MoT(
                 wan_dim,
                 self.config.action_expert_dim,
             )
-        return loaded_keys, skipped_keys, unexpected_keys, [
-            k for k in own_state if k not in loaded_keys and not k.startswith("blocks.")
-        ]
+        return (
+            loaded_keys,
+            skipped_keys,
+            unexpected_keys,
+            [k for k in own_state if k not in loaded_keys and not k.startswith("blocks.")],
+        )
 
     def encode_action_tokens(
         self,
@@ -958,9 +982,7 @@ class CasualWorldActionTransformer_MoT(
             scale_lora_layers(self, lora_scale)
         else:
             if attention_kwargs is not None and attention_kwargs.get("scale", None) is not None:
-                logger.warning(
-                    "Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective."
-                )
+                logger.warning("Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective.")
 
         batch_size = action_hidden_states.shape[0]
         la = action_hidden_states.shape[1]
@@ -1051,7 +1073,9 @@ class CasualWorldActionTransformer_MoT(
             action_shift = action_shift.to(action_hidden_states.device)
             action_scale = action_scale.to(action_hidden_states.device)
             # action_hidden_states = (action_hidden_states.float() + action_scale * action_shift).type_as(action_hidden_states)
-            action_hidden_states = (self.action_norm_out(action_hidden_states.float()) * (1 + action_scale) + action_shift).type_as(action_hidden_states)
+            action_hidden_states = (
+                self.action_norm_out(action_hidden_states.float()) * (1 + action_scale) + action_shift
+            ).type_as(action_hidden_states)
             action_slice = action_hidden_states[:, num_state_tokens:]
             action_pred = self._decode_action_tokens(action_slice, embodiment_id=embodiment_id)
 
@@ -1059,11 +1083,15 @@ class CasualWorldActionTransformer_MoT(
             if visual_grid_info is None:
                 raise ValueError("visual_grid_info is required when output_visual=True")
             if visual_temb.ndim == 3:
-                shift, scale = (self.scale_shift_table.unsqueeze(0).to(visual_temb.device) + visual_temb.unsqueeze(2)).chunk(2, dim=2)
+                shift, scale = (
+                    self.scale_shift_table.unsqueeze(0).to(visual_temb.device) + visual_temb.unsqueeze(2)
+                ).chunk(2, dim=2)
                 shift = shift.squeeze(2)
                 scale = scale.squeeze(2)
             else:
-                shift, scale = (self.scale_shift_table.to(visual_temb.device) + visual_temb.unsqueeze(1)).chunk(2, dim=1)
+                shift, scale = (self.scale_shift_table.to(visual_temb.device) + visual_temb.unsqueeze(1)).chunk(
+                    2, dim=1
+                )
             shift = shift.to(visual_hidden_states.device)
             scale = scale.to(visual_hidden_states.device)
             visual_for_out = (self.norm_out(visual_hidden_states.float()) * (1 + scale) + shift).type_as(
@@ -1110,7 +1138,9 @@ class CasualWorldActionTransformer_MoT(
         action: Optional[torch.Tensor] = None,
         embodiment_id: Optional[torch.Tensor] = None,
     ) -> Union[Tuple[torch.Tensor, ...], Dict[str, torch.Tensor], Transformer2DModelOutput]:
-        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(state, action, embodiment_id=embodiment_id)
+        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(
+            state, action, embodiment_id=embodiment_id
+        )
         visual_hidden_states, visual_rotary_emb, num_ref_tokens, _, grid_info = self.encode_visual_tokens(
             ref_latents, noisy_latents
         )
@@ -1145,7 +1175,9 @@ class CasualWorldActionTransformer_MoT(
         action: Optional[torch.Tensor] = None,
         embodiment_id: Optional[torch.Tensor] = None,
     ) -> Union[Tuple[torch.Tensor, ...], Dict[str, torch.Tensor], Transformer2DModelOutput]:
-        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(state, action, embodiment_id=embodiment_id)
+        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(
+            state, action, embodiment_id=embodiment_id
+        )
         visual_hidden_states, visual_rotary_emb, num_ref_tokens, _, _ = self.encode_visual_tokens(
             ref_latents, noisy_latents
         )
@@ -1179,7 +1211,9 @@ class CasualWorldActionTransformer_MoT(
         action: Optional[torch.Tensor] = None,
         embodiment_id: Optional[torch.Tensor] = None,
     ) -> Union[Tuple[torch.Tensor, ...], Dict[str, torch.Tensor], Transformer2DModelOutput]:
-        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(state, action, embodiment_id=embodiment_id)
+        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(
+            state, action, embodiment_id=embodiment_id
+        )
         if ref_latents is not None:
             visual_hidden_states, visual_rotary_emb, num_ref_tokens, _, _ = self.encode_visual_tokens(ref_latents)
         else:
@@ -1220,7 +1254,9 @@ class CasualWorldActionTransformer_MoT(
         action: Optional[torch.Tensor] = None,
         embodiment_id: Optional[torch.Tensor] = None,
     ) -> Union[Tuple[torch.Tensor, ...], Dict[str, torch.Tensor], Transformer2DModelOutput]:
-        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(state, action, embodiment_id=embodiment_id)
+        action_hidden_states, action_rotary_emb, num_state_tokens, _ = self.encode_action_tokens(
+            state, action, embodiment_id=embodiment_id
+        )
         visual_hidden_states, visual_rotary_emb, num_ref_tokens, _, grid_info = self.encode_visual_tokens(
             ref_latents, noisy_latents
         )
@@ -1383,9 +1419,7 @@ class CasualWorldActionTransformer_MoT(
             scale_lora_layers(self, lora_scale)
         else:
             if attention_kwargs is not None and attention_kwargs.get("scale", None) is not None:
-                logger.warning(
-                    "Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective."
-                )
+                logger.warning("Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective.")
 
         try:
             action_hidden_states, action_rotary_emb, num_state_tokens, num_action_tokens = self.encode_action_tokens(

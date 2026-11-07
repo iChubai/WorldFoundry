@@ -33,9 +33,7 @@ def load_model_from_config(config, ckpt: str = None):
             raise NotImplementedError
         missing, unexpected = model.load_state_dict(sd, strict=False)
         if missing:
-            raise RuntimeError(
-                f"AdaWorld checkpoint is missing {len(missing)} model tensors: {missing[:8]}"
-            )
+            raise RuntimeError(f"AdaWorld checkpoint is missing {len(missing)} model tensors: {missing[:8]}")
         # The released checkpoint also contains the LAM decoder, while this
         # inference runtime only uses its encoder to extract latent actions.
         unused_lam_prefixes = (
@@ -45,10 +43,7 @@ def load_model_from_config(config, ckpt: str = None):
         )
         unexpected_active = [key for key in unexpected if not key.startswith(unused_lam_prefixes)]
         if unexpected_active:
-            raise RuntimeError(
-                "AdaWorld checkpoint has unexpected active model tensors: "
-                f"{unexpected_active[:8]}"
-            )
+            raise RuntimeError(f"AdaWorld checkpoint has unexpected active model tensors: {unexpected_active[:8]}")
         if unexpected:
             print(f"Ignored {len(unexpected)} LAM decoder-only tensors in AdaWorld checkpoint")
 
@@ -59,28 +54,21 @@ def load_model_from_config(config, ckpt: str = None):
 
 def get_guider(guider, scale):
     if guider == "IdentityGuider":
-        guider_config = {
-            "target": "vwm.modules.diffusionmodules.guiders.IdentityGuider"
-        }
+        guider_config = {"target": "vwm.modules.diffusionmodules.guiders.IdentityGuider"}
     elif guider == "VanillaCFG":
-        guider_config = {
-            "target": "vwm.modules.diffusionmodules.guiders.VanillaCFG",
-            "params": {
-                "scale": scale
-            }
-        }
+        guider_config = {"target": "vwm.modules.diffusionmodules.guiders.VanillaCFG", "params": {"scale": scale}}
     else:
         raise ValueError(f"Unknown guider {guider}")
     return guider_config
 
 
 def init_sampling(
-        steps: int = 40,
-        sampler: str = "EulerEDMSampler",
-        discretization: str = "EDMShiftDiscretization",
-        guider: str = "VanillaCFG",
-        cfg_scale: float = 7.5,
-        n_context_frames: int = 5
+    steps: int = 40,
+    sampler: str = "EulerEDMSampler",
+    discretization: str = "EDMShiftDiscretization",
+    guider: str = "VanillaCFG",
+    cfg_scale: float = 7.5,
+    n_context_frames: int = 5,
 ):
     discretization_config = get_discretization(discretization)
     guider_config = get_guider(guider, cfg_scale)
@@ -90,9 +78,7 @@ def init_sampling(
 
 def get_discretization(discretization):
     if discretization == "EDMShiftDiscretization":
-        discretization_config = {
-            "target": "vwm.modules.diffusionmodules.discretizer.EDMShiftDiscretization"
-        }
+        discretization_config = {"target": "vwm.modules.diffusionmodules.discretizer.EDMShiftDiscretization"}
     else:
         raise ValueError(f"Unknown discretization {discretization}")
     return discretization_config
@@ -114,20 +100,14 @@ def get_sampler(sampler, steps, discretization_config, guider_config, n_context_
             s_tmax=s_tmax,
             s_noise=s_noise,
             verbose=False,
-            n_context_frames=n_context_frames
+            n_context_frames=n_context_frames,
         )
     else:
         raise ValueError(f"Unknown sampler {sampler}")
     return sampler
 
 
-def do_sample(
-        model,
-        sampler,
-        value_dict,
-        input_res: int = 256,
-        force_uc_zero_embeddings: List = None
-):
+def do_sample(model, sampler, value_dict, input_res: int = 256, force_uc_zero_embeddings: List = None):
     if force_uc_zero_embeddings is None:
         force_uc_zero_embeddings = []
     num_context = len(value_dict["img_seq"]) - 1
@@ -137,14 +117,9 @@ def do_sample(
     z = model.encode_first_stage(value_dict["img_seq"])
 
     for predict_id in range(out_length):
-        batch, batch_uc = get_batch(
-            list(set([x.input_key for x in model.conditioner.embedders])),
-            value_dict
-        )
+        batch, batch_uc = get_batch(list(set([x.input_key for x in model.conditioner.embedders])), value_dict)
         c, uc = model.conditioner.get_unconditional_conditioning(
-            batch,
-            batch_uc=batch_uc,
-            force_uc_zero_embeddings=force_uc_zero_embeddings
+            batch, batch_uc=batch_uc, force_uc_zero_embeddings=force_uc_zero_embeddings
         )
 
         randn = torch.randn_like(z)
@@ -162,7 +137,7 @@ def do_sample(
         out_samples[predict_id] = samples[[-1]]
         if predict_id < out_length - 1:
             value_dict["context_len"] = torch.Tensor([min(predict_id + 2, num_context)]).to("cuda")
-            source_inputs = value_dict["source_video"][predict_id + 1: predict_id + 3]
+            source_inputs = value_dict["source_video"][predict_id + 1 : predict_id + 3]
             value_dict["lam_inputs"] = torch.cat([source_inputs, samples[[-1]]], dim=0)[None]
             value_dict["cond_frames"] = samples_z[[-1]] / model.scale_factor
             value_dict["cond_frames_without_noise"] = torch.clamp(samples_x[[-1]], min=-1.0, max=1.0)

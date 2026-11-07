@@ -72,15 +72,9 @@ def mask_apply(
     mask_flat = mask.reshape(B * S).bool()
 
     if out_dims is None:
-        out_flat = [
-            torch.zeros(B * S, D, device=flat.device, dtype=flat.dtype)
-            for _ in text_funcs
-        ]
+        out_flat = [torch.zeros(B * S, D, device=flat.device, dtype=flat.dtype) for _ in text_funcs]
     else:
-        out_flat = [
-            torch.zeros(B * S, od, device=flat.device, dtype=flat.dtype)
-            for od in out_dims
-        ]
+        out_flat = [torch.zeros(B * S, od, device=flat.device, dtype=flat.dtype) for od in out_dims]
 
     text_idx = ~mask_flat
     if text_idx.any():
@@ -100,7 +94,7 @@ def mask_apply(
 def rotate_half(x):
     """Rotates half the hidden dims of the input."""
     x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2:]
+    x2 = x[..., x.shape[-1] // 2 :]
     return torch.cat((-x2, x1), dim=-1)
 
 
@@ -293,9 +287,7 @@ class HyDualTower(PreTrainedModel):
             feat = self.vlm.visual(image)[0]
             return feat.view(B, -1, feat.shape[-1]).contiguous()
 
-        image_list = list(
-            image.unsqueeze(1) if image.dim() == 3 else image.split(1, dim=0)
-        )
+        image_list = list(image.unsqueeze(1) if image.dim() == 3 else image.split(1, dim=0))
         # image_list: list of (1, 3, h, w)
         image_features = self.vlm.visual(image_list)  # list of (num_tokens, 2048)
         image_features = torch.stack(image_features, dim=0)
@@ -399,9 +391,7 @@ class HyDualTower(PreTrainedModel):
             value_states = torch.cat(value_states, dim=2)
 
             cos, sin = position_embeddings
-            query_states, key_states = apply_rotary_pos_emb(
-                query_states, key_states, cos, sin
-            )
+            query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin)
 
             q_parts = query_states.split(seq_len_list, dim=2)
             k_parts = key_states.split(seq_len_list, dim=2)
@@ -430,19 +420,19 @@ class HyDualTower(PreTrainedModel):
                         "value_states": value_states,
                     }
                 else:
-                    key_states = torch.cat(
-                        [past_key_values[layer_idx]["key_states"], key_states], dim=1
-                    )
-                    value_states = torch.cat(
-                        [past_key_values[layer_idx]["value_states"], value_states], dim=1
-                    )
+                    key_states = torch.cat([past_key_values[layer_idx]["key_states"], key_states], dim=1)
+                    value_states = torch.cat([past_key_values[layer_idx]["value_states"], value_states], dim=1)
                     past_key_values[layer_idx]["key_states"] = key_states
                     past_key_values[layer_idx]["value_states"] = value_states
 
             attention_interface = self.get_attention_interface()
             att_output, probs = attention_interface(
-                attention_mask, batch_size, layer.self_attn.head_dim,
-                query_states, key_states, value_states,
+                attention_mask,
+                batch_size,
+                layer.self_attn.head_dim,
+                query_states,
+                key_states,
+                value_states,
             )
 
             att_output = att_output.to(dtype=value_states.dtype)  # (b, seq_vlm, ...)
@@ -505,14 +495,10 @@ class HyDualTower(PreTrainedModel):
             return self.flash_attention_forward
         return self.eager_attention_forward
 
-    def flash_attention_forward(
-        self, attention_mask, batch_size, head_dim, query_states, key_states, value_states
-    ):
+    def flash_attention_forward(self, attention_mask, batch_size, head_dim, query_states, key_states, value_states):
         raise NotImplementedError("FA2 is not implemented (yet)")
 
-    def eager_attention_forward(
-        self, attention_mask, batch_size, head_dim, query_states, key_states, value_states
-    ):
+    def eager_attention_forward(self, attention_mask, batch_size, head_dim, query_states, key_states, value_states):
         num_att_heads = self.config.vlm_config.num_attention_heads
         num_key_value_heads = self.config.vlm_config.num_key_value_heads
         num_key_value_groups = num_att_heads // num_key_value_heads
@@ -541,21 +527,17 @@ class HyDualTower(PreTrainedModel):
         key_states = key_states.transpose(1, 2)
 
         att_weights = torch.matmul(query_states, key_states.transpose(2, 3))
-        att_weights *= head_dim ** -0.5
+        att_weights *= head_dim**-0.5
         big_neg = -2.3819763e38  # bf16 -inf approximation
 
-        masked_att_weights = torch.where(
-            attention_mask[:, None, :, :], att_weights, big_neg
-        )
+        masked_att_weights = torch.where(attention_mask[:, None, :, :], att_weights, big_neg)
 
         probs = nn.functional.softmax(masked_att_weights, dim=-1)
         probs = probs.to(dtype=value_states.dtype)
 
         att_output = torch.matmul(probs, value_states.permute(0, 2, 1, 3))
         att_output = att_output.permute(0, 2, 1, 3)
-        att_output = att_output.reshape(
-            batch_size, -1, num_key_value_heads * num_key_value_groups * head_dim
-        )
+        att_output = att_output.reshape(batch_size, -1, num_key_value_heads * num_key_value_groups * head_dim)
 
         return att_output, probs
 

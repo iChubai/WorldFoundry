@@ -14,10 +14,13 @@ try:
 except ModuleNotFoundError:
     # diffusers>=0.35 moved the legacy text-to-video pipeline under deprecated/.
     from diffusers.pipelines.deprecated.text_to_video_synthesis.pipeline_output import TextToVideoSDPipelineOutput
-from diffusers.pipelines.stable_video_diffusion.pipeline_stable_video_diffusion import StableVideoDiffusionPipelineOutput
+from diffusers.pipelines.stable_video_diffusion.pipeline_stable_video_diffusion import (
+    StableVideoDiffusionPipelineOutput,
+)
 from diffusers.loaders import LoraLoaderMixin, TextualInversionLoaderMixin
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.pipelines.stable_video_diffusion.pipeline_stable_video_diffusion import _resize_with_antialiasing
+
 
 def svd_tensor2vid(video: torch.Tensor, processor, output_type="np"):
     # Based on:
@@ -33,27 +36,28 @@ def svd_tensor2vid(video: torch.Tensor, processor, output_type="np"):
 
     return outputs
 
+
 class LatentToVideoPipeline(TextToVideoSDPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        prompt = None,
-        height= None,
-        width= None,
+        prompt=None,
+        height=None,
+        width=None,
         num_frames: int = 16,
         num_inference_steps: int = 50,
-        guidance_scale= 9.0,
-        negative_prompt= None,
+        guidance_scale=9.0,
+        negative_prompt=None,
         eta: float = 0.0,
-        generator= None,
-        latents= None,
-        prompt_embeds= None,
-        negative_prompt_embeds= None,
-        output_type= "np",
+        generator=None,
+        latents=None,
+        prompt_embeds=None,
+        negative_prompt_embeds=None,
+        output_type="np",
         return_dict: bool = True,
-        callback= None,
+        callback=None,
         callback_steps: int = 1,
-        cross_attention_kwargs= None,
+        cross_attention_kwargs=None,
         condition_latent=None,
         mask=None,
         timesteps=None,
@@ -134,9 +138,7 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
         num_images_per_prompt = 1
 
         # 1. Check inputs. Raise error if not correct
-        self.check_inputs(
-            prompt, height, width, callback_steps, negative_prompt, prompt_embeds, negative_prompt_embeds
-        )
+        self.check_inputs(prompt, height, width, callback_steps, negative_prompt, prompt_embeds, negative_prompt_embeds)
 
         # 2. Define call parameters
         if prompt is not None and isinstance(prompt, str):
@@ -146,7 +148,7 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
         else:
             batch_size = prompt_embeds.shape[0]
 
-        #device = self._execution_device
+        # device = self._execution_device
         device = latents.device
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
         # of the Imagen paper: https://arxiv.org/pdf/2205.11487.pdf . `guidance_scale = 1`
@@ -182,7 +184,9 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
         # 7. Denoising loop
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
         uncondition_latent = condition_latent
-        condition_latent = torch.cat([uncondition_latent, condition_latent]) if do_classifier_free_guidance else condition_latent 
+        condition_latent = (
+            torch.cat([uncondition_latent, condition_latent]) if do_classifier_free_guidance else condition_latent
+        )
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
                 # expand the latents if we are doing classifier free guidance
@@ -197,7 +201,7 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
                     cross_attention_kwargs=cross_attention_kwargs,
                     condition_latent=condition_latent,
                     mask=mask,
-                    motion=motion
+                    motion=motion,
                 ).sample
                 # perform guidance
                 if do_classifier_free_guidance:
@@ -237,12 +241,14 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
 
         return TextToVideoSDPipelineOutput(frames=video)
 
+
 def _append_dims(x, target_dims):
     """Appends dimensions to the end of a tensor until it has target_dims dimensions."""
     dims_to_append = target_dims - x.ndim
     if dims_to_append < 0:
         raise ValueError(f"input has {x.ndim} dims but target_dims is {target_dims}, which is less")
     return x[(...,) + (None,) * dims_to_append]
+
 
 class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
     @torch.no_grad()
@@ -267,7 +273,7 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
         callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
         callback_on_step_end_tensor_inputs: List[str] = ["latents"],
         return_dict: bool = True,
-        mask = None,
+        mask=None,
         cond_wrist=None,
         history=None,
         frame_level_cond=False,
@@ -356,7 +362,7 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
         num_frames = num_frames if num_frames is not None else self.unet.config.num_frames
         decode_chunk_size = decode_chunk_size if decode_chunk_size is not None else num_frames
         # device = self._execution_device
-        device = self.unet.device   
+        device = self.unet.device
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
         # of the Imagen paper: https://arxiv.org/pdf/2205.11487.pdf . `guidance_scale = 1`
         # corresponds to doing no classifier free guidance.
@@ -381,7 +387,6 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
         if do_classifier_free_guidance:
             negative_image_embeddings = torch.zeros_like(image_embeddings)
             image_embeddings = torch.cat([negative_image_embeddings, image_embeddings])
-        
 
         # NOTE: Stable Diffusion Video was conditioned on fps - 1, which
         # is why it is reduced here.
@@ -390,7 +395,7 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
 
         # 4. Encode input image using VAE
         needs_upcasting = self.vae.dtype == torch.float16 and self.vae.config.force_upcast
-        if image.shape[-3] == 3: # (batch, 3, 256, 256)
+        if image.shape[-3] == 3:  # (batch, 3, 256, 256)
             image = self.video_processor.preprocess(image, height=height, width=width)
             noise = randn_tensor(image.shape, generator=generator, device=image.device, dtype=image.dtype)
             # image = image + noise_aug_strength * noise
@@ -404,12 +409,12 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
             # cast back to fp16 if needed
             if needs_upcasting:
                 self.vae.to(dtype=torch.float16)
-        else: # (batch, 4, 32, 32)
-            image_latents = image/self.vae.config.scaling_factor
+        else:  # (batch, 4, 32, 32)
+            image_latents = image / self.vae.config.scaling_factor
             if do_classifier_free_guidance:
                 # negative_image_latent = torch.zeros_like(image_latents)
                 # image_latents = torch.cat([negative_image_latent, image_latents])
-                image_latents = torch.cat([image_latents]*2)
+                image_latents = torch.cat([image_latents] * 2)
             image_latents = image_latents.to(image_embeddings.dtype)
 
         # Repeat the image latents for each frame so we can concatenate them with the noise
@@ -419,7 +424,7 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
             num_frames_all = num_frames + num_his
             image_latents = image_latents.unsqueeze(1).repeat(1, num_frames_all, 1, 1, 1)
             if his_cond_zero:
-                image_latents[:,:num_his] = 0.0 # set history to 0
+                image_latents[:, :num_his] = 0.0  # set history to 0
         else:
             image_latents = image_latents.unsqueeze(1).repeat(1, num_frames, 1, 1, 1)
         # mask = repeat(mask, '1 h w -> 2 f 1 h w', f=num_frames)
@@ -466,13 +471,15 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
         self._num_timesteps = len(timesteps)
         # print("prediction type",self.scheduler.config.prediction_type)
         if cond_wrist is not None:
-            B,F, C, H, W = latents.shape
-            cond_wrist = einops.repeat(cond_wrist, 'b l c h w -> b (f l) (n c) h w', n=3,f=num_frames) # (B, 8, 12 , 24, 40)
-            cond_wrist = torch.cat([cond_wrist]*2) if do_classifier_free_guidance else cond_wrist
-        
+            B, F, C, H, W = latents.shape
+            cond_wrist = einops.repeat(
+                cond_wrist, "b l c h w -> b (f l) (n c) h w", n=3, f=num_frames
+            )  # (B, 8, 12 , 24, 40)
+            cond_wrist = torch.cat([cond_wrist] * 2) if do_classifier_free_guidance else cond_wrist
+
         if history is not None:
             history = torch.cat([history] * 2) if do_classifier_free_guidance else history
-        
+
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
                 # expand the latents if we are doing classifier free guidance
@@ -480,15 +487,14 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
                 if history is not None:
-                    latent_model_input = torch.cat([history, latent_model_input], dim=1) # (bsz*2,frame+F,4,32,32)
+                    latent_model_input = torch.cat([history, latent_model_input], dim=1)  # (bsz*2,frame+F,4,32,32)
 
                 # Concatenate image_latents over channels dimention
                 latent_model_input = torch.cat([latent_model_input, image_latents], dim=2)
 
-                if cond_wrist is not None and i==0:
+                if cond_wrist is not None and i == 0:
                     # print('cond_wrist_shape:',cond_wrist.shape, 'latent_model_input_shape:',latent_model_input.shape)
-                    latent_model_input = torch.cat([latent_model_input, cond_wrist], dim=3) # (B, 8, 12, 96, 40)
-                
+                    latent_model_input = torch.cat([latent_model_input, cond_wrist], dim=3)  # (B, 8, 12, 96, 40)
 
                 # predict the noise residual
                 latent_model_input = latent_model_input.to(self.unet.dtype)
@@ -507,11 +513,11 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
                 )[0]
 
                 if cond_wrist is not None:
-                    noise_pred = noise_pred[:, :,:,:H, :W] # remove cond_wrist
+                    noise_pred = noise_pred[:, :, :, :H, :W]  # remove cond_wrist
                 if history is not None:
                     # print('history_shape:',history.shape)
                     # print('noise_pred_shape:',noise_pred.shape)
-                    noise_pred = noise_pred[:, num_his:, :, :, :] # remove history
+                    noise_pred = noise_pred[:, num_his:, :, :, :]  # remove history
 
                 # perform guidance
                 if do_classifier_free_guidance:
@@ -559,17 +565,18 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return frames,latents
+            return frames, latents
 
         return StableVideoDiffusionPipelineOutput(frames=frames)
-        
+
+
 class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
     @torch.no_grad()
     def __call__(
         self,
         image,
-        prompt_embeds = None,
-        negative_prompt_embeds = None,
+        prompt_embeds=None,
+        negative_prompt_embeds=None,
         height: int = 576,
         width: int = 1024,
         num_frames: Optional[int] = None,
@@ -587,9 +594,9 @@ class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
         callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
         callback_on_step_end_tensor_inputs: List[str] = ["latents"],
         return_dict: bool = True,
-        mask = None,
-        condition_type = "image",
-        condition_latent = None,
+        mask=None,
+        condition_type="image",
+        condition_latent=None,
     ):
         r"""
         The call function to the pipeline for generation.
@@ -691,9 +698,9 @@ class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
         do_classifier_free_guidance = max_guidance_scale > 1.0
 
         # 3. Encode input image
-        if condition_type=="image":
+        if condition_type == "image":
             image_embeddings = self._encode_image(image, device, num_videos_per_prompt, do_classifier_free_guidance)
-        elif condition_type=="text":
+        elif condition_type == "text":
             if do_classifier_free_guidance:
                 prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds])
             image_embeddings = prompt_embeds
@@ -704,7 +711,7 @@ class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
             image_embeddings = torch.cat([image_embeddings, prompt_embeds], dim=1)
         motion_mask = self.unet.config.in_channels == 9
         if do_classifier_free_guidance:
-            mask = torch.cat([mask]*2) 
+            mask = torch.cat([mask] * 2)
         # NOTE: Stable Diffusion Video was conditioned on fps - 1, which
         # is why it is reduced here.
         # See: https://github.com/Stability-AI/generative-models/blob/ed0997173f98eaf8f4edf7ba5fe8f15c6b877fd3/scripts/sampling/simple_video_sample.py#L188
@@ -728,7 +735,7 @@ class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
             condition_latent = image_latents.unsqueeze(1).repeat(1, num_frames, 1, 1, 1)
         else:
             if do_classifier_free_guidance:
-                condition_latent = torch.cat([condition_latent] * 2) 
+                condition_latent = torch.cat([condition_latent] * 2)
         # 5. Get Added Time IDs
 
         # cast back to fp16 if needed

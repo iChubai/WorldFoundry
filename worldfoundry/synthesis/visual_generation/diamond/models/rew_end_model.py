@@ -52,7 +52,6 @@ class RewEndModel(nn.Module):
         return logits[:, :, :-2], logits[:, :, -2:], hx_cx
 
 
-
 class RewEndEncoder(nn.Module):
     def __init__(
         self,

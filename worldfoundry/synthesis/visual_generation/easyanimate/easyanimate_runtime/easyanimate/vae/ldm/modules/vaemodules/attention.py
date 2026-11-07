@@ -70,18 +70,18 @@ class Attention(nn.Module):
         bias: bool = False,
         upcast_attention: bool = False,
         upcast_softmax: bool = False,
-        cross_attention_norm = None,
+        cross_attention_norm=None,
         cross_attention_norm_num_groups: int = 32,
-        added_kv_proj_dim = None,
-        norm_num_groups = None,
-        spatial_norm_dim = None,
+        added_kv_proj_dim=None,
+        norm_num_groups=None,
+        spatial_norm_dim=None,
         out_bias: bool = True,
         scale_qk: bool = True,
         only_cross_attention: bool = False,
         eps: float = 1e-5,
         rescale_output_factor: float = 1.0,
         residual_connection: bool = False,
-        processor = None,
+        processor=None,
         out_dim: int = None,
     ):
         super().__init__()
@@ -103,7 +103,7 @@ class Attention(nn.Module):
             )
 
         self.scale_qk = scale_qk
-        self.scale = head_dim ** -0.5 if scale_qk else 1.0
+        self.scale = head_dim**-0.5 if scale_qk else 1.0
 
         self.rescale_output_factor = rescale_output_factor
         self.residual_connection = residual_connection
@@ -158,9 +158,7 @@ class Attention(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         if processor is None:
-            processor = (
-                AttnProcessor2_0() if hasattr(F, "scaled_dot_product_attention") else AttnProcessor()
-            )
+            processor = AttnProcessor2_0() if hasattr(F, "scaled_dot_product_attention") else AttnProcessor()
         self.set_processor(processor)
 
     def set_processor(self, processor: AttnProcessor) -> None:

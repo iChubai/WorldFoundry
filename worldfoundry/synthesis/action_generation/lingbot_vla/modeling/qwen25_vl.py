@@ -13,11 +13,15 @@ from transformers import (
 from dataclasses import dataclass
 from transformers.models.qwen2_5_vl.configuration_qwen2_5_vl import Qwen2_5_VLConfig, Qwen2_5_VLVisionConfig
 from transformers.cache_utils import Cache, DynamicCache, StaticCache
+
 try:
     from transformers.cache_utils import SlidingWindowCache
 except ImportError:
+
     class SlidingWindowCache(Cache):
         """Compatibility sentinel for Transformers releases without the legacy cache class."""
+
+
 from transformers.generation import GenerationMixin
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
@@ -32,13 +36,18 @@ from transformers.utils import (
 )
 from transformers.activations import ACT2FN
 from transformers.modeling_attn_mask_utils import AttentionMaskConverter
-from transformers.modeling_flash_attention_utils import FlashAttentionKwargs, flash_attn_supports_top_left_mask, is_flash_attn_available
+from transformers.modeling_flash_attention_utils import (
+    FlashAttentionKwargs,
+    flash_attn_supports_top_left_mask,
+    is_flash_attn_available,
+)
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 from transformers.processing_utils import Unpack
 import torch.distributed._tensor as dt
 
 if is_flash_attn_available():
     from transformers.modeling_flash_attention_utils import _flash_attention_forward
+
     try:
         from transformers.modeling_flash_attention_utils import apply_rotary_emb, flash_attn_varlen_func
     except ImportError:
@@ -102,6 +111,7 @@ class Qwen2_5_VisionRotaryEmbedding(nn.Module):
         freqs = torch.outer(seq, self.inv_freq)
         return freqs
 
+
 class Qwen2RMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-6):
         """
@@ -120,6 +130,7 @@ class Qwen2RMSNorm(nn.Module):
 
     def extra_repr(self):
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
+
 
 class Qwen2_5_VLPatchMerger(nn.Module):
     def __init__(self, dim: int, context_dim: int, spatial_merge_size: int = 2) -> None:
@@ -220,6 +231,7 @@ class Qwen2_5_VLVisionAttention(nn.Module):
         attn_output = self.proj(attn_output)
         return attn_output
 
+
 class Qwen2_5_VLVisionFlashAttention2(nn.Module):
     def __init__(self, dim: int, num_heads: int = 16) -> None:
         super().__init__()
@@ -284,6 +296,7 @@ QWEN2_5_VL_VISION_ATTENTION_CLASSES = {
     "eager": Qwen2_5_VLVisionAttention,
     "flash_attention_2": Qwen2_5_VLVisionFlashAttention2,
 }
+
 
 class Qwen2_5_VLVisionBlock(nn.Module):
     def __init__(self, config, attn_implementation: str = "flash_attention_2") -> None:
@@ -482,11 +495,11 @@ class Qwen2_5_VisionTransformerPretrainedModel(Qwen2_5_VLPreTrainedModel):
         self,
         hidden_states: torch.Tensor,
         grid_thw: torch.Tensor = None,
-        rotary_pos_emb = None,
-        window_index = None,
-        cu_window_seqlens = None,
-        cu_seqlens = None,
-        **kwargs
+        rotary_pos_emb=None,
+        window_index=None,
+        cu_window_seqlens=None,
+        cu_seqlens=None,
+        **kwargs,
     ) -> torch.Tensor:
         """
         Args:
@@ -567,6 +580,7 @@ class Qwen2_5_VLRotaryEmbedding(nn.Module):
 
         return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
 
+
 def apply_multimodal_rotary_pos_emb(q, k, cos, sin, mrope_section, unsqueeze_dim=1):
     """Applies Rotary Position Embedding with Multimodal Sections to the query and key tensors (https://qwenlm.github.io/blog/qwen2-vl/).
 
@@ -600,12 +614,8 @@ def apply_multimodal_rotary_pos_emb(q, k, cos, sin, mrope_section, unsqueeze_dim
         `tuple(torch.Tensor)` comprising of the query and key tensors rotated using the Rotary Position Embedding.
     """
     mrope_section = mrope_section * 2
-    cos = torch.cat([m[i % 3] for i, m in enumerate(cos.split(mrope_section, dim=-1))], dim=-1).unsqueeze(
-        unsqueeze_dim
-    )
-    sin = torch.cat([m[i % 3] for i, m in enumerate(sin.split(mrope_section, dim=-1))], dim=-1).unsqueeze(
-        unsqueeze_dim
-    )
+    cos = torch.cat([m[i % 3] for i, m in enumerate(cos.split(mrope_section, dim=-1))], dim=-1).unsqueeze(unsqueeze_dim)
+    sin = torch.cat([m[i % 3] for i, m in enumerate(sin.split(mrope_section, dim=-1))], dim=-1).unsqueeze(unsqueeze_dim)
 
     q_embed = (q * cos) + (rotate_half(q) * sin)
     k_embed = (k * cos) + (rotate_half(k) * sin)
@@ -827,6 +837,7 @@ class Qwen2_5_VLFlashAttention2(Qwen2_5_VLAttention):
 
         return attn_output, attn_weights, past_key_value
 
+
 class Qwen2MLP(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -842,10 +853,12 @@ class Qwen2MLP(nn.Module):
         down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
         return down_proj
 
+
 QWEN2_5_VL_ATTENTION_CLASSES = {
     "eager": Qwen2_5_VLAttention,
     "flash_attention_2": Qwen2_5_VLFlashAttention2,
 }
+
 
 class Qwen2_5_VLDecoderLayer(nn.Module):
     def __init__(self, config: Qwen2_5_VLConfig, layer_idx: int):
@@ -932,7 +945,9 @@ class Qwen2_5_VLDecoderLayer(nn.Module):
             return out_emb
 
         else:
-            raise ValueError(f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2_5_VLDecoderLayer in LingBot-VLA")
+            raise ValueError(
+                f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2_5_VLDecoderLayer in LingBot-VLA"
+            )
 
 
 @add_start_docstrings(
@@ -1205,9 +1220,7 @@ class Qwen2_5_VLModel(Qwen2_5_VLPreTrainedModel):
             causal_mask = attention_mask
         else:
             min_dtype = torch.finfo(dtype).min
-            causal_mask = torch.full(
-                (sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device
-            )
+            causal_mask = torch.full((sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device)
             diagonal_attend_mask = torch.arange(target_length, device=device) > cache_position.reshape(-1, 1)
             if config.sliding_window is not None:
                 # if we have sliding window, we should not attend to tokens beyond sliding window length, so we mask them out also
@@ -1690,9 +1703,7 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
             else:
                 batch_size, seq_length, _ = inputs_embeds.shape
                 delta = (
-                    (cache_position[0] + self.rope_deltas).to(inputs_embeds.device)
-                    if cache_position is not None
-                    else 0
+                    (cache_position[0] + self.rope_deltas).to(inputs_embeds.device) if cache_position is not None else 0
                 )
                 position_ids = torch.arange(seq_length, device=inputs_embeds.device)
                 position_ids = position_ids.view(1, -1).expand(batch_size, -1)

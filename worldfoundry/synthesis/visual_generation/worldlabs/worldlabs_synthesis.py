@@ -102,7 +102,7 @@ class WorldLabsSynthesis(ApiVideoSynthesis):
         display_name: Optional[str] = None,
         tags: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Start a world generation and return the long-running ``Operation``."""
         payload: Dict[str, Any] = {"model": model, "world_prompt": world_prompt}

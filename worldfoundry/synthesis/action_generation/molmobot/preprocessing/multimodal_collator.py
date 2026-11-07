@@ -71,11 +71,7 @@ class MMCollator:
     def __call__(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
         if not batch:
             raise ValueError("Cannot collate an empty MolmoBot batch.")
-        max_sequence_len = (
-            self.shapes_to_pad_to["tokens"].shape[0]
-            if self.pad is not None
-            else None
-        )
+        max_sequence_len = self.shapes_to_pad_to["tokens"].shape[0] if self.pad is not None else None
         output: Dict[str, Any] = {
             "input_ids": _collate(
                 [example["input_tokens"] for example in batch],

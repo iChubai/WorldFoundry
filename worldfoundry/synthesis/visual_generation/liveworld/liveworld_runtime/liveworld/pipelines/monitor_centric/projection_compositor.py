@@ -8,6 +8,7 @@ _prepare_sp_context(), which handles the channel concatenation:
 - fg_proj: [C, T, h, w] (16 channels) -> target_fg_proj
 - State Adapter context: [2C, T+P, h, w] (32 channels) after internal concatenation
 """
+
 from __future__ import annotations
 
 from typing import List, Optional, Tuple
@@ -55,9 +56,13 @@ def merge_event_projections(
         merged_rgb = np.where(fg_mask, layer, merged_rgb)
 
     # Re-encode merged RGB to latent.
-    combined_tensor = torch.from_numpy(
-        merged_rgb.transpose(0, 3, 1, 2)  # [T, 3, H, W]
-    ).float() / 127.5 - 1.0
+    combined_tensor = (
+        torch.from_numpy(
+            merged_rgb.transpose(0, 3, 1, 2)  # [T, 3, H, W]
+        ).float()
+        / 127.5
+        - 1.0
+    )
 
     with torch.no_grad():
         vae_device = next(vae.model.parameters()).device
@@ -120,9 +125,13 @@ def overlay_fg_on_scene(
     combined_rgb = np.where(fg_nonblack, fg_rgb, scene_rgb)
 
     # Re-encode to latent.
-    combined_tensor = torch.from_numpy(
-        combined_rgb.transpose(0, 3, 1, 2)  # [T, 3, H, W]
-    ).float() / 127.5 - 1.0
+    combined_tensor = (
+        torch.from_numpy(
+            combined_rgb.transpose(0, 3, 1, 2)  # [T, 3, H, W]
+        ).float()
+        / 127.5
+        - 1.0
+    )
 
     with torch.no_grad():
         vae_device = next(vae.model.parameters()).device

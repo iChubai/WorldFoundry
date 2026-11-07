@@ -32,11 +32,7 @@ def validate_prompt_embedding_pair(positive: Any, negative: Any) -> None:
     for positive_item, negative_item in zip(positive, negative):
         positive_shape = _embedding_shape(positive_item)
         negative_shape = _embedding_shape(negative_item)
-        if (
-            len(positive_shape) != len(negative_shape)
-            or not positive_shape
-            or positive_shape[-1] != negative_shape[-1]
-        ):
+        if len(positive_shape) != len(negative_shape) or not positive_shape or positive_shape[-1] != negative_shape[-1]:
             raise ValueError("Prompt embedding rank and hidden width must match.")
 
 

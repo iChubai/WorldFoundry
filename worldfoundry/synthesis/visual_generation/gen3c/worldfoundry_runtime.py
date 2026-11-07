@@ -141,9 +141,7 @@ class Gen3CRuntime:
         selected_trajectory = trajectory or option("default_trajectory", "left")
         selected_rotation = camera_rotation or option("default_camera_rotation", "center_facing")
         selected_distance = (
-            movement_distance
-            if movement_distance is not None
-            else float(option("default_movement_distance", 0.3))
+            movement_distance if movement_distance is not None else float(option("default_movement_distance", 0.3))
         )
         fps = int(option("fps", 24))
         result = self.pipeline(

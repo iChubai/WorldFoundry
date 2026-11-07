@@ -70,17 +70,13 @@ class Veo3Synthesis(CredentialedSynthesis):
             raise ValueError("Veo accepts at most three reference images")
 
         config_values = {
-            key: value
-            for key, value in (processed_data.get("veo_config") or {}).items()
-            if value is not None
+            key: value for key, value in (processed_data.get("veo_config") or {}).items() if value is not None
         }
         if last_frame is not None:
             config_values["last_frame"] = self._as_google_image(last_frame)
         if reference_images:
             config_values["reference_images"] = [
-                self._types.VideoGenerationReferenceImage(
-                    image=self._as_google_image(item), reference_type="asset"
-                )
+                self._types.VideoGenerationReferenceImage(image=self._as_google_image(item), reference_type="asset")
                 for item in reference_images
             ]
         operation = self.client.models.generate_videos(

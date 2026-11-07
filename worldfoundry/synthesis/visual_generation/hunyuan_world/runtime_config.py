@@ -5,6 +5,7 @@ from checked-in YAML configuration files specific to various Hunyuan World
 runtimes. It includes logic for expanding special placeholders within
 configuration values, such as paths resolved via `worldfoundry`.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -5,6 +5,7 @@ implementation of `RuntimeVideoSynthesis` specifically tailored for the
 EchoInfinity text-to-video generation model. It handles the dynamic loading
 of the EchoInfinity runtime and specifies its configuration parameters.
 """
+
 from __future__ import annotations
 
 import inspect

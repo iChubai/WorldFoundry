@@ -275,11 +275,7 @@ class Lyra2Runtime:
             None,
         )
         xlm_tokenizer = next(
-            (
-                candidate
-                for candidate in xlm_candidates
-                if (candidate / "tokenizer_config.json").is_file()
-            ),
+            (candidate for candidate in xlm_candidates if (candidate / "tokenizer_config.json").is_file()),
             None,
         )
         for env_name, candidate in {

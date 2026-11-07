@@ -151,8 +151,7 @@ def resolve_runtime_root(runtime_root: Optional[str | Path]) -> str:
     resolved = _candidate_runtime_root(candidate)
     if resolved is None:
         raise FileNotFoundError(
-            f"MultiWorld runtime not found at '{runtime_root}'. "
-            "Expected the native WorldFoundry multiworld package."
+            f"MultiWorld runtime not found at '{runtime_root}'. Expected the native WorldFoundry multiworld package."
         )
     return str(resolved.resolve())
 
@@ -319,11 +318,7 @@ def _candidate_checkpoint_paths(runtime_root: str | Path) -> list[Path]:
                 root / "MultiWorld" / DEFAULT_MULTIWORLD_CHECKPOINT_FILENAME,
                 root / "multiworld" / DEFAULT_MULTIWORLD_CHECKPOINT_FILENAME,
                 root / "hfd" / "Haoyuwu--MultiWorldCheckpoint" / DEFAULT_MULTIWORLD_CHECKPOINT_FILENAME,
-                root
-                / "huggingface"
-                / "hub"
-                / "models--Haoyuwu--MultiWorldCheckpoint"
-                / "snapshots",
+                root / "huggingface" / "hub" / "models--Haoyuwu--MultiWorldCheckpoint" / "snapshots",
             ]
         )
     expanded: list[Path] = []

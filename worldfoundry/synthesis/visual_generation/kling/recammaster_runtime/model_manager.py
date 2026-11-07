@@ -2,7 +2,11 @@ import os, torch, json, importlib
 from typing import List
 
 from .models.lora import get_lora_loaders
-from .recammaster_model_registry import model_loader_configs, huggingface_model_loader_configs, patch_model_loader_configs
+from .recammaster_model_registry import (
+    model_loader_configs,
+    huggingface_model_loader_configs,
+    patch_model_loader_configs,
+)
 from worldfoundry.core.model_loading import hash_state_dict_keys, load_state_dict, split_state_dict_with_prefix
 from worldfoundry.core.vram import init_weights_on_device
 
@@ -51,7 +55,9 @@ def load_model_from_huggingface_folder(file_path, model_names, model_classes, to
     return loaded_model_names, loaded_models
 
 
-def load_single_patch_model_from_single_file(state_dict, model_name, model_class, base_model, extra_kwargs, torch_dtype, device):
+def load_single_patch_model_from_single_file(
+    state_dict, model_name, model_class, base_model, extra_kwargs, torch_dtype, device
+):
     print(f"    model_name: {model_name} model_class: {model_class.__name__} extra_kwargs: {extra_kwargs}")
     base_state_dict = base_model.state_dict()
     base_model.to("cpu")
@@ -63,7 +69,9 @@ def load_single_patch_model_from_single_file(state_dict, model_name, model_class
     return model
 
 
-def load_patch_model_from_single_file(state_dict, model_names, model_classes, extra_kwargs, model_manager, torch_dtype, device):
+def load_patch_model_from_single_file(
+    state_dict, model_names, model_classes, extra_kwargs, model_manager, torch_dtype, device
+):
     loaded_model_names, loaded_models = [], []
     for model_name, model_class in zip(model_names, model_classes):
         while True:
@@ -74,7 +82,8 @@ def load_patch_model_from_single_file(state_dict, model_names, model_classes, ex
                     base_model = model_manager.model[model_id]
                     print(f"    Adding patch model to {base_model_name} ({base_model_path})")
                     patched_model = load_single_patch_model_from_single_file(
-                        state_dict, model_name, model_class, base_model, extra_kwargs, torch_dtype, device)
+                        state_dict, model_name, model_class, base_model, extra_kwargs, torch_dtype, device
+                    )
                     loaded_model_names.append(base_model_name)
                     loaded_models.append(patched_model)
                     model_manager.model.pop(model_id)
@@ -86,17 +95,15 @@ def load_patch_model_from_single_file(state_dict, model_names, model_classes, ex
     return loaded_model_names, loaded_models
 
 
-
 class ModelDetectorTemplate:
     def __init__(self):
         pass
 
     def match(self, file_path="", state_dict={}):
         return False
-    
+
     def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, **kwargs):
         return [], []
-    
 
 
 class ModelDetectorFromSingleFile:
@@ -132,7 +139,9 @@ class ModelDetectorFromSingleFile:
         keys_hash_with_shape = hash_state_dict_keys(state_dict, with_shape=True)
         if keys_hash_with_shape in self.keys_hash_with_shape_dict:
             model_names, model_classes, model_resource = self.keys_hash_with_shape_dict[keys_hash_with_shape]
-            loaded_model_names, loaded_models = load_model_from_single_file(state_dict, model_names, model_classes, model_resource, torch_dtype, device)
+            loaded_model_names, loaded_models = load_model_from_single_file(
+                state_dict, model_names, model_classes, model_resource, torch_dtype, device
+            )
             return loaded_model_names, loaded_models
 
         # Load models without strict matching
@@ -140,7 +149,9 @@ class ModelDetectorFromSingleFile:
         keys_hash = hash_state_dict_keys(state_dict, with_shape=False)
         if keys_hash in self.keys_hash_dict:
             model_names, model_classes, model_resource = self.keys_hash_dict[keys_hash]
-            loaded_model_names, loaded_models = load_model_from_single_file(state_dict, model_names, model_classes, model_resource, torch_dtype, device)
+            loaded_model_names, loaded_models = load_model_from_single_file(
+                state_dict, model_names, model_classes, model_resource, torch_dtype, device
+            )
             return loaded_model_names, loaded_models
 
         return loaded_model_names, loaded_models
@@ -178,7 +189,7 @@ class ModelDetectorFromSplitedSingleFile(ModelDetectorFromSingleFile):
                     loaded_model_names += loaded_model_names_
                     loaded_models += loaded_models_
         return loaded_model_names, loaded_models
-    
+
 
 class ModelDetectorFromHuggingfaceFolder:
     def __init__(self, model_loader_configs=[]):
@@ -211,11 +222,13 @@ class ModelDetectorFromHuggingfaceFolder:
             if redirected_architecture is not None:
                 architecture = redirected_architecture
             model_class = importlib.import_module(huggingface_lib).__getattribute__(architecture)
-            loaded_model_names_, loaded_models_ = load_model_from_huggingface_folder(file_path, [model_name], [model_class], torch_dtype, device)
+            loaded_model_names_, loaded_models_ = load_model_from_huggingface_folder(
+                file_path, [model_name], [model_class], torch_dtype, device
+            )
             loaded_model_names += loaded_model_names_
             loaded_models += loaded_models_
         return loaded_model_names, loaded_models
-    
+
 
 class ModelDetectorFromPatchedSingleFile:
     def __init__(self, model_loader_configs=[]):
@@ -246,7 +259,8 @@ class ModelDetectorFromPatchedSingleFile:
         if keys_hash_with_shape in self.keys_hash_with_shape_dict:
             model_names, model_classes, extra_kwargs = self.keys_hash_with_shape_dict[keys_hash_with_shape]
             loaded_model_names_, loaded_models_ = load_patch_model_from_single_file(
-                state_dict, model_names, model_classes, extra_kwargs, model_manager, torch_dtype, device)
+                state_dict, model_names, model_classes, extra_kwargs, model_manager, torch_dtype, device
+            )
             loaded_model_names += loaded_model_names_
             loaded_models += loaded_models_
         return loaded_model_names, loaded_models
@@ -273,11 +287,15 @@ class ModelManager:
         ]
         # self.load_models(downloaded_files + file_path_list)
 
-    def load_model_from_single_file(self, file_path="", state_dict={}, model_names=[], model_classes=[], model_resource=None):
+    def load_model_from_single_file(
+        self, file_path="", state_dict={}, model_names=[], model_classes=[], model_resource=None
+    ):
         print(f"Loading models from file: {file_path}")
         if len(state_dict) == 0:
             state_dict = load_state_dict(file_path)
-        model_names, models = load_model_from_single_file(state_dict, model_names, model_classes, model_resource, self.torch_dtype, self.device)
+        model_names, models = load_model_from_single_file(
+            state_dict, model_names, model_classes, model_resource, self.torch_dtype, self.device
+        )
         for model_name, model in zip(model_names, models):
             self.model.append(model)
             self.model_path.append(file_path)
@@ -286,17 +304,22 @@ class ModelManager:
 
     def load_model_from_huggingface_folder(self, file_path="", model_names=[], model_classes=[]):
         print(f"Loading models from folder: {file_path}")
-        model_names, models = load_model_from_huggingface_folder(file_path, model_names, model_classes, self.torch_dtype, self.device)
+        model_names, models = load_model_from_huggingface_folder(
+            file_path, model_names, model_classes, self.torch_dtype, self.device
+        )
         for model_name, model in zip(model_names, models):
             self.model.append(model)
             self.model_path.append(file_path)
             self.model_name.append(model_name)
         print(f"    The following models are loaded: {model_names}.")
 
-    def load_patch_model_from_single_file(self, file_path="", state_dict={}, model_names=[], model_classes=[], extra_kwargs={}):
+    def load_patch_model_from_single_file(
+        self, file_path="", state_dict={}, model_names=[], model_classes=[], extra_kwargs={}
+    ):
         print(f"Loading patch models from file: {file_path}")
         model_names, models = load_patch_model_from_single_file(
-            state_dict, model_names, model_classes, extra_kwargs, self, self.torch_dtype, self.device)
+            state_dict, model_names, model_classes, extra_kwargs, self, self.torch_dtype, self.device
+        )
         for model_name, model in zip(model_names, models):
             self.model.append(model)
             self.model_path.append(file_path)
@@ -326,8 +349,10 @@ class ModelManager:
 
     def load_model(self, file_path, model_names=None, device=None, torch_dtype=None):
         print(f"Loading models from: {file_path}")
-        if device is None: device = self.device
-        if torch_dtype is None: torch_dtype = self.torch_dtype
+        if device is None:
+            device = self.device
+        if torch_dtype is None:
+            torch_dtype = self.torch_dtype
         if isinstance(file_path, list):
             state_dict = {}
             for path in file_path:
@@ -339,9 +364,12 @@ class ModelManager:
         for model_detector in self.model_detector:
             if model_detector.match(file_path, state_dict):
                 model_names, models = model_detector.load(
-                    file_path, state_dict,
-                    device=device, torch_dtype=torch_dtype,
-                    allowed_model_names=model_names, model_manager=self
+                    file_path,
+                    state_dict,
+                    device=device,
+                    torch_dtype=torch_dtype,
+                    allowed_model_names=model_names,
+                    model_manager=self,
                 )
                 for model_name, model in zip(model_names, models):
                     self.model.append(model)
@@ -371,7 +399,9 @@ class ModelManager:
         if len(fetched_models) == 1:
             print(f"Using {model_name} from {fetched_model_paths[0]}.")
         else:
-            print(f"More than one {model_name} models are loaded in model manager: {fetched_model_paths}. Using {model_name} from {fetched_model_paths[0]}.")
+            print(
+                f"More than one {model_name} models are loaded in model manager: {fetched_model_paths}. Using {model_name} from {fetched_model_paths[0]}."
+            )
         if require_model_path:
             return fetched_models[0], fetched_model_paths[0]
         else:

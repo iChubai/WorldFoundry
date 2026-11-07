@@ -79,9 +79,7 @@ class ActionChunk(Generic[PoseType]):
         """Get the number of poses in the action chunking"""
         return len(self._poses)
 
-    def relative_chunking(
-        self, reference_frame: Optional[PoseType] = None
-    ) -> "ActionChunk[PoseType]":
+    def relative_chunking(self, reference_frame: Optional[PoseType] = None) -> "ActionChunk[PoseType]":
         """
         Compute the relative action chunking with respect to a reference frame.
 
@@ -298,9 +296,7 @@ class JointActionChunk(ActionChunk[JointPose]):
         joint_values = np.array([pose.joints for pose in self._poses])  # (N, num_joints)
 
         # Find and remove non-monotonic timestamps
-        drop_indices = [
-            idx for idx in range(1, len(timestamps)) if timestamps[idx] <= timestamps[idx - 1]
-        ]
+        drop_indices = [idx for idx in range(1, len(timestamps)) if timestamps[idx] <= timestamps[idx - 1]]
 
         if drop_indices:
             for idx in drop_indices:
@@ -327,9 +323,7 @@ class JointActionChunk(ActionChunk[JointPose]):
 
         # Check that interpolation times are within bounds
         if np.any(interp_times < timestamps[0]) or np.any(interp_times > timestamps[-1]):
-            raise ValueError(
-                f"Interpolation times must be within [{timestamps[0]}, {timestamps[-1]}]"
-            )
+            raise ValueError(f"Interpolation times must be within [{timestamps[0]}, {timestamps[-1]}]")
 
         # Interpolate joint values
         interp_joint_values = joint_interp(interp_times)
@@ -337,8 +331,7 @@ class JointActionChunk(ActionChunk[JointPose]):
         # Create interpolated poses
         joint_names = self._poses[0].joint_names
         interpolated_poses = [
-            JointPose(joints=interp_joint_values[i], joint_names=joint_names)
-            for i in range(len(interp_times))
+            JointPose(joints=interp_joint_values[i], joint_names=joint_names) for i in range(len(interp_times))
         ]
 
         return JointActionChunk(interpolated_poses, times=interp_times)
@@ -382,9 +375,7 @@ class JointActionChunk(ActionChunk[JointPose]):
         absolute_poses: List[JointPose] = []
         for relative_pose in self._poses:
             absolute_joints = reference_frame.joints + relative_pose.joints
-            absolute_pose = JointPose(
-                joints=absolute_joints, joint_names=reference_frame.joint_names
-            )
+            absolute_pose = JointPose(joints=absolute_joints, joint_names=reference_frame.joint_names)
             absolute_poses.append(absolute_pose)
 
         return JointActionChunk(absolute_poses, times=self.times)
@@ -528,9 +519,7 @@ class EndEffectorActionChunk(ActionChunk[EndEffectorPose]):
         rotations = Rotation.from_matrix(homogeneous_matrices[:, :3, :3])
 
         # Find indices where timestamps are not monotonically increasing
-        drop_indices = [
-            idx for idx in range(1, len(timestamps)) if timestamps[idx] <= timestamps[idx - 1]
-        ]
+        drop_indices = [idx for idx in range(1, len(timestamps)) if timestamps[idx] <= timestamps[idx - 1]]
 
         # Remove the problematic timestamps and corresponding data
         if drop_indices:
@@ -541,9 +530,7 @@ class EndEffectorActionChunk(ActionChunk[EndEffectorPose]):
                 )
             timestamps = np.delete(timestamps, drop_indices)
             positions = np.delete(positions, drop_indices, axis=0)
-            rotations = Rotation.from_matrix(
-                np.delete(homogeneous_matrices[:, :3, :3], drop_indices, axis=0)
-            )
+            rotations = Rotation.from_matrix(np.delete(homogeneous_matrices[:, :3, :3], drop_indices, axis=0))
 
         # Check if we still have enough poses after cleanup
         if len(timestamps) < 2:
@@ -562,9 +549,7 @@ class EndEffectorActionChunk(ActionChunk[EndEffectorPose]):
 
         # Check that interpolation times are within bounds
         if np.any(interp_times < timestamps[0]) or np.any(interp_times > timestamps[-1]):
-            raise ValueError(
-                f"Interpolation times must be within [{timestamps[0]}, {timestamps[-1]}]"
-            )
+            raise ValueError(f"Interpolation times must be within [{timestamps[0]}, {timestamps[-1]}]")
 
         # Interpolate positions and rotations
         interp_positions = pos_interp(interp_times)

@@ -23,9 +23,7 @@ class MultiModalVideoPreprocessorConfig(TextPreprocessorConfig):
 
     max_frames: int = 1
     frame_sample_mode: str = "uniform_last_frame"
-    candidate_sampling_fps: List[float] = field(
-        default_factory=lambda: [0.25, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 16.0]
-    )
+    candidate_sampling_fps: List[float] = field(default_factory=lambda: [0.25, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 16.0])
     cache_videos: bool = True
     loading_method: str = "torchcodec_exact"
     max_fps: List[float] = field(default_factory=lambda: [2.0])

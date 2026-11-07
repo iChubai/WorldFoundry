@@ -41,8 +41,6 @@ def create_sinusoidal_pos_embedding(
     return torch.cat([torch.sin(sin_input), torch.cos(sin_input)], dim=1)
 
 
-
-
 def make_att_2d_masks(pad_masks, att_masks):
     """Copied from big_vision.
 
@@ -134,7 +132,6 @@ class PI0Pytorch(nn.Module):
             device=device,
         )
 
-
     def embed_prefix(
         self, images, img_masks, lang_tokens, lang_masks
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -213,9 +210,7 @@ class PI0Pytorch(nn.Module):
             time_emb = time_emb[:, None, :].expand_as(action_emb)
             action_time_emb = torch.cat([action_emb, time_emb], dim=2)
 
-            action_time_emb = self.action_time_mlp_out(
-                F.silu(self.action_time_mlp_in(action_time_emb))
-            )
+            action_time_emb = self.action_time_mlp_out(F.silu(self.action_time_mlp_in(action_time_emb)))
             adarms_cond = None
         else:
             time_emb = F.silu(self.time_mlp_out(F.silu(self.time_mlp_in(time_emb))))
@@ -238,7 +233,6 @@ class PI0Pytorch(nn.Module):
         att_masks = att_masks[None, :].expand(bsize, len(att_masks))
 
         return embs, pad_masks, att_masks, adarms_cond
-
 
     @torch.no_grad()
     def sample_actions(self, device, observation, noise=None, num_steps=10) -> Tensor:

@@ -17,8 +17,6 @@ class Conditioners:
     c_noise: Tensor
 
 
-
-
 @dataclass
 class DenoiserConfig:
     inner_model: InnerModelConfig
@@ -31,11 +29,10 @@ class Denoiser(nn.Module):
         super().__init__()
         self.cfg = cfg
         self.inner_model = InnerModel(cfg.inner_model)
+
     @property
     def device(self) -> torch.device:
         return self.inner_model.noise_emb.weight.device
-
-
 
     def compute_conditioners(self, sigma: Tensor) -> Conditioners:
         sigma = (sigma**2 + self.cfg.sigma_offset_noise**2).sqrt()

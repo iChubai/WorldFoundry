@@ -33,7 +33,6 @@ class Agent(nn.Module):
     def device(self):
         return self.denoiser.device
 
-
     def load(
         self,
         path_to_ckpt: Path,

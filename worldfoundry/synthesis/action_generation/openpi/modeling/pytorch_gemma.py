@@ -201,9 +201,7 @@ class PaliGemmaWithExpertModel(nn.Module):
                 key_states = []
                 value_states = []
                 gates = []
-                for model, hidden_states, cond in zip(
-                    models, inputs_embeds, adarms_cond, strict=True
-                ):
+                for model, hidden_states, cond in zip(models, inputs_embeds, adarms_cond, strict=True):
                     layer = model.layers[layer_idx]
                     hidden_states, gate = layer.input_layernorm(hidden_states, cond=cond)
                     gates.append(gate)
@@ -212,21 +210,9 @@ class PaliGemmaWithExpertModel(nn.Module):
                         -1,
                         layer.self_attn.head_dim,
                     )
-                    query_states.append(
-                        layer.self_attn.q_proj(hidden_states)
-                        .view(hidden_shape)
-                        .transpose(1, 2)
-                    )
-                    key_states.append(
-                        layer.self_attn.k_proj(hidden_states)
-                        .view(hidden_shape)
-                        .transpose(1, 2)
-                    )
-                    value_states.append(
-                        layer.self_attn.v_proj(hidden_states)
-                        .view(hidden_shape)
-                        .transpose(1, 2)
-                    )
+                    query_states.append(layer.self_attn.q_proj(hidden_states).view(hidden_shape).transpose(1, 2))
+                    key_states.append(layer.self_attn.k_proj(hidden_states).view(hidden_shape).transpose(1, 2))
+                    value_states.append(layer.self_attn.v_proj(hidden_states).view(hidden_shape).transpose(1, 2))
 
                 query_states = torch.cat(query_states, dim=2)
                 key_states = torch.cat(key_states, dim=2)
@@ -258,9 +244,7 @@ class PaliGemmaWithExpertModel(nn.Module):
 
                 next_embeds = []
                 start_pos = 0
-                for model, hidden_states, gate, cond in zip(
-                    models, inputs_embeds, gates, adarms_cond, strict=True
-                ):
+                for model, hidden_states, gate, cond in zip(models, inputs_embeds, gates, adarms_cond, strict=True):
                     layer = model.layers[layer_idx]
                     end_pos = start_pos + hidden_states.shape[1]
                     layer_attention = attention_output[:, start_pos:end_pos]
@@ -284,9 +268,7 @@ class PaliGemmaWithExpertModel(nn.Module):
 
             outputs_embeds = [
                 model.norm(hidden_states, cond=cond)[0]
-                for model, hidden_states, cond in zip(
-                    models, inputs_embeds, adarms_cond, strict=True
-                )
+                for model, hidden_states, cond in zip(models, inputs_embeds, adarms_cond, strict=True)
             ]
             prefix_output, suffix_output = outputs_embeds
             prefix_past_key_values = None

@@ -99,7 +99,7 @@ def _patched_script(
         # subdirectory; remote/offical-repository loading remains unchanged.
         local_tokenizer = str(Path(hunyuan_root) / "tokenizer")
         text = text.replace(
-            'LlamaTokenizerFast.from_pretrained("hunyuanvideo-community/HunyuanVideo", subfolder=\'tokenizer\')',
+            "LlamaTokenizerFast.from_pretrained(\"hunyuanvideo-community/HunyuanVideo\", subfolder='tokenizer')",
             f"LlamaTokenizerFast.from_pretrained({local_tokenizer!r})",
         )
         text = text.replace('"hunyuanvideo-community/HunyuanVideo"', repr(hunyuan_root))

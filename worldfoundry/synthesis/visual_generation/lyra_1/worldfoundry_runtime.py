@@ -311,8 +311,7 @@ class Lyra1Runtime:
                 )
             if warp_images is None or warp_masks is None:
                 raise NotImplementedError(
-                    "Native Lyra-1 dynamic synthesis requires explicit rendered_warp_images "
-                    "and rendered_warp_masks"
+                    "Native Lyra-1 dynamic synthesis requires explicit rendered_warp_images and rendered_warp_masks"
                 )
             reference_image = kwargs.pop("reference_image", None)
             if reference_image is None:

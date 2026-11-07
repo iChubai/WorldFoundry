@@ -67,9 +67,7 @@ def unpack_array(value: dict[Any, Any]) -> Any:
             raise TypeError("DreamZero ndarray payload must contain bytes")
         expected = math.prod(shape) * dtype.itemsize
         if expected != len(data):
-            raise ValueError(
-                f"DreamZero ndarray payload length mismatch: expected {expected}, got {len(data)}"
-            )
+            raise ValueError(f"DreamZero ndarray payload length mismatch: expected {expected}, got {len(data)}")
         return np.frombuffer(data, dtype=dtype).reshape(shape)
     if value.get(b"__npgeneric__") is True:
         dtype = _safe_dtype(value[b"dtype"])

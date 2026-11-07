@@ -3,6 +3,7 @@ from typing import Dict
 import torch
 from .module import ModuleAttrMixin
 
+
 class BaseLowdimPolicy(ModuleAttrMixin):
     # ========= inference  ============
     # also as self.device and self.dtype for inference device transfer

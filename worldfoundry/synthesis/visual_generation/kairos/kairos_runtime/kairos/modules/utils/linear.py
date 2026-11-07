@@ -9,11 +9,10 @@ from typing import Any
 import torch.nn as nn
 import torch.distributed as dist
 
+
 def ensure_divisibility(numerator, denominator) -> None:
     """Ensure that numerator is divisible by the denominator."""
-    assert numerator % denominator == 0, "{} is not divisible by {}".format(
-        numerator, denominator
-    )
+    assert numerator % denominator == 0, "{} is not divisible by {}".format(numerator, denominator)
 
 
 def divide(numerator: int, denominator: int) -> int:
@@ -22,6 +21,7 @@ def divide(numerator: int, denominator: int) -> int:
     ensure_divisibility(numerator, denominator)
     return numerator // denominator
 
+
 def _prefix_sum(xs):
     ps = [0]
     s = 0
@@ -29,6 +29,7 @@ def _prefix_sum(xs):
         s += int(v)
         ps.append(s)
     return ps
+
 
 def _build_plan(full_dim: int, tp_rank: int, tp_size: int, tp_chunk_list=None):
     if tp_chunk_list is None:
@@ -51,14 +52,11 @@ def _build_plan(full_dim: int, tp_rank: int, tp_size: int, tp_chunk_list=None):
     end = ps[tp_rank + 1] * chunk_dim
     return start, end, end - start
 
+
 class ColumnParallelLinear(nn.Linear):
     def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        bias: bool = True,
-        gather_output: bool = False,
-        tp_chunk_list=None):
+        self, in_features: int, out_features: int, bias: bool = True, gather_output: bool = False, tp_chunk_list=None
+    ):
         # Divide the weight matrix along the last dimension.
         self.tp_rank = parallel_state.get_context_parallel_rank()
         self.tp_size = parallel_state.get_context_parallel_world_size()
@@ -112,7 +110,7 @@ class ColumnParallelLinear(nn.Linear):
 
         outs = [torch.empty_like(x_pad) for _ in range(self.tp_size)]
         dist.all_gather(outs, x_pad, group=self.tp_group)
-        outs = [o[..., :lens[i]] for i, o in enumerate(outs)]
+        outs = [o[..., : lens[i]] for i, o in enumerate(outs)]
         return torch.cat(outs, dim=-1)
 
     def _load_state_dict_pre_hook(self, module, state_dict, prefix, *args):
@@ -123,14 +121,15 @@ class ColumnParallelLinear(nn.Linear):
         full_weight = state_dict[weight_key]
         # full ckpt: [out, in] -> shard rows
         if full_weight.ndim == 2 and full_weight.shape[0] == self.out_features_full:
-            state_dict[weight_key] = full_weight[self.start:self.end, :]
+            state_dict[weight_key] = full_weight[self.start : self.end, :]
 
         if self.bias is not None:
             bias_key = prefix + "bias"
             if bias_key in state_dict:
                 full_bias = state_dict[bias_key]
                 if full_bias.ndim == 1 and full_bias.shape[0] == self.out_features_full:
-                    state_dict[bias_key] = full_bias[self.start:self.end]
+                    state_dict[bias_key] = full_bias[self.start : self.end]
+
 
 class RowParallelLinear(nn.Linear):
     def __init__(
@@ -171,7 +170,7 @@ class RowParallelLinear(nn.Linear):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if not self.input_is_parallel:
-            x = x[..., self.start:self.end]
+            x = x[..., self.start : self.end]
         else:
             if x.shape[-1] != self.local_in:
                 raise RuntimeError(
@@ -192,14 +191,14 @@ class RowParallelLinear(nn.Linear):
         if weight_key not in state_dict:
             return
 
-        w = state_dict[weight_key]          # ckpt weight
-        expect = self.weight.shape          # (out, local_in)
+        w = state_dict[weight_key]  # ckpt weight
+        expect = self.weight.shape  # (out, local_in)
 
         if tuple(w.shape) == tuple(expect):
             pass
         else:
             if w.ndim == 2 and w.shape[0] == self.out_features_full and w.shape[1] == self.in_features_full:
-                state_dict[weight_key] = w[:, self.start:self.end]
+                state_dict[weight_key] = w[:, self.start : self.end]
             else:
                 raise RuntimeError(
                     f"[{prefix}] unexpected weight shape in ckpt: {tuple(w.shape)}, "

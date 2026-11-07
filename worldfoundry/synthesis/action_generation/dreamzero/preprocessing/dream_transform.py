@@ -25,16 +25,16 @@ def basic_clean(text):
     text = html.unescape(html.unescape(text))
     return text.strip()
 
+
 def whitespace_clean(text):
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"\s+", " ", text)
     text = text.strip()
     return text
 
 
 class HuggingfaceTokenizer:
-
     def __init__(self, name, seq_len=None, clean=None, **kwargs):
-        assert clean in (None, 'whitespace')
+        assert clean in (None, "whitespace")
         self.name = name
         self.seq_len = seq_len
         self.clean = clean
@@ -50,18 +50,13 @@ class HuggingfaceTokenizer:
         self.vocab_size = self.tokenizer.vocab_size
 
     def __call__(self, sequence, **kwargs):
-        return_mask = kwargs.pop('return_mask', False)
+        return_mask = kwargs.pop("return_mask", False)
 
         # arguments
-        _kwargs = {'return_tensors': 'pt'}
+        _kwargs = {"return_tensors": "pt"}
         if self.seq_len is not None:
-            _kwargs.update({
-                'padding': 'max_length',
-                'truncation': True,
-                'max_length': self.seq_len
-            })
+            _kwargs.update({"padding": "max_length", "truncation": True, "max_length": self.seq_len})
         _kwargs.update(**kwargs)
-
 
         # tokenization
         if isinstance(sequence, str):
@@ -77,7 +72,7 @@ class HuggingfaceTokenizer:
             return ids.input_ids
 
     def _clean(self, text):
-        if self.clean == 'whitespace':
+        if self.clean == "whitespace":
             text = whitespace_clean(basic_clean(text))
         # elif self.clean == 'lower':
         #     text = whitespace_clean(basic_clean(text)).lower()
@@ -105,7 +100,12 @@ def collate(features: List[dict], tokenizer: AutoTokenizer, num_views=3, embodim
                         processed_item = str(parsed_item)
 
                     if num_views > 1 and elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.AGIBOT.value]:
-                        processed_item = "A multi-view video shows that a robot " + processed_item.lower() + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot " + processed_item.lower()
+                        processed_item = (
+                            "A multi-view video shows that a robot "
+                            + processed_item.lower()
+                            + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot "
+                            + processed_item.lower()
+                        )
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.OXE_DROID.value]:
                         processed_item = (
                             "A multi-view video shows that a robot "
@@ -118,16 +118,31 @@ def collate(features: List[dict], tokenizer: AutoTokenizer, num_views=3, embodim
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.MECKA_HANDS.value]:
                         processed_item = "A single view video shows that a human " + processed_item.lower()
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.XDOF.value]:
-                        processed_item = "A multi-view video shows that a robot " + processed_item.lower() + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot " + processed_item.lower()
+                        processed_item = (
+                            "A multi-view video shows that a robot "
+                            + processed_item.lower()
+                            + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot "
+                            + processed_item.lower()
+                        )
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.YAM.value]:
-                        processed_item = "A multi-view video shows that a robot " + processed_item.lower() + " The video is split into four views: The top-left view shows the top camera, the top-right view shows the right camera, the bottom-left view shows the left camera, and the bottom-right view is a black screen. The robot " + processed_item.lower()
+                        processed_item = (
+                            "A multi-view video shows that a robot "
+                            + processed_item.lower()
+                            + " The video is split into four views: The top-left view shows the top camera, the top-right view shows the right camera, the bottom-left view shows the left camera, and the bottom-right view is a black screen. The robot "
+                            + processed_item.lower()
+                        )
                     else:
                         raise ValueError(f"Embodiment ID {elem['embodiment_id']} not supported.")
                     output_values.append(processed_item)
                 except (ValueError, SyntaxError, TypeError):
                     # If parsing fails or item is already a string, use it directly
                     if num_views > 1 and elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.AGIBOT.value]:
-                        item = "A multi-view video shows that a robot " + str(item).lower() + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot " + str(item).lower()
+                        item = (
+                            "A multi-view video shows that a robot "
+                            + str(item).lower()
+                            + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot "
+                            + str(item).lower()
+                        )
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.OXE_DROID.value]:
                         item = (
                             "A multi-view video shows that a robot "
@@ -140,36 +155,40 @@ def collate(features: List[dict], tokenizer: AutoTokenizer, num_views=3, embodim
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.MECKA_HANDS.value]:
                         item = "A single view video shows that a human " + str(item).lower()
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.XDOF.value]:
-                        item = "A multi-view video shows that a robot " + str(item).lower() + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot " + str(item).lower()
+                        item = (
+                            "A multi-view video shows that a robot "
+                            + str(item).lower()
+                            + " The video is split into four views: The top-left view shows the camera view from the robot's head, the top-right view shows the camera view from the right hand, the bottom-left view shows the camera view from the left hand, and the bottom-right view is a black screen (inactive view). The robot "
+                            + str(item).lower()
+                        )
                     elif elem["embodiment_id"] == embodiment_tag_mapping[EmbodimentTag.YAM.value]:
-                        item = "A multi-view video shows that a robot " + str(item).lower() + " The video is split into four views: The top-left view shows the top camera, the top-right view shows the right camera, the bottom-left view shows the left camera, and the bottom-right view is a black screen. The robot " + str(item).lower()
+                        item = (
+                            "A multi-view video shows that a robot "
+                            + str(item).lower()
+                            + " The video is split into four views: The top-left view shows the top camera, the top-right view shows the right camera, the bottom-left view shows the left camera, and the bottom-right view is a black screen. The robot "
+                            + str(item).lower()
+                        )
                     else:
                         raise ValueError(f"Embodiment ID {elem['embodiment_id']} not supported.")
                     output_values.append(item)
             # print("output_values", output_values)
             ids, mask = tokenizer(output_values, return_mask=True, add_special_tokens=True)
             batch[key] = ids
-            batch['text_attention_mask'] = mask
+            batch["text_attention_mask"] = mask
         elif key == "text_negative":
             values = [elem[key] for elem in features]
             ids, mask = tokenizer(values, return_mask=True, add_special_tokens=True)
             batch[key] = ids
-            batch['text_attention_mask_negative'] = mask
+            batch["text_attention_mask_negative"] = mask
         else:
             values = [elem[key] for elem in features]
             batch[key] = torch.from_numpy(np.stack(values))
     return batch
 
 
-
-
-
 class DreamTransform(InvertibleModalityTransform):
-
     # -- We inherit from ModalityTransform, so we keep apply_to as well --
-    apply_to: list[str] = Field(
-        default_factory=list, description="Not used in this transform, kept for compatibility."
-    )
+    apply_to: list[str] = Field(default_factory=list, description="Not used in this transform, kept for compatibility.")
     formalize_language: bool = Field(default=False, description="Formalize language if True.")
 
     embodiment_tag_mapping: dict[str, int] = Field(
@@ -197,35 +216,24 @@ class DreamTransform(InvertibleModalityTransform):
     num_views: int = 3
 
     # Add tokenizer attribute
-    tokenizer_path: str = Field(
-        default="google/umt5-xxl",
-        description="Path to the tokenizer."
-    )
+    tokenizer_path: str = Field(default="google/umt5-xxl", description="Path to the tokenizer.")
     _tokenizer: Optional[HuggingfaceTokenizer] = PrivateAttr(default=None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Initialize the tokenizer
-        self._tokenizer = HuggingfaceTokenizer(
-            name=self.tokenizer_path,
-            seq_len=self.max_length,
-            clean='whitespace'
-        )
+        self._tokenizer = HuggingfaceTokenizer(name=self.tokenizer_path, seq_len=self.max_length, clean="whitespace")
 
     @property
     def tokenizer(self):
         return self._tokenizer
 
-    def set_metadata(
-        self, dataset_metadata: DatasetMetadata
-    ):
+    def set_metadata(self, dataset_metadata: DatasetMetadata):
         self.embodiment_tag = dataset_metadata.embodiment_tag
 
     def get_embodiment_tag(self) -> int:
         """Get the embodiment tag from the data."""
-        assert (
-            self.embodiment_tag is not None
-        ), "Embodiment tag not set. Please call set_metadata first."
+        assert self.embodiment_tag is not None, "Embodiment tag not set. Please call set_metadata first."
         return self.embodiment_tag_mapping[self.embodiment_tag.value]
 
     def check_keys_and_batch_size(self, data):
@@ -308,9 +316,9 @@ class DreamTransform(InvertibleModalityTransform):
             #   [left_ext | right_ext]
             #
             if self.embodiment_tag == EmbodimentTag.OXE_DROID and v >= 3:
-                left_exterior = images[0]   # (t, c, h, w)
+                left_exterior = images[0]  # (t, c, h, w)
                 right_exterior = images[1]  # (t, c, h, w)
-                wrist_image = images[2]     # (t, c, h, w)
+                wrist_image = images[2]  # (t, c, h, w)
 
                 concat_images = np.zeros((1, t, c, 2 * h, 2 * w), dtype=images.dtype)
 
@@ -329,7 +337,7 @@ class DreamTransform(InvertibleModalityTransform):
             #         [left, black]
 
             # Create output tensor with doubled height and width
-            concat_images = np.zeros((1, t, c, 2*h, 2*w), dtype=images.dtype)
+            concat_images = np.zeros((1, t, c, 2 * h, 2 * w), dtype=images.dtype)
 
             # Place images in the 2x2 grid
             # Left upper: head image (view 0)
@@ -401,7 +409,6 @@ class DreamTransform(InvertibleModalityTransform):
         # We only have 1 "proprio" token to represent the entire state
         n_state_tokens = state.shape[0]
         return state, state_mask, n_state_tokens
-
 
     def apply_single(self, data: dict) -> dict:
         images = self._prepare_video(data).astype(np.uint8)

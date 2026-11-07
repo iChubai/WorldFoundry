@@ -121,7 +121,9 @@ class WorldModelEnv:
                 obs = batch.obs.to(self.device)
                 act = batch.act.to(self.device)
                 with torch.no_grad():
-                    *_, (hx, cx) = self.rew_end_model.predict_rew_end(obs[:, :-1], act[:, :-1], obs[:, 1:])  # Burn-in of rew/end model
+                    *_, (hx, cx) = self.rew_end_model.predict_rew_end(
+                        obs[:, :-1], act[:, :-1], obs[:, 1:]
+                    )  # Burn-in of rew/end model
                 assert hx.size(0) == cx.size(0) == 1
                 obs_.extend(list(obs))
                 act_.extend(list(act))

@@ -8,6 +8,7 @@
 import torch
 import torch.nn.functional as F
 
+
 def pad_vector(vector: torch.Tensor, new_dim: int) -> torch.Tensor:
     if vector.shape[-1] == new_dim:
         return vector
@@ -17,6 +18,7 @@ def pad_vector(vector: torch.Tensor, new_dim: int) -> torch.Tensor:
     new_vector = torch.zeros(*shape, dtype=vector.dtype, device=vector.device)
     new_vector[..., :current_dim] = vector
     return new_vector
+
 
 def pad_and_cat(tensor_list: list[torch.Tensor]) -> torch.Tensor:
     max_length = max(tensor.shape[2] for tensor in tensor_list)

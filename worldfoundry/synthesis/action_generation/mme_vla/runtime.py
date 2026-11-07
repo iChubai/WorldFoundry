@@ -30,10 +30,13 @@ def _stage_paligemma_tokenizer(location: str | Path | None = None) -> Path:
 
     source = resolve_worldfoundry_path(str(location or _MODEL_CONFIG["paligemma_tokenizer_path"]))
     if not source.is_file() and location is None:
-        source = resolve_local_hf_model_path(
-            "google/paligemma-3b-pt-224",
-            required_files=("tokenizer.model",),
-        ) / "tokenizer.model"
+        source = (
+            resolve_local_hf_model_path(
+                "google/paligemma-3b-pt-224",
+                required_files=("tokenizer.model",),
+            )
+            / "tokenizer.model"
+        )
     if not source.is_file():
         raise FileNotFoundError(f"MME-VLA PaliGemma tokenizer is missing: {source}")
     target = checkpoint_root_path("runtime_assets", "openpi", "big_vision", "tokenizer.model")
@@ -141,7 +144,9 @@ def _buffer_observation(observation: Mapping[str, Any], instruction: str) -> dic
     image = first_present(observation, "observation/image", "image", "base_image")
     image_np = to_numpy_image(image)
     if image_np is None or state is None:
-        raise ValueError("MME-VLA history_observations require images/state or observation/image plus observation/state.")
+        raise ValueError(
+            "MME-VLA history_observations require images/state or observation/image plus observation/state."
+        )
 
     return {
         "images": np.asarray(image_np, dtype=np.uint8)[None, None, ...],

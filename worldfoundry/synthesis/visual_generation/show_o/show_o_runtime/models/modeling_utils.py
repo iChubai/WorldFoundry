@@ -251,9 +251,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
         """
         self.set_use_npu_flash_attention(False)
 
-    def set_use_memory_efficient_attention_xformers(
-        self, valid: bool, attention_op: Optional[Callable] = None
-    ) -> None:
+    def set_use_memory_efficient_attention_xformers(self, valid: bool, attention_op: Optional[Callable] = None) -> None:
         # Recursively walk through all the children.
         # Any children which exposes the set_use_memory_efficient_attention_xformers method
         # gets the message

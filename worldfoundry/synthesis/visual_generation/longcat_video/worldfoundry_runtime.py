@@ -42,13 +42,7 @@ def _expand_path(value: str | Path | None) -> Path | None:
 
 
 def _video_files_in(directory: Path) -> list[Path]:
-    return sorted(
-        {
-            path
-            for pattern in ("*.mp4", "*.webm", "*.mov", "*.gif")
-            for path in directory.glob(pattern)
-        }
-    )
+    return sorted({path for pattern in ("*.mp4", "*.webm", "*.mov", "*.gif") for path in directory.glob(pattern)})
 
 
 def _preferred_video_output(paths: Sequence[Path]) -> Path | None:
@@ -142,9 +136,7 @@ class LongCatVideoRuntime:
 
     def missing_checkpoint_files(self) -> tuple[str, ...]:
         if self.checkpoint_dir is None:
-            return tuple(
-                str(Path(relative_path)) for relative_path in CHECKPOINT_SUBDIRS
-            )
+            return tuple(str(Path(relative_path)) for relative_path in CHECKPOINT_SUBDIRS)
         return tuple(
             str(self.checkpoint_dir / relative_path)
             for relative_path in CHECKPOINT_SUBDIRS
@@ -155,14 +147,15 @@ class LongCatVideoRuntime:
         return tuple(
             str(self.runtime_root / relative_path)
             for relative_path in REQUIRED_RUNTIME_FILES
-            if not (self.runtime_root / relative_path).is_file()
-            and not (self.runtime_root / relative_path).is_dir()
+            if not (self.runtime_root / relative_path).is_file() and not (self.runtime_root / relative_path).is_dir()
         )
 
     def preflight(self) -> dict[str, Any]:
         missing_checkpoint = self.missing_checkpoint_files()
         missing_runtime = self.missing_runtime_files()
-        checkpoint_ready = len(missing_checkpoint) == 0 and self.checkpoint_dir is not None and self.checkpoint_dir.is_dir()
+        checkpoint_ready = (
+            len(missing_checkpoint) == 0 and self.checkpoint_dir is not None and self.checkpoint_dir.is_dir()
+        )
         runtime_ready = len(missing_runtime) == 0
         return {
             "status": "ready" if checkpoint_ready and runtime_ready else "blocked",
@@ -238,7 +231,7 @@ class LongCatVideoRuntime:
         env = {
             "PYTHONPATH": f"{self.runtime_root}:{SRC_ROOT}{os.pathsep + os.environ.get('PYTHONPATH', '') if os.environ.get('PYTHONPATH') else ''}",
             "WORLD_EVALS_LONGCAT_TASK": str(task_type),
-            "WORLD_EVALS_LONGCAT_REQUEST_PATH": str(output_path_obj.with_suffix('.json')),
+            "WORLD_EVALS_LONGCAT_REQUEST_PATH": str(output_path_obj.with_suffix(".json")),
         }
         if self.device:
             env["WORLD_EVALS_LONGCAT_DEVICE"] = self.device
@@ -272,7 +265,11 @@ class LongCatVideoRuntime:
             workdir=str(target_output_dir if task_type == "t2v" else self.runtime_root),
             checkpoint_dir=str(self.checkpoint_dir),
             output_dir=str(target_output_dir),
-            output_path=str(output_path_obj.with_suffix(".mp4") if output_path_obj.suffix.lower() not in {".json", ".mp4", ".mov", ".webm", ".gif"} else output_path_obj),
+            output_path=str(
+                output_path_obj.with_suffix(".mp4")
+                if output_path_obj.suffix.lower() not in {".json", ".mp4", ".mov", ".webm", ".gif"}
+                else output_path_obj
+            ),
             task_type=task_type,
             script=str(script_path),
         )
@@ -306,7 +303,7 @@ class LongCatVideoRuntime:
                     text=True,
                     timeout=timeout_seconds,
                     check=False,
-            )
+                )
             returncode = completed.returncode
             runtime_output_dir = Path(plan.workdir).expanduser().resolve()
             requested_output_dir = Path(plan.output_dir).expanduser().resolve()
@@ -329,7 +326,9 @@ class LongCatVideoRuntime:
                     if target.resolve() != primary_output_path.resolve():
                         copied_videos.append(target)
             materialized_videos = _video_files_in(requested_output_dir)
-            generated_files = [str(path) for path in dict.fromkeys([*copied_videos, *requested_videos, *materialized_videos])]
+            generated_files = [
+                str(path) for path in dict.fromkeys([*copied_videos, *requested_videos, *materialized_videos])
+            ]
             for source in runtime_videos:
                 if source.parent == runtime_output_dir and source.parent != requested_output_dir:
                     source.unlink(missing_ok=True)

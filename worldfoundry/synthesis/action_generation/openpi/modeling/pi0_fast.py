@@ -123,7 +123,6 @@ class Pi0FASTConfig(_model.BaseModelConfig):
         return observation_spec, action_spec
 
 
-
 class Pi0FAST(_model.BaseModel):
     def __init__(self, config: Pi0FASTConfig, rngs: nnx.Rngs):
         super().__init__(config.action_dim, config.action_horizon, config.max_token_len)
@@ -187,7 +186,6 @@ class Pi0FAST(_model.BaseModel):
             jnp.concatenate(ar_mask, axis=1),
         )
 
-
     @override
     def sample_actions(
         self,
@@ -198,9 +196,7 @@ class Pi0FAST(_model.BaseModel):
         temperature: float = 0.0,
     ) -> _model.Actions:
         # TODO: this is a hack to get the image keys.
-        observation = _model.preprocess_observation(
-            None, observation, image_keys=list(observation.images.keys())
-        )
+        observation = _model.preprocess_observation(None, observation, image_keys=list(observation.images.keys()))
 
         # embed inputs
         prefix_token_embeddings, prefix_mask, prefix_ar_mask = self.embed_inputs(observation)

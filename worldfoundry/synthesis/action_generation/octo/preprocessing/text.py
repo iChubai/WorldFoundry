@@ -38,15 +38,11 @@ class HFTokenizer(TextProcessor):
             tokenizer_name,
             required_files=("tokenizer.json",),
         )
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            str(source), local_files_only=True
-        )
+        self.tokenizer = AutoTokenizer.from_pretrained(str(source), local_files_only=True)
         self.tokenizer_kwargs = tokenizer_kwargs
         self.encode_with_model = encode_with_model
         if self.encode_with_model:
-            self.model = FlaxAutoModel.from_pretrained(
-                str(source), local_files_only=True
-            )
+            self.model = FlaxAutoModel.from_pretrained(str(source), local_files_only=True)
 
     def encode(self, strings: Sequence[str]):
         # this creates another nested layer with "input_ids", "attention_mask", etc.
@@ -69,9 +65,7 @@ class MuseEmbedding(TextProcessor):
 
         source = resolve_worldfoundry_path(model_path or str(_TEXT_ASSETS["muse_model_path"]))
         if not source.exists():
-            raise FileNotFoundError(
-                f"Octo MUSE text encoder is not staged locally: {source}"
-            )
+            raise FileNotFoundError(f"Octo MUSE text encoder is not staged locally: {source}")
         self.muse_model = hub.load(str(source))
 
     def encode(self, strings: Sequence[str]):
@@ -110,7 +104,7 @@ class CLIPTextProcessor(TextProcessor):
             text=strings,
             **self.kwargs,
         )
-        inputs["position_ids"] = np.expand_dims(
-            np.arange(inputs["input_ids"].shape[1]), axis=0
-        ).repeat(inputs["input_ids"].shape[0], axis=0)
+        inputs["position_ids"] = np.expand_dims(np.arange(inputs["input_ids"].shape[1]), axis=0).repeat(
+            inputs["input_ids"].shape[0], axis=0
+        )
         return inputs

@@ -55,22 +55,18 @@ ATARI_KEYMAP = {
     (pygame.K_d,): 3,
     (pygame.K_a,): 4,
     (pygame.K_s,): 5,
-
     (pygame.K_w, pygame.K_d): 6,
     (pygame.K_w, pygame.K_a): 7,
     (pygame.K_s, pygame.K_d): 8,
     (pygame.K_s, pygame.K_a): 9,
-
     (pygame.K_w, pygame.K_SPACE): 10,
     (pygame.K_d, pygame.K_SPACE): 11,
     (pygame.K_a, pygame.K_SPACE): 12,
     (pygame.K_s, pygame.K_SPACE): 13,
-
     (pygame.K_w, pygame.K_d, pygame.K_SPACE): 14,
     (pygame.K_w, pygame.K_a, pygame.K_SPACE): 15,
     (pygame.K_s, pygame.K_d, pygame.K_SPACE): 16,
     (pygame.K_s, pygame.K_a, pygame.K_SPACE): 17,
-
 }
 
 DATASET_MODE_ACTION_NAMES = [

@@ -54,14 +54,9 @@ class InterleavedTextPreprocessor:
         prompt_positions = np.flatnonzero(text == self.tokenizer.image_prompt_token_id)
         if len(prompt_positions) not in {0, len(multimodal_tokens)}:
             raise ValueError(
-                f"Found {len(prompt_positions)} image placeholders for "
-                f"{len(multimodal_tokens)} visual inputs."
+                f"Found {len(prompt_positions)} image placeholders for {len(multimodal_tokens)} visual inputs."
             )
-        insertion_points = (
-            prompt_positions.tolist()
-            if len(prompt_positions)
-            else [1] * len(multimodal_tokens)
-        )
+        insertion_points = prompt_positions.tolist() if len(prompt_positions) else [1] * len(multimodal_tokens)
 
         chunks: List[np.ndarray] = []
         positions: List[np.ndarray] = []

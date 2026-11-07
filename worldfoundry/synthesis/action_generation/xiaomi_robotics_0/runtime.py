@@ -28,13 +28,10 @@ MODEL_ID = "xiaomi-robotics-0"
 _MODEL_CONFIG = load_vla_va_wam_runtime_config(MODEL_ID)
 UPSTREAM_GITHUB_REVISION = str(_MODEL_CONFIG["upstream_github_revision"])
 ACTION_HORIZONS_BY_ROBOT_TYPE: dict[str, int] = {
-    str(name): int(value)
-    for name, value in dict(_MODEL_CONFIG["action_horizons_by_robot_type"]).items()
+    str(name): int(value) for name, value in dict(_MODEL_CONFIG["action_horizons_by_robot_type"]).items()
 }
 _PRETRAIN_ROBOT_TYPES = tuple(str(value) for value in _MODEL_CONFIG["pretrain_robot_types"])
-_REQUIRED_CHECKPOINT_FILES = tuple(
-    str(value) for value in _MODEL_CONFIG["required_checkpoint_files"]
-)
+_REQUIRED_CHECKPOINT_FILES = tuple(str(value) for value in _MODEL_CONFIG["required_checkpoint_files"])
 
 
 @dataclass(frozen=True)
@@ -62,15 +59,9 @@ OFFICIAL_CHECKPOINTS: dict[str, CheckpointSpec] = {
         view_labels=tuple(str(value) for value in values.get("view_labels", ())),
         aliases=tuple(str(value) for value in values.get("aliases", ())),
         image_size=(
-            tuple(int(value) for value in values["image_size"])
-            if values.get("image_size") is not None
-            else None
+            tuple(int(value) for value in values["image_size"]) if values.get("image_size") is not None else None
         ),
-        center_crop_ratio=(
-            float(values["center_crop_ratio"])
-            if values.get("center_crop_ratio") is not None
-            else None
-        ),
+        center_crop_ratio=(float(values["center_crop_ratio"]) if values.get("center_crop_ratio") is not None else None),
     )
     for variant, values in dict(_MODEL_CONFIG["variants"]).items()
 }
@@ -83,8 +74,7 @@ _VARIANT_ALIASES = {
 }
 
 _CAMERA_ALIASES: dict[str, tuple[str, ...]] = {
-    str(name): tuple(str(value) for value in aliases)
-    for name, aliases in dict(_MODEL_CONFIG["camera_aliases"]).items()
+    str(name): tuple(str(value) for value in aliases) for name, aliases in dict(_MODEL_CONFIG["camera_aliases"]).items()
 }
 
 
@@ -102,9 +92,7 @@ def checkpoint_spec(variant: Any = None) -> CheckpointSpec:
 def build_instruction_prompt(instruction: str, view_labels: Sequence[str]) -> str:
     """Build the exact no-CoT prompt used by the official deployment."""
 
-    view_block = "".join(
-        f"# {label}\n<|vision_start|><|image_pad|><|vision_end|>\n" for label in view_labels
-    )
+    view_block = "".join(f"# {label}\n<|vision_start|><|image_pad|><|vision_end|>\n" for label in view_labels)
     return (
         "<|im_start|>user\n"
         "The following observations are captured from multiple views.\n"
@@ -201,9 +189,7 @@ class XiaomiRobotics0RuntimeConfig:
             if checkpoint_key in _VARIANT_ALIASES:
                 variant = checkpoint_value
         spec = checkpoint_spec(variant)
-        checkpoint = str(
-            checkpoint_value or spec.repo_id
-        )
+        checkpoint = str(checkpoint_value or spec.repo_id)
         revision_value = first_present(values, "revision", "checkpoint_revision")
         if Path(checkpoint).expanduser().exists():
             revision = None
@@ -219,11 +205,7 @@ class XiaomiRobotics0RuntimeConfig:
                 "the pretrain checkpoint contains multiple embodiment statistics; pass robot_type explicitly "
                 "(one of agibot_pt_v3, droid_pt, midata_mix_ann_pt_v1, molmoact_pt)"
             )
-        if (
-            spec.variant == "pretrain"
-            and checkpoint == spec.repo_id
-            and robot_type not in _PRETRAIN_ROBOT_TYPES
-        ):
+        if spec.variant == "pretrain" and checkpoint == spec.repo_id and robot_type not in _PRETRAIN_ROBOT_TYPES:
             available = ", ".join(sorted(_PRETRAIN_ROBOT_TYPES))
             raise ValueError(
                 f"unknown Xiaomi-Robotics-0 pretrain robot_type {robot_type!r}; choose one of: {available}"
@@ -252,9 +234,7 @@ class XiaomiRobotics0RuntimeConfig:
             image_size = None
         else:
             if isinstance(image_size_value, str):
-                image_size_value = tuple(
-                    part.strip() for part in image_size_value.split(",") if part.strip()
-                )
+                image_size_value = tuple(part.strip() for part in image_size_value.split(",") if part.strip())
             image_size = tuple(int(value) for value in image_size_value)
             if len(image_size) != 2 or min(image_size) <= 0:
                 raise ValueError("image_size must contain positive width and height")
@@ -420,9 +400,9 @@ class XiaomiRobotics0Runtime:
                 crop_height = max(1, int(height * self.config.center_crop_ratio))
                 left = (width - crop_width) // 2
                 top = (height - crop_height) // 2
-                value = value.crop(
-                    (left, top, left + crop_width, top + crop_height)
-                ).resize((width, height), resampling)
+                value = value.crop((left, top, left + crop_width, top + crop_height)).resize(
+                    (width, height), resampling
+                )
             processed.append(value)
         return processed
 

@@ -1,4 +1,5 @@
 """I/O helpers for event-centric outputs."""
+
 from __future__ import annotations
 
 import json
@@ -170,7 +171,7 @@ def visualize_projection_latent(
     if C == 32:
         # Split scene and fg.
         scene_latent = latent[:16]  # [16, T, h, w]
-        fg_latent = latent[16:]     # [16, T, h, w]
+        fg_latent = latent[16:]  # [16, T, h, w]
 
         scene_frames = decode_latent_to_rgb(scene_latent, vae, device, dtype)
         fg_frames = decode_latent_to_rgb(fg_latent, vae, device, dtype)

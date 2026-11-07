@@ -15,9 +15,7 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 from utils import aggregate_dct
 
 gym_old_venv_step_type = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-gym_new_venv_step_type = Tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
-]
+gym_new_venv_step_type = Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 warnings.simplefilter("once", DeprecationWarning)
 _NP_TO_CT = {
     np.bool_: ctypes.c_bool,
@@ -99,10 +97,7 @@ class EnvWorker(ABC):
         function is determined by such kind of different signal.
         """
         if hasattr(self, "send_action"):
-            deprecation(
-                "send_action will soon be deprecated. "
-                "Please use send and recv for your own EnvWorker."
-            )
+            deprecation("send_action will soon be deprecated. Please use send and recv for your own EnvWorker.")
             if action is None:
                 self.is_reset = True
                 self.result = self.reset()
@@ -126,10 +121,7 @@ class EnvWorker(ABC):
         the environment is using the old step API or the new one.
         """
         if hasattr(self, "get_result"):
-            deprecation(
-                "get_result will soon be deprecated. "
-                "Please use send and recv for your own EnvWorker."
-            )
+            deprecation("get_result will soon be deprecated. Please use send and recv for your own EnvWorker.")
             if not self.is_reset:
                 self.result = self.get_result()
         return self.result
@@ -138,9 +130,7 @@ class EnvWorker(ABC):
     def reset(self, **kwargs: Any) -> Union[np.ndarray, Tuple[np.ndarray, dict]]:
         pass
 
-    def step(
-        self, action: np.ndarray
-    ) -> Union[gym_old_venv_step_type, gym_new_venv_step_type]:
+    def step(self, action: np.ndarray) -> Union[gym_old_venv_step_type, gym_new_venv_step_type]:
         """Perform one timestep of the environment's dynamic.
 
         "send" and "recv" are coupled in sync simulation, so users only call
@@ -151,9 +141,7 @@ class EnvWorker(ABC):
         return self.recv()  # type: ignore
 
     @staticmethod
-    def wait(
-        workers: List["EnvWorker"], wait_num: int, timeout: Optional[float] = None
-    ) -> List["EnvWorker"]:
+    def wait(workers: List["EnvWorker"], wait_num: int, timeout: Optional[float] = None) -> List["EnvWorker"]:
         """Given a list of workers, return those ready ones."""
         raise NotImplementedError
 
@@ -188,9 +176,7 @@ class ShArray:
     def save(self, ndarray: np.ndarray) -> None:
         assert isinstance(ndarray, np.ndarray)
         dst = self.arr.get_obj()
-        dst_np = np.frombuffer(dst, dtype=self.dtype).reshape(
-            self.shape
-        )  # type: ignore
+        dst_np = np.frombuffer(dst, dtype=self.dtype).reshape(self.shape)  # type: ignore
         np.copyto(dst_np, ndarray)
 
     def get(self) -> np.ndarray:
@@ -215,9 +201,7 @@ def _worker(
     env_fn_wrapper: CloudpickleWrapper,
     obs_bufs: Optional[Union[dict, tuple, ShArray]] = None,
 ) -> None:
-    def _encode_obs(
-        obs: Union[dict, tuple, np.ndarray], buffer: Union[dict, tuple, ShArray]
-    ) -> None:
+    def _encode_obs(obs: Union[dict, tuple, np.ndarray], buffer: Union[dict, tuple, ShArray]) -> None:
         if isinstance(obs, np.ndarray) and isinstance(buffer, ShArray):
             buffer.save(obs)
         elif isinstance(obs, tuple) and isinstance(buffer, tuple):
@@ -246,9 +230,7 @@ def _worker(
             elif cmd == "reset":
                 retval = env.reset(**data)
                 reset_returns_info = (
-                    isinstance(retval, (tuple, list))
-                    and len(retval) == 2
-                    and isinstance(retval[1], dict)
+                    isinstance(retval, (tuple, list)) and len(retval) == 2 and isinstance(retval[1], dict)
                 )
                 if reset_returns_info:
                     obs, info = retval
@@ -302,7 +284,7 @@ def _worker(
                 state = env.sample_random_init_goal_states(data)
                 p.send(state)
             elif cmd == "eval_state":
-                p.send(env.eval_state(data[0], data[1])) 
+                p.send(env.eval_state(data[0], data[1]))
             elif cmd == "update_env":
                 p.send(env.update_env(data))
             else:
@@ -373,9 +355,7 @@ class DummyEnvWorker(EnvWorker):
 class SubprocEnvWorker(EnvWorker):
     """Subprocess worker used in SubprocVectorEnv and ShmemVectorEnv."""
 
-    def __init__(
-        self, env_fn: Callable[[], gym.Env], share_memory: bool = False
-    ) -> None:
+    def __init__(self, env_fn: Callable[[], gym.Env], share_memory: bool = False) -> None:
         self.parent_remote, self.child_remote = Pipe()
         self.share_memory = share_memory
         self.buffer: Optional[Union[dict, tuple, ShArray]] = None
@@ -404,9 +384,7 @@ class SubprocEnvWorker(EnvWorker):
         self.parent_remote.send(["setattr", {"key": key, "value": value}])
 
     def _decode_obs(self) -> Union[dict, tuple, np.ndarray]:
-        def decode_obs(
-            buffer: Optional[Union[dict, tuple, ShArray]]
-        ) -> Union[dict, tuple, np.ndarray]:
+        def decode_obs(buffer: Optional[Union[dict, tuple, ShArray]]) -> Union[dict, tuple, np.ndarray]:
             if isinstance(buffer, ShArray):
                 return buffer.get()
             elif isinstance(buffer, tuple):
@@ -415,6 +393,7 @@ class SubprocEnvWorker(EnvWorker):
                 return {k: decode_obs(v) for k, v in buffer.items()}
             else:
                 raise NotImplementedError
+
         return decode_obs(self.buffer)
 
     @staticmethod
@@ -444,18 +423,18 @@ class SubprocEnvWorker(EnvWorker):
             self.parent_remote.send(["reset", kwargs])
         else:
             self.parent_remote.send(["step", action])
-    
-    def rollout(self,seed,init_state,actions):
+
+    def rollout(self, seed, init_state, actions):
         self.parent_remote.send(["rollout", (seed, init_state, actions)])
-    
+
     def prepare(self, seed, init_state):
         self.parent_remote.send(["prepare", (seed, init_state)])
         return self.parent_remote.recv()
-    
+
     def sample_random_init_goal_states(self, seed):
         self.parent_remote.send(["sample_random_init_goal_states", seed])
         return self.parent_remote.recv()
-    
+
     def eval_state(self, goal_state, cur_state):
         self.parent_remote.send(["eval_state", (goal_state, cur_state)])
         return self.parent_remote.recv()
@@ -622,13 +601,9 @@ class BaseVectorEnv(object):
 
         self.env_num = len(env_fns)
         self.wait_num = wait_num or len(env_fns)
-        assert (
-            1 <= self.wait_num <= len(env_fns)
-        ), f"wait_num should be in [1, {len(env_fns)}], but got {wait_num}"
+        assert 1 <= self.wait_num <= len(env_fns), f"wait_num should be in [1, {len(env_fns)}], but got {wait_num}"
         self.timeout = timeout
-        assert (
-            self.timeout is None or self.timeout > 0
-        ), f"timeout is {timeout}, it should be positive if provided!"
+        assert self.timeout is None or self.timeout > 0, f"timeout is {timeout}, it should be positive if provided!"
         self.is_async = self.wait_num != len(env_fns) or timeout is not None
         self.waiting_conn: List[EnvWorker] = []
         # environments in self.ready_id is actually ready
@@ -641,9 +616,7 @@ class BaseVectorEnv(object):
         self.is_closed = False
 
     def _assert_is_not_closed(self) -> None:
-        assert (
-            not self.is_closed
-        ), f"Methods of {self.__class__.__name__} cannot be called after close."
+        assert not self.is_closed, f"Methods of {self.__class__.__name__} cannot be called after close."
 
     def __len__(self) -> int:
         """Return len(self), which is the number of environments."""
@@ -718,12 +691,8 @@ class BaseVectorEnv(object):
 
     def _assert_id(self, id: Union[List[int], np.ndarray]) -> None:
         for i in id:
-            assert (
-                i not in self.waiting_id
-            ), f"Cannot interact with environment {i} which is stepping now."
-            assert (
-                i in self.ready_id
-            ), f"Can only interact with ready environments {self.ready_id}."
+            assert i not in self.waiting_id, f"Cannot interact with environment {i} which is stepping now."
+            assert i in self.ready_id, f"Can only interact with ready environments {self.ready_id}."
 
     def reset(
         self,
@@ -747,9 +716,7 @@ class BaseVectorEnv(object):
         ret_list = [self.workers[i].recv() for i in id]
 
         reset_returns_info = (
-            isinstance(ret_list[0], (tuple, list))
-            and len(ret_list[0]) == 2
-            and isinstance(ret_list[0][1], dict)
+            isinstance(ret_list[0], (tuple, list)) and len(ret_list[0]) == 2 and isinstance(ret_list[0][1], dict)
         )
         if reset_returns_info:
             obs_list = [r[0] for r in ret_list]
@@ -843,9 +810,7 @@ class BaseVectorEnv(object):
                 self.ready_id = [x for x in self.ready_id if x not in id]
             ready_conns: List[EnvWorker] = []
             while not ready_conns:
-                ready_conns = self.worker_class.wait(
-                    self.waiting_conn, self.wait_num, self.timeout
-                )
+                ready_conns = self.worker_class.wait(self.waiting_conn, self.wait_num, self.timeout)
             result = []
             for conn in ready_conns:
                 waiting_index = self.waiting_conn.index(conn)
@@ -865,14 +830,14 @@ class BaseVectorEnv(object):
             obs_stack = np.array(obs_list, dtype=object)
         other_stacks = map(np.stack, return_lists[1:])
         return (obs_stack, *other_stacks)  # type: ignore
-    
-    def rollout(self,seeds,init_states,action: np.ndarray,id: Optional[Union[int, List[int], np.ndarray]] = None):
+
+    def rollout(self, seeds, init_states, action: np.ndarray, id: Optional[Union[int, List[int], np.ndarray]] = None):
         self._assert_is_not_closed()
         id = self._wrap_id(id)
         if not self.is_async:
             assert len(action) == len(id)
             for i, j in enumerate(id):
-                self.workers[j].rollout(seeds[i],init_states[i],action[i])
+                self.workers[j].rollout(seeds[i], init_states[i], action[i])
             result = []
             for j in id:
                 env_return = self.workers[j].recv()
@@ -883,7 +848,7 @@ class BaseVectorEnv(object):
         obses = aggregate_dct(obses)
         states = np.stack(states)
         return obses, states
-    
+
     def prepare(self, seeds, init_states):
         self._assert_is_not_closed()
         obs_list = []
@@ -898,9 +863,11 @@ class BaseVectorEnv(object):
 
     def sample_random_init_goal_states(self, seed):
         self._assert_is_not_closed()
-        init_state, goal_state = zip(*(self.workers[i].sample_random_init_goal_states(seed[i]) for i in range(self.env_num)))
+        init_state, goal_state = zip(
+            *(self.workers[i].sample_random_init_goal_states(seed[i]) for i in range(self.env_num))
+        )
         return np.stack(init_state), np.stack(goal_state)
-    
+
     def eval_state(self, goal_state, cur_state):
         self._assert_is_not_closed()
         eval_result = []
@@ -914,8 +881,7 @@ class BaseVectorEnv(object):
         self._assert_is_not_closed()
         for i in range(self.env_num):
             self.workers[i].update_env(env_info[i])
-        
-        
+
     def seed(
         self,
         seed: Optional[Union[int, List[int]]] = None,
@@ -943,10 +909,7 @@ class BaseVectorEnv(object):
         """Render all of the environments."""
         self._assert_is_not_closed()
         if self.is_async and len(self.waiting_id) > 0:
-            raise RuntimeError(
-                f"Environments {self.waiting_id} are still stepping, cannot "
-                "render them now."
-            )
+            raise RuntimeError(f"Environments {self.waiting_id} are still stepping, cannot render them now.")
         return [w.render(**kwargs) for w in self.workers]
 
     def close(self) -> None:
@@ -976,10 +939,7 @@ class DummyVectorEnv(BaseVectorEnv):
         return [w.check_success() for w in self.workers]
 
     def get_segmentation_of_interest(self, segmentation_images):
-        return [
-            w.get_segmentation_of_interest(img)
-            for w, img in zip(self.workers, segmentation_images)
-        ]
+        return [w.get_segmentation_of_interest(img) for w, img in zip(self.workers, segmentation_images)]
 
     def get_sim_state(self):
         return [w.get_sim_state() for w in self.workers]
@@ -1027,10 +987,7 @@ class SubprocVectorEnv(BaseVectorEnv):
         return [w.check_success() for w in self.workers]
 
     def get_segmentation_of_interest(self, segmentation_images):
-        return [
-            w.get_segmentation_of_interest(img)
-            for w, img in zip(self.workers, segmentation_images)
-        ]
+        return [w.get_segmentation_of_interest(img) for w, img in zip(self.workers, segmentation_images)]
 
     def get_sim_state(self):
         return [w.get_sim_state() for w in self.workers]

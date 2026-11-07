@@ -27,9 +27,7 @@ class Hailuo2p3Synthesis(ApiVideoSynthesis):
         base_resp = payload.get("base_resp", {})
         status_code = base_resp.get("status_code", 0)
         if status_code not in (0, "0"):
-            raise RuntimeError(
-                base_resp.get("status_msg", f"MiniMax request failed with status_code={status_code}")
-            )
+            raise RuntimeError(base_resp.get("status_msg", f"MiniMax request failed with status_code={status_code}"))
 
     def _post(self, route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         result = super()._post(route, payload)
@@ -47,7 +45,7 @@ class Hailuo2p3Synthesis(ApiVideoSynthesis):
         model: str = "MiniMax-Hailuo-2.3",
         resolution: str = "768P",
         duration: int = 6,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a text-to-video generation task."""
         payload: Dict[str, Any] = {
@@ -66,7 +64,7 @@ class Hailuo2p3Synthesis(ApiVideoSynthesis):
         model: str = "MiniMax-Hailuo-2.3",
         resolution: str = "768P",
         duration: int = 6,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit an image-to-video generation task anchored on ``first_frame_image``."""
         payload: Dict[str, Any] = {
@@ -94,7 +92,7 @@ class Hailuo2p3Synthesis(ApiVideoSynthesis):
         model: str = "MiniMax-Hailuo-2.3",
         resolution: str = "768P",
         duration: int = 6,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a generation, choosing the route from the presence of a first frame.
 

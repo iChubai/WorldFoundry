@@ -9,8 +9,6 @@ from torch import Tensor
 # from xformers.ops import memory_efficient_attention
 
 
-
-
 def create_sinusoidal_pos_embedding(
     time: torch.tensor,
     dimension: int,
@@ -25,9 +23,7 @@ def create_sinusoidal_pos_embedding(
     if time.ndim != 1:
         raise ValueError("The time tensor is expected to be of shape `(batch_size, )`.")
 
-    fraction = torch.linspace(
-        0.0, 1.0, dimension // 2, dtype=torch.float32, device=device
-    )
+    fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=torch.float32, device=device)
     period = min_period * (max_period / min_period) ** fraction
 
     # Compute the outer product
@@ -35,8 +31,6 @@ def create_sinusoidal_pos_embedding(
     sin_input = scaling_factor[None, :] * time[:, None]
     pos_emb = torch.cat([torch.sin(sin_input), torch.cos(sin_input)], dim=1)
     return pos_emb
-
-
 
 
 def make_att_2d_masks(pad_masks, att_masks):
@@ -72,8 +66,6 @@ def make_att_2d_masks(pad_masks, att_masks):
     return att_2d_masks
 
 
-
-
 def our_eager_attention_forward(
     query_states: torch.Tensor,
     key_states: torch.Tensor,
@@ -97,33 +89,23 @@ def our_eager_attention_forward(
     num_key_value_heads = key_states.shape[2]
     num_key_value_groups = num_att_heads // num_key_value_heads
 
-    key_states = einops.repeat(
-        key_states, "b l h d -> b l (h g) d", g=num_key_value_groups
-    )
-    value_states = einops.repeat(
-        value_states, "b l h d -> b l (h g) d", g=num_key_value_groups
-    )
+    key_states = einops.repeat(key_states, "b l h d -> b l (h g) d", g=num_key_value_groups)
+    value_states = einops.repeat(value_states, "b l h d -> b l (h g) d", g=num_key_value_groups)
 
     query_states_permuted = torch.einsum("blhd->bhld", query_states)
     key_states_permuted = torch.einsum("blhd->bhld", key_states)
 
-    att_weights = torch.einsum(
-        "bhqd,bhkd->bhqk", query_states_permuted, key_states_permuted
-    )
+    att_weights = torch.einsum("bhqd,bhkd->bhqk", query_states_permuted, key_states_permuted)
     att_weights *= head_dim**-0.5
 
     big_neg = -2.3819763e38
-    masked_att_weights = torch.where(
-        attention_mask[:, None, :, :], att_weights, big_neg
-    )
+    masked_att_weights = torch.where(attention_mask[:, None, :, :], att_weights, big_neg)
 
     probs = nn.functional.softmax(masked_att_weights, dim=-1)
     probs = probs.to(dtype=value_states.dtype)
 
     value_states_permuted = torch.einsum("blhd->bhld", value_states)  # [B, H, L_v, D]
-    att_output = torch.einsum(
-        "bhqk,bhkv->bhqv", probs, value_states_permuted
-    )  # [B, H, L_q, D]
+    att_output = torch.einsum("bhqk,bhkv->bhqv", probs, value_states_permuted)  # [B, H, L_q, D]
     att_output = torch.einsum("bhld->blhd", att_output)  # [B, L, H, D]
     att_output = att_output.reshape(bsize, seq_len, num_att_heads * head_dim)
 
@@ -139,7 +121,7 @@ def apply_rope(
 ) -> torch.Tensor:
     """Applies RoPE positions [B, L] to x [B, L, H, D]."""
     # ipdb.set_trace()
-    original_dtype = x.dtype # bf16
+    original_dtype = x.dtype  # bf16
     d = x.shape[-1]
     d_half = d // 2
     device = x.device
@@ -150,15 +132,15 @@ def apply_rope(
 
     freq_exponents = (2.0 / d) * torch.arange(d_half, dtype=dtype, device=device)
     timescale = max_wavelength**freq_exponents
-    radians = torch.einsum("bl,h->blh", positions_casted, 1.0 / timescale) # fp32 -> bf16
+    radians = torch.einsum("bl,h->blh", positions_casted, 1.0 / timescale)  # fp32 -> bf16
 
     radians = radians[..., None, :]  # [B, L, 1, D_half]
 
-    sin = torch.sin(radians) # bf16
-    cos = torch.cos(radians) # bf16
+    sin = torch.sin(radians)  # bf16
+    cos = torch.cos(radians)  # bf16
 
-    x1, x2 = x_casted.split(d_half, dim=-1) # fp32
+    x1, x2 = x_casted.split(d_half, dim=-1)  # fp32
 
-    res = torch.cat([x1 * cos - x2 * sin, x2 * cos + x1 * sin], dim=-1) # fp32
+    res = torch.cat([x1 * cos - x2 * sin, x2 * cos + x1 * sin], dim=-1)  # fp32
 
-    return res.to(original_dtype) # bf16
+    return res.to(original_dtype)  # bf16

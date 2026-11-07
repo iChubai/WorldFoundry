@@ -47,7 +47,8 @@ def canonicalize(text, keep_punctuation_exact_string=None):
     text = text.replace("_", " ")
     if keep_punctuation_exact_string:
         text = keep_punctuation_exact_string.join(
-            part.translate(str.maketrans("", "", string.punctuation)) for part in text.split(keep_punctuation_exact_string)
+            part.translate(str.maketrans("", "", string.punctuation))
+            for part in text.split(keep_punctuation_exact_string)
         )
     else:
         text = text.translate(str.maketrans("", "", string.punctuation))
@@ -195,7 +196,12 @@ class T5Encoder(nn.Module):
         self.token_embedding = vocab if isinstance(vocab, nn.Embedding) else nn.Embedding(vocab, dim)
         self.pos_embedding = T5RelativeEmbedding(num_buckets, num_heads, bidirectional=True) if shared_pos else None
         self.dropout = nn.Dropout(dropout)
-        self.blocks = nn.ModuleList([T5SelfAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout) for _ in range(num_layers)])
+        self.blocks = nn.ModuleList(
+            [
+                T5SelfAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout)
+                for _ in range(num_layers)
+            ]
+        )
         self.norm = T5LayerNorm(dim)
 
         # initialize weights
@@ -228,7 +234,10 @@ class T5Decoder(nn.Module):
         self.pos_embedding = T5RelativeEmbedding(num_buckets, num_heads, bidirectional=False) if shared_pos else None
         self.dropout = nn.Dropout(dropout)
         self.blocks = nn.ModuleList(
-            [T5CrossAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout) for _ in range(num_layers)]
+            [
+                T5CrossAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout)
+                for _ in range(num_layers)
+            ]
         )
         self.norm = T5LayerNorm(dim)
 
@@ -281,8 +290,12 @@ class T5Model(nn.Module):
 
         # layers
         self.token_embedding = nn.Embedding(vocab_size, dim)
-        self.encoder = T5Encoder(self.token_embedding, dim, dim_attn, dim_ffn, num_heads, encoder_layers, num_buckets, shared_pos, dropout)
-        self.decoder = T5Decoder(self.token_embedding, dim, dim_attn, dim_ffn, num_heads, decoder_layers, num_buckets, shared_pos, dropout)
+        self.encoder = T5Encoder(
+            self.token_embedding, dim, dim_attn, dim_ffn, num_heads, encoder_layers, num_buckets, shared_pos, dropout
+        )
+        self.decoder = T5Decoder(
+            self.token_embedding, dim, dim_attn, dim_ffn, num_heads, decoder_layers, num_buckets, shared_pos, dropout
+        )
         self.head = nn.Linear(dim, vocab_size, bias=False)
 
         # initialize weights

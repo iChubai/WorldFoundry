@@ -97,6 +97,7 @@ class Observation(Generic[ArrayT]):
 
     # Token auto-regressive mask (for FAST autoregressive model).
     token_ar_mask: at.Int[ArrayT, "*b l"] | None = None
+
     @classmethod
     def from_dict(cls, data: at.PyTree[ArrayT]) -> "Observation[ArrayT]":
         """This method defines the mapping between unstructured data (i.e., nested dict) to the structured Observation format."""
@@ -223,7 +224,6 @@ class BaseModelConfig(abc.ABC):
         return jax.tree.map(lambda x: jnp.ones(x.shape, x.dtype), observation_spec)
 
 
-
 @dataclasses.dataclass
 class BaseModel(nnx.Module, abc.ABC):
     """Base class for all model implementations. Specific models should inherit from this class. They should call
@@ -233,7 +233,6 @@ class BaseModel(nnx.Module, abc.ABC):
     action_dim: int
     action_horizon: int
     max_token_len: int
-
 
     @abc.abstractmethod
     def sample_actions(self, rng: at.KeyArrayLike, observation: Observation, **kwargs) -> Actions: ...

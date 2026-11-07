@@ -130,12 +130,9 @@ class XiaomiRobotics1Runtime:
                 values = nested
                 break
         if not values or not all(
-            isinstance(key, str) and isinstance(value, torch.Tensor)
-            for key, value in values.items()
+            isinstance(key, str) and isinstance(value, torch.Tensor) for key, value in values.items()
         ):
-            raise TypeError(
-                "XR1 model_states.pt must contain a non-empty string-to-tensor state dict"
-            )
+            raise TypeError("XR1 model_states.pt must contain a non-empty string-to-tensor state dict")
         prefixes = ("module.model.", "model.")
         for prefix in prefixes:
             selected = {key[len(prefix) :]: value for key, value in values.items() if key.startswith(prefix)}
@@ -162,8 +159,7 @@ class XiaomiRobotics1Runtime:
         tasks = payload.get("tasks", payload)
         if not isinstance(tasks, Mapping) or not tasks:
             raise ValueError(
-                f"normalization file {path} has no task statistics; "
-                "export checkpoint statistics into worldfoundry/data"
+                f"normalization file {path} has no task statistics; export checkpoint statistics into worldfoundry/data"
             )
         selected = tasks.get(task_id)
         if selected is None and len(tasks) == 1:

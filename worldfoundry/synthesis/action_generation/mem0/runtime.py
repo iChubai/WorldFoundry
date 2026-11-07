@@ -180,8 +180,7 @@ def _torch_load_checkpoint(root: Path, config: Mem0RuntimeConfig) -> tuple[Any, 
     parts = sorted(root.glob(config.checkpoint_parts_glob))
     if not parts:
         raise FileNotFoundError(
-            f"Mem-0 checkpoint is missing {checkpoint} and split parts "
-            f"matching {config.checkpoint_parts_glob!r}"
+            f"Mem-0 checkpoint is missing {checkpoint} and split parts matching {config.checkpoint_parts_glob!r}"
         )
     expected = [f".part{index:02d}" for index in range(len(parts))]
     suffixes = [part.name[-7:] for part in parts]
@@ -257,8 +256,7 @@ class Mem0Runtime:
         if not isinstance(state_dict, Mapping):
             raise TypeError("Mem-0 checkpoint does not contain a model state dictionary")
         if not state_dict or not all(
-            isinstance(key, str) and isinstance(value, torch.Tensor)
-            for key, value in state_dict.items()
+            isinstance(key, str) and isinstance(value, torch.Tensor) for key, value in state_dict.items()
         ):
             raise TypeError("Mem-0 checkpoint state dictionary must contain tensor values only")
         model.load_state_dict(state_dict, strict=self.config.strict_checkpoint)
@@ -328,9 +326,7 @@ class Mem0Runtime:
         layout = str(observation.get("state_layout", self.config.state_layout)).lower()
         if layout == "model":
             if values.size != self.config.model_state_dim:
-                raise ValueError(
-                    f"Mem-0 model-layout state requires {self.config.model_state_dim} values"
-                )
+                raise ValueError(f"Mem-0 model-layout state requires {self.config.model_state_dim} values")
             model_values = values
         else:
             if values.size == self.config.model_state_dim:
@@ -352,9 +348,13 @@ class Mem0Runtime:
             stats=self._stats,
             inverse=False,
         )
-        return torch.from_numpy(model_values).view(1, 1, -1).to(
-            device=self._device,
-            dtype=self._dtype,
+        return (
+            torch.from_numpy(model_values)
+            .view(1, 1, -1)
+            .to(
+                device=self._device,
+                dtype=self._dtype,
+            )
         )
 
     def predict_action(

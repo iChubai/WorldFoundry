@@ -14,11 +14,13 @@ from torchvision.transforms import ToTensor, ToPILImage
 try:
     from pytorch3d.renderer import PointsRasterizationSettings
 except ImportError:
+
     class PointsRasterizationSettings:
         def __init__(self, *, image_size, radius, points_per_pixel) -> None:
             self.image_size = image_size
             self.radius = radius
             self.points_per_pixel = points_per_pixel
+
 
 import depth_pro
 from uni3c.pointcloud import point_rendering
@@ -97,6 +99,7 @@ def _points_padding_numpy(points3d_hw3: np.ndarray) -> np.ndarray:
 
 _MODELS = {}
 
+
 def get_models(device):
     if device not in _MODELS:
         print("[cam_render] Init depth model (singleton)")
@@ -104,6 +107,7 @@ def get_models(device):
         depth_model = depth_model.eval()  # 统一FP32更稳
         _MODELS[device] = (depth_model, depth_transform)
     return _MODELS[device]
+
 
 @torch.no_grad()
 def render_from_image_and_traj(
@@ -125,7 +129,7 @@ def render_from_image_and_traj(
     depth_radius: float = 0.008,
     ppp: int = 8,
     fps: int = 30,
-) -> tuple[List[Image.Image], List[Image.Image]]:   # ← 新增显式返回类型
+) -> tuple[List[Image.Image], List[Image.Image]]:  # ← 新增显式返回类型
     """
     将原 cam_render.py 的主流程封装成函数：
     - reference_image: 直接给图片对象（PIL/np/tensor）
@@ -159,27 +163,23 @@ def render_from_image_and_traj(
         # 与传入 nframe 一致（若不一致按 nframe 截断/保护）
         cam_params = cam_params[:nframe]
 
-    w2cs = [ _camera_from_param(p) for p in cam_params ]
-    w2cs = torch.stack(w2cs, dim=0)                 # [F,4,4]
-    c2ws = w2cs.inverse()                           # [F,4,4]
+    w2cs = [_camera_from_param(p) for p in cam_params]
+    w2cs = torch.stack(w2cs, dim=0)  # [F,4,4]
+    c2ws = w2cs.inverse()  # [F,4,4]
 
     # === 3) 深度模型 & 前景分割 ===
     depth_model, depth_transform = get_models(device)
 
     depth_image_np = np.array(image)
-    depth_image = depth_transform(depth_image_np)   # depth_pro 的 transform
+    depth_image = depth_transform(depth_image_np)  # depth_pro 的 transform
     prediction = depth_model.infer(depth_image, f_px=None)
     depth = prediction["depth"]  # [H,W] in meters
-    depth = depth[None, None]    # [1,1,H,W]
+    depth = depth[None, None]  # [1,1,H,W]
 
     focallength_px = prediction["focallength_px"].item()
-    K = torch.tensor([
-        [focallength_px, 0,            width / 2],
-        [0,             focallength_px, height / 2],
-        [0,             0,              1]
-    ], dtype=torch.float32)
+    K = torch.tensor([[focallength_px, 0, width / 2], [0, focallength_px, height / 2], [0, 0, 1]], dtype=torch.float32)
     K_inv = K.inverse()
-    intrinsic = K[None].repeat(nframe, 1, 1)        # [F,3,3]
+    intrinsic = K[None].repeat(nframe, 1, 1)  # [F,3,3]
 
     # === 4) 构建点云（相机0为世界） ===
     # 像素网格
@@ -200,7 +200,7 @@ def render_from_image_and_traj(
     # === 5) 渲染序列 ===
     # with torch.no_grad(), torch.amp.autocast(device_type="cuda", enabled=(device.startswith("cuda"))):
     with torch.no_grad():
-    # 强制禁用 autocast，避免被转成 half/bf16
+        # 强制禁用 autocast，避免被转成 half/bf16
         with torch.autocast("cuda", enabled=False):
             control_imgs, render_masks = point_rendering(
                 K=intrinsic.float(),
@@ -208,14 +208,12 @@ def render_from_image_and_traj(
                 depth=depth.float(),
                 image=ToTensor()(image)[None].float() * 2 - 1,  # [-1,1]
                 raster_settings=PointsRasterizationSettings(
-                    image_size=(height, width),
-                    radius=depth_radius,
-                    points_per_pixel=ppp
+                    image_size=(height, width), radius=depth_radius, points_per_pixel=ppp
                 ),
                 device=device,
                 background_color=[0, 0, 0],
                 sobel_threshold=0.35,
-                sam_mask=None
+                sam_mask=None,
             )
 
     control_imgs = einops.rearrange(control_imgs, "(b f) c h w -> b c f h w", f=nframe)

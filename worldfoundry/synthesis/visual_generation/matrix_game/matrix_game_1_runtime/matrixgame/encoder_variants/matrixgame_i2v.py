@@ -4,7 +4,14 @@ from copy import deepcopy
 
 import torch
 import torch.nn as nn
-from transformers import CLIPTextModel, CLIPTokenizer, AutoTokenizer, AutoModel, LlavaForConditionalGeneration, CLIPImageProcessor
+from transformers import (
+    CLIPTextModel,
+    CLIPTokenizer,
+    AutoTokenizer,
+    AutoModel,
+    LlavaForConditionalGeneration,
+    CLIPImageProcessor,
+)
 from transformers.utils import ModelOutput
 
 
@@ -19,36 +26,29 @@ def load_text_encoder(
     logger=None,
     device=None,
 ):
-
-    if text_encoder_type == 'clipL':
+    if text_encoder_type == "clipL":
         text_encoder_path = f"{text_encoder_path}/text_encoder_2"
-    elif text_encoder_type == 'llm':
+    elif text_encoder_type == "llm":
         text_encoder_path = f"{text_encoder_path}/text_encoder"
-    elif text_encoder_type == 'llm-i2v':
+    elif text_encoder_type == "llm-i2v":
         text_encoder_path = f"{text_encoder_path}/text_encoder_i2v"
     if logger is not None:
-        logger.info(
-            f"Loading text encoder model ({text_encoder_type}) from: {text_encoder_path}"
-        )
+        logger.info(f"Loading text encoder model ({text_encoder_type}) from: {text_encoder_path}")
 
     if text_encoder_type == "clipL":
         text_encoder = CLIPTextModel.from_pretrained(text_encoder_path, low_cpu_mem_usage=True)
         text_encoder.final_layer_norm = text_encoder.text_model.final_layer_norm
     elif text_encoder_type == "llm":
-        text_encoder = AutoModel.from_pretrained(
-            text_encoder_path, low_cpu_mem_usage=True
-        )
+        text_encoder = AutoModel.from_pretrained(text_encoder_path, low_cpu_mem_usage=True)
         text_encoder.final_layer_norm = text_encoder.norm
     elif text_encoder_type == "llm-i2v":
-        text_encoder = LlavaForConditionalGeneration.from_pretrained(
-            text_encoder_path, low_cpu_mem_usage=True
-        )
+        text_encoder = LlavaForConditionalGeneration.from_pretrained(text_encoder_path, low_cpu_mem_usage=True)
     else:
         raise ValueError(f"Unsupported text encoder type: {text_encoder_type}")
     # from_pretrained will ensure that the model is in eval mode.
 
     text_encoder = text_encoder.to(dtype=text_encoder_precision)
-    '''
+    """
     try:
         if torch.distributed.get_rank() == 0:
             text_encoder_dict = text_encoder.state_dict()
@@ -62,7 +62,7 @@ def load_text_encoder(
             text_encoder.load_state_dict(params[0])
     except:
         pass
-    '''
+    """
 
     text_encoder.requires_grad_(False)
     text_encoder.eval()
@@ -75,28 +75,22 @@ def load_text_encoder(
     return text_encoder, text_encoder_path
 
 
-def load_tokenizer(
-    tokenizer_type, tokenizer_path=None, padding_side="right", logger=None
-):
-    if tokenizer_type == 'clipL':
+def load_tokenizer(tokenizer_type, tokenizer_path=None, padding_side="right", logger=None):
+    if tokenizer_type == "clipL":
         tokenizer_path = f"{tokenizer_path}/text_encoder_2"
-    elif tokenizer_type == 'llm-i2v':
+    elif tokenizer_type == "llm-i2v":
         tokenizer_path = f"{tokenizer_path}/text_encoder_i2v"
 
     if logger is not None:
         logger.info(f"Loading tokenizer ({tokenizer_type}) from: {tokenizer_path}")
-    
+
     processor = None
     if tokenizer_type == "clipL":
         tokenizer = CLIPTokenizer.from_pretrained(tokenizer_path, max_length=77)
     elif tokenizer_type == "llm":
-        tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer_path, padding_side=padding_side
-        )
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, padding_side=padding_side)
     elif tokenizer_type == "llm-i2v":
-        tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer_path, padding_side=padding_side
-        )
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, padding_side=padding_side)
         processor = CLIPImageProcessor.from_pretrained(tokenizer_path)
     else:
         raise ValueError(f"Unsupported tokenizer type: {tokenizer_type}")
@@ -155,20 +149,12 @@ class TextEncoder(nn.Module):
         self.max_length = max_length
         self.precision = text_encoder_precision
         self.model_path = text_encoder_path
-        self.tokenizer_type = (
-            tokenizer_type if tokenizer_type is not None else text_encoder_type
-        )
-        self.tokenizer_path = (
-            tokenizer_path if tokenizer_path is not None else text_encoder_path
-        )
+        self.tokenizer_type = tokenizer_type if tokenizer_type is not None else text_encoder_type
+        self.tokenizer_path = tokenizer_path if tokenizer_path is not None else text_encoder_path
         self.use_attention_mask = use_attention_mask
         if prompt_template_video is not None:
-            assert (
-                use_attention_mask is True
-            ), "Attention mask is True required when training videos."
-        self.input_max_length = (
-            input_max_length if input_max_length is not None else max_length
-        )
+            assert use_attention_mask is True, "Attention mask is True required when training videos."
+        self.input_max_length = input_max_length if input_max_length is not None else max_length
         self.prompt_template = prompt_template
         self.prompt_template_video = prompt_template_video
         self.hidden_state_skip_layer = hidden_state_skip_layer
@@ -180,10 +166,9 @@ class TextEncoder(nn.Module):
 
         self.use_template = self.prompt_template is not None
         if self.use_template:
-            assert (
-                isinstance(self.prompt_template, dict)
-                and "template" in self.prompt_template
-            ), f"`prompt_template` must be a dictionary with a key 'template', got {self.prompt_template}"
+            assert isinstance(self.prompt_template, dict) and "template" in self.prompt_template, (
+                f"`prompt_template` must be a dictionary with a key 'template', got {self.prompt_template}"
+            )
             assert "{}" in str(self.prompt_template["template"]), (
                 "`prompt_template['template']` must contain a placeholder `{}` for the input text, "
                 f"got {self.prompt_template['template']}"
@@ -192,10 +177,9 @@ class TextEncoder(nn.Module):
         self.use_video_template = self.prompt_template_video is not None
         if self.use_video_template:
             if self.prompt_template_video is not None:
-                assert (
-                    isinstance(self.prompt_template_video, dict)
-                    and "template" in self.prompt_template_video
-                ), f"`prompt_template_video` must be a dictionary with a key 'template', got {self.prompt_template_video}"
+                assert isinstance(self.prompt_template_video, dict) and "template" in self.prompt_template_video, (
+                    f"`prompt_template_video` must be a dictionary with a key 'template', got {self.prompt_template_video}"
+                )
             assert "{}" in str(self.prompt_template_video["template"]), (
                 "`prompt_template_video['template']` must contain a placeholder `{}` for the input text, "
                 f"got {self.prompt_template_video['template']}"
@@ -292,10 +276,7 @@ class TextEncoder(nn.Module):
             else:
                 raise ValueError(f"Unsupported data type: {data_type}")
             if isinstance(text, (list, tuple)):
-                text = [
-                    self.apply_text_to_template(one_text, prompt_template)
-                    for one_text in text
-                ]
+                text = [self.apply_text_to_template(one_text, prompt_template) for one_text in text]
                 if isinstance(text[0], list):
                     tokenize_input_type = "list"
             elif isinstance(text, str):
@@ -359,26 +340,17 @@ class TextEncoder(nn.Module):
         """
         device = self.model.device if device is None else device
         use_attention_mask = use_default(use_attention_mask, self.use_attention_mask)
-        hidden_state_skip_layer = use_default(
-            hidden_state_skip_layer, self.hidden_state_skip_layer
-        )
+        hidden_state_skip_layer = use_default(hidden_state_skip_layer, self.hidden_state_skip_layer)
         do_sample = use_default(do_sample, not self.reproduce)
         if not self.i2v_mode:
-            attention_mask = (
-                batch_encoding["attention_mask"].to(device)
-                if use_attention_mask
-                else None
-            )
+            attention_mask = batch_encoding["attention_mask"].to(device) if use_attention_mask else None
             outputs = self.model(
                 input_ids=batch_encoding["input_ids"].to(device),
                 attention_mask=attention_mask,
-                output_hidden_states=output_hidden_states
-                or hidden_state_skip_layer is not None,
+                output_hidden_states=output_hidden_states or hidden_state_skip_layer is not None,
             )
             if hidden_state_skip_layer is not None:
-                last_hidden_state = outputs.hidden_states[
-                    -(hidden_state_skip_layer + 1)
-                ]
+                last_hidden_state = outputs.hidden_states[-(hidden_state_skip_layer + 1)]
                 # Real last hidden state already has layer norm applied. So here we only apply it
                 # for intermediate layers.
                 if hidden_state_skip_layer > 0 and self.apply_final_norm:
@@ -396,24 +368,16 @@ class TextEncoder(nn.Module):
                     raise ValueError(f"Unsupported data type: {data_type}")
                 if crop_start > 0:
                     last_hidden_state = last_hidden_state[:, crop_start:]
-                    attention_mask = (
-                        attention_mask[:, crop_start:] if use_attention_mask else None
-                    )
+                    attention_mask = attention_mask[:, crop_start:] if use_attention_mask else None
 
             if output_hidden_states:
-                return TextEncoderModelOutput(
-                    last_hidden_state, attention_mask, outputs.hidden_states
-                )
+                return TextEncoderModelOutput(last_hidden_state, attention_mask, outputs.hidden_states)
             return TextEncoderModelOutput(last_hidden_state, attention_mask)
         else:
-            image_outputs = self.processor(semantic_images, return_tensors="pt")[
-                "pixel_values"
-            ].to(device=device, dtype=self.precision)
-            attention_mask = (
-                batch_encoding["attention_mask"].to(device)
-                if use_attention_mask
-                else None
+            image_outputs = self.processor(semantic_images, return_tensors="pt")["pixel_values"].to(
+                device=device, dtype=self.precision
             )
+            attention_mask = batch_encoding["attention_mask"].to(device) if use_attention_mask else None
             model_input_ids = batch_encoding["input_ids"].to(device)
             model_attention_mask = attention_mask
             image_token_id = getattr(
@@ -422,11 +386,7 @@ class TextEncoder(nn.Module):
                 getattr(self.model.config, "image_token_index", None),
             )
             if image_token_id is not None:
-                prompt_template = (
-                    self.prompt_template_video
-                    if data_type == "video"
-                    else self.prompt_template
-                )
+                prompt_template = self.prompt_template_video if data_type == "video" else self.prompt_template
                 image_token_count = (prompt_template or {}).get("image_emb_len", 576)
                 model_input_ids, model_attention_mask = self._expand_image_tokens_for_llava(
                     model_input_ids,
@@ -437,14 +397,11 @@ class TextEncoder(nn.Module):
             outputs = self.model(
                 input_ids=model_input_ids,
                 attention_mask=model_attention_mask,
-                output_hidden_states=output_hidden_states
-                or hidden_state_skip_layer is not None,
+                output_hidden_states=output_hidden_states or hidden_state_skip_layer is not None,
                 pixel_values=image_outputs,
             )
             if hidden_state_skip_layer is not None:
-                last_hidden_state = outputs.hidden_states[
-                    -(hidden_state_skip_layer + 1)
-                ]
+                last_hidden_state = outputs.hidden_states[-(hidden_state_skip_layer + 1)]
                 # Real last hidden state already has layer norm applied. So here we only apply it
                 # for intermediate layers.
                 if hidden_state_skip_layer > 0 and self.apply_final_norm:
@@ -454,20 +411,11 @@ class TextEncoder(nn.Module):
             if self.use_template:
                 if data_type == "video":
                     crop_start = self.prompt_template_video.get("crop_start", -1)
-                    text_crop_start = (
-                        crop_start
-                        - 1
-                        + self.prompt_template_video.get("image_emb_len", 576)
-                    )
-                    image_crop_start = self.prompt_template_video.get(
-                        "image_emb_start", 5
-                    )
-                    image_crop_end = self.prompt_template_video.get(
-                        "image_emb_end", 581
-                    )
+                    text_crop_start = crop_start - 1 + self.prompt_template_video.get("image_emb_len", 576)
+                    image_crop_start = self.prompt_template_video.get("image_emb_start", 5)
+                    image_crop_end = self.prompt_template_video.get("image_emb_end", 581)
                     batch_indices, last_double_return_token_indices = torch.where(
-                        batch_encoding["input_ids"]
-                        == self.prompt_template_video.get("double_return_token_id", 271)
+                        batch_encoding["input_ids"] == self.prompt_template_video.get("double_return_token_id", 271)
                     )
                     if last_double_return_token_indices.shape[0] == 3:
                         # in case the prompt is too long
@@ -475,28 +423,20 @@ class TextEncoder(nn.Module):
                             (
                                 last_double_return_token_indices,
                                 torch.tensor([batch_encoding["input_ids"].shape[-1]]).to(
-                                    device=last_double_return_token_indices.device),
+                                    device=last_double_return_token_indices.device
+                                ),
                             )
                         )
-                    last_double_return_token_indices = (
-                        last_double_return_token_indices.reshape(
-                            batch_encoding["input_ids"].shape[0], -1
-                        )[:, -1]
-                    )
+                    last_double_return_token_indices = last_double_return_token_indices.reshape(
+                        batch_encoding["input_ids"].shape[0], -1
+                    )[:, -1]
                     assistant_crop_start = (
-                        last_double_return_token_indices
-                        - 1
-                        + self.prompt_template_video.get("image_emb_len", 576)
-                        - 4
+                        last_double_return_token_indices - 1 + self.prompt_template_video.get("image_emb_len", 576) - 4
                     )
                     assistant_crop_end = (
-                        last_double_return_token_indices
-                        - 1
-                        + self.prompt_template_video.get("image_emb_len", 576)
+                        last_double_return_token_indices - 1 + self.prompt_template_video.get("image_emb_len", 576)
                     )
-                    attention_mask_assistant_crop_start = (
-                        last_double_return_token_indices - 4
-                    )
+                    attention_mask_assistant_crop_start = last_double_return_token_indices - 4
                     attention_mask_assistant_crop_end = last_double_return_token_indices
                 else:
                     raise ValueError(f"Unsupported data type: {data_type}")
@@ -509,9 +449,7 @@ class TextEncoder(nn.Module):
                     text_last_hidden_state.append(
                         torch.cat(
                             [
-                                last_hidden_state[
-                                    i, text_crop_start : assistant_crop_start[i].item()
-                                ],
+                                last_hidden_state[i, text_crop_start : assistant_crop_start[i].item()],
                                 last_hidden_state[i, assistant_crop_end[i].item() :],
                             ]
                         )
@@ -521,21 +459,15 @@ class TextEncoder(nn.Module):
                             [
                                 attention_mask[
                                     i,
-                                    crop_start : attention_mask_assistant_crop_start[
-                                        i
-                                    ].item(),
+                                    crop_start : attention_mask_assistant_crop_start[i].item(),
                                 ],
-                                attention_mask[
-                                    i, attention_mask_assistant_crop_end[i].item() :
-                                ],
+                                attention_mask[i, attention_mask_assistant_crop_end[i].item() :],
                             ]
                         )
                         if use_attention_mask
                         else None
                     )
-                    image_last_hidden_state.append(
-                        last_hidden_state[i, image_crop_start:image_crop_end]
-                    )
+                    image_last_hidden_state.append(last_hidden_state[i, image_crop_start:image_crop_end])
                     image_attention_mask.append(
                         torch.ones(image_last_hidden_state[-1].shape[0])
                         .to(last_hidden_state.device)
@@ -550,27 +482,18 @@ class TextEncoder(nn.Module):
                 image_attention_mask = torch.stack(image_attention_mask)
 
                 if semantic_images is not None and 0 < self.image_embed_interleave < 6:
-                    image_last_hidden_state = image_last_hidden_state[
-                        :, ::self.image_embed_interleave, :
-                    ]
-                    image_attention_mask = image_attention_mask[
-                        :, ::self.image_embed_interleave
-                    ]
+                    image_last_hidden_state = image_last_hidden_state[:, :: self.image_embed_interleave, :]
+                    image_attention_mask = image_attention_mask[:, :: self.image_embed_interleave]
 
                 assert (
                     text_last_hidden_state.shape[0] == text_attention_mask.shape[0]
-                    and image_last_hidden_state.shape[0]
-                    == image_attention_mask.shape[0]
+                    and image_last_hidden_state.shape[0] == image_attention_mask.shape[0]
                 )
-                #print("image_last_hidden_state", image_last_hidden_state.shape)
-                #print("text_last_hidden_state", text_last_hidden_state.shape)
-                last_hidden_state = torch.cat(
-                    [image_last_hidden_state, text_last_hidden_state], dim=1
-                )
-                #print("last_hidden_state", last_hidden_state.shape)
-                attention_mask = torch.cat(
-                    [image_attention_mask, text_attention_mask], dim=1
-                )
+                # print("image_last_hidden_state", image_last_hidden_state.shape)
+                # print("text_last_hidden_state", text_last_hidden_state.shape)
+                last_hidden_state = torch.cat([image_last_hidden_state, text_last_hidden_state], dim=1)
+                # print("last_hidden_state", last_hidden_state.shape)
+                attention_mask = torch.cat([image_attention_mask, text_attention_mask], dim=1)
             if output_hidden_states:
                 return TextEncoderModelOutput(
                     last_hidden_state,
@@ -597,12 +520,15 @@ class TextEncoder(nn.Module):
             hidden_state_skip_layer=hidden_state_skip_layer,
             return_texts=return_texts,
         )
+
+
 from diffusers.models import ModelMixin
+
 PROMPT_TEMPLATE_ENCODE = (
     "<|start_header_id|>system<|end_header_id|>\n\nDescribe the image by detailing the color, shape, size, texture, "
     "quantity, text, spatial relationships of the objects and background:<|eot_id|>"
     "<|start_header_id|>user<|end_header_id|>\n\n{}<|eot_id|>"
-) 
+)
 PROMPT_TEMPLATE_ENCODE_VIDEO = (
     "<|start_header_id|>system<|end_header_id|>\n\nDescribe the video by detailing the following aspects: "
     "1. The main content and theme of the video."
@@ -611,7 +537,7 @@ PROMPT_TEMPLATE_ENCODE_VIDEO = (
     "4. background environment, light, style and atmosphere."
     "5. camera angles, movements, and transitions used in the video:<|eot_id|>"
     "<|start_header_id|>user<|end_header_id|>\n\n{}<|eot_id|>"
-)  
+)
 
 PROMPT_TEMPLATE_ENCODE_I2V = (
     "<|start_header_id|>system<|end_header_id|>\n\n<image>\nDescribe the image by detailing the color, shape, size, texture, "
@@ -630,15 +556,29 @@ PROMPT_TEMPLATE_ENCODE_VIDEO_I2V = (
     "<|start_header_id|>user<|end_header_id|>\n\n{}<|eot_id|>"
     "<|start_header_id|>assistant<|end_header_id|>\n\n"
 )
+
+
 class MatrixGameEncoderWrapperI2V(ModelMixin):
-    def __init__(self, model_path, weight_dtype, task='i2v', i2v_type = 'concat'):
+    def __init__(self, model_path, weight_dtype, task="i2v", i2v_type="concat"):
         super().__init__()
-        text_encoder_type_1 = "llm-i2v" 
-        tokenizer_type_1 = "llm-i2v" 
-        prompt_template = {'template': PROMPT_TEMPLATE_ENCODE_I2V, 'crop_start': 36, "image_emb_start": 5,"image_emb_end": 581,"image_emb_len": 576,
-        "double_return_token_id": 271}
-        prompt_template_video = {"template": PROMPT_TEMPLATE_ENCODE_VIDEO_I2V, "crop_start": 103,"image_emb_start": 5,"image_emb_end": 581,"image_emb_len": 576,
-        "double_return_token_id": 271}
+        text_encoder_type_1 = "llm-i2v"
+        tokenizer_type_1 = "llm-i2v"
+        prompt_template = {
+            "template": PROMPT_TEMPLATE_ENCODE_I2V,
+            "crop_start": 36,
+            "image_emb_start": 5,
+            "image_emb_end": 581,
+            "image_emb_len": 576,
+            "double_return_token_id": 271,
+        }
+        prompt_template_video = {
+            "template": PROMPT_TEMPLATE_ENCODE_VIDEO_I2V,
+            "crop_start": 103,
+            "image_emb_start": 5,
+            "image_emb_end": 581,
+            "image_emb_len": 576,
+            "double_return_token_id": 271,
+        }
         max_length_1 = 256 + (
             prompt_template_video.get("crop_start", 0)
             if prompt_template_video is not None
@@ -659,7 +599,7 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
             max_length=max_length_1,
             text_encoder_precision=weight_dtype,
             tokenizer_type=tokenizer_type_1,
-            i2v_mode = True,
+            i2v_mode=True,
             prompt_template=prompt_template,
             prompt_template_video=prompt_template_video,
             hidden_state_skip_layer=hidden_state_skip_layer,
@@ -667,10 +607,9 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
             reproduce=reproduce,
             logger=logger,
             device=device,
-            text_encoder_path = model_path,
-            image_embed_interleave = 2 if i2v_type == 'concat' else 4
+            text_encoder_path=model_path,
+            image_embed_interleave=2 if i2v_type == "concat" else 4,
         )
-
 
         self.text_encoder_1 = text_encoder_1
 
@@ -678,11 +617,11 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
         self,
         prompt,
         device,
-        num_videos_per_prompt = 1,
+        num_videos_per_prompt=1,
         clip_skip: Optional[int] = None,
         text_encoder: Optional[TextEncoder] = None,
         data_type: Optional[str] = "image",
-        semantic_images=None
+        semantic_images=None,
     ):
         if prompt is not None and isinstance(prompt, str):
             batch_size = 1
@@ -691,12 +630,14 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
         else:
             batch_size = prompt_embeds.shape[0]
 
-        
         text_inputs = text_encoder.text2tokens(prompt, data_type=data_type)
 
         if clip_skip is None:
             prompt_outputs = text_encoder.encode(
-                text_inputs, data_type=data_type, device=device, semantic_images=semantic_images,
+                text_inputs,
+                data_type=data_type,
+                device=device,
+                semantic_images=semantic_images,
             )
             prompt_embeds = prompt_outputs.hidden_state
         else:
@@ -705,7 +646,7 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
                 output_hidden_states=True,
                 data_type=data_type,
                 device=device,
-                semantic_images=semantic_images
+                semantic_images=semantic_images,
             )
             # Access the `hidden_states` first, that contains a tuple of
             # all the hidden states from the encoder layers. Then index into
@@ -715,20 +656,15 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
             # representations. The `last_hidden_states` that we typically use for
             # obtaining the final prompt representations passes through the LayerNorm
             # layer.
-            prompt_embeds = text_encoder.model.text_model.final_layer_norm(
-                prompt_embeds
-            )
+            prompt_embeds = text_encoder.model.text_model.final_layer_norm(prompt_embeds)
 
         attention_mask = prompt_outputs.attention_mask
         if attention_mask is not None:
             attention_mask = attention_mask.to(device)
             bs_embed, seq_len = attention_mask.shape
             attention_mask = attention_mask.repeat(1, num_videos_per_prompt)
-            attention_mask = attention_mask.view(
-                bs_embed * num_videos_per_prompt, seq_len
-            )
+            attention_mask = attention_mask.view(bs_embed * num_videos_per_prompt, seq_len)
 
-        
         prompt_embeds_dtype = text_encoder.dtype
         prompt_embeds = prompt_embeds.to(dtype=prompt_embeds_dtype, device=device)
 
@@ -741,18 +677,16 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
             bs_embed, seq_len, _ = prompt_embeds.shape
             # duplicate text embeddings for each generation per prompt, using mps friendly method
             prompt_embeds = prompt_embeds.repeat(1, num_videos_per_prompt, 1)
-            prompt_embeds = prompt_embeds.view(
-                bs_embed * num_videos_per_prompt, seq_len, -1
-            )
+            prompt_embeds = prompt_embeds.view(bs_embed * num_videos_per_prompt, seq_len, -1)
         return prompt_embeds, attention_mask
 
     def forward(self, caption, semantic_images, device=None, max_length=226):
         prompt_embeds_1, attention_mask_1 = self.encode_prompt(
             caption,
             device,
-            data_type = 'video', #TODO: 注意图像和视频需要使用不同的，因为llm里使用不同的template
-            text_encoder = self.text_encoder_1,
-            semantic_images = semantic_images
+            data_type="video",  # TODO: 注意图像和视频需要使用不同的，因为llm里使用不同的template
+            text_encoder=self.text_encoder_1,
+            semantic_images=semantic_images,
         )
 
         return (prompt_embeds_1, None), (attention_mask_1, None), None

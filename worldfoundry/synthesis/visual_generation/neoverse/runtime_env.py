@@ -6,6 +6,7 @@ includes robust mechanisms for finding NeoVerse model directories,
 reconstructor checkpoints, and LoRA files, supporting both local paths
 and downloading from Hugging Face Hub.
 """
+
 from __future__ import annotations
 
 import os
@@ -243,9 +244,7 @@ def _resolve_file_from_source(
             matches.extend(sorted(candidate.glob(pattern)))
         if matches:
             return matches[0].resolve()
-        raise FileNotFoundError(
-            f"Unable to find any of {list(expected_names)} under {candidate}."
-        )
+        raise FileNotFoundError(f"Unable to find any of {list(expected_names)} under {candidate}.")
 
     # If local path doesn't exist, try downloading from Hugging Face Hub.
     snapshot_root = _download_snapshot(
@@ -262,9 +261,7 @@ def _resolve_file_from_source(
         matches.extend(sorted(snapshot_root.glob(pattern)))
     if matches:
         return matches[0].resolve()
-    raise FileNotFoundError(
-        f"Unable to find any of {list(expected_names)} in snapshot for {source_value}."
-    )
+    raise FileNotFoundError(f"Unable to find any of {list(expected_names)} in snapshot for {source_value}.")
 
 
 def resolve_neoverse_model_dir(source_value: Optional[str | os.PathLike]) -> Path:
@@ -299,9 +296,7 @@ def resolve_neoverse_model_dir(source_value: Optional[str | os.PathLike]) -> Pat
 
     # If a source value was provided but nothing was found locally, raise an error.
     if source_value and Path(str(source_value)).expanduser().exists():
-        raise FileNotFoundError(
-            f"Unable to locate a valid NeoVerse model directory under {source_value}."
-        )
+        raise FileNotFoundError(f"Unable to locate a valid NeoVerse model directory under {source_value}.")
 
     # If no local or cached directory is found, attempt to download from Hugging Face Hub.
     repo_id = str(source_value) if source_value else DEFAULT_NEOVERSE_REPO
@@ -312,9 +307,7 @@ def resolve_neoverse_model_dir(source_value: Optional[str | os.PathLike]) -> Pat
     nested = snapshot_root / "NeoVerse"
     if _looks_like_neoverse_model_dir(nested):
         return nested.resolve()
-    raise FileNotFoundError(
-        f"Unable to locate a valid NeoVerse checkpoint directory in snapshot for {repo_id}."
-    )
+    raise FileNotFoundError(f"Unable to locate a valid NeoVerse checkpoint directory in snapshot for {repo_id}.")
 
 
 def resolve_neoverse_reconstructor_path(

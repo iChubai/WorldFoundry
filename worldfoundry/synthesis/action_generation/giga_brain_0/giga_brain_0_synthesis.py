@@ -162,7 +162,9 @@ class GigaBrain0Synthesis(ActionModelSynthesis):
         delta_mask = merged.get("delta_mask") or self.profile.input_schema.get("delta_mask")
         if isinstance(delta_mask, str):
             # Convert comma-separated string to a list of booleans.
-            delta_mask = [item.strip().lower() in {"1", "true", "yes"} for item in delta_mask.split(",") if item.strip()]
+            delta_mask = [
+                item.strip().lower() in {"1", "true", "yes"} for item in delta_mask.split(",") if item.strip()
+            ]
         if not delta_mask:
             if require_existing:
                 raise ValueError("GigaBrain-0 requires delta_mask.")
@@ -303,7 +305,9 @@ class GigaBrain0Synthesis(ActionModelSynthesis):
             },
         }
         # Write the plan payload to the plan file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         # If only a plan is requested, return the planning details and exit.
         if plan_only:
@@ -329,7 +333,11 @@ class GigaBrain0Synthesis(ActionModelSynthesis):
             images=images,
             state=state,
             output_path=context["output_path"],
-            extra_metadata={"run_dir": str(run_dir), "profile": self.profile.to_dict(), "interactions": list(interactions)},
+            extra_metadata={
+                "run_dir": str(run_dir),
+                "profile": self.profile.to_dict(),
+                "interactions": list(interactions),
+            },
         )
         # Return the prediction result augmented with run directory, plan path, and profile.
         return {**result, "run_dir": str(run_dir), "plan_path": str(plan_path), "profile": self.profile.to_dict()}

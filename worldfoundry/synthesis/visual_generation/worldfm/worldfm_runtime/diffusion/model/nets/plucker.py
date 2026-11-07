@@ -70,4 +70,3 @@ def compute_plucker_rays(
     o_cross_d = torch.cross(o, d_world, dim=-1)
     plucker = torch.cat([o_cross_d, d_world], dim=-1)  # (B,V,h,w,6)
     return plucker.to(dtype=dtype)
-

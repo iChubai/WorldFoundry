@@ -261,11 +261,7 @@ class OpenVLARuntime:
         checkpoint = self.config.checkpoint_dir.expanduser().resolve()
         official_prompt = openvla_prompt(instruction, checkpoint)
         inputs = self.processor(official_prompt, rgb_image).to(self.device, dtype=self.dtype)
-        if (
-            "input_ids" in inputs
-            and "attention_mask" in inputs
-            and not torch.all(inputs["input_ids"][:, -1] == 29871)
-        ):
+        if "input_ids" in inputs and "attention_mask" in inputs and not torch.all(inputs["input_ids"][:, -1] == 29871):
             inputs["attention_mask"] = torch.cat(
                 [inputs["attention_mask"], torch.ones_like(inputs["attention_mask"][:, :1])],
                 dim=1,

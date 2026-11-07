@@ -54,12 +54,8 @@ class SelfAttentionConfig(BaseModel):
         if self.num_kv_heads is None:
             self.num_kv_heads = self.num_heads
 
-        assert self.embed_dim % self.num_heads == 0, (
-            f"{self.embed_dim=} must be divisible by {self.num_heads=}"
-        )
-        assert self.num_heads % self.num_kv_heads == 0, (
-            f"{self.num_heads=} must be divisible by {self.num_kv_heads=}"
-        )
+        assert self.embed_dim % self.num_heads == 0, f"{self.embed_dim=} must be divisible by {self.num_heads=}"
+        assert self.num_heads % self.num_kv_heads == 0, f"{self.num_heads=} must be divisible by {self.num_kv_heads=}"
         return self
 
     @property

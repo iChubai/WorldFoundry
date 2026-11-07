@@ -70,7 +70,8 @@ def make_magi_ranges_full(spec: AttnMaskSpec, Q_real: int, KV_real: int, device)
         total_len = 2 * clean_len
 
         assert Q_real == total_len and KV_real == total_len, (
-            f"teacher_forcing expects Q_real==KV_real==2*clean_len ({total_len}), " f"got Q_real={Q_real}, KV_real={KV_real}"
+            f"teacher_forcing expects Q_real==KV_real==2*clean_len ({total_len}), "
+            f"got Q_real={Q_real}, KV_real={KV_real}"
         )
 
         local_k_tf = spec.local_attn_blocks - 1
@@ -184,7 +185,9 @@ def merge_k_ranges(q_ranges: torch.Tensor, k_ranges: torch.Tensor, KV_real: int)
     return q2, k2
 
 
-def group_q_ranges_csr(q_ranges: torch.Tensor, k_ranges: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def group_q_ranges_csr(
+    q_ranges: torch.Tensor, k_ranges: torch.Tensor
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Groups consecutive identical q_ranges into CSR:
       q_unique: [G,2] int32
@@ -262,14 +265,16 @@ class MagiMask:
     BLOCK_M: int
 
 
-def prepare_magi_csr_and_tasks(q_ranges: torch.Tensor, k_ranges: torch.Tensor, Q_real: int, KV_real: int, BLOCK_M: int) -> MagiMask:
+def prepare_magi_csr_and_tasks(
+    q_ranges: torch.Tensor, k_ranges: torch.Tensor, Q_real: int, KV_real: int, BLOCK_M: int
+) -> MagiMask:
     q_ranges, k_ranges = merge_k_ranges(q_ranges, k_ranges, KV_real=KV_real)
     q_unique, k_flat, qk_map = group_q_ranges_csr(q_ranges, k_ranges)
     # sanity: q coverage (partition, no gaps/overlaps)
     qu = q_unique.detach().to("cpu").to(torch.int64).numpy()
     assert qu.shape[0] > 0 and qu[0, 0] == 0 and qu[-1, 1] == Q_real, f"q_unique does not cover [0,Q_real)."
     for i in range(qu.shape[0] - 1):
-        assert qu[i, 1] == qu[i + 1, 0], f"q_unique has gap/overlap at i={i}: {qu[i]} vs {qu[i+1]}"
+        assert qu[i, 1] == qu[i + 1, 0], f"q_unique has gap/overlap at i={i}: {qu[i]} vs {qu[i + 1]}"
     task_group, task_qtile = build_qtile_tasks(q_unique, Q_real=Q_real, BLOCK_M=BLOCK_M)
     return MagiMask(
         q_unique=q_unique.contiguous(),

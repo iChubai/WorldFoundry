@@ -15,12 +15,10 @@ class AbstractRegularizer(nn.Module):
         raise NotImplementedError
 
 
-
 class DiagonalGaussianRegularizer(AbstractRegularizer):
     def __init__(self, sample: bool = True):
         super(DiagonalGaussianRegularizer, self).__init__()
         self.sample = sample
-
 
     def forward(self, z: torch.Tensor) -> Tuple[torch.Tensor, dict]:
         posterior = DiagonalGaussianDistribution(z)

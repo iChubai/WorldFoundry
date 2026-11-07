@@ -37,7 +37,8 @@ OFFICIAL_MOTIONCTRL_CONFIG = (
 # Path to the MotionCtrl configuration file vendored within WorldFoundry data.
 WORLDFOUNDRY_MOTIONCTRL_CONFIG = worldfoundry_data_path(
     "models",
-    "runtime", "configs",
+    "runtime",
+    "configs",
     "camera_control",
     "motionctrl_config_both.yaml",
 )
@@ -227,7 +228,10 @@ class MotionCtrlRuntime:
             model_id=str(options.get("model_id") or options.get("profile_id") or model_id or cls.MODEL_ID),
             device=str(device or options.get("device") or "cuda"),
             ckpt_path=options.get("ckpt_path") or options.get("checkpoint_path") or DEFAULT_MOTIONCTRL_CKPT,
-            config_path=options.get("config_path") or options.get("config") or options.get("base") or DEFAULT_MOTIONCTRL_CONFIG,
+            config_path=options.get("config_path")
+            or options.get("config")
+            or options.get("base")
+            or DEFAULT_MOTIONCTRL_CONFIG,
             cond_dir=options.get("cond_dir") or DEFAULT_MOTIONCTRL_COND_DIR,
             adapter_ckpt=options.get("adapter_ckpt"),
             condtype=str(options.get("condtype") or "both"),

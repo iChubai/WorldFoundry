@@ -104,8 +104,8 @@ class DatasetEnv:
                 f"Done  : {bool(self.end)}",
                 f"Reward: {self.rew.item():.2f}",
                 "-------",
-                f"To here: {self.episode.rew[:self.t + 1].sum().item():.2f}",
-                f"To go  : {self.episode.rew[self.t + 1:].sum().item():.2f}",
+                f"To here: {self.episode.rew[: self.t + 1].sum().item():.2f}",
+                f"To go  : {self.episode.rew[self.t + 1 :].sum().item():.2f}",
             ],
             [
                 f"Timestep: {self.t:{n_digits}d}",

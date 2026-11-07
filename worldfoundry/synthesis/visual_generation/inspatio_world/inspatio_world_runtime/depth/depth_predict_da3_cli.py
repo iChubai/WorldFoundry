@@ -86,18 +86,14 @@ def process_video(model, video_path, output_dir, video_idx, total_videos, flat_o
 
 def main():
     parser = argparse.ArgumentParser(description="Depth Predict DA3 CLI")
-    parser.add_argument("--input", "-i", type=str, required=True,
-                        help="Input video file or directory")
-    parser.add_argument("--output", "-o", type=str, required=True,
-                        help="Output directory")
-    parser.add_argument("--video_ext", type=str, default=".mp4,.avi,.mov,.mkv",
-                        help="Supported video extensions, comma-separated")
-    parser.add_argument("--filter", "-f", type=str, default=None,
-                        help="Filter videos by filename keyword")
-    parser.add_argument("--skip_existing", action="store_true",
-                        help="Skip videos with existing output")
-    parser.add_argument("--config-json", type=str, default=None,
-                        help="JSON string with depth model config overrides")
+    parser.add_argument("--input", "-i", type=str, required=True, help="Input video file or directory")
+    parser.add_argument("--output", "-o", type=str, required=True, help="Output directory")
+    parser.add_argument(
+        "--video_ext", type=str, default=".mp4,.avi,.mov,.mkv", help="Supported video extensions, comma-separated"
+    )
+    parser.add_argument("--filter", "-f", type=str, default=None, help="Filter videos by filename keyword")
+    parser.add_argument("--skip_existing", action="store_true", help="Skip videos with existing output")
+    parser.add_argument("--config-json", type=str, default=None, help="JSON string with depth model config overrides")
     args = parser.parse_args()
     initialize_reproducibility()
 
@@ -124,7 +120,9 @@ def main():
         is_single = os.path.isfile(args.input)
         filtered = []
         for vp in video_files:
-            check_dir = args.output if is_single else os.path.join(args.output, os.path.splitext(os.path.basename(vp))[0])
+            check_dir = (
+                args.output if is_single else os.path.join(args.output, os.path.splitext(os.path.basename(vp))[0])
+            )
             if os.path.exists(os.path.join(check_dir, "intrinsic.txt")):
                 print(f"Skipping (already processed): {os.path.basename(vp)}")
             else:
@@ -147,8 +145,7 @@ def main():
     fail_count = 0
 
     for idx, video_path in enumerate(video_files, 1):
-        success = process_video(model, video_path, args.output, idx, len(video_files),
-                                flat_output=is_single_file)
+        success = process_video(model, video_path, args.output, idx, len(video_files), flat_output=is_single_file)
         if success:
             success_count += 1
         else:

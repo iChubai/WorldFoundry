@@ -150,9 +150,7 @@ class DreamZeroWan225BPolicy(BasePolicy):
         self._policy = groot_policy
         self._image_height = image_height
         self._image_width = image_width
-        self._embodiment_tag = (
-            embodiment_tag if embodiment_tag in VIDEO_KEY_MAPPING else "oxe_droid"
-        )
+        self._embodiment_tag = embodiment_tag if embodiment_tag in VIDEO_KEY_MAPPING else "oxe_droid"
         video_keys = list(VIDEO_KEY_MAPPING[self._embodiment_tag].values())
         self._frame_buffers = {k: [] for k in video_keys}
         self._is_first_call = True
@@ -172,9 +170,7 @@ class DreamZeroWan225BPolicy(BasePolicy):
             if roboarena_key in obs:
                 data = obs[roboarena_key]
                 if isinstance(data, np.ndarray):
-                    data = _resize_frames_to_resolution(
-                        data, self._image_height, self._image_width
-                    )
+                    data = _resize_frames_to_resolution(data, self._image_height, self._image_width)
                     if data.ndim == 4:
                         self._frame_buffers[model_key].extend(list(data))
                     else:
@@ -208,7 +204,7 @@ class DreamZeroWan225BPolicy(BasePolicy):
                 gripper_pos = gripper_pos.reshape(1, -1)
             converted[state_gripper_key] = gripper_pos.astype(np.float64)
         else:
-            converted[state_gripper_key] = np.zeros((1,1), dtype=np.float64)
+            converted[state_gripper_key] = np.zeros((1, 1), dtype=np.float64)
 
         text_prompt = obs.get("prompt", "")
         logger.info("Text prompt: %s", text_prompt)

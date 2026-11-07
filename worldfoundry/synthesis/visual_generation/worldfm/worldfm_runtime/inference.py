@@ -89,7 +89,7 @@ def _preprocess_u8_tensor(
     x = torch.nn.functional.interpolate(x, size=(new_h, new_w), mode="bicubic", align_corners=False)
     crop_y = max(0, (new_h - tgt_h) // 2)
     crop_x = max(0, (new_w - tgt_w) // 2)
-    x = x[:, :, crop_y:crop_y + tgt_h, crop_x:crop_x + tgt_w].squeeze(0)
+    x = x[:, :, crop_y : crop_y + tgt_h, crop_x : crop_x + tgt_w].squeeze(0)
     return (x - 0.5) / 0.5
 
 
@@ -162,7 +162,9 @@ class WorldFMTriConditionInprocess:
             ).to(self.device)
 
         state_dict = load_worldfm_checkpoint(cfg.model_path)
-        model_sd = state_dict["state_dict"] if isinstance(state_dict, dict) and "state_dict" in state_dict else state_dict
+        model_sd = (
+            state_dict["state_dict"] if isinstance(state_dict, dict) and "state_dict" in state_dict else state_dict
+        )
         if isinstance(model_sd, dict) and "pos_embed" in model_sd:
             del model_sd["pos_embed"]
         model.load_state_dict(model_sd, strict=False)
@@ -254,7 +256,7 @@ class WorldFMTriConditionInprocess:
         vae_scale = getattr(self.vae.config, "scaling_factor", 0.13025)
         latents = []
         for i in range(0, cond2.shape[0], int(chunk)):
-            x = cond2[i:i + int(chunk)]
+            x = cond2[i : i + int(chunk)]
             z = self.vae.encode(x).latent_dist.sample() * vae_scale
             latents.append(z)
         self._cond2_candidates_latent = torch.cat(latents)
@@ -299,8 +301,8 @@ class WorldFMTriConditionInprocess:
             z_c2: Optional[torch.Tensor] = None
         else:
             ci = int(cond2_index or 0)
-            cond2 = self._cond2_candidates_tensor[ci:ci + 1]  # type: ignore
-            z_c2 = self._cond2_candidates_latent[ci:ci + 1]  # type: ignore
+            cond2 = self._cond2_candidates_tensor[ci : ci + 1]  # type: ignore
+            z_c2 = self._cond2_candidates_latent[ci : ci + 1]  # type: ignore
         self._last_cond2_tensor = cond2
 
         if use_profile:
@@ -328,9 +330,15 @@ class WorldFMTriConditionInprocess:
         latent_h, latent_w = z_c1.shape[2], z_c1.shape[3]
         z = torch.randn(1, 4, latent_h, latent_w, device=self.device, dtype=self.cfg.weight_dtype)
 
-        hw = torch.tensor([[float(self.target_hw[0]), float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype)
-        ar = torch.tensor([[float(self.target_hw[0]) / float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype)
-        caption_embs = torch.zeros(1, 1, self.max_sequence_length, 4096, device=self.device, dtype=self.cfg.weight_dtype)
+        hw = torch.tensor(
+            [[float(self.target_hw[0]), float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype
+        )
+        ar = torch.tensor(
+            [[float(self.target_hw[0]) / float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype
+        )
+        caption_embs = torch.zeros(
+            1, 1, self.max_sequence_length, 4096, device=self.device, dtype=self.cfg.weight_dtype
+        )
 
         def model_fn_wrapper(x, timestep, cond=None, **kwargs):
             kw = kwargs.copy()
@@ -428,8 +436,8 @@ class WorldFMTriConditionInprocess:
             z_c2: Optional[torch.Tensor] = None
         else:
             ci = int(cond2_index or 0)
-            cond2 = self._cond2_candidates_tensor[ci:ci + 1]  # type: ignore
-            z_c2 = self._cond2_candidates_latent[ci:ci + 1]  # type: ignore
+            cond2 = self._cond2_candidates_tensor[ci : ci + 1]  # type: ignore
+            z_c2 = self._cond2_candidates_latent[ci : ci + 1]  # type: ignore
         self._last_cond2_tensor = cond2
 
         vae_scale = getattr(self.vae.config, "scaling_factor", 0.13025)
@@ -441,9 +449,15 @@ class WorldFMTriConditionInprocess:
 
         latent_h, latent_w = z_c1.shape[2], z_c1.shape[3]
         z = torch.randn(1, 4, latent_h, latent_w, device=self.device, dtype=self.cfg.weight_dtype)
-        hw = torch.tensor([[float(self.target_hw[0]), float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype)
-        ar = torch.tensor([[float(self.target_hw[0]) / float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype)
-        caption_embs = torch.zeros(1, 1, self.max_sequence_length, 4096, device=self.device, dtype=self.cfg.weight_dtype)
+        hw = torch.tensor(
+            [[float(self.target_hw[0]), float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype
+        )
+        ar = torch.tensor(
+            [[float(self.target_hw[0]) / float(self.target_hw[1])]], device=self.device, dtype=self.cfg.weight_dtype
+        )
+        caption_embs = torch.zeros(
+            1, 1, self.max_sequence_length, 4096, device=self.device, dtype=self.cfg.weight_dtype
+        )
         null_y = caption_embs.clone()
 
         def model_fn_wrapper(x, timestep, cond=None, **kwargs):

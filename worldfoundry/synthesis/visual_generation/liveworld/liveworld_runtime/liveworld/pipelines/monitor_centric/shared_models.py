@@ -5,6 +5,7 @@ reused across multiple ``MonitorCentricEvolutionPipeline`` runs.  Each pipeline
 receives a ``SharedModels`` instance and uses the pre-loaded models
 directly — no lazy loading.
 """
+
 from __future__ import annotations
 
 import sys
@@ -29,6 +30,7 @@ from liveworld.pipelines.pointcloud_updater import PointCloudUpdater, create_poi
 @dataclass
 class SharedModels:
     """Pre-loaded model instances shared across batch runs."""
+
     observer_adapter: ObserverAdapter
     qwen_extractor: Qwen3VLEntityExtractor
     sam3_segmenter: Sam3VideoSegmenter
@@ -95,7 +97,9 @@ def create_shared_models(config: dict) -> SharedModels:
         dedup_model_path = dedup_cfg.get("model_path", "ckpts/facebook--dinov3-vith16plus-pretrain-lvd1689m")
         dedup_similarity_threshold = dedup_cfg.get("similarity_threshold", 0.6)
         entity_matcher = EntityMatcher(
-            model_path=dedup_model_path, device=device_str, similarity_threshold=dedup_similarity_threshold,
+            model_path=dedup_model_path,
+            device=device_str,
+            similarity_threshold=dedup_similarity_threshold,
         )
         if event_cfg["cpu_offload"].get("dinov3", False) and hasattr(entity_matcher, "model"):
             entity_matcher.model.to("cpu")

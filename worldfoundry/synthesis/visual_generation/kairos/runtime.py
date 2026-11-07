@@ -148,7 +148,11 @@ def _default_config_path(runtime_root: str | Path, variant: str) -> str:
     Returns:
         The string representation of the default configuration file path.
     """
-    name = "kairos_4b_config.py" if str(variant).lower() in {"720p", "4b-720p", "pretrained"} else "kairos_4b_config_DMD.py"
+    name = (
+        "kairos_4b_config.py"
+        if str(variant).lower() in {"720p", "4b-720p", "pretrained"}
+        else "kairos_4b_config_DMD.py"
+    )
     root = Path(runtime_root).expanduser()
     candidates = (
         root / "kairos" / "configs" / name,
@@ -156,7 +160,7 @@ def _default_config_path(runtime_root: str | Path, variant: str) -> str:
         root / "configs" / name,
     )
     existing = _first_existing(candidates)
-    return str(existing or package_data_path('models', 'runtime', 'configs', 'kairos') / name)
+    return str(existing or package_data_path("models", "runtime", "configs", "kairos") / name)
 
 
 def _load_video_frames(video_path: str | Path) -> np.ndarray:
@@ -507,7 +511,9 @@ class KairosRuntime:
         patched.write_text(text + "\n".join(overrides) + "\n", encoding="utf-8")
         return patched
 
-    def _write_input_json(self, temp_dir: Path, prompt: str, images: Any, output_dir: Path, options: Mapping[str, Any]) -> Path:
+    def _write_input_json(
+        self, temp_dir: Path, prompt: str, images: Any, output_dir: Path, options: Mapping[str, Any]
+    ) -> Path:
         """
         Writes the input parameters for Kairos inference to a JSON file.
 

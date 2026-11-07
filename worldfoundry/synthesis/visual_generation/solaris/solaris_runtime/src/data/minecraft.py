@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from .utils import resize_letterbox
@@ -93,7 +92,6 @@ def read_act_slice_vpt(
     start,
     stop,
 ):
-
     attack_is_stuck = False
     last_hotbar = 0
 
@@ -110,9 +108,7 @@ def read_act_slice_vpt(
                 attack_is_stuck = False
         # If still stuck, remove the action
         if attack_is_stuck:
-            step_data["mouse"]["buttons"] = [
-                button for button in step_data["mouse"]["buttons"] if button != 0
-            ]
+            step_data["mouse"]["buttons"] = [button for button in step_data["mouse"]["buttons"] if button != 0]
 
         action, _ = json_action_to_env_action(step_data)
 
@@ -211,16 +207,10 @@ def read_obs_slice_decord(
         frames = video.get_batch(range(start + 1, stop + 1)).asnumpy()
     except Exception as e:
         raise ValueError(
-            f"Could not read frames from video: {e}. "
-            "Ensure the video is properly loaded and the range is valid."
+            f"Could not read frames from video: {e}. Ensure the video is properly loaded and the range is valid."
         )
 
-    episode_frames = np.array(
-        [
-            resize_letterbox(frame, *resize) if resize is not None else frame
-            for frame in frames
-        ]
-    )
+    episode_frames = np.array([resize_letterbox(frame, *resize) if resize is not None else frame for frame in frames])
     return episode_frames
 
 
@@ -282,9 +272,7 @@ def convert_act_slice_mineflayer(
             actions_one_hot[i, ACTION_KEYS.index("attack")] = 1  # LMB
         for hotbar_idx in range(HOTBAR_KEYS_NUM):
             if action_data.get("hotbar.{}".format(hotbar_idx + 1)):
-                actions_one_hot[
-                    i, ACTION_KEYS.index("hotbar.{}".format(hotbar_idx + 1))
-                ] = 1
+                actions_one_hot[i, ACTION_KEYS.index("hotbar.{}".format(hotbar_idx + 1))] = 1
 
         # Convert camera values from radians to degrees (no normalization)
         # MineFlayer camera: [yaw, pitch] in radians

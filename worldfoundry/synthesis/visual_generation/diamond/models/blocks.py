@@ -224,8 +224,8 @@ class UNet(nn.Module):
     def forward(self, x: Tensor, cond: Tensor) -> Tensor:
         *_, h, w = x.size()
         n = self._num_down
-        padding_h = math.ceil(h / 2 ** n) * 2 ** n - h
-        padding_w = math.ceil(w / 2 ** n) * 2 ** n - w
+        padding_h = math.ceil(h / 2**n) * 2**n - h
+        padding_w = math.ceil(w / 2**n) * 2**n - w
         x = F.pad(x, (0, padding_w, 0, padding_h))
 
         d_outputs = []
@@ -235,7 +235,7 @@ class UNet(nn.Module):
             d_outputs.append((x_down, *block_outputs))
 
         x, _ = self.mid_blocks(x, cond)
-        
+
         u_outputs = []
         for block, up, skip in zip(self.u_blocks, self.upsamples, reversed(d_outputs)):
             x_up = up(x)

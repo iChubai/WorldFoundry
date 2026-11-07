@@ -32,9 +32,7 @@ class VMemModelParams(object):
     context_dim: int = 1024
     dense_in_channels: int = 6
     dropout: float = 0.0
-    unflatten_names: list[str] = field(
-        default_factory=lambda: ["middle_ds8", "output_ds4", "output_ds2"]
-    )
+    unflatten_names: list[str] = field(default_factory=lambda: ["middle_ds8", "output_ds4", "output_ds2"])
 
     def __post_init__(self):
         assert len(self.channel_mult) == len(self.transformer_depth)
@@ -56,11 +54,7 @@ class VMemModel(nn.Module):
         )
 
         self.input_blocks = nn.ModuleList(
-            [
-                TimestepEmbedSequential(
-                    nn.Conv2d(params.in_channels, params.model_channels, 3, padding=1)
-                )
-            ]
+            [TimestepEmbedSequential(nn.Conv2d(params.in_channels, params.model_channels, 3, padding=1))]
         )
         self._feature_size = params.model_channels
         input_block_chans = [params.model_channels]
@@ -98,9 +92,7 @@ class VMemModel(nn.Module):
             if level != len(params.channel_mult) - 1:
                 ds *= 2
                 out_ch = ch
-                self.input_blocks.append(
-                    TimestepEmbedSequential(Downsample(ch, out_channels=out_ch))
-                )
+                self.input_blocks.append(TimestepEmbedSequential(Downsample(ch, out_channels=out_ch)))
                 ch = out_ch
                 input_block_chans.append(ch)
                 self._feature_size += ch
@@ -225,9 +217,7 @@ class VMemWrapper(nn.Module):
         super().__init__()
         self.module = module
 
-    def forward(
-        self, x: torch.Tensor, t: torch.Tensor, c: dict, **kwargs
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, t: torch.Tensor, c: dict, **kwargs) -> torch.Tensor:
         x = torch.cat((x, c.get("concat", torch.Tensor([]).type_as(x))), dim=1)
         return self.module(
             x,

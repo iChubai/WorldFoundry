@@ -7,12 +7,14 @@ and prediction.
 It also includes a compatibility layer for PyTorch, allowing the module to be imported
 and used even in environments where PyTorch is not installed.
 """
+
 from abc import ABC
 from functools import wraps
 
 
 def _lazy_no_grad(func):
     """Retain Torch's decorator semantics without loading Torch for discovery."""
+
     @wraps(func)
     def predict_without_grad(*args, **kwargs):
         try:
@@ -24,6 +26,7 @@ def _lazy_no_grad(func):
         return torch.no_grad()(func)(*args, **kwargs)
 
     return predict_without_grad
+
 
 class BaseSynthesis(ABC):
     """

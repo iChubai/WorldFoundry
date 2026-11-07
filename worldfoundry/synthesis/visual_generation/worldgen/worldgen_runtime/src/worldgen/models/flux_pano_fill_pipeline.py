@@ -391,7 +391,9 @@ class FluxFillPipeline(
 
         # 4. pack the masked_image_latents
         # batch_size, num_channels_latents, height, width -> batch_size, height//2 * width//2 , num_channels_latents*4
-        masked_image_latents = torch.cat([masked_image_latents, masked_image_latents[:, :, :, :self.blend_extend]], dim=-1)
+        masked_image_latents = torch.cat(
+            [masked_image_latents, masked_image_latents[:, :, :, : self.blend_extend]], dim=-1
+        )
         width_new_blended = masked_image_latents.shape[-1]
 
         masked_image_latents = self._pack_latents(
@@ -411,7 +413,7 @@ class FluxFillPipeline(
         mask = mask.reshape(
             batch_size, self.vae_scale_factor * self.vae_scale_factor, height, width
         )  # batch_size, 8*8, height, width
-        mask = torch.cat([mask, mask[:, :, :, :self.blend_extend]], dim=-1)
+        mask = torch.cat([mask, mask[:, :, :, : self.blend_extend]], dim=-1)
         # 6. pack the mask:
         # batch_size, 64, height, width -> batch_size, height//2 * width//2 , 64*2*2
         mask = self._pack_latents(
@@ -641,18 +643,13 @@ class FluxFillPipeline(
     def blend_v(self, a, b, blend_extent):
         blend_extent = min(a.shape[2], b.shape[2], blend_extent)
         for y in range(blend_extent):
-            b[:, :,
-              y, :] = a[:, :, -blend_extent
-                        + y, :] * (1 - y / blend_extent) + b[:, :, y, :] * (
-                            y / blend_extent)
+            b[:, :, y, :] = a[:, :, -blend_extent + y, :] * (1 - y / blend_extent) + b[:, :, y, :] * (y / blend_extent)
         return b
 
     def blend_h(self, a, b, blend_extent):
         blend_extent = min(a.shape[3], b.shape[3], blend_extent)
         for x in range(blend_extent):
-            b[:, :, :, x] = a[:, :, :, -blend_extent
-                              + x] * (1 - x / blend_extent) + b[:, :, :, x] * (
-                                  x / blend_extent)
+            b[:, :, :, x] = a[:, :, :, -blend_extent + x] * (1 - x / blend_extent) + b[:, :, :, x] * (x / blend_extent)
         return b
 
     def enable_vae_slicing(self):
@@ -731,10 +728,12 @@ class FluxFillPipeline(
 
         noise = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
         latents = self.scheduler.scale_noise(image_latents, timestep, noise)
-        latents = torch.cat([latents, latents[:, :, :, :self.blend_extend]], dim=-1)
+        latents = torch.cat([latents, latents[:, :, :, : self.blend_extend]], dim=-1)
         width_new_blended = latents.shape[-1]
         latents = self._pack_latents(latents, batch_size, num_channels_latents, height, width_new_blended)
-        latent_image_ids = self._prepare_latent_image_ids(batch_size, height // 2, width_new_blended // 2, device, dtype)
+        latent_image_ids = self._prepare_latent_image_ids(
+            batch_size, height // 2, width_new_blended // 2, device, dtype
+        )
 
         return latents, latent_image_ids, width_new_blended
 
@@ -780,7 +779,7 @@ class FluxFillPipeline(
         callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
         callback_on_step_end_tensor_inputs: List[str] = ["latents"],
         max_sequence_length: int = 512,
-        blend_extend: int = 6 
+        blend_extend: int = 6,
     ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -876,7 +875,6 @@ class FluxFillPipeline(
 
         ###########################################
         def _decode(self, z: torch.Tensor, return_dict: bool = True) -> Union[DecoderOutput, torch.Tensor]:
-            
             # if self.use_tiling and (z.shape[-1] > self.tile_latent_min_size or z.shape[-2] > self.tile_latent_min_size):
             #     return self.tiled_decode(z, return_dict=return_dict)
 
@@ -893,17 +891,10 @@ class FluxFillPipeline(
 
             return DecoderOutput(sample=dec)
 
-
-
-
         ###########################################
         def tiled_decode(
-            self,
-            z: torch.FloatTensor,
-            return_dict: bool = True
+            self, z: torch.FloatTensor, return_dict: bool = True
         ) -> Union[DecoderOutput, torch.FloatTensor]:
-            
-            
             r"""Decode a batch of images using a tiled decoder.
 
             Args:
@@ -919,10 +910,10 @@ class FluxFillPipeline(
             overlap_size = int(self.tile_latent_min_size * (1 - self.tile_overlap_factor))
             blend_extent = int(self.tile_sample_min_size * self.tile_overlap_factor)
             row_limit = self.tile_sample_min_size - blend_extent
-            
+
             w = z.shape[3]
 
-            z = torch.cat([z, z[:, :, :, :2]], dim=-1)  #[1, 16, 64, 160]
+            z = torch.cat([z, z[:, :, :, :2]], dim=-1)  # [1, 16, 64, 160]
 
             # z = torch.cat([z, z[:, :, :, :w // 32]], dim=-1)  #[1, 16, 64, 160]
             # Split z into overlapping 64x64 tiles and decode them separately.
@@ -931,7 +922,7 @@ class FluxFillPipeline(
             rows = []
             for i in range(0, z.shape[2], overlap_size):
                 row = []
-                tile = z[:, :, i:i + self.tile_latent_min_size, :]
+                tile = z[:, :, i : i + self.tile_latent_min_size, :]
                 if self.config.use_post_quant_conv:
                     tile = self.post_quant_conv(tile)
 
@@ -951,16 +942,18 @@ class FluxFillPipeline(
                         tile = self.blend_h(row[j - 1], tile, blend_extent)
                     result_row.append(
                         self.blend_h(
-                            tile[:, :, :row_limit, w * vae_scale_factor:],
-                            tile[:, :, :row_limit, :w * vae_scale_factor],
-                            tile.shape[-1] - w * vae_scale_factor))
+                            tile[:, :, :row_limit, w * vae_scale_factor :],
+                            tile[:, :, :row_limit, : w * vae_scale_factor],
+                            tile.shape[-1] - w * vae_scale_factor,
+                        )
+                    )
                 result_rows.append(torch.cat(result_row, dim=3))
 
             dec = torch.cat(result_rows, dim=2)
             if not return_dict:
-                return (dec, )
+                return (dec,)
             return DecoderOutput(sample=dec)
-        
+
         self.vae.tiled_decode = tiled_decode.__get__(self.vae, AutoencoderKL)
         self.vae._decode = _decode.__get__(self.vae, AutoencoderKL)
 
@@ -1003,9 +996,7 @@ class FluxFillPipeline(
         device = self._execution_device
 
         # 3. Prepare prompt embeddings
-        lora_scale = (
-            self.joint_attention_kwargs.get("scale", None) if self.joint_attention_kwargs is not None else None
-        )
+        lora_scale = self.joint_attention_kwargs.get("scale", None) if self.joint_attention_kwargs is not None else None
         (
             prompt_embeds,
             pooled_prompt_embeds,
@@ -1126,10 +1117,14 @@ class FluxFillPipeline(
                         # some platforms (eg. apple mps) misbehave due to a pytorch bug: https://github.com/pytorch/pytorch/pull/99272
                         latents = latents.to(latents_dtype)
 
-                latents_unpack = self._unpack_latents(latents, height, width_new_blended*self.vae_scale_factor, self.vae_scale_factor)                
+                latents_unpack = self._unpack_latents(
+                    latents, height, width_new_blended * self.vae_scale_factor, self.vae_scale_factor
+                )
                 latents_unpack = self.blend_h(latents_unpack, latents_unpack, self.blend_extend)
                 latent_height = 2 * (int(height) // (self.vae_scale_factor * 2))
-                latents = self._pack_latents(latents_unpack, batch_size, num_channels_latents, latent_height, width_new_blended)
+                latents = self._pack_latents(
+                    latents_unpack, batch_size, num_channels_latents, latent_height, width_new_blended
+                )
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -1147,10 +1142,18 @@ class FluxFillPipeline(
                 if XLA_AVAILABLE:
                     xm.mark_step()
 
-        latents_unpack = self._unpack_latents(latents, height, width_new_blended*self.vae_scale_factor, self.vae_scale_factor)
+        latents_unpack = self._unpack_latents(
+            latents, height, width_new_blended * self.vae_scale_factor, self.vae_scale_factor
+        )
         latents_unpack = self.blend_h(latents_unpack, latents_unpack, self.blend_extend)
-        latents_unpack = latents_unpack[:, :, :, :width // self.vae_scale_factor]
-        latents = self._pack_latents(latents_unpack, batch_size, num_channels_latents, height // self.vae_scale_factor, width // self.vae_scale_factor)
+        latents_unpack = latents_unpack[:, :, :, : width // self.vae_scale_factor]
+        latents = self._pack_latents(
+            latents_unpack,
+            batch_size,
+            num_channels_latents,
+            height // self.vae_scale_factor,
+            width // self.vae_scale_factor,
+        )
 
         # 8. Post-process the image
         if output_type == "latent":

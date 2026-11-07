@@ -81,8 +81,7 @@ class _MaterializeMixin:
             ref_count = int(ref_images.shape[0])
             codec_dtype = getattr(self, "vae_dtype", dtype)
             ref_videos = [
-                ref_images[index].to(device=device, dtype=codec_dtype).unsqueeze(1)
-                for index in range(ref_count)
+                ref_images[index].to(device=device, dtype=codec_dtype).unsqueeze(1) for index in range(ref_count)
             ]
             ref_latents = self.vae.encode(
                 ref_videos,

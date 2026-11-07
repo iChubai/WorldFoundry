@@ -20,7 +20,7 @@ def FeedForward(dim, mult=4):
 
 def reshape_tensor(x, heads):
     bs, length, width = x.shape
-    #(bs, length, width) --> (bs, length, n_heads, dim_per_head)
+    # (bs, length, width) --> (bs, length, n_heads, dim_per_head)
     x = x.view(bs, length, heads, -1)
     # (bs, length, n_heads, dim_per_head) --> (bs, n_heads, length, dim_per_head)
     x = x.transpose(1, 2)
@@ -33,7 +33,6 @@ from worldfoundry.base_models.diffusion_model.models.encoders.lvdm.resampler imp
 
 
 class AttentionPool2d(nn.Module):
-
     def __init__(self, seq_len: int, embed_dim: int, num_heads: int, output_dim: int = None):
         super().__init__()
         self.positional_embedding = nn.Parameter(torch.randn(seq_len + 1, embed_dim) / embed_dim**0.5)
@@ -48,25 +47,27 @@ class AttentionPool2d(nn.Module):
         x = x.permute(1, 0, 2)  # (N(HW)C) => (HW)NC
         x = torch.cat([x.mean(dim=0, keepdim=True), x], dim=0)  # (HW+1)NC
         x = x + self.positional_embedding[:, None, :].to(x.dtype)  # (HW+1)NC
-        x, _ = F.multi_head_attention_forward(query=x,
-                                              key=x,
-                                              value=x,
-                                              embed_dim_to_check=x.shape[-1],
-                                              num_heads=self.num_heads,
-                                              q_proj_weight=self.q_proj.weight,
-                                              k_proj_weight=self.k_proj.weight,
-                                              v_proj_weight=self.v_proj.weight,
-                                              in_proj_weight=None,
-                                              in_proj_bias=torch.cat([self.q_proj.bias, self.k_proj.bias, self.v_proj.bias]),
-                                              bias_k=None,
-                                              bias_v=None,
-                                              add_zero_attn=False,
-                                              dropout_p=0,
-                                              out_proj_weight=self.c_proj.weight,
-                                              out_proj_bias=self.c_proj.bias,
-                                              use_separate_proj_weight=True,
-                                              training=self.training,
-                                              need_weights=False)
+        x, _ = F.multi_head_attention_forward(
+            query=x,
+            key=x,
+            value=x,
+            embed_dim_to_check=x.shape[-1],
+            num_heads=self.num_heads,
+            q_proj_weight=self.q_proj.weight,
+            k_proj_weight=self.k_proj.weight,
+            v_proj_weight=self.v_proj.weight,
+            in_proj_weight=None,
+            in_proj_bias=torch.cat([self.q_proj.bias, self.k_proj.bias, self.v_proj.bias]),
+            bias_k=None,
+            bias_v=None,
+            add_zero_attn=False,
+            dropout_p=0,
+            out_proj_weight=self.c_proj.weight,
+            out_proj_bias=self.c_proj.bias,
+            use_separate_proj_weight=True,
+            training=self.training,
+            need_weights=False,
+        )
         if return_all_tokens:
             return x
         else:
@@ -74,7 +75,6 @@ class AttentionPool2d(nn.Module):
 
 
 class Resampler(nn.Module):
-
     def __init__(
         self,
         dim_in=768,
@@ -88,7 +88,7 @@ class Resampler(nn.Module):
     ):
         super().__init__()
 
-        self.queries = nn.Parameter(torch.randn(1, num_queries, dim_in) / dim_mid ** 0.5)
+        self.queries = nn.Parameter(torch.randn(1, num_queries, dim_in) / dim_mid**0.5)
 
         self.proj_in = nn.Linear(dim_in, dim_mid)
         self.proj_out = nn.Linear(dim_mid, dim_out)
@@ -117,8 +117,8 @@ class Resampler(nn.Module):
         queries = self.norm_out(queries)
         return queries
 
-class TaskTokenResampler(nn.Module):
 
+class TaskTokenResampler(nn.Module):
     def __init__(
         self,
         dim_in=768,
@@ -141,10 +141,13 @@ class TaskTokenResampler(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(num_layers):
             self.layers.append(
-                nn.ModuleList([
-                    PerceiverAttention(dim=dim_mid, dim_head=dim_head, heads=num_heads),
-                    FeedForward(dim=dim_mid, mult=ff_mult),
-                ]))
+                nn.ModuleList(
+                    [
+                        PerceiverAttention(dim=dim_mid, dim_head=dim_head, heads=num_heads),
+                        FeedForward(dim=dim_mid, mult=ff_mult),
+                    ]
+                )
+            )
 
     def forward(self, x, queries):
         queries = self.proj_in1(queries)
@@ -160,7 +163,6 @@ class TaskTokenResampler(nn.Module):
 
 
 class ResamplerXL(nn.Module):
-
     def __init__(
         self,
         dim=1024,
@@ -188,17 +190,19 @@ class ResamplerXL(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(depth):
             self.layers.append(
-                nn.ModuleList([
-                    PerceiverAttention(dim=dim, dim_head=dim_head, heads=heads),
-                    FeedForward(dim=dim, mult=ff_mult),
-                ]))
+                nn.ModuleList(
+                    [
+                        PerceiverAttention(dim=dim, dim_head=dim_head, heads=heads),
+                        FeedForward(dim=dim, mult=ff_mult),
+                    ]
+                )
+            )
 
         self.unet_proj_1 = nn.Linear(self.in_dim, output1_dim)
         self.unet_proj_2 = nn.Linear(self.in_dim, output2_dim)
         self.unet_attnpool = AttentionPool2d(num_queries, self.in_dim, heads, output2_dim)
 
     def forward(self, x):
-
         latents = self.latents.repeat(x.size(0), 1, 1)
 
         x = self.proj_in(x)
@@ -218,7 +222,6 @@ class ResamplerXL(nn.Module):
 
 
 class ResamplerXLV2(nn.Module):
-
     def __init__(
         self,
         dim=1024,
@@ -230,7 +233,7 @@ class ResamplerXLV2(nn.Module):
         output1_dim=768,
         output2_dim=1280,
         ff_mult=4,
-        normalize=True
+        normalize=True,
     ):
         super().__init__()
 
@@ -248,17 +251,19 @@ class ResamplerXLV2(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(depth):
             self.layers.append(
-                nn.ModuleList([
-                    PerceiverAttention(dim=dim, dim_head=dim_head, heads=heads),
-                    FeedForward(dim=dim, mult=ff_mult),
-                ]))
+                nn.ModuleList(
+                    [
+                        PerceiverAttention(dim=dim, dim_head=dim_head, heads=heads),
+                        FeedForward(dim=dim, mult=ff_mult),
+                    ]
+                )
+            )
 
         self.unet_proj_1 = nn.Linear(self.in_dim, output1_dim)
         self.unet_proj_2 = nn.Linear(self.in_dim, output2_dim)
         self.unet_attnpool = AttentionPool2d(num_queries, self.in_dim, heads, output2_dim)
 
-    def forward(self, x,pooled_text_embeds=None):
-
+    def forward(self, x, pooled_text_embeds=None):
         latents = self.latents.repeat(x.size(0), 1, 1)
 
         if self.normalize:
@@ -279,6 +284,7 @@ class ResamplerXLV2(nn.Module):
 
         return prompt_embeds, pooled_prompt_embeds
 
+
 class ResamplerXLIdentity(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -287,17 +293,12 @@ class ResamplerXLIdentity(nn.Module):
         return x, pooled_text_embeds
 
 
-if __name__ == '__main__':
-    image_proj_model = Resampler(dim=1024,
-                                 depth=4,
-                                 dim_head=64,
-                                 heads=12,
-                                 num_queries=1024,
-                                 embedding_dim=1024,
-                                 output_dim=1024,
-                                 ff_mult=4)
+if __name__ == "__main__":
+    image_proj_model = Resampler(
+        dim=1024, depth=4, dim_head=64, heads=12, num_queries=1024, embedding_dim=1024, output_dim=1024, ff_mult=4
+    )
     numel = 0
     for name, param in image_proj_model.named_parameters():
         numel += param.numel()
 
-    print(f'Total params: {numel}')
+    print(f"Total params: {numel}")

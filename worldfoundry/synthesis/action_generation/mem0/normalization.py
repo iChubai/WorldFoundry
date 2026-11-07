@@ -50,9 +50,7 @@ def _stat(stats: Mapping[str, np.ndarray | None], key: str, dimensions: int) -> 
         raise KeyError(f"Mem-0 normalization statistics are missing {key!r}")
     value = np.asarray(value, dtype=np.float32).reshape(-1)
     if value.size < dimensions:
-        raise ValueError(
-            f"Mem-0 statistic {key!r} has {value.size} values; expected at least {dimensions}"
-        )
+        raise ValueError(f"Mem-0 statistic {key!r} has {value.size} values; expected at least {dimensions}")
     return value[:dimensions]
 
 

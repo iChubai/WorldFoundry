@@ -27,7 +27,7 @@ HIDDEN_STATE_SKIP_LAYER = 0
 PROMPT_TEMPLATE = (
     "<|im_start|>system\nGiven a user input that may include a text prompt alone, "
     "a text prompt with an image reference, or a text prompt with a video reference "
-    "or a video reference alone, generate an \"Enhanced prompt\" that provides detailed "
+    'or a video reference alone, generate an "Enhanced prompt" that provides detailed '
     "visual descriptions suitable for video generation. Evaluate the level of detail "
     "in the user's input: if it is simple, enrich it by adding specifics about colors, "
     "shapes, sizes, textures, lighting, motion dynamics, camera movement, temporal "
@@ -40,15 +40,11 @@ PROMPT_TEMPLATE = (
 IMG_PROMPT_TEMPLATE = "<|vision_start|><|image_pad|><|vision_end|>"
 VIDEO_PROMPT_TEMPLATE = "<|vision_start|><|video_pad|><|vision_end|>"
 
-DEFAULT_NEGATIVE_PROMPT = (
-    '{"universal_negative": {"visual_quality": ["low quality", "worst quality", "blurry", "pixelated", "jpeg artifacts", "low resolution", "unstable color", "color flicker", "underexposed", "overexposed", "invisible subject", "subject hidden in darkness"], "artistic_style": ["painting", "illustration", "drawing", "cartoon", "3d render", "cgi", "sketch", "digital art"], "composition_and_content": ["text", "watermark", "signature", "logo", "subtitles", "pillarboxed", "side bars", "portrait image in landscape frame"], "temporal_and_motion_stability": ["flickering", "jittery", "motion blur", "temporal inconsistency", "warping", "morphing", "incoherent motion", "unnatural movement", "static object with sudden jump", "frame-to-frame inconsistency"], "material_and_structure": ["plastic-like glass", "unrealistic texture", "deformed bottle", "liquid freezing improperly", "distorted reflections"]}}'
-)
+DEFAULT_NEGATIVE_PROMPT = '{"universal_negative": {"visual_quality": ["low quality", "worst quality", "blurry", "pixelated", "jpeg artifacts", "low resolution", "unstable color", "color flicker", "underexposed", "overexposed", "invisible subject", "subject hidden in darkness"], "artistic_style": ["painting", "illustration", "drawing", "cartoon", "3d render", "cgi", "sketch", "digital art"], "composition_and_content": ["text", "watermark", "signature", "logo", "subtitles", "pillarboxed", "side bars", "portrait image in landscape frame"], "temporal_and_motion_stability": ["flickering", "jittery", "motion blur", "temporal inconsistency", "warping", "morphing", "incoherent motion", "unnatural movement", "static object with sudden jump", "frame-to-frame inconsistency"], "material_and_structure": ["plastic-like glass", "unrealistic texture", "deformed bottle", "liquid freezing improperly", "distorted reflections"]}}'
 
 # Still-image default (t2i): drops the whole temporal/motion block and the video-only
 # codec/temporal terms that cannot apply to a single frame.
-DEFAULT_NEGATIVE_PROMPT_IMAGE = (
-    '{"universal_negative": {"visual_quality": ["low quality", "worst quality", "blurry", "pixelated", "jpeg artifacts", "low resolution", "underexposed", "overexposed", "invisible subject", "subject hidden in darkness"], "artistic_style": ["painting", "illustration", "drawing", "cartoon", "3d render", "cgi", "sketch", "digital art"], "composition_and_content": ["text", "watermark", "signature", "logo", "pillarboxed", "side bars", "portrait image in landscape frame"], "material_and_structure": ["plastic-like glass", "unrealistic texture", "deformed bottle", "distorted reflections"]}}'
-)
+DEFAULT_NEGATIVE_PROMPT_IMAGE = '{"universal_negative": {"visual_quality": ["low quality", "worst quality", "blurry", "pixelated", "jpeg artifacts", "low resolution", "underexposed", "overexposed", "invisible subject", "subject hidden in darkness"], "artistic_style": ["painting", "illustration", "drawing", "cartoon", "3d render", "cgi", "sketch", "digital art"], "composition_and_content": ["text", "watermark", "signature", "logo", "pillarboxed", "side bars", "portrait image in landscape frame"], "material_and_structure": ["plastic-like glass", "unrealistic texture", "deformed bottle", "distorted reflections"]}}'
 
 
 @dataclass
@@ -103,10 +99,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
 
     def __init__(self, transformer, vae, text_encoder, processor, scheduler):
         super().__init__()
-        if (
-            scheduler is not None
-            and scheduler.__class__.__name__ != FlowUniPCMultistepScheduler.__name__
-        ):
+        if scheduler is not None and scheduler.__class__.__name__ != FlowUniPCMultistepScheduler.__name__:
             raise TypeError(
                 "LingBotVideoPipeline requires vendored FlowUniPCMultistepScheduler; "
                 f"got {scheduler.__class__.__name__}."
@@ -180,10 +173,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
         elif videos is not None:
             visual_template = self.video_prompt_template
 
-        texts = [
-            self.apply_text_to_template(visual_template + text, self.prompt_template)
-            for text in prompts
-        ]
+        texts = [self.apply_text_to_template(visual_template + text, self.prompt_template) for text in prompts]
         kwargs = dict(video_kwargs or {})
         return self.processor(
             text=texts,
@@ -274,18 +264,14 @@ class LingBotVideoPipeline(DiffusionPipeline):
 
     def _dit_latent_to_vae(self, latents: torch.Tensor) -> torch.Tensor:
         mean = torch.tensor(self.vae.config.latents_mean, device=latents.device, dtype=torch.float32)
-        std_inv = 1.0 / torch.tensor(
-            self.vae.config.latents_std, device=latents.device, dtype=torch.float32
-        )
+        std_inv = 1.0 / torch.tensor(self.vae.config.latents_std, device=latents.device, dtype=torch.float32)
         mean = mean.view(1, -1, 1, 1, 1)
         std_inv = std_inv.view(1, -1, 1, 1, 1)
         return latents.float() / std_inv + mean
 
     def _vae_latent_to_dit(self, latents: torch.Tensor) -> torch.Tensor:
         mean = torch.tensor(self.vae.config.latents_mean, device=latents.device, dtype=torch.float32)
-        std_inv = 1.0 / torch.tensor(
-            self.vae.config.latents_std, device=latents.device, dtype=torch.float32
-        )
+        std_inv = 1.0 / torch.tensor(self.vae.config.latents_std, device=latents.device, dtype=torch.float32)
         mean = mean.view(1, -1, 1, 1, 1)
         std_inv = std_inv.view(1, -1, 1, 1, 1)
         return (latents.float() - mean) * std_inv
@@ -308,11 +294,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
             [0.5, 0.5, 0.5],
             inplace=False,
         )
-        norm_video = (
-            norm_flat_video.reshape(bsz, frames, channels, height, width)
-            .permute(0, 2, 1, 3, 4)
-            .contiguous()
-        )
+        norm_video = norm_flat_video.reshape(bsz, frames, channels, height, width).permute(0, 2, 1, 3, 4).contiguous()
         with torch.autocast(
             "cuda",
             dtype=torch.bfloat16,
@@ -336,9 +318,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
         if vae_latents.ndim == 5:
             vae_latents = vae_latents.contiguous(memory_format=torch.channels_last_3d)
         autocast_dtype = (
-            vae_dtype
-            if vae_device.type == "cuda" and vae_dtype in {torch.bfloat16, torch.float16}
-            else None
+            vae_dtype if vae_device.type == "cuda" and vae_dtype in {torch.bfloat16, torch.float16} else None
         )
         with torch.autocast(
             "cuda",
@@ -405,9 +385,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
             cfg_parallel_rank = dist.get_rank(cfg_parallel_group)
             cfg_parallel_world_size = dist.get_world_size(cfg_parallel_group)
             if cfg_parallel_world_size != 2:
-                raise ValueError(
-                    f"CFG parallel currently requires exactly 2 ranks, got {cfg_parallel_world_size}."
-                )
+                raise ValueError(f"CFG parallel currently requires exactly 2 ranks, got {cfg_parallel_world_size}.")
 
         if prompt_embeds is not None:
             if prompt_mask is None:
@@ -416,9 +394,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
             prompt_mask = prompt_mask.to(device=device)
         if negative_prompt_embeds is not None:
             if negative_prompt_mask is None:
-                raise ValueError(
-                    "`negative_prompt_mask` is required when `negative_prompt_embeds` is provided."
-                )
+                raise ValueError("`negative_prompt_mask` is required when `negative_prompt_embeds` is provided.")
             negative_prompt_embeds = negative_prompt_embeds.to(device=device)
             negative_prompt_mask = negative_prompt_mask.to(device=device)
 
@@ -531,9 +507,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
                             return_dict=False,
                         )[0].float()
                     noise_pred, noise_pred_uncond = noise_batched.chunk(2, dim=0)
-                    noise_pred = noise_pred_uncond + guidance_scale * (
-                        noise_pred - noise_pred_uncond
-                    )
+                    noise_pred = noise_pred_uncond + guidance_scale * (noise_pred - noise_pred_uncond)
                 else:
                     with _transformer_autocast(device, transformer_dtype):
                         noise_pred = self.transformer(

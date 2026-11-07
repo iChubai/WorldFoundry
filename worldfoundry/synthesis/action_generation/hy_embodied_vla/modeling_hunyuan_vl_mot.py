@@ -57,6 +57,7 @@ try:
         PatchEmbed,
         resample_abs_pos_embed,
     )
+
     _TIMM_AVAILABLE = True
 except ImportError:
     _TIMM_AVAILABLE = False
@@ -123,6 +124,7 @@ def get_hunyuan_vision_attention_backend() -> str:
 # Output dataclass
 # ============================================================================
 
+
 @dataclass
 @auto_docstring(custom_intro="Base class for HunYuanVLMoT outputs.")
 class HunYuanVLMoTModelOutputWithPast(ModelOutput):
@@ -130,6 +132,7 @@ class HunYuanVLMoTModelOutputWithPast(ModelOutput):
     past_key_values (`Cache`, *optional*):
         Pre-computed hidden-states for fast sequential decoding.
     """
+
     logits: Optional[torch.FloatTensor] = None
     last_hidden_state: Optional[torch.FloatTensor] = None
     past_key_values: Optional[Cache] = None
@@ -140,6 +143,7 @@ class HunYuanVLMoTModelOutputWithPast(ModelOutput):
 # ============================================================================
 # Utility helpers
 # ============================================================================
+
 
 def _rotate_half(x):
     x1 = x[..., : x.shape[-1] // 2]
@@ -168,6 +172,7 @@ def _apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
 # RMSNorm
 # ============================================================================
 
+
 class HunYuanVLMoTRMSNorm(nn.Module):
     def __init__(self, hidden_size, eps: float = 1e-6):
         super().__init__()
@@ -189,6 +194,7 @@ class HunYuanVLMoTRMSNorm(nn.Module):
 # MLP
 # ============================================================================
 
+
 class HunYuanVLMoTMLP(nn.Module):
     def __init__(self, config: HunYuanVLMoTConfig):
         super().__init__()
@@ -206,6 +212,7 @@ class HunYuanVLMoTMLP(nn.Module):
 # ============================================================================
 # Rotary Embedding
 # ============================================================================
+
 
 class HunYuanVLMoTRotaryEmbedding(nn.Module):
     inv_freq: torch.Tensor
@@ -252,7 +259,10 @@ class HunYuanVLMoTRotaryEmbedding(nn.Module):
 # MoT (Mixture of Transformers) helpers
 # ============================================================================
 
-def _mask_apply(hidden_states: torch.Tensor, mask: torch.Tensor, text_funcs, vision_funcs, out_dims=None, padding_mask=None):
+
+def _mask_apply(
+    hidden_states: torch.Tensor, mask: torch.Tensor, text_funcs, vision_funcs, out_dims=None, padding_mask=None
+):
     """
     Routes tokens to modality-specific functions.
     hidden_states: (B, S, D), mask: (B, S) bool — True = vision token.
@@ -277,8 +287,8 @@ def _mask_apply(hidden_states: torch.Tensor, mask: torch.Tensor, text_funcs, vis
         per_sample_results = [[] for _ in range(num_outputs)]
 
     for b in range(B):
-        hs_b = hidden_states[b]           # (S, D)
-        mask_b = mask[b].bool()           # (S,)
+        hs_b = hidden_states[b]  # (S, D)
+        mask_b = mask[b].bool()  # (S,)
 
         if padding_mask is not None:
             valid_b = padding_mask[b].bool()  # (S,)
@@ -359,14 +369,18 @@ def _flash_attention_forward_mot_fast(
         max_seqlen = seqlens.max().item()
 
         # Unpad: boolean indexing extracts all valid tokens in row-major order
-        q_unpad = query[pad_bool]   # (total_valid, H, D)
+        q_unpad = query[pad_bool]  # (total_valid, H, D)
         k_unpad = key[pad_bool]
         v_unpad = value[pad_bool]
 
         output_unpad = flash_attn_varlen_func(
-            q_unpad, k_unpad, v_unpad,
-            cu_seqlens_q=cu_seqlens, cu_seqlens_k=cu_seqlens,
-            max_seqlen_q=max_seqlen, max_seqlen_k=max_seqlen,
+            q_unpad,
+            k_unpad,
+            v_unpad,
+            cu_seqlens_q=cu_seqlens,
+            cu_seqlens_k=cu_seqlens,
+            max_seqlen_q=max_seqlen,
+            max_seqlen_k=max_seqlen,
             softmax_scale=scaling,
             causal=True,
         )
@@ -384,9 +398,13 @@ def _flash_attention_forward_mot_fast(
         cu_k_t = torch.arange(0, B + 1, dtype=torch.int32, device=query.device) * S_k
 
         attn_flat = flash_attn_varlen_func(
-            q_flat, k_flat, v_flat,
-            cu_seqlens_q=cu_q_t, cu_seqlens_k=cu_k_t,
-            max_seqlen_q=S_q, max_seqlen_k=S_k,
+            q_flat,
+            k_flat,
+            v_flat,
+            cu_seqlens_q=cu_q_t,
+            cu_seqlens_k=cu_k_t,
+            max_seqlen_q=S_q,
+            max_seqlen_k=S_k,
             softmax_scale=scaling,
             causal=(S_q == S_k),
         )
@@ -445,9 +463,13 @@ def _flash_attention_forward_mot_fast(
             cu_v_seqlens_t = torch.tensor(cu_v_seqlen, device=query.device, dtype=torch.int32)
 
             visual_attn_output = flash_attn_varlen_func(
-                visual_query_cat, visual_key_cat, visual_value_cat,
-                cu_seqlens_q=cu_v_seqlens_t, cu_seqlens_k=cu_v_seqlens_t,
-                max_seqlen_q=max_v_seqlen, max_seqlen_k=max_v_seqlen,
+                visual_query_cat,
+                visual_key_cat,
+                visual_value_cat,
+                cu_seqlens_q=cu_v_seqlens_t,
+                cu_seqlens_k=cu_v_seqlens_t,
+                max_seqlen_q=max_v_seqlen,
+                max_seqlen_k=max_v_seqlen,
                 softmax_scale=scaling,
                 causal=False,
             )
@@ -455,9 +477,9 @@ def _flash_attention_forward_mot_fast(
             # Write back: override causal attention output with bidirectional visual output
             attn_output = attn_output.clone()
             offset = 0
-            for (b_idx, s, e) in visual_write_back:
+            for b_idx, s, e in visual_write_back:
                 seg_len = e - s
-                attn_output[b_idx, s:e] = visual_attn_output[offset:offset + seg_len]
+                attn_output[b_idx, s:e] = visual_attn_output[offset : offset + seg_len]
                 offset += seg_len
 
     return attn_output, None
@@ -467,9 +489,7 @@ def _visual_segment_list(v_seqlens, batch_size: int):
     """Normalize the vendor segment representation to one tensor per sample."""
     if isinstance(v_seqlens, list):
         if len(v_seqlens) != batch_size:
-            raise ValueError(
-                f"Expected {batch_size} visual-segment tensors, got {len(v_seqlens)}"
-            )
+            raise ValueError(f"Expected {batch_size} visual-segment tensors, got {len(v_seqlens)}")
         return v_seqlens
     if batch_size != 1:
         raise ValueError("A tensor visual-segment value is valid only for batch size 1")
@@ -528,8 +548,7 @@ def _build_mot_sdpa_mask(
     if padding_mask is not None:
         if padding_mask.ndim != 2 or padding_mask.shape != (batch_size, key_length):
             raise ValueError(
-                "MoT padding_mask must have shape "
-                f"({batch_size}, {key_length}), got {tuple(padding_mask.shape)}"
+                f"MoT padding_mask must have shape ({batch_size}, {key_length}), got {tuple(padding_mask.shape)}"
             )
         key_valid = padding_mask.to(device=device, dtype=torch.bool)
         allowed &= key_valid[:, None, :]
@@ -551,9 +570,7 @@ def _sdpa_attention_forward_mot(
     key_length = key.shape[2]
     key_heads = key.shape[1]
     if query_heads % key_heads != 0:
-        raise ValueError(
-            f"MoT GQA requires query heads divisible by KV heads; got {query_heads}/{key_heads}"
-        )
+        raise ValueError(f"MoT GQA requires query heads divisible by KV heads; got {query_heads}/{key_heads}")
     if query_heads != key_heads:
         repeat = query_heads // key_heads
         key = key.repeat_interleave(repeat, dim=1)
@@ -650,10 +667,7 @@ def _sdpa_spatial_attention(
         )
     else:
         if batch_size != 1:
-            raise ValueError(
-                "HYViT2 varlen attention expects one concatenated batch row; "
-                f"got batch size {batch_size}"
-            )
+            raise ValueError(f"HYViT2 varlen attention expects one concatenated batch row; got batch size {batch_size}")
         if cu_seqlens.ndim != 1 or cu_seqlens.numel() < 2:
             raise ValueError("HYViT2 cu_seqlens must be a one-dimensional boundary tensor")
         boundaries = [int(index) for index in cu_seqlens.detach().cpu().tolist()]
@@ -701,10 +715,7 @@ def _flash_spatial_attention_fast(
             causal=False,
         )
     if batch_size != 1:
-        raise ValueError(
-            "HYViT2 varlen attention expects one concatenated batch row; "
-            f"got batch size {batch_size}"
-        )
+        raise ValueError(f"HYViT2 varlen attention expects one concatenated batch row; got batch size {batch_size}")
     segment_lengths = cu_seqlens[1:] - cu_seqlens[:-1]
     max_seqlen = int(segment_lengths.max().item()) if segment_lengths.numel() else 0
     output = flash_attn_varlen_func(
@@ -772,11 +783,13 @@ def _modality_mask_to_segments_single(mask_1d):
     slen = mask_1d.numel()
 
     is_zero = (mask_1d == 0).to(torch.int64)
-    padded = torch.cat([
-        torch.tensor([0], device=mask_1d.device),
-        is_zero,
-        torch.tensor([0], device=mask_1d.device),
-    ])
+    padded = torch.cat(
+        [
+            torch.tensor([0], device=mask_1d.device),
+            is_zero,
+            torch.tensor([0], device=mask_1d.device),
+        ]
+    )
 
     diff = padded[1:] - padded[:-1]
     zero_run_starts = (diff == 1).nonzero(as_tuple=True)[0]
@@ -842,6 +855,7 @@ def _modality_mask_to_segments(mask: torch.Tensor):
 # MoT Attention
 # ============================================================================
 
+
 class HunYuanVLMoTAttention(nn.Module):
     """Multi-headed attention with per-modality text/vision projection paths."""
 
@@ -851,22 +865,38 @@ class HunYuanVLMoTAttention(nn.Module):
         self.layer_idx = layer_idx
         self.head_dim = config.head_dim
         self.num_key_value_groups = config.num_attention_heads // config.num_key_value_heads
-        self.scaling = self.head_dim ** -0.5
+        self.scaling = self.head_dim**-0.5
         self.is_causal = True
 
         # Text projections
-        self.q_proj = nn.Linear(config.hidden_size, config.num_attention_heads * self.head_dim, bias=config.attention_bias)
-        self.k_proj = nn.Linear(config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias)
-        self.v_proj = nn.Linear(config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias)
-        self.o_proj = nn.Linear(config.num_attention_heads * self.head_dim, config.hidden_size, bias=config.attention_bias)
+        self.q_proj = nn.Linear(
+            config.hidden_size, config.num_attention_heads * self.head_dim, bias=config.attention_bias
+        )
+        self.k_proj = nn.Linear(
+            config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias
+        )
+        self.v_proj = nn.Linear(
+            config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias
+        )
+        self.o_proj = nn.Linear(
+            config.num_attention_heads * self.head_dim, config.hidden_size, bias=config.attention_bias
+        )
         self.query_layernorm = HunYuanVLMoTRMSNorm(self.head_dim, eps=config.rms_norm_eps)
         self.key_layernorm = HunYuanVLMoTRMSNorm(self.head_dim, eps=config.rms_norm_eps)
 
         # Vision projections (separate path, _v suffix matches checkpoint keys)
-        self.q_proj_v = nn.Linear(config.hidden_size, config.num_attention_heads * self.head_dim, bias=config.attention_bias)
-        self.k_proj_v = nn.Linear(config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias)
-        self.v_proj_v = nn.Linear(config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias)
-        self.o_proj_v = nn.Linear(config.num_attention_heads * self.head_dim, config.hidden_size, bias=config.attention_bias)
+        self.q_proj_v = nn.Linear(
+            config.hidden_size, config.num_attention_heads * self.head_dim, bias=config.attention_bias
+        )
+        self.k_proj_v = nn.Linear(
+            config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias
+        )
+        self.v_proj_v = nn.Linear(
+            config.hidden_size, config.num_key_value_heads * self.head_dim, bias=config.attention_bias
+        )
+        self.o_proj_v = nn.Linear(
+            config.num_attention_heads * self.head_dim, config.hidden_size, bias=config.attention_bias
+        )
 
     def _mask_apply(self, hidden_states, modality_mask, text_funcs, vision_funcs, out_dims=None, padding_mask=None):
         if modality_mask is None:
@@ -895,7 +925,8 @@ class HunYuanVLMoTAttention(nn.Module):
                 pm = padding_mask
 
         query_states, key_states, value_states = self._mask_apply(
-            hidden_states, modality_mask,
+            hidden_states,
+            modality_mask,
             [self.q_proj, self.k_proj, self.v_proj],
             [self.q_proj_v, self.k_proj_v, self.v_proj_v],
             out_dims=[
@@ -929,8 +960,10 @@ class HunYuanVLMoTAttention(nn.Module):
 
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self._mask_apply(
-            attn_output, modality_mask,
-            [self.o_proj], [self.o_proj_v],
+            attn_output,
+            modality_mask,
+            [self.o_proj],
+            [self.o_proj_v],
             padding_mask=pm,
         )[0]
         return attn_output, attn_weights
@@ -939,6 +972,7 @@ class HunYuanVLMoTAttention(nn.Module):
 # ============================================================================
 # Decoder Layer
 # ============================================================================
+
 
 class HunYuanVLMoTDecoderLayer(nn.Module):
     """A single transformer decoder layer with per-modality norm and MLP paths."""
@@ -983,8 +1017,10 @@ class HunYuanVLMoTDecoderLayer(nn.Module):
         residual = hidden_states
 
         hidden_states = _mask_apply(
-            hidden_states, modality_mask,
-            [self.input_layernorm], [self.input_layernorm_v],
+            hidden_states,
+            modality_mask,
+            [self.input_layernorm],
+            [self.input_layernorm_v],
             padding_mask=pm,
         )[0]
 
@@ -1003,7 +1039,8 @@ class HunYuanVLMoTDecoderLayer(nn.Module):
 
         residual = hidden_states
         hidden_states = _mask_apply(
-            hidden_states, modality_mask,
+            hidden_states,
+            modality_mask,
             [lambda x: self.mlp(self.post_attention_layernorm(x))],
             [lambda x: self.mlp_v(self.post_attention_layernorm_v(x))],
             padding_mask=pm,
@@ -1024,8 +1061,10 @@ class HunYuanVLMoTDecoderLayer(nn.Module):
 # Inner language model (text-only decoder with MoT)
 # ============================================================================
 
+
 class _HunYuanVLMoTInnerPreTrainedModel(PreTrainedModel):
     """Internal base for the text decoder that lives inside HunYuanVLMoTModel."""
+
     config_class = HunYuanVLMoTConfig
     base_model_prefix = "model"
     _no_split_modules = ["HunYuanVLMoTDecoderLayer"]
@@ -1142,6 +1181,7 @@ class _HunYuanVLMoTTextModel(_HunYuanVLMoTInnerPreTrainedModel):
 
 class _HunYuanVLMoTTextForCausalLM(_HunYuanVLMoTInnerPreTrainedModel, GenerationMixin):
     """Text decoder + lm_head for generation (inner component)."""
+
     _tied_weights_keys = {"lm_head.weight": "model.embed_tokens.weight"}
 
     def __init__(self, config: HunYuanVLMoTConfig):
@@ -1190,11 +1230,7 @@ class _HunYuanVLMoTTextForCausalLM(_HunYuanVLMoTInnerPreTrainedModel, Generation
 
         hidden_states = outputs.last_hidden_state
 
-        slice_indices = (
-            slice(-logits_to_keep, None)
-            if isinstance(logits_to_keep, int)
-            else logits_to_keep
-        )
+        slice_indices = slice(-logits_to_keep, None) if isinstance(logits_to_keep, int) else logits_to_keep
         logits = self.lm_head(hidden_states[:, slice_indices, :])
 
         return CausalLMOutputWithPast(
@@ -1210,6 +1246,7 @@ class _HunYuanVLMoTTextForCausalLM(_HunYuanVLMoTInnerPreTrainedModel, Generation
 
 
 # ViT Attention / Block
+
 
 class _ViTLayerScale(nn.Module):
     def __init__(self, dim: int, init_values: float = 1e-5, inplace: bool = False) -> None:
@@ -1239,7 +1276,7 @@ class _ViTAttention(nn.Module):
         assert dim % num_heads == 0
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
-        self.scale = self.head_dim ** -0.5
+        self.scale = self.head_dim**-0.5
         self.fused_attn = True
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
@@ -1259,9 +1296,7 @@ class _ViTAttention(nn.Module):
     def forward(self, x: torch.Tensor, cu_slens=None) -> torch.Tensor:
         B, N, C = x.shape
         if self.q_bias is not None:
-            qkv_bias = torch.cat((self.q_bias,
-                                   torch.zeros_like(self.v_bias),
-                                   self.v_bias))
+            qkv_bias = torch.cat((self.q_bias, torch.zeros_like(self.v_bias), self.v_bias))
             qkv = F.linear(x, self.qkv.weight, qkv_bias)
         else:
             qkv = self.qkv(x)
@@ -1303,13 +1338,19 @@ class _ViTBlock(nn.Module):
         if mlp_layer is None:
             mlp_layer = Mlp
         self.norm1 = norm_layer(dim)
-        self.attn = _ViTAttention(dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_norm=qk_norm,
-                               attn_drop=attn_drop, proj_drop=proj_drop, norm_layer=norm_layer)
+        self.attn = _ViTAttention(
+            dim,
+            num_heads=num_heads,
+            qkv_bias=qkv_bias,
+            qk_norm=qk_norm,
+            attn_drop=attn_drop,
+            proj_drop=proj_drop,
+            norm_layer=norm_layer,
+        )
         self.ls1 = _ViTLayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.drop_path1 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)
-        self.mlp = mlp_layer(in_features=dim, hidden_features=int(dim * mlp_ratio),
-                              act_layer=act_layer, drop=proj_drop)
+        self.mlp = mlp_layer(in_features=dim, hidden_features=int(dim * mlp_ratio), act_layer=act_layer, drop=proj_drop)
         self.ls2 = _ViTLayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.drop_path2 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
@@ -1320,6 +1361,7 @@ class _ViTBlock(nn.Module):
 
 
 # HYViT2 VisionTransformer
+
 
 class _HYViT2VisionTransformer(nn.Module):
     """Vision Transformer with variable-resolution support."""
@@ -1390,9 +1432,13 @@ class _HYViT2VisionTransformer(nn.Module):
         if dynamic_img_size:
             embed_args.update(dict(strict_img_size=False, output_fmt="NHWC"))
         self.patch_embed = embed_layer(
-            img_size=img_size, patch_size=patch_size, in_chans=in_chans,
-            embed_dim=embed_dim, bias=not pre_norm,
-            dynamic_img_pad=dynamic_img_pad, strict_img_size=strict_img_size,
+            img_size=img_size,
+            patch_size=patch_size,
+            in_chans=in_chans,
+            embed_dim=embed_dim,
+            bias=not pre_norm,
+            dynamic_img_pad=dynamic_img_pad,
+            strict_img_size=strict_img_size,
             **embed_args,
         )
         num_patches = self.patch_embed.num_patches
@@ -1412,10 +1458,17 @@ class _HYViT2VisionTransformer(nn.Module):
         self.blocks = nn.Sequential(
             *[
                 block_fn(
-                    dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio,
-                    qkv_bias=qkv_bias, qk_norm=qk_norm, init_values=init_values,
-                    proj_drop=proj_drop_rate, attn_drop=attn_drop_rate,
-                    drop_path=dpr[i], norm_layer=norm_layer, act_layer=act_layer,
+                    dim=embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    qk_norm=qk_norm,
+                    init_values=init_values,
+                    proj_drop=proj_drop_rate,
+                    attn_drop=attn_drop_rate,
+                    drop_path=dpr[i],
+                    norm_layer=norm_layer,
+                    act_layer=act_layer,
                     mlp_layer=mlp_layer,
                 )
                 for i in range(depth)
@@ -1436,7 +1489,9 @@ class _HYViT2VisionTransformer(nn.Module):
         pe_2d = self.pos_embed[0].T.contiguous().view(1, -1, pos_embed_shape, pos_embed_shape)
         if torch.__version__ == "2.0.0":
             dtype = pe_2d.dtype
-            pe_2d = F.interpolate(pe_2d.float(), out_size, mode="bilinear", align_corners=False).to(dtype).view(-1, h * w)
+            pe_2d = (
+                F.interpolate(pe_2d.float(), out_size, mode="bilinear", align_corners=False).to(dtype).view(-1, h * w)
+            )
         else:
             pe_2d = F.interpolate(pe_2d, out_size, mode="bilinear", align_corners=False).view(-1, h * w)
         rescaled[0] = pe_2d.T.contiguous()
@@ -1446,7 +1501,8 @@ class _HYViT2VisionTransformer(nn.Module):
         if self.dynamic_img_size:
             B, H, W, C = x.shape
             pos_embed = resample_abs_pos_embed(
-                self.pos_embed, (H, W),
+                self.pos_embed,
+                (H, W),
                 num_prefix_tokens=0 if self.no_embed_class else self.num_prefix_tokens,
             )
             x = x.view(B, -1, C)
@@ -1491,13 +1547,21 @@ class _HYViT2VisionTransformer(nn.Module):
             image_patches = []
             for x in x_list:
                 _, _, h, w = x.shape
-                pad_h = (self.patch_embed.patch_size[0] - h % self.patch_embed.patch_size[0]) % self.patch_embed.patch_size[0]
-                pad_w = (self.patch_embed.patch_size[1] - w % self.patch_embed.patch_size[1]) % self.patch_embed.patch_size[1]
+                pad_h = (
+                    self.patch_embed.patch_size[0] - h % self.patch_embed.patch_size[0]
+                ) % self.patch_embed.patch_size[0]
+                pad_w = (
+                    self.patch_embed.patch_size[1] - w % self.patch_embed.patch_size[1]
+                ) % self.patch_embed.patch_size[1]
                 x = F.pad(x, (0, pad_w, 0, pad_h))
                 _, _, h, w = x.shape
                 h = h // self.patch_embed.patch_size[0]
                 w = w // self.patch_embed.patch_size[1]
-                x = x.view(1, 3, h, self.patch_embed.patch_size[0], w, self.patch_embed.patch_size[1]).permute(0, 2, 4, 1, 3, 5).reshape(-1, 3, self.patch_embed.patch_size[0], self.patch_embed.patch_size[1])
+                x = (
+                    x.view(1, 3, h, self.patch_embed.patch_size[0], w, self.patch_embed.patch_size[1])
+                    .permute(0, 2, 4, 1, 3, 5)
+                    .reshape(-1, 3, self.patch_embed.patch_size[0], self.patch_embed.patch_size[1])
+                )
                 margin_h = 1.0 / h
                 margin_w = 1.0 / w
                 dh = torch.linspace(-1 + margin_h, 1 - margin_h, steps=h, device=x.device)
@@ -1520,8 +1584,12 @@ class _HYViT2VisionTransformer(nn.Module):
         else:
             for x in x_list:
                 _, _, h, w = x.shape
-                pad_h = (self.patch_embed.patch_size[0] - h % self.patch_embed.patch_size[0]) % self.patch_embed.patch_size[0]
-                pad_w = (self.patch_embed.patch_size[1] - w % self.patch_embed.patch_size[1]) % self.patch_embed.patch_size[1]
+                pad_h = (
+                    self.patch_embed.patch_size[0] - h % self.patch_embed.patch_size[0]
+                ) % self.patch_embed.patch_size[0]
+                pad_w = (
+                    self.patch_embed.patch_size[1] - w % self.patch_embed.patch_size[1]
+                ) % self.patch_embed.patch_size[1]
                 x = F.pad(x, (0, pad_w, 0, pad_h))
                 _, _, h, w = x.shape
                 h = h // self.patch_embed.patch_size[0]
@@ -1564,7 +1632,7 @@ class _HYViT2VisionTransformer(nn.Module):
         if self.attn_pool is not None:
             x = self.attn_pool(x)
         elif self.global_pool == "avg":
-            x = x[:, self.num_prefix_tokens:].mean(dim=1)
+            x = x[:, self.num_prefix_tokens :].mean(dim=1)
         elif self.global_pool:
             x = x[:, 0]
         x = self.fc_norm(x)
@@ -1587,6 +1655,7 @@ class _HYViT2VisionTransformer(nn.Module):
 
 # HYViT2 model config
 
+
 @dataclass
 class _HYViT2VisionCfg:
     width: int = 1152
@@ -1604,14 +1673,23 @@ def _create_hyvit2() -> _HYViT2VisionTransformer:
     """Construct the exact vision architecture populated by the VLA checkpoint."""
     vision_cfg = _HYViT2VisionCfg()
     return _HYViT2VisionTransformer(
-        img_size=2048, patch_size=vision_cfg.patch_size, embed_dim=vision_cfg.width,
-        depth=vision_cfg.layers, num_heads=vision_cfg.heads, mlp_ratio=vision_cfg.mlp_ratio,
-        class_token=vision_cfg.class_token, global_pool=vision_cfg.global_pool,
-        dynamic_img_pad=False, strict_img_size=False, ignore_head=False, num_classes=0,
+        img_size=2048,
+        patch_size=vision_cfg.patch_size,
+        embed_dim=vision_cfg.width,
+        depth=vision_cfg.layers,
+        num_heads=vision_cfg.heads,
+        mlp_ratio=vision_cfg.mlp_ratio,
+        class_token=vision_cfg.class_token,
+        global_pool=vision_cfg.global_pool,
+        dynamic_img_pad=False,
+        strict_img_size=False,
+        ignore_head=False,
+        num_classes=0,
     )
 
 
 # HYViT2 Projection / pooling
+
 
 class _NormalizedDwPooler(nn.Module):
     def __init__(self, dim):
@@ -1659,7 +1737,9 @@ class _HYViT2MLPProjector(nn.Module):
         split_lens = [h // 2 * w // 2 for h, w in size]
         all_x = []
         for i, (h, w) in enumerate(size):
-            now_x = x[i].reshape(1, h // 2, 2, w // 2, 2, -1).permute(0, 1, 3, 2, 4, 5).reshape(h // 2 * w // 2, 2, 2, -1)
+            now_x = (
+                x[i].reshape(1, h // 2, 2, w // 2, 2, -1).permute(0, 1, 3, 2, 4, 5).reshape(h // 2 * w // 2, 2, 2, -1)
+            )
             all_x.append(now_x)
         x = torch.cat(all_x, dim=0)
         x = self.proj1(x)
@@ -1698,6 +1778,7 @@ class _HYViT2MLPProjector(nn.Module):
 
 # HYViT2_400MAnyRes — Any-resolution ViT wrapper
 
+
 class HYViT2_400MAnyRes(nn.Module):
     """
     Any-resolution HYViT2 wrapper.
@@ -1724,7 +1805,9 @@ class HYViT2_400MAnyRes(nn.Module):
             xs = [x.to(self.dtype) for x in images]
             image_features, img_size, cls_token = self.vision_tower(xs, cal_attn_pool=cal_attn_pool)
         else:
-            image_forward_outs, img_size, cls_token = self.vision_tower(images.to(self.dtype), cal_attn_pool=cal_attn_pool)
+            image_forward_outs, img_size, cls_token = self.vision_tower(
+                images.to(self.dtype), cal_attn_pool=cal_attn_pool
+            )
             image_features = image_forward_outs.to(images.dtype)
         return image_features, img_size, cls_token
 
@@ -1762,6 +1845,7 @@ class HYViT2_400MAnyRes(nn.Module):
 # Vision Encoder — wraps HYViT2_400MAnyRes
 # ============================================================================
 
+
 class _HunYuanVLMoTVisionEncoder(nn.Module):
     """
     Thin wrapper that loads the HYViT2_400MAnyRes vision encoder.
@@ -1782,6 +1866,7 @@ class _HunYuanVLMoTVisionEncoder(nn.Module):
 # ============================================================================
 # Top-level PreTrainedModel
 # ============================================================================
+
 
 @auto_docstring
 class HunYuanVLMoTPreTrainedModel(PreTrainedModel):
@@ -1808,6 +1893,7 @@ class HunYuanVLMoTPreTrainedModel(PreTrainedModel):
 # ============================================================================
 # HunYuanVLMoTModel — core model combining vision + language
 # ============================================================================
+
 
 @auto_docstring
 class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
@@ -1854,13 +1940,14 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
         images = []
         for idx, pv in enumerate(patches_list):
             T, H, W = grid_thw[idx][0].item(), grid_thw[idx][1].item(), grid_thw[idx][2].item()
-            pv = (pv
-                  .reshape(T, H // 2, W // 2, 2, 2, 3, 16, 16)
-                  .permute(0, 1, 3, 2, 4, 6, 7, 5)
-                  .reshape(T, H, W, 16, 16, 3)
-                  .permute(0, 1, 3, 2, 4, 5)
-                  .reshape(T, H * 16, W * 16, 3)
-                  .permute(0, 3, 1, 2))
+            pv = (
+                pv.reshape(T, H // 2, W // 2, 2, 2, 3, 16, 16)
+                .permute(0, 1, 3, 2, 4, 6, 7, 5)
+                .reshape(T, H, W, 16, 16, 3)
+                .permute(0, 1, 3, 2, 4, 5)
+                .reshape(T, H * 16, W * 16, 3)
+                .permute(0, 3, 1, 2)
+            )
             images.append(pv)
         return images
 
@@ -1869,7 +1956,9 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
         images = self._reshape_pixel_values(pixel_values, image_grid_thw)
         return self.visual(images)
 
-    def get_video_features(self, pixel_values_videos: torch.FloatTensor, video_grid_thw: Optional[torch.LongTensor] = None):
+    def get_video_features(
+        self, pixel_values_videos: torch.FloatTensor, video_grid_thw: Optional[torch.LongTensor] = None
+    ):
         pixel_values_videos = pixel_values_videos.type(self.visual.dtype)
         frames = []
         for img_list in self._reshape_pixel_values(pixel_values_videos, video_grid_thw):
@@ -1877,7 +1966,9 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
             frames.extend(img_list.split(1, dim=0))
         return self.visual(frames)
 
-    def get_image_video_features(self, pixel_values, pixel_values_videos, image_grid_thw, video_grid_thw, device, dtype):
+    def get_image_video_features(
+        self, pixel_values, pixel_values_videos, image_grid_thw, video_grid_thw, device, dtype
+    ):
         recon_images, recon_videos = [], []
         if pixel_values is not None:
             pixel_values = pixel_values.type(self.visual.dtype)
@@ -1955,8 +2046,12 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
             pass  # inference with KV cache — skip vision encoding
         else:
             image_embeds, video_embeds, zero_feature = self.get_image_video_features(
-                pixel_values, pixel_values_videos, image_grid_thw, video_grid_thw,
-                inputs_embeds.device, inputs_embeds.dtype,
+                pixel_values,
+                pixel_values_videos,
+                image_grid_thw,
+                video_grid_thw,
+                inputs_embeds.device,
+                inputs_embeds.dtype,
             )
             if len(image_embeds) > 0:
                 image_embeds_cat = torch.cat(image_embeds, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)
@@ -1975,7 +2070,9 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
         if union_mask is not None:
             kwargs["modality_mask"] = union_mask
         else:
-            kwargs["modality_mask"] = torch.zeros(inputs_embeds.shape[:-1], dtype=torch.bool, device=inputs_embeds.device)
+            kwargs["modality_mask"] = torch.zeros(
+                inputs_embeds.shape[:-1], dtype=torch.bool, device=inputs_embeds.device
+            )
 
         outputs = self.language_model(
             input_ids=None,
@@ -1997,6 +2094,7 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
 # ============================================================================
 # HunYuanVLMoTForConditionalGeneration — public generation entry point
 # ============================================================================
+
 
 @auto_docstring
 class HunYuanVLMoTForConditionalGeneration(HunYuanVLMoTPreTrainedModel, GenerationMixin):
@@ -2114,9 +2212,8 @@ class HunYuanVLMoTForConditionalGeneration(HunYuanVLMoTPreTrainedModel, Generati
         # Compatible with both transformers 4.x (cache_position based)
         # and transformers 5.x (is_first_iteration based).
         _cp = model_inputs.get("cache_position")
-        is_subsequent = (
-            (_cp is not None and len(_cp) > 0 and _cp[0] != 0)
-            or (_cp is None and not is_first_iteration and use_cache)
+        is_subsequent = (_cp is not None and len(_cp) > 0 and _cp[0] != 0) or (
+            _cp is None and not is_first_iteration and use_cache
         )
         if is_subsequent:
             model_inputs["pixel_values"] = None

@@ -16,10 +16,14 @@ from transformers import AutoTokenizer, UMT5EncoderModel
 
 from worldfoundry.base_models.diffusion_model.runners.worldcrafter import WorldCrafterPipeline
 from worldfoundry.base_models.diffusion_model.schedulers.worldcrafter import WorldCrafterScheduler
-from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.transformer import WorldCrafterTransformer3DModel
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.transformer import (
+    WorldCrafterTransformer3DModel,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.compact_ucpe import compact_ucpe
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.attention import FastUcpeSelfAttention
-from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.contract import load_dmd_inference_contract
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.contract import (
+    load_dmd_inference_contract,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.fast.resident import ResidentBranches
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.kernels import (
     replace_rmsnorm_with_fp32,
@@ -73,28 +77,23 @@ def load_fast(
         compile=False,
     )
     if any(config.get(key) != value for key, value in expected_config.items()):
-        raise ValueError(
-            "Fast inference configuration differs from the validated release contract"
-        )
+        raise ValueError("Fast inference configuration differs from the validated release contract")
     if config["routing"] != [["equal", "equal"], ["equal", "equal"], ["equal", "old"]]:
         raise ValueError("Fast I2V requires 5+1 routing")
-    shared = (Path(shared_model_path).expanduser().resolve()
-              if shared_model_path is not None
-              else (root / config["shared_components"]).resolve())
+    shared = (
+        Path(shared_model_path).expanduser().resolve()
+        if shared_model_path is not None
+        else (root / config["shared_components"]).resolve()
+    )
     for row in manifest["files"]:
         path = root / row["path"]
         if not path.is_file():
             raise ValueError(f"Incomplete fast checkpoint: {path}")
     adapters = [root / "adapter_high_noise", root / "adapter_low_noise"]
-    contracts = [
-        load_dmd_inference_contract(p, expected_latent_shape=(16, 9, 48, 80))
-        for p in adapters
-    ]
+    contracts = [load_dmd_inference_contract(p, expected_latent_shape=(16, 9, 48, 80)) for p in adapters]
     contract = contracts[0]
     if contract != contracts[1] or contract.rollout_steps_per_stage != (2, 2, 2):
-        raise ValueError(
-            "Fast branches must have identical native 2/2/2 timestep contracts"
-        )
+        raise ValueError("Fast branches must have identical native 2/2/2 timestep contracts")
     enable_ucpe_inference_sdpa_attention()
     repencoder = RepEncoder.from_pretrained(
         shared / "repencoder", device=device, compute_dtype="bf16", target_microbatch=1
@@ -122,9 +121,7 @@ def load_fast(
             adaptation_method="parallel",
             attention_cls=FastUcpeSelfAttention,
         )
-        loaded = load_ucpe_camera_adapter_weights(
-            model, root / f"adapter_{branch}_noise" / "transformer_partial.pth"
-        )
+        loaded = load_ucpe_camera_adapter_weights(model, root / f"adapter_{branch}_noise" / "transformer_partial.pth")
         if loaded["loaded_tensor_keys"] != loaded["expected_tensor_keys"]:
             raise ValueError(f"Incomplete {branch} UCPE state")
         model = replace_rmsnorm_with_fp32(model)
@@ -148,9 +145,7 @@ def load_fast(
     )
     pipe = WorldCrafterPipeline(
         tokenizer=AutoTokenizer.from_pretrained(shared / "tokenizer"),
-        text_encoder=UMT5EncoderModel.from_pretrained(
-            shared / "text_encoder", torch_dtype=torch.bfloat16
-        ),
+        text_encoder=UMT5EncoderModel.from_pretrained(shared / "text_encoder", torch_dtype=torch.bfloat16),
         transformer=early,
         vae=AutoencoderKLWan.from_pretrained(shared / "vae", torch_dtype=torch.float32),
         scheduler=scheduler,

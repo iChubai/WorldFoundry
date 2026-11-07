@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Tuple
 import torch
 import torch.distributed as dist
 import torch.nn as nn
+
 if TYPE_CHECKING:
     from colossalai.booster import Booster
 from torch.optim import Optimizer
@@ -149,6 +150,7 @@ def download_model(model_name=None, local_path=None, url=None):
 
 def load_from_sharded_state_dict(model, ckpt_path, model_name="model", strict=False):
     from colossalai.checkpoint_io import GeneralCheckpointIO
+
     ckpt_io = GeneralCheckpointIO()
     ckpt_io.load_model(model, os.path.join(ckpt_path, model_name), strict=strict)
 

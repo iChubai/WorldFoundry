@@ -182,14 +182,7 @@ class VideoToNumpy(VideoTransform):
 
     @staticmethod
     def to_numpy(frames: torch.Tensor) -> np.ndarray:
-        return (
-            frames.movedim(-3, -1)
-            .mul(255)
-            .clamp_(0, 255)
-            .to(torch.uint8)
-            .cpu()
-            .numpy()
-        )
+        return frames.movedim(-3, -1).mul(255).clamp_(0, 255).to(torch.uint8).cpu().numpy()
 
 
 class VideoNormalize(VideoTransform):

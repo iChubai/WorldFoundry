@@ -16,6 +16,7 @@ import pdb
 
 from .diffusers_compat import AdaLayerNorm, CrossAttention, FeedForward, ModelMixin
 
+
 @dataclass
 class Transformer3DModelOutput(BaseOutput):
     sample: torch.FloatTensor
@@ -45,7 +46,6 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         use_linear_projection: bool = False,
         only_cross_attention: bool = False,
         upcast_attention: bool = False,
-
         unet_use_cross_frame_attention=None,
         unet_use_temporal_attention=None,
     ):
@@ -78,7 +78,6 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
                     attention_bias=attention_bias,
                     only_cross_attention=only_cross_attention,
                     upcast_attention=upcast_attention,
-
                     unet_use_cross_frame_attention=unet_use_cross_frame_attention,
                     unet_use_temporal_attention=unet_use_temporal_attention,
                 )
@@ -97,7 +96,7 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         assert hidden_states.dim() == 5, f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
         video_length = hidden_states.shape[2]
         hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w")
-        encoder_hidden_states = repeat(encoder_hidden_states, 'b n c -> (b f) n c', f=video_length)
+        encoder_hidden_states = repeat(encoder_hidden_states, "b n c -> (b f) n c", f=video_length)
 
         batch, channel, height, weight = hidden_states.shape
         residual = hidden_states
@@ -115,23 +114,16 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         # Blocks
         for block in self.transformer_blocks:
             hidden_states = block(
-                hidden_states,
-                encoder_hidden_states=encoder_hidden_states,
-                timestep=timestep,
-                video_length=video_length
+                hidden_states, encoder_hidden_states=encoder_hidden_states, timestep=timestep, video_length=video_length
             )
 
         # Output
         if not self.use_linear_projection:
-            hidden_states = (
-                hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
-            )
+            hidden_states = hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
             hidden_states = self.proj_out(hidden_states)
         else:
             hidden_states = self.proj_out(hidden_states)
-            hidden_states = (
-                hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
-            )
+            hidden_states = hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
 
         output = hidden_states + residual
 
@@ -155,9 +147,8 @@ class BasicTransformerBlock(nn.Module):
         attention_bias: bool = False,
         only_cross_attention: bool = False,
         upcast_attention: bool = False,
-
-        unet_use_cross_frame_attention = None,
-        unet_use_temporal_attention = None,
+        unet_use_cross_frame_attention=None,
+        unet_use_temporal_attention=None,
     ):
         super().__init__()
         self.only_cross_attention = only_cross_attention
@@ -229,8 +220,7 @@ class BasicTransformerBlock(nn.Module):
         if not is_xformers_available():
             print("Here is how to install it")
             raise ModuleNotFoundError(
-                "Refer to https://github.com/facebookresearch/xformers for more information on how to install"
-                " xformers",
+                "Refer to https://github.com/facebookresearch/xformers for more information on how to install xformers",
                 name="xformers",
             )
         elif not torch.cuda.is_available():
@@ -268,7 +258,9 @@ class BasicTransformerBlock(nn.Module):
 
         # pdb.set_trace()
         if self.unet_use_cross_frame_attention:
-            hidden_states = self.attn1(norm_hidden_states, attention_mask=attention_mask, video_length=video_length) + hidden_states
+            hidden_states = (
+                self.attn1(norm_hidden_states, attention_mask=attention_mask, video_length=video_length) + hidden_states
+            )
         else:
             hidden_states = self.attn1(norm_hidden_states, attention_mask=attention_mask) + hidden_states
 

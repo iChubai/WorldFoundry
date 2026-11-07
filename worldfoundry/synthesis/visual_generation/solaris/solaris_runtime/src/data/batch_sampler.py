@@ -20,7 +20,6 @@ def _init_torch_sampler_with_optional_dataset(sampler, dataset):
 
 
 class EvalBatchSampler(torch.utils.data.Sampler):
-
     def __init__(
         self,
         dataset,
@@ -64,11 +63,7 @@ class EvalBatchSampler(torch.utils.data.Sampler):
                 self.ids = json.load(f)
 
         assert num_frames <= 1024, "num_frames must be at most 1024"
-        num_global_samples = (
-            min(num_global_samples, len(self.ids))
-            if num_global_samples is not None
-            else len(self.ids)
-        )
+        num_global_samples = min(num_global_samples, len(self.ids)) if num_global_samples is not None else len(self.ids)
         if isinstance(dataset, DatasetMultiplayer):
             self.examples = [
                 SegmentIdMultiplayer(
@@ -84,8 +79,7 @@ class EvalBatchSampler(torch.utils.data.Sampler):
             # For other datasets, replace the endpoint with start + self.num_frames
             # Note this could potentially lead to an error later on when calling Dataset.__getitem__(...) if out of bounds
             self.examples = [
-                SegmentId(episode_id, start, start + self.num_frames)
-                for (episode_id, start, _) in self.ids
+                SegmentId(episode_id, start, start + self.num_frames) for (episode_id, start, _) in self.ids
             ]
         self.examples = self.examples[:num_global_samples]
         self.examples = self.examples[self.rank :: self.world_size]

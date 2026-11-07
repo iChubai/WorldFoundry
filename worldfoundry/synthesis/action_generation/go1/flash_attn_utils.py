@@ -9,6 +9,7 @@ from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
+
 @lru_cache(maxsize=None)
 def load_flash_attn():
     """Return local Flash Attention symbols, or an empty dict."""

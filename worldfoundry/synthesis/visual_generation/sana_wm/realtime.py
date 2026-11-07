@@ -46,9 +46,7 @@ def _frames_for_segments(
     fps: int,
 ) -> list[frozenset[str]]:
     fallback = frozenset(
-        _TOKEN_TO_KEY[token]
-        for item in interactions
-        if (token := str(item).strip().lower()) in _TOKEN_TO_KEY
+        _TOKEN_TO_KEY[token] for item in interactions if (token := str(item).strip().lower()) in _TOKEN_TO_KEY
     )
     if not segments:
         return [fallback] * frame_count

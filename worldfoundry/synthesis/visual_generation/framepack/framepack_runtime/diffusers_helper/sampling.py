@@ -25,10 +25,10 @@ def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=1.0):
 
 def fm_wrapper(transformer, t_scale=1000.0):
     def k_model(x, sigma, **extra_args):
-        dtype = extra_args['dtype']
-        cfg_scale = extra_args['cfg_scale']
-        cfg_rescale = extra_args['cfg_rescale']
-        concat_latent = extra_args['concat_latent']
+        dtype = extra_args["dtype"]
+        cfg_scale = extra_args["cfg_scale"]
+        cfg_rescale = extra_args["cfg_rescale"]
+        concat_latent = extra_args["concat_latent"]
 
         original_dtype = x.dtype
         sigma = sigma.float()
@@ -41,12 +41,16 @@ def fm_wrapper(transformer, t_scale=1000.0):
         else:
             hidden_states = torch.cat([x, concat_latent.to(x)], dim=1)
 
-        pred_positive = transformer(hidden_states=hidden_states, timestep=timestep, return_dict=False, **extra_args['positive'])[0].float()
+        pred_positive = transformer(
+            hidden_states=hidden_states, timestep=timestep, return_dict=False, **extra_args["positive"]
+        )[0].float()
 
         if cfg_scale == 1.0:
             pred_negative = torch.zeros_like(pred_positive)
         else:
-            pred_negative = transformer(hidden_states=hidden_states, timestep=timestep, return_dict=False, **extra_args['negative'])[0].float()
+            pred_negative = transformer(
+                hidden_states=hidden_states, timestep=timestep, return_dict=False, **extra_args["negative"]
+            )[0].float()
 
         pred_cfg = pred_negative + cfg_scale * (pred_positive - pred_negative)
         pred = rescale_noise_cfg(pred_cfg, pred_positive, guidance_rescale=cfg_rescale)
@@ -63,7 +67,7 @@ def expand_dims(v, dims):
 
 
 class FlowMatchUniPC:
-    def __init__(self, model, extra_args, variant='bh1'):
+    def __init__(self, model, extra_args, variant="bh1"):
         self.model = model
         self.variant = variant
         self.extra_args = extra_args
@@ -76,8 +80,8 @@ class FlowMatchUniPC:
         dims = x.dim()
 
         t_prev_0 = t_prev_list[-1]
-        lambda_prev_0 = - torch.log(t_prev_0)
-        lambda_t = - torch.log(t)
+        lambda_prev_0 = -torch.log(t_prev_0)
+        lambda_t = -torch.log(t)
         model_prev_0 = model_prev_list[-1]
 
         h = lambda_t - lambda_prev_0
@@ -87,12 +91,12 @@ class FlowMatchUniPC:
         for i in range(1, order):
             t_prev_i = t_prev_list[-(i + 1)]
             model_prev_i = model_prev_list[-(i + 1)]
-            lambda_prev_i = - torch.log(t_prev_i)
+            lambda_prev_i = -torch.log(t_prev_i)
             rk = ((lambda_prev_i - lambda_prev_0) / h)[0]
             rks.append(rk)
             D1s.append((model_prev_i - model_prev_0) / rk)
 
-        rks.append(1.)
+        rks.append(1.0)
         rks = torch.tensor(rks, device=x.device)
 
         R = []
@@ -104,17 +108,17 @@ class FlowMatchUniPC:
 
         factorial_i = 1
 
-        if self.variant == 'bh1':
+        if self.variant == "bh1":
             B_h = hh
-        elif self.variant == 'bh2':
+        elif self.variant == "bh2":
             B_h = torch.expm1(hh)
         else:
-            raise NotImplementedError('Bad variant!')
+            raise NotImplementedError("Bad variant!")
 
         for i in range(1, order + 1):
             R.append(torch.pow(rks, i - 1))
             b.append(h_phi_k * factorial_i / B_h)
-            factorial_i *= (i + 1)
+            factorial_i *= i + 1
             h_phi_k = h_phi_k / hh - 1 / factorial_i
 
         R = torch.stack(R)
@@ -152,7 +156,7 @@ class FlowMatchUniPC:
         else:
             corr_res = 0
 
-        D1_t = (model_t - model_prev_0)
+        D1_t = model_t - model_prev_0
         x_t = x_t_ - expand_dims(B_h, dims) * (corr_res + rhos_c[-1] * D1_t)
 
         return x_t, model_t
@@ -180,14 +184,16 @@ class FlowMatchUniPC:
             t_prev_list = t_prev_list[-order:]
 
             if callback is not None:
-                callback({'x': x, 'i': i, 'denoised': model_prev_list[-1]})
+                callback({"x": x, "i": i, "denoised": model_prev_list[-1]})
 
         return model_prev_list[-1]
 
 
-def sample_unipc(model, noise, sigmas, extra_args=None, callback=None, disable=False, variant='bh1'):
-    assert variant in ['bh1', 'bh2']
-    return FlowMatchUniPC(model, extra_args=extra_args, variant=variant).sample(noise, sigmas=sigmas, callback=callback, disable_pbar=disable)
+def sample_unipc(model, noise, sigmas, extra_args=None, callback=None, disable=False, variant="bh1"):
+    assert variant in ["bh1", "bh2"]
+    return FlowMatchUniPC(model, extra_args=extra_args, variant=variant).sample(
+        noise, sigmas=sigmas, callback=callback, disable_pbar=disable
+    )
 
 
 def flux_time_shift(t, mu=1.15, sigma=1.0):
@@ -210,39 +216,41 @@ def get_flux_sigmas_from_mu(n, mu):
 
 @torch.inference_mode()
 def sample_hunyuan(
-        transformer,
-        sampler='unipc',
-        initial_latent=None,
-        concat_latent=None,
-        strength=1.0,
-        width=512,
-        height=512,
-        frames=16,
-        real_guidance_scale=1.0,
-        distilled_guidance_scale=6.0,
-        guidance_rescale=0.0,
-        shift=None,
-        num_inference_steps=25,
-        batch_size=None,
-        generator=None,
-        prompt_embeds=None,
-        prompt_embeds_mask=None,
-        prompt_poolers=None,
-        negative_prompt_embeds=None,
-        negative_prompt_embeds_mask=None,
-        negative_prompt_poolers=None,
-        dtype=torch.bfloat16,
-        device=None,
-        negative_kwargs=None,
-        callback=None,
-        **kwargs,
+    transformer,
+    sampler="unipc",
+    initial_latent=None,
+    concat_latent=None,
+    strength=1.0,
+    width=512,
+    height=512,
+    frames=16,
+    real_guidance_scale=1.0,
+    distilled_guidance_scale=6.0,
+    guidance_rescale=0.0,
+    shift=None,
+    num_inference_steps=25,
+    batch_size=None,
+    generator=None,
+    prompt_embeds=None,
+    prompt_embeds_mask=None,
+    prompt_poolers=None,
+    negative_prompt_embeds=None,
+    negative_prompt_embeds_mask=None,
+    negative_prompt_poolers=None,
+    dtype=torch.bfloat16,
+    device=None,
+    negative_kwargs=None,
+    callback=None,
+    **kwargs,
 ):
     device = device or transformer.device
 
     if batch_size is None:
         batch_size = int(prompt_embeds.shape[0])
 
-    latents = torch.randn((batch_size, 16, (frames + 3) // 4, height // 8, width // 8), generator=generator, device=generator.device).to(device=device, dtype=torch.float32)
+    latents = torch.randn(
+        (batch_size, 16, (frames + 3) // 4, height // 8, width // 8), generator=generator, device=generator.device
+    ).to(device=device, dtype=torch.float32)
 
     B, C, T, H, W = latents.shape
     seq_length = T * H * W // 4
@@ -293,12 +301,12 @@ def sample_hunyuan(
             encoder_attention_mask=negative_prompt_embeds_mask,
             guidance=distilled_guidance,
             **(kwargs if negative_kwargs is None else {**kwargs, **negative_kwargs}),
-        )
+        ),
     )
 
-    if sampler == 'unipc':
+    if sampler == "unipc":
         results = sample_unipc(k_model, latents, sigmas, extra_args=sampler_kwargs, disable=False, callback=callback)
     else:
-        raise NotImplementedError(f'Sampler {sampler} is not supported.')
+        raise NotImplementedError(f"Sampler {sampler} is not supported.")
 
     return results

@@ -253,14 +253,18 @@ def model_fn_hydra(
     expected_grid = (config.num_frames, config.frame_height, config.frame_width)
     if actual_grid != expected_grid:
         raise ValueError(f"HyDRA checkpoint expects token grid {expected_grid}, got {actual_grid}")
-    freqs = torch.cat(
-        [
-            dit.freqs[0][:frames].view(frames, 1, 1, -1).expand(frames, height, width, -1),
-            dit.freqs[1][:height].view(1, height, 1, -1).expand(frames, height, width, -1),
-            dit.freqs[2][:width].view(1, 1, width, -1).expand(frames, height, width, -1),
-        ],
-        dim=-1,
-    ).reshape(frames * height * width, 1, -1).to(x.device)
+    freqs = (
+        torch.cat(
+            [
+                dit.freqs[0][:frames].view(frames, 1, 1, -1).expand(frames, height, width, -1),
+                dit.freqs[1][:height].view(1, height, 1, -1).expand(frames, height, width, -1),
+                dit.freqs[2][:width].view(1, 1, width, -1).expand(frames, height, width, -1),
+            ],
+            dim=-1,
+        )
+        .reshape(frames * height * width, 1, -1)
+        .to(x.device)
+    )
 
     tea_cache_update = tea_cache.check(dit, x, t_mod) if tea_cache is not None else False
     if tea_cache_update:

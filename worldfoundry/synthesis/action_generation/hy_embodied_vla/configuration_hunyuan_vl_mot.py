@@ -26,6 +26,7 @@ class HunYuanVLMoTVisionConfig(PretrainedConfig):
     """
     Configuration class for HunYuanVL-MoT Vision Transformer.
     """
+
     model_type = "hunyuan_vl_mot"
     base_config_key = "vision_config"
 

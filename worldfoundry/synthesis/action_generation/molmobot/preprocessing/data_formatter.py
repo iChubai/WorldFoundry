@@ -56,9 +56,7 @@ class DataFormatter(BaseConfig):
         if is_training or not for_inference:
             raise ValueError("MolmoBot's in-tree DataFormatter supports inference only.")
         if example.get("style") != "demo":
-            raise ValueError(
-                f"MolmoBot action inference expects style='demo', got {example.get('style')!r}."
-            )
+            raise ValueError(f"MolmoBot action inference expects style='demo', got {example.get('style')!r}.")
         if self.prompt_templates not in {"uber_model", "uber_model_v2", "none"}:
             raise ValueError(f"Unsupported prompt_templates value: {self.prompt_templates!r}")
         if self.system_prompt not in {"demo_or_style", "demo_or_style_v2", "no_style", "none"}:

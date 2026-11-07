@@ -183,9 +183,7 @@ class LingBotWorldRuntime:
         if offload_model and dit_fsdp:
             raise ValueError("LingBot-World offload_model is not supported together with DiT FSDP.")
         if initialized and rank != int(dist.get_rank()):
-            raise ValueError(
-                f"LingBot-World rank={rank} does not match process-group rank={dist.get_rank()}."
-            )
+            raise ValueError(f"LingBot-World rank={rank} does not match process-group rank={dist.get_rank()}.")
         if ulysses_size > 1 and ulysses_size != world_size:
             raise ValueError(
                 "LingBot-World ulysses_size must equal torchrun WORLD_SIZE; "
@@ -193,9 +191,7 @@ class LingBotWorldRuntime:
             )
         num_heads = int(config.num_heads)
         if ulysses_size > 1 and num_heads % ulysses_size:
-            raise ValueError(
-                f"LingBot-World num_heads={num_heads} is not divisible by ulysses_size={ulysses_size}."
-            )
+            raise ValueError(f"LingBot-World num_heads={num_heads} is not divisible by ulysses_size={ulysses_size}.")
 
     @staticmethod
     def _looks_like_fast_repo(path_or_repo: Optional[str]) -> bool:
@@ -329,13 +325,17 @@ class LingBotWorldRuntime:
         if use_fast:
             if cls._looks_like_fast_repo(requested_path):
                 resolved_fast = requested_path
-                base_request = cls._resolve_cached_sibling(requested_path, DEFAULT_LINGBOT_BASE_REPO) or DEFAULT_LINGBOT_BASE_REPO
+                base_request = (
+                    cls._resolve_cached_sibling(requested_path, DEFAULT_LINGBOT_BASE_REPO) or DEFAULT_LINGBOT_BASE_REPO
+                )
             elif fast_model_path:
                 resolved_fast = fast_model_path
                 base_request = requested_path
             else:
                 base_request = requested_path
-                resolved_fast = cls._resolve_cached_sibling(requested_path, DEFAULT_LINGBOT_FAST_REPO) or DEFAULT_LINGBOT_FAST_REPO
+                resolved_fast = (
+                    cls._resolve_cached_sibling(requested_path, DEFAULT_LINGBOT_FAST_REPO) or DEFAULT_LINGBOT_FAST_REPO
+                )
         else:
             base_request = requested_path
 
@@ -455,11 +455,7 @@ class LingBotWorldRuntime:
         resolved = int(seed)
         dist = torch.distributed
         if dist.is_available() and dist.is_initialized() and dist.get_world_size() > 1:
-            payload = [
-                resolved if resolved >= 0 else random.randint(0, sys.maxsize)
-                if dist.get_rank() == 0
-                else 0
-            ]
+            payload = [resolved if resolved >= 0 else random.randint(0, sys.maxsize) if dist.get_rank() == 0 else 0]
             dist.broadcast_object_list(payload, src=0)
             return int(payload[0])
         return resolved if resolved >= 0 else random.randint(0, sys.maxsize)
@@ -473,11 +469,7 @@ class LingBotWorldRuntime:
             "offload_model": offload_model,
             **kwargs,
         }
-        filtered_payload = {
-            key: value
-            for key, value in payload.items()
-            if value is not None and key in accepted
-        }
+        filtered_payload = {key: value for key, value in payload.items() if value is not None and key in accepted}
         return generate(**filtered_payload)
 
     @torch.no_grad()
@@ -524,7 +516,9 @@ class LingBotWorldRuntime:
             if control_type == "act" and action_matrix is None:
                 raise ValueError("LingBot Base-Act requires action_matrix alongside c2ws/Ks.")
             if control_type == "act" and allow_act2cam:
-                raise ValueError("allow_act2cam is a Base-Cam conversion mode and cannot be used with Base-Act weights.")
+                raise ValueError(
+                    "allow_act2cam is a Base-Cam conversion mode and cannot be used with Base-Act weights."
+                )
             with tempfile.TemporaryDirectory(prefix="lingbot_action_") as action_dir:
                 self._save_camera_controls(action_dir, c2ws, Ks, action_matrix=action_matrix)
                 video = self._generate_video(

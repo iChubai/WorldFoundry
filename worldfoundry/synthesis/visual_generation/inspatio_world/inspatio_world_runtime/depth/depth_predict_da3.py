@@ -49,6 +49,7 @@ DEFAULT_CONFIG = {
 # Video / image loaders
 # ──────────────────────────────────────────────
 
+
 def load_video(video_path: str, max_frames: int = 81):
     frames_list = []
     cap = cv2.VideoCapture(video_path)
@@ -79,8 +80,7 @@ def load_images(image_paths: List[str], max_frames: int = None):
     return frames_list
 
 
-def filter_depth_outliers(depth_map, valid_mask, method="iqr",
-                          iqr_factor=1.5, percentile_low=1, percentile_high=99):
+def filter_depth_outliers(depth_map, valid_mask, method="iqr", iqr_factor=1.5, percentile_low=1, percentile_high=99):
     filtered_depth_map = depth_map.copy()
     outlier_mask = np.zeros_like(valid_mask, dtype=bool)
 
@@ -119,6 +119,7 @@ def filter_depth_outliers(depth_map, valid_mask, method="iqr",
 # ──────────────────────────────────────────────
 # Main class
 # ──────────────────────────────────────────────
+
 
 class DepthPredictDA3:
     """Depth estimation + pose extraction using Depth-Anything-3."""
@@ -168,6 +169,7 @@ class DepthPredictDA3:
     @staticmethod
     def load_seg_masks(mask_path: str, max_frames: int = 41):
         from PIL import Image as PILImage
+
         sources = []
         cap = cv2.VideoCapture(mask_path)
         if not cap.isOpened():
@@ -344,7 +346,8 @@ class DepthPredictDA3:
 
             if seg_masks is not None and self.outlier_filter_config["enable"]:
                 depth_map, outlier_mask = filter_depth_outliers(
-                    depth_map, local_seg_mask.numpy(),
+                    depth_map,
+                    local_seg_mask.numpy(),
                     method=self.outlier_filter_config["method"],
                     iqr_factor=self.outlier_filter_config["iqr_factor"],
                     percentile_low=self.outlier_filter_config["percentile_low"],
@@ -366,7 +369,9 @@ class DepthPredictDA3:
         if self.config["save_point_cloud"]:
             for idx in range(len(frames)):
                 local_pts = self.depthmap_to_local_points(depth_maps[idx], intrinsics[idx])
-                local_pts = (local_pts * depth_scale_factor).reshape(depth_maps[idx].shape[0], depth_maps[idx].shape[1], 3)
+                local_pts = (local_pts * depth_scale_factor).reshape(
+                    depth_maps[idx].shape[0], depth_maps[idx].shape[1], 3
+                )
                 valid_depth_mask = valid_depths[idx]
 
                 R_c2w = camera_poses[idx][:3, :3]

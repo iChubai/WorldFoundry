@@ -11,10 +11,6 @@ _WANDB_URL_RE = re.compile(r"https://wandb\.ai/([^/]+)/([^/]+)/runs/([^/]+)")
 logger = logging.getLogger(__name__)
 
 
-
-
-
-
 def _find_latest_checkpoint(output_dir: Path) -> Path:
     """Find the latest ``checkpoint-{step}/checkpoint.pth`` in an output directory."""
     checkpoint_dirs = sorted(

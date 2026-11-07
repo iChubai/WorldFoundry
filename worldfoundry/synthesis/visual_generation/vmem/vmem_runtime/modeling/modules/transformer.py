@@ -27,9 +27,7 @@ class FeedForward(nn.Module):
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = dim_out or dim
-        self.net = nn.Sequential(
-            GEGLU(dim, inner_dim), nn.Dropout(dropout), nn.Linear(inner_dim, dim_out)
-        )
+        self.net = nn.Sequential(GEGLU(dim, inner_dim), nn.Dropout(dropout), nn.Linear(inner_dim, dim_out))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
@@ -53,13 +51,9 @@ class Attention(nn.Module):
         self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, query_dim), nn.Dropout(dropout)
-        )
+        self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
 
-    def forward(
-        self, x: torch.Tensor, context: Union[torch.Tensor, None] = None
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, context: Union[torch.Tensor, None] = None) -> torch.Tensor:
         q = self.to_q(x)
         context = context if context is not None else x
         k = self.to_k(context)
@@ -143,9 +137,7 @@ class TransformerBlockTimeMix(nn.Module):
         self.norm2 = nn.LayerNorm(inner_dim)
         self.norm3 = nn.LayerNorm(inner_dim)
 
-    def forward(
-        self, x: torch.Tensor, context: torch.Tensor, num_frames: int
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, context: torch.Tensor, num_frames: int) -> torch.Tensor:
         _, s, _ = x.shape
         x = rearrange(x, "(b t) s c -> (b s) t c", t=num_frames)
         x = self.ff_in(self.norm_in(x)) + x
@@ -160,9 +152,7 @@ class SkipConnect(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(
-        self, x_spatial: torch.Tensor, x_temporal: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, x_spatial: torch.Tensor, x_temporal: torch.Tensor) -> torch.Tensor:
         return x_spatial + x_temporal
 
 
@@ -213,18 +203,14 @@ class MultiviewTransformer(nn.Module):
             ]
         )
 
-    def forward(
-        self, x: torch.Tensor, context: torch.Tensor, num_frames: int
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, context: torch.Tensor, num_frames: int) -> torch.Tensor:
         assert context.ndim == 3
         _, _, h, w = x.shape
         x_in = x
 
         time_context = context
         time_context_first_timestep = time_context[::num_frames]
-        time_context = repeat(
-            time_context_first_timestep, "b ... -> (b n) ...", n=h * w
-        )
+        time_context = repeat(time_context_first_timestep, "b ... -> (b n) ...", n=h * w)
 
         if self.name in self.unflatten_names:
             context = context[::num_frames]

@@ -6,11 +6,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+
 try:
     from jaxtyping import Float
 except ModuleNotFoundError:
+
     class Float:
         """Float implementation."""
+
         def __class_getitem__(cls, item):
             """Class getitem.
 
@@ -19,8 +22,10 @@ except ModuleNotFoundError:
             """
             return Tensor
 
+
 try:
     from torch_scatter import scatter_sum
+
     _TORCH_SCATTER_IMPORT_ERROR = None
 except ModuleNotFoundError as error:
     _TORCH_SCATTER_IMPORT_ERROR = error
@@ -31,17 +36,20 @@ except ModuleNotFoundError as error:
             "Dependency `torch_scatter` is required for NeoVerse WorldMirror rasterization."
         ) from _TORCH_SCATTER_IMPORT_ERROR
 
+
 from einops import rearrange
 
 try:
     from gsplat.rendering import rasterization
     from gsplat.strategy import DefaultStrategy
+
     _GSPLAT_IMPORT_ERROR = None
 except ModuleNotFoundError as error:
     _GSPLAT_IMPORT_ERROR = error
 
     class DefaultStrategy:
         """Default strategy implementation."""
+
         pass
 
     def rasterization(*args, **kwargs):
@@ -49,6 +57,7 @@ except ModuleNotFoundError as error:
         raise ImportError(
             "Dependency `gsplat` is required for NeoVerse WorldMirror rasterization."
         ) from _GSPLAT_IMPORT_ERROR
+
 
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.frustum import (
     calculate_unprojected_mask,
@@ -64,6 +73,7 @@ from .geometry import (
 
 class Gaussians:
     """Gaussians implementation."""
+
     def __init__(
         self,
         means: Float[Tensor, "*batch 3"],
@@ -116,7 +126,9 @@ class Gaussians:
         self.life_span_gamma = life_span_gamma
 
         if forward_timestamp is not None:
-            assert forward_timestamp >= timestamp, "Forward timestamp must be greater than or equal to current timestamp."
+            assert forward_timestamp >= timestamp, (
+                "Forward timestamp must be greater than or equal to current timestamp."
+            )
             self.forward_timestamp = forward_timestamp
         else:
             self.forward_timestamp = None
@@ -140,7 +152,9 @@ class Gaussians:
             self.forward_rotations = None
 
         if backward_timestamp is not None:
-            assert backward_timestamp <= timestamp, "Backward timestamp must be less than or equal to current timestamp."
+            assert backward_timestamp <= timestamp, (
+                "Backward timestamp must be less than or equal to current timestamp."
+            )
             self.backward_timestamp = backward_timestamp
         else:
             self.backward_timestamp = None
@@ -282,9 +296,7 @@ class Gaussians:
         # - γ (life_span_gamma) controls overall decay strength
         # - x (delta_time) is normalized time difference in [0, 1]
         power = 1.0 / (1.0 - life_span + 1e-6)
-        transitioned_opacities = opacities * torch.exp(
-            -self.life_span_gamma * (delta_time ** power)
-        )
+        transitioned_opacities = opacities * torch.exp(-self.life_span_gamma * (delta_time**power))
         return transitioned_opacities
 
     def transition_scales(self, target_timestamp, mask):
@@ -375,9 +387,7 @@ class Gaussians:
         half_angle = angle / 2
         cos_half_angle = torch.cos(half_angle)
         sin_half_angle = torch.sin(half_angle)
-        delta_quat = torch.cat(
-            [cos_half_angle, axis * sin_half_angle], dim=-1
-        )
+        delta_quat = torch.cat([cos_half_angle, axis * sin_half_angle], dim=-1)
         transitioned_rotations = self.quaternion_multiply(quaternion, delta_quat)
         return transitioned_rotations
 
@@ -403,9 +413,22 @@ class Gaussians:
 
 class Rasterizer:
     """Rasterizer implementation."""
-    def __init__(self, rasterization_mode="classic", packed=False, abs_grad=True, with_eval3d=False,
-                 camera_model="pinhole", sparse_grad=False, distributed=False, grad_strategy=DefaultStrategy,
-                 confidence_prune_threshold=-1, opacity_prune_threshold=-1, bidirection=True, backgrounds="black"):
+
+    def __init__(
+        self,
+        rasterization_mode="classic",
+        packed=False,
+        abs_grad=True,
+        with_eval3d=False,
+        camera_model="pinhole",
+        sparse_grad=False,
+        distributed=False,
+        grad_strategy=DefaultStrategy,
+        confidence_prune_threshold=-1,
+        opacity_prune_threshold=-1,
+        bidirection=True,
+        backgrounds="black",
+    ):
         """Init.
 
         Args:
@@ -447,8 +470,9 @@ class Rasterizer:
             width: The width.
             height: The height.
         """
-        assert len(render_splats) == len(render_viewmats) == len(render_Ks) == len(render_timestamps), \
+        assert len(render_splats) == len(render_viewmats) == len(render_Ks) == len(render_timestamps), (
             "Number of batches in gaussians must match the batch size in render_viewmats and render_Ks."
+        )
         # Prevent OOM by using chunked rendering
         rendered_colors_list, rendered_depths_list, rendered_alphas_list = [], [], []
         for b_idx in range(len(render_splats)):
@@ -467,14 +491,22 @@ class Rasterizer:
                 for splats in batch_splats:
                     if splats.timestamp == -1 or splats.timestamp == timestamp_i:
                         render_flag = True
-                    elif timestamp_i > splats.timestamp and splats.forward_timestamp is not None and timestamp_i < splats.forward_timestamp:
+                    elif (
+                        timestamp_i > splats.timestamp
+                        and splats.forward_timestamp is not None
+                        and timestamp_i < splats.forward_timestamp
+                    ):
                         if self.bidirection:
                             render_flag = True
                         elif abs(timestamp_i - splats.timestamp) <= abs(timestamp_i - splats.forward_timestamp):
                             render_flag = True
                         else:
                             render_flag = False
-                    elif timestamp_i < splats.timestamp and splats.backward_timestamp is not None and timestamp_i > splats.backward_timestamp:
+                    elif (
+                        timestamp_i < splats.timestamp
+                        and splats.backward_timestamp is not None
+                        and timestamp_i > splats.backward_timestamp
+                    ):
                         if self.bidirection:
                             render_flag = True
                         elif abs(timestamp_i - splats.timestamp) < abs(timestamp_i - splats.backward_timestamp):
@@ -489,12 +521,14 @@ class Rasterizer:
                             mask = mask & (splats.opacities >= self.opacity_prune_threshold)
                         if self.confidence_prune_threshold >= 0 and splats.confidences is not None:
                             mask = mask & (splats.confidences >= self.confidence_prune_threshold)
-                        transitioned_splats.append(
-                            splats.transition(timestamp_i, mask=mask)
-                        )
+                        transitioned_splats.append(splats.transition(timestamp_i, mask=mask))
                 rendered_colors, rendered_depths, rendered_alphas = self.rasterize_splats(
-                    transitioned_splats, viewmats_i[None], Ks_i[None],
-                    width=width, height=height, sh_degree=sh_degree,
+                    transitioned_splats,
+                    viewmats_i[None],
+                    Ks_i[None],
+                    width=width,
+                    height=height,
+                    sh_degree=sh_degree,
                 )
                 batch_colors_list.append(rendered_colors)
                 batch_depths_list.append(rendered_depths)
@@ -553,11 +587,7 @@ class Rasterizer:
             width=width,
             height=height,
             packed=self.packed,
-            absgrad=(
-                self.abs_grad
-                if isinstance(self.grad_strategy, DefaultStrategy)
-                else False
-            ),
+            absgrad=(self.abs_grad if isinstance(self.grad_strategy, DefaultStrategy) else False),
             sparse_grad=self.sparse_grad,
             rasterize_mode=self.rasterization_mode,
             distributed=self.distributed,
@@ -572,12 +602,13 @@ class Rasterizer:
 
 class GaussianSplatRenderer(nn.Module):
     """Gaussian splat renderer implementation."""
+
     def __init__(
         self,
-        feature_dim: int = 256,       # Output channels of gs_feat_head
+        feature_dim: int = 256,  # Output channels of gs_feat_head
         sh_degree: int = 0,
         enable_prune: bool = True,
-        voxel_size: float = 0.002,    # Default voxel size for prune_gs
+        voxel_size: float = 0.002,  # Default voxel size for prune_gs
         enable_conf_filter: bool = False,  # Enable confidence filtering
         conf_threshold_percent: float = 30.0,  # Confidence threshold percentage
         max_gaussians: int = 5000000,  # Maximum number of Gaussians
@@ -626,11 +657,11 @@ class GaussianSplatRenderer(nn.Module):
 
         # Predict Gaussian parameters from GS features (quaternions/scales/opacities/SH/weights)
         splits_and_inits = [
-            (4, 1.0, 0.0),                # quats
-            (3, 0.00003, -7.0),           # scales
-            (1, 1.0, -2.0),               # opacities
-            (3 * self.nums_sh, 1.0, 0.0), # residual_sh
-            (1, 1.0, -2.0),               # weights for 3DGS or life span for 4DGS
+            (4, 1.0, 0.0),  # quats
+            (3, 0.00003, -7.0),  # scales
+            (1, 1.0, -2.0),  # opacities
+            (3 * self.nums_sh, 1.0, 0.0),  # residual_sh
+            (1, 1.0, -2.0),  # weights for 3DGS or life span for 4DGS
         ]
         gaussian_raw_channels = 4 + 3 + 1 + self.nums_sh * 3 + 1
 
@@ -643,8 +674,8 @@ class GaussianSplatRenderer(nn.Module):
         final_conv_layer = self.gs_head[-1]
         start_channels = 0
         for out_channel, s, b in splits_and_inits:
-            nn.init.xavier_uniform_(final_conv_layer.weight[start_channels:start_channels+out_channel], s)
-            nn.init.constant_(final_conv_layer.bias[start_channels:start_channels+out_channel], b)
+            nn.init.xavier_uniform_(final_conv_layer.weight[start_channels : start_channels + out_channel], s)
+            nn.init.constant_(final_conv_layer.bias[start_channels : start_channels + out_channel], b)
             start_channels += out_channel
 
         if self.is_4dgs:
@@ -656,8 +687,8 @@ class GaussianSplatRenderer(nn.Module):
             final_conv_layer = self.gs_head_dynamic[-1]
             start_channels = 0
             for out_channel, s, b in splits_and_inits:
-                nn.init.xavier_uniform_(final_conv_layer.weight[start_channels:start_channels+out_channel], s)
-                nn.init.constant_(final_conv_layer.bias[start_channels:start_channels+out_channel], b)
+                nn.init.xavier_uniform_(final_conv_layer.weight[start_channels : start_channels + out_channel], s)
+                nn.init.constant_(final_conv_layer.bias[start_channels : start_channels + out_channel], b)
                 start_channels += out_channel
 
         # Rasterizer
@@ -666,12 +697,12 @@ class GaussianSplatRenderer(nn.Module):
     # ======== Main entry point: Complete GS rendering and fill results back to predictions ========
     def render(
         self,
-        gs_feats: torch.Tensor,                    # [B, S, 3, H, W]
-        images: torch.Tensor,                      # [B, S+V, 3, H, W]
-        predictions: Dict[str, torch.Tensor],      # From WorldMirror: pose/depth/pts3d etc
+        gs_feats: torch.Tensor,  # [B, S, 3, H, W]
+        images: torch.Tensor,  # [B, S+V, 3, H, W]
+        predictions: Dict[str, torch.Tensor],  # From WorldMirror: pose/depth/pts3d etc
         views: Dict[str, torch.Tensor],
         context_predictions: Dict[str, torch.Tensor],
-        is_inference: bool=True,
+        is_inference: bool = True,
     ) -> Dict[str, torch.Tensor]:
         """
         Returns predictions with the following fields filled:
@@ -680,8 +711,8 @@ class GaussianSplatRenderer(nn.Module):
         - splats / rendered_extrinsics / rendered_intrinsics
         """
         B, _, _, H, W = images.shape
-        S = context_predictions.get("imgs", images).shape[1] # context view nums
-        V = images.shape[1] - S                              # target view nums
+        S = context_predictions.get("imgs", images).shape[1]  # context view nums
+        V = images.shape[1] - S  # target view nums
 
         # 1) Predict GS features from tokens, then convert to Gaussian parameters
         gs_feats_reshape = rearrange(gs_feats, "b s c h w -> (b s) c h w")
@@ -689,11 +720,7 @@ class GaussianSplatRenderer(nn.Module):
         if self.is_4dgs:
             gs_params_dynamic = self.gs_head_dynamic(gs_feats_reshape)
             is_static = views["is_static"][:, :S].reshape(-1)
-            gs_params = torch.where(
-                is_static[:, None, None, None],
-                gs_params_static,
-                gs_params_dynamic
-            )
+            gs_params = torch.where(is_static[:, None, None, None], gs_params_static, gs_params_dynamic)
         else:
             gs_params = gs_params_static
 
@@ -701,17 +728,15 @@ class GaussianSplatRenderer(nn.Module):
         if self.training:
             # Using all gt cameras
             render_viewmats, render_Ks = self.prepare_cameras(views, S + V)
-            gt_valid_masks_src = views["valid_mask"][:, :S]      # [B, S, H, W]
-            gt_valid_masks_tgt = views["valid_mask"][:, S:]     # [B, V, H, W]
-            unproject_masks = calculate_unprojected_mask(views, S)     # [B, V, H, W]
+            gt_valid_masks_src = views["valid_mask"][:, :S]  # [B, S, H, W]
+            gt_valid_masks_tgt = views["valid_mask"][:, S:]  # [B, V, H, W]
+            unproject_masks = calculate_unprojected_mask(views, S)  # [B, V, H, W]
             valid_masks = torch.cat([gt_valid_masks_src, (gt_valid_masks_tgt & unproject_masks)], dim=1)
             render_timestamps = views["timestamp"]
         else:
             # Re-predict the camera for novel views and perform translation scale alignment
             pred_all_extrinsic, pred_all_intrinsic = self.prepare_cameras(predictions, S + V)
-            scale_factor = torch.ones(
-                (B, 1), device=pred_all_extrinsic.device, dtype=pred_all_extrinsic.dtype
-            )
+            scale_factor = torch.ones((B, 1), device=pred_all_extrinsic.device, dtype=pred_all_extrinsic.dtype)
             if "camera_poses" in context_predictions:
                 pred_context_extrinsic, _ = self.prepare_cameras(context_predictions, S)
                 scale_factor = pred_context_extrinsic[:, :, :3, 3].norm(dim=-1).mean(dim=1, keepdim=True) / (
@@ -728,7 +753,9 @@ class GaussianSplatRenderer(nn.Module):
         if self.training:
             splats = self.prepare_splats(views, predictions, images, gs_params, S, position_from="gsdepth+gtcamera")
         elif not is_inference:
-            splats = self.prepare_splats(views, predictions, images, gs_params, S, context_predictions, position_from="gsdepth+predcamera")
+            splats = self.prepare_splats(
+                views, predictions, images, gs_params, S, context_predictions, position_from="gsdepth+predcamera"
+            )
         else:
             splats = self.prepare_splats(views, predictions, images, gs_params, S, position_from="gsdepth+predcamera")
 
@@ -802,9 +829,7 @@ class GaussianSplatRenderer(nn.Module):
         # Compute voxel indices
         coords = splats["means"]
         voxel_indices = (coords / voxel_size).floor().long()
-        unique_voxels, inverse_indices = torch.unique(
-            voxel_indices, dim=0, return_inverse=True
-        )
+        unique_voxels, inverse_indices = torch.unique(voxel_indices, dim=0, return_inverse=True)
         splat_weights = splats["weights"]
         voxel_weights = scatter_sum(splat_weights, inverse_indices, dim=0)
         weights = splat_weights / torch.clamp(voxel_weights[inverse_indices], min=1e-8)
@@ -820,8 +845,16 @@ class GaussianSplatRenderer(nn.Module):
         merged["quats"] = F.normalize(merged["quats"], p=2, dim=-1, eps=1e-8)
         return merged
 
-    def prepare_splats(self, views, predictions, images, gs_params, context_nums,
-                       context_predictions={}, position_from="gsdepth+gtcamera"):
+    def prepare_splats(
+        self,
+        views,
+        predictions,
+        images,
+        gs_params,
+        context_nums,
+        context_predictions={},
+        position_from="gsdepth+gtcamera",
+    ):
         """
         Prepare Gaussian splats from model predictions and input data.
 
@@ -846,9 +879,7 @@ class GaussianSplatRenderer(nn.Module):
         splats["gs_feats"] = gs_params.reshape(B, S, H * W, -1)
 
         # Split Gaussian parameters
-        quats, scales, opacities, residual_sh, weights = torch.split(
-            gs_params, [4, 3, 1, self.nums_sh * 3, 1], dim=-1
-        )
+        quats, scales, opacities, residual_sh, weights = torch.split(gs_params, [4, 3, 1, self.nums_sh * 3, 1], dim=-1)
 
         # Apply activation functions to Gaussian parameters
         splats["quats"] = act_gs.reg_dense_rotation(quats.reshape(B, S, H * W, 4))
@@ -858,9 +889,7 @@ class GaussianSplatRenderer(nn.Module):
         # Handle spherical harmonics (SH) coefficients
         residual_sh = act_gs.reg_dense_sh(residual_sh.reshape(B, S, H * W, self.nums_sh * 3))
         new_sh = torch.zeros_like(residual_sh)
-        new_sh[..., 0, :] = sh_utils.RGB2SH(
-            images[:, :S].permute(0, 1, 3, 4, 2).reshape(B, S, H * W, 3)
-        )
+        new_sh[..., 0, :] = sh_utils.RGB2SH(images[:, :S].permute(0, 1, 3, 4, 2).reshape(B, S, H * W, 3))
         splats["sh"] = new_sh + residual_sh
 
         splats["weights"] = act_gs.reg_dense_weights(weights.reshape(B, S, H * W))
@@ -880,8 +909,16 @@ class GaussianSplatRenderer(nn.Module):
             pose4x4 = views["camera_poses"][:, :S].reshape(B * S, 4, 4)
             intrinsic = views["camera_intrs"][:, :S].reshape(B * S, 3, 3)
         elif camera_from == "predcamera":
-            pose4x4 = context_predictions.get("camera_poses", predictions["camera_poses"])[:, :S].reshape(B * S, 4, 4).detach()
-            intrinsic = context_predictions.get("camera_intrs", predictions["camera_intrs"])[:, :S].reshape(B * S, 3, 3).detach()
+            pose4x4 = (
+                context_predictions.get("camera_poses", predictions["camera_poses"])[:, :S]
+                .reshape(B * S, 4, 4)
+                .detach()
+            )
+            intrinsic = (
+                context_predictions.get("camera_intrs", predictions["camera_intrs"])[:, :S]
+                .reshape(B * S, 3, 3)
+                .detach()
+            )
         else:
             raise ValueError(f"Invalid camera_from={camera_from}")
 
@@ -894,24 +931,28 @@ class GaussianSplatRenderer(nn.Module):
         if "velocity_fwd" in predictions:
             camera2world = pose4x4.reshape(B, S, 4, 4)
             world_velocity_fwd = torch.einsum(
-                "bsij, bshwj -> bshwi", camera2world[:, :S-1, :3, :3], predictions["velocity_fwd"]
+                "bsij, bshwj -> bshwi", camera2world[:, : S - 1, :3, :3], predictions["velocity_fwd"]
             )
-            splats["world_velocity_fwd"] = world_velocity_fwd.reshape(B, S-1, H * W, 3)
+            splats["world_velocity_fwd"] = world_velocity_fwd.reshape(B, S - 1, H * W, 3)
 
             world_velocity_bwd = torch.einsum(
                 "bsij, bshwj -> bshwi", camera2world[:, 1:, :3, :3], predictions["velocity_bwd"]
             )
-            splats["world_velocity_bwd"] = world_velocity_bwd.reshape(B, S-1, H * W, 3)
+            splats["world_velocity_bwd"] = world_velocity_bwd.reshape(B, S - 1, H * W, 3)
 
-            context_vel_mag_fwd = torch.cat([world_velocity_fwd.norm(dim=-1), torch.zeros_like(world_velocity_fwd[:, :1, ..., 0])], dim=1)
-            context_vel_mag_bwd = torch.cat([torch.zeros_like(world_velocity_bwd[:, :1, ..., 0]), world_velocity_bwd.norm(dim=-1)], dim=1)
+            context_vel_mag_fwd = torch.cat(
+                [world_velocity_fwd.norm(dim=-1), torch.zeros_like(world_velocity_fwd[:, :1, ..., 0])], dim=1
+            )
+            context_vel_mag_bwd = torch.cat(
+                [torch.zeros_like(world_velocity_bwd[:, :1, ..., 0]), world_velocity_bwd.norm(dim=-1)], dim=1
+            )
             context_vel_mag = torch.max(context_vel_mag_fwd, context_vel_mag_bwd)
         else:
             context_vel_mag = None
 
         if "gs_fwd_attr" in predictions:
-            splats["angular_velocity_fwd"] = predictions["gs_fwd_attr"].reshape(B, S-1, H * W, -1)
-            splats["angular_velocity_bwd"] = predictions["gs_bwd_attr"].reshape(B, S-1, H * W, -1)
+            splats["angular_velocity_fwd"] = predictions["gs_fwd_attr"].reshape(B, S - 1, H * W, -1)
+            splats["angular_velocity_bwd"] = predictions["gs_bwd_attr"].reshape(B, S - 1, H * W, -1)
 
         gaussians = self.separate_splats(
             splats,
@@ -934,7 +975,9 @@ class GaussianSplatRenderer(nn.Module):
         Ks = views["camera_intrs"][:, :nums]
         return viewmats, Ks
 
-    def separate_splats(self, splats, context_extrs=None, context_intrs=None, context_depth=None, context_vel_mag=None, static_flag=None):
+    def separate_splats(
+        self, splats, context_extrs=None, context_intrs=None, context_depth=None, context_vel_mag=None, static_flag=None
+    ):
         """Separate splats.
 
         Args:
@@ -1041,18 +1084,26 @@ class GaussianSplatRenderer(nn.Module):
                     life_span=splats["weights"][batch_idx, s][dynamic_mask],
                     life_span_gamma=self.life_span_gamma,
                     forward_timestamp=splats["timestamp"][batch_idx, s + 1].item() if s < (S - 1) else None,
-                    forward_vel=splats["world_velocity_fwd"][batch_idx, s][dynamic_mask] if "world_velocity_fwd" in splats and s < (S - 1) else None,
-                    forward_rotations=splats["angular_velocity_fwd"][batch_idx, s][dynamic_mask] if "angular_velocity_fwd" in splats and s < (S - 1) else None,
+                    forward_vel=splats["world_velocity_fwd"][batch_idx, s][dynamic_mask]
+                    if "world_velocity_fwd" in splats and s < (S - 1)
+                    else None,
+                    forward_rotations=splats["angular_velocity_fwd"][batch_idx, s][dynamic_mask]
+                    if "angular_velocity_fwd" in splats and s < (S - 1)
+                    else None,
                     backward_timestamp=splats["timestamp"][batch_idx, s - 1].item() if s > 0 else None,
-                    backward_vel=splats["world_velocity_bwd"][batch_idx, s - 1][dynamic_mask] if "world_velocity_bwd" in splats and s > 0 else None,
-                    backward_rotations=splats["angular_velocity_bwd"][batch_idx, s - 1][dynamic_mask] if "angular_velocity_bwd" in splats and s > 0 else None,
+                    backward_vel=splats["world_velocity_bwd"][batch_idx, s - 1][dynamic_mask]
+                    if "world_velocity_bwd" in splats and s > 0
+                    else None,
+                    backward_rotations=splats["angular_velocity_bwd"][batch_idx, s - 1][dynamic_mask]
+                    if "angular_velocity_bwd" in splats and s > 0
+                    else None,
                 )
                 gaussian_list.append(gs)
         return gaussian_list
 
-    def _classify_gaussians(self, means, static_flag=False,
-                            context_extrs=None, context_intrs=None,
-                            context_depth=None, context_vel_mag=None):
+    def _classify_gaussians(
+        self, means, static_flag=False, context_extrs=None, context_intrs=None, context_depth=None, context_vel_mag=None
+    ):
         """
         Classify gaussians into dynamic and constant categories.
         Returns masks for dynamic gaussians and fusion data for constant gaussians.
@@ -1080,7 +1131,9 @@ class GaussianSplatRenderer(nn.Module):
         dynamic_indices = torch.nonzero(~constant_mask, as_tuple=False)
         return dynamic_indices, constant_indices
 
-    def _global_motion_tracking(self, static_means, context_extrs, context_intrs, context_depth, context_vel_mag, reference_idx):
+    def _global_motion_tracking(
+        self, static_means, context_extrs, context_intrs, context_depth, context_vel_mag, reference_idx
+    ):
         """
         Args:
             static_means: [N, 3] 3D coordinates of static Gaussians
@@ -1097,8 +1150,7 @@ class GaussianSplatRenderer(nn.Module):
             return torch.zeros_like(static_means[:, 0], dtype=torch.bool)
 
         # If context data is not available, classify all static gaussians as constant
-        if (context_extrs is None or context_intrs is None or
-            context_depth is None or context_vel_mag is None):
+        if context_extrs is None or context_intrs is None or context_depth is None or context_vel_mag is None:
             return torch.ones_like(static_means[:, 0], dtype=torch.bool)
 
         S = context_extrs.shape[0]
@@ -1128,8 +1180,12 @@ class GaussianSplatRenderer(nn.Module):
         H, W = vel_mag_map.shape[-2], vel_mag_map.shape[-1]
 
         # First check if coordinates are within image bounds
-        in_bounds = ((projected_coords[..., 0] >= 0) & (projected_coords[..., 0] < W) &
-                     (projected_coords[..., 1] >= 0) & (projected_coords[..., 1] < H))
+        in_bounds = (
+            (projected_coords[..., 0] >= 0)
+            & (projected_coords[..., 0] < W)
+            & (projected_coords[..., 1] >= 0)
+            & (projected_coords[..., 1] < H)
+        )
         valid_depth = projected_depths > 1e-8
 
         # Only process points that are within bounds
@@ -1137,8 +1193,8 @@ class GaussianSplatRenderer(nn.Module):
 
         # Convert to integer coordinates for sampling
         coords_int = projected_coords.round().long()
-        coords_int[..., 0] = coords_int[..., 0].clamp(0, W-1)
-        coords_int[..., 1] = coords_int[..., 1].clamp(0, H-1)
+        coords_int[..., 0] = coords_int[..., 0].clamp(0, W - 1)
+        coords_int[..., 1] = coords_int[..., 1].clamp(0, H - 1)
 
         # Sample depth values from depth maps
         seq_indices = torch.arange(S, device=projected_depths.device)[:, None].expand(S, N)
@@ -1154,6 +1210,7 @@ class GaussianSplatRenderer(nn.Module):
 
         return sampled_vels, is_visible
 
+
 if __name__ == "__main__":
     device = "cuda:0"
     means = torch.randn((100, 3), device=device)
@@ -1163,8 +1220,9 @@ if __name__ == "__main__":
     colors = torch.rand((100, 3), device=device)
 
     viewmats = torch.eye(4, device=device)[None, :, :].repeat(10, 1, 1)
-    Ks = torch.tensor([
-    [300., 0., 150.], [0., 300., 100.], [0., 0., 1.]], device=device)[None, :, :].repeat(10, 1, 1)
+    Ks = torch.tensor([[300.0, 0.0, 150.0], [0.0, 300.0, 100.0], [0.0, 0.0, 1.0]], device=device)[None, :, :].repeat(
+        10, 1, 1
+    )
     width, height = 300, 200
 
     rasterizer = Rasterizer()

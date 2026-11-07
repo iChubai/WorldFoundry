@@ -3,6 +3,7 @@
 DetectorAgent detects dynamic entities from frames using Qwen3-VL,
 then segments them with SAM3 and produces cropped images.
 """
+
 from __future__ import annotations
 
 import tempfile
@@ -115,9 +116,9 @@ def _crop_entity_on_black_square(
 
     # Apply SAM mask: only copy foreground pixels, leave rest black.
     cropped_mask_bool = cropped_mask > 0
-    region = black_square[offset_y:offset_y + crop_h, offset_x:offset_x + crop_w]
+    region = black_square[offset_y : offset_y + crop_h, offset_x : offset_x + crop_w]
     region[cropped_mask_bool] = cropped_frame[cropped_mask_bool]
-    region_mask = black_square_mask[offset_y:offset_y + crop_h, offset_x:offset_x + crop_w]
+    region_mask = black_square_mask[offset_y : offset_y + crop_h, offset_x : offset_x + crop_w]
     region_mask[cropped_mask_bool] = 1
 
     return black_square, (x1, y1, x2, y2), black_square_mask
@@ -206,7 +207,7 @@ class DetectorAgent:
         # If frame_path is empty, save frame to a temporary file
         temp_file = None
         if not frame_path:
-            temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+            temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
             temp_path = temp_file.name
             temp_file.close()
             # Convert RGB to BGR for cv2.imwrite
@@ -256,13 +257,15 @@ class DetectorAgent:
                         frame,
                         inst_mask,
                     )
-                    results.append(EntityDetectionResult(
-                        name=entity_name.strip().lower(),
-                        mask=inst_mask,
-                        cropped_image=cropped_image,
-                        bbox=bbox,
-                        cropped_mask=cropped_mask,
-                    ))
+                    results.append(
+                        EntityDetectionResult(
+                            name=entity_name.strip().lower(),
+                            mask=inst_mask,
+                            cropped_image=cropped_image,
+                            bbox=bbox,
+                            cropped_mask=cropped_mask,
+                        )
+                    )
 
         return results
         # finally:

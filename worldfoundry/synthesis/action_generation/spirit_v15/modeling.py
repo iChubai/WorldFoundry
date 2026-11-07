@@ -226,7 +226,7 @@ class BaseDiTConfig(PretrainedConfig):
         norm_eps: float = 1e-5,
         max_num_positional_embeddings: int = 512,
         compute_dtype=torch.float32,
-        positional_embeddings: str  = "sinusoidal",
+        positional_embeddings: str = "sinusoidal",
         interleave_self_attention=False,
         cross_attention_dim: Optional[int] = None,
         dropout: float = 0.0,
@@ -307,8 +307,8 @@ class BasicTransformerBlock(nn.Module):
         norm_elementwise_affine: bool = True,
         norm_type: str = "layer_norm",
         norm_eps: float = 1e-5,
-        positional_embeddings: Optional[str] =  None,
-        num_positional_embeddings:Optional[int] = None,
+        positional_embeddings: Optional[str] = None,
+        num_positional_embeddings: Optional[int] = None,
         ff_inner_dim: Optional[int] = None,
         ff_bias: bool = True,
         attention_out_bias: bool = True,
@@ -557,16 +557,15 @@ class SpiritVLAPolicy(nn.Module):
         pixel_values_list, image_grid_thw_list, input_ids_list, position_ids_list = self.preprocess_rb_batch(batch)
 
         qwen_dtype = next(self.qwen.parameters()).dtype
-        pixel_values = (
-            torch.cat(pixel_values_list, dim=0)
-            .to(device=device, dtype=qwen_dtype)
+        pixel_values = torch.cat(pixel_values_list, dim=0).to(device=device, dtype=qwen_dtype).contiguous()
+        image_grid_thw = torch.cat(image_grid_thw_list, dim=0).to(device).contiguous()
+        input_ids = (
+            torch.nn.utils.rnn.pad_sequence(
+                input_ids_list, batch_first=True, padding_value=self.language_tokenizer.pad_token_id
+            )
+            .to(device)
             .contiguous()
         )
-        image_grid_thw = torch.cat(image_grid_thw_list, dim=0).to(device).contiguous()
-        input_ids = torch.nn.utils.rnn.pad_sequence(
-            input_ids_list, batch_first=True,
-            padding_value=self.language_tokenizer.pad_token_id
-        ).to(device).contiguous()
         model_max_length = self.language_tokenizer.model_max_length
         input_ids = input_ids[:, :model_max_length]
         position_ids = pad_and_cat(position_ids_list)[:, :, :model_max_length].to(device).contiguous()
@@ -602,9 +601,7 @@ class SpiritVLAPolicy(nn.Module):
         state_mask = torch.ones(bsize, nstates, dtype=torch.bool, device=device)
         pad_masks.append(state_mask)
         att_masks += [1] + [0] * (nstates - 1)
-        action_emb = self.action_in_proj(
-            noisy_actions.to(dtype=self.action_in_proj.weight.dtype)
-        )
+        action_emb = self.action_in_proj(noisy_actions.to(dtype=self.action_in_proj.weight.dtype))
         embs.append(action_emb)
         bsize, action_dim = action_emb.shape[:2]
         action_mask = torch.ones(bsize, action_dim, dtype=torch.bool, device=device)
@@ -704,9 +701,7 @@ class SpiritVLAPolicy(nn.Module):
             sample_grid_thws = []
             for img_batch in all_images:
                 img_torch = img_batch[i]
-                img_np = (
-                    img_torch.permute(1, 2, 0).float().cpu().numpy() * 255
-                ).astype(np.uint8)
+                img_np = (img_torch.permute(1, 2, 0).float().cpu().numpy() * 255).astype(np.uint8)
                 img_pil = Image.fromarray(img_np)
                 processed_result = self.image_processor.preprocess(img_pil, return_tensors="pt")
                 sample_pixel_values.append(processed_result["pixel_values"].to(device).contiguous())

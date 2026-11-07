@@ -27,13 +27,9 @@ class ConfigBase:
 
     @classmethod
     def parse_from_command_line_deprecated(cls):
-        result = DataclassArgParser(
-            cls, fromfile_prefix_chars="@"
-        ).parse_args_into_dataclasses()
+        result = DataclassArgParser(cls, fromfile_prefix_chars="@").parse_args_into_dataclasses()
         if len(result) > 1:
-            raise RuntimeError(
-                f"The following arguments were not recognized: {result[1:]}"
-            )
+            raise RuntimeError(f"The following arguments were not recognized: {result[1:]}")
         return result[0]
 
     @classmethod
@@ -146,11 +142,7 @@ class DataclassArgParser(argparse.ArgumentParser):
         inputs = {k: v for k, v in vars(namespace).items() if k in keys}
         for k in keys:
             delattr(namespace, k)
-        sub_dataclasses = {
-            f.name: f.type
-            for f in dataclasses.fields(dtype)
-            if dataclasses.is_dataclass(f.type)
-        }
+        sub_dataclasses = {f.name: f.type for f in dataclasses.fields(dtype) if dataclasses.is_dataclass(f.type)}
         for k, s in sub_dataclasses.items():
             inputs[k] = DataclassArgParser._populate_dataclass(s, namespace)
         obj = dtype(**inputs)
@@ -164,11 +156,7 @@ class DataclassArgParser(argparse.ArgumentParser):
         for k in keys:
             if k in d:
                 del d[k]
-        sub_dataclasses = {
-            f.name: f.type
-            for f in dataclasses.fields(dtype)
-            if dataclasses.is_dataclass(f.type)
-        }
+        sub_dataclasses = {f.name: f.type for f in dataclasses.fields(dtype) if dataclasses.is_dataclass(f.type)}
         for k, s in sub_dataclasses.items():
             if k not in inputs:
                 v = {}
@@ -186,11 +174,7 @@ class DataclassArgParser(argparse.ArgumentParser):
         for k in keys:
             if k in d:
                 del d[k]
-        sub_dataclasses = {
-            f.name: f.type
-            for f in dataclasses.fields(dtype)
-            if dataclasses.is_dataclass(f.type)
-        }
+        sub_dataclasses = {f.name: f.type for f in dataclasses.fields(dtype) if dataclasses.is_dataclass(f.type)}
         for k, s in sub_dataclasses.items():
             inputs[k] = DataclassArgParser._populate_dataclass_from_dict(s, d)
         obj = dtype(**inputs)

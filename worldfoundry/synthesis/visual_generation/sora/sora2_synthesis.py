@@ -60,7 +60,7 @@ class Sora2Synthesis(OpenAiVideoSynthesis):
         task_type: str = "auto",
         size: str = "1280x720",
         duration: int = 8,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """按输入自动选择 T2V 或 I2V 并提交生成任务。
 
@@ -77,32 +77,19 @@ class Sora2Synthesis(OpenAiVideoSynthesis):
             if encoded_image is None:
                 raise ValueError("i2av 任务需要提供 encoded_image 参数")
             response = self.generate_i2av(
-                encoded_image=encoded_image,
-                input_prompt=prompt,
-                size=size,
-                duration=duration,
-                **kwargs
+                encoded_image=encoded_image, input_prompt=prompt, size=size, duration=duration, **kwargs
             )
         elif task_type == "t2av":
-            response = self.generate_t2av(
-                input_prompt=prompt,
-                size=size,
-                duration=duration,
-                **kwargs
-            )
+            response = self.generate_t2av(input_prompt=prompt, size=size, duration=duration, **kwargs)
         else:
             raise ValueError(f"不支持的任务类型: {task_type}")
 
-        return {
-            "task_type": task_type,
-            "prompt": prompt,
-            "response": response
-        }
+        return {"task_type": task_type, "prompt": prompt, "response": response}
 
 
 def _normalize_size(size: str) -> str:
     """Accept ``1280*720`` as well as the ``1280x720`` the API expects."""
-    return size.replace('*', 'x')
+    return size.replace("*", "x")
 
 
 __all__ = ["Sora2Synthesis"]

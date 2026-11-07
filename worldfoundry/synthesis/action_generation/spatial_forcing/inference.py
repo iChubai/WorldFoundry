@@ -117,12 +117,9 @@ def _load_component_state_dict(path: Path) -> dict[str, Any]:
     if not isinstance(state_dict, Mapping):
         raise TypeError(f"Spatial-Forcing component checkpoint is not a state dict: {path}")
     if not state_dict or not all(
-        isinstance(key, str) and isinstance(value, torch.Tensor)
-        for key, value in state_dict.items()
+        isinstance(key, str) and isinstance(value, torch.Tensor) for key, value in state_dict.items()
     ):
-        raise TypeError(
-            f"Spatial-Forcing component checkpoint must be a non-empty string-to-tensor mapping: {path}"
-        )
+        raise TypeError(f"Spatial-Forcing component checkpoint must be a non-empty string-to-tensor mapping: {path}")
     return {key[7:] if key.startswith("module.") else key: value for key, value in state_dict.items()}
 
 

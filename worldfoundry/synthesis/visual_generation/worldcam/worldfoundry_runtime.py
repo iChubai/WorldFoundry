@@ -627,16 +627,16 @@ class WorldCamRuntime:
         # If the WorldCam checkpoint wasn't found, add it to missing assets.
         if checkpoint_path is None:
             missing_assets.append(str(DEFAULT_WORLDCAM_CKPT_DIR / self.checkpoint_name))
-        
+
         # Determine the target output path for the JSON plan.
         target = Path(output_path) if output_path is not None else Path.cwd() / "worldcam_plan.json"
         target = target.expanduser().resolve()
         # Ensure the parent directory for the output path exists.
         target.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Construct the payload for the JSON plan.
         payload = {
-            "status": "blocked" if missing_assets else "prepared", # Status indicates if assets are missing.
+            "status": "blocked" if missing_assets else "prepared",  # Status indicates if assets are missing.
             "model_id": "worldcam",
             "artifact_kind": "generated_world",
             "backend": "worldfoundry.worldcam.in_tree_runtime",
@@ -712,7 +712,7 @@ class WorldCamRuntime:
         if self.pipeline is None:
             raise RuntimeError("WorldCam model is not loaded. Use from_pretrained(load_model=True) for generation.")
         torch = _require_torch()
-        
+
         # Compose the final prompt by prepending the instance's prompt prefix.
         composed_prompt = (self.prompt_prefix or "") + (prompt or "")
         composed_prompt = composed_prompt.strip()
@@ -729,7 +729,7 @@ class WorldCamRuntime:
             tiled=tiled,
             height=self.height,
             width=self.width,
-            num_frames=self.warmup_output_frames + num_ar_steps * self.frames_per_latent, # Total frames to generate.
+            num_frames=self.warmup_output_frames + num_ar_steps * self.frames_per_latent,  # Total frames to generate.
             num_inference_steps=num_inference_steps,
             num_ar_steps=num_ar_steps,
             long_term_memory_start_step=long_term_memory_start_step,
@@ -739,8 +739,8 @@ class WorldCamRuntime:
             **kwargs,
         )
         # Trim conditioning frames from the output if requested.
-        video = full_video[self.warmup_output_frames:] if trim_conditioning else full_video
-        
+        video = full_video[self.warmup_output_frames :] if trim_conditioning else full_video
+
         # Prepare the result dictionary.
         result = {
             "video": video,

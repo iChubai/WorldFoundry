@@ -73,8 +73,8 @@ class BaseEvalInputDataset(Dataset):
         self.transform = transform
         self._load_index(predefined_index)
         self.ACTION_STATS = {}
-        for key in all_data_config['action_stats']:
-            self.ACTION_STATS[key] = np.expand_dims(all_data_config['action_stats'][key], axis=0)
+        for key in all_data_config["action_stats"]:
+            self.ACTION_STATS[key] = np.expand_dims(all_data_config["action_stats"][key], axis=0)
 
     def _load_index(self, predefined_index) -> None:
         if not predefined_index:
@@ -87,7 +87,7 @@ class BaseEvalInputDataset(Dataset):
         with open(os.path.join(self.data_folder, trajectory_name, "traj_data.pkl"), "rb") as f:
             traj_data = pickle.load(f)
         for k, v in traj_data.items():
-            traj_data[k] = v.astype('float')
+            traj_data[k] = v.astype("float")
         return traj_data
 
     def __len__(self) -> int:
@@ -122,6 +122,7 @@ class BaseEvalInputDataset(Dataset):
         goal_pos = np.concatenate([goal_pos, goal_yaw.reshape(-1, 1)], axis=-1)
         return actions, goal_pos
 
+
 class EvalDataset(BaseEvalInputDataset):
     def __init__(
         self,
@@ -139,8 +140,21 @@ class EvalDataset(BaseEvalInputDataset):
         normalize: bool = True,
         predefined_index: list = None,
     ):
-        super().__init__(data_folder, data_split_folder, dataset_name, image_size, min_dist_cat, max_dist_cat,
-            len_traj_pred, traj_stride, context_size, transform, traj_names, normalize, predefined_index)
+        super().__init__(
+            data_folder,
+            data_split_folder,
+            dataset_name,
+            image_size,
+            min_dist_cat,
+            max_dist_cat,
+            len_traj_pred,
+            traj_stride,
+            context_size,
+            transform,
+            traj_names,
+            normalize,
+            predefined_index,
+        )
 
     def __getitem__(self, i: int) -> Tuple[torch.Tensor]:
         try:
@@ -151,18 +165,24 @@ class EvalDataset(BaseEvalInputDataset):
             context = [(f_curr, t) for t in context_times]
             pred = [(f_curr, t) for t in pred_times]
 
-            obs_image = torch.stack([self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in context])
-            pred_image = torch.stack([self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in pred])
+            obs_image = torch.stack(
+                [self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in context]
+            )
+            pred_image = torch.stack(
+                [self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in pred]
+            )
 
             curr_traj_data = self._get_trajectory(f_curr)
 
             # Compute actions
-            actions, _ = self._compute_actions(curr_traj_data, curr_time, np.array([curr_time+1])) # last argument is dummy goal
+            actions, _ = self._compute_actions(
+                curr_traj_data, curr_time, np.array([curr_time + 1])
+            )  # last argument is dummy goal
             actions[:, :2] = normalize_data(actions[:, :2], self.ACTION_STATS)
             delta = get_delta_np(actions)
 
             return (
-                torch.tensor([i], dtype=torch.float32), # for logging purposes
+                torch.tensor([i], dtype=torch.float32),  # for logging purposes
                 torch.as_tensor(obs_image, dtype=torch.float32),
                 torch.as_tensor(pred_image, dtype=torch.float32),
                 torch.as_tensor(delta, dtype=torch.float32),

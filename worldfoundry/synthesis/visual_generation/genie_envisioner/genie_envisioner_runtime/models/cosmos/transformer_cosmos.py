@@ -37,6 +37,7 @@ if is_torchvision_available():
 
 class CosmosPatchEmbed(nn.Module):
     """Cosmos patch embed implementation."""
+
     def __init__(
         self, in_channels: int, out_channels: int, patch_size: Tuple[int, int, int], bias: bool = True
     ) -> None:
@@ -77,6 +78,7 @@ class CosmosPatchEmbed(nn.Module):
 
 class CosmosTimestepEmbedding(nn.Module):
     """Cosmos timestep embedding implementation."""
+
     def __init__(self, in_features: int, out_features: int) -> None:
         """Init.
 
@@ -109,6 +111,7 @@ class CosmosTimestepEmbedding(nn.Module):
 
 class CosmosEmbedding(nn.Module):
     """Cosmos embedding implementation."""
+
     def __init__(self, embedding_dim: int, condition_dim: int) -> None:
         """Init.
 
@@ -143,6 +146,7 @@ class CosmosEmbedding(nn.Module):
 
 class CosmosAdaLayerNorm(nn.Module):
     """Cosmos ada layer norm implementation."""
+
     def __init__(self, in_features: int, hidden_features: int) -> None:
         """Init.
 
@@ -193,6 +197,7 @@ class CosmosAdaLayerNorm(nn.Module):
 
 class CosmosAdaLayerNormZero(nn.Module):
     """Cosmos ada layer norm zero implementation."""
+
     def __init__(self, in_features: int, hidden_features: Optional[int] = None) -> None:
         """Init.
 
@@ -250,6 +255,7 @@ class CosmosAdaLayerNormZero(nn.Module):
 
 class CosmosAttnProcessor2_0:
     """Cosmos attn processor implementation."""
+
     def __init__(self):
         """Init."""
         if not hasattr(F, "scaled_dot_product_attention"):
@@ -293,7 +299,6 @@ class CosmosAttnProcessor2_0:
 
         # 3. Apply RoPE
         if image_rotary_emb is not None:
-
             query = apply_rotary_emb(query, image_rotary_emb, use_real=True, use_real_unbind_dim=-2)
             key = apply_rotary_emb(key, image_rotary_emb, use_real=True, use_real_unbind_dim=-2)
 
@@ -319,6 +324,7 @@ class CosmosAttnProcessor2_0:
 
 class CosmosTransformerBlock(nn.Module):
     """Cosmos transformer block implementation."""
+
     def __init__(
         self,
         num_attention_heads: int,
@@ -423,6 +429,7 @@ class CosmosTransformerBlock(nn.Module):
 
 class CosmosRotaryPosEmbed(nn.Module):
     """Cosmos rotary pos embed implementation."""
+
     def __init__(
         self,
         hidden_size: int,
@@ -458,10 +465,7 @@ class CosmosRotaryPosEmbed(nn.Module):
         self.t_ntk_factor = rope_scale[0] ** (self.dim_t / (self.dim_t - 2))
 
     def forward(
-        self,
-        hidden_states: torch.Tensor,
-        fps: Optional[int] = None,
-        **kwargs
+        self, hidden_states: torch.Tensor, fps: Optional[int] = None, **kwargs
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
@@ -515,6 +519,7 @@ class CosmosRotaryPosEmbed(nn.Module):
 
 class CosmosLearnablePositionalEmbed(nn.Module):
     """Cosmos learnable positional embed implementation."""
+
     def __init__(
         self,
         hidden_size: int,
@@ -684,9 +689,7 @@ class CosmosTransformer3DModel(ModelMixin, ConfigMixin):
 
         # 5. Output norm & projection
         self.norm_out = CosmosAdaLayerNorm(hidden_size, adaln_lora_dim)
-        self.proj_out = nn.Linear(
-            hidden_size, patch_size[0] * patch_size[1] * patch_size[2] * out_channels, bias=False
-        )
+        self.proj_out = nn.Linear(hidden_size, patch_size[0] * patch_size[1] * patch_size[2] * out_channels, bias=False)
 
         self.gradient_checkpointing = False
 

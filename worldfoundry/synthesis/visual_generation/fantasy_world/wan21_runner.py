@@ -79,17 +79,19 @@ class FantasyWorldWan21Runner:
             is_i2v=True,
             pose_encoding_to_extri_intri=pose_encoding_to_extri_intri,
         )
-        self.model = build_fantasy_world_wan21_model(
-            base_model_root=ckpt_dir,
-            checkpoint_path=model_ckpt,
-            device=self.device,
-            torch_dtype=self.torch_dtype,
-        ).to(self.device).eval()
+        self.model = (
+            build_fantasy_world_wan21_model(
+                base_model_root=ckpt_dir,
+                checkpoint_path=model_ckpt,
+                device=self.device,
+                torch_dtype=self.torch_dtype,
+            )
+            .to(self.device)
+            .eval()
+        )
         self.model.pipe.device = self.device
         self.model.pipe.torch_dtype = self.torch_dtype
-        self.moge = MoGeModel.from_pretrained(
-            resolve_moge_pretrained(moge_pretrained)
-        ).to(self.device).eval()
+        self.moge = MoGeModel.from_pretrained(resolve_moge_pretrained(moge_pretrained)).to(self.device).eval()
 
     def _sample_latents(
         self,
@@ -178,13 +180,9 @@ class FantasyWorldWan21Runner:
             moge = {key: value.cpu().contiguous() for key, value in moge_output.items()}
 
             intrinsics = torch.from_numpy(
-                np.stack([self._fw_utils.get_intrinsic_matrix(camera) for camera in camera_params]).astype(
-                    np.float32
-                )
+                np.stack([self._fw_utils.get_intrinsic_matrix(camera) for camera in camera_params]).astype(np.float32)
             )
-            extrinsics = torch.from_numpy(
-                np.stack([camera.w2c_mat for camera in camera_params]).astype(np.float32)
-            )
+            extrinsics = torch.from_numpy(np.stack([camera.w2c_mat for camera in camera_params]).astype(np.float32))
             if using_scale:
                 first_world, first_mask = self._fw_utils.batch_depth_to_world(
                     prediction=moge,
@@ -216,9 +214,7 @@ class FantasyWorldWan21Runner:
             )
             clip_feature = image_embedding["clip_feature"].to(self.device, self.torch_dtype)
             condition_latents = image_embedding["y"].to(self.device, self.torch_dtype)
-            context_positive = self.model.pipe.encode_prompt(prompt or "")["context"].to(
-                self.device, self.torch_dtype
-            )
+            context_positive = self.model.pipe.encode_prompt(prompt or "")["context"].to(self.device, self.torch_dtype)
             context_negative = self.model.pipe.encode_prompt(neg_prompt or "")["context"].to(
                 self.device, self.torch_dtype
             )

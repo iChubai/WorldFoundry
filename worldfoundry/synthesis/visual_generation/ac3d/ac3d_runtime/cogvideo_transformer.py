@@ -6,13 +6,13 @@ from diffusers.utils import is_torch_version
 from diffusers.models.transformers.cogvideox_transformer_3d import CogVideoXTransformer3DModel, Transformer2DModelOutput
 
 
-class CustomCogVideoXTransformer3DModel(CogVideoXTransformer3DModel):        
+class CustomCogVideoXTransformer3DModel(CogVideoXTransformer3DModel):
     def forward(
         self,
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
         timestep: Union[int, float, torch.LongTensor],
-        start_frame = None,
+        start_frame=None,
         timestep_cond: Optional[torch.Tensor] = None,
         image_rotary_emb: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
         controlnet_states: torch.Tensor = None,
@@ -75,7 +75,7 @@ class CustomCogVideoXTransformer3DModel(CogVideoXTransformer3DModel):
                     controlnet_block_weight = controlnet_weights[i]
                 elif isinstance(controlnet_weights, (float, int)):
                     controlnet_block_weight = controlnet_weights
-                
+
                 hidden_states = hidden_states + controlnet_states_block * controlnet_block_weight
 
         if not self.config.use_rotary_positional_embeddings:

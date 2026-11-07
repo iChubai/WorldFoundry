@@ -276,7 +276,9 @@ class LAPASynthesis(ActionModelSynthesis):
             },
         }
         # Write the generated plan to a JSON file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         if plan_only:
             # If only a plan is requested, return the plan details without executing inference.

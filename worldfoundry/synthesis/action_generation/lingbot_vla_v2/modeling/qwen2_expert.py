@@ -26,7 +26,9 @@ from transformers.models.qwen2.modeling_qwen2 import (
     Qwen2Model as _Qwen2Model,
     Qwen2ForCausalLM as _Qwen2ForCausalLM,
 )
+
 logger = logging.get_logger(__name__)
+
 
 # Modified from transformers.models.mistral.modeling_mistral.MistralMLP with Mistral->Qwen2Moe
 class Qwen2MoeRoutedExpertMLP(nn.Module):
@@ -71,6 +73,7 @@ class Qwen2FusedExperts(nn.Module):
     module provides the portable PyTorch implementation for unsupported GPUs
     or Triton build failures without changing checkpoint parameter names.
     """
+
     def __init__(self, num_experts, hidden_size, intermediate_size, initializer_range=0.02):
         super().__init__()
         self.num_experts = num_experts
@@ -171,6 +174,7 @@ class FixQwen2RMSNorm(nn.Module):
 
 class Qwen2TokenMoeBlock(nn.Module):
     """Token-level routing MoE block with all-to-all computation for torch.compile compatibility."""
+
     def __init__(self, config):
         super().__init__()
         self.num_experts = config.num_experts
@@ -179,7 +183,8 @@ class Qwen2TokenMoeBlock(nn.Module):
 
         # Checkpoint-resident loss-free routing bias used during inference.
         self.register_buffer(
-            "e_score_correction_bias", torch.zeros(config.num_experts),
+            "e_score_correction_bias",
+            torch.zeros(config.num_experts),
             persistent=True,
         )
 
@@ -187,8 +192,8 @@ class Qwen2TokenMoeBlock(nn.Module):
         self.gate = nn.Linear(config.hidden_size, config.num_experts, bias=False)
 
         # EP/fused support: choose expert storage based on moe_implementation
-        self._moe_implementation = getattr(config, '_moe_implementation', None) or 'eager'
-        if self._moe_implementation == 'fused':
+        self._moe_implementation = getattr(config, "_moe_implementation", None) or "eager"
+        if self._moe_implementation == "fused":
             self.experts = Qwen2FusedExperts(
                 self.num_experts,
                 config.hidden_size,
@@ -197,13 +202,16 @@ class Qwen2TokenMoeBlock(nn.Module):
             )
         else:
             self.experts = nn.ModuleList(
-                [Qwen2MoeRoutedExpertMLP(config, intermediate_size=config.moe_intermediate_size) for _ in range(self.num_experts)]
+                [
+                    Qwen2MoeRoutedExpertMLP(config, intermediate_size=config.moe_intermediate_size)
+                    for _ in range(self.num_experts)
+                ]
             )
 
         self.shared_expert = Qwen2MoeSharedExpertMLP(config, intermediate_size=config.shared_expert_intermediate_size)
-        self._router_activation = getattr(config, 'router_activation', 'softmax')
-        self.routed_scaling_factor = getattr(config, 'routed_scaling_factor', 1.0)
-        self._use_shared_expert_gate = getattr(config, 'use_shared_expert_gate', True)
+        self._router_activation = getattr(config, "router_activation", "softmax")
+        self.routed_scaling_factor = getattr(config, "routed_scaling_factor", 1.0)
+        self._use_shared_expert_gate = getattr(config, "use_shared_expert_gate", True)
         if self._use_shared_expert_gate:
             self.shared_expert_gate = torch.nn.Linear(config.hidden_size, 1, bias=False)
 
@@ -220,7 +228,7 @@ class Qwen2TokenMoeBlock(nn.Module):
         with torch.amp.autocast(hidden_flat.device.type, enabled=False):
             router_logits = F.linear(hidden_flat.float(), self.gate.weight.float())  # (B*T, num_experts)
 
-        if self._router_activation == 'sigmoid':
+        if self._router_activation == "sigmoid":
             routing_scores = router_logits.sigmoid()
         else:
             routing_scores = F.softmax(router_logits, dim=1, dtype=torch.float)
@@ -235,7 +243,7 @@ class Qwen2TokenMoeBlock(nn.Module):
         routing_weights = routing_weights.to(hidden_states.dtype)
 
         # Packed experts use the shared cached Triton/PyTorch dispatcher.
-        if self._moe_implementation == 'fused':
+        if self._moe_implementation == "fused":
             final_hidden_states = self.experts(
                 module=self,
                 num_experts=self.num_experts,
@@ -248,11 +256,11 @@ class Qwen2TokenMoeBlock(nn.Module):
             expert_outputs = torch.stack(
                 [expert(hidden_flat) for expert in self.experts], dim=0
             )  # (num_experts, B*T, D)
-            expert_mask = F.one_hot(
-                selected_experts, num_classes=self.num_experts
-            ).float()  # (B*T, top_k, num_experts)
-            weights = (expert_mask * routing_weights.unsqueeze(-1).float()).sum(dim=1).to(hidden_states.dtype)  # (B*T, num_experts)
-            final_hidden_states = torch.einsum('ebd,be->bd', expert_outputs, weights)  # (B*T, D)
+            expert_mask = F.one_hot(selected_experts, num_classes=self.num_experts).float()  # (B*T, top_k, num_experts)
+            weights = (
+                (expert_mask * routing_weights.unsqueeze(-1).float()).sum(dim=1).to(hidden_states.dtype)
+            )  # (B*T, num_experts)
+            final_hidden_states = torch.einsum("ebd,be->bd", expert_outputs, weights)  # (B*T, D)
 
         # Shared expert: applied to all tokens (fixed shape)
         if final_hidden_states.dtype != hidden_flat.dtype:
@@ -337,7 +345,9 @@ class Qwen2DecoderLayer(GradientCheckpointingLayer):
             return out_emb, router_logits
 
         else:
-            raise ValueError(f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2DecoderLayer in LingBot-VLA")
+            raise ValueError(
+                f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2DecoderLayer in LingBot-VLA"
+            )
 
 
 @auto_docstring
@@ -380,6 +390,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
     Args:
         config: Qwen2Config
     """
+
     get_input_embeddings = _Qwen2Model.get_input_embeddings
     set_input_embeddings = _Qwen2Model.set_input_embeddings
     forward = _Qwen2Model.forward
@@ -414,6 +425,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     forward = _Qwen2ForCausalLM.forward
     set_decoder = _Qwen2ForCausalLM.set_decoder
     get_decoder = _Qwen2ForCausalLM.get_decoder
+
     def __init__(self, config, eval):
         super().__init__(config)
         self.model = Qwen2Model(config, eval)
@@ -422,6 +434,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
 
         # Initialize weights and apply final processing
         self.post_init()
+
 
 def apply_lingbot_qwen2_patch():
     hf_qwen2.Qwen2DecoderLayer = Qwen2DecoderLayer

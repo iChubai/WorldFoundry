@@ -63,6 +63,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
     emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
     return emb
 
+
 class Patch1D(nn.Module):
     def __init__(
         self,
@@ -84,7 +85,8 @@ class Patch1D(nn.Module):
             self.conv = nn.Conv1d(self.channels, self.out_channels, stride, stride=stride, padding=padding)
             init.constant_(self.conv.weight, 0.0)
             with torch.no_grad():
-                for i in range(len(self.conv.weight)): self.conv.weight[i, i] = 1 / stride
+                for i in range(len(self.conv.weight)):
+                    self.conv.weight[i, i] = 1 / stride
             init.constant_(self.conv.bias, 0.0)
         else:
             assert self.channels == self.out_channels
@@ -93,6 +95,7 @@ class Patch1D(nn.Module):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         assert inputs.shape[1] == self.channels
         return self.conv(inputs)
+
 
 class UnPatch1D(nn.Module):
     def __init__(
@@ -128,6 +131,7 @@ class UnPatch1D(nn.Module):
 
         return outputs
 
+
 class Upsampler(nn.Module):
     def __init__(
         self,
@@ -138,6 +142,7 @@ class Upsampler(nn.Module):
 
         self.spatial_upsample_factor = spatial_upsample_factor
         self.temporal_upsample_factor = temporal_upsample_factor
+
 
 class TemporalUpsampler3D(Upsampler):
     def __init__(self):
@@ -153,15 +158,16 @@ class TemporalUpsampler3D(Upsampler):
             x = torch.cat([first_frame, x], dim=2)
         return x
 
+
 class CausalConv3d(nn.Conv3d):
     def __init__(
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size=3, # : int | tuple[int, int, int], 
-        stride=1, # : int | tuple[int, int, int] = 1,
-        padding=1, # : int | tuple[int, int, int],  # TODO: change it to 0.
-        dilation=1, # :  int | tuple[int, int, int] = 1,
+        kernel_size=3,  # : int | tuple[int, int, int],
+        stride=1,  # : int | tuple[int, int, int] = 1,
+        padding=1,  # : int | tuple[int, int, int],  # TODO: change it to 0.
+        dilation=1,  # :  int | tuple[int, int, int] = 1,
         **kwargs,
     ):
         kernel_size = kernel_size if isinstance(kernel_size, tuple) else (kernel_size,) * 3
@@ -204,9 +210,10 @@ class CausalConv3d(nn.Conv3d):
         x = F.pad(
             x,
             pad=(0, 0, 0, 0, self.temporal_padding, 0),
-            mode="replicate",     # TODO: check if this is necessary
+            mode="replicate",  # TODO: check if this is necessary
         )
         return super().forward(x)
+
 
 class PatchEmbed3D(nn.Module):
     """3D Image to Patch Embedding"""
@@ -231,7 +238,11 @@ class PatchEmbed3D(nn.Module):
         self.layer_norm = layer_norm
 
         self.proj = nn.Conv3d(
-            in_channels, embed_dim, kernel_size=(time_patch_size, patch_size, patch_size), stride=(time_patch_size, patch_size, patch_size), bias=bias
+            in_channels,
+            embed_dim,
+            kernel_size=(time_patch_size, patch_size, patch_size),
+            stride=(time_patch_size, patch_size, patch_size),
+            bias=bias,
         )
         if layer_norm:
             self.norm = nn.LayerNorm(embed_dim, elementwise_affine=False, eps=1e-6)
@@ -273,6 +284,7 @@ class PatchEmbed3D(nn.Module):
             pos_embed = self.pos_embed
 
         return (latent + pos_embed).to(latent.dtype)
+
 
 class PatchEmbedF3D(nn.Module):
     """Fake 3D Image to Patch Embedding"""
@@ -298,9 +310,7 @@ class PatchEmbedF3D(nn.Module):
         self.proj = nn.Conv2d(
             in_channels, embed_dim, kernel_size=(patch_size, patch_size), stride=patch_size, bias=bias
         )
-        self.proj_t = Patch1D(
-            embed_dim, True, stride=patch_size
-        )
+        self.proj_t = Patch1D(embed_dim, True, stride=patch_size)
         if layer_norm:
             self.norm = nn.LayerNorm(embed_dim, elementwise_affine=False, eps=1e-6)
         else:
@@ -326,8 +336,8 @@ class PatchEmbedF3D(nn.Module):
 
         latent = rearrange(latent, "b c f h w -> (b h w) c f")
         latent = self.proj_t(latent)
-        latent = rearrange(latent, "(b h w) c f -> b c f h w", h=h//2, w=w//2)
-        
+        latent = rearrange(latent, "(b h w) c f -> b c f h w", h=h // 2, w=w // 2)
+
         latent = rearrange(latent, "b c f h w -> (b f) c h w")
         if self.flatten:
             latent = latent.flatten(2).transpose(1, 2)  # BCFHW -> BNC
@@ -349,6 +359,7 @@ class PatchEmbedF3D(nn.Module):
             pos_embed = self.pos_embed
 
         return (latent + pos_embed).to(latent.dtype)
+
 
 class CasualPatchEmbed3D(nn.Module):
     """3D Image to Patch Embedding"""
@@ -373,7 +384,12 @@ class CasualPatchEmbed3D(nn.Module):
         self.layer_norm = layer_norm
 
         self.proj = CausalConv3d(
-            in_channels, embed_dim, kernel_size=(time_patch_size, patch_size, patch_size), stride=(time_patch_size, patch_size, patch_size), bias=bias, padding=None
+            in_channels,
+            embed_dim,
+            kernel_size=(time_patch_size, patch_size, patch_size),
+            stride=(time_patch_size, patch_size, patch_size),
+            bias=bias,
+            padding=None,
         )
         if layer_norm:
             self.norm = nn.LayerNorm(embed_dim, elementwise_affine=False, eps=1e-6)

@@ -232,11 +232,7 @@ def _rope_precompute_coeffs(
     assert feat_dim % 2 == 0
     num_freqs = feat_dim // 2
     freqs = freq_scale * (
-        freq_base
-        ** (
-            -torch.arange(num_freqs, device=positions.device)[None, None, None, :]
-            / num_freqs
-        )
+        freq_base ** (-torch.arange(num_freqs, device=positions.device)[None, None, None, :] / num_freqs)
     )
     angles = positions[None, None, :, None] * freqs
     assert angles.shape == (1, 1, positions.shape[0], num_freqs)
@@ -306,6 +302,3 @@ def _invert_K(Ks: torch.Tensor) -> torch.Tensor:
     out[..., 1, 2] = -Ks[..., 1, 2] / Ks[..., 1, 1]
     out[..., 2, 2] = 1.0
     return out
-
-
-

@@ -7,7 +7,9 @@ from worldfoundry.core.io.paths import package_data_path
 
 
 @hydra.main(
-    config_path=str(package_data_path('models', 'runtime', 'configs', 'solaris')), config_name="inference", version_base=None
+    config_path=str(package_data_path("models", "runtime", "configs", "solaris")),
+    config_name="inference",
+    version_base=None,
 )  # no version to avoid warnings in cli
 def main(cfg):
     # Hydra changes cwd, so resolve relative paths before anything else.

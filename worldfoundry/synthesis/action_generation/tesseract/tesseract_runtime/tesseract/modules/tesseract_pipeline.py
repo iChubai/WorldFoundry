@@ -28,7 +28,6 @@ _LOW_CPU_MEM_USAGE_DEFAULT_LORA = False
 
 
 class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
-
     def __init__(
         self,
         tokenizer: T5Tokenizer,
@@ -494,7 +493,6 @@ class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
 
 
 class TesserActImageToDepthNormalVideoPipeline(CogVideoXImageToVideoPipeline):
-
     def __init__(
         self,
         tokenizer: T5Tokenizer,

@@ -36,6 +36,7 @@ logger = logging.get_logger(__name__)
 def _qwen3vl_no_init_weights(self, module):
     return
 
+
 _Qwen3VLPreTrainedModel._init_weights = _qwen3vl_no_init_weights
 Qwen3VLPreTrainedModel = _Qwen3VLPreTrainedModel
 

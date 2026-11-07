@@ -95,14 +95,8 @@ class RMS_norm(nnx.Module):
         shape = (dim, *broadcastable_dims)
         self.scale = dim**0.5
         self.images = images
-        self.gamma = nnx.Param(
-            jnp.ones(shape), dtype=jnp.bfloat16, param_dtype=jnp.bfloat16
-        )
-        self.bias = (
-            nnx.Param(jnp.zeros(shape), dtype=jnp.bfloat16, param_dtype=jnp.bfloat16)
-            if bias
-            else 0.0
-        )
+        self.gamma = nnx.Param(jnp.ones(shape), dtype=jnp.bfloat16, param_dtype=jnp.bfloat16)
+        self.bias = nnx.Param(jnp.zeros(shape), dtype=jnp.bfloat16, param_dtype=jnp.bfloat16) if bias else 0.0
 
     def __call__(self, x):
         original_dtype = x.dtype
@@ -184,9 +178,7 @@ class ResidualBlock(nnx.Module):
                 cache_x = x[:, -CACHE_T:, :, :, :]
                 if cache_x.shape[1] < 2 and feat_cache[idx] is not None:
                     # Cache last frame of last two chunks
-                    last_frame = jnp.expand_dims(
-                        feat_cache[idx][:, -1, :, :, :], axis=1
-                    )
+                    last_frame = jnp.expand_dims(feat_cache[idx][:, -1, :, :, :], axis=1)
                     cache_x = jnp.concatenate([last_frame, cache_x], axis=1)
 
                 x = layer(x, feat_cache[idx])
@@ -300,9 +292,7 @@ class Resample(nnx.Module):
                     feat_idx[0] += 1
                 else:
                     cache_x = x[:, -CACHE_T:, :, :, :]
-                    cache_x = jnp.concatenate([feat_cache[idx], cache_x], axis=1)[
-                        :, -2:, :, :, :
-                    ]
+                    cache_x = jnp.concatenate([feat_cache[idx], cache_x], axis=1)[:, -2:, :, :, :]
 
                     if feat_cache[idx] == "Rep":
                         x = self.time_conv(x)
@@ -341,9 +331,7 @@ class Resample(nnx.Module):
                     feat_idx[0] += 1
             else:
                 first_frame = x[:, :1, :, :, :]
-                x = self.time_conv(
-                    x, time_padding=(2, 0)
-                )  # do the convolution but but let the first frame through.
+                x = self.time_conv(x, time_padding=(2, 0))  # do the convolution but but let the first frame through.
                 x = jnp.concatenate([first_frame, x[:, 1:, :, :, :]], axis=1)
         return x
 
@@ -367,14 +355,10 @@ class AttentionBlock(nnx.Module):
             dtype=jnp.bfloat16,
             param_dtype=jnp.bfloat16,
         )
-        self.proj = nnx.Conv(
-            dim, dim, (1, 1), rngs=rngs, dtype=jnp.bfloat16, param_dtype=jnp.bfloat16
-        )
+        self.proj = nnx.Conv(dim, dim, (1, 1), rngs=rngs, dtype=jnp.bfloat16, param_dtype=jnp.bfloat16)
 
         # zero out the last layer params
-        self.proj.kernel.value = jnp.zeros_like(
-            self.proj.kernel.value, dtype=jnp.bfloat16
-        )
+        self.proj.kernel.value = jnp.zeros_like(self.proj.kernel.value, dtype=jnp.bfloat16)
 
     def __call__(self, x):
         identity = x
@@ -406,9 +390,7 @@ def count_conv3d(module):
         for layer in module:
             if isinstance(layer, CausalConv3d):
                 count += 1
-            elif isinstance(
-                layer, (ResidualBlock, Resample, AttentionBlock, Encoder3d, Decoder3d)
-            ):
+            elif isinstance(layer, (ResidualBlock, Resample, AttentionBlock, Encoder3d, Decoder3d)):
                 count += count_conv3d(layer)
             elif hasattr(layer, "__iter__"):
                 count += count_conv3d(layer)
@@ -551,9 +533,7 @@ class WanVAE_(nnx.Module):
         # Pad out along time dimension to length iter_, with zeros on the right
         def encode_chunk(i, res):
             out, cache = res
-            chunk = jax.lax.dynamic_slice_in_dim(
-                x, start_index=1 + 4 * (i - 1), slice_size=4, axis=1
-            )
+            chunk = jax.lax.dynamic_slice_in_dim(x, start_index=1 + 4 * (i - 1), slice_size=4, axis=1)
             out_, cache = self.encoder(
                 chunk,
                 feat_cache=cache,
@@ -601,9 +581,7 @@ class WanVAE_(nnx.Module):
             feat_cache=cache,
         )
         cache = _pad_cache_time_to(cache, T=CACHE_T)
-        out = jnp.zeros(
-            (out0.shape[0], (iter_ - 1) * 4 + 1) + out0.shape[2:], dtype=out0.dtype
-        )
+        out = jnp.zeros((out0.shape[0], (iter_ - 1) * 4 + 1) + out0.shape[2:], dtype=out0.dtype)
         out = out.at[:, :1, :, :, :].set(out0)
 
         def decode_chunk(i, res):
@@ -614,9 +592,7 @@ class WanVAE_(nnx.Module):
                 feat_cache=cache,
             )
             cache = _pad_cache_time_to(cache, T=CACHE_T)
-            out = jax.lax.dynamic_update_slice_in_dim(
-                out, out_, 1 + 4 * (i - 1), axis=1
-            )
+            out = jax.lax.dynamic_update_slice_in_dim(out, out_, 1 + 4 * (i - 1), axis=1)
             return out, cache
 
         out, _ = jax.lax.fori_loop(1, iter_, decode_chunk, (out, cache))
@@ -646,9 +622,7 @@ def _pad_cache_time_to(cache_list, T=2):
     def pad_one(a):
         # a: (b, t, h, w, c)
         if a is None:
-            return (
-                None  # keep structure; this entry will be set by encoder on next call
-            )
+            return None  # keep structure; this entry will be set by encoder on next call
         t = a.shape[1]
         if t == T:
             return a
@@ -768,9 +742,7 @@ class Encoder3d(nnx.Module):
                 cache_x = x[:, -CACHE_T:, :, :, :]
                 if cache_x.shape[1] < 2 and feat_cache[idx] is not None:
                     # cache last frame of last two chunk
-                    last_frame = jnp.expand_dims(
-                        feat_cache[idx][:, -1, :, :, :], axis=1
-                    )
+                    last_frame = jnp.expand_dims(feat_cache[idx][:, -1, :, :, :], axis=1)
                     cache_x = jnp.concatenate([last_frame, cache_x], axis=1)
                 x = layer(x, feat_cache[idx])
                 new_cache[idx] = cache_x
@@ -807,9 +779,7 @@ class Decoder3d(nnx.Module):
         scale = 1.0 / 2 ** (len(dim_mult) - 2)
 
         # init block
-        self.conv1 = CausalConv3d(
-            z_dim, dims[0], (3, 3, 3), padding=(1, 1, 1), rngs=rngs
-        )
+        self.conv1 = CausalConv3d(z_dim, dims[0], (3, 3, 3), padding=(1, 1, 1), rngs=rngs)
 
         # middle blocks
         self.middle = [
@@ -882,9 +852,7 @@ class Decoder3d(nnx.Module):
                 cache_x = x[:, -CACHE_T:, :, :, :]
                 if cache_x.shape[1] < 2 and feat_cache[idx] is not None:
                     # cache last frame of last two chunk
-                    last_frame = jnp.expand_dims(
-                        feat_cache[idx][:, -1, :, :, :], axis=1
-                    )
+                    last_frame = jnp.expand_dims(feat_cache[idx][:, -1, :, :, :], axis=1)
                     cache_x = jnp.concatenate([last_frame, cache_x], axis=1)
                 x = layer(x, feat_cache[idx])
                 new_cache[idx] = cache_x

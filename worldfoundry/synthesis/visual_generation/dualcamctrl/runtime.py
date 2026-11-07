@@ -44,6 +44,7 @@ DEFAULT_NEGATIVE_PROMPT = (
 def _looks_like_hf_repo_id(value: str) -> bool:
     return bool(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", value.strip()))
 
+
 OFFICIAL_DEMO_PROMPTS = {
     "astronaut": (
         "An astronaut walks forward on the Moon, the Earth looming far behind him. In smooth, alternating steps, "
@@ -190,7 +191,9 @@ class DualCamCtrlRuntime:
         self.tokenizer_repo = tokenizer_repo
         self.dualcamctrl_repo = dualcamctrl_repo
         self.checkpoint_name = checkpoint_name
-        self.local_model_path = str(Path(local_model_path).expanduser()) if local_model_path is not None else str(local_model_root_path())
+        self.local_model_path = (
+            str(Path(local_model_path).expanduser()) if local_model_path is not None else str(local_model_root_path())
+        )
         self.download_resource = download_resource
         self.allow_download = bool(allow_download)
         self.base_model_path = None if base_model_path is None else str(Path(base_model_path).expanduser())
@@ -428,11 +431,7 @@ class DualCamCtrlRuntime:
         checkpoint = self._resolve_checkpoint_path()
         state_dict = load_state_dict(checkpoint, torch_dtype=self.torch_dtype, device="cpu")
         state_dict = self._strip_pipe_prefix(state_dict)
-        dit_state = {
-            name.removeprefix("dit."): value
-            for name, value in state_dict.items()
-            if name.startswith("dit.")
-        }
+        dit_state = {name.removeprefix("dit."): value for name, value in state_dict.items() if name.startswith("dit.")}
         if not dit_state:
             dit_state = state_dict
         load_state = pipe.dit.load_state_dict(dit_state, strict=False)
@@ -475,7 +474,9 @@ class DualCamCtrlRuntime:
         if cameras_info.shape[1] == 18:
             cameras_info = torch.cat([torch.zeros(cameras_info.shape[0], 1), cameras_info], dim=1)
         if cameras_info.shape[0] < frame_len:
-            raise ValueError(f"DualCamCtrl camera path has {cameras_info.shape[0]} frames, but {frame_len} are required.")
+            raise ValueError(
+                f"DualCamCtrl camera path has {cameras_info.shape[0]} frames, but {frame_len} are required."
+            )
         cam_params = [_Camera(cameras_info[index]) for index in range(frame_len)]
 
         sample_wh_ratio = width / height
@@ -512,12 +513,18 @@ class DualCamCtrlRuntime:
         **kwargs: Any,
     ) -> dict[str, Any]:
         if video is not None:
-            raise ValueError("DualCamCtrl consumes an image, a depth image, and a camera path; it does not accept input video.")
+            raise ValueError(
+                "DualCamCtrl consumes an image, a depth image, and a camera path; it does not accept input video."
+            )
         demo_name = str(kwargs.get("demo_name") or "seaside")
         default_image, default_depth, default_camera, default_prompt = self.demo_assets(demo_name)
         image_path = Path(kwargs.get("image_path") or images or default_image).expanduser()
         depth_path = Path(kwargs.get("depth_image") or kwargs.get("depth_path") or default_depth).expanduser()
-        camera_path = Path(kwargs.get("camera_path") or kwargs.get("trajectory_file") or (interactions[0] if interactions else default_camera)).expanduser()
+        camera_path = Path(
+            kwargs.get("camera_path")
+            or kwargs.get("trajectory_file")
+            or (interactions[0] if interactions else default_camera)
+        ).expanduser()
         text_prompt = prompt or kwargs.get("caption") or default_prompt
 
         frame_len = int(kwargs.get("num_frames", kwargs.get("frame_len", 61)))

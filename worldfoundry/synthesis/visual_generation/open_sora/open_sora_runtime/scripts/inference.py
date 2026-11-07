@@ -52,6 +52,7 @@ def main():
     if is_distributed():
         import colossalai
         from colossalai.cluster import DistCoordinator
+
         colossalai.launch_from_torch({})
         coordinator = DistCoordinator()
         enable_sequence_parallelism = coordinator.world_size > 1
@@ -81,9 +82,9 @@ def main():
     if image_size is None:
         resolution = cfg.get("resolution", None)
         aspect_ratio = cfg.get("aspect_ratio", None)
-        assert (
-            resolution is not None and aspect_ratio is not None
-        ), "resolution and aspect_ratio must be provided if image_size is not provided"
+        assert resolution is not None and aspect_ratio is not None, (
+            "resolution and aspect_ratio must be provided if image_size is not provided"
+        )
         image_size = get_image_size(resolution, aspect_ratio)
     num_frames = get_num_frames(cfg.num_frames)
 

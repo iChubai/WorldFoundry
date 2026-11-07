@@ -18,7 +18,6 @@ D = TypeVar("D", bound="DictConfig|ListConfig")
 
 @dataclasses.dataclass
 class BaseConfig:
-
     @classmethod
     def update_legacy_settings(cls, config: D) -> D:
         """

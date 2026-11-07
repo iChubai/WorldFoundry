@@ -109,9 +109,7 @@ def load_model_checkpoint(model, ckpt: str):
         model: The model.
         ckpt: The ckpt.
     """
-    state_dict = _normalized_checkpoint_state_dict(
-        torch.load(ckpt, map_location="cpu", weights_only=True)
-    )
+    state_dict = _normalized_checkpoint_state_dict(torch.load(ckpt, map_location="cpu", weights_only=True))
     expected = model.state_dict()
     for key in ("scale_arr_prev",):
         if key in expected and key not in state_dict:
@@ -137,9 +135,7 @@ def load_image_batch(filepath_list, image_size=(256, 256)):
             rgb_img = rgb_img.resize((image_size[1], image_size[0]), Image.Resampling.BILINEAR)
             img_tensor = torch.from_numpy(np.asarray(rgb_img, np.float32)).permute(2, 0, 1).float()
         else:
-            raise NotImplementedError(
-                f"VideoCrafter image conditioning supports image files only, got {suffix!r}."
-            )
+            raise NotImplementedError(f"VideoCrafter image conditioning supports image files only, got {suffix!r}.")
         img_tensor = (img_tensor / 255.0 - 0.5) * 2
         batch_tensor.append(img_tensor)
     return torch.stack(batch_tensor, dim=0)

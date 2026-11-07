@@ -102,9 +102,7 @@ class EchoInfinity:
                 raw_state = state_dict["generator_ema"]
                 if "generator" in state_dict:
                     encoder_keys = {
-                        key: value
-                        for key, value in state_dict["generator"].items()
-                        if "query_memory_encoder" in key
+                        key: value for key, value in state_dict["generator"].items() if "query_memory_encoder" in key
                     }
                     if encoder_keys:
                         raw_state = dict(raw_state)

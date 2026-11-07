@@ -495,10 +495,7 @@ class WorldFMRuntime:
             self._set_seed(int(seed))
 
         # Generate each frame by decoding the render with its corresponding condition
-        frames = [
-            self._decode_render(item["render_rgb_u8"], item["cond_nearest_rgb"])
-            for item in frame_conditions
-        ]
+        frames = [self._decode_render(item["render_rgb_u8"], item["cond_nearest_rgb"]) for item in frame_conditions]
 
         # Save the generated frames to disk based on the specified output options
         saved_outputs = self._save_outputs(

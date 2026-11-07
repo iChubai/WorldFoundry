@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
 from pathlib import Path
 
+
 @dataclass
 class SegmentId:
     episode_id: Union[int, str]
@@ -33,6 +34,7 @@ class Segment:
     @property
     def effective_size(self):
         return self.mask_padding.sum().item()
+
 
 class StateDictMixin:
     def _init_fields(self) -> None:
@@ -59,6 +61,7 @@ class StateDictMixin:
         assert set(list(state_dict.keys())) == self._all_fields
         for k, v in state_dict.items():
             self._set_field(k, v)
+
 
 @dataclass
 class Episode:
@@ -115,6 +118,7 @@ def merge_info(info_a, info_b):
     }
     return info
 
+
 class CSGOHdf5Dataset(StateDictMixin, Dataset):
     def __init__(self, directory: Path) -> None:
         super().__init__()
@@ -129,13 +133,17 @@ class CSGOHdf5Dataset(StateDictMixin, Dataset):
         return self.num_steps
 
     def __getitem__(self, segment_id: SegmentId) -> Segment:
-        assert segment_id.start < self._length_one_episode and segment_id.stop > 0 and segment_id.start < segment_id.stop
+        assert (
+            segment_id.start < self._length_one_episode and segment_id.stop > 0 and segment_id.start < segment_id.stop
+        )
         pad_len_right = max(0, segment_id.stop - self._length_one_episode)
         pad_len_left = max(0, -segment_id.start)
 
         start = max(0, segment_id.start)
         stop = min(self._length_one_episode, segment_id.stop)
-        mask_padding = torch.cat((torch.zeros(pad_len_left), torch.ones(stop - start), torch.zeros(pad_len_right))).bool()
+        mask_padding = torch.cat(
+            (torch.zeros(pad_len_left), torch.ones(stop - start), torch.zeros(pad_len_right))
+        ).bool()
 
         with h5py.File(self._filenames[segment_id.episode_id], "r") as f:
             obs = torch.stack([torch.tensor(f[f"frame_{i}_x"][:]).flip(2).permute(2, 0, 1) for i in range(start, stop)])
@@ -150,7 +158,9 @@ class CSGOHdf5Dataset(StateDictMixin, Dataset):
         rew = torch.zeros(obs.size(0))
         end = torch.zeros(obs.size(0), dtype=torch.uint8)
         trunc = torch.zeros(obs.size(0), dtype=torch.uint8)
-        return Segment(obs, act, rew, end, trunc, mask_padding, info={}, id=SegmentId(segment_id.episode_id, start, stop))
+        return Segment(
+            obs, act, rew, end, trunc, mask_padding, info={}, id=SegmentId(segment_id.episode_id, start, stop)
+        )
 
     def load_episode(self, episode_id: int) -> Episode:  # used by DatasetTraverser
         s = self[SegmentId(episode_id, 0, self._length_one_episode)]

@@ -7,6 +7,7 @@ Supports two modes:
 In batch mode all heavyweight models are loaded once externally, then each
 config gets a fresh pipeline instance that reuses those shared models.
 """
+
 from __future__ import annotations
 
 import os
@@ -66,7 +67,13 @@ def _run_single(config: dict) -> None:
     pipeline.run(iter_inputs)
 
 
-def _run_batch(config_paths: list[str], output_root: str, device: str | None, entity_names_str: str | None = None, system_config: str | None = None) -> None:
+def _run_batch(
+    config_paths: list[str],
+    output_root: str,
+    device: str | None,
+    entity_names_str: str | None = None,
+    system_config: str | None = None,
+) -> None:
     """Load all models once, then run each config with a fresh pipeline."""
     if not config_paths:
         print("[batch] No configs to run")
@@ -115,10 +122,14 @@ def main() -> None:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--config", help="Path to a single event-centric YAML config")
     group.add_argument("--configs-list", help="Path to file listing config paths (one per line)")
-    parser.add_argument("--system-config", required=True, help="Path to system config YAML (model weights, runtime settings)")
+    parser.add_argument(
+        "--system-config", required=True, help="Path to system config YAML (model weights, runtime settings)"
+    )
     parser.add_argument("--output-root", required=True, help="Output directory for inference results")
     parser.add_argument("--device", default=None, help="Override device, e.g. cuda:0")
-    parser.add_argument("--entity-names", default=None, help="Comma-separated entity names to always detect, e.g. 'person,dog'")
+    parser.add_argument(
+        "--entity-names", default=None, help="Comma-separated entity names to always detect, e.g. 'person,dog'"
+    )
     args = parser.parse_args()
 
     if args.configs_list:

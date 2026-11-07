@@ -161,7 +161,9 @@ def _prepare_visual_tensor(
     frames = frames[-window_size:]
     rgb = torch.stack([image_processor(frame) for frame in frames], dim=0).to(device=device)
 
-    gripper_value = _first_present(observation, "gripper_image", "gripper", "wrist_image", "current_image", "image", "image_path")
+    gripper_value = _first_present(
+        observation, "gripper_image", "gripper", "wrist_image", "current_image", "image", "image_path"
+    )
     gripper_frames = [_load_rgb_image(item) for item in _as_image_sequence(gripper_value)]
     if not gripper_frames:
         gripper_frames = frames
@@ -247,9 +249,7 @@ def select_roboflamingo_runtime_config(
     language_override = _first_present(options, "lang_encoder_path", "lm_path")
     lang_encoder_path = _adjacent_released_checkpoint(
         _path_or_none(
-            language_override
-            or _checkpoint_by_role(checkpoints, "language")
-            or _checkpoint_by_role(checkpoints, "mpt")
+            language_override or _checkpoint_by_role(checkpoints, "language") or _checkpoint_by_role(checkpoints, "mpt")
         ),
         explicit=language_override is not None,
         relative_path="anas-awadalla--mpt-1b-redpajama-200b-dolly",
@@ -265,27 +265,21 @@ def select_roboflamingo_runtime_config(
                 _path_or_none(vision_pretrained),
                 explicit=False,
                 relative_path="open_clip/ViT-L-14.pt",
-            ) or vision_pretrained
+            )
+            or vision_pretrained
         )
     architecture = RoboFlamingoArchitectureConfig(
         llm_name=str(options.get("llm_name") or architecture_defaults["llm_name"]),
-        vision_encoder_path=str(
-            options.get("vision_encoder_path") or architecture_defaults["vision_encoder_path"]
-        ),
+        vision_encoder_path=str(options.get("vision_encoder_path") or architecture_defaults["vision_encoder_path"]),
         vision_encoder_pretrained=vision_pretrained,
         cross_attn_every_n_layers=int(
-            options.get("cross_attn_every_n_layers")
-            or architecture_defaults["cross_attn_every_n_layers"]
+            options.get("cross_attn_every_n_layers") or architecture_defaults["cross_attn_every_n_layers"]
         ),
         window_size=int(
-            options.get("window_size")
-            or options.get("eval_hist_size")
-            or architecture_defaults["window_size"]
+            options.get("window_size") or options.get("eval_hist_size") or architecture_defaults["window_size"]
         ),
         fusion_mode=str(options.get("fusion_mode") or architecture_defaults["fusion_mode"]),
-        use_gripper=_bool_option(
-            options, "use_gripper", bool(architecture_defaults["use_gripper"])
-        ),
+        use_gripper=_bool_option(options, "use_gripper", bool(architecture_defaults["use_gripper"])),
         use_state=_bool_option(options, "use_state", bool(architecture_defaults["use_state"])),
         decoder_type=str(options.get("decoder_type") or architecture_defaults["decoder_type"]),
         head_type=str(options.get("head_type") or architecture_defaults["head_type"]),
@@ -293,13 +287,17 @@ def select_roboflamingo_runtime_config(
         precision=str(options.get("precision") or architecture_defaults["precision"]),
     )
     return RoboFlamingoRuntimeConfig(
-        policy_checkpoint_path=_resolve_checkpoint_file(policy_path, require_existing=require_existing, label="policy checkpoint"),
+        policy_checkpoint_path=_resolve_checkpoint_file(
+            policy_path, require_existing=require_existing, label="policy checkpoint"
+        ),
         openflamingo_checkpoint_path=_resolve_checkpoint_file(
             openflamingo_path,
             require_existing=require_existing,
             label="OpenFlamingo checkpoint",
         ),
-        lang_encoder_path=_resolve_existing_dir(lang_encoder_path, require_existing=require_existing, label="language backbone"),
+        lang_encoder_path=_resolve_existing_dir(
+            lang_encoder_path, require_existing=require_existing, label="language backbone"
+        ),
         tokenizer_path=_resolve_existing_dir(tokenizer_path, require_existing=require_existing, label="tokenizer"),
         device=str(options.get("device") or "cuda"),
         precision=architecture.precision,
@@ -378,18 +376,19 @@ class RoboFlamingoRuntime:
         if self.config.policy_checkpoint_path is None or not self.config.policy_checkpoint_path.is_file():
             raise FileNotFoundError(f"RoboFlamingo policy checkpoint is missing: {self.config.policy_checkpoint_path}")
         if self.config.openflamingo_checkpoint_path is None or not self.config.openflamingo_checkpoint_path.is_file():
-            raise FileNotFoundError(f"RoboFlamingo OpenFlamingo checkpoint is missing: {self.config.openflamingo_checkpoint_path}")
+            raise FileNotFoundError(
+                f"RoboFlamingo OpenFlamingo checkpoint is missing: {self.config.openflamingo_checkpoint_path}"
+            )
         if self.config.lang_encoder_path is None or not self.config.lang_encoder_path.is_dir():
-            raise FileNotFoundError(f"RoboFlamingo language backbone directory is missing: {self.config.lang_encoder_path}")
+            raise FileNotFoundError(
+                f"RoboFlamingo language backbone directory is missing: {self.config.lang_encoder_path}"
+            )
         if self.config.tokenizer_path is None or not self.config.tokenizer_path.is_dir():
             raise FileNotFoundError(f"RoboFlamingo tokenizer directory is missing: {self.config.tokenizer_path}")
-        vision_checkpoint = resolve_worldfoundry_path(
-            self.config.architecture.vision_encoder_pretrained
-        ).resolve()
+        vision_checkpoint = resolve_worldfoundry_path(self.config.architecture.vision_encoder_pretrained).resolve()
         if not vision_checkpoint.is_file():
             raise FileNotFoundError(
-                "RoboFlamingo requires the OpenCLIP vision checkpoint as a staged local file: "
-                f"{vision_checkpoint}"
+                f"RoboFlamingo requires the OpenCLIP vision checkpoint as a staged local file: {vision_checkpoint}"
             )
 
         from .imports import ensure_runtime_import_paths

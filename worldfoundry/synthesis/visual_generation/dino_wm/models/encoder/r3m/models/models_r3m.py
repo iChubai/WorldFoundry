@@ -47,7 +47,7 @@ class R3M(nn.Module):
         self.langweight = langweight  ## Weight on language reward
         self.size = size  ## Size ResNet or ViT
         self.num_negatives = 3
-        
+
         self.latent_ndim = 1
         self.emb_dim = 512
         self.name = "r3m"
@@ -78,13 +78,9 @@ class R3M(nn.Module):
             ).to(self.device)
 
         if self.size == 0:
-            self.normlayer = transforms.Normalize(
-                mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]
-            )
+            self.normlayer = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
         else:
-            self.normlayer = transforms.Normalize(
-                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-            )
+            self.normlayer = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         self.convnet.fc = Identity()
         self.convnet.train()
         params += list(self.convnet.parameters())
@@ -95,9 +91,7 @@ class R3M(nn.Module):
             from r3m.models.models_language import LangEncoder, LanguageReward
 
             self.lang_enc = LangEncoder(self.device, 0, 0)
-            self.lang_rew = LanguageReward(
-                None, self.outdim, hidden_dim, self.lang_enc.lang_size, simfunc=self.sim
-            )
+            self.lang_rew = LanguageReward(None, self.outdim, hidden_dim, self.lang_enc.lang_size, simfunc=self.sim)
             params += list(self.lang_rew.parameters())
         ########################################################################
 
@@ -135,7 +129,7 @@ class R3M(nn.Module):
             h = h.squeeze(0)
         elif dims > 4:
             h = h.reshape(*orig_shape[:-3], -1)
-        h = h.unsqueeze(1) 
+        h = h.unsqueeze(1)
         return h
 
     def sim(self, tensor1, tensor2):

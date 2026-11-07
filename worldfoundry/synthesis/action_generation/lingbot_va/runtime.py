@@ -510,7 +510,7 @@ def _normalize_lingbot_va_frame(source: Any, camera_keys: Sequence[str]) -> dict
             if key in source:
                 values.append(source[key])
         if not values:
-            values = list(source.values()) # Fallback: use all values if no specific camera_keys match
+            values = list(source.values())  # Fallback: use all values if no specific camera_keys match
         if not values:
             raise ValueError("LingBot-VA observation mapping is empty.")
 
@@ -666,11 +666,13 @@ class LingBotVAWebsocketRuntime:
                     image_source = request[key]
                     break
             if image_source is None:
-                raise ValueError("LingBot-VA live inference requires obs, rgb_views, image, images, image_path, or input_path.")
+                raise ValueError(
+                    "LingBot-VA live inference requires obs, rgb_views, image, images, image_path, or input_path."
+                )
             request["obs"] = _normalize_lingbot_va_obs(image_source, camera_keys)
 
         # Normalize robot state data.
-        state = request.pop("robot_state", None) # Pop 'robot_state' if present.
+        state = request.pop("robot_state", None)  # Pop 'robot_state' if present.
         if "state" in request:
             # If 'state' key is present, normalize its content.
             request["state"] = _normalize_lingbot_va_state(request["state"])

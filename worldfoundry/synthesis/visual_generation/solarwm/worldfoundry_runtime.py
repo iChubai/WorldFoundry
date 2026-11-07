@@ -122,10 +122,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
             {
                 "kind": "source_repo",
                 "path": str(source),
-                "reason": (
-                    f"SolarWM checkout is not staged; clone {OFFICIAL_REPO_URL} here or set "
-                    f"{SOURCE_ENV_VAR}"
-                ),
+                "reason": (f"SolarWM checkout is not staged; clone {OFFICIAL_REPO_URL} here or set {SOURCE_ENV_VAR}"),
             }
         )
     else:

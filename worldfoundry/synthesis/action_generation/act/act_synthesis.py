@@ -100,7 +100,9 @@ class ACTSynthesis(ActionModelSynthesis):
             require_checkpoint: Whether a missing checkpoint should fail immediately.
         """
         merged = self._runtime_options_with_defaults(options)
-        checkpoint_path = merged.get("checkpoint_path") or merged.get("ckpt_path") or merged.get("pretrained_model_path")
+        checkpoint_path = (
+            merged.get("checkpoint_path") or merged.get("ckpt_path") or merged.get("pretrained_model_path")
+        )
         checkpoint_dir = merged.get("checkpoint_dir")
         checkpoint: Path | None = None
         if require_checkpoint or checkpoint_path or checkpoint_dir:
@@ -205,10 +207,18 @@ class ACTSynthesis(ActionModelSynthesis):
             "backend": "worldfoundry.act.in_tree_runtime.ACTRuntime.predict_action",
             "checkpoint_path": str(runtime_config.checkpoint_path) if runtime_config is not None else None,
             "device": runtime_config.device if runtime_config is not None else str(merged_runtime_options["device"]),
-            "camera_names": list(runtime_config.camera_names) if runtime_config is not None else list(merged_runtime_options["camera_names"]),
-            "state_dim": runtime_config.state_dim if runtime_config is not None else int(merged_runtime_options["state_dim"]),
-            "chunk_size": runtime_config.chunk_size if runtime_config is not None else int(merged_runtime_options["chunk_size"]),
-            "temporal_agg": runtime_config.temporal_agg if runtime_config is not None else bool(merged_runtime_options["temporal_agg"]),
+            "camera_names": list(runtime_config.camera_names)
+            if runtime_config is not None
+            else list(merged_runtime_options["camera_names"]),
+            "state_dim": runtime_config.state_dim
+            if runtime_config is not None
+            else int(merged_runtime_options["state_dim"]),
+            "chunk_size": runtime_config.chunk_size
+            if runtime_config is not None
+            else int(merged_runtime_options["chunk_size"]),
+            "temporal_agg": runtime_config.temporal_agg
+            if runtime_config is not None
+            else bool(merged_runtime_options["temporal_agg"]),
         }
         plan_payload = {
             "schema_version": "worldfoundry-runtime-profile-act-plan",
@@ -216,7 +226,9 @@ class ACTSynthesis(ActionModelSynthesis):
             "context": context,
             "runtime": runtime_payload,
         }
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         if plan_only:
             return {
@@ -232,7 +244,9 @@ class ACTSynthesis(ActionModelSynthesis):
         assert runtime_config is not None
         observation = self._select_observation(kwargs)
         if observation is None:
-            raise ValueError("ACT predict requires act_observation or observation with qpos and configured camera arrays.")
+            raise ValueError(
+                "ACT predict requires act_observation or observation with qpos and configured camera arrays."
+            )
         result = self._runtime_for(runtime_config).predict_action(
             observation=observation,
             output_path=context["output_path"],

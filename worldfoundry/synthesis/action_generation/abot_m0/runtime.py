@@ -58,6 +58,7 @@ def _checkpoint_root(location: str) -> tuple[Path, Path]:
     candidates = sorted(set(path.resolve() for path in candidates if path.is_file()))
     if not candidates:
         raise FileNotFoundError(f"ABot-M0 policy weights are missing under {root}")
+
     # Released step checkpoints sort lexicographically; compare the numeric step.
     def rank(path: Path) -> tuple[int, str]:
         import re
@@ -366,9 +367,7 @@ class ABotM0Runtime:
             # right gripper] order and its official adapter restores the
             # interleaved per-arm environment layout after unnormalization.
             action_layout = (
-                "dual_arm_14"
-                if statistics_width == 14 and mask.shape == (14,) and not mask[-2:].any()
-                else "identity"
+                "dual_arm_14" if statistics_width == 14 and mask.shape == (14,) and not mask[-2:].any() else "identity"
             )
         if action_layout == "dual_arm_14" and low.shape[-1] == 14:
             # Some deployment statistics are stored in interleaved modality order.
@@ -409,15 +408,20 @@ class ABotM0Runtime:
         state = self._prepare_state(observation, model.action_config.state_dim)
         state_tensor = torch.from_numpy(state) if state is not None else None
         with worldfoundry_inference_context():
-            normalized = model.predict_action(
-                images=[views],
-                instructions=[instruction],
-                state=state_tensor,
-                image_size=self.config.image_size,
-                seed=self.config.seed,
-                num_inference_steps=self.config.num_inference_steps,
-                tokenizer_max_length=self.config.tokenizer_max_length,
-            )[0].float().cpu().numpy()
+            normalized = (
+                model.predict_action(
+                    images=[views],
+                    instructions=[instruction],
+                    state=state_tensor,
+                    image_size=self.config.image_size,
+                    seed=self.config.seed,
+                    num_inference_steps=self.config.num_inference_steps,
+                    tokenizer_max_length=self.config.tokenizer_max_length,
+                )[0]
+                .float()
+                .cpu()
+                .numpy()
+            )
         actions = self._unnormalize(normalized)
         if not np.isfinite(actions).all():
             raise FloatingPointError("ABot-M0 produced non-finite actions")
@@ -479,8 +483,16 @@ def predict_action(
         device=str(options.get("device") or device),
         torch_dtype=str(options.get("torch_dtype") or "auto"),
         attention_backend=str(options.get("attention_backend") or "auto"),
-        num_inference_steps=(option_int(options.get("num_inference_steps"), 4) if options.get("num_inference_steps") is not None else None),
-        tokenizer_max_length=(option_int(options.get("tokenizer_max_length"), 256) if options.get("tokenizer_max_length") is not None else None),
+        num_inference_steps=(
+            option_int(options.get("num_inference_steps"), 4)
+            if options.get("num_inference_steps") is not None
+            else None
+        ),
+        tokenizer_max_length=(
+            option_int(options.get("tokenizer_max_length"), 256)
+            if options.get("tokenizer_max_length") is not None
+            else None
+        ),
         seed=option_int(options.get("seed"), 0),
         device_map=options.get("device_map"),
         device_ids=tuple(int(item) for item in raw_devices),

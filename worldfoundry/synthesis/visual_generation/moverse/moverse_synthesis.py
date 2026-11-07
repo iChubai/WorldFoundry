@@ -105,9 +105,7 @@ class MoVerseSynthesis(BaseSynthesis):
         config_path = resolve_data_path(
             "models", "runtime", "configs", "moverse", "inference", "cond_inference_multi.yaml"
         )
-        default_config_path = resolve_data_path(
-            "models", "runtime", "configs", "moverse", "default_config.yaml"
-        )
+        default_config_path = resolve_data_path("models", "runtime", "configs", "moverse", "default_config.yaml")
         moverse_root = Path(resolved_assets["moverse_path"])
         command = [
             python_executable,
@@ -159,37 +157,11 @@ class MoVerseSynthesis(BaseSynthesis):
             / "depth_anything"
             / "depth_anything_v3"
             / "api.py",
-            package_root
-            / "base_models"
-            / "three_dimensions"
-            / "point_clouds"
-            / "sharp"
-            / "__init__.py",
-            package_root
-            / "base_models"
-            / "three_dimensions"
-            / "general_3d"
-            / "geocalib"
-            / "autolevel.py",
-            package_root
-            / "base_models"
-            / "diffusion_model"
-            / "schedulers"
-            / "__init__.py",
-            package_root
-            / "base_models"
-            / "diffusion_model"
-            / "models"
-            / "autoencoders"
-            / "wan"
-            / "resident.py",
-            package_root
-            / "base_models"
-            / "diffusion_model"
-            / "models"
-            / "encoders"
-            / "wan"
-            / "resident.py",
+            package_root / "base_models" / "three_dimensions" / "point_clouds" / "sharp" / "__init__.py",
+            package_root / "base_models" / "three_dimensions" / "general_3d" / "geocalib" / "autolevel.py",
+            package_root / "base_models" / "diffusion_model" / "schedulers" / "__init__.py",
+            package_root / "base_models" / "diffusion_model" / "models" / "autoencoders" / "wan" / "resident.py",
+            package_root / "base_models" / "diffusion_model" / "models" / "encoders" / "wan" / "resident.py",
             package_root
             / "base_models"
             / "diffusion_model"
@@ -199,11 +171,7 @@ class MoVerseSynthesis(BaseSynthesis):
             / "variants"
             / "moverse"
             / "__init__.py",
-            package_root
-            / "base_models"
-            / "diffusion_model"
-            / "loaders"
-            / "wan_variant.py",
+            package_root / "base_models" / "diffusion_model" / "loaders" / "wan_variant.py",
             package_root
             / "base_models"
             / "diffusion_model"
@@ -296,7 +264,11 @@ class MoVerseSynthesis(BaseSynthesis):
 
 
 def _materialize_image(images: Any, run_dir: Path) -> str:
-    value = images[0] if isinstance(images, Sequence) and not isinstance(images, (str, bytes, bytearray)) and images else images
+    value = (
+        images[0]
+        if isinstance(images, Sequence) and not isinstance(images, (str, bytes, bytearray)) and images
+        else images
+    )
     if value is None:
         return ""
     if isinstance(value, (str, Path)):
@@ -329,9 +301,7 @@ def _resolve_assets(values: Mapping[str, str], *, required: bool) -> tuple[dict[
     errors: list[str] = []
     for role, value in values.items():
         try:
-            resolved[role] = str(
-                resolve_local_hf_model_path(value, required_files=REQUIRED_ASSET_FILES.get(role, ()))
-            )
+            resolved[role] = str(resolve_local_hf_model_path(value, required_files=REQUIRED_ASSET_FILES.get(role, ())))
         except FileNotFoundError as exc:
             if required:
                 errors.append(str(exc).splitlines()[0])

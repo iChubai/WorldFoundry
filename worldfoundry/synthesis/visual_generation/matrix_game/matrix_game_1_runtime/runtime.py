@@ -28,14 +28,8 @@ DEFAULT_CONDA_DIR = os.environ.get(
     str(conda_envs_root_path() / "matrix-game-1.0"),
 )
 DEFAULT_RUNTIME_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "matrix_game_1")
-EXPECTED_DIT_FILES = tuple(
-    f"dit/diffusion_pytorch_model-{index:05d}-of-00007.safetensors"
-    for index in range(1, 8)
-)
-EXPECTED_TEXT_ENCODER_FILES = tuple(
-    f"text_encoder_i2v/model-{index:05d}-of-00004.safetensors"
-    for index in range(1, 5)
-)
+EXPECTED_DIT_FILES = tuple(f"dit/diffusion_pytorch_model-{index:05d}-of-00007.safetensors" for index in range(1, 8))
+EXPECTED_TEXT_ENCODER_FILES = tuple(f"text_encoder_i2v/model-{index:05d}-of-00004.safetensors" for index in range(1, 5))
 EXPECTED_VAE_FILES = ("vae/pytorch_model.pt",)
 EXPECTED_CHECKPOINT_FILES = EXPECTED_DIT_FILES + EXPECTED_TEXT_ENCODER_FILES + EXPECTED_VAE_FILES
 REQUIRED_RUNTIME_CONFIG_FILES = ("environment.yml",)
@@ -165,7 +159,9 @@ class MatrixGame1Runtime:
         self.generation_type = "image_to_video"
         self.device = device
         selected_checkpoint_dir = checkpoint_dir or DEFAULT_CHECKPOINT_DIR
-        self.checkpoint_dir = _expand_runtime_path(selected_checkpoint_dir) or Path(selected_checkpoint_dir).expanduser()
+        self.checkpoint_dir = (
+            _expand_runtime_path(selected_checkpoint_dir) or Path(selected_checkpoint_dir).expanduser()
+        )
         self.conda_dir = _expand_runtime_path(conda_dir) if conda_dir is not None else None
         if self.conda_dir is None and DEFAULT_CONDA_DIR is not None:
             self.conda_dir = _expand_runtime_path(DEFAULT_CONDA_DIR)
@@ -264,9 +260,9 @@ class MatrixGame1Runtime:
         missing_checkpoint = self.missing_checkpoint_files()
         missing_runtime = self.missing_runtime_files()
         missing_runtime_config = self.missing_runtime_config_files()
-        code_ready = not any(
-            item for item in missing_runtime if not item.endswith("/bin/python")
-        ) and not missing_runtime_config
+        code_ready = (
+            not any(item for item in missing_runtime if not item.endswith("/bin/python")) and not missing_runtime_config
+        )
         checkpoint_ready = len(missing_checkpoint) == 0
         env_ready = self.python_executable is None or self.python_executable.is_file()
         return {
@@ -540,7 +536,10 @@ class MatrixGame1Runtime:
                     source_video = video_candidates[0]
                     shutil.copyfile(source_video, target)
                     artifact_path = str(target)
-                    generated_files = [str(target), *[path for path in generated_files if str(Path(path)) != str(target)]]
+                    generated_files = [
+                        str(target),
+                        *[path for path in generated_files if str(Path(path)) != str(target)],
+                    ]
                     run_result = {
                         **run_result,
                         "generated_files": generated_files,

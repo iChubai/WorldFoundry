@@ -14,8 +14,10 @@ from ..preprocessing.image_preprocessor import ImagePreprocessor
 
 log = logging.getLogger(__name__)
 
+
 class ImagePaddingEmbed(StrEnum):
     """How to embed image padding information"""
+
     pad_and_partial_pad = "pad_and_partial_pad"
     pad_embed = "pad_embed"
     regress = "regress"
@@ -23,6 +25,7 @@ class ImagePaddingEmbed(StrEnum):
 
 class ImagePooling2DType(StrEnum):
     """How to pool patch features"""
+
     attention = "attention"
     attention_meanq = "attention_meanq"
     attention_meanq_2x = "attention_meanq_2x"
@@ -35,6 +38,7 @@ class ImagePooling2DType(StrEnum):
 
 class ImageProjectType(StrEnum):
     """How to project the pooled features into the LLM embedding space"""
+
     random_linear = "random_linear"
     mlp = "mlp"
     mlpx2 = "2mlp"
@@ -112,7 +116,7 @@ class MolmoVisionBackboneConfig(BaseConfig):
             normalize_on_gpu=self.normalize_on_gpu,
             use_image_mask=self.image_padding_embed is not None,
             use_image_augmentation=self.use_image_augmentation,
-            use_resize_bottleneck=self.use_resize_bottleneck
+            use_resize_bottleneck=self.use_resize_bottleneck,
         )
 
     def build(self, llm_config, device):
@@ -139,7 +143,9 @@ class ImageProjectorMLP(nn.Module):
 
     def __init__(self, config, input_dim: int, dropout: float = 0.0, device=None):
         super().__init__()
-        self.hidden_size = config.mlp_hidden_size if config.mlp_hidden_size is not None else config.mlp_ratio * config.d_model
+        self.hidden_size = (
+            config.mlp_hidden_size if config.mlp_hidden_size is not None else config.mlp_ratio * config.d_model
+        )
         self.initializer_range = config.initializer_range
 
         self.w1 = nn.Linear(
@@ -153,7 +159,7 @@ class ImageProjectorMLP(nn.Module):
             config.d_model,
             bias=False,
             device=device,
-            )
+        )
         self.w3 = nn.Linear(
             input_dim,
             self.hidden_size // 2,
@@ -200,10 +206,7 @@ class MolmoVisionBackbone(nn.Module):
             self.image_pooling_2d, self.image_projector = self.build_connector(llm_config, device)
         else:
             image_pooling_2d_list, image_project_list = map(
-                list,
-                zip(
-                    *[self.build_connector(llm_config, device) for _ in range(len(config.vit_layers))]
-                )
+                list, zip(*[self.build_connector(llm_config, device) for _ in range(len(config.vit_layers))])
             )
             self.image_pooling_2d = nn.ModuleList(image_pooling_2d_list)
             self.image_projector = nn.ModuleList(image_project_list)
@@ -216,7 +219,7 @@ class MolmoVisionBackbone(nn.Module):
                 self.vit_layers.append(layer)
             else:
                 self.vit_layers.append(config.vit.image_num_layers + layer)
-        last_layer_needed = (max(self.vit_layers)+1)
+        last_layer_needed = max(self.vit_layers) + 1
 
         vit_cfg = self.config.vit
         if last_layer_needed < config.vit.image_num_layers:
@@ -235,22 +238,19 @@ class MolmoVisionBackbone(nn.Module):
         if config.use_deepstack:
             image_dim = vit_cfg.image_emb_dim
         else:
-            image_dim = vit_cfg.image_emb_dim*len(self.config.vit_layers)
+            image_dim = vit_cfg.image_emb_dim * len(self.config.vit_layers)
         self.pad_embed = None
         if config.image_padding_embed:
             if config.image_padding_embed in ["pad_embed", "regress"]:
-                self.pad_embed = nn.Parameter(
-                    torch.zeros((image_dim,), device=device))
+                self.pad_embed = nn.Parameter(torch.zeros((image_dim,), device=device))
             elif config.image_padding_embed == "pad_and_partial_pad":
-                self.pad_embed = nn.Parameter(
-                    torch.zeros((2, image_dim), device=device))
+                self.pad_embed = nn.Parameter(torch.zeros((2, image_dim), device=device))
             else:
                 raise ValueError(config.image_padding_embed)
         if config.pool_size_embeds:
             assert self.pad_embed is None
-            self.pad_embed = nn.Parameter(
-                torch.zeros((len(config.pool_size_embeds), image_dim), device=device))
-            self._pad_embed_idx = {k*k: i for i, k in enumerate(config.pool_size_embeds)}
+            self.pad_embed = nn.Parameter(torch.zeros((len(config.pool_size_embeds), image_dim), device=device))
+            self._pad_embed_idx = {k * k: i for i, k in enumerate(config.pool_size_embeds)}
 
     def build_connector(self, llm_config, device):
         config = self.config
@@ -266,9 +266,13 @@ class MolmoVisionBackbone(nn.Module):
         if config.image_pooling_2d in {ImagePooling2DType.attention, ImagePooling2DType.attention_meanq}:
             image_pooling_2d = ViTMultiHeadDotProductAttention(config.vit, input_dim=pool_dim)
             input_dim = vit_cfg.image_emb_dim
-        elif config.image_pooling_2d in [ImagePooling2DType.attention_2wide, ImagePooling2DType.attention_meanq_2x, ImagePooling2DType.attention_meanq_4x]:
+        elif config.image_pooling_2d in [
+            ImagePooling2DType.attention_2wide,
+            ImagePooling2DType.attention_meanq_2x,
+            ImagePooling2DType.attention_meanq_4x,
+        ]:
             mha_cfg = deepcopy(config.vit)
-            factor = 4 if config.image_pooling_2d ==ImagePooling2DType.attention_meanq_4x else 2
+            factor = 4 if config.image_pooling_2d == ImagePooling2DType.attention_meanq_4x else 2
             mha_cfg.image_emb_dim *= factor
             mha_cfg.image_head_dim *= factor
             image_pooling_2d = ViTMultiHeadDotProductAttention(mha_cfg, input_dim=pool_dim)
@@ -294,7 +298,7 @@ class MolmoVisionBackbone(nn.Module):
         return image_pooling_2d, image_projector
 
     @classmethod
-    def build(cls, config: MolmoVisionBackboneConfig, outut_dim, device=None) -> 'MolmoVisionBackbone':
+    def build(cls, config: MolmoVisionBackboneConfig, outut_dim, device=None) -> "MolmoVisionBackbone":
         return MolmoVisionBackbone(config, outut_dim, device)
 
     def apply_compile(self, **kwargs):
@@ -335,7 +339,7 @@ class MolmoVisionBackbone(nn.Module):
 
         if cfg.use_deepstack:
             image_features = [
-                image_features[layer][:, self.num_prefix_tokens:].view(B, T, N, -1) for layer in self.vit_layers
+                image_features[layer][:, self.num_prefix_tokens :].view(B, T, N, -1) for layer in self.vit_layers
             ]
         else:
             features = []
@@ -366,7 +370,9 @@ class MolmoVisionBackbone(nn.Module):
 
         # Use `pooled_patches_idx` to arange the features for image pooling
         batch_idx = torch.arange(pooled_patches_idx.shape[0], dtype=torch.long, device=pooled_patches_idx.device)
-        batch_idx = torch.tile(batch_idx.view(batch_size, 1, 1), [1, pooled_patches_idx.shape[1], pooled_patches_idx.shape[2]])
+        batch_idx = torch.tile(
+            batch_idx.view(batch_size, 1, 1), [1, pooled_patches_idx.shape[1], pooled_patches_idx.shape[2]]
+        )
 
         # Now [batch, num_high_res_features, pool_dim, dim]
         to_pool = image_features.reshape(batch_size, -1, dim)[batch_idx, torch.clip(pooled_patches_idx, 0)]
@@ -380,7 +386,11 @@ class MolmoVisionBackbone(nn.Module):
         else:
             attn_mask = None
 
-        if cfg.image_pooling_2d in [ImagePooling2DType.attention_meanq, ImagePooling2DType.attention_meanq_2x, ImagePooling2DType.attention_meanq_4x]:
+        if cfg.image_pooling_2d in [
+            ImagePooling2DType.attention_meanq,
+            ImagePooling2DType.attention_meanq_2x,
+            ImagePooling2DType.attention_meanq_4x,
+        ]:
             if self.config.pooling_attention_mask:
                 denom = valid.view(-1, to_pool.shape[-2]).sum(-1)
                 denom = torch.clamp(denom, min=1).to(dtype=to_pool.dtype)
@@ -445,10 +455,7 @@ class MolmoVisionBackbone(nn.Module):
             if image_masks is None:
                 raise ValueError("image_padding_embed requires image_masks.")
             if isinstance(image_features, (list, tuple)):
-                image_features = [
-                    self.add_image_padding_embed(features, image_masks)
-                    for features in image_features
-                ]
+                image_features = [self.add_image_padding_embed(features, image_masks) for features in image_features]
             else:
                 image_features = self.add_image_padding_embed(image_features, image_masks)
 
@@ -472,9 +479,7 @@ class MolmoVisionBackbone(nn.Module):
             valid_token = torch.any(pooling_indices >= 0, dim=-1)
             pooled_features = [
                 self.apply_connector(pooling_fn, projector_fn, features, pooling_indices)
-                for features, pooling_fn, projector_fn in zip(
-                    image_features, pooling_fns, projector_fns
-                )
+                for features, pooling_fn, projector_fn in zip(image_features, pooling_fns, projector_fns)
             ]
             value = pooled_features if len(pooled_features) > 1 else pooled_features[0]
             all_pooled_features.append((value, valid_token))

@@ -27,9 +27,7 @@ __all__ = [
 
 def __getattr__(name):
     if name == "hunyuan_worldplay":
-        module = import_module(
-            "worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay"
-        )
+        module = import_module("worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay")
         globals()[name] = module
         return module
     if name in {"HunyuanWorldPlaySynthesis", "_HunyuanWorldPlayInternalPipeline"}:

@@ -228,7 +228,11 @@ def _normalize_mode(value: Any) -> str:
 
 
 def _materialize_image(images: Any, run_dir: Path) -> str:
-    value = images[0] if isinstance(images, Sequence) and not isinstance(images, (str, bytes, bytearray)) and images else images
+    value = (
+        images[0]
+        if isinstance(images, Sequence) and not isinstance(images, (str, bytes, bytearray)) and images
+        else images
+    )
     if value is None:
         return ""
     if isinstance(value, (str, Path)):
@@ -286,7 +290,11 @@ def _input_errors(reference_image: str, render_path: str, *, mode: str, required
     if root is None or not root.is_dir():
         errors.append(f"Uni3C render bundle not found: {render_path or '<missing>'}")
     else:
-        errors.extend(f"Uni3C render bundle is missing {name}: {root / name}" for name in required_files if not (root / name).is_file())
+        errors.extend(
+            f"Uni3C render bundle is missing {name}: {root / name}"
+            for name in required_files
+            if not (root / name).is_file()
+        )
     return errors
 
 
@@ -297,7 +305,9 @@ def _output_path(value: str | Path | None, default: Path) -> Path:
     return (path / "uni3c.mp4" if not path.suffix else path).resolve()
 
 
-def _failed(plan_path: Path, output: Path, command: list[str], errors: list[str], plan: Mapping[str, Any]) -> dict[str, Any]:
+def _failed(
+    plan_path: Path, output: Path, command: list[str], errors: list[str], plan: Mapping[str, Any]
+) -> dict[str, Any]:
     return {
         "status": "failed",
         "model_id": "uni3c",

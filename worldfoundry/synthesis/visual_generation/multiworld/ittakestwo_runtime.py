@@ -105,10 +105,7 @@ def load_ittakestwo_action_csv(
     continuous: list[list[list[float]]] = []
     with resolved.open("r", encoding="utf-8", newline="") as handle:
         for row in csv.DictReader(handle):
-            left_discrete = [
-                as_int(row, key)
-                for key in ("w", "a", "s", "d", "space", "shift", "ctrl", "e", "q", "f")
-            ]
+            left_discrete = [as_int(row, key) for key in ("w", "a", "s", "d", "space", "shift", "ctrl", "e", "q", "f")]
             left_continuous = [as_float(row, "norm_dx"), as_float(row, "norm_dy")]
             right_discrete = [0] * 10
             right_continuous = [as_float(row, "axis_2"), as_float(row, "axis_3")]
@@ -132,14 +129,14 @@ def load_ittakestwo_action_csv(
             if len(discrete) >= num_frames:
                 break
     if len(discrete) < num_frames:
-        raise ValueError(
-            f"MultiWorld action CSV contains {len(discrete)} frames, but {num_frames} are required"
-        )
+        raise ValueError(f"MultiWorld action CSV contains {len(discrete)} frames, but {num_frames} are required")
     return {"discrete_action": [discrete], "continuous_action": [continuous]}
 
 
 def _derive_env_obv_from_image(input_image_path: str | Path) -> torch.Tensor:
-    from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.environment_observation import load_and_preprocess_images
+    from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.environment_observation import (
+        load_and_preprocess_images,
+    )
 
     left = load_and_preprocess_images([input_image_path], mode="pad", return_view="left")
     right = load_and_preprocess_images([input_image_path], mode="pad", return_view="right")
@@ -287,26 +284,15 @@ class MultiWorldItTakesTwoRuntime:
 
         dataset = self.config["eval_dataset_config"]["params"]
         video_params = dataset["video_params"]
-        resolved_frames = int(
-            num_frames
-            or _resolve_num_frames(action, int(video_params.get("num_frames", 81)))
-        )
+        resolved_frames = int(num_frames or _resolve_num_frames(action, int(video_params.get("num_frames", 81))))
         resolved_height = int(height or video_params.get("height", 480))
         default_width = int(video_params.get("width", 960))
         if str(dataset.get("return_view", "both")) != "both":
             default_width //= 2
         resolved_width = int(width or default_width)
-        resolved_fps = int(
-            fps
-            or self.defaults["fps"]
-            or max(1, 60 // int(video_params.get("frame_skip", 1)))
-        )
+        resolved_fps = int(fps or self.defaults["fps"] or max(1, 60 // int(video_params.get("frame_skip", 1))))
         steps = int(num_inference_steps or self.defaults["num_inference_steps"])
-        seed = int(
-            self.defaults["inference_seed"]
-            if inference_seed is None
-            else inference_seed
-        )
+        seed = int(self.defaults["inference_seed"] if inference_seed is None else inference_seed)
 
         frames = self._load_pipeline()(
             input_image=input_image,

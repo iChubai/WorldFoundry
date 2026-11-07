@@ -76,9 +76,7 @@ class CredentialedSynthesis(BaseSynthesis):
         factory: it returns a new configured instance.
         """
         accepted = inspect.signature(cls).parameters
-        takes_var_kwargs = any(
-            parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in accepted.values()
-        )
+        takes_var_kwargs = any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in accepted.values())
         if takes_var_kwargs:
             return cls(*args, **kwargs)
         return cls(*args, **{key: value for key, value in kwargs.items() if key in accepted})

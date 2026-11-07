@@ -5,6 +5,7 @@ It wraps the underlying WorldFM runtime to provide a standardized interface
 for generating visual content based on frame conditions, integrating it
 into a broader synthesis framework.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

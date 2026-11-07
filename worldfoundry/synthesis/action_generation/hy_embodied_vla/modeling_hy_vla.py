@@ -27,6 +27,7 @@ VLM + action expert and implements flow-matching sampling). Training forwards,
 losses, label preparation, optimizer helpers, and checkpoint writing are
 intentionally omitted from this inference-only integration.
 """
+
 import copy
 import json
 import math
@@ -70,6 +71,7 @@ _SAFETENSORS_SINGLE_FILE = "model.safetensors"
 # (b) the user supplies a ``vlm_model_path=...`` override at load time.
 _DEFAULT_VLM_REPO = "tencent/HY-Embodied-0.5"
 
+
 def _is_self_contained_vlm_dir(path: str) -> bool:
     """Return True iff ``path`` is a local directory shipping a ``tokenizer.json``
     AND its ``config.json`` (if any) advertises a transformer ``model_type``
@@ -92,6 +94,7 @@ def _is_self_contained_vlm_dir(path: str) -> bool:
         return False
     return bool(data.get("model_type"))
 
+
 def _resolve_vlm_path(config: HyVLAConfig, override: str | None = None) -> str:
     """Resolve a usable VLM path for tokenizer + AutoConfig loading.
 
@@ -113,9 +116,7 @@ def _resolve_vlm_path(config: HyVLAConfig, override: str | None = None) -> str:
     if override:
         candidates.append(("override", override))
     own_path = getattr(config, "pretrained_path", None)
-    if own_path and os.path.isdir(own_path) and os.path.isfile(
-        os.path.join(own_path, "tokenizer.json")
-    ):
+    if own_path and os.path.isdir(own_path) and os.path.isfile(os.path.join(own_path, "tokenizer.json")):
         # A HyVLA ckpt is "self-contained" iff it ships a tokenizer.json
         # AND either (a) carries an embedded vendor VLM AutoConfig payload
         # via ``vlm_config_dict``, or (b) the directory itself is a vendor
@@ -136,7 +137,8 @@ def _resolve_vlm_path(config: HyVLAConfig, override: str | None = None) -> str:
             if source != "ckpt":
                 print(
                     f"[modeling_hy_vla] VLM path resolved from {source}: {path}",
-                    file=sys.stderr, flush=True,
+                    file=sys.stderr,
+                    flush=True,
                 )
             return path
         try:
@@ -150,13 +152,14 @@ def _resolve_vlm_path(config: HyVLAConfig, override: str | None = None) -> str:
             if source != "ckpt":
                 print(
                     f"[modeling_hy_vla] VLM path resolved from {source}: {resolved}",
-                    file=sys.stderr, flush=True,
+                    file=sys.stderr,
+                    flush=True,
                 )
             return str(resolved)
         print(
-            f"[modeling_hy_vla] {source} VLM path does not exist locally: {path!r}, "
-            f"trying next fallback...",
-            file=sys.stderr, flush=True,
+            f"[modeling_hy_vla] {source} VLM path does not exist locally: {path!r}, trying next fallback...",
+            file=sys.stderr,
+            flush=True,
         )
 
     raise ValueError(
@@ -215,9 +218,9 @@ def _load_vlm_autoconfig(config_or_path):
                     f"has_text_config={'text_config' in data})."
                 )
             print(
-                "[modeling_hy_vla] VLM AutoConfig loaded from embedded "
-                "vlm_config_dict (nested hunyuan_vl_mot schema).",
-                file=sys.stderr, flush=True,
+                "[modeling_hy_vla] VLM AutoConfig loaded from embedded vlm_config_dict (nested hunyuan_vl_mot schema).",
+                file=sys.stderr,
+                flush=True,
             )
             data.pop("model_type", None)
             return HunYuanVLMoTConfig(**data)
@@ -258,8 +261,11 @@ def _load_vlm_autoconfig(config_or_path):
         )
     except (OSError, ValueError) as exc:
         msg = str(exc).lower()
-        if "auto_map" not in msg and "does not appear to have a file named" not in msg \
-                and "trust_remote_code" not in msg:
+        if (
+            "auto_map" not in msg
+            and "does not appear to have a file named" not in msg
+            and "trust_remote_code" not in msg
+        ):
             raise
 
     # ---- Path 3: read config.json by hand (auto_map strip) -----------
@@ -360,15 +366,14 @@ def resize_with_pad(img, width, height, pad_value=-1, mode="bilinear"):
     resized_width = int(cur_width / ratio)
 
     interpolate_params = {
-        'size': (resized_height, resized_width),
-        'mode': mode,
+        "size": (resized_height, resized_width),
+        "mode": mode,
     }
 
     if mode != "nearest":
-        interpolate_params['align_corners'] = False
+        interpolate_params["align_corners"] = False
 
     resized_img = F.interpolate(img, **interpolate_params)
-
 
     pad_height = max(0, int(height - resized_height))
     pad_width = max(0, int(width - resized_width))
@@ -417,9 +422,7 @@ class HyVLA(nn.Module):
         """
         super().__init__()
         if not isinstance(config, HyVLAConfig):
-            raise TypeError(
-                f"HyVLA expects a HyVLAConfig instance; got {type(config)!r}."
-            )
+            raise TypeError(f"HyVLA expects a HyVLAConfig instance; got {type(config)!r}.")
         self.config = config
 
         # Resolve the tokenizer source. Two cases:
@@ -515,8 +518,7 @@ class HyVLA(nn.Module):
 
         if not local_files_only or force_download:
             raise ValueError(
-                "HyVLA loading is local-only; stage checkpoints with hfd under "
-                "WORLDFOUNDRY_HFD_ROOT first"
+                "HyVLA loading is local-only; stage checkpoints with hfd under WORLDFOUNDRY_HFD_ROOT first"
             )
         del cache_dir, revision, token
         checkpoint_dir = resolve_local_hf_model_path(
@@ -621,8 +623,13 @@ class HyVLA(nn.Module):
             state = self.prepare_state(batch)
             lang_tokens, lang_masks = self.prepare_language(batch)
             results = self.model.sample_actions(
-                images, img_masks, lang_tokens, lang_masks, state,
-                noise=noise, vis_attn=self.config.vis_attn,
+                images,
+                img_masks,
+                lang_tokens,
+                lang_masks,
+                state,
+                noise=noise,
+                vis_attn=self.config.vis_attn,
             )
             if self.config.vis_attn:
                 actions, _ = results
@@ -653,8 +660,13 @@ class HyVLA(nn.Module):
         lang_tokens, lang_masks = self.prepare_language(batch)
 
         results = self.model.sample_actions(
-            images, img_masks, lang_tokens, lang_masks, state,
-            noise=None, vis_attn=self.config.vis_attn,
+            images,
+            img_masks,
+            lang_tokens,
+            lang_masks,
+            state,
+            noise=None,
+            vis_attn=self.config.vis_attn,
         )
         if self.config.vis_attn:
             pred_actions, att_vis_output = results
@@ -709,9 +721,7 @@ class HyVLA(nn.Module):
                     # well-formed (effectively a K=1 video).
                     img = img.unsqueeze(1)
             else:
-                raise ValueError(
-                    f"Unexpected image tensor rank {img.dim()} for key '{key}'. Expected 4D or 5D."
-                )
+                raise ValueError(f"Unexpected image tensor rank {img.dim()} for key '{key}'. Expected 4D or 5D.")
 
             if self.config.resize_imgs_with_padding is not None:
                 if img.dim() == 5:
@@ -780,6 +790,7 @@ class HyVLA(nn.Module):
         state = pad_vector(batch[OBS_ROBOT], self.config.max_state_dim)
         return state
 
+
 class HyVLAFlowMatching(nn.Module):
     """Hy-VLA flow-matching action expert.
 
@@ -822,6 +833,7 @@ class HyVLAFlowMatching(nn.Module):
         # 2048) and ``intermediate_size=2048``; everything else (layers,
         # heads, vocab, rope) is shared with the VLM.
         import copy as _copy
+
         expert_inner_config = _copy.deepcopy(vlm_inner_config)
         expert_inner_config.hidden_size = self.config.proj_width
         expert_inner_config.intermediate_size = 2048
@@ -832,7 +844,7 @@ class HyVLAFlowMatching(nn.Module):
             vlm_config=vlm_inner_config,
             expert_config=expert_inner_config,
             attention_implementation=self.config.attention_implementation,
-            config=self.config  # outer HyVLAConfig (kept for proj_width etc.)
+            config=self.config,  # outer HyVLAConfig (kept for proj_width etc.)
         )
         self.dual_tower = HyDualTower(
             dual_tower_config,
@@ -879,7 +891,9 @@ class HyVLAFlowMatching(nn.Module):
         # Special tokens (BOS / role / vision boundaries / split / assistant)
         img = images[0]
         # add <｜hy_begin▁of▁sentence｜><｜hy_User｜>
-        bos_token = torch.full((img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_begin▁of▁sentence｜>"))
+        bos_token = torch.full(
+            (img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_begin▁of▁sentence｜>")
+        )
         bos_token = bos_token.to(img.device)
         bos_emb = self.dual_tower.embed_language_tokens(bos_token)
         hy_user_token = torch.full((img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_User｜>"))
@@ -887,17 +901,23 @@ class HyVLAFlowMatching(nn.Module):
         hy_user_emb = self.dual_tower.embed_language_tokens(hy_user_token)
 
         # add <｜hy_place▁holder▁no▁666｜> vision_start_token
-        vision_start_token = torch.full((img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_place▁holder▁no▁666｜>"))
+        vision_start_token = torch.full(
+            (img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_place▁holder▁no▁666｜>")
+        )
         vision_start_token = vision_start_token.to(img.device)
         vision_start_emb = self.dual_tower.embed_language_tokens(vision_start_token)
 
         # add <｜hy_place▁holder▁no▁666｜> vision_end_token
-        vision_end_token = torch.full((img.shape[0], 1),self.language_tokenizer.convert_tokens_to_ids("<｜hy_place▁holder▁no▁667｜>"))
+        vision_end_token = torch.full(
+            (img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_place▁holder▁no▁667｜>")
+        )
         vision_end_token = vision_end_token.to(img.device)
         vision_end_emb = self.dual_tower.embed_language_tokens(vision_end_token)
 
         # add <｜hy_place▁holder▁no▁666｜> vision_split_token
-        vision_split_token = torch.full((img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_place▁holder▁no▁671｜>"))
+        vision_split_token = torch.full(
+            (img.shape[0], 1), self.language_tokenizer.convert_tokens_to_ids("<｜hy_place▁holder▁no▁671｜>")
+        )
         vision_split_token = vision_split_token.to(img.device)
         vision_split_emb = self.dual_tower.embed_language_tokens(vision_split_token)
 
@@ -909,8 +929,8 @@ class HyVLAFlowMatching(nn.Module):
 
         # Track image-token index ranges so the visual-segment attention mask
         # tweak (see ``_apply_visual_segment_mask``) can address them later.
-        image_idx_ranges = []      # per-row patch ranges (excludes split tokens)
-        image_full_ranges = []     # full per-image span (patches + split rows)
+        image_idx_ranges = []  # per-row patch ranges (excludes split tokens)
+        image_full_ranges = []  # full per-image span (patches + split rows)
 
         # 2. Add vision_start + image patches with row-wise split tokens + vision_end
         for i, (img, img_mask) in enumerate(zip(images, img_masks, strict=True)):
@@ -925,8 +945,8 @@ class HyVLAFlowMatching(nn.Module):
             # embed image (bs, num_patches, emb_dim)
             img_emb = self.dual_tower.embed_image(img).to(dtype=vision_start_emb.dtype)
             num_patches, emb_dim = img_emb.shape[1], img_emb.shape[2]
-            grid_size = int(num_patches ** 0.5)
-            assert grid_size * grid_size == num_patches, 'num_patches must be square'
+            grid_size = int(num_patches**0.5)
+            assert grid_size * grid_size == num_patches, "num_patches must be square"
 
             img_emb_grid = img_emb.view(bs, grid_size, grid_size, emb_dim)
             split_expanded = vision_split_emb.unsqueeze(1).expand(bs, grid_size, 1, emb_dim)
@@ -939,10 +959,7 @@ class HyVLAFlowMatching(nn.Module):
             start_idx = len(att_masks)
 
             # Per-row patch ranges (exclude the trailing split token of each row).
-            row_ranges = [
-                (start_idx + r * row_len, start_idx + r * row_len + grid_size)
-                for r in range(grid_size)
-            ]
+            row_ranges = [(start_idx + r * row_len, start_idx + r * row_len + grid_size) for r in range(grid_size)]
             image_idx_ranges.extend(row_ranges)
 
             # Full span of this image's visual segment (patches + split tokens).
@@ -982,8 +999,6 @@ class HyVLAFlowMatching(nn.Module):
         modality_mask = modality_mask[None, :].expand(bsize, -1)
 
         return embs, pad_masks, att_masks, modality_mask, image_idx_ranges, image_full_ranges
-
-
 
     def embed_suffix(self, state, noisy_actions, timestep):
         """Embed state, noisy_actions and timestep for the action expert.
@@ -1026,20 +1041,16 @@ class HyVLAFlowMatching(nn.Module):
         time_emb = time_emb.to(dtype=self.action_in_proj.weight.dtype)
 
         # Fuse timestep + action information using an MLP
-        action_emb = self.action_in_proj(
-            noisy_actions.to(dtype=self.action_in_proj.weight.dtype)
-        )
+        action_emb = self.action_in_proj(noisy_actions.to(dtype=self.action_in_proj.weight.dtype))
 
         time_emb = time_emb[:, None, :].expand_as(action_emb)
         action_time_emb = torch.cat([action_emb, time_emb], dim=2)  # torch.float32
 
-        action_time_emb = self.action_time_mlp_in(
-            action_time_emb.to(dtype=self.action_time_mlp_in.weight.dtype)
-        )
+        action_time_emb = self.action_time_mlp_in(action_time_emb.to(dtype=self.action_time_mlp_in.weight.dtype))
         action_time_emb = F.silu(action_time_emb)  # swish == silu
-        action_time_emb = self.action_time_mlp_out(
-            action_time_emb.to(dtype=self.action_time_mlp_out.weight.dtype)
-        ).to(dtype=expert_dtype)
+        action_time_emb = self.action_time_mlp_out(action_time_emb.to(dtype=self.action_time_mlp_out.weight.dtype)).to(
+            dtype=expert_dtype
+        )
 
         # Add to input tokens
         embs.append(action_time_emb)
@@ -1102,9 +1113,7 @@ class HyVLAFlowMatching(nn.Module):
             # Full-segment isolation: rewrite each image_full_range as a
             # self-contained bidirectional block.
             for img_full_start, img_full_end in image_full_ranges:
-                full_range_idx = torch.arange(
-                    img_full_start, img_full_end, device=att_2d_masks.device
-                )
+                full_range_idx = torch.arange(img_full_start, img_full_end, device=att_2d_masks.device)
                 # Clear outward visibility for image-patch + split rows.
                 att_2d_masks[:, full_range_idx, :] = False
                 # Re-enable visibility within the segment.
@@ -1143,8 +1152,8 @@ class HyVLAFlowMatching(nn.Module):
             actions_shape = (bsize, self.config.n_action_steps, self.config.max_action_dim)
             noise = self.sample_noise(actions_shape, device)
 
-        prefix_embs, prefix_pad_masks, prefix_att_masks, modality_mask_prefix, image_idx_ranges, image_full_ranges = self.embed_prefix(
-            images, img_masks, lang_tokens, lang_masks
+        prefix_embs, prefix_pad_masks, prefix_att_masks, modality_mask_prefix, image_idx_ranges, image_full_ranges = (
+            self.embed_prefix(images, img_masks, lang_tokens, lang_masks)
         )
         prefix_att_2d_masks = make_att_2d_masks(prefix_pad_masks, prefix_att_masks)
         prefix_position_ids = torch.cumsum(prefix_pad_masks, dim=1) - 1
@@ -1160,7 +1169,7 @@ class HyVLAFlowMatching(nn.Module):
             inputs_embeds=[prefix_embs, None],
             use_cache=self.config.use_cache,
             fill_kv_cache=True,
-            modality_masks=[modality_mask_prefix, None]
+            modality_masks=[modality_mask_prefix, None],
         )
 
         dt = -1.0 / self.config.num_steps
@@ -1211,7 +1220,9 @@ class HyVLAFlowMatching(nn.Module):
         past_key_values_vlm = copy.deepcopy(past_key_values)
 
         suffix_embs, suffix_pad_masks, suffix_att_masks, modality_mask_suffix = self.embed_suffix(
-            state, x_t, timestep,
+            state,
+            x_t,
+            timestep,
         )
 
         suffix_len = suffix_pad_masks.shape[1]
@@ -1233,13 +1244,11 @@ class HyVLAFlowMatching(nn.Module):
             inputs_embeds=[None, suffix_embs],
             use_cache=self.config.use_cache,
             fill_kv_cache=False,
-            modality_masks=[None, modality_mask_suffix]
+            modality_masks=[None, modality_mask_suffix],
         )
         suffix_out = outputs_embeds[1]
         suffix_out = suffix_out[:, -self.config.n_action_steps :]
-        v_t = self.action_out_proj(
-            suffix_out.to(dtype=self.action_out_proj.weight.dtype)
-        )
+        v_t = self.action_out_proj(suffix_out.to(dtype=self.action_out_proj.weight.dtype))
         return v_t, att_vis_output
 
 

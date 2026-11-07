@@ -55,7 +55,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--src-video", required=True, help="Path to the source video file")
     parser.add_argument("--prompt", required=True, help="Text instruction / prompt")
     parser.add_argument("--output-dir", default="tmp", help="Output directory (default: tmp)")
-    parser.add_argument("--model-root", default=DEFAULT_MODEL_ROOT, help="Root directory of Wan2.1-T2V-14B model weights")
+    parser.add_argument(
+        "--model-root", default=DEFAULT_MODEL_ROOT, help="Root directory of Wan2.1-T2V-14B model weights"
+    )
     parser.add_argument("--device", default="cuda:0", help="Device string (default: cuda:0)")
     parser.add_argument("--lora-path", default="", help="LoRA checkpoint path (optional)")
     parser.add_argument("--state-dict", default="", help="Full DiT weight checkpoint path")
@@ -93,6 +95,7 @@ def parse_args() -> argparse.Namespace:
 
 # ---------- pipeline ----------
 
+
 def init_pipeline(device: str, lora_path: str, state_dict: str, model_root: str) -> SamaWanPipeline:
     pipe = load_sama_pipeline(
         model_root,
@@ -106,6 +109,7 @@ def init_pipeline(device: str, lora_path: str, state_dict: str, model_root: str)
 
 
 # ---------- video helpers ----------
+
 
 def detect_video_resolution(video_path: str, fallback: tuple[int, int]) -> tuple[int, int]:
     width = height = None
@@ -129,6 +133,7 @@ def detect_video_resolution(video_path: str, fallback: tuple[int, int]) -> tuple
         return width, height
     try:
         import cv2
+
         cap = cv2.VideoCapture(video_path)
         if cap.isOpened():
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -161,6 +166,7 @@ def detect_video_fps(video_path: str) -> Optional[float]:
         return float(fps)
     try:
         import cv2
+
         cap = cv2.VideoCapture(video_path)
         if cap.isOpened():
             fps = cap.get(cv2.CAP_PROP_FPS) or fps
@@ -225,7 +231,9 @@ def pad_frame(frame, pad_left: int, pad_right: int, pad_top: int, pad_bottom: in
     raise TypeError(f"Unsupported frame type: {type(frame)!r}")
 
 
-def load_clip_frames(video_path: str, height: int, width: int, max_frames: Optional[int], resolutions=None) -> List[torch.Tensor]:
+def load_clip_frames(
+    video_path: str, height: int, width: int, max_frames: Optional[int], resolutions=None
+) -> List[torch.Tensor]:
     if resolutions is None:
         orig_w, orig_h = detect_video_resolution(video_path, fallback=(width, height))
         resize_w, resize_h, pad_l, pad_r, pad_t, pad_b = compute_letterbox_params(orig_w, orig_h, width, height)
@@ -275,6 +283,7 @@ def ensure_4k_plus_1_frames(frames: List[torch.Tensor]) -> tuple[List[torch.Tens
 
 # ---------- main ----------
 
+
 def main() -> None:
     args = parse_args()
 
@@ -285,13 +294,14 @@ def main() -> None:
         return
 
     os.makedirs(args.output_dir, exist_ok=True)
-    
+
     pipe = init_pipeline(args.device, args.lora_path, args.state_dict, args.model_root)
 
     # Load frames
     resolutions = get_all_resolution(args.height * args.width, factor=32, min_ar=0.5, max_ar=2.0)
-    frames = load_clip_frames(args.src_video, height=args.height, width=args.width,
-                               max_frames=args.max_frames, resolutions=resolutions)
+    frames = load_clip_frames(
+        args.src_video, height=args.height, width=args.width, max_frames=args.max_frames, resolutions=resolutions
+    )
     if not frames:
         raise RuntimeError(f"No frames decoded from: {args.src_video}")
 
@@ -307,9 +317,12 @@ def main() -> None:
         prompt = f"[Video edit] {prompt}"
     if negative_prompt is None:
         negative_prompt = "[Video edit]" if args.prompt_prefix else ""
-    
-    print(f"[Run] prompt='{prompt}' src='{args.src_video}' frames={len(frames)} "
-          f"size={width}x{height} fps={case_fps} seed={args.seed}", flush=True)
+
+    print(
+        f"[Run] prompt='{prompt}' src='{args.src_video}' frames={len(frames)} "
+        f"size={width}x{height} fps={case_fps} seed={args.seed}",
+        flush=True,
+    )
     video = pipe(
         prompt=prompt,
         negative_prompt=negative_prompt,

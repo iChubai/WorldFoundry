@@ -113,9 +113,7 @@ class AnimateDiffSynthesis(RuntimeProfileSynthesis):
         # Set various instance attributes, prioritizing explicit options, then inferred values, then defaults.
         instance.motion_module_path = str(motion_module_path or DEFAULT_ANIMATEDIFF_MOTION_MODULE)
         instance.base_model_path = str(
-            _resolve_sd15_path(
-                options.get("sd15_path") or options.get("base_model_path") or DEFAULT_SD15_ROOT
-            )
+            _resolve_sd15_path(options.get("sd15_path") or options.get("base_model_path") or DEFAULT_SD15_ROOT)
         )
         instance.dreambooth_model_path = str(
             options.get("dreambooth_model_path")

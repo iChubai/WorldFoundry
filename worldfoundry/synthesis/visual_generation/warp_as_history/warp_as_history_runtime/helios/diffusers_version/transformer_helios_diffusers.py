@@ -33,13 +33,18 @@ from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import FP32LayerNorm
 from diffusers.utils import logging
+
 try:
     from diffusers.utils import apply_lora_scale
 except ImportError:
+
     def apply_lora_scale(_scale_key):
         def decorator(fn):
             return fn
+
         return decorator
+
+
 from diffusers.utils.torch_utils import maybe_allow_in_graph
 
 
@@ -215,11 +220,7 @@ class HeliosAttnProcessor:
 
         history_key_boost_mask = getattr(attn, "history_key_boost_mask", None)
         history_key_boost_scale = float(getattr(attn, "history_key_boost_scale", 1.0) or 1.0)
-        if (
-            not attn.is_cross_attention
-            and history_key_boost_mask is not None
-            and history_key_boost_scale != 1.0
-        ):
+        if not attn.is_cross_attention and history_key_boost_mask is not None and history_key_boost_scale != 1.0:
             boost_mask = history_key_boost_mask.to(device=key.device, dtype=torch.bool)
             if boost_mask.ndim != 1:
                 raise ValueError(f"history_key_boost_mask must be 1D, got {tuple(boost_mask.shape)}.")
@@ -807,10 +808,15 @@ class HeliosTransformer3DModel(
         if delta is None:
             return rotary_emb
         delta = delta.to(device=device, dtype=torch.float32)
-        if delta.ndim != 5 or delta.shape[1] != 3 or delta.shape[-3:] != (
-            frame_indices.shape[1],
-            height,
-            width,
+        if (
+            delta.ndim != 5
+            or delta.shape[1] != 3
+            or delta.shape[-3:]
+            != (
+                frame_indices.shape[1],
+                height,
+                width,
+            )
         ):
             return rotary_emb
 
@@ -863,10 +869,14 @@ class HeliosTransformer3DModel(
             history_invisible_token_mode = str(attention_kwargs.get("history_invisible_token_mode", "none") or "none")
             history_key_boost_mode = str(attention_kwargs.get("history_key_boost_mode", "none") or "none")
             history_key_boost_scale = float(attention_kwargs.get("history_key_boost_scale", 1.0) or 1.0)
-        history_key_boost_enabled = history_key_boost_mode in {
-            "short_last_latent",
-            "warp_last_latent",
-        } and history_key_boost_scale != 1.0
+        history_key_boost_enabled = (
+            history_key_boost_mode
+            in {
+                "short_last_latent",
+                "warp_last_latent",
+            }
+            and history_key_boost_scale != 1.0
+        )
         # 1. Input
         batch_size = hidden_states.shape[0]
         p_t, p_h, p_w = self.config.patch_size

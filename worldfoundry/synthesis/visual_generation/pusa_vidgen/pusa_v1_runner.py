@@ -154,8 +154,7 @@ def main() -> int:
         if len(images) != len(cond_positions) or len(images) != len(noise_multipliers):
             raise ValueError("--image-path, --cond-position, and --noise-multipliers counts must match.")
         multi_frame_images = {
-            frame_idx: (image, noise)
-            for frame_idx, image, noise in zip(cond_positions, images, noise_multipliers)
+            frame_idx: (image, noise) for frame_idx, image, noise in zip(cond_positions, images, noise_multipliers)
         }
         video = pipe(
             prompt=args.prompt,

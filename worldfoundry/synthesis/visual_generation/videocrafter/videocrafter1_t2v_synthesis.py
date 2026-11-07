@@ -5,6 +5,7 @@ It integrates the VideoCrafter model into a broader video synthesis runtime syst
 providing a standardized interface for configuration, loading, and execution
 of the model within the `worldfoundry` framework.
 """
+
 from __future__ import annotations
 
 from .worldfoundry_runtime import VideoCrafter

@@ -21,15 +21,9 @@ class Qwen3VLInterface(nn.Module):
         qwen_config = config.framework.get("qwenvl", {})
         model_id = str(qwen_config.get("base_vlm", "Qwen/Qwen3-VL-4B-Instruct"))
         requested_attention = str(qwen_config.get("attn_implementation", "auto"))
-        probe_device = resolve_inference_device(
-            str(qwen_config.get("device", "cuda")), allow_cpu_fallback=True
-        )
-        self.inference_dtype = resolve_inference_dtype(
-            probe_device, str(qwen_config.get("torch_dtype", "auto"))
-        )
-        self.attention_implementation = resolve_transformers_attention_implementation(
-            requested_attention, probe_device
-        )
+        probe_device = resolve_inference_device(str(qwen_config.get("device", "cuda")), allow_cpu_fallback=True)
+        self.inference_dtype = resolve_inference_dtype(probe_device, str(qwen_config.get("torch_dtype", "auto")))
+        self.attention_implementation = resolve_transformers_attention_implementation(requested_attention, probe_device)
 
         model_kwargs = {
             "attn_implementation": self.attention_implementation,

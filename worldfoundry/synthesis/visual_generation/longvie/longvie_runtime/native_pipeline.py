@@ -78,8 +78,12 @@ class LongViePipeline(StagedDiffusionPipeline):
             tokenizer_path: The tokenizer path.
         """
         super().__init__(
-            device=device, torch_dtype=torch_dtype,
-            height_division_factor=16, width_division_factor=16, time_division_factor=4, time_division_remainder=1
+            device=device,
+            torch_dtype=torch_dtype,
+            height_division_factor=16,
+            width_division_factor=16,
+            time_division_factor=4,
+            time_division_remainder=1,
         )
         self.scheduler = FlowMatchScheduler(shift=5, sigma_min=0.0, extra_one_step=True)
         self.prompter = WanPrompter(tokenizer_path=tokenizer_path)
@@ -126,7 +130,7 @@ class LongViePipeline(StagedDiffusionPipeline):
         ]
 
         self.model_fn = model_fn_wan_video
-    
+
     def load_lora(
         self,
         module: torch.nn.Module,
@@ -155,15 +159,15 @@ class LongViePipeline(StagedDiffusionPipeline):
         if hotload:
             for name, module in module.named_modules():
                 if isinstance(module, AutoWrappedLinear):
-                    lora_a_name = f'{name}.lora_A.default.weight'
-                    lora_b_name = f'{name}.lora_B.default.weight'
+                    lora_a_name = f"{name}.lora_A.default.weight"
+                    lora_b_name = f"{name}.lora_B.default.weight"
                     if lora_a_name in lora and lora_b_name in lora:
                         module.lora_A_weights.append(lora[lora_a_name] * alpha)
                         module.lora_B_weights.append(lora[lora_b_name])
         else:
             loader = GeneralLoRALoader(torch_dtype=self.torch_dtype, device=self.device)
             loader.load(module, lora, alpha=alpha)
-        
+
     def enable_vram_management(self, num_persistent_param_in_dit=None, vram_limit=None, vram_buffer=0.5):
         """Enable vram management.
 
@@ -183,13 +187,13 @@ class LongViePipeline(StagedDiffusionPipeline):
             dtype = next(iter(self.text_encoder.parameters())).dtype
             enable_vram_management(
                 self.text_encoder,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Embedding: AutoWrappedModule,
                     T5RelativeEmbedding: AutoWrappedModule,
                     T5LayerNorm: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -204,7 +208,7 @@ class LongViePipeline(StagedDiffusionPipeline):
             device = "cpu" if vram_limit is not None else self.device
             enable_vram_management(
                 self.dit,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv3d: AutoWrappedModule,
                     torch.nn.LayerNorm: WanAutoCastLayerNorm,
@@ -213,7 +217,7 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.Conv1d: AutoWrappedModule,
                     torch.nn.Embedding: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -222,7 +226,7 @@ class LongViePipeline(StagedDiffusionPipeline):
                     computation_device=self.device,
                 ),
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config = dict(
+                overflow_vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -237,7 +241,7 @@ class LongViePipeline(StagedDiffusionPipeline):
             device = "cpu" if vram_limit is not None else self.device
             enable_vram_management(
                 self.dual_controller,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv3d: AutoWrappedModule,
                     torch.nn.LayerNorm: WanAutoCastLayerNorm,
@@ -246,7 +250,7 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.Conv1d: AutoWrappedModule,
                     torch.nn.Embedding: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -255,7 +259,7 @@ class LongViePipeline(StagedDiffusionPipeline):
                     computation_device=self.device,
                 ),
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config = dict(
+                overflow_vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -270,14 +274,14 @@ class LongViePipeline(StagedDiffusionPipeline):
             device = "cpu" if vram_limit is not None else self.device
             enable_vram_management(
                 self.dit2,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv3d: AutoWrappedModule,
                     torch.nn.LayerNorm: WanAutoCastLayerNorm,
                     RMSNorm: AutoWrappedModule,
                     torch.nn.Conv2d: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -286,7 +290,7 @@ class LongViePipeline(StagedDiffusionPipeline):
                     computation_device=self.device,
                 ),
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config = dict(
+                overflow_vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -300,7 +304,7 @@ class LongViePipeline(StagedDiffusionPipeline):
             dtype = next(iter(self.vae.parameters())).dtype
             enable_vram_management(
                 self.vae,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv2d: AutoWrappedModule,
                     RMS_norm: AutoWrappedModule,
@@ -309,7 +313,7 @@ class LongViePipeline(StagedDiffusionPipeline):
                     torch.nn.SiLU: AutoWrappedModule,
                     torch.nn.Dropout: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -322,12 +326,12 @@ class LongViePipeline(StagedDiffusionPipeline):
             dtype = next(iter(self.image_encoder.parameters())).dtype
             enable_vram_management(
                 self.image_encoder,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv2d: AutoWrappedModule,
                     torch.nn.LayerNorm: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -350,10 +354,10 @@ class LongViePipeline(StagedDiffusionPipeline):
             dtype = next(iter(self.motion_controller.parameters())).dtype
             enable_vram_management(
                 self.motion_controller,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -366,13 +370,13 @@ class LongViePipeline(StagedDiffusionPipeline):
             device = "cpu" if vram_limit is not None else self.device
             enable_vram_management(
                 self.vace,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv3d: AutoWrappedModule,
                     torch.nn.LayerNorm: AutoWrappedModule,
                     RMSNorm: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -387,12 +391,12 @@ class LongViePipeline(StagedDiffusionPipeline):
             dtype = next(iter(self.audio_encoder.parameters())).dtype
             enable_vram_management(
                 self.audio_encoder,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.LayerNorm: AutoWrappedModule,
                     torch.nn.Conv1d: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -401,8 +405,7 @@ class LongViePipeline(StagedDiffusionPipeline):
                     computation_device=self.device,
                 ),
             )
-            
-            
+
     def initialize_usp(self, ring_degree=2, ulysses_degree=4):
         """Initialize usp.
 
@@ -422,7 +425,6 @@ class LongViePipeline(StagedDiffusionPipeline):
                 f"ring_degree={ring_degree}, ulysses_degree={ulysses_degree}."
             )
 
-
     def enable_usp(self):
         """Enable usp."""
         from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import usp_attn_forward, usp_dit_forward
@@ -441,7 +443,6 @@ class LongViePipeline(StagedDiffusionPipeline):
             self.dit2.forward = types.MethodType(usp_dit_forward, self.dit2)
         self.sp_size = _sequence_parallel_world_size()
         self.use_unified_sequence_parallel = True
-
 
     @classmethod
     def from_components(
@@ -479,10 +480,7 @@ class LongViePipeline(StagedDiffusionPipeline):
         ).to(dtype=torch_dtype, device="cpu")
 
         control_state = load_state_dict(control_weight_path, torch_dtype=torch_dtype, device="cpu")
-        control_state = {
-            name.removeprefix("pipe.dual_controller."): value
-            for name, value in control_state.items()
-        }
+        control_state = {name.removeprefix("pipe.dual_controller."): value for name, value in control_state.items()}
         pipe.dual_controller.load_state_dict(control_state, strict=False)
         if dit_weight_path:
             attention_state = load_state_dict(dit_weight_path, torch_dtype=torch_dtype, device="cpu")
@@ -496,7 +494,6 @@ class LongViePipeline(StagedDiffusionPipeline):
             pipe.initialize_usp(ring_degree=ring_degree, ulysses_degree=ulysses_degree)
             pipe.enable_usp()
         return pipe
-
 
     @torch.no_grad()
     def __call__(
@@ -522,9 +519,31 @@ class LongViePipeline(StagedDiffusionPipeline):
         control_video: Optional[list[Image.Image]] = None,
         reference_image: Optional[Image.Image] = None,
         # Camera control
-        camera_control_direction: Optional[Literal["Left", "Right", "Up", "Down", "LeftUp", "LeftDown", "RightUp", "RightDown"]] = None,
-        camera_control_speed: Optional[float] = 1/54,
-        camera_control_origin: Optional[tuple] = (0, 0.532139961, 0.946026558, 0.5, 0.5, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0),
+        camera_control_direction: Optional[
+            Literal["Left", "Right", "Up", "Down", "LeftUp", "LeftDown", "RightUp", "RightDown"]
+        ] = None,
+        camera_control_speed: Optional[float] = 1 / 54,
+        camera_control_origin: Optional[tuple] = (
+            0,
+            0.532139961,
+            0.946026558,
+            0.5,
+            0.5,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+        ),
         # VACE
         vace_video: Optional[list[Image.Image]] = None,
         vace_video_mask: Optional[Image.Image] = None,
@@ -623,59 +642,93 @@ class LongViePipeline(StagedDiffusionPipeline):
         """
         # Scheduler
         self.scheduler.set_timesteps(num_inference_steps, denoising_strength=denoising_strength, shift=sigma_shift)
-        
+
         # Inputs
         inputs_posi = {
             "prompt": prompt,
-            "tea_cache_l1_thresh": tea_cache_l1_thresh, "tea_cache_model_id": tea_cache_model_id, "num_inference_steps": num_inference_steps,
+            "tea_cache_l1_thresh": tea_cache_l1_thresh,
+            "tea_cache_model_id": tea_cache_model_id,
+            "num_inference_steps": num_inference_steps,
         }
         inputs_nega = {
             "negative_prompt": negative_prompt,
-            "tea_cache_l1_thresh": tea_cache_l1_thresh, "tea_cache_model_id": tea_cache_model_id, "num_inference_steps": num_inference_steps,
+            "tea_cache_l1_thresh": tea_cache_l1_thresh,
+            "tea_cache_model_id": tea_cache_model_id,
+            "num_inference_steps": num_inference_steps,
         }
         inputs_shared = {
             "input_image": input_image,
             "history_video": history,
             "end_image": end_image,
-            "input_video": input_video, "denoising_strength": denoising_strength,
-            "control_video": control_video, "reference_image": reference_image,
-            "camera_control_direction": camera_control_direction, "camera_control_speed": camera_control_speed, "camera_control_origin": camera_control_origin,
-            "vace_video": vace_video, "vace_video_mask": vace_video_mask, "vace_reference_image": vace_reference_image, "vace_scale": vace_scale,
-            "seed": seed, "rand_device": rand_device,
-            "height": height, "width": width, "num_frames": num_frames,
-            "cfg_scale": cfg_scale, "cfg_merge": cfg_merge,
+            "input_video": input_video,
+            "denoising_strength": denoising_strength,
+            "control_video": control_video,
+            "reference_image": reference_image,
+            "camera_control_direction": camera_control_direction,
+            "camera_control_speed": camera_control_speed,
+            "camera_control_origin": camera_control_origin,
+            "vace_video": vace_video,
+            "vace_video_mask": vace_video_mask,
+            "vace_reference_image": vace_reference_image,
+            "vace_scale": vace_scale,
+            "seed": seed,
+            "rand_device": rand_device,
+            "height": height,
+            "width": width,
+            "num_frames": num_frames,
+            "cfg_scale": cfg_scale,
+            "cfg_merge": cfg_merge,
             "sigma_shift": sigma_shift,
             "motion_bucket_id": motion_bucket_id,
-            "tiled": tiled, "tile_size": tile_size, "tile_stride": tile_stride,
-            "sliding_window_size": sliding_window_size, "sliding_window_stride": sliding_window_stride,
-            "input_audio": input_audio, "audio_sample_rate": audio_sample_rate, "s2v_pose_video": s2v_pose_video, "audio_embeds": audio_embeds, "s2v_pose_latents": s2v_pose_latents, "motion_video": motion_video,
-            "animate_pose_video": animate_pose_video, "animate_face_video": animate_face_video, "animate_inpaint_video": animate_inpaint_video, "animate_mask_video": animate_mask_video,
+            "tiled": tiled,
+            "tile_size": tile_size,
+            "tile_stride": tile_stride,
+            "sliding_window_size": sliding_window_size,
+            "sliding_window_stride": sliding_window_stride,
+            "input_audio": input_audio,
+            "audio_sample_rate": audio_sample_rate,
+            "s2v_pose_video": s2v_pose_video,
+            "audio_embeds": audio_embeds,
+            "s2v_pose_latents": s2v_pose_latents,
+            "motion_video": motion_video,
+            "animate_pose_video": animate_pose_video,
+            "animate_face_video": animate_face_video,
+            "animate_inpaint_video": animate_inpaint_video,
+            "animate_mask_video": animate_mask_video,
             "dense_video": dense_video,
             "sparse_video": sparse_video,
             "dense_image": dense_video[0],
             "sparse_image": sparse_video[0],
         }
         for unit in self.units:
-            inputs_shared, inputs_posi, inputs_nega = self.unit_runner(unit, self, inputs_shared, inputs_posi, inputs_nega)
-        
+            inputs_shared, inputs_posi, inputs_nega = self.unit_runner(
+                unit, self, inputs_shared, inputs_posi, inputs_nega
+            )
+
         # Denoise
         self.load_models_to_device(self.in_iteration_models)
         models = {name: getattr(self, name) for name in self.in_iteration_models}
         if noise is not None:
             inputs_shared["latents"] = noise
             sigma = 0.925926
-            inputs_shared["latents"][:,:,:1] = (1 - sigma) * inputs_shared["history_latents"][:,:,-1:] + sigma * noise[:,:,:1]
-            
+            inputs_shared["latents"][:, :, :1] = (1 - sigma) * inputs_shared["history_latents"][
+                :, :, -1:
+            ] + sigma * noise[:, :, :1]
+
         for progress_id, timestep in enumerate(progress_bar_cmd(self.scheduler.timesteps)):
             # Switch DiT if necessary
-            if timestep.item() < switch_DiT_boundary * self.scheduler.num_train_timesteps and self.dit2 is not None and not models["dit"] is self.dit2:
+            if (
+                timestep.item() < switch_DiT_boundary * self.scheduler.num_train_timesteps
+                and self.dit2 is not None
+                and not models["dit"] is self.dit2
+            ):
                 self.load_models_to_device(self.in_iteration_models_2)
                 models["dit"] = self.dit2
                 models["vace"] = self.vace2
-                
+
             # Timestep
             timestep = timestep.unsqueeze(0).to(dtype=self.torch_dtype, device=self.device)
-            
+
             # Inference
             noise_pred_posi = self.model_fn(**models, **inputs_shared, **inputs_posi, timestep=timestep)
             if cfg_scale != 1.0:
@@ -688,14 +741,18 @@ class LongViePipeline(StagedDiffusionPipeline):
                 noise_pred = noise_pred_posi
 
             # Scheduler
-            inputs_shared["latents"] = self.scheduler.step(noise_pred, self.scheduler.timesteps[progress_id], inputs_shared["latents"])
+            inputs_shared["latents"] = self.scheduler.step(
+                noise_pred, self.scheduler.timesteps[progress_id], inputs_shared["latents"]
+            )
             if "first_frame_latents" in inputs_shared:
                 inputs_shared["latents"][:, :, 0:1] = inputs_shared["first_frame_latents"]
 
         # Decode
-        self.load_models_to_device(['vae'])
+        self.load_models_to_device(["vae"])
         # history_token = inputs_shared["latents"][:,-4:].clone()
-        video = self.vae.decode(inputs_shared["latents"], device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)
+        video = self.vae.decode(
+            inputs_shared["latents"], device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        )
         video = self.vae_output_to_video(video)
         self.load_models_to_device([])
 
@@ -704,6 +761,7 @@ class LongViePipeline(StagedDiffusionPipeline):
 
 class WanVideoUnit_ShapeChecker(InferenceStage):
     """Wan video unit shape checker implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(input_params=("height", "width", "num_frames"))
@@ -721,9 +779,9 @@ class WanVideoUnit_ShapeChecker(InferenceStage):
         return {"height": height, "width": width, "num_frames": num_frames}
 
 
-
 class WanVideoUnit_NoiseInitializer(InferenceStage):
     """Wan video unit noise initializer implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(input_params=("height", "width", "num_frames", "seed", "rand_device", "vace_reference_image"))
@@ -744,20 +802,27 @@ class WanVideoUnit_NoiseInitializer(InferenceStage):
         if vace_reference_image is not None:
             f = len(vace_reference_image) if isinstance(vace_reference_image, list) else 1
             length += f
-        shape = (1, pipe.vae.model.z_dim, length, height // pipe.vae.upsampling_factor, width // pipe.vae.upsampling_factor)
+        shape = (
+            1,
+            pipe.vae.model.z_dim,
+            length,
+            height // pipe.vae.upsampling_factor,
+            width // pipe.vae.upsampling_factor,
+        )
         noise = pipe.generate_noise(shape, seed=seed, rand_device=rand_device)
         if vace_reference_image is not None:
             noise = torch.concat((noise[:, :, -f:], noise[:, :, :-f]), dim=2)
         return {"noise": noise}
-    
+
 
 class WanVideoUnit_InputVideoEmbedder(InferenceStage):
     """Wan video unit input video embedder implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
             input_params=("input_video", "noise", "tiled", "tile_size", "tile_stride", "vace_reference_image"),
-            onload_model_names=("vae",)
+            onload_model_names=("vae",),
         )
 
     def process(self, pipe: LongViePipeline, input_video, noise, tiled, tile_size, tile_stride, vace_reference_image):
@@ -776,12 +841,16 @@ class WanVideoUnit_InputVideoEmbedder(InferenceStage):
             return {"latents": noise}
         pipe.load_models_to_device(["vae"])
         input_video = pipe.preprocess_video(input_video)
-        input_latents = pipe.vae.encode(input_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+        input_latents = pipe.vae.encode(
+            input_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        ).to(dtype=pipe.torch_dtype, device=pipe.device)
         if vace_reference_image is not None:
             if not isinstance(vace_reference_image, list):
                 vace_reference_image = [vace_reference_image]
             vace_reference_image = pipe.preprocess_video(vace_reference_image)
-            vace_reference_latents = pipe.vae.encode(vace_reference_image, device=pipe.device).to(dtype=pipe.torch_dtype, device=pipe.device)
+            vace_reference_latents = pipe.vae.encode(vace_reference_image, device=pipe.device).to(
+                dtype=pipe.torch_dtype, device=pipe.device
+            )
             input_latents = torch.concat([vace_reference_latents, input_latents], dim=2)
         if pipe.scheduler.training:
             return {"latents": noise, "input_latents": input_latents}
@@ -792,11 +861,11 @@ class WanVideoUnit_InputVideoEmbedder(InferenceStage):
 
 class WanVideoUnit_HistoryVideoEmbedder(InferenceStage):
     """Wan video unit history video embedder implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
-            input_params=("history_video", "tiled", "tile_size", "tile_stride"),
-            onload_model_names=("vae",)
+            input_params=("history_video", "tiled", "tile_size", "tile_stride"), onload_model_names=("vae",)
         )
 
     def process(self, pipe: LongViePipeline, history_video, tiled, tile_size, tile_stride):
@@ -813,19 +882,22 @@ class WanVideoUnit_HistoryVideoEmbedder(InferenceStage):
             return {"history_latents": None}
         pipe.load_models_to_device(["vae"])
         history_video = pipe.preprocess_video(history_video)
-        input_latents = pipe.vae.encode(history_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+        input_latents = pipe.vae.encode(
+            history_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        ).to(dtype=pipe.torch_dtype, device=pipe.device)
         return {"history_latents": input_latents}
 
 
 class WanVideoUnit_PromptEmbedder(InferenceStage):
     """Wan video unit prompt embedder implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
             seperate_cfg=True,
             input_params_posi={"prompt": "prompt", "positive": "positive"},
             input_params_nega={"prompt": "negative_prompt", "positive": "positive"},
-            onload_model_names=("text_encoder",)
+            onload_model_names=("text_encoder",),
         )
 
     def process(self, pipe: LongViePipeline, prompt, positive) -> dict:
@@ -848,14 +920,26 @@ class WanVideoUnit_ImageEmbedder(InferenceStage):
     """
     Deprecated
     """
+
     def __init__(self):
         """Init."""
         super().__init__(
-            input_params=("input_image", "end_image", "num_frames", "height", "width", "tiled", "tile_size", "tile_stride"),
-            onload_model_names=("image_encoder", "vae")
+            input_params=(
+                "input_image",
+                "end_image",
+                "num_frames",
+                "height",
+                "width",
+                "tiled",
+                "tile_size",
+                "tile_stride",
+            ),
+            onload_model_names=("image_encoder", "vae"),
         )
 
-    def process(self, pipe: LongViePipeline, input_image, end_image, num_frames, height, width, tiled, tile_size, tile_stride):
+    def process(
+        self, pipe: LongViePipeline, input_image, end_image, num_frames, height, width, tiled, tile_size, tile_stride
+    ):
         """Process.
 
         Args:
@@ -874,22 +958,37 @@ class WanVideoUnit_ImageEmbedder(InferenceStage):
         pipe.load_models_to_device(self.onload_model_names)
         image = pipe.preprocess_image(input_image.resize((width, height))).to(pipe.device)
         clip_context = pipe.image_encoder.encode_image([image])
-        msk = torch.ones(1, num_frames, height//8, width//8, device=pipe.device)
+        msk = torch.ones(1, num_frames, height // 8, width // 8, device=pipe.device)
         msk[:, 1:] = 0
         if end_image is not None:
             end_image = pipe.preprocess_image(end_image.resize((width, height))).to(pipe.device)
-            vae_input = torch.concat([image.transpose(0,1), torch.zeros(3, num_frames-2, height, width).to(image.device), end_image.transpose(0,1)],dim=1)
+            vae_input = torch.concat(
+                [
+                    image.transpose(0, 1),
+                    torch.zeros(3, num_frames - 2, height, width).to(image.device),
+                    end_image.transpose(0, 1),
+                ],
+                dim=1,
+            )
             if pipe.dit.has_image_pos_emb:
                 clip_context = torch.concat([clip_context, pipe.image_encoder.encode_image([end_image])], dim=1)
             msk[:, -1:] = 1
         else:
-            vae_input = torch.concat([image.transpose(0, 1), torch.zeros(3, num_frames-1, height, width).to(image.device)], dim=1)
+            vae_input = torch.concat(
+                [image.transpose(0, 1), torch.zeros(3, num_frames - 1, height, width).to(image.device)], dim=1
+            )
 
         msk = torch.concat([torch.repeat_interleave(msk[:, 0:1], repeats=4, dim=1), msk[:, 1:]], dim=1)
-        msk = msk.view(1, msk.shape[1] // 4, 4, height//8, width//8)
+        msk = msk.view(1, msk.shape[1] // 4, 4, height // 8, width // 8)
         msk = msk.transpose(1, 2)[0]
-        
-        y = pipe.vae.encode([vae_input.to(dtype=pipe.torch_dtype, device=pipe.device)], device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)[0]
+
+        y = pipe.vae.encode(
+            [vae_input.to(dtype=pipe.torch_dtype, device=pipe.device)],
+            device=pipe.device,
+            tiled=tiled,
+            tile_size=tile_size,
+            tile_stride=tile_stride,
+        )[0]
         y = y.to(dtype=pipe.torch_dtype, device=pipe.device)
         y = torch.concat([msk, y])
         y = y.unsqueeze(0)
@@ -900,11 +999,11 @@ class WanVideoUnit_ImageEmbedder(InferenceStage):
 
 class WanVideoUnit_ImageEmbedderCLIP(InferenceStage):
     """Wan video unit image embedder clip implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
-            input_params=("input_image", "end_image", "height", "width"),
-            onload_model_names=("image_encoder",)
+            input_params=("input_image", "end_image", "height", "width"), onload_model_names=("image_encoder",)
         )
 
     def process(self, pipe: LongViePipeline, input_image, end_image, height, width):
@@ -932,14 +1031,37 @@ class WanVideoUnit_ImageEmbedderCLIP(InferenceStage):
 
 class WanVideoUnit_ImageEmbedderVAE(InferenceStage):
     """Wan video unit image embedder vae implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
-            input_params=("input_image", "end_image", "num_frames", "height", "width", "tiled", "tile_size", "tile_stride", "input_image_token"),
-            onload_model_names=("vae",)
+            input_params=(
+                "input_image",
+                "end_image",
+                "num_frames",
+                "height",
+                "width",
+                "tiled",
+                "tile_size",
+                "tile_stride",
+                "input_image_token",
+            ),
+            onload_model_names=("vae",),
         )
 
-    def process(self, pipe: LongViePipeline, input_image, end_image, num_frames, height, width, tiled, tile_size, tile_stride, input_image_token):
+    def process(
+        self,
+        pipe: LongViePipeline,
+        input_image,
+        end_image,
+        num_frames,
+        height,
+        width,
+        tiled,
+        tile_size,
+        tile_stride,
+        input_image_token,
+    ):
         """Process.
 
         Args:
@@ -958,23 +1080,38 @@ class WanVideoUnit_ImageEmbedderVAE(InferenceStage):
             return {}
         pipe.load_models_to_device(self.onload_model_names)
         image = pipe.preprocess_image(input_image.resize((width, height))).to(pipe.device)
-        msk = torch.ones(1, num_frames, height//8, width//8, device=pipe.device)
+        msk = torch.ones(1, num_frames, height // 8, width // 8, device=pipe.device)
         msk[:, 1:] = 0
         if end_image is not None:
             end_image = pipe.preprocess_image(end_image.resize((width, height))).to(pipe.device)
-            vae_input = torch.concat([image.transpose(0,1), torch.zeros(3, num_frames-2, height, width).to(image.device), end_image.transpose(0,1)],dim=1)
+            vae_input = torch.concat(
+                [
+                    image.transpose(0, 1),
+                    torch.zeros(3, num_frames - 2, height, width).to(image.device),
+                    end_image.transpose(0, 1),
+                ],
+                dim=1,
+            )
             msk[:, -1:] = 1
         else:
-            vae_input = torch.concat([image.transpose(0, 1), torch.zeros(3, num_frames-1, height, width).to(image.device)], dim=1)
+            vae_input = torch.concat(
+                [image.transpose(0, 1), torch.zeros(3, num_frames - 1, height, width).to(image.device)], dim=1
+            )
 
         msk = torch.concat([torch.repeat_interleave(msk[:, 0:1], repeats=4, dim=1), msk[:, 1:]], dim=1)
-        msk = msk.view(1, msk.shape[1] // 4, 4, height//8, width//8)
+        msk = msk.view(1, msk.shape[1] // 4, 4, height // 8, width // 8)
         msk = msk.transpose(1, 2)[0]
 
         # if input_image_token is not None:
         #     y = input_image_token[0]
         # else:
-        y = pipe.vae.encode([vae_input.to(dtype=pipe.torch_dtype, device=pipe.device)], device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)[0]
+        y = pipe.vae.encode(
+            [vae_input.to(dtype=pipe.torch_dtype, device=pipe.device)],
+            device=pipe.device,
+            tiled=tiled,
+            tile_size=tile_size,
+            tile_stride=tile_stride,
+        )[0]
         y = y.to(dtype=pipe.torch_dtype, device=pipe.device)
         # print(y.size(),msk.size())
         y = torch.concat([msk, y])
@@ -987,11 +1124,12 @@ class WanVideoUnit_ImageEmbedderFused(InferenceStage):
     """
     Encode input image to latents using VAE. This unit is for Wan-AI/Wan2.2-TI2V-5B.
     """
+
     def __init__(self):
         """Init."""
         super().__init__(
             input_params=("input_image", "latents", "height", "width", "tiled", "tile_size", "tile_stride"),
-            onload_model_names=("vae",)
+            onload_model_names=("vae",),
         )
 
     def process(self, pipe: LongViePipeline, input_image, latents, height, width, tiled, tile_size, tile_stride):
@@ -1012,20 +1150,45 @@ class WanVideoUnit_ImageEmbedderFused(InferenceStage):
         pipe.load_models_to_device(self.onload_model_names)
         image = pipe.preprocess_image(input_image.resize((width, height))).transpose(0, 1)
         z = pipe.vae.encode([image], device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)
-        latents[:, :, 0: 1] = z
+        latents[:, :, 0:1] = z
         return {"latents": latents, "fuse_vae_embedding_in_latents": True, "first_frame_latents": z}
 
 
 class WanVideoUnit_LongVieControlEmbedder(InferenceStage):
     """Wan video unit long vie control embedder implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
-            input_params=("dense_video", "dense_image", "sparse_video", "sparse_image", "num_frames", "height", "width", "tiled", "tile_size", "tile_stride"),
-            onload_model_names=("vae")
+            input_params=(
+                "dense_video",
+                "dense_image",
+                "sparse_video",
+                "sparse_image",
+                "num_frames",
+                "height",
+                "width",
+                "tiled",
+                "tile_size",
+                "tile_stride",
+            ),
+            onload_model_names=("vae"),
         )
 
-    def process(self, pipe: LongViePipeline, dense_video, dense_image, sparse_video, sparse_image, num_frames, height, width, tiled, tile_size, tile_stride):
+    def process(
+        self,
+        pipe: LongViePipeline,
+        dense_video,
+        dense_image,
+        sparse_video,
+        sparse_image,
+        num_frames,
+        height,
+        width,
+        tiled,
+        tile_size,
+        tile_stride,
+    ):
         """Process.
 
         Args:
@@ -1045,46 +1208,64 @@ class WanVideoUnit_LongVieControlEmbedder(InferenceStage):
             return {}
         pipe.load_models_to_device(self.onload_model_names)
         dense_video = pipe.preprocess_video(dense_video)
-        dense_latents = pipe.vae.encode(dense_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+        dense_latents = pipe.vae.encode(
+            dense_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        ).to(dtype=pipe.torch_dtype, device=pipe.device)
         dense_latents = dense_latents.to(dtype=pipe.torch_dtype, device=pipe.device)
 
         sparse_video = pipe.preprocess_video(sparse_video)
-        sparse_latents = pipe.vae.encode(sparse_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+        sparse_latents = pipe.vae.encode(
+            sparse_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        ).to(dtype=pipe.torch_dtype, device=pipe.device)
         sparse_latents = sparse_latents.to(dtype=pipe.torch_dtype, device=pipe.device)
 
-        msk = torch.ones(1, num_frames, height//8, width//8, device=pipe.device)
+        msk = torch.ones(1, num_frames, height // 8, width // 8, device=pipe.device)
         msk[:, 1:] = 0
         msk = torch.concat([torch.repeat_interleave(msk[:, 0:1], repeats=4, dim=1), msk[:, 1:]], dim=1)
-        msk = msk.view(1, msk.shape[1] // 4, 4, height//8, width//8)
+        msk = msk.view(1, msk.shape[1] // 4, 4, height // 8, width // 8)
         msk = msk.transpose(1, 2)[0]
 
         dense_image = pipe.preprocess_image(dense_image.resize((width, height))).to(pipe.device)
         sparse_image = pipe.preprocess_image(sparse_image.resize((width, height))).to(pipe.device)
 
-        vae_input_dense = torch.concat([dense_image.transpose(0, 1), torch.zeros(3, num_frames-1, height, width).to(dense_image.device)], dim=1)
-        vae_input_sparse = torch.concat([sparse_image.transpose(0, 1), torch.zeros(3, num_frames-1, height, width).to(sparse_image.device)], dim=1)
-        dense = pipe.vae.encode([vae_input_dense.to(dtype=pipe.torch_dtype, device=pipe.device)], device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)[0]
+        vae_input_dense = torch.concat(
+            [dense_image.transpose(0, 1), torch.zeros(3, num_frames - 1, height, width).to(dense_image.device)], dim=1
+        )
+        vae_input_sparse = torch.concat(
+            [sparse_image.transpose(0, 1), torch.zeros(3, num_frames - 1, height, width).to(sparse_image.device)], dim=1
+        )
+        dense = pipe.vae.encode(
+            [vae_input_dense.to(dtype=pipe.torch_dtype, device=pipe.device)],
+            device=pipe.device,
+            tiled=tiled,
+            tile_size=tile_size,
+            tile_stride=tile_stride,
+        )[0]
         dense = dense.to(dtype=pipe.torch_dtype, device=pipe.device)
         dense = torch.concat([msk, dense])
         dense = dense.unsqueeze(0)
         dense = dense.to(dtype=pipe.torch_dtype, device=pipe.device)
 
-        sparse = pipe.vae.encode([vae_input_sparse.to(dtype=pipe.torch_dtype, device=pipe.device)], device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)[0]
+        sparse = pipe.vae.encode(
+            [vae_input_sparse.to(dtype=pipe.torch_dtype, device=pipe.device)],
+            device=pipe.device,
+            tiled=tiled,
+            tile_size=tile_size,
+            tile_stride=tile_stride,
+        )[0]
         sparse = sparse.to(dtype=pipe.torch_dtype, device=pipe.device)
         sparse = torch.concat([msk, sparse])
         sparse = sparse.unsqueeze(0)
         sparse = sparse.to(dtype=pipe.torch_dtype, device=pipe.device)
 
-        dense = torch.cat([dense_latents, dense],dim=1)
-        sparse = torch.cat([sparse_latents, sparse],dim=1)
+        dense = torch.cat([dense_latents, dense], dim=1)
+        sparse = torch.cat([sparse_latents, sparse], dim=1)
         return {"dense": dense, "sparse": sparse}
-
-
-
 
 
 class WanVideoUnit_UnifiedSequenceParallel(InferenceStage):
     """Wan video unit unified sequence parallel implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(input_params=())
@@ -1101,15 +1282,23 @@ class WanVideoUnit_UnifiedSequenceParallel(InferenceStage):
         return {}
 
 
-
 class WanVideoUnit_TeaCache(InferenceStage):
     """Wan video unit tea cache implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
             seperate_cfg=True,
-            input_params_posi={"num_inference_steps": "num_inference_steps", "tea_cache_l1_thresh": "tea_cache_l1_thresh", "tea_cache_model_id": "tea_cache_model_id"},
-            input_params_nega={"num_inference_steps": "num_inference_steps", "tea_cache_l1_thresh": "tea_cache_l1_thresh", "tea_cache_model_id": "tea_cache_model_id"},
+            input_params_posi={
+                "num_inference_steps": "num_inference_steps",
+                "tea_cache_l1_thresh": "tea_cache_l1_thresh",
+                "tea_cache_model_id": "tea_cache_model_id",
+            },
+            input_params_nega={
+                "num_inference_steps": "num_inference_steps",
+                "tea_cache_l1_thresh": "tea_cache_l1_thresh",
+                "tea_cache_model_id": "tea_cache_model_id",
+            },
         )
 
     def process(self, pipe: LongViePipeline, num_inference_steps, tea_cache_l1_thresh, tea_cache_model_id):
@@ -1123,12 +1312,14 @@ class WanVideoUnit_TeaCache(InferenceStage):
         """
         if tea_cache_l1_thresh is None:
             return {}
-        return {"tea_cache": TeaCache(num_inference_steps, rel_l1_thresh=tea_cache_l1_thresh, model_id=tea_cache_model_id)}
-
+        return {
+            "tea_cache": TeaCache(num_inference_steps, rel_l1_thresh=tea_cache_l1_thresh, model_id=tea_cache_model_id)
+        }
 
 
 class WanVideoUnit_CfgMerger(InferenceStage):
     """Wan video unit cfg merger implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(take_over=True)
@@ -1160,6 +1351,7 @@ class WanVideoUnit_CfgMerger(InferenceStage):
 
 class TeaCache:
     """Tea cache implementation."""
+
     def __init__(self, num_inference_steps, rel_l1_thresh, model_id):
         """Init.
 
@@ -1175,16 +1367,18 @@ class TeaCache:
         self.rel_l1_thresh = rel_l1_thresh
         self.previous_residual = None
         self.previous_hidden_states = None
-        
+
         self.coefficients_dict = {
-            "Wan2.1-T2V-1.3B": [-5.21862437e+04, 9.23041404e+03, -5.28275948e+02, 1.36987616e+01, -4.99875664e-02],
-            "Wan2.1-T2V-14B": [-3.03318725e+05, 4.90537029e+04, -2.65530556e+03, 5.87365115e+01, -3.15583525e-01],
-            "Wan2.1-I2V-14B-480P": [2.57151496e+05, -3.54229917e+04,  1.40286849e+03, -1.35890334e+01, 1.32517977e-01],
-            "Wan2.1-I2V-14B-720P": [ 8.10705460e+03,  2.13393892e+03, -3.72934672e+02,  1.66203073e+01, -4.17769401e-02],
+            "Wan2.1-T2V-1.3B": [-5.21862437e04, 9.23041404e03, -5.28275948e02, 1.36987616e01, -4.99875664e-02],
+            "Wan2.1-T2V-14B": [-3.03318725e05, 4.90537029e04, -2.65530556e03, 5.87365115e01, -3.15583525e-01],
+            "Wan2.1-I2V-14B-480P": [2.57151496e05, -3.54229917e04, 1.40286849e03, -1.35890334e01, 1.32517977e-01],
+            "Wan2.1-I2V-14B-720P": [8.10705460e03, 2.13393892e03, -3.72934672e02, 1.66203073e01, -4.17769401e-02],
         }
         if model_id not in self.coefficients_dict:
             supported_model_ids = ", ".join([i for i in self.coefficients_dict])
-            raise ValueError(f"{model_id} is not a supported TeaCache model id. Please choose a valid model id in ({supported_model_ids}).")
+            raise ValueError(
+                f"{model_id} is not a supported TeaCache model id. Please choose a valid model id in ({supported_model_ids})."
+            )
         self.coefficients = self.coefficients_dict[model_id]
 
     def check(self, dit: WanModel, x, t_mod):
@@ -1202,7 +1396,14 @@ class TeaCache:
         else:
             coefficients = self.coefficients
             rescale_func = np.poly1d(coefficients)
-            self.accumulated_rel_l1_distance += rescale_func(((modulated_inp-self.previous_modulated_input).abs().mean() / self.previous_modulated_input.abs().mean()).cpu().item())
+            self.accumulated_rel_l1_distance += rescale_func(
+                (
+                    (modulated_inp - self.previous_modulated_input).abs().mean()
+                    / self.previous_modulated_input.abs().mean()
+                )
+                .cpu()
+                .item()
+            )
             if self.accumulated_rel_l1_distance < self.rel_l1_thresh:
                 should_calc = False
             else:
@@ -1235,9 +1436,9 @@ class TeaCache:
         return hidden_states
 
 
-
 class TemporalTiler_BCTHW:
     """Temporal tiler bcthw implementation."""
+
     def __init__(self):
         """Init."""
         pass
@@ -1254,7 +1455,7 @@ class TemporalTiler_BCTHW:
         x = torch.ones((length,))
         if border_width == 0:
             return x
-        
+
         shift = 0.5
         if not left_bound:
             x[:border_width] = (torch.arange(border_width) + shift) / border_width
@@ -1274,8 +1475,18 @@ class TemporalTiler_BCTHW:
         t = self.build_1d_mask(T, is_bound[0], is_bound[1], border_width[0])
         mask = repeat(t, "T -> 1 1 T 1 1")
         return mask
-    
-    def run(self, model_fn, sliding_window_size, sliding_window_stride, computation_device, computation_dtype, model_kwargs, tensor_names, batch_size=None):
+
+    def run(
+        self,
+        model_fn,
+        sliding_window_size,
+        sliding_window_stride,
+        computation_device,
+        computation_dtype,
+        model_kwargs,
+        tensor_names,
+        batch_size=None,
+    ):
         """Run.
 
         Args:
@@ -1300,22 +1511,23 @@ class TemporalTiler_BCTHW:
             if t - sliding_window_stride >= 0 and t - sliding_window_stride + sliding_window_size >= T:
                 continue
             t_ = min(t + sliding_window_size, T)
-            model_kwargs.update({
-                tensor_name: tensor_dict[tensor_name][:, :, t: t_:, :].to(device=computation_device, dtype=computation_dtype) \
+            model_kwargs.update(
+                {
+                    tensor_name: tensor_dict[tensor_name][:, :, t:t_:, :].to(
+                        device=computation_device, dtype=computation_dtype
+                    )
                     for tensor_name in tensor_names
-            })
+                }
+            )
             model_output = model_fn(**model_kwargs).to(device=data_device, dtype=data_dtype)
             mask = self.build_mask(
-                model_output,
-                is_bound=(t == 0, t_ == T),
-                border_width=(sliding_window_size - sliding_window_stride,)
+                model_output, is_bound=(t == 0, t_ == T), border_width=(sliding_window_size - sliding_window_stride,)
             ).to(device=data_device, dtype=data_dtype)
-            value[:, :, t: t_, :, :] += model_output * mask
-            weight[:, :, t: t_, :, :] += mask
+            value[:, :, t:t_, :, :] += model_output * mask
+            weight[:, :, t:t_, :, :] += mask
         value /= weight
         model_kwargs.update(tensor_dict)
         return value
-
 
 
 def model_fn_wan_video(
@@ -1329,9 +1541,9 @@ def model_fn_wan_video(
     context: torch.Tensor = None,
     clip_feature: Optional[torch.Tensor] = None,
     y: Optional[torch.Tensor] = None,
-    reference_latents = None,
-    vace_context = None,
-    vace_scale = 1.0,
+    reference_latents=None,
+    vace_context=None,
+    vace_scale=1.0,
     audio_embeds: Optional[torch.Tensor] = None,
     motion_latents: Optional[torch.Tensor] = None,
     s2v_pose_latents: Optional[torch.Tensor] = None,
@@ -1346,7 +1558,7 @@ def model_fn_wan_video(
     cfg_merge: bool = False,
     use_gradient_checkpointing: bool = False,
     use_gradient_checkpointing_offload: bool = False,
-    control_camera_latents_input = None,
+    control_camera_latents_input=None,
     fuse_vae_embedding_in_latents: bool = False,
     dense=None,
     sparse=None,
@@ -1409,11 +1621,13 @@ def model_fn_wan_video(
         )
         return TemporalTiler_BCTHW().run(
             model_fn_wan_video,
-            sliding_window_size, sliding_window_stride,
-            latents.device, latents.dtype,
+            sliding_window_size,
+            sliding_window_stride,
+            latents.device,
+            latents.dtype,
             model_kwargs=model_kwargs,
             tensor_names=["latents", "y"],
-            batch_size=2 if cfg_merge else 1
+            batch_size=2 if cfg_merge else 1,
         )
 
     if use_unified_sequence_parallel:
@@ -1422,14 +1636,24 @@ def model_fn_wan_video(
 
     # Timestep
     if dit.seperated_timestep and fuse_vae_embedding_in_latents:
-        timestep = torch.concat([
-            torch.zeros((1, latents.shape[3] * latents.shape[4] // 4), dtype=latents.dtype, device=latents.device),
-            torch.ones((latents.shape[2] - 1, latents.shape[3] * latents.shape[4] // 4), dtype=latents.dtype, device=latents.device) * timestep
-        ]).flatten()
+        timestep = torch.concat(
+            [
+                torch.zeros((1, latents.shape[3] * latents.shape[4] // 4), dtype=latents.dtype, device=latents.device),
+                torch.ones(
+                    (latents.shape[2] - 1, latents.shape[3] * latents.shape[4] // 4),
+                    dtype=latents.dtype,
+                    device=latents.device,
+                )
+                * timestep,
+            ]
+        ).flatten()
         t = dit.time_embedding(sinusoidal_embedding_1d(dit.freq_dim, timestep).unsqueeze(0))
         if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
             t_chunks = torch.chunk(t, _sequence_parallel_world_size(), dim=1)
-            t_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, t_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in t_chunks]
+            t_chunks = [
+                torch.nn.functional.pad(chunk, (0, 0, 0, t_chunks[0].shape[1] - chunk.shape[1]), value=0)
+                for chunk in t_chunks
+            ]
             t = t_chunks[_sequence_parallel_rank()]
         t_mod = dit.time_projection(t).unflatten(2, (6, dit.dim))
     else:
@@ -1472,32 +1696,39 @@ def model_fn_wan_video(
             history_latents.size(3),
             history_latents.size(4),
             device=history_latents.device,
-            dtype=history_latents.dtype
+            dtype=history_latents.dtype,
         )
-        history_latents = torch.cat([ones,history_latents], dim=1)
+        history_latents = torch.cat([ones, history_latents], dim=1)
         history = patch_volume(history_latents)
     dense = patch_volume(dense)
     sparse = patch_volume(sparse)
-    
+
     # Animate
     if pose_latents is not None and face_pixel_values is not None:
         x, motion_vec = animate_adapter.after_patch_embedding(x, pose_latents, face_pixel_values)
-    
+
     # Patchify
     f, h, w = x.shape[2:]
-    x = rearrange(x, 'b c f h w -> b (f h w) c').contiguous()
-    dense = rearrange(dense, 'b c f h w -> b (f h w) c').contiguous()
-    sparse = rearrange(sparse, 'b c f h w -> b (f h w) c').contiguous()
-    
-    freqs = torch.cat([
-        dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
-        dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
-        dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)
-    ], dim=-1).reshape(f * h * w, 1, -1).to(x.device)
+    x = rearrange(x, "b c f h w -> b (f h w) c").contiguous()
+    dense = rearrange(dense, "b c f h w -> b (f h w) c").contiguous()
+    sparse = rearrange(sparse, "b c f h w -> b (f h w) c").contiguous()
+
+    freqs = (
+        torch.cat(
+            [
+                dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
+                dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
+                dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1),
+            ],
+            dim=-1,
+        )
+        .reshape(f * h * w, 1, -1)
+        .to(x.device)
+    )
 
     if history_latents is not None:
         f_h, h_h, w_h = history.shape[2:]
-        history = rearrange(history, 'b c f h w -> b (f h w) c').contiguous()
+        history = rearrange(history, "b c f h w -> b (f h w) c").contiguous()
         history_token = history.shape[1]
         x = torch.cat([history, x], dim=1)
         f += f_h
@@ -1514,19 +1745,25 @@ def model_fn_wan_video(
         reference_latents = dit.ref_conv(reference_latents).flatten(2).transpose(1, 2)
         x = torch.concat([reference_latents, x], dim=1)
         f += 1
-    
-    freqs_history = torch.cat([
-        dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
-        dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
-        dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)
-    ], dim=-1).reshape(f * h * w, 1, -1).to(x.device)
-    
+
+    freqs_history = (
+        torch.cat(
+            [
+                dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
+                dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
+                dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1),
+            ],
+            dim=-1,
+        )
+        .reshape(f * h * w, 1, -1)
+        .to(x.device)
+    )
+
     # TeaCache
     if tea_cache is not None:
         tea_cache_update = tea_cache.check(dit, x, t_mod)
     else:
         tea_cache_update = False
-
 
     if use_unified_sequence_parallel:
         if dist.is_initialized() and dist.get_world_size() > 1:
@@ -1534,45 +1771,62 @@ def model_fn_wan_video(
             dense_original_len = dense.size(1)
             chunks = torch.chunk(x, _sequence_parallel_world_size(), dim=1)
             pad_shape = chunks[0].shape[1] - chunks[-1].shape[1]
-            chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in chunks]
+            chunks = [
+                torch.nn.functional.pad(chunk, (0, 0, 0, chunks[0].shape[1] - chunk.shape[1]), value=0)
+                for chunk in chunks
+            ]
             x = chunks[_sequence_parallel_rank()]
 
             dense_chunks = torch.chunk(dense, _sequence_parallel_world_size(), dim=1)
-            dense_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, dense_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in dense_chunks]
+            dense_chunks = [
+                torch.nn.functional.pad(chunk, (0, 0, 0, dense_chunks[0].shape[1] - chunk.shape[1]), value=0)
+                for chunk in dense_chunks
+            ]
             dense = dense_chunks[_sequence_parallel_rank()]
-            
+
             sparse_chunks = torch.chunk(sparse, _sequence_parallel_world_size(), dim=1)
-            sparse_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, sparse_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in sparse_chunks]
+            sparse_chunks = [
+                torch.nn.functional.pad(chunk, (0, 0, 0, sparse_chunks[0].shape[1] - chunk.shape[1]), value=0)
+                for chunk in sparse_chunks
+            ]
             sparse = sparse_chunks[_sequence_parallel_rank()]
-            
 
     if tea_cache_update:
         x = tea_cache.update(x)
     else:
+
         def create_custom_forward(module):
             """Create custom forward.
 
             Args:
                 module: The module.
             """
+
             def custom_forward(*inputs):
                 """Custom forward."""
                 return module(*inputs)
+
             return custom_forward
-        
+
         for block_id, block in enumerate(dit.blocks):
             # Block
             if use_gradient_checkpointing_offload:
                 with torch.autograd.graph.save_on_cpu():
                     x = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(block),
-                        x, context, t_mod, freqs_history,
+                        x,
+                        context,
+                        t_mod,
+                        freqs_history,
                         use_reentrant=False,
                     )
             elif use_gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(block),
-                    x, context, t_mod, freqs_history,
+                    x,
+                    context,
+                    t_mod,
+                    freqs_history,
                     use_reentrant=False,
                 )
             else:
@@ -1581,55 +1835,76 @@ def model_fn_wan_video(
             if block_id < dual_controller.control_layers:
                 dense_block = dual_controller.control_blocks_dense[block_id]
                 sparse_block = dual_controller.control_blocks_sparse[block_id]
-                
+
                 if use_gradient_checkpointing_offload:
                     with torch.autograd.graph.save_on_cpu():
                         dense = torch.utils.checkpoint.checkpoint(
                             create_custom_forward(dense_block),
-                            dense, control_context, control_t_mod, freqs,
+                            dense,
+                            control_context,
+                            control_t_mod,
+                            freqs,
                             use_reentrant=False,
                         )
                         sparse = torch.utils.checkpoint.checkpoint(
                             create_custom_forward(sparse_block),
-                            sparse, control_context, control_t_mod, freqs,
+                            sparse,
+                            control_context,
+                            control_t_mod,
+                            freqs,
                             use_reentrant=False,
                         )
                 elif use_gradient_checkpointing:
                     dense = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(dense_block),
-                        dense, control_context, control_t_mod, freqs,
+                        dense,
+                        control_context,
+                        control_t_mod,
+                        freqs,
                         use_reentrant=False,
                     )
                     sparse = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(sparse_block),
-                        sparse, control_context, control_t_mod, freqs,
+                        sparse,
+                        control_context,
+                        control_t_mod,
+                        freqs,
                         use_reentrant=False,
                     )
                 else:
                     dense = dense_block(dense, control_context, control_t_mod, freqs)
                     sparse = sparse_block(sparse, control_context, control_t_mod, freqs)
                 # for history context, we should gather x and dense to apply the indice of them
-                if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1 and history_latents is not None:
+                if (
+                    use_unified_sequence_parallel
+                    and dist.is_initialized()
+                    and dist.get_world_size() > 1
+                    and history_latents is not None
+                ):
                     x_full = _sequence_parallel_all_gather(x, dim=1)
                     x_full = x_full[:, :x_original_len]
-                    
+
                     dense_full = _sequence_parallel_all_gather(dense, dim=1)
                     dense_full = dense_full[:, :dense_original_len]
-                    
+
                     sparse_full = _sequence_parallel_all_gather(sparse, dim=1)
                     sparse_full = sparse_full[:, :dense_original_len]
 
-                    x_full[:, -dense_original_len:] += dual_controller.control_combine_linears[block_id](dense_full + sparse_full)
+                    x_full[:, -dense_original_len:] += dual_controller.control_combine_linears[block_id](
+                        dense_full + sparse_full
+                    )
 
                     x_chunks = torch.chunk(x_full, _sequence_parallel_world_size(), dim=1)
-                    x_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, x_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in x_chunks]
+                    x_chunks = [
+                        torch.nn.functional.pad(chunk, (0, 0, 0, x_chunks[0].shape[1] - chunk.shape[1]), value=0)
+                        for chunk in x_chunks
+                    ]
                     x = x_chunks[_sequence_parallel_rank()]
                 else:
                     if history_latents is not None:
-                        x[:,-dense.size(1):] += dual_controller.control_combine_linears[block_id](dense + sparse)
+                        x[:, -dense.size(1) :] += dual_controller.control_combine_linears[block_id](dense + sparse)
                     else:
                         x += dual_controller.control_combine_linears[block_id](dense + sparse)
-
 
         if tea_cache is not None:
             tea_cache.store(x)
@@ -1639,13 +1914,16 @@ def model_fn_wan_video(
             x_full = _sequence_parallel_all_gather(x, dim=1)
             x_full = x_full[:, :x_original_len]
             x_full = x_full[:, -dense_original_len:]
-            
+
             x_chunks = torch.chunk(x_full, _sequence_parallel_world_size(), dim=1)
             current_pad_shape = x_chunks[0].shape[1] - x_chunks[-1].shape[1]
-            x_chunks = [torch.nn.functional.pad(chunk, (0, 0, 0, x_chunks[0].shape[1]-chunk.shape[1]), value=0) for chunk in x_chunks]
+            x_chunks = [
+                torch.nn.functional.pad(chunk, (0, 0, 0, x_chunks[0].shape[1] - chunk.shape[1]), value=0)
+                for chunk in x_chunks
+            ]
             x = x_chunks[_sequence_parallel_rank()]
         else:
-            x = x[:, -dense.size(1):]
+            x = x[:, -dense.size(1) :]
         f -= f_h
     x = dit.head(x, t)
     if use_unified_sequence_parallel:
@@ -1654,7 +1932,7 @@ def model_fn_wan_video(
             x = x[:, :-pad_shape] if pad_shape > 0 else x
     # Remove reference latents
     if reference_latents is not None:
-        x = x[:, reference_latents.shape[1]:]
+        x = x[:, reference_latents.shape[1] :]
         f -= 1
     x = dit.unpatchify(x, (f, h, w))
     return x

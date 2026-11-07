@@ -78,15 +78,13 @@ def crop_image_depth_and_intrinsic_by_pp(
     intrinsic = np.copy(intrinsic)
     if original_size[0] < target_shape[0]:
         error_message = (
-            f"Width check failed: original width {original_size[0]} "
-            f"is less than target width {target_shape[0]}."
+            f"Width check failed: original width {original_size[0]} is less than target width {target_shape[0]}."
         )
         print(error_message)
         raise AssertionError(error_message)
     if original_size[1] < target_shape[1]:
         error_message = (
-            f"Height check failed: original height {original_size[1]} "
-            f"is less than target height {target_shape[1]}."
+            f"Height check failed: original height {original_size[1]} is less than target height {target_shape[1]}."
         )
         print(error_message)
         raise AssertionError(error_message)
@@ -188,14 +186,14 @@ def normalize_scene(
     extrinsics_homog[:, :, -1, -1] = 1.0
 
     first_cam_extrinsic_inv = closed_form_inverse_se3(extrinsics_homog[:, 0])
-    new_extrinsics = torch.matmul(
-        extrinsics_homog, first_cam_extrinsic_inv.unsqueeze(1)
-    )  # (B,N,4,4)
+    new_extrinsics = torch.matmul(extrinsics_homog, first_cam_extrinsic_inv.unsqueeze(1))  # (B,N,4,4)
 
     R = extrinsics[:, 0, :3, :3]
     t = extrinsics[:, 0, :3, 3]
     first_moge_world = first_moge_world.to(torch.float32)
-    first_moge_world = (first_moge_world @ R.transpose(-1, -2).unsqueeze(1).unsqueeze(2)) + t.unsqueeze(1).unsqueeze(2).unsqueeze(3)
+    first_moge_world = (first_moge_world @ R.transpose(-1, -2).unsqueeze(1).unsqueeze(2)) + t.unsqueeze(1).unsqueeze(
+        2
+    ).unsqueeze(3)
 
     point_masks = first_moge_mask.to(torch.bool).to(first_moge_world.device)
     final_mask = torch.zeros_like(point_masks)
@@ -340,8 +338,7 @@ def resize_by_short_side_and_update_intrinsics(
 
     if depth_map is not None:
         assert image.shape[:2] == depth_map.shape[:2], (
-            f"Resized image shape {image.shape[:2]} "
-            f"does not match depth shape {depth_map.shape[:2]}"
+            f"Resized image shape {image.shape[:2]} does not match depth shape {depth_map.shape[:2]}"
         )
 
     return image, depth_map, intrinsic, track, conf_map
@@ -415,9 +412,7 @@ def resize_image_depth_and_intrinsic(
     image = Image.fromarray(image)
     input_resolution = np.array(image.size)
     output_resolution = np.floor(input_resolution * max_resize_scale).astype(int)
-    image = image.resize(
-        tuple(output_resolution), resample=lanczos if max_resize_scale < 1 else bicubic
-    )
+    image = image.resize(tuple(output_resolution), resample=lanczos if max_resize_scale < 1 else bicubic)
     image = np.array(image)
 
     if depth_map is not None:
@@ -489,12 +484,8 @@ def threshold_depth_map(
         depth_map[depth_map > max_depth] = 0.0
 
     # Percentile-based thresholds
-    depth_max_thres = (
-        np.nanpercentile(depth_map, max_percentile) if max_percentile > 0 else None
-    )
-    depth_min_thres = (
-        np.nanpercentile(depth_map, min_percentile) if min_percentile > 0 else None
-    )
+    depth_max_thres = np.nanpercentile(depth_map, max_percentile) if max_percentile > 0 else None
+    depth_min_thres = np.nanpercentile(depth_map, min_percentile) if min_percentile > 0 else None
 
     # Apply the thresholds if they are > 0
     if depth_max_thres is not None and depth_max_thres > 0:
@@ -590,9 +581,7 @@ def depth_to_cam_coords_points(depth_map: np.ndarray, intrinsic: np.ndarray) -> 
     return np.stack((x_cam, y_cam, z_cam), axis=-1).astype(np.float32)
 
 
-def rotate_90_degrees(
-    image, depth_map, extri_opencv, intri_opencv, clockwise=True, track=None
-):
+def rotate_90_degrees(image, depth_map, extri_opencv, intri_opencv, clockwise=True, track=None):
     """
     Rotates the input image, depth map, and camera parameters by 90 degrees.
 
@@ -632,13 +621,9 @@ def rotate_90_degrees(
     image_height, image_width = image.shape[:2]
 
     # Rotate the image and depth map
-    rotated_image, rotated_depth_map = rotate_image_and_depth_rot90(
-        image, depth_map, clockwise
-    )
+    rotated_image, rotated_depth_map = rotate_image_and_depth_rot90(image, depth_map, clockwise)
     # Adjust the intrinsic matrix
-    new_intri_opencv = adjust_intrinsic_matrix_rot90(
-        intri_opencv, image_width, image_height, clockwise
-    )
+    new_intri_opencv = adjust_intrinsic_matrix_rot90(intri_opencv, image_width, image_height, clockwise)
 
     if track is not None:
         new_track = adjust_track_rot90(track, image_width, image_height, clockwise)

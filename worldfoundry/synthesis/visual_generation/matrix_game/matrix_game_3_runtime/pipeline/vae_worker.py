@@ -31,10 +31,7 @@ MOUSE_ICON_PATH = os.path.join(_matrix_game3_asset_root(), "images", "mouse.png"
 
 def denormalize_video(video):
     return np.ascontiguousarray(
-        ((rearrange(video, "C T H W -> T H W C").float() + 1) * 127.5)
-        .clip(0, 255)
-        .numpy()
-        .astype(np.uint8)
+        ((rearrange(video, "C T H W -> T H W C").float() + 1) * 127.5).clip(0, 255).numpy().astype(np.uint8)
     )
 
 
@@ -103,7 +100,9 @@ def run_vae_worker_queue(latent_queue, ack_queue, done_event, watch_dir, device_
             mouse_condition = data["mouse_condition"]
             keyboard_condition = data["keyboard_condition"]
             save_name = data["save_name"]
-            _save_final_video([vid_cpu], actual_watch_dir, metadata, mouse_condition, keyboard_condition, save_name, clip_idx=clip_idx)
+            _save_final_video(
+                [vid_cpu], actual_watch_dir, metadata, mouse_condition, keyboard_condition, save_name, clip_idx=clip_idx
+            )
 
     print(f"✅ All clips decoded.", flush=True)
     print(f"🎬 Saving final video ...", flush=True)
@@ -113,7 +112,9 @@ def run_vae_worker_queue(latent_queue, ack_queue, done_event, watch_dir, device_
     print(f"✨ Task complete. Exiting.", flush=True)
 
 
-def _save_final_video(all_videos, actual_watch_dir, metadata, mouse_condition, keyboard_condition, save_name, clip_idx=None):
+def _save_final_video(
+    all_videos, actual_watch_dir, metadata, mouse_condition, keyboard_condition, save_name, clip_idx=None
+):
     if len(all_videos) == 0:
         return
     concatenated_video = denormalize_video(torch.concat(all_videos, dim=2)[0])

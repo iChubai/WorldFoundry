@@ -1,4 +1,5 @@
 from collections.abc import Callable
+
 """NNX runtime helpers used for compiled OpenPI sampling."""
 
 import dataclasses

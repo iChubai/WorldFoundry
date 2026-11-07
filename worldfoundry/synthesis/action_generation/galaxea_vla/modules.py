@@ -53,15 +53,13 @@ class ActionEncoder(nn.Module):
         emb = self.linear_3(emb)
         return emb
 
+
 class ActionDecoder(nn.Module):
-    def __init__(self, action_hidden_size: int, action_dim: int, num_layers: int=2):
+    def __init__(self, action_hidden_size: int, action_dim: int, num_layers: int = 2):
         super().__init__()
 
         proj = nn.ModuleList(
-            [nn.Sequential(
-                nn.Linear(action_hidden_size, action_hidden_size),
-                nn.SiLU()
-            ) for _ in range(num_layers - 1)]
+            [nn.Sequential(nn.Linear(action_hidden_size, action_hidden_size), nn.SiLU()) for _ in range(num_layers - 1)]
         )
         proj.append(nn.Linear(action_hidden_size, action_dim))
         self.proj = nn.Sequential(*proj)

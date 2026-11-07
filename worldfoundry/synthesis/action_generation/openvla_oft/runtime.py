@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
 
-from worldfoundry.synthesis.action_generation._official_action_trace import checkpoint_gated_action_trace, precomputed_actions
+from worldfoundry.synthesis.action_generation._official_action_trace import (
+    checkpoint_gated_action_trace,
+    precomputed_actions,
+)
 from worldfoundry.synthesis.action_generation.openvla_oft.inference import (
     OpenVLAOFTRuntime,
     OpenVLAOFTRuntimeConfig,

@@ -64,21 +64,14 @@ def load_image(image_path):
 
 
 def resize_and_pad(
-    image,
-    desired_output_size,
-    is_training=False,
-    resize_method="torch-bilinear",
-    pad_value=0,
-    rng=np.random
+    image, desired_output_size, is_training=False, resize_method="torch-bilinear", pad_value=0, rng=np.random
 ):
     """Deterministically resize and pad an image while preserving aspect ratio."""
     del rng
     if is_training:
         raise ValueError("MolmoBot's image preprocessor supports inference only.")
     if resize_method not in {"torch-bilinear", "default"}:
-        raise ValueError(
-            f"Inference-only resize_and_pad does not support {resize_method!r}."
-        )
+        raise ValueError(f"Inference-only resize_and_pad does not support {resize_method!r}.")
     desired_height, desired_width = desired_output_size
     height, width = image.shape[:2]
 
@@ -92,9 +85,9 @@ def resize_and_pad(
 
     image = torch.permute(torch.from_numpy(image), [2, 0, 1])
     image = convert_image_dtype(image)
-    image = torchvision.transforms.Resize(
-        [scaled_height, scaled_width], InterpolationMode.BILINEAR, antialias=True
-    )(image)
+    image = torchvision.transforms.Resize([scaled_height, scaled_width], InterpolationMode.BILINEAR, antialias=True)(
+        image
+    )
     image = torch.clip(image, 0.0, 1.0)
     image = torch.permute(image, [1, 2, 0]).numpy()
 
@@ -103,7 +96,7 @@ def resize_and_pad(
     padding = [
         [top_pad, desired_height - scaled_height - top_pad],
         [left_pad, desired_width - scaled_width - left_pad],
-        [0, 0]
+        [0, 0],
     ]
     image_mask = np.pad(np.ones_like(image[:, :, 0], dtype=bool), padding[:2])
     image = np.pad(image, padding, constant_values=pad_value)
@@ -113,13 +106,11 @@ def resize_and_pad(
 def metaclip_resize(image, desired_output_size):
     image = torch.permute(torch.from_numpy(image), [2, 0, 1])
     if torch.is_floating_point(image):
-        image = torchvision.transforms.Resize(
-            desired_output_size, InterpolationMode.BICUBIC, antialias=True)(image)
+        image = torchvision.transforms.Resize(desired_output_size, InterpolationMode.BICUBIC, antialias=True)(image)
         image = torch.clip(image, 0.0, 1.0)
     else:
         assert image.dtype == torch.uint8, "Expected float images or uint8 images, but got {}".format(image.dtype)
-        image = torchvision.transforms.Resize(
-            desired_output_size, InterpolationMode.BICUBIC, antialias=True)(image)
+        image = torchvision.transforms.Resize(desired_output_size, InterpolationMode.BICUBIC, antialias=True)(image)
         image = image.to(torch.float32)
         image = torch.clip(image, 0, 255)
         image = image / 255.0
@@ -129,9 +120,7 @@ def metaclip_resize(image, desired_output_size):
 
 
 def siglip_resize_and_pad(
-    image: np.ndarray,
-    desired_output_size: Tuple[int, int],
-    float32=True
+    image: np.ndarray, desired_output_size: Tuple[int, int], float32=True
 ) -> Tuple[np.ndarray, np.ndarray]:
     in_min = 0.0
     in_max = 255.0
@@ -209,10 +198,10 @@ def select_tiling(h, w, patch_size, max_num_crops):
     tilings = []
     for i in range(1, max_num_crops + 1):
         for j in range(1, max_num_crops + 1):
-            if i*j <= max_num_crops:
+            if i * j <= max_num_crops:
                 tilings.append((i, j))
     # sort so argmin and argmax favour smaller tilings in the event of a tie
-    tilings.sort(key=lambda x: (x[0]*x[1], x[0]))
+    tilings.sort(key=lambda x: (x[0] * x[1], x[0]))
     candidate_tilings = np.array(tilings, dtype=np.int32)  # [n_resolutions, 2]
     candidate_resolutions = candidate_tilings * patch_size  # [n_resolutions, 2]
 
@@ -222,8 +211,8 @@ def select_tiling(h, w, patch_size, max_num_crops):
     # The original size can be zero in rare cases if the image is smaller than the margin
     # In those cases letting the scale become infinite means the tiling is based on the
     # other side, or falls back to the smallest tiling
-    with np.errstate(divide='ignore'):
-        required_scale_d = candidate_resolutions.astype(np.float32) / original_size,
+    with np.errstate(divide="ignore"):
+        required_scale_d = (candidate_resolutions.astype(np.float32) / original_size,)
     required_scale = np.min(required_scale_d, axis=-1, keepdims=True)  # [n_resolutions, 1]
     if np.all(required_scale < 1):
         # We are forced to downscale, so try to minimize the amount of downscaling
@@ -235,10 +224,7 @@ def select_tiling(h, w, patch_size, max_num_crops):
     return candidate_tilings[ix]
 
 
-def bottleneck_resize(
-        image: np.ndarray,
-        bottleneck_size: Tuple[int, int] = (224, 224)
-) -> np.ndarray:
+def bottleneck_resize(image: np.ndarray, bottleneck_size: Tuple[int, int] = (224, 224)) -> np.ndarray:
     """Resize image to bottleneck size without preserving aspect ratio."""
     image = torch.permute(torch.from_numpy(image), [2, 0, 1])
     dtype = image.dtype
@@ -266,6 +252,7 @@ def bottleneck_resize(
 @dataclasses.dataclass
 class ImagePreprocessor:
     """Preprocesses an image, usually matching the pre-processing used by a pre-trained ViT"""
+
     normalize: str = "siglip"
     resize: str = "siglip"
     pad_value: float = 0
@@ -281,13 +268,17 @@ class ImagePreprocessor:
         if self.normalize_on_gpu:
             return image
         if self.normalize == "openai":
-            return (image * np.array(OPENAI_CLIP_STD, dtype=np.float32)[None, None, :] +
-                    np.array(OPENAI_CLIP_MEAN, dtype=np.float32)[None, None, :])
+            return (
+                image * np.array(OPENAI_CLIP_STD, dtype=np.float32)[None, None, :]
+                + np.array(OPENAI_CLIP_MEAN, dtype=np.float32)[None, None, :]
+            )
         elif self.normalize == "siglip":
             return (image + 1) / np.asarray(2.0, dtype=np.float32)
         elif self.normalize == "dino":
-            return (image * np.array((0.229, 0.224, 0.225), dtype=np.float32)[None, None, :] +
-                    np.array((0.485, 0.456, 0.406), dtype=np.float32)[None, None, :])
+            return (
+                image * np.array((0.229, 0.224, 0.225), dtype=np.float32)[None, None, :]
+                + np.array((0.485, 0.456, 0.406), dtype=np.float32)[None, None, :]
+            )
         else:
             raise NotImplementedError()
 
@@ -297,9 +288,7 @@ class ImagePreprocessor:
         if self.normalize == "siglip":
             return image * 2 - 1
         if image.shape[-1] % 3 != 0:
-            raise ValueError(
-                f"Expected RGB values in the last dimension, got {image.shape[-1]}."
-            )
+            raise ValueError(f"Expected RGB values in the last dimension, got {image.shape[-1]}.")
         original_shape = image.shape
         rgb = image.reshape(*original_shape[:-1], -1, 3)
         if self.normalize == "openai":
@@ -339,8 +328,8 @@ class ImagePreprocessor:
         else:
             resize = "torch-bilinear" if self.resize == "default" else self.resize
             crop_arr, mask_arr = resize_and_pad(
-                image, output_size, pad_value=self.pad_value, rng=rng, is_training=is_training,
-                resize_method=resize)
+                image, output_size, pad_value=self.pad_value, rng=rng, is_training=is_training, resize_method=resize
+            )
         return crop_arr, mask_arr
 
     def build_single_crop(self, image, is_training, rng, image_size=None):
@@ -358,7 +347,7 @@ class ImagePreprocessor:
         resized_mask = np.expand_dims(resized_mask, 0)
         crop_patch_w = image_size[1] // self.image_patch_size
         crop_patch_h = image_size[0] // self.image_patch_size
-        resize_idx = np.arange(crop_patch_w*crop_patch_h).reshape([crop_patch_h, crop_patch_w])
+        resize_idx = np.arange(crop_patch_w * crop_patch_h).reshape([crop_patch_h, crop_patch_w])
         if not self.use_image_mask:
             resized_mask = None
         return resized, resized_mask, resize_idx
@@ -383,7 +372,7 @@ class ImagePreprocessor:
         assert base_image_input_size[0] == base_image_input_size[1]
 
         left_margin, right_margin = overlap_margins
-        total_margin_pixels = image_patch_size*(right_margin + left_margin)  # pixels removed per dim
+        total_margin_pixels = image_patch_size * (right_margin + left_margin)  # pixels removed per dim
         crop_patches = base_image_input_size[0] // image_patch_size  # patches per crop dim
         crop_window_patches = crop_patches - (right_margin + left_margin)  # usable patches
         crop_window_size = crop_window_patches * image_patch_size
@@ -398,13 +387,13 @@ class ImagePreprocessor:
             max(original_image_h - total_margin_pixels, 1),
             max(original_image_w - total_margin_pixels, 1),
             crop_window_size,
-            max_crops
+            max_crops,
         )
         src, img_mask = self.resize_image(
             image,
-            [tiling[0]*crop_window_size+total_margin_pixels, tiling[1]*crop_window_size+total_margin_pixels],
+            [tiling[0] * crop_window_size + total_margin_pixels, tiling[1] * crop_window_size + total_margin_pixels],
             is_training,
-            rng
+            rng,
         )
         src = self.normalize_image(src)
 
@@ -419,12 +408,12 @@ class ImagePreprocessor:
         for i in range(tiling[0]):
             # Slide over `src` by `crop_window_size` steps, but extract crops of size `crops_size`
             # which results in overlapping crop windows
-            y0 = i*crop_window_size
+            y0 = i * crop_window_size
             for j in range(tiling[1]):
-                x0 = j*crop_window_size
-                crop_arr[on_crop] = src[y0:y0+crop_size, x0:x0+crop_size]
-                mask_arr[on_crop] = img_mask[y0:y0+crop_size, x0:x0+crop_size]
-                patch_idx = np.arange(crop_patch_w*crop_patch_h).reshape(crop_patch_h, crop_patch_w)
+                x0 = j * crop_window_size
+                crop_arr[on_crop] = src[y0 : y0 + crop_size, x0 : x0 + crop_size]
+                mask_arr[on_crop] = img_mask[y0 : y0 + crop_size, x0 : x0 + crop_size]
+                patch_idx = np.arange(crop_patch_w * crop_patch_h).reshape(crop_patch_h, crop_patch_w)
                 patch_idx += on_crop * crop_patch_h * crop_patch_w
 
                 # Mask out idx that are in the overlap region
@@ -432,28 +421,25 @@ class ImagePreprocessor:
                     patch_idx[:left_margin, :] = -1
                 if j != 0:
                     patch_idx[:, :left_margin] = -1
-                if i != tiling[0]-1:
+                if i != tiling[0] - 1:
                     patch_idx[-right_margin:, :] = -1
-                if j != tiling[1]-1:
+                if j != tiling[1] - 1:
                     patch_idx[:, -right_margin:] = -1
                 patch_idx_arr[on_crop] = patch_idx
                 on_crop += 1
 
         # `patch_idx_arr` is ordered crop-by-crop, here we transpose `patch_idx_arr`
         # so it is ordered left-to-right order
-        patch_idx_arr = np.reshape(
-            patch_idx_arr,
-            [tiling[0], tiling[1], crop_patch_h, crop_patch_w]
-        )
+        patch_idx_arr = np.reshape(patch_idx_arr, [tiling[0], tiling[1], crop_patch_h, crop_patch_w])
         patch_idx_arr = np.transpose(patch_idx_arr, [0, 2, 1, 3])
         patch_idx_arr = np.reshape(patch_idx_arr, [-1])
 
         # Now get the parts not in the overlap region, so it should map each patch in `src`
         # to the correct patch it should come from in `crop_arr`
         patch_idx_arr = patch_idx_arr[patch_idx_arr >= 0].reshape(
-            src.shape[0]//image_patch_size,
-            src.shape[1]//image_patch_size,
-            )
+            src.shape[0] // image_patch_size,
+            src.shape[1] // image_patch_size,
+        )
         if not self.use_image_mask:
             mask_arr = None
         return crop_arr, mask_arr, patch_idx_arr

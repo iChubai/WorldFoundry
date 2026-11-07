@@ -5,10 +5,11 @@ import numpy as np
 from torch import Tensor
 
 __all__ = [
-    '_is_quaternion_relative_type',
-    'relative_pose_quaternion',
-    'absolute_pose_quaternion',
+    "_is_quaternion_relative_type",
+    "relative_pose_quaternion",
+    "absolute_pose_quaternion",
 ]
+
 
 def quat_normalize(q: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     """Normalize quaternion in xyzw format. Shape: (..., 4)."""
@@ -33,12 +34,15 @@ def quat_multiply(q1: torch.Tensor, q2: torch.Tensor) -> torch.Tensor:
     """Hamilton product q1 * q2 in xyzw format. Shape: (..., 4)"""
     x1, y1, z1, w1 = q1.unbind(-1)
     x2, y2, z2, w2 = q2.unbind(-1)
-    return torch.stack([
-        w1*x2 + x1*w2 + y1*z2 - z1*y2,
-        w1*y2 - x1*z2 + y1*w2 + z1*x2,
-        w1*z2 + x1*y2 - y1*x2 + z1*w2,
-        w1*w2 - x1*x2 - y1*y2 - z1*z2,
-    ], dim=-1)
+    return torch.stack(
+        [
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+            w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+        ],
+        dim=-1,
+    )
 
 
 def quat_rotate(q: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
@@ -54,23 +58,22 @@ def quat_rotate_inverse(v: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
 
 
 def _resolve_quaternion_relative_type(relative_type: str | None) -> str:
-    if relative_type in (None, 'world', 'quaternion', 'quaternion_world'):
-        return 'world'
-    if relative_type in ('local', 'quaternion_local'):
-        return 'local'
+    if relative_type in (None, "world", "quaternion", "quaternion_world"):
+        return "world"
+    if relative_type in ("local", "quaternion_local"):
+        return "local"
     raise ValueError(f"Unsupported quaternion relative type: {relative_type}")
 
 
 def _is_quaternion_relative_type(relative_type: str | None) -> bool:
-    return relative_type in {'quaternion', 'quaternion_world', 'quaternion_local'}
-
+    return relative_type in {"quaternion", "quaternion_world", "quaternion_local"}
 
 
 def relative_pose_quaternion(
     action: torch.Tensor,
     state: torch.Tensor,
     pose_dim: int = 7,
-    relative_type: str | None = 'world',
+    relative_type: str | None = "world",
 ) -> torch.Tensor:
     """Compute relative pose for xyz+quaternion(xyzw) representation.
     Handles concatenated multi-arm data by splitting into pose_dim chunks.
@@ -83,11 +86,11 @@ def relative_pose_quaternion(
     parts = []
     for i in range(chunks):
         s = i * pose_dim
-        a_xyz = action[..., s:s+3]
-        a_q = quat_normalize(action[..., s+3:s+pose_dim])
-        s_xyz = state[..., s:s+3]
-        s_q = quat_normalize(state[..., s+3:s+pose_dim])
-        if relative_type == 'local':
+        a_xyz = action[..., s : s + 3]
+        a_q = quat_normalize(action[..., s + 3 : s + pose_dim])
+        s_xyz = state[..., s : s + 3]
+        s_q = quat_normalize(state[..., s + 3 : s + pose_dim])
+        if relative_type == "local":
             rel_xyz = quat_rotate_inverse(a_xyz - s_xyz, s_q)
         else:
             rel_xyz = a_xyz - s_xyz
@@ -100,7 +103,7 @@ def absolute_pose_quaternion(
     rel_action: torch.Tensor,
     state: torch.Tensor,
     pose_dim: int = 7,
-    relative_type: str | None = 'world',
+    relative_type: str | None = "world",
 ) -> torch.Tensor:
     """Recover absolute pose from relative pose (inverse of relative_pose_quaternion).
     rel_action/state shape: (..., N*pose_dim).
@@ -112,17 +115,18 @@ def absolute_pose_quaternion(
     parts = []
     for i in range(chunks):
         s = i * pose_dim
-        r_xyz = rel_action[..., s:s+3]
-        r_q = quat_normalize(rel_action[..., s+3:s+pose_dim])
-        s_xyz = state[..., s:s+3]
-        s_q = quat_normalize(state[..., s+3:s+pose_dim])
-        if relative_type == 'local':
+        r_xyz = rel_action[..., s : s + 3]
+        r_q = quat_normalize(rel_action[..., s + 3 : s + pose_dim])
+        s_xyz = state[..., s : s + 3]
+        s_q = quat_normalize(state[..., s + 3 : s + pose_dim])
+        if relative_type == "local":
             abs_xyz = s_xyz + quat_rotate(s_q, r_xyz)
         else:
             abs_xyz = s_xyz + r_xyz
         abs_q = quat_canonicalize(quat_normalize(quat_multiply(s_q, r_q)))
         parts.append(torch.cat([abs_xyz, abs_q], dim=-1))
     return torch.cat(parts, dim=-1)
+
 
 def matrix_to_quat(R: Tensor) -> Tensor:
     """Convert rotation matrix (..., 3, 3) to quaternion (..., 4) in xyzw format.

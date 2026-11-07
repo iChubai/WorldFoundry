@@ -1092,7 +1092,10 @@ class AutoencoderKLLTXVideo(ModelMixin, ConfigMixin, FromOriginalModelMixin):
 
     @apply_forward_hook
     def encode(
-        self, x: torch.Tensor, return_dict: bool = True, num_splits: int = 2,
+        self,
+        x: torch.Tensor,
+        return_dict: bool = True,
+        num_splits: int = 2,
     ) -> Union[AutoencoderKLOutput, Tuple[DiagonalGaussianDistribution]]:
         """
         Encode a batch of images into latents.
@@ -1144,7 +1147,11 @@ class AutoencoderKLLTXVideo(ModelMixin, ConfigMixin, FromOriginalModelMixin):
 
     @apply_forward_hook
     def decode(
-        self, z: torch.Tensor, temb: Optional[torch.Tensor] = None, return_dict: bool = True, num_splits: int = 2,
+        self,
+        z: torch.Tensor,
+        temb: Optional[torch.Tensor] = None,
+        return_dict: bool = True,
+        num_splits: int = 2,
     ) -> Union[DecoderOutput, torch.Tensor]:
         """
         Decode a batch of images.
@@ -1162,10 +1169,14 @@ class AutoencoderKLLTXVideo(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         if self.use_slicing and z.shape[0] > 1:
             if temb is not None:
                 decoded_slices = [
-                    self._decode(z_slice, t_slice).sample for z_slice, t_slice in (z.chunk(num_splits), temb.chunk(num_splits)) if z_slice.numel() != 0 and t_slice.numel() != 0
+                    self._decode(z_slice, t_slice).sample
+                    for z_slice, t_slice in (z.chunk(num_splits), temb.chunk(num_splits))
+                    if z_slice.numel() != 0 and t_slice.numel() != 0
                 ]
             else:
-                decoded_slices = [self._decode(z_slice).sample for z_slice in z.chunk(num_splits) if z_slice.numel() != 0]
+                decoded_slices = [
+                    self._decode(z_slice).sample for z_slice in z.chunk(num_splits) if z_slice.numel() != 0
+                ]
             decoded = torch.cat(decoded_slices)
         else:
             decoded = self._decode(z, temb).sample
@@ -1293,9 +1304,7 @@ class AutoencoderKLLTXVideo(ModelMixin, ConfigMixin, FromOriginalModelMixin):
                         "should be possible, please submit a PR to https://github.com/huggingface/diffusers/pulls."
                     )
                 else:
-                    time = self.decoder(
-                        z[:, :, :, i : i + tile_latent_min_height, j : j + tile_latent_min_width], temb
-                    )
+                    time = self.decoder(z[:, :, :, i : i + tile_latent_min_height, j : j + tile_latent_min_width], temb)
 
                 row.append(time)
             rows.append(row)

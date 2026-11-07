@@ -327,12 +327,12 @@ class StyleGANDiscriminatorBlur(nn.Module):
         else:
             time_scaled = num_frames / scale_factor
 
-        assert (
-            self.input_size[0] % scale_factor == 0
-        ), f"image width {self.input_size[0]} is not divisible by scale factor {scale_factor}"
-        assert (
-            self.input_size[1] % scale_factor == 0
-        ), f"image height {self.input_size[1]} is not divisible by scale factor {scale_factor}"
+        assert self.input_size[0] % scale_factor == 0, (
+            f"image width {self.input_size[0]} is not divisible by scale factor {scale_factor}"
+        )
+        assert self.input_size[1] % scale_factor == 0, (
+            f"image height {self.input_size[1]} is not divisible by scale factor {scale_factor}"
+        )
         w_scaled, h_scaled = self.input_size[0] / scale_factor, self.input_size[1] / scale_factor
         in_features = int(prev_filters * time_scaled * w_scaled * h_scaled)  # (C*T*W*H)
         self.linear1 = nn.Linear(in_features, prev_filters, device=device, dtype=dtype)  # NOTE: init to xavier_uniform

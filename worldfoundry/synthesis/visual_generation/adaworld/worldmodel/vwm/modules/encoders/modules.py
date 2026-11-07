@@ -9,14 +9,7 @@ import torch.nn as nn
 from einops import rearrange, repeat
 from omegaconf import ListConfig
 from vwm.modules.diffusionmodules.openaimodel import Timestep
-from vwm.util import (
-    autocast,
-    count_params,
-    default,
-    disabled_train,
-    expand_dims_like,
-    instantiate_from_config
-)
+from vwm.util import autocast, count_params, default, disabled_train, expand_dims_like, instantiate_from_config
 
 
 class AbstractEmbModel(nn.Module):
@@ -72,9 +65,9 @@ class GeneralConditioner(nn.Module):
         embedders = []
         for n, embconfig in enumerate(emb_models):
             embedder = instantiate_from_config(embconfig)
-            assert isinstance(
-                embedder, AbstractEmbModel
-            ), f"Embedder model {embedder.__class__.__name__} has to inherit from AbstractEmbModel"
+            assert isinstance(embedder, AbstractEmbModel), (
+                f"Embedder model {embedder.__class__.__name__} has to inherit from AbstractEmbModel"
+            )
             embedder.is_trainable = embconfig.get("is_trainable", False)
             embedder.ucg_rate = embconfig.get("ucg_rate", 0.0)
             if not embedder.is_trainable:
@@ -123,22 +116,20 @@ class GeneralConditioner(nn.Module):
                     emb_out = embedder(batch[embedder.input_key])
                 elif hasattr(embedder, "input_keys"):
                     emb_out = embedder(*[batch[k] for k in embedder.input_keys])
-            assert isinstance(
-                emb_out, (torch.Tensor, List, Tuple)
-            ), f"Encoder outputs must be tensors or a sequence, but got {type(emb_out)}"
+            assert isinstance(emb_out, (torch.Tensor, List, Tuple)), (
+                f"Encoder outputs must be tensors or a sequence, but got {type(emb_out)}"
+            )
             if not isinstance(emb_out, (List, Tuple)):
                 emb_out = [emb_out]
             for emb in emb_out:
                 out_key = self.OUTPUT_DIM2KEYS[emb.dim()]
                 if embedder.ucg_rate > 0.0 and embedder.legacy_ucg_val is None:
                     emb = (
-                            expand_dims_like(
-                                torch.bernoulli(
-                                    (1.0 - embedder.ucg_rate) * torch.ones(emb.shape[0], device=emb.device)
-                                ),
-                                emb
-                            )
-                            * emb
+                        expand_dims_like(
+                            torch.bernoulli((1.0 - embedder.ucg_rate) * torch.ones(emb.shape[0], device=emb.device)),
+                            emb,
+                        )
+                        * emb
                     )
                 if hasattr(embedder, "input_key") and embedder.input_key in force_zero_embeddings:
                     emb = torch.zeros_like(emb)
@@ -149,10 +140,7 @@ class GeneralConditioner(nn.Module):
         return output
 
     def get_unconditional_conditioning(
-            self,
-            batch_c: Dict,
-            batch_uc: Optional[Dict] = None,
-            force_uc_zero_embeddings: Optional[List[str]] = None
+        self, batch_c: Dict, batch_uc: Optional[Dict] = None, force_uc_zero_embeddings: Optional[List[str]] = None
     ):
         ucg_rates = []
         for embedder in self.embedders:
@@ -173,26 +161,24 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
     """
 
     def __init__(
-            self,
-            arch="ViT-H-14",
-            # version="path_to/huggingface/laion/CLIP-ViT-H-14-laion2B-s32B-b79K/open_clip_pytorch_model.bin",
-            version="laion2b_s32b_b79k",
-            device="cuda",
-            max_length=77,
-            freeze=True,
-            antialias=True,
-            ucg_rate=0.0,
-            unsqueeze_dim=False,
-            repeat_to_max_len=False,
-            num_image_crops=0,
-            output_tokens=False,
-            init_device=None
+        self,
+        arch="ViT-H-14",
+        # version="path_to/huggingface/laion/CLIP-ViT-H-14-laion2B-s32B-b79K/open_clip_pytorch_model.bin",
+        version="laion2b_s32b_b79k",
+        device="cuda",
+        max_length=77,
+        freeze=True,
+        antialias=True,
+        ucg_rate=0.0,
+        unsqueeze_dim=False,
+        repeat_to_max_len=False,
+        num_image_crops=0,
+        output_tokens=False,
+        init_device=None,
     ):
         super(FrozenOpenCLIPImageEmbedder, self).__init__()
         model, _, _ = open_clip.create_model_and_transforms(
-            arch,
-            device=torch.device(default(init_device, "cpu")),
-            pretrained=version
+            arch, device=torch.device(default(init_device, "cpu")), pretrained=version
         )
         del model.transformer
         self.model = model
@@ -216,13 +202,7 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
 
     def preprocess(self, x):
         # Normalize to [0,1]
-        x = kornia.geometry.resize(
-            x,
-            (224, 224),
-            interpolation="bicubic",
-            align_corners=True,
-            antialias=self.antialias
-        )
+        x = kornia.geometry.resize(x, (224, 224), interpolation="bicubic", align_corners=True, antialias=self.antialias)
         x = (x + 1.0) / 2.0
         # Renormalize according to clip
         x = kornia.enhance.normalize(x, self.mean, self.std)
@@ -241,21 +221,14 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
             z, tokens = z[0], z[1]
         z = z.to(image.dtype)
         if self.ucg_rate > 0.0 and not no_dropout and not self.max_crops > 0:
-            z = (
-                    torch.bernoulli(
-                        (1.0 - self.ucg_rate) * torch.ones(z.shape[0], device=z.device)
-                    )[:, None]
-                    * z
-            )
+            z = torch.bernoulli((1.0 - self.ucg_rate) * torch.ones(z.shape[0], device=z.device))[:, None] * z
             if tokens is not None:
                 tokens = (
-                        expand_dims_like(
-                            torch.bernoulli(
-                                (1.0 - self.ucg_rate) * torch.ones(tokens.shape[0], device=tokens.device)
-                            ),
-                            tokens
-                        )
-                        * tokens
+                    expand_dims_like(
+                        torch.bernoulli((1.0 - self.ucg_rate) * torch.ones(tokens.shape[0], device=tokens.device)),
+                        tokens,
+                    )
+                    * tokens
                 )
         if self.unsqueeze_dim:
             z = z[:, None]
@@ -272,11 +245,7 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
         elif self.pad_to_max_len:
             assert z.dim() == 3
             z_pad = torch.cat(
-                (
-                    z,
-                    torch.zeros(z.shape[0], self.max_length - z.shape[1], z.shape[2], device=z.device)
-                ),
-                1
+                (z, torch.zeros(z.shape[0], self.max_length - z.shape[1], z.shape[2], device=z.device)), 1
             )
             return z_pad, z_pad[:, 0]
         else:
@@ -297,12 +266,7 @@ class FrozenOpenCLIPImageEmbedder(AbstractEmbModel):
         if self.max_crops > 0:
             x = rearrange(x, "(b n) d -> b n d", n=self.max_crops)
             # Drop out between 0 and all along the sequence axis
-            x = (
-                    torch.bernoulli(
-                        (1.0 - self.ucg_rate) * torch.ones(x.shape[0], x.shape[1], 1, device=x.device)
-                    )
-                    * x
-            )
+            x = torch.bernoulli((1.0 - self.ucg_rate) * torch.ones(x.shape[0], x.shape[1], 1, device=x.device)) * x
             if tokens is not None:
                 tokens = rearrange(tokens, "(b n) t d -> b t (n d)", n=self.max_crops)
                 print(
@@ -339,11 +303,7 @@ class ActionBook(AbstractEmbModel):  # For adaptation to discrete action space
 class ActionMLP(AbstractEmbModel):  # For adaptation to continuous action space
     def __init__(self, num_actions: int = 4, action_dim: int = 32):
         super(ActionMLP, self).__init__()
-        self.mapping = nn.Sequential(
-            nn.Linear(num_actions, action_dim),
-            nn.SiLU(),
-            nn.Linear(action_dim, action_dim)
-        )
+        self.mapping = nn.Sequential(nn.Linear(num_actions, action_dim), nn.SiLU(), nn.Linear(action_dim, action_dim))
 
         init_weights = torch.load("path_to/mlp_init_weights.pth", map_location="cpu")["model_state_dict"]
         missing, unexpected = self.load_state_dict(init_weights)
@@ -369,11 +329,11 @@ class VideoPredictionEmbedderWithLAMEncoder(AbstractEmbModel):
 
 class VideoPredictionEmbedderWithEncoder(AbstractEmbModel):
     def __init__(
-            self,
-            encoder_config: Dict,
-            n_context_frames: int = 5,
-            disable_encoder_autocast: bool = False,
-            en_and_decode_n_samples_a_time: Optional[int] = None
+        self,
+        encoder_config: Dict,
+        n_context_frames: int = 5,
+        disable_encoder_autocast: bool = False,
+        en_and_decode_n_samples_a_time: Optional[int] = None,
     ):
         super(VideoPredictionEmbedderWithEncoder, self).__init__()
         self.encoder = instantiate_from_config(encoder_config).eval()

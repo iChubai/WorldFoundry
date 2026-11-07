@@ -27,9 +27,8 @@ from worldfoundry.synthesis.visual_generation.vid2world.csgo_utils.data import (
 )
 
 
-_VID2WORLD_RUNTIME_ROOT = Path(
-    str(files("worldfoundry.synthesis.visual_generation.vid2world"))
-)
+_VID2WORLD_RUNTIME_ROOT = Path(str(files("worldfoundry.synthesis.visual_generation.vid2world")))
+
 
 class CSGOVID(Dataset):
     """
@@ -47,21 +46,23 @@ class CSGOVID(Dataset):
         - image: shape [T, H, W, C]
         - action: shape [T, M]
     """
-    def __init__(self,
-                 data_dir,
-                 resolution,
-                 video_length=16,
-                 spatial_transform=None,
-                 crop_resolution=None,
-                 subsample=False,
-                 augment_data=True,
-                 mode = 'training',
-                 strong_augmentation=False,
-                 val_file_list_path=None,
-                 val_start_idx_path=None,
-                 use_random_action=False,
-                 cond_frame=4,
-                 ): # training or validation
+
+    def __init__(
+        self,
+        data_dir,
+        resolution,
+        video_length=16,
+        spatial_transform=None,
+        crop_resolution=None,
+        subsample=False,
+        augment_data=True,
+        mode="training",
+        strong_augmentation=False,
+        val_file_list_path=None,
+        val_start_idx_path=None,
+        use_random_action=False,
+        cond_frame=4,
+    ):  # training or validation
         """Init.
 
         Args:
@@ -86,7 +87,7 @@ class CSGOVID(Dataset):
         self.mode = mode
         self.use_random_action = use_random_action
         self.cond_frame = cond_frame
-        
+
         self.augment_data = augment_data
         self.strong_augmentation = strong_augmentation
         if self.strong_augmentation:
@@ -109,50 +110,55 @@ class CSGOVID(Dataset):
         self.val_file_list_path = val_file_list_path
         self.val_start_idx_path = val_start_idx_path
         self.val_file_set = set()
-        
+
         if self.val_file_list_path and not os.path.isabs(self.val_file_list_path):
-            self.val_file_list_path = str(
-                resolve_runtime_asset(self.val_file_list_path, _VID2WORLD_RUNTIME_ROOT)
-            )
-        
+            self.val_file_list_path = str(resolve_runtime_asset(self.val_file_list_path, _VID2WORLD_RUNTIME_ROOT))
+
         if self.val_file_list_path and os.path.exists(self.val_file_list_path):
-            with open(self.val_file_list_path, 'r') as f: # val_file_list_path is a txt file, each line is a file path
+            with open(self.val_file_list_path, "r") as f:  # val_file_list_path is a txt file, each line is a file path
                 self.val_file_set = set(line.strip() for line in f)
-        print(f'Current directory: {os.getcwd()}')
-        print(f'Does val_file_list_path exist? {os.path.exists(self.val_file_list_path)}')
-        print(f'val_file_list_path: {self.val_file_list_path}')
+        print(f"Current directory: {os.getcwd()}")
+        print(f"Does val_file_list_path exist? {os.path.exists(self.val_file_list_path)}")
+        print(f"val_file_list_path: {self.val_file_list_path}")
         self._load_metadata()
-        
+
         if spatial_transform is not None:
             if spatial_transform == "random_crop":
                 self.spatial_transform = transforms.RandomCrop(crop_resolution)
             elif spatial_transform == "center_crop":
-                self.spatial_transform = transforms.Compose([
-                    transforms.CenterCrop(resolution),
-                    ])            
+                self.spatial_transform = transforms.Compose(
+                    [
+                        transforms.CenterCrop(resolution),
+                    ]
+                )
             elif spatial_transform == "resize_center_crop":
-                self.spatial_transform = transforms.Compose([
-                    transforms.Resize(min(self.resolution)),
-                    transforms.CenterCrop(self.resolution),
-                    ])
+                self.spatial_transform = transforms.Compose(
+                    [
+                        transforms.Resize(min(self.resolution)),
+                        transforms.CenterCrop(self.resolution),
+                    ]
+                )
             elif spatial_transform == "resize_center_crop_csgo":
-                self.spatial_transform = transforms.Compose([
-                    transforms.Resize((275,512)), ##[150,280] -> [275, 512] 275 ~ 150 * 512/280
-                    transforms.CenterCrop(self.resolution), # [275, 512] -> [320, 512]
-                    ])
+                self.spatial_transform = transforms.Compose(
+                    [
+                        transforms.Resize((275, 512)),  ##[150,280] -> [275, 512] 275 ~ 150 * 512/280
+                        transforms.CenterCrop(self.resolution),  # [275, 512] -> [320, 512]
+                    ]
+                )
             elif spatial_transform == "resize":
                 self.spatial_transform = transforms.Resize(self.resolution)
             else:
                 raise NotImplementedError
         else:
             self.spatial_transform = None
-        if self.mode == 'validation':
+        if self.mode == "validation":
             assert self.augment_data == False, "validation mode, augment_data should be set False"
+
     def _load_metadata(self):
         """Helper function to load metadata."""
         # Get all hdf5 files in the directory recursively
-        self.start_indices=[]
-        if self.mode == 'validation':
+        self.start_indices = []
+        if self.mode == "validation":
             # Convert relative path to absolute path based on project root
             if not os.path.isabs(self.val_start_idx_path):
                 val_start_idx_path = str(_VID2WORLD_RUNTIME_ROOT / self.val_start_idx_path)
@@ -162,21 +168,21 @@ class CSGOVID(Dataset):
         self.file_list = []
         for root, _, files in os.walk(self.data_dir):
             for file in files:
-                if not file.endswith('.hdf5'):
+                if not file.endswith(".hdf5"):
                     continue
                 file_path = os.path.join(root, file)
-                if self.mode == 'training':
+                if self.mode == "training":
                     if file not in self.val_file_set:
                         self.file_list.append(file_path)
-                elif self.mode == 'validation':
+                elif self.mode == "validation":
                     if file in self.val_file_set:
                         self.file_list.append(file_path)
         self.file_list.sort()  # Sort files for consistency
         # print(f"file_list_length: {len(self.file_list)}")
-        if self.subsample: # default is False, for debugging purpose
-            self.file_list = self.file_list[:16] # when training, we only use 64 videos for sake of time
-        print(f'{self.mode} set size: {len(self.file_list)} episode files.')
-    
+        if self.subsample:  # default is False, for debugging purpose
+            self.file_list = self.file_list[:16]  # when training, we only use 64 videos for sake of time
+        print(f"{self.mode} set size: {len(self.file_list)} episode files.")
+
     def __getitem__(self, index):
         """Getitem.
 
@@ -186,27 +192,28 @@ class CSGOVID(Dataset):
         # Find which file to load based on index
         file_idx = index % len(self.file_list)
         file_path = self.file_list[file_idx]
-        if self.mode == 'training':
+        if self.mode == "training":
             start_idx = random.randint(0, 1000 - self.video_length)
-        else: # on validation, we use the pre-generated start indices (see gen_csgo_start_idx.py)
+        else:  # on validation, we use the pre-generated start indices (see gen_csgo_start_idx.py)
             start_idx = self.start_indices[index]
-        
+
         # Convert full path to relative path for episode_id
         relative_path = os.path.relpath(file_path, self.data_dir)
-        data = self.full_dataset[SegmentId(relative_path, start_idx, start_idx+self.video_length)]
-        frames_tensor = data.obs.detach().clone().permute(1, 0, 2, 3) # [T, C, H, W]
-        actions_tensor = data.act.detach().clone().float() # [T, M]
+        data = self.full_dataset[SegmentId(relative_path, start_idx, start_idx + self.video_length)]
+        frames_tensor = data.obs.detach().clone().permute(1, 0, 2, 3)  # [T, C, H, W]
+        actions_tensor = data.act.detach().clone().float()  # [T, M]
 
         if self.spatial_transform is not None:
             frames_tensor = self.spatial_transform(frames_tensor)
 
         if self.augment_data:
             frames_tensor = self.augment_video_clip(frames_tensor)
-        
+
         if self.resolution is not None:
-            assert (frames_tensor.shape[2], frames_tensor.shape[3]) == (self.resolution[0], self.resolution[1]), \
-                f'frames={frames_tensor.shape}, self.resolution={self.resolution}'
-        
+            assert (frames_tensor.shape[2], frames_tensor.shape[3]) == (self.resolution[0], self.resolution[1]), (
+                f"frames={frames_tensor.shape}, self.resolution={self.resolution}"
+            )
+
         # Normalize frames to [-1, 1]
         frames_tensor = (frames_tensor / 255 - 0.5) * 2
 
@@ -215,56 +222,56 @@ class CSGOVID(Dataset):
             actions_tensor = self.generate_random_actions(self.video_length, actions_tensor)
 
         data = {
-            'video': frames_tensor, 
-            'caption': "",
-            'action': actions_tensor,
-            'path': file_path,
-            'fps': 3, # for csgo dataset, fps is fixed to 3
-            'frame_stride': 1 # for rt dataset, frame_stride is fixed to 1
+            "video": frames_tensor,
+            "caption": "",
+            "action": actions_tensor,
+            "path": file_path,
+            "fps": 3,  # for csgo dataset, fps is fixed to 3
+            "frame_stride": 1,  # for rt dataset, frame_stride is fixed to 1
         }
         return data
-    
+
     def __len__(self):
         """Len."""
         return len(self.file_list)
-    
+
     def generate_random_actions(self, T, real_actions):
         """
         Generate random actions for T timesteps, preserving the first cond_frame actions.
-        
+
         CSGO Action Space (51 dimensions):
         - 11 dimensions: keyboard keys (multi-hot): w, a, s, d, space, ctrl, shift, 1, 2, 3, r [RANDOMIZED]
         - 1 dimension: left click (0 or 1) [ALWAYS 0 - no click]
         - 1 dimension: right click (0 or 1) [ALWAYS 0 - no click]
         - 23 dimensions: mouse x movement (one-hot) [ALWAYS at index 11 = 0, no horizontal movement]
         - 15 dimensions: mouse y movement (one-hot) [ALWAYS at index 7 = 0, no vertical movement]
-        
+
         Random action strategy:
         - Preserve first cond_frame actions (real from dataset)
         - For t >= cond_frame: only randomize keyboard keys, mouse is static (no clicks, no movement)
         - Keyboard: 50% chance of no key, 50% chance of one random key
-        
+
         Note: In the model, actions are shifted by 1 timestep: [a_0, a_1, ..., a_15] -> [0, a_0, a_1, ..., a_14]
         So we preserve the first cond_frame actions which will correspond to frames 0 to cond_frame-1 after shifting.
-        
+
         Args:
             T: number of timesteps
             real_actions: [T, 51] tensor of real actions from dataset
-        
+
         Returns:
-            actions_tensor: [T, 51] tensor with real actions for first cond_frame timesteps, 
+            actions_tensor: [T, 51] tensor with real actions for first cond_frame timesteps,
                            random keyboard + static mouse for the rest
         """
         N_KEYS = 11
         N_CLICKS = 2
         N_MOUSE_X = 23
         N_MOUSE_Y = 15
-        
+
         # Start with real actions
         actions_tensor = real_actions.clone()
-        
+
         # Only randomize actions after cond_frame
-        for t in range(self.cond_frame-1, T):
+        for t in range(self.cond_frame - 1, T):
             # Sample ONE random key (more realistic than multi-hot)
             # 50% chance of no key, 50% chance of one random key
             if torch.rand(1).item() < 0.5:
@@ -273,25 +280,25 @@ class CSGOVID(Dataset):
                 keys[key_idx] = 1.0
             else:
                 keys = torch.zeros(N_KEYS)  # No key pressed
-            
+
             # Mouse clicks: always 0 (never click)
             l_click = torch.zeros(1)
             r_click = torch.zeros(1)
-            
+
             # Mouse movement: always at center (no movement)
             # mouse_x: index 11 = 0 (no horizontal movement)
             mouse_x = torch.zeros(N_MOUSE_X)
             mouse_x[11] = 1.0
-            
+
             # mouse_y: index 7 = 0 (no vertical movement)
             mouse_y = torch.zeros(N_MOUSE_Y)
             mouse_y[7] = 1.0
-            
+
             # Concatenate all action components and replace
             actions_tensor[t] = torch.cat([keys, l_click, r_click, mouse_x, mouse_y])
-        
+
         return actions_tensor
-    
+
     def data_augmentation(self, images):
         """Data augmentation.
 
@@ -299,23 +306,16 @@ class CSGOVID(Dataset):
             images: The images.
         """
         # Compute random crop parameters
-        i, j, h, w = self.get_crop_params(
-            images,
-            self.random_resized_crop_scale,
-            self.random_resized_crop_ratio
-        )
+        i, j, h, w = self.get_crop_params(images, self.random_resized_crop_scale, self.random_resized_crop_ratio)
         # Generate random color adjustment parameters
         fn_idx, brightness_factor, contrast_factor, saturation_factor, hue_factor = self.get_jittor_params(
-            self.brightness,
-            self.contrast,
-            self.saturation,
-            self.hue
+            self.brightness, self.contrast, self.saturation, self.hue
         )
 
         new_images = []
-        transform = transforms.ToPILImage() # Tool to convert Tensor to PIL Image
-        tensor = transforms.ToTensor()      # Convert PIL Image to Tensor (automatically normalizes to [0, 1])
-        
+        transform = transforms.ToPILImage()  # Tool to convert Tensor to PIL Image
+        tensor = transforms.ToTensor()  # Convert PIL Image to Tensor (automatically normalizes to [0, 1])
+
         for image in images:
             image = F.resized_crop(image, i, j, h, w, self.resolution)
             image = transform(image / 255)
@@ -332,9 +332,9 @@ class CSGOVID(Dataset):
             image = tensor(image)
             image = image * 255.0
             new_images.append(image)
-        
+
         res = torch.stack(new_images)
-        res = res.permute(1, 0, 2, 3)   # [C, T, H, W]
+        res = res.permute(1, 0, 2, 3)  # [C, T, H, W]
         return torch.stack(new_images)
 
     def augment_video_clip(self, video):
@@ -361,10 +361,10 @@ class CSGOVID(Dataset):
         for t in range(T):
             # Get frame t and keep it as [C, H, W]
             frame = video[:, t, :, :]  # [C, H, W]
-            
-            frame = F.pad(frame, [padding] * 4, padding_mode='reflect')  # Pad all sides
-            frame = frame[:, i:i+H, j:j+W]  # Random crop back to original size
-            
+
+            frame = F.pad(frame, [padding] * 4, padding_mode="reflect")  # Pad all sides
+            frame = frame[:, i : i + H, j : j + W]  # Random crop back to original size
+
             # Convert to PIL for color augmentation (requires channels last)
             frame = transform(frame / 255)  # Convert to PIL Image
             tensor = transforms.ToTensor()
@@ -385,7 +385,7 @@ class CSGOVID(Dataset):
             new_frames.append(frame)
 
         return torch.stack(new_frames, dim=1)  # [C, T, H, W]
-    
+
     @staticmethod
     def get_crop_params(img: Tensor, scale: List[float], ratio: List[float]) -> Tuple[int, int, int, int]:
         """Get parameters for ``crop`` for a random sized crop.

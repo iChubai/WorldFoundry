@@ -661,6 +661,5 @@ class AttnProcessor:
 
         return hidden_states
 
-AttentionProcessor = Union[
-    AttnProcessor,
-]
+
+AttentionProcessor = Union[AttnProcessor,]

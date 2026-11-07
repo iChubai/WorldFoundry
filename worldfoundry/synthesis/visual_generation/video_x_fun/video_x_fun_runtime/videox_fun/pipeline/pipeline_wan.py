@@ -17,8 +17,12 @@ from worldfoundry.synthesis.visual_generation.shared.wan_diffusers import (
 from transformers import AutoTokenizer
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import AutoencoderKLWan
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import WanT5EncoderModel
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.video_x_fun.transformer import WanTransformer3DModel
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (
+    WanT5EncoderModel,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.video_x_fun.transformer import (
+    WanTransformer3DModel,
+)
 from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
     FlowDPMSolverMultistepScheduler,
     get_sampling_sigmas,
@@ -33,6 +37,8 @@ EXAMPLE_DOC_STRING = """
         pass
         ```
 """
+
+
 @dataclass
 class WanPipelineOutput(BaseOutput):
     r"""
@@ -79,12 +85,14 @@ class WanPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
             tokenizer=tokenizer, text_encoder=text_encoder, vae=vae, transformer=transformer, scheduler=scheduler
         )
         self.video_processor = VideoProcessor(vae_scale_factor=self.vae.spatial_compression_ratio)
+
     def decode_latents(self, latents: torch.Tensor) -> torch.Tensor:
         frames = self.vae.decode(latents.to(self.vae.dtype)).sample
         frames = (frames / 2 + 0.5).clamp(0, 1)
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloa16
         frames = frames.cpu().float().numpy()
         return frames
+
     @property
     def guidance_scale(self):
         return self._guidance_scale
@@ -192,21 +200,21 @@ class WanPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
         # 4. Prepare timesteps
         if isinstance(self.scheduler, FlowMatchEulerDiscreteScheduler):
-            timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps, mu=1)
+            timesteps, num_inference_steps = retrieve_timesteps(
+                self.scheduler, num_inference_steps, device, timesteps, mu=1
+            )
         elif isinstance(self.scheduler, FlowUniPCMultistepScheduler):
             self.scheduler.set_timesteps(num_inference_steps, device=device, shift=shift)
             timesteps = self.scheduler.timesteps
         elif isinstance(self.scheduler, FlowDPMSolverMultistepScheduler):
             sampling_sigmas = get_sampling_sigmas(num_inference_steps, shift)
-            timesteps, _ = retrieve_timesteps(
-                self.scheduler,
-                device=device,
-                sigmas=sampling_sigmas)
+            timesteps, _ = retrieve_timesteps(self.scheduler, device=device, sigmas=sampling_sigmas)
         else:
             timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps)
         self._num_timesteps = len(timesteps)
         if comfyui_progressbar:
             from comfy.utils import ProgressBar
+
             pbar = ProgressBar(num_inference_steps + 1)
 
         # 5. Prepare latents
@@ -228,8 +236,17 @@ class WanPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
 
-        target_shape = (self.vae.latent_channels, (num_frames - 1) // self.vae.temporal_compression_ratio + 1, width // self.vae.spatial_compression_ratio, height // self.vae.spatial_compression_ratio)
-        seq_len = math.ceil((target_shape[2] * target_shape[3]) / (self.transformer.config.patch_size[1] * self.transformer.config.patch_size[2]) * target_shape[1])
+        target_shape = (
+            self.vae.latent_channels,
+            (num_frames - 1) // self.vae.temporal_compression_ratio + 1,
+            width // self.vae.spatial_compression_ratio,
+            height // self.vae.spatial_compression_ratio,
+        )
+        seq_len = math.ceil(
+            (target_shape[2] * target_shape[3])
+            / (self.transformer.config.patch_size[1] * self.transformer.config.patch_size[2])
+            * target_shape[1]
+        )
         # 7. Denoising loop
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
         self.transformer.num_inference_steps = num_inference_steps

@@ -1,3 +1,1 @@
-DomainTable = {
-    'agibotworld': 11
-}
+DomainTable = {"agibotworld": 11}

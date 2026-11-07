@@ -32,6 +32,7 @@ if Version(torch.__version__) > Version("2.5.0"):
         flex_attention,
     )
 
+
 # @torch.compile(dynamic=False)
 def flex_attention_forward(
     query_states: torch.Tensor,
@@ -163,19 +164,24 @@ def build_block_mask(
     def precomputed_mask_factory(precomputed_mask: torch.Tensor):
         def mask_mod(b, h, q_idx, kv_idx):
             return precomputed_mask[b][h][q_idx][kv_idx]
+
         return mask_mod
 
     mask_4d = create_mask(
         mod_fn=precomputed_mask_factory(padded_mask),
-        B=b_mask, H=h_mask,
-        Q_LEN=q_len_rounded, KV_LEN=kv_len_rounded,
+        B=b_mask,
+        H=h_mask,
+        Q_LEN=q_len_rounded,
+        KV_LEN=kv_len_rounded,
         device=causal_mask.device,
     )
 
     block_mask = create_block_mask(
         mask_mod=precomputed_mask_factory(mask_4d),
-        B=b_mask, H=h_mask,
-        Q_LEN=q_len_rounded, KV_LEN=kv_len_rounded,
+        B=b_mask,
+        H=h_mask,
+        Q_LEN=q_len_rounded,
+        KV_LEN=kv_len_rounded,
         BLOCK_SIZE=block_size,
         device=causal_mask.device,
         _compile=False,
@@ -203,8 +209,8 @@ def flex_attention_with_block_mask(
     key_states = key_states.transpose(1, 2).to(torch.float32)
     value_states = value_states.transpose(1, 2).to(torch.float32)
 
-    q_len_rounded = block_mask.shape[-2] if hasattr(block_mask, 'shape') else query_states.shape[2]
-    kv_len_rounded = block_mask.shape[-1] if hasattr(block_mask, 'shape') else key_states.shape[2]
+    q_len_rounded = block_mask.shape[-2] if hasattr(block_mask, "shape") else query_states.shape[2]
+    kv_len_rounded = block_mask.shape[-1] if hasattr(block_mask, "shape") else key_states.shape[2]
 
     pad_q = q_len_rounded - query_states.shape[2]
     pad_k = kv_len_rounded - key_states.shape[2]

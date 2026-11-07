@@ -27,17 +27,22 @@ from transformers import AutoTokenizer, UMT5EncoderModel
 
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
+
 try:
     from diffusers.loaders import HeliosLoraLoaderMixin
 except ImportError:
     try:
         from diffusers.loaders import WanLoraLoaderMixin as HeliosLoraLoaderMixin
     except ImportError:
+
         class HeliosLoraLoaderMixin:
             pass
+
+
 from diffusers.models import AutoencoderKLWan
 from .transformer_helios_diffusers import HeliosTransformer3DModel
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+
 try:
     from diffusers.schedulers import HeliosScheduler
 except ImportError:
@@ -58,6 +63,8 @@ from diffusers.video_processor import VideoProcessor
 
 from dataclasses import dataclass
 from diffusers.utils import BaseOutput
+
+
 @dataclass
 class HeliosPipelineOutput(BaseOutput):
     r"""
@@ -1392,8 +1399,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
                 history_latents = torch.cat([history_latents, latents], dim=2)
                 real_history_latents = history_latents[:, :, -total_generated_latent_frames:]
                 current_latents = (
-                    real_history_latents[:, :, -num_latent_frames_per_chunk:].to(vae_dtype) / latents_std
-                    + latents_mean
+                    real_history_latents[:, :, -num_latent_frames_per_chunk:].to(vae_dtype) / latents_std + latents_mean
                 )
                 current_video = self.vae.decode(current_latents, return_dict=False)[0]
 

@@ -66,13 +66,9 @@ def pts3d_to_trimesh(img, pts3d, valid=None):
     faces = np.concatenate(
         (
             np.c_[idx1, idx2, idx3],
-            np.c_[
-                idx3, idx2, idx1
-            ],  # same triangle, but backward (cheap solution to cancel face culling)
+            np.c_[idx3, idx2, idx1],  # same triangle, but backward (cheap solution to cancel face culling)
             np.c_[idx2, idx3, idx4],
-            np.c_[
-                idx4, idx3, idx2
-            ],  # same triangle, but backward (cheap solution to cancel face culling)
+            np.c_[idx4, idx3, idx2],  # same triangle, but backward (cheap solution to cancel face culling)
         ),
         axis=0,
     )
@@ -99,9 +95,7 @@ def pts3d_to_trimesh(img, pts3d, valid=None):
 
 
 def cat_meshes(meshes):
-    vertices, faces, colors = zip(
-        *[(m["vertices"], m["faces"], m["face_colors"]) for m in meshes]
-    )
+    vertices, faces, colors = zip(*[(m["vertices"], m["faces"], m["face_colors"]) for m in meshes])
     n_vertices = np.cumsum([0] + [len(v) for v in vertices])
     for i in range(len(faces)):
         faces[i][:] += n_vertices[i]
@@ -146,9 +140,7 @@ class SceneViz:
     def __init__(self):
         self.scene = trimesh.Scene()
 
-    def add_rgbd(
-        self, image, depth, intrinsics=None, cam2world=None, zfar=np.inf, mask=None
-    ):
+    def add_rgbd(self, image, depth, intrinsics=None, cam2world=None, zfar=np.inf, mask=None):
         image = img_to_arr(image)
 
         if intrinsics is None:
@@ -158,9 +150,7 @@ class SceneViz:
 
         pts3d = depthmap_to_pts3d(depth, intrinsics, cam2world=cam2world)
 
-        return self.add_pointcloud(
-            pts3d, image, mask=(depth < zfar) if mask is None else mask
-        )
+        return self.add_pointcloud(pts3d, image, mask=(depth < zfar) if mask is None else mask)
 
     def add_pointcloud(self, pts3d, color=(0, 0, 0), mask=None, denoise=False):
         pts3d = to_numpy(pts3d)
@@ -187,31 +177,23 @@ class SceneViz:
             pct.visual.vertex_colors = np.broadcast_to(uint8(color), pts.shape)
 
         if denoise:
-
             centroid = np.median(pct.vertices, axis=0)
             dist_to_centroid = np.linalg.norm(pct.vertices - centroid, axis=-1)
             dist_thr = np.quantile(dist_to_centroid, 0.99)
             valid = dist_to_centroid < dist_thr
 
-            pct = trimesh.PointCloud(
-                pct.vertices[valid], color=pct.visual.vertex_colors[valid]
-            )
+            pct = trimesh.PointCloud(pct.vertices[valid], color=pct.visual.vertex_colors[valid])
 
         self.scene.add_geometry(pct)
         return self
 
-    def add_rgbd(
-        self, image, depth, intrinsics=None, cam2world=None, zfar=np.inf, mask=None
-    ):
-
+    def add_rgbd(self, image, depth, intrinsics=None, cam2world=None, zfar=np.inf, mask=None):
         if intrinsics is None:
             H, W, THREE = image.shape
             focal = max(H, W)
             intrinsics = np.float32([[focal, 0, W / 2], [0, focal, H / 2], [0, 0, 1]])
 
-        pts3d, mask2 = depthmap_to_absolute_camera_coordinates(
-            depth, intrinsics, cam2world
-        )
+        pts3d, mask2 = depthmap_to_absolute_camera_coordinates(depth, intrinsics, cam2world)
         mask2 &= depth < zfar
 
         if mask is not None:
@@ -248,9 +230,7 @@ class SceneViz:
         )
         return self
 
-    def add_cameras(
-        self, poses, focals=None, images=None, imsizes=None, colors=None, **kw
-    ):
+    def add_cameras(self, poses, focals=None, images=None, imsizes=None, colors=None, **kw):
         get = lambda arr, idx: None if arr is None else arr[idx]
         for i, pose_c2w in enumerate(poses):
             self.add_camera(
@@ -267,9 +247,7 @@ class SceneViz:
         self.scene.show(line_settings={"point_size": point_size})
 
 
-def show_raw_pointcloud_with_cams(
-    imgs, pts3d, mask, focals, cams2world, point_size=2, cam_size=0.05, cam_color=None
-):
+def show_raw_pointcloud_with_cams(imgs, pts3d, mask, focals, cams2world, point_size=2, cam_size=0.05, cam_color=None):
     """Visualization of a pointcloud with cameras
     imgs = (N, H, W, 3) or N-size list of [(H,W,3), ...]
     pts3d = (N, H, W, 3) or N-size list of [(H,W,3), ...]
@@ -349,9 +327,7 @@ def add_scene_cam(
         faces = np.array([[0, 1, 2], [0, 2, 3], [2, 1, 0], [3, 2, 0]])
         img = trimesh.Trimesh(vertices=vertices, faces=faces)
         uv_coords = np.float32([[0, 0], [1, 0], [1, 1], [0, 1]])
-        img.visual = trimesh.visual.TextureVisuals(
-            uv_coords, image=PIL.Image.fromarray(image)
-        )
+        img.visual = trimesh.visual.TextureVisuals(uv_coords, image=PIL.Image.fromarray(image))
         scene.add_geometry(img)
 
     rot2 = np.eye(4)
@@ -438,9 +414,7 @@ def segment_sky(image):
     kernel = np.ones((5, 5), np.uint8)
     mask2 = ndimage.binary_opening(mask, structure=kernel)
 
-    _, labels, stats, _ = cv2.connectedComponentsWithStats(
-        mask2.view(np.uint8), connectivity=8
-    )
+    _, labels, stats, _ = cv2.connectedComponentsWithStats(mask2.view(np.uint8), connectivity=8)
     cc_sizes = stats[1:, cv2.CC_STAT_AREA]
     order = cc_sizes.argsort()[::-1]  # bigger first
     i = 0
@@ -473,9 +447,7 @@ def get_vertical_colorbar(h, vmin, vmax, cmap_name="jet", label=None, cbar_preci
 
     tick_cnt = 6
     tick_loc = np.linspace(vmin, vmax, tick_cnt)
-    cb1 = mpl.colorbar.ColorbarBase(
-        ax, cmap=cmap, norm=norm, ticks=tick_loc, orientation="vertical"
-    )
+    cb1 = mpl.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, ticks=tick_loc, orientation="vertical")
 
     tick_label = [str(np.round(x, cbar_precision)) for x in tick_loc]
     if cbar_precision == 0:
@@ -524,7 +496,6 @@ def colorize_np(
     if range is not None:
         vmin, vmax = range
     elif mask is not None:
-
         vmin = np.min(x[mask][np.nonzero(x[mask])])
         vmax = np.max(x[mask])
 
@@ -556,17 +527,13 @@ def colorize_np(
         if cbar_in_image:
             x_new[:, -cbar.shape[1] :, :] = cbar
         else:
-            x_new = np.concatenate(
-                (x_new, np.zeros_like(x_new[:, :5, :]), cbar), axis=1
-            )
+            x_new = np.concatenate((x_new, np.zeros_like(x_new[:, :5, :]), cbar), axis=1)
         return x_new
     else:
         return x_new
 
 
-def colorize(
-    x, cmap_name="jet", mask=None, range=None, append_cbar=False, cbar_in_image=False
-):
+def colorize(x, cmap_name="jet", mask=None, range=None, append_cbar=False, cbar_in_image=False):
     """
     turn a grayscale image into a color image
     :param x: torch.Tensor, grayscale image, [H, W] or [B, H, W]
@@ -595,9 +562,7 @@ def colorize(
     return out
 
 
-def draw_correspondences(
-    imgs1, imgs2, coords1, coords2, interval=10, color_by=0, radius=2
-):
+def draw_correspondences(imgs1, imgs2, coords1, coords2, interval=10, color_by=0, radius=2):
     """
     draw correspondences between two images
     :param img1: tensor [B, H, W, 3]
@@ -613,23 +578,15 @@ def draw_correspondences(
     for i in range(batch_size):
         img1 = imgs1[i].detach().cpu().numpy()
         img2 = imgs2[i].detach().cpu().numpy()
-        coord1 = (
-            coords1[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
-        )
-        coord2 = (
-            coords2[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
-        )
-        img = drawMatches(
-            img1, img2, coord1, coord2, radius=radius, color_by=color_by, row_cat=True
-        )
+        coord1 = coords1[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
+        coord2 = coords2[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
+        img = drawMatches(img1, img2, coord1, coord2, radius=radius, color_by=color_by, row_cat=True)
         out.append(img)
     out = np.stack(out)
     return out
 
 
-def draw_correspondences_lines(
-    imgs1, imgs2, coords1, coords2, interval=10, color_by=0, radius=2
-):
+def draw_correspondences_lines(imgs1, imgs2, coords1, coords2, interval=10, color_by=0, radius=2):
     """
     draw correspondences between two images
     :param img1: tensor [B, H, W, 3]
@@ -645,22 +602,15 @@ def draw_correspondences_lines(
     for i in range(batch_size):
         img1 = imgs1[i].detach().cpu().numpy()
         img2 = imgs2[i].detach().cpu().numpy()
-        coord1 = (
-            coords1[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
-        )
-        coord2 = (
-            coords2[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
-        )
-        img = drawMatches_lines(
-            img1, img2, coord1, coord2, radius=radius, color_by=color_by, row_cat=True
-        )
+        coord1 = coords1[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
+        coord2 = coords2[i].detach().cpu().numpy()[::interval, ::interval].reshape(-1, 2)
+        img = drawMatches_lines(img1, img2, coord1, coord2, radius=radius, color_by=color_by, row_cat=True)
         out.append(img)
     out = np.stack(out)
     return out
 
 
 def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=False):
-
     h1, w1 = img1.shape[:2]
     h2, w2 = img2.shape[:2]
 
@@ -673,10 +623,7 @@ def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=F
     set_max = range(128)
     colors = {m: i for i, m in enumerate(set_max)}
     colors = {
-        m: (255 * np.array(plt.cm.hsv(i / float(len(colors))))[:3][::-1]).astype(
-            np.int32
-        )
-        for m, i in colors.items()
+        m: (255 * np.array(plt.cm.hsv(i / float(len(colors))))[:3][::-1]).astype(np.int32) for m, i in colors.items()
     }
 
     if mask is not None:
@@ -686,7 +633,6 @@ def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=F
         mask = mask[ind]
 
     for i, (pt1, pt2) in enumerate(zip(kp1, kp2)):
-
         if color_by == 0:
             coord_angle = np.arctan2(pt1[1] - center1[1], pt1[0] - center1[0])
         elif color_by == 1:
@@ -695,22 +641,10 @@ def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=F
         corr_color = np.int32(64 * coord_angle / np.pi) % 128
         color = tuple(colors[corr_color].tolist())
 
-        if (
-            (pt1[0] <= w1 - 1)
-            and (pt1[0] >= 0)
-            and (pt1[1] <= h1 - 1)
-            and (pt1[1] >= 0)
-        ):
-            img1 = cv2.circle(
-                img1, (int(pt1[0]), int(pt1[1])), radius, color, -1, cv2.LINE_AA
-            )
+        if (pt1[0] <= w1 - 1) and (pt1[0] >= 0) and (pt1[1] <= h1 - 1) and (pt1[1] >= 0):
+            img1 = cv2.circle(img1, (int(pt1[0]), int(pt1[1])), radius, color, -1, cv2.LINE_AA)
 
-        if (
-            (pt2[0] <= w2 - 1)
-            and (pt2[0] >= 0)
-            and (pt2[1] <= h2 - 1)
-            and (pt2[1] >= 0)
-        ):
+        if (pt2[0] <= w2 - 1) and (pt2[0] >= 0) and (pt2[1] <= h2 - 1) and (pt2[1] >= 0):
             if mask is not None and mask[i]:
                 img2 = cv2.drawMarker(
                     img2,
@@ -722,9 +656,7 @@ def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=F
                     line_type=cv2.LINE_AA,
                 )
             else:
-                img2 = cv2.circle(
-                    img2, (int(pt2[0]), int(pt2[1])), radius, color, -1, cv2.LINE_AA
-                )
+                img2 = cv2.circle(img2, (int(pt2[0]), int(pt2[1])), radius, color, -1, cv2.LINE_AA)
     if row_cat:
         whole_img = np.concatenate([img1, img2], axis=0)
     else:
@@ -732,10 +664,7 @@ def drawMatches(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=F
     return whole_img
 
 
-def drawMatches_lines(
-    img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=False
-):
-
+def drawMatches_lines(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row_cat=False):
     h1, w1 = img1.shape[:2]
     h2, w2 = img2.shape[:2]
 
@@ -748,10 +677,7 @@ def drawMatches_lines(
     set_max = range(128)
     colors = {m: i for i, m in enumerate(set_max)}
     colors = {
-        m: (255 * np.array(plt.cm.hsv(i / float(len(colors))))[:3][::-1]).astype(
-            np.int32
-        )
-        for m, i in colors.items()
+        m: (255 * np.array(plt.cm.hsv(i / float(len(colors))))[:3][::-1]).astype(np.int32) for m, i in colors.items()
     }
 
     if mask is not None:
@@ -774,18 +700,9 @@ def drawMatches_lines(
         color = tuple(colors[corr_color].tolist())
         rand_val = np.random.rand()
         if rand_val < 0.1:
-            if (
-                (pt1[0] <= w1 - 1)
-                and (pt1[0] >= 0)
-                and (pt1[1] <= h1 - 1)
-                and (pt1[1] >= 0)
-            ) and (
-                (pt2[0] <= w2 - 1)
-                and (pt2[0] >= 0)
-                and (pt2[1] <= h2 - 1)
-                and (pt2[1] >= 0)
+            if ((pt1[0] <= w1 - 1) and (pt1[0] >= 0) and (pt1[1] <= h1 - 1) and (pt1[1] >= 0)) and (
+                (pt2[0] <= w2 - 1) and (pt2[0] >= 0) and (pt2[1] <= h2 - 1) and (pt2[1] >= 0)
             ):
-
                 whole_img = cv2.circle(
                     whole_img,
                     (int(pt1[0]), int(pt1[1])),
@@ -892,9 +809,9 @@ class PointCloudViewer:
         idx = batch_idx
         ret_dict = {}
         for i in range(len(pc.keys()) // 2):
-            pred_pts = pc[f"pts3d_{i+1}"][idx].reshape(-1, 3)  # [N, 3]
-            color = pc[f"colors_{i+1}"][idx].reshape(-1, 3)  # [N, 3]
-            ret_dict.update({f"pred_pts_{i+1}": pred_pts, f"color_{i+1}": color})
+            pred_pts = pc[f"pts3d_{i + 1}"][idx].reshape(-1, 3)  # [N, 3]
+            color = pc[f"colors_{i + 1}"][idx].reshape(-1, 3)  # [N, 3]
+            ret_dict.update({f"pred_pts_{i + 1}": pred_pts, f"color_{i + 1}": color})
         return ret_dict
 
     def add_pc(self, step):
@@ -903,9 +820,9 @@ class PointCloudViewer:
 
         for i in range(len(pc_dict.keys()) // 2):
             self.server.add_point_cloud(
-                name=f"/frames/{step}/pred_pts_{i+1}_{step}",
-                points=pc_dict[f"pred_pts_{i+1}"],
-                colors=pc_dict[f"color_{i+1}"],
+                name=f"/frames/{step}/pred_pts_{i + 1}_{step}",
+                points=pc_dict[f"pred_pts_{i + 1}"],
+                colors=pc_dict[f"color_{i + 1}"],
                 point_size=0.002,
             )
 
@@ -925,12 +842,8 @@ class PointCloudViewer:
             gui_next_frame = self.server.add_gui_button("Next Step", disabled=True)
             gui_prev_frame = self.server.add_gui_button("Prev Step", disabled=True)
             gui_playing = self.server.add_gui_checkbox("Playing", False)
-            gui_framerate = self.server.add_gui_slider(
-                "FPS", min=1, max=60, step=0.1, initial_value=1
-            )
-            gui_framerate_options = self.server.add_gui_button_group(
-                "FPS options", ("10", "20", "30", "60")
-            )
+            gui_framerate = self.server.add_gui_slider("FPS", min=1, max=60, step=0.1, initial_value=1)
+            gui_framerate_options = self.server.add_gui_button_group("FPS options", ("10", "20", "30", "60"))
 
         @gui_next_frame.on_click
         def _(_) -> None:
@@ -978,7 +891,6 @@ class PointCloudViewer:
             self.add_pc(step)
 
         for i, frame_node in enumerate(frame_nodes):
-
             frame_node.visible = i == gui_timestep.value
 
         prev_timestep = gui_timestep.value
@@ -1024,8 +936,6 @@ def colorize_feature_map_np(x):
     pca = PCA(n_components=3)
     pca_features = pca.fit_transform(x.reshape(-1, x.shape[-1]))
 
-    pca_features = (pca_features - pca_features.min()) / (
-        pca_features.max() - pca_features.min()
-    )
+    pca_features = (pca_features - pca_features.min()) / (pca_features.max() - pca_features.min())
     pca_features = pca_features.reshape(x.shape[0], x.shape[1], 3)
     return pca_features

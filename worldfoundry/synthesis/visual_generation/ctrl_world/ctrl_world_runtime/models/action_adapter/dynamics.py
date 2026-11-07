@@ -16,9 +16,9 @@ class Dynamics(nn.Module):
         self.joint_vel_01 = np.array(
             [-0.4077107, -0.79047304, -0.47850373, -0.8666644, -0.6729502, -0.5602032, -0.692411]
         )[None, :]
-        self.joint_vel_99 = np.array(
-            [0.4900636, 0.7259861, 0.45910007, 0.79220384, 0.69864315, 0.648198, 0.810115]
-        )[None, :]
+        self.joint_vel_99 = np.array([0.4900636, 0.7259861, 0.45910007, 0.79220384, 0.69864315, 0.648198, 0.810115])[
+            None, :
+        ]
         self.joint_delta_01 = np.array(
             [-0.2801219, -0.397792, -0.22935797, -0.3351759, -0.42025003, -0.36825255, -0.450706]
         )[None, :]
@@ -48,9 +48,7 @@ class Dynamics(nn.Module):
             joint = joint[None, :]
         if joint_vel.ndim == 2:
             joint_vel = joint_vel[None, :]
-        assert joint.shape[1:] == (1, self.action_dim), (
-            f"Joint shape should be (B, 1, action_dim), got {joint.shape}"
-        )
+        assert joint.shape[1:] == (1, self.action_dim), f"Joint shape should be (B, 1, action_dim), got {joint.shape}"
         assert joint_vel.shape[1:] == (self.action_num, self.action_dim), (
             f"Joint velocity shape should be (B, action_num, action_dim), got {joint_vel.shape}"
         )

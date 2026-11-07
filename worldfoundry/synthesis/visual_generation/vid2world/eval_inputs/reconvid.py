@@ -27,9 +27,8 @@ from worldfoundry.synthesis.visual_generation.vid2world.nvm_utils.misc import (
 )
 
 
-_VID2WORLD_RUNTIME_ROOT = str(
-    files("worldfoundry.synthesis.visual_generation.vid2world")
-)
+_VID2WORLD_RUNTIME_ROOT = str(files("worldfoundry.synthesis.visual_generation.vid2world"))
+
 
 class RECONVID(Dataset):
     """
@@ -47,23 +46,25 @@ class RECONVID(Dataset):
         - position: shape [T, 2]
         - yaw: shape [T,]
     """
-    def __init__(self,
-                 data_dir,
-                 resolution,
-                 video_length=16,
-                 spatial_transform=None,
-                 crop_resolution=None,
-                 subsample=False,
-                 augment_data=True,
-                 mode = 'training',
-                 strong_augmentation=False,
-                 data_split_folder=None,
-                 train_predefined_index=None,
-                 val_predefined_index=None,
-                 processed_data_dir=None,
-                 skip_processed=False,
-                 exp=None,
-                 ): # training or validation
+
+    def __init__(
+        self,
+        data_dir,
+        resolution,
+        video_length=16,
+        spatial_transform=None,
+        crop_resolution=None,
+        subsample=False,
+        augment_data=True,
+        mode="training",
+        strong_augmentation=False,
+        data_split_folder=None,
+        train_predefined_index=None,
+        val_predefined_index=None,
+        processed_data_dir=None,
+        skip_processed=False,
+        exp=None,
+    ):  # training or validation
         """Init.
 
         Args:
@@ -85,13 +86,13 @@ class RECONVID(Dataset):
         """
         self.data_dir = data_dir
         self.exp = exp
-        
+
         # Convert relative path to absolute path based on project root
         if data_split_folder and not os.path.isabs(data_split_folder):
             self.data_split_folder = os.path.join(_VID2WORLD_RUNTIME_ROOT, data_split_folder)
         else:
             self.data_split_folder = data_split_folder
-            
+
         self.video_length = video_length
         self.resolution = [resolution, resolution] if isinstance(resolution, int) else resolution
         self.subsample = subsample
@@ -114,16 +115,16 @@ class RECONVID(Dataset):
             self.hue = [-0.05, 0.05]
             self.random_resized_crop_scale = (0.8, 1.0)
             self.random_resized_crop_ratio = (0.9, 1.1)
-        self.data_split_folder_training = os.path.join(self.data_split_folder, 'train')
-        self.data_split_folder_validation = os.path.join(self.data_split_folder, 'test')
-        if self.mode == 'training':
+        self.data_split_folder_training = os.path.join(self.data_split_folder, "train")
+        self.data_split_folder_validation = os.path.join(self.data_split_folder, "test")
+        if self.mode == "training":
             self.dataset = RECONVIDDataset(
                 data_folder=self.data_dir,
                 data_split_folder=self.data_split_folder_training,
                 min_dist_cat=0,
                 max_dist_cat=100000,
-                dataset_name='recon',
-                image_size=(320,320), # 224x224 for input
+                dataset_name="recon",
+                image_size=(320, 320),  # 224x224 for input
                 len_traj_pred=self.video_length,
                 normalize=True,
                 context_size=1,
@@ -131,127 +132,135 @@ class RECONVID(Dataset):
                 predefined_index=self.train_predefined_index,
                 video_length=self.video_length,
                 traj_stride=1,
-                traj_names='traj_names.txt',
-                mode='training',
+                traj_names="traj_names.txt",
+                mode="training",
             )
             print(f"train_dataset: {len(self.dataset)}")
-        if self.mode == 'validation':
+        if self.mode == "validation":
             if self.subsample:
                 # When subsample=True, use a large traj_stride to ensure each trajectory only generates one sample
                 # This limits the total number of validation samples
                 self.dataset = RECONVIDDataset(
                     data_folder=self.data_dir,
                     data_split_folder=self.data_split_folder_validation,
-                    dataset_name='recon',
-                    image_size=(320,320), # 224x224 for input
+                    dataset_name="recon",
+                    image_size=(320, 320),  # 224x224 for input
                     min_dist_cat=0,
                     max_dist_cat=100000,
                     len_traj_pred=self.video_length,
                     traj_stride=100000,  # Large stride to ensure each trajectory only generates one sample
                     context_size=1,
                     transform=transform,
-                    traj_names='traj_names_subsample.txt',
+                    traj_names="traj_names_subsample.txt",
                     normalize=True,
                     predefined_index=self.val_predefined_index,
                     video_length=self.video_length,
-                    mode='validation',
+                    mode="validation",
                 )
             else:
                 # this branch is currently deprecated
                 assert self.exp is not None, "exp is not set, choices [rollout, single_step]"
                 if self.exp == "rollout":
-                    predefined_index = os.path.join(_VID2WORLD_RUNTIME_ROOT, "nvm_utils/data_splits/recon/test/rollout.pkl")
+                    predefined_index = os.path.join(
+                        _VID2WORLD_RUNTIME_ROOT, "nvm_utils/data_splits/recon/test/rollout.pkl"
+                    )
                 elif self.exp == "single_step":
-                    predefined_index = os.path.join(_VID2WORLD_RUNTIME_ROOT, "nvm_utils/data_splits/recon/test/time.pkl")
+                    predefined_index = os.path.join(
+                        _VID2WORLD_RUNTIME_ROOT, "nvm_utils/data_splits/recon/test/time.pkl"
+                    )
                 else:
                     raise ValueError(f"Invalid exp: {self.exp}")
                 self.dataset = RECONEvalDataset(
                     data_folder=self.data_dir,
                     data_split_folder=self.data_split_folder_validation,
-                    dataset_name='recon',
-                    image_size=(320,320), # 224x224 for input
+                    dataset_name="recon",
+                    image_size=(320, 320),  # 224x224 for input
                     min_dist_cat=-64,
                     max_dist_cat=64,
                     traj_stride=1,
-                    len_traj_pred=self.video_length -4, # self.video_length should be 20
-                    context_size = 4,
+                    len_traj_pred=self.video_length - 4,  # self.video_length should be 20
+                    context_size=4,
                     normalize=True,
                     transform=transform,
                     predefined_index=predefined_index,
-                    traj_names='traj_names.txt',
-                    mode='validation',
+                    traj_names="traj_names.txt",
+                    mode="validation",
                 )
             print(f"val_dataset: {len(self.dataset)}")
         if spatial_transform is not None:
             if spatial_transform == "random_crop":
                 self.spatial_transform = transforms.RandomCrop(crop_resolution)
             elif spatial_transform == "center_crop":
-                self.spatial_transform = transforms.Compose([
-                    transforms.CenterCrop(resolution),
-                    ])            
+                self.spatial_transform = transforms.Compose(
+                    [
+                        transforms.CenterCrop(resolution),
+                    ]
+                )
             elif spatial_transform == "resize_center_crop":
-                self.spatial_transform = transforms.Compose([
-                    transforms.Resize(min(self.resolution)),
-                    transforms.CenterCrop(self.resolution),
-                    ])
+                self.spatial_transform = transforms.Compose(
+                    [
+                        transforms.Resize(min(self.resolution)),
+                        transforms.CenterCrop(self.resolution),
+                    ]
+                )
             elif spatial_transform == "resize":
                 self.spatial_transform = transforms.Resize(self.resolution)
             else:
                 raise NotImplementedError
         else:
             self.spatial_transform = None
-        if self.mode == 'validation':
+        if self.mode == "validation":
             assert self.augment_data == False, "validation mode, augment_data should be set False"
-    
+
     def __getitem__(self, index):
         """Getitem.
 
         Args:
             index: The index.
         """
-        
+
         # Load data
-        if self.mode == 'training':
+        if self.mode == "training":
             frames = self.dataset[index][0]  # [T, H, W, C] # [115, 256, 320, 3]
             actions = self.dataset[index][1]  # [T, M]
-        elif self.mode == 'validation':
+        elif self.mode == "validation":
             frames = self.dataset[index][0]  # [T, H, W, C] # [115, 256, 320, 3]
             actions = self.dataset[index][1]  # [T, M]
         else:
             raise ValueError(f"Invalid mode: {self.mode}")
-        frames_tensor = torch.tensor(frames).clone().detach().permute(1,0,2,3).float()  # [C, T, H, W], range:[-1,1]
-        frames_tensor = (frames_tensor+1.0)/2.0 * 255.0
+        frames_tensor = torch.tensor(frames).clone().detach().permute(1, 0, 2, 3).float()  # [C, T, H, W], range:[-1,1]
+        frames_tensor = (frames_tensor + 1.0) / 2.0 * 255.0
         actions_tensor = torch.tensor(actions).clone().detach().float()  # [T, M]
-            
-        
+
         if self.spatial_transform is not None:
             frames_tensor = self.spatial_transform(frames_tensor)
 
         if self.augment_data:
             frames_tensor = self.augment_video_clip(frames_tensor)
-        
+
         if self.resolution is not None:
-            assert (frames_tensor.shape[2], frames_tensor.shape[3]) == (self.resolution[0], self.resolution[1]), \
-                f'frames={frames_tensor.shape}, self.resolution={self.resolution}'
-        
+            assert (frames_tensor.shape[2], frames_tensor.shape[3]) == (self.resolution[0], self.resolution[1]), (
+                f"frames={frames_tensor.shape}, self.resolution={self.resolution}"
+            )
+
         # Normalize frames to [-1, 1]
         frames_tensor = (frames_tensor / 255.0 - 0.5) * 2
 
         data = {
-            'video': frames_tensor, 
-            'caption': "",
-            'action': actions_tensor,
-            'path': self.dataset[index][2],
-            'fps': 3, # for rt dataset, fps is fixed to 3
-            'frame_stride': 1, # for rt dataset, frame_stride is fixed to 1
-            'curr_time': self.dataset[index][3],
+            "video": frames_tensor,
+            "caption": "",
+            "action": actions_tensor,
+            "path": self.dataset[index][2],
+            "fps": 3,  # for rt dataset, fps is fixed to 3
+            "frame_stride": 1,  # for rt dataset, frame_stride is fixed to 1
+            "curr_time": self.dataset[index][3],
         }
         return data
-    
+
     def __len__(self):
         """Len."""
         return len(self.dataset)
-    
+
     def data_augmentation(self, images):
         """Data augmentation.
 
@@ -259,23 +268,16 @@ class RECONVID(Dataset):
             images: The images.
         """
         # Calculate random crop parameters
-        i, j, h, w = self.get_crop_params(
-            images,
-            self.random_resized_crop_scale,
-            self.random_resized_crop_ratio
-        )
+        i, j, h, w = self.get_crop_params(images, self.random_resized_crop_scale, self.random_resized_crop_ratio)
         # Generate random color adjustment parameters
         fn_idx, brightness_factor, contrast_factor, saturation_factor, hue_factor = self.get_jittor_params(
-            self.brightness,
-            self.contrast,
-            self.saturation,
-            self.hue
+            self.brightness, self.contrast, self.saturation, self.hue
         )
 
         new_images = []
-        transform = transforms.ToPILImage() # Tool to convert Tensor to PIL Image
-        tensor = transforms.ToTensor()      # Convert PIL Image to Tensor (will be normalized to [0, 1])
-        
+        transform = transforms.ToPILImage()  # Tool to convert Tensor to PIL Image
+        tensor = transforms.ToTensor()  # Convert PIL Image to Tensor (will be normalized to [0, 1])
+
         for image in images:
             image = F.resized_crop(image, i, j, h, w, self.resolution)
             image = transform(image / 255)
@@ -292,9 +294,9 @@ class RECONVID(Dataset):
             image = tensor(image)
             image = image * 255.0
             new_images.append(image)
-        
+
         res = torch.stack(new_images)
-        res = res.permute(1, 0, 2, 3)   # [C, T, H, W]
+        res = res.permute(1, 0, 2, 3)  # [C, T, H, W]
         return torch.stack(new_images)
 
     def augment_video_clip(self, video):
@@ -321,10 +323,10 @@ class RECONVID(Dataset):
         for t in range(T):
             # Get frame t and keep it as [C, H, W]
             frame = video[:, t, :, :]  # [C, H, W]
-            
-            frame = F.pad(frame, [padding] * 4, padding_mode='reflect')  # Pad all sides
-            frame = frame[:, i:i+H, j:j+W]  # Random crop back to original size
-            
+
+            frame = F.pad(frame, [padding] * 4, padding_mode="reflect")  # Pad all sides
+            frame = frame[:, i : i + H, j : j + W]  # Random crop back to original size
+
             # Convert to PIL for color augmentation (requires channels last)
             frame = transform(frame / 255)  # Convert to PIL Image
             tensor = transforms.ToTensor()
@@ -345,7 +347,7 @@ class RECONVID(Dataset):
             new_frames.append(frame)
 
         return torch.stack(new_frames, dim=1)  # [C, T, H, W]
-    
+
     @staticmethod
     def get_crop_params(img: Tensor, scale: List[float], ratio: List[float]) -> Tuple[int, int, int, int]:
         """Get parameters for ``crop`` for a random sized crop.

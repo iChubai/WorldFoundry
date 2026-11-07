@@ -22,6 +22,7 @@ SAGE_ATTN_AVAILABLE = False
 
 try:
     import flash_attn_interface
+
     # FLASH_ATTN_3_AVAILABLE = True
     # NOTE: forcing disable flash_attn3 for a800
     FLASH_ATTN_3_AVAILABLE = False
@@ -30,6 +31,7 @@ except ModuleNotFoundError:
 
 try:
     import flash_attn
+
     FLASH_ATTN_2_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
@@ -44,6 +46,7 @@ SUPPORTED_ARCHS = {80, 89, 120, 121}
 if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
     try:
         from sageattention import sageattn, sag_attention_with_window, sageattn_qk_int8_pv_fp16_cuda_with_window
+
         SAGE_ATTN_AVAILABLE = True
     except ModuleNotFoundError:
         SAGE_ATTN_AVAILABLE = False
@@ -54,14 +57,21 @@ from kairos.apis.builder import DITS
 from torch.distributed import ProcessGroup, get_process_group_ranks
 import torch.distributed as dist
 from kairos.modules.utils import parallel_state, FLAGS_KAIROS_IS_METAX
-from kairos.modules.utils.tp_utils import build_tp_chunk_list, all2all_seq_to_head, all2all_head_to_seq, _gather_input_sp, _distribute_input_sp
+from kairos.modules.utils.tp_utils import (
+    build_tp_chunk_list,
+    all2all_seq_to_head,
+    all2all_head_to_seq,
+    _gather_input_sp,
+    _distribute_input_sp,
+)
 
-#================================================================
-#====================rope_apply_for3d_triton当前只适用于沐曦========
-#================================================================
+# ================================================================
+# ====================rope_apply_for3d_triton当前只适用于沐曦========
+# ================================================================
 import triton
 import triton.language as tl
 from fla.utils import autotune_cache_kwargs
+
 
 def _optional_torch_compile(fn):
     enabled = os.environ.get("WORLDFOUNDRY_KAIROS_ENABLE_TORCH_COMPILE", "0").strip().lower()
@@ -70,13 +80,14 @@ def _optional_torch_compile(fn):
     mode = os.environ.get("WORLDFOUNDRY_KAIROS_TORCH_COMPILE_MODE", "reduce-overhead")
     return torch.compile(fullgraph=False, mode=mode)(fn)
 
+
 def rope_apply_for3d_triton(x, num_frames, freqs, num_heads):
     assert x.is_contiguous(), "x 必须是 contiguous 的 [B,L,D]"
     B, T, D = x.shape
     H = num_heads
-    x = rearrange(x, "b s (n d) -> b s n d", n=num_heads) # [B,T,H,HD] ([1,720000,20,128]) bf16
+    x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)  # [B,T,H,HD] ([1,720000,20,128]) bf16
     HD = x.shape[-1]
-    C = HD // 2 # 64
+    C = HD // 2  # 64
     # freqs: [L, 1, HD/2] complex
     assert freqs.shape[0] == T and freqs.shape[1] == 1
     assert HD % freqs.shape[-1] == 0
@@ -86,28 +97,36 @@ def rope_apply_for3d_triton(x, num_frames, freqs, num_heads):
     assert freqs_scalar.is_contiguous()
 
     # 输出 buffer，同 layout
-    out = torch.empty_like(x) # [B,L,H,D] ([1,720000,20,128]) bf16
+    out = torch.empty_like(x)  # [B,L,H,D] ([1,720000,20,128]) bf16
 
     def grid(meta):
-        BT = meta['BT']
+        BT = meta["BT"]
         return (triton.cdiv(T, BT), B * H)
+
     rope_apply_for_3d_kernel[grid](
-        x, freqs_scalar, out,
-        B, T, H, C, HD,
+        x,
+        freqs_scalar,
+        out,
+        B,
+        T,
+        H,
+        C,
+        HD,
     )
     out = out.reshape(B, T, D)
     return out
 
+
 @triton.autotune(
     configs=[
-        triton.Config({'BT': BT}, num_warps=num_warps, num_stages=num_stages)
+        triton.Config({"BT": BT}, num_warps=num_warps, num_stages=num_stages)
         for num_warps in [4]
         for num_stages in [8]
         for BT in [32]
     ],
-    key=['B', 'T'],
+    key=["B", "T"],
     use_cuda_graph=False,
-    **autotune_cache_kwargs
+    **autotune_cache_kwargs,
 )
 @triton.jit
 def rope_apply_for_3d_kernel(
@@ -116,12 +135,12 @@ def rope_apply_for_3d_kernel(
     out_bf16,
     B,
     T,
-    H:  tl.constexpr,
-    C:  tl.constexpr,
+    H: tl.constexpr,
+    C: tl.constexpr,
     HD: tl.constexpr,
     BT: tl.constexpr,
 ):
-    pid_t  = tl.program_id(0)
+    pid_t = tl.program_id(0)
     pid_bh = tl.program_id(1)
 
     b = pid_bh // H
@@ -136,36 +155,36 @@ def rope_apply_for_3d_kernel(
 
     for dt in range(0, BT):
         t = t_start + dt
-        mask_t = t < T         # 当前这一行是否有效（标量 bool）
+        mask_t = t < T  # 当前这一行是否有效（标量 bool）
 
         # 如果这一 dt 已经越界了，不 return，只是把 load/store 全部 mask 掉
         # x[b, t, h, d]，d = 0..HD-1
         base_x = ((b * T + t) * H + h) * HD
 
-        idx_real = base_x + 2 * offs_c       # d = 2c
-        idx_imag = idx_real + 1              # d = 2c + 1
+        idx_real = base_x + 2 * offs_c  # d = 2c
+        idx_imag = idx_real + 1  # d = 2c + 1
 
         # 每个通道都复用同一个 time-mask
-        mask_elem = mask_t                   # 形状 [C]，广播到 [C]
+        mask_elem = mask_t  # 形状 [C]，广播到 [C]
 
         # -------- x: bf16 → float64，拆成实部/虚部 --------
         x_real_bf16 = tl.load(
             x_bf16 + idx_real,
             mask=mask_elem,
             other=0.0,
-        )                                    # [C]
+        )  # [C]
         x_imag_bf16 = tl.load(
             x_bf16 + idx_imag,
             mask=mask_elem,
             other=0.0,
-        )                                    # [C]
+        )  # [C]
         x_real_f64 = x_real_bf16.to(tl.float64)
         x_imag_f64 = x_imag_bf16.to(tl.float64)
 
         # -------- freqs: float64 视图 [T, 2*C] --------
         # 假设 freqs_f64 按 [t, 2*C] 摊平成一维：
         # real 在偶数位，imag 在奇数位
-        base_f = t * (2 * C)                 # 对应 freqs[t, 0]
+        base_f = t * (2 * C)  # 对应 freqs[t, 0]
         idx_freq_real = base_f + 2 * offs_c
         idx_freq_imag = idx_freq_real + 1
 
@@ -203,6 +222,7 @@ def rope_apply_for_3d_kernel(
             y_imag_bf16,
             mask=mask_elem,
         )
+
 
 def _slice_attention_mask(attn_mask, q_start, q_end, k_start, k_end, q_len, k_len):
     if attn_mask is None:
@@ -271,9 +291,7 @@ def _pytorch_sdpa_attention(
         if k_end == k_start:
             outputs.append(torch.zeros_like(q_chunk))
             if return_softmax_lse:
-                lse_chunks.append(
-                    torch.full(q_chunk.shape[:-1], -torch.inf, device=q.device, dtype=torch.float32)
-                )
+                lse_chunks.append(torch.full(q_chunk.shape[:-1], -torch.inf, device=q.device, dtype=torch.float32))
             continue
 
         k_chunk = k[..., k_start:k_end, :]
@@ -289,9 +307,7 @@ def _pytorch_sdpa_attention(
             allowed &= k_positions.unsqueeze(0) <= q_positions.unsqueeze(1)
         allowed = allowed.view(1, 1, q_end - q_start, k_end - k_start)
 
-        mask = _slice_attention_mask(
-            attn_mask, q_start, q_end, k_start, k_end, q_len, k_len
-        )
+        mask = _slice_attention_mask(attn_mask, q_start, q_end, k_start, k_end, q_len, k_len)
         if mask is None:
             mask = allowed
         elif mask.dtype == torch.bool:
@@ -299,9 +315,7 @@ def _pytorch_sdpa_attention(
         else:
             mask = mask.masked_fill(~allowed, -torch.inf)
 
-        output = F.scaled_dot_product_attention(
-            q_chunk, k_chunk, v_chunk, attn_mask=mask, dropout_p=0.0
-        )
+        output = F.scaled_dot_product_attention(q_chunk, k_chunk, v_chunk, attn_mask=mask, dropout_p=0.0)
         outputs.append(output)
         if return_softmax_lse:
             logits = torch.matmul(q_chunk.float(), k_chunk.float().transpose(-2, -1)) * scale
@@ -318,10 +332,17 @@ def _pytorch_sdpa_attention(
     return output
 
 
-def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int,
-                    compatibility_mode=False, attn_mask=None, window_size=(-1, -1),
-                    return_attn_probs=False, causal=False):
-    
+def flash_attention(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    num_heads: int,
+    compatibility_mode=False,
+    attn_mask=None,
+    window_size=(-1, -1),
+    return_attn_probs=False,
+    causal=False,
+):
     # ***************************************
     # debug code
     # if DEBUG_CLOSE_FLASH_ATTN:
@@ -344,16 +365,14 @@ def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads
         )
     elif FLASH_ATTN_3_AVAILABLE:
         x = flash_attn_interface.flash_attn_func(
-            q, k, v, window_size=window_size, causal=causal,
-            return_attn_probs=return_attn_probs
+            q, k, v, window_size=window_size, causal=causal, return_attn_probs=return_attn_probs
         )
         if return_attn_probs:
             x, probs = x[0], x[1]
             return x, probs
     elif FLASH_ATTN_2_AVAILABLE:
         x = flash_attn.flash_attn_func(
-            q, k, v, window_size=window_size, causal=causal,
-            return_attn_probs=return_attn_probs
+            q, k, v, window_size=window_size, causal=causal, return_attn_probs=return_attn_probs
         )
         if return_attn_probs:
             x, probs = x[0], x[1]
@@ -383,8 +402,10 @@ def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor):
 
 
 def sinusoidal_embedding_1d(dim, position):
-    sinusoid = torch.outer(position.type(torch.float64), torch.pow(
-        10000, -torch.arange(dim//2, dtype=torch.float64, device=position.device).div(dim//2)))
+    sinusoid = torch.outer(
+        position.type(torch.float64),
+        torch.pow(10000, -torch.arange(dim // 2, dtype=torch.float64, device=position.device).div(dim // 2)),
+    )
     x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
     return x.to(position.dtype)
 
@@ -399,8 +420,7 @@ def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
 
 def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
     # 1d rope precompute
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)
-                   [: (dim // 2)].double() / dim))
+    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].double() / dim))
     freqs = torch.outer(torch.arange(end, device=freqs.device), freqs)
     freqs_cis = torch.polar(torch.ones_like(freqs), freqs)
     return freqs_cis
@@ -408,17 +428,16 @@ def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
 
 def rope_apply(x, freqs, num_heads):
     x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)
-    x_out = torch.view_as_complex(x.to(torch.float16).reshape(
-        x.shape[0], x.shape[1], x.shape[2], -1, 2))
+    x_out = torch.view_as_complex(x.to(torch.float16).reshape(x.shape[0], x.shape[1], x.shape[2], -1, 2))
     x_out = torch.view_as_real(x_out * freqs).flatten(2)
     return x_out.to(x.dtype)
+
 
 def rope_apply_for3d(x, num_frames, freqs, num_heads):
     B, L, D = x.shape
     x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)
 
-    x_out = torch.view_as_complex(x.to(torch.float16).reshape(
-        x.shape[0], x.shape[1], x.shape[2], -1, 2))
+    x_out = torch.view_as_complex(x.to(torch.float16).reshape(x.shape[0], x.shape[1], x.shape[2], -1, 2))
     x_out = torch.view_as_real(x_out * freqs).flatten(2)
 
     x_out = x_out.reshape(B, L, D)
@@ -443,7 +462,7 @@ class AttentionModule(nn.Module):
     def __init__(self, num_heads):
         super().__init__()
         self.num_heads = num_heads
-        
+
     def forward(self, q, k, v, attn_mask=None, window_size=(-1, -1)):
         q = rearrange(q, "b s (n d) -> b s n d", n=self.num_heads)
         k = rearrange(k, "b s (n d) -> b s n d", n=self.num_heads)
@@ -451,16 +470,18 @@ class AttentionModule(nn.Module):
         x = flash_attention(q=q, k=k, v=v, num_heads=self.num_heads, attn_mask=attn_mask, window_size=window_size)
         x = rearrange(x, "b s n d -> b s (n d)", n=self.num_heads)
         return x
+
+
 class SagAttentionModule(nn.Module):
     def __init__(self, num_heads):
         super().__init__()
         self.num_heads = num_heads
         self.pv_accum_dtype = "fp16"
-        self.smooth_v=True
+        self.smooth_v = True
         if FLAGS_KAIROS_CUDA_SM in [89, 120, 121]:
             self.pv_accum_dtype = "fp32+fp16"
             self.smooth_v = True
-        
+
     def forward(self, q, k, v, attn_mask=None, window_size=(-1, -1)):
         b, s, _ = q.shape
         n = self.num_heads
@@ -470,12 +491,30 @@ class SagAttentionModule(nn.Module):
         q = q.view(b, s, n, d).transpose(1, 2)
         k = k.view(b, s, n, d).transpose(1, 2)
         v = v.view(b, s, n, d).transpose(1, 2)
-        x = sag_attention_with_window(q, k, v,window_size=window_size,qk_quant_gran="per_warp", pv_accum_dtype=self.pv_accum_dtype,smooth_v=self.smooth_v)
+        x = sag_attention_with_window(
+            q,
+            k,
+            v,
+            window_size=window_size,
+            qk_quant_gran="per_warp",
+            pv_accum_dtype=self.pv_accum_dtype,
+            smooth_v=self.smooth_v,
+        )
         x = x.transpose(1, 2).contiguous().view(b, s, n * d)
         return x
 
+
 class SelfAttention(nn.Module):
-    def __init__(self, dim: int, num_heads: int, eps: float = 1e-6, dilated_length=1, window_size=3, attend_k0=False, backend = "flashattention"):
+    def __init__(
+        self,
+        dim: int,
+        num_heads: int,
+        eps: float = 1e-6,
+        dilated_length=1,
+        window_size=3,
+        attend_k0=False,
+        backend="flashattention",
+    ):
         super().__init__()
         self.dim = dim
         self.num_heads = num_heads
@@ -496,10 +535,10 @@ class SelfAttention(nn.Module):
             self.attn = SagAttentionModule(self.num_heads)
         else:
             self.attn = AttentionModule(self.num_heads)
- 
+
     def extra_repr(self):
-        return f'dilated_length={self.dilated_length}, window_size={self.window_size}'
-    
+        return f"dilated_length={self.dilated_length}, window_size={self.window_size}"
+
     def forward(self, x, f, freqs, L=1):
         dilated_length = self.dilated_length
         q = self.norm_q(self.q(x))
@@ -508,7 +547,7 @@ class SelfAttention(nn.Module):
         q = rope_apply(q, freqs, self.num_heads)
         k = rope_apply(k, freqs, self.num_heads)
         use_dilated = dilated_length > 1 and x.shape[1] // (dilated_length * L) > 1
-        
+
         if self.attend_k0:
             fk = k[:, :1]
             fv = v[:, :1]
@@ -527,14 +566,18 @@ class SelfAttention(nn.Module):
                 fk = fk.unsqueeze(1).expand(-1, dilated_length, -1, -1).flatten(0, 1)
                 fv = fv.unsqueeze(1).expand(-1, dilated_length, -1, -1).flatten(0, 1)
         if not self.attend_k0:
-            x = self.attn(q, k, v, window_size=(L*self.window_size, L*self.window_size))
+            x = self.attn(q, k, v, window_size=(L * self.window_size, L * self.window_size))
         else:
             q = rearrange(q, "b s (n d) -> b s n d", n=self.num_heads)
             k = rearrange(k, "b s (n d) -> b s n d", n=self.num_heads)
             v = rearrange(v, "b s (n d) -> b s n d", n=self.num_heads)
             x, probs = flash_attention(
-                q=q, k=k, v=v, num_heads=self.num_heads, 
-                window_size=(L*self.window_size, L*self.window_size), return_attn_probs=True
+                q=q,
+                k=k,
+                v=v,
+                num_heads=self.num_heads,
+                window_size=(L * self.window_size, L * self.window_size),
+                return_attn_probs=True,
             )
 
             fk = rearrange(fk, "b s (n d) -> b s n d", n=self.num_heads)
@@ -557,6 +600,7 @@ class SelfAttention(nn.Module):
                 out = out[:, :-pad_len]
         return out
 
+
 def tensor_parallel_rms_norm(x, norm, tp_chunk_list):
     tp_rank = parallel_state.get_context_parallel_rank()
     tp_group = parallel_state.get_context_parallel_group()
@@ -566,8 +610,7 @@ def tensor_parallel_rms_norm(x, norm, tp_chunk_list):
     total_heads = sum(tp_chunk_list)
 
     # head_dim 必须来自 full_dim / total_heads
-    assert full_dim % total_heads == 0, \
-        f"RMSNorm dim {full_dim} not divisible by total_heads {total_heads}"
+    assert full_dim % total_heads == 0, f"RMSNorm dim {full_dim} not divisible by total_heads {total_heads}"
 
     head_dim = full_dim // total_heads
     local_heads = tp_chunk_list[tp_rank]
@@ -576,8 +619,7 @@ def tensor_parallel_rms_norm(x, norm, tp_chunk_list):
     start = sum(tp_chunk_list[:tp_rank]) * head_dim
     end = start + local_dim
 
-    assert x.shape[-1] == local_dim, \
-        f"RMSNorm input dim mismatch: x={x.shape[-1]}, expect {local_dim}"
+    assert x.shape[-1] == local_dim, f"RMSNorm input dim mismatch: x={x.shape[-1]}, expect {local_dim}"
 
     weight = norm.weight[start:end]
 
@@ -589,6 +631,7 @@ def tensor_parallel_rms_norm(x, norm, tp_chunk_list):
     out = x_fp32 * torch.rsqrt(variance + norm.eps) * weight
     return out.to(x.dtype)
 
+
 def _distribute_freqs_sp(freqs, context_group):
     context_group_world_size = dist.get_world_size(group=context_group)
     context_group_rank = dist.get_rank(group=context_group)
@@ -596,13 +639,16 @@ def _distribute_freqs_sp(freqs, context_group):
         return freqs
 
     N, B, D = freqs.shape
-    assert N % context_group_world_size == 0, 'cannot split tensor {} vs {}'.format(freqs.shape, context_group_world_size)
+    assert N % context_group_world_size == 0, "cannot split tensor {} vs {}".format(
+        freqs.shape, context_group_world_size
+    )
     local_dim = N // context_group_world_size
     start_idx = context_group_rank * local_dim
     end_idx = start_idx + local_dim if context_group_rank != context_group_world_size - 1 else N
 
     local_freqs = freqs[start_idx:end_idx, :, :].contiguous()
     return local_freqs
+
 
 class SelfAttentionTP(nn.Module):
     def __init__(self, dim: int, num_heads: int, eps: float = 1e-6, dilated_length=1, window_size=3):
@@ -615,9 +661,7 @@ class SelfAttentionTP(nn.Module):
 
         if self.num_heads % self.tp_size != 0:
             self.tp_chunk_list = build_tp_chunk_list(self.num_heads, self.tp_size)
-            num_heads_local = self.tp_chunk_list[
-                parallel_state.get_context_parallel_rank()
-            ]
+            num_heads_local = self.tp_chunk_list[parallel_state.get_context_parallel_rank()]
         else:
             self.tp_chunk_list = None
             num_heads_local = self.num_heads // self.tp_size
@@ -644,12 +688,11 @@ class SelfAttentionTP(nn.Module):
         self._debug_saved_attn_out = False
 
     def extra_repr(self):
-        return f'dilated_length={self.dilated_length}, window_size={self.window_size}, tp_size={self.tp_size}'
-
+        return f"dilated_length={self.dilated_length}, window_size={self.window_size}, tp_size={self.tp_size}"
 
     def forward(self, x, f, freqs, L=1):
         dilated_length = self.dilated_length
-    
+
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(x))
         v = self.v(x)
@@ -668,7 +711,7 @@ class SelfAttentionTP(nn.Module):
         seq_local = x.shape[1]
         seq_global = seq_local * self.tp_size
         use_dilated = dilated_length > 1 and seq_global // (dilated_length * L) > 1
-    
+
         if use_dilated:
             # Sequence length is generally divisible; cases where it is not divisible are not supported.
 
@@ -684,7 +727,7 @@ class SelfAttentionTP(nn.Module):
             k = rearrange(k, "b (n d l) c -> (b d) (n l) c", l=L, d=dilated_length)
             v = rearrange(v, "b (n d l) c -> (b d) (n l) c", l=L, d=dilated_length)
 
-        x = self.attn(q, k, v, window_size=(L*self.window_size, L*self.window_size))
+        x = self.attn(q, k, v, window_size=(L * self.window_size, L * self.window_size))
 
         if use_dilated:
             x = rearrange(x, "(b d) (n l) c -> b (n d l) c", l=L, d=dilated_length)
@@ -695,6 +738,7 @@ class SelfAttentionTP(nn.Module):
         out = self.o(x)
 
         return out
+
 
 class CrossAttention(nn.Module):
     def __init__(self, dim: int, num_heads: int, eps: float = 1e-6, has_image_input: bool = False):
@@ -718,7 +762,6 @@ class CrossAttention(nn.Module):
         self.attn = AttentionModule(self.num_heads)
 
     def forward(self, x: torch.Tensor, y: torch.Tensor, attn_mask=None):
-
         if self.has_image_input:
             img = y[:, :257]
             ctx = y[:, 257:]
@@ -740,12 +783,16 @@ class CrossAttention(nn.Module):
             x = x + y
         return self.o(x)
 
+
 class GateModule(nn.Module):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         super().__init__()
 
     def forward(self, x, gate, residual):
         return x + gate * residual
+
 
 def _broadcast_from_owner(x_chunk, owner_rank, chunk_shape, dtype, device, group):
     rank = dist.get_rank(group)
@@ -762,37 +809,39 @@ def _get_owner_chunk_info(chunk_id, chunk_size, local_seq_len):
     owner_local_end = owner_local_start + chunk_size
     return owner_rank, owner_local_start, owner_local_end
 
+
 class DiTBlock(nn.Module):
-    def __init__(self, 
+    def __init__(
+        self,
         has_image_input: bool,
         dim: int,
         num_heads: int,
-        ffn_dim: int, 
+        ffn_dim: int,
         eps: float = 1e-6,
-        use_linear_attn = True, 
-        dilated_length=1, 
+        use_linear_attn=True,
+        dilated_length=1,
         window_size=3,
         # *************************
         # seq parallel params
         block_idx=-1,
-        gateddeltanet_layer_idx = -1,
+        gateddeltanet_layer_idx=-1,
         is_first_block=False,
         is_last_block=False,
         use_seq_parallel=False,
         use_tp_in_getaeddeltanet=False,
         use_tp_in_self_attn=False,
-        attend_k0=False
-        ):
+        attend_k0=False,
+    ):
         super().__init__()
         self.dim = dim
         self.num_heads = num_heads
         self.ffn_dim = ffn_dim
         self.use_linear_attn = use_linear_attn
 
-        self.block_idx=block_idx
-        self.is_first_block=is_first_block
-        self.is_last_block=is_last_block
-        self.use_seq_parallel=use_seq_parallel
+        self.block_idx = block_idx
+        self.is_first_block = is_first_block
+        self.is_last_block = is_last_block
+        self.use_seq_parallel = use_seq_parallel
         self.use_tp_in_getaeddeltanet = use_tp_in_getaeddeltanet
         self.use_tp_in_self_attn = use_tp_in_self_attn
 
@@ -809,7 +858,9 @@ class DiTBlock(nn.Module):
             self.context_group = None
 
         if is_first_block:
-            print(f'{self.__class__.__name__} use_seq_parallel: {use_seq_parallel} context_group_size: {self.context_group_size}')
+            print(
+                f"{self.__class__.__name__} use_seq_parallel: {use_seq_parallel} context_group_size: {self.context_group_size}"
+            )
 
         if self.use_linear_attn:
             assert gateddeltanet_layer_idx >= 0
@@ -827,34 +878,35 @@ class DiTBlock(nn.Module):
                     RuntimeWarning,
                     stacklevel=2,
                 )
-            self.gated_delta = GatedDeltaNet(hidden_size=dim,
-                                            num_heads=num_heads,
-                                            mode='chunk',
-                                            use_gate=True,
-                                            norm_eps=eps,
-                                            layer_idx=gateddeltanet_layer_idx
-                                            )
+            self.gated_delta = GatedDeltaNet(
+                hidden_size=dim,
+                num_heads=num_heads,
+                mode="chunk",
+                use_gate=True,
+                norm_eps=eps,
+                layer_idx=gateddeltanet_layer_idx,
+            )
         else:
             assert gateddeltanet_layer_idx == -1
             if self.use_tp_in_self_attn and self.world > 1:
                 # self_attention用tp并行
                 if attend_k0:
-                    raise NotImplementedError('SelfAttentionTP not support attend_k0 yet!!!')
-                self.self_attn = SelfAttentionTP(dim, num_heads, eps, dilated_length=dilated_length, window_size=window_size)
+                    raise NotImplementedError("SelfAttentionTP not support attend_k0 yet!!!")
+                self.self_attn = SelfAttentionTP(
+                    dim, num_heads, eps, dilated_length=dilated_length, window_size=window_size
+                )
             else:
-                self.self_attn = SelfAttention(dim, num_heads, eps, dilated_length=dilated_length, window_size=window_size, attend_k0=attend_k0)
+                self.self_attn = SelfAttention(
+                    dim, num_heads, eps, dilated_length=dilated_length, window_size=window_size, attend_k0=attend_k0
+                )
 
-        self.cross_attn = CrossAttention(
-            dim, num_heads, eps, has_image_input=has_image_input)
+        self.cross_attn = CrossAttention(dim, num_heads, eps, has_image_input=has_image_input)
 
         self.self_attn_norm = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
         self.cross_attn_norm = nn.LayerNorm(dim, eps=eps)
         self.ffn_norm = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
 
-        self.ffn = nn.Sequential(
-            nn.Linear(dim, ffn_dim), 
-            ACT2CLS['silu'](),
-            nn.Linear(ffn_dim, dim))
+        self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), ACT2CLS["silu"](), nn.Linear(ffn_dim, dim))
         self.modulation = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5)
         self.gate = GateModule()
 
@@ -904,12 +956,12 @@ class DiTBlock(nn.Module):
             if world_size > 1:
                 chunk_size = local_seq_len
             else:
-                assert local_seq_len >= 8 and local_seq_len % 8 == 0, \
+                assert local_seq_len >= 8 and local_seq_len % 8 == 0, (
                     f"single-card path requires local_seq_len divisible by 8, got {local_seq_len}"
+                )
                 chunk_size = local_seq_len // 8
 
-            assert local_seq_len % chunk_size == 0, \
-                f"chunk_size={chunk_size} must divide local_seq_len={local_seq_len}"
+            assert local_seq_len % chunk_size == 0, f"chunk_size={chunk_size} must divide local_seq_len={local_seq_len}"
 
             total_seq_len = local_seq_len * world_size
             num_chunks = total_seq_len // chunk_size
@@ -920,9 +972,7 @@ class DiTBlock(nn.Module):
             for chunk_id in range(num_chunks):
                 if world_size > 1:
                     owner_rank, owner_local_start, owner_local_end = _get_owner_chunk_info(
-                        chunk_id=chunk_id,
-                        chunk_size=chunk_size,
-                        local_seq_len=local_seq_len
+                        chunk_id=chunk_id, chunk_size=chunk_size, local_seq_len=local_seq_len
                     )
 
                     if rank == owner_rank:
@@ -939,11 +989,7 @@ class DiTBlock(nn.Module):
                         group=self.context_group,
                     )
 
-                    out_chunk, _, cache = self.gated_delta(
-                        x_chunk,
-                        past_key_values=cache,
-                        use_cache=True
-                    )
+                    out_chunk, _, cache = self.gated_delta(x_chunk, past_key_values=cache, use_cache=True)
 
                     # The upstream fallback is replicated: every rank receives
                     # the full input chunk and produces the full output chunk.
@@ -958,11 +1004,7 @@ class DiTBlock(nn.Module):
                     end = start + chunk_size
                     x_chunk = input_x_local[:, start:end, :].contiguous()
 
-                    out_chunk, _, cache = self.gated_delta(
-                        x_chunk,
-                        past_key_values=cache,
-                        use_cache=True
-                    )
+                    out_chunk, _, cache = self.gated_delta(x_chunk, past_key_values=cache, use_cache=True)
 
                     attn_out_local[:, start:end, :] = out_chunk
 
@@ -979,7 +1021,7 @@ class DiTBlock(nn.Module):
 
         shift = get_mod_chunk(4)
         scale = get_mod_chunk(3)
-        gate  = get_mod_chunk(5)
+        gate = get_mod_chunk(5)
 
         def chunked_ffn(input_x, shift, scale, gate, chunk_size):
             B, N, D = input_x.shape
@@ -1019,9 +1061,9 @@ class MLP(torch.nn.Module):
         self.proj = torch.nn.Sequential(
             nn.LayerNorm(in_dim),
             nn.Linear(in_dim, in_dim),
-            ACT2CLS['silu'](),
+            ACT2CLS["silu"](),
             nn.Linear(in_dim, out_dim),
-            nn.LayerNorm(out_dim)
+            nn.LayerNorm(out_dim),
         )
         self.has_pos_emb = has_pos_emb
         if has_pos_emb:
@@ -1061,7 +1103,6 @@ def build_2d_sincos_pos_embed(embed_dim: int, h: int, w: int, device=None, dtype
     return pos
 
 
-
 class PosEmbed2D(nn.Module):
     def __init__(self, embed_dim: int):
         super().__init__()
@@ -1086,11 +1127,13 @@ class Head(nn.Module):
 
     def forward(self, x, t_mod):
         if len(t_mod.shape) == 3:
-            shift, scale = (self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)).chunk(2, dim=2)
-            x = (self.head(self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2)))
+            shift, scale = (
+                self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)
+            ).chunk(2, dim=2)
+            x = self.head(self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2))
         else:
             shift, scale = (self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(2, dim=1)
-            x = (self.head(self.norm(x) * (1 + scale) + shift))
+            x = self.head(self.norm(x) * (1 + scale) + shift)
         return x
 
 
@@ -1117,12 +1160,12 @@ class KairosDiT(torch.nn.Module):
         require_vae_embedding: bool = True,
         require_clip_embedding: bool = True,
         fuse_vae_embedding_in_latents: bool = False,
-        dilated_lengths = [1, 1, 6, 1],
+        dilated_lengths=[1, 1, 6, 1],
         use_first_frame_cond: bool = False,
         use_seq_parallel=False,
         use_tp_in_getaeddeltanet=False,
         use_tp_in_self_attn=False,
-        attend_k0=False
+        attend_k0=False,
     ):
         super().__init__()
         self.dim = dim
@@ -1136,11 +1179,10 @@ class KairosDiT(torch.nn.Module):
         self.fuse_vae_embedding_in_latents = fuse_vae_embedding_in_latents
         self.use_first_frame_cond = use_first_frame_cond
 
-        self.patch_embedding = nn.Conv3d(
-            in_dim, dim, kernel_size=patch_size, stride=patch_size)
+        self.patch_embedding = nn.Conv3d(in_dim, dim, kernel_size=patch_size, stride=patch_size)
         self.text_embedding = nn.Sequential(
             nn.Linear(text_dim, dim),
-            ACT2CLS['silu'](),
+            ACT2CLS["silu"](),
             nn.Linear(dim, dim),
         )
         if self.use_first_frame_cond:
@@ -1151,14 +1193,8 @@ class KairosDiT(torch.nn.Module):
             )
             self.image_embedding = MLP(dim, dim, has_pos_emb=False)
             self.image_pos_embed = PosEmbed2D(dim)
-        self.time_embedding = nn.Sequential(
-            nn.Linear(freq_dim, dim),
-            nn.SiLU(),
-            nn.Linear(dim, dim)
-        )
-        self.time_projection = nn.Sequential(
-            nn.SiLU(), nn.Linear(dim, dim * 6)
-        )
+        self.time_embedding = nn.Sequential(nn.Linear(freq_dim, dim), nn.SiLU(), nn.Linear(dim, dim))
+        self.time_projection = nn.Sequential(nn.SiLU(), nn.Linear(dim, dim * 6))
 
         _blocks = []
 
@@ -1171,21 +1207,28 @@ class KairosDiT(torch.nn.Module):
                 gidx += 1
 
         for i in range(num_layers):
-            _block = DiTBlock(has_image_input, dim, num_heads, ffn_dim, eps, use_linear_attn=(i + 1) % 4 == 0, dilated_length=dilated_lengths[i % 4],
-                    block_idx=i,
-                    gateddeltanet_layer_idx=gateddeltanet_layer_indexs[i],
-                    is_first_block=(i == 0),
-                    is_last_block= (i == (num_layers - 1)),
-                    use_seq_parallel=use_seq_parallel,
-                    use_tp_in_getaeddeltanet=use_tp_in_getaeddeltanet,
-                    use_tp_in_self_attn=use_tp_in_self_attn,
-                    attend_k0=attend_k0
+            _block = DiTBlock(
+                has_image_input,
+                dim,
+                num_heads,
+                ffn_dim,
+                eps,
+                use_linear_attn=(i + 1) % 4 == 0,
+                dilated_length=dilated_lengths[i % 4],
+                block_idx=i,
+                gateddeltanet_layer_idx=gateddeltanet_layer_indexs[i],
+                is_first_block=(i == 0),
+                is_last_block=(i == (num_layers - 1)),
+                use_seq_parallel=use_seq_parallel,
+                use_tp_in_getaeddeltanet=use_tp_in_getaeddeltanet,
+                use_tp_in_self_attn=use_tp_in_self_attn,
+                attend_k0=attend_k0,
             )
             _blocks.append(_block)
         self.blocks = nn.ModuleList(_blocks)
-        print(f'{self.__class__.__name__} use_seq_parallel: {use_seq_parallel}')
-        print(f'{self.__class__.__name__} use_tp_in_getaeddeltanet: {use_tp_in_getaeddeltanet}')
-        print(f'{self.__class__.__name__} use_tp_in_self_attn: {use_tp_in_self_attn}')
+        print(f"{self.__class__.__name__} use_seq_parallel: {use_seq_parallel}")
+        print(f"{self.__class__.__name__} use_tp_in_getaeddeltanet: {use_tp_in_getaeddeltanet}")
+        print(f"{self.__class__.__name__} use_tp_in_self_attn: {use_tp_in_self_attn}")
         self.head = Head(dim, out_dim, patch_size, eps)
         head_dim = dim // num_heads
 
@@ -1210,26 +1253,30 @@ class KairosDiT(torch.nn.Module):
 
     def unpatchify(self, x: torch.Tensor, grid_size: torch.Tensor):
         return rearrange(
-            x, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
-            f=grid_size[0], h=grid_size[1], w=grid_size[2], 
-            x=self.patch_size[0], y=self.patch_size[1], z=self.patch_size[2]
+            x,
+            "b (f h w) (x y z c) -> b c (f x) (h y) (w z)",
+            f=grid_size[0],
+            h=grid_size[1],
+            w=grid_size[2],
+            x=self.patch_size[0],
+            y=self.patch_size[1],
+            z=self.patch_size[2],
         )
 
-    def forward(self,
-                x: torch.Tensor,
-                timestep: torch.Tensor,
-                context: torch.Tensor,
-                context_mask: Optional[torch.Tensor] = None,
-                clip_feature: Optional[torch.Tensor] = None,
-                y: Optional[torch.Tensor] = None,
-                use_gradient_checkpointing: bool = False,
-                use_gradient_checkpointing_offload: bool = False,
-                first_frame_latents: Optional[torch.Tensor] = None,
-                **kwargs,
-                ):
-
-        t = self.time_embedding(
-            sinusoidal_embedding_1d(self.freq_dim, timestep))
+    def forward(
+        self,
+        x: torch.Tensor,
+        timestep: torch.Tensor,
+        context: torch.Tensor,
+        context_mask: Optional[torch.Tensor] = None,
+        clip_feature: Optional[torch.Tensor] = None,
+        y: Optional[torch.Tensor] = None,
+        use_gradient_checkpointing: bool = False,
+        use_gradient_checkpointing_offload: bool = False,
+        first_frame_latents: Optional[torch.Tensor] = None,
+        **kwargs,
+    ):
+        t = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep))
         t_mod = self.time_projection(t).unflatten(1, (6, self.dim))
         context = self.text_embedding(context)
 
@@ -1243,11 +1290,16 @@ class KairosDiT(torch.nn.Module):
             img_context = self.image_pos_embed(img_context, h=fh, w=fw)
             context = torch.cat([img_context, context], dim=1)
             if context_mask is not None:
-                context_mask = torch.cat([
-                    torch.ones(context.shape[0], img_context.shape[1], dtype=context_mask.dtype, device=context_mask.device),
-                    context_mask
-                ], dim=1)
-        
+                context_mask = torch.cat(
+                    [
+                        torch.ones(
+                            context.shape[0], img_context.shape[1], dtype=context_mask.dtype, device=context_mask.device
+                        ),
+                        context_mask,
+                    ],
+                    dim=1,
+                )
+
         if self.has_image_input:
             x = torch.cat([x, y], dim=1)
             clip_embdding = self.img_emb(clip_feature)
@@ -1256,15 +1308,23 @@ class KairosDiT(torch.nn.Module):
         x, (f, h, w) = self.patchify(x)
         grid_size = (f, h, w)
 
-        freqs = torch.cat([
-            self.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
-            self.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
-            self.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)
-        ], dim=-1).reshape(f * h * w, 1, -1).to(x.device)
+        freqs = (
+            torch.cat(
+                [
+                    self.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
+                    self.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
+                    self.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1),
+                ],
+                dim=-1,
+            )
+            .reshape(f * h * w, 1, -1)
+            .to(x.device)
+        )
 
         def create_custom_forward(module):
             def custom_forward(*inputs):
                 return module(*inputs)
+
             return custom_forward
 
         for block in self.blocks:
@@ -1273,13 +1333,23 @@ class KairosDiT(torch.nn.Module):
                     with torch.autograd.graph.save_on_cpu():
                         x = torch.utils.checkpoint.checkpoint(
                             create_custom_forward(block),
-                            x, context, t_mod, freqs, grid_size, context_mask=context_mask,
+                            x,
+                            context,
+                            t_mod,
+                            freqs,
+                            grid_size,
+                            context_mask=context_mask,
                             use_reentrant=False,
                         )
                 else:
                     x = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(block),
-                        x, context, t_mod, freqs, grid_size, context_mask=context_mask,
+                        x,
+                        context,
+                        t_mod,
+                        freqs,
+                        grid_size,
+                        context_mask=context_mask,
                         use_reentrant=False,
                     )
             else:

@@ -49,7 +49,7 @@ class GemmaRMSNorm(nn.Module):
 
         # Dense layer for adaptive normalization (if cond_dim is provided)
         if cond_dim is not None:
-            #self.dense = nn.Linear(cond_dim, dim * 3, bias=True, dtype=torch.bfloat16)
+            # self.dense = nn.Linear(cond_dim, dim * 3, bias=True, dtype=torch.bfloat16)
             self.dense = nn.Linear(cond_dim, dim * 3, bias=True)
             # Initialize with zeros (matches source implementation)
             nn.init.zeros_(self.dense.weight)
@@ -78,7 +78,7 @@ class GemmaRMSNorm(nn.Module):
         if cond.shape[-1] != self.cond_dim:
             raise ValueError(f"Expected cond dimension {self.cond_dim}, got {cond.shape[-1]}")
 
-        #self.dense.to(dtype=torch.bfloat16).to(dtype=torch.float32)
+        # self.dense.to(dtype=torch.bfloat16).to(dtype=torch.float32)
         modulation = self.dense(cond)
         # Reshape modulation to broadcast properly: [batch, 1, features] for [batch, seq, features]
         if len(x.shape) == 3:  # [batch, seq, features]
@@ -233,11 +233,7 @@ def eager_attention_forward(
     key_states = repeat_kv(key, module.num_key_value_groups)
     value_states = repeat_kv(value, module.num_key_value_groups)
 
-    causal_mask = (
-        attention_mask[:, :, :, : key_states.shape[-2]]
-        if attention_mask is not None
-        else None
-    )
+    causal_mask = attention_mask[:, :, :, : key_states.shape[-2]] if attention_mask is not None else None
     attn_output = scaled_dot_product_attention(
         query,
         key_states,
@@ -335,7 +331,7 @@ class GemmaDecoderLayer(nn.Module):
         self.self_attn = GemmaAttention(config=config, layer_idx=layer_idx)
 
         self.mlp = GemmaMLP(config)
-        cond_dim = getattr(config, 'adarms_cond_dim', None) if getattr(config, 'use_adarms', False) else None
+        cond_dim = getattr(config, "adarms_cond_dim", None) if getattr(config, "use_adarms", False) else None
         self.input_layernorm = GemmaRMSNorm(config.hidden_size, eps=config.rms_norm_eps, cond_dim=cond_dim)
         self.post_attention_layernorm = GemmaRMSNorm(config.hidden_size, eps=config.rms_norm_eps, cond_dim=cond_dim)
 
@@ -408,7 +404,7 @@ class GemmaPreTrainedModel(PreTrainedModel):
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         elif isinstance(module, GemmaRMSNorm):
-            if hasattr(module, 'weight'):
+            if hasattr(module, "weight"):
                 # GemmaRMSNorm applies ``1 + weight`` in forward.
                 module.weight.data.zero_()
 
@@ -425,7 +421,7 @@ class GemmaModel(GemmaPreTrainedModel):
             [GemmaDecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
         )
 
-        cond_dim = getattr(config, 'adarms_cond_dim', None) if getattr(config, 'use_adarms', False) else None
+        cond_dim = getattr(config, "adarms_cond_dim", None) if getattr(config, "use_adarms", False) else None
         self.norm = GemmaRMSNorm(config.hidden_size, eps=config.rms_norm_eps, cond_dim=cond_dim)
         self.rotary_emb = GemmaRotaryEmbedding(config=config)
         # Initialize weights and apply final processing
@@ -540,14 +536,6 @@ class GemmaModel(GemmaPreTrainedModel):
             hidden_states=all_hidden_states,
             attentions=all_self_attns,
         )
-
-
-
-
-
-
-
-
 
 
 __all__ = [

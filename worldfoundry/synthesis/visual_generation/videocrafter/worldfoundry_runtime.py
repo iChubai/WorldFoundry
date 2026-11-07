@@ -105,6 +105,7 @@ def _normalize_lvdm_config(model_config) -> None:
 
 class VideoCrafter:
     """Video crafter implementation."""
+
     def __init__(
         self,
         model_name: str,

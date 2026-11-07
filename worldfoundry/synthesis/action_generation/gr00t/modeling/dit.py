@@ -136,9 +136,7 @@ class BasicTransformerBlock(nn.Module):
             )
 
         if positional_embeddings == "sinusoidal":
-            self.pos_embed = SinusoidalPositionalEmbedding(
-                dim, max_seq_length=num_positional_embeddings
-            )
+            self.pos_embed = SinusoidalPositionalEmbedding(dim, max_seq_length=num_positional_embeddings)
         else:
             self.pos_embed = None
 
@@ -196,9 +194,7 @@ class BasicTransformerBlock(nn.Module):
             attn_output = self.attn1(
                 norm_hidden_states,
                 encoder_hidden_states=encoder_hidden_states,
-                attention_mask=(
-                    encoder_attention_mask if encoder_hidden_states is not None else attention_mask
-                ),
+                attention_mask=(encoder_attention_mask if encoder_hidden_states is not None else attention_mask),
             )
         if self.final_dropout:
             attn_output = self.final_dropout(attn_output)
@@ -245,9 +241,7 @@ class DiT(ModelMixin, ConfigMixin):
         self.attention_head_dim = attention_head_dim
         self.inner_dim = self.config.num_attention_heads * self.config.attention_head_dim
         # Timestep encoder
-        self.timestep_encoder = TimestepEncoder(
-            embedding_dim=self.inner_dim, compute_dtype=self.compute_dtype
-        )
+        self.timestep_encoder = TimestepEncoder(embedding_dim=self.inner_dim, compute_dtype=self.compute_dtype)
 
         all_blocks = []
         for idx in range(self.config.num_layers):

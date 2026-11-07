@@ -82,6 +82,8 @@ def calculate_shift(
     b = base_shift - m * base_seq_len
     mu = image_seq_len * m + b
     return mu
+
+
 def retrieve_latents(
     encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
 ):
@@ -427,13 +429,9 @@ class FluxFillPipeline(
         return prompt_embeds, pooled_prompt_embeds, text_ids
 
     def circular_encode(self, image, generator=None, pad=32):
-        padded_image = torch.cat([
-            image[..., -pad:],
-            image,
-            image[..., :pad]
-        ], dim=-1)
+        padded_image = torch.cat([image[..., -pad:], image, image[..., :pad]], dim=-1)
         latents = retrieve_latents(self.vae.encode(padded_image), generator=generator)
-        latent_pad = pad//8
+        latent_pad = pad // 8
         latents = latents[..., latent_pad:-latent_pad]
         return latents
 
@@ -441,8 +439,7 @@ class FluxFillPipeline(
     def _encode_vae_image(self, image: torch.Tensor, generator: torch.Generator):
         if isinstance(generator, list):
             image_latents = [
-                self.circular_encode(image[i : i + 1], generator=generator[i])
-                for i in range(image.shape[0])
+                self.circular_encode(image[i : i + 1], generator=generator[i]) for i in range(image.shape[0])
             ]
             image_latents = torch.cat(image_latents, dim=0)
         else:
@@ -809,8 +806,6 @@ class FluxFillPipeline(
         """
 
         def _decode(self, z: torch.Tensor, return_dict: bool = True) -> Union[DecoderOutput, torch.Tensor]:
-
-
             if self.use_tiling:
                 raise NotImplementedError
 
@@ -818,12 +813,15 @@ class FluxFillPipeline(
                 z = self.post_quant_conv(z)
 
             pad = 32
-            latent_pad = pad//8
-            z = torch.cat([
-                z[..., -latent_pad:],
-                z,
-                z[..., :latent_pad],
-            ], dim=-1)
+            latent_pad = pad // 8
+            z = torch.cat(
+                [
+                    z[..., -latent_pad:],
+                    z,
+                    z[..., :latent_pad],
+                ],
+                dim=-1,
+            )
 
             dec = self.decoder(z)
 
@@ -873,9 +871,7 @@ class FluxFillPipeline(
         device = self._execution_device
 
         # 3. Prepare prompt embeddings
-        lora_scale = (
-            self.joint_attention_kwargs.get("scale", None) if self.joint_attention_kwargs is not None else None
-        )
+        lora_scale = self.joint_attention_kwargs.get("scale", None) if self.joint_attention_kwargs is not None else None
         (
             prompt_embeds,
             pooled_prompt_embeds,
@@ -997,21 +993,23 @@ class FluxFillPipeline(
                         # some platforms (eg. apple mps) misbehave due to a pytorch bug: https://github.com/pytorch/pytorch/pull/99272
                         latents = latents.to(latents_dtype)
 
-                #TODO:
+                # TODO:
                 # if i > len(timesteps) * 0.6 and i%2 == 0:
                 # if i < len(timesteps) * 0.8 and i%2 == 0:
                 if i % 2 == 0:
                     latents_unpack = self._unpack_latents(latents, height, width, self.vae_scale_factor)
-                    B,C,H,W = latents_unpack.shape
+                    B, C, H, W = latents_unpack.shape
                     if self.shift_count % 2 == 0:
-                        roll_shift = W//2
+                        roll_shift = W // 2
                     else:
-                        roll_shift = -(W//2)
+                        roll_shift = -(W // 2)
                     self.shift_count += 1
                     latents_unpack = torch.roll(latents_unpack, roll_shift, dims=-1)
                     latents = self._pack_latents(latents_unpack, batch_size, num_channels_latents, H, W)
-                    masked_latents_unpack = self._unpack_latents(masked_image_latents, height, width, self.vae_scale_factor)
-                    B,C,H,W = masked_latents_unpack.shape
+                    masked_latents_unpack = self._unpack_latents(
+                        masked_image_latents, height, width, self.vae_scale_factor
+                    )
+                    B, C, H, W = masked_latents_unpack.shape
                     masked_latents_unpack = torch.roll(masked_latents_unpack, roll_shift, dims=-1)
                     masked_image_latents = self._pack_latents(masked_latents_unpack, batch_size, C, H, W)
 
@@ -1035,8 +1033,8 @@ class FluxFillPipeline(
         ## restore shift
         if self.shift_count % 2:
             latents_unpack = self._unpack_latents(latents, height, width, self.vae_scale_factor)
-            B,C,H,W = latents_unpack.shape
-            roll_shift = -(W//2)
+            B, C, H, W = latents_unpack.shape
+            roll_shift = -(W // 2)
             latents_unpack = torch.roll(latents_unpack, roll_shift, dims=-1)
             latents = self._pack_latents(latents_unpack, batch_size, num_channels_latents, H, W)
 

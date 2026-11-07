@@ -81,15 +81,7 @@ class Downsample(nn.Module):
 
 
 class ResnetBlock(nn.Module):
-    def __init__(
-            self,
-            *,
-            in_channels,
-            out_channels=None,
-            conv_shortcut=False,
-            dropout=0.0,
-            temb_channels=512
-    ):
+    def __init__(self, *, in_channels, out_channels=None, conv_shortcut=False, dropout=0.0, temb_channels=512):
         super(ResnetBlock, self).__init__()
         self.in_channels = in_channels
         out_channels = in_channels if out_channels is None else out_channels
@@ -149,9 +141,7 @@ class AttnBlock(nn.Module):
         v = self.v(h_)
 
         b, c, h, w = q.shape
-        q, k, v = map(
-            lambda x: rearrange(x, "b c h w -> b 1 (h w) c").contiguous(), (q, k, v)
-        )
+        q, k, v = map(lambda x: rearrange(x, "b c h w -> b 1 (h w) c").contiguous(), (q, k, v))
         h_ = _worldfoundry_scaled_dot_product_attention(q, k, v)
         return rearrange(h_, "b 1 (h w) c -> b c h w", h=h, w=w, c=c, b=b)
 
@@ -195,15 +185,10 @@ class MemoryEfficientAttnBlock(nn.Module):
             .permute(0, 2, 1, 3)
             .reshape(B * 1, t.shape[1], C)
             .contiguous(),
-            (q, k, v)
+            (q, k, v),
         )
         out = xformers.ops.memory_efficient_attention(q, k, v, op=self.attention_op)
-        out = (
-            out[None]
-            .reshape(B, 1, out.shape[1], C)
-            .permute(0, 2, 1, 3)
-            .reshape(B, out.shape[1], C)
-        )
+        out = out[None].reshape(B, 1, out.shape[1], C).permute(0, 2, 1, 3).reshape(B, out.shape[1], C)
         return rearrange(out, "b (h w) c -> b c h w", b=B, h=H, w=W, c=C)
 
     def forward(self, x, **kwargs):
@@ -223,13 +208,9 @@ class MemoryEfficientCrossAttentionWrapper(MemoryEfficientCrossAttention):
 
 
 def make_attn(in_channels, attn_type="vanilla", attn_kwargs=None):
-    assert attn_type in [
-        "vanilla",
-        "vanilla-xformers",
-        "memory-efficient-cross-attn",
-        "linear",
-        "none"
-    ], f"Attention type {attn_type} unknown"
+    assert attn_type in ["vanilla", "vanilla-xformers", "memory-efficient-cross-attn", "linear", "none"], (
+        f"Attention type {attn_type} unknown"
+    )
     if version.parse(torch.__version__) < version.parse("2.0.0") and attn_type != "none":
         assert XFORMERS_IS_AVAILABLE, (
             f"We do not support vanilla attention in {torch.__version__} anymore, "
@@ -254,21 +235,21 @@ def make_attn(in_channels, attn_type="vanilla", attn_kwargs=None):
 
 class Encoder(nn.Module):
     def __init__(
-            self,
-            *,
-            ch,
-            out_channels,
-            ch_mult=(1, 2, 4, 8),
-            num_res_blocks,
-            attn_resolutions,
-            dropout=0.0,
-            resamp_with_conv=True,
-            in_channels,
-            resolution,
-            z_channels,
-            use_linear_attn=False,
-            attn_type="vanilla",
-            **ignore_kwargs
+        self,
+        *,
+        ch,
+        out_channels,
+        ch_mult=(1, 2, 4, 8),
+        num_res_blocks,
+        attn_resolutions,
+        dropout=0.0,
+        resamp_with_conv=True,
+        in_channels,
+        resolution,
+        z_channels,
+        use_linear_attn=False,
+        attn_type="vanilla",
+        **ignore_kwargs,
     ):
         super(Encoder, self).__init__()
         if use_linear_attn:
@@ -295,10 +276,7 @@ class Encoder(nn.Module):
             for i_block in range(self.num_res_blocks):
                 block.append(
                     ResnetBlock(
-                        in_channels=block_in,
-                        out_channels=block_out,
-                        temb_channels=self.temb_ch,
-                        dropout=dropout
+                        in_channels=block_in, out_channels=block_out, temb_channels=self.temb_ch, dropout=dropout
                     )
                 )
                 block_in = block_out
@@ -314,17 +292,11 @@ class Encoder(nn.Module):
 
         self.mid = nn.Module()
         self.mid.block_1 = ResnetBlock(
-            in_channels=block_in,
-            out_channels=block_in,
-            temb_channels=self.temb_ch,
-            dropout=dropout
+            in_channels=block_in, out_channels=block_in, temb_channels=self.temb_ch, dropout=dropout
         )
         self.mid.attn_1 = make_attn(block_in, attn_type=attn_type)
         self.mid.block_2 = ResnetBlock(
-            in_channels=block_in,
-            out_channels=block_in,
-            temb_channels=self.temb_ch,
-            dropout=dropout
+            in_channels=block_in, out_channels=block_in, temb_channels=self.temb_ch, dropout=dropout
         )
 
         self.norm_out = Normalize(block_in)
@@ -358,23 +330,23 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(
-            self,
-            *,
-            ch,
-            out_channels,
-            ch_mult=(1, 2, 4, 8),
-            num_res_blocks,
-            attn_resolutions,
-            dropout=0.0,
-            resamp_with_conv=True,
-            in_channels,
-            resolution,
-            z_channels,
-            give_pre_end=False,
-            tanh_out=False,
-            use_linear_attn=False,
-            attn_type="vanilla",
-            **ignorekwargs
+        self,
+        *,
+        ch,
+        out_channels,
+        ch_mult=(1, 2, 4, 8),
+        num_res_blocks,
+        attn_resolutions,
+        dropout=0.0,
+        resamp_with_conv=True,
+        in_channels,
+        resolution,
+        z_channels,
+        give_pre_end=False,
+        tanh_out=False,
+        use_linear_attn=False,
+        attn_type="vanilla",
+        **ignorekwargs,
     ):
         super(Decoder, self).__init__()
         if use_linear_attn:
@@ -403,17 +375,11 @@ class Decoder(nn.Module):
 
         self.mid = nn.Module()
         self.mid.block_1 = make_resblock_cls(
-            in_channels=block_in,
-            out_channels=block_in,
-            temb_channels=self.temb_ch,
-            dropout=dropout
+            in_channels=block_in, out_channels=block_in, temb_channels=self.temb_ch, dropout=dropout
         )
         self.mid.attn_1 = make_attn_cls(block_in, attn_type=attn_type)
         self.mid.block_2 = make_resblock_cls(
-            in_channels=block_in,
-            out_channels=block_in,
-            temb_channels=self.temb_ch,
-            dropout=dropout
+            in_channels=block_in, out_channels=block_in, temb_channels=self.temb_ch, dropout=dropout
         )
 
         # Upsampling
@@ -425,10 +391,7 @@ class Decoder(nn.Module):
             for i_block in range(self.num_res_blocks + 1):
                 block.append(
                     make_resblock_cls(
-                        in_channels=block_in,
-                        out_channels=block_out,
-                        temb_channels=self.temb_ch,
-                        dropout=dropout
+                        in_channels=block_in, out_channels=block_out, temb_channels=self.temb_ch, dropout=dropout
                     )
                 )
                 block_in = block_out

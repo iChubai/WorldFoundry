@@ -346,9 +346,8 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel, GenerationMixi
             )
 
         # === Handle Multimodal Forward ===
-        elif (
-            (input_ids is not None and input_ids.shape[0] == pixel_values.shape[0])
-            or (inputs_embeds is not None and inputs_embeds.shape[0] == pixel_values.shape[0])
+        elif (input_ids is not None and input_ids.shape[0] == pixel_values.shape[0]) or (
+            inputs_embeds is not None and inputs_embeds.shape[0] == pixel_values.shape[0]
         ):
             assert past_key_values is None, "Unexpected key `past_key_values` provided during language-only forward!"
 
@@ -394,9 +393,8 @@ class PrismaticForConditionalGeneration(PrismaticPreTrainedModel, GenerationMixi
             )
 
         # === Otherwise =>> Assume Invalid! ===
-        elif (
-            (input_ids is not None and input_ids.shape[0] != pixel_values.shape[0])
-            or (inputs_embeds is not None and inputs_embeds.shape[0] != pixel_values.shape[0])
+        elif (input_ids is not None and input_ids.shape[0] != pixel_values.shape[0]) or (
+            inputs_embeds is not None and inputs_embeds.shape[0] != pixel_values.shape[0]
         ):
             raise ValueError("Non-homogenous batch of (text, image) input -- forward() does not support mixed batches!")
 

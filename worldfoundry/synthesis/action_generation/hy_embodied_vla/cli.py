@@ -55,9 +55,7 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="local checkpoint directory or repo ID (defaults to the selected official variant)",
     )
-    parser.add_argument(
-        "--variant", choices=tuple(OFFICIAL_REPOSITORIES), default=DEFAULT_VARIANT
-    )
+    parser.add_argument("--variant", choices=tuple(OFFICIAL_REPOSITORIES), default=DEFAULT_VARIANT)
     parser.add_argument(
         "--revision",
         help="checkpoint revision (official repos default to the audited immutable revision)",

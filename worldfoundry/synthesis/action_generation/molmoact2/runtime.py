@@ -156,9 +156,7 @@ def _normalize_embodiment(value: Any = None, *, repo_id: str = "", norm_tag: str
     for canonical, payload in defaults.items():
         repo_hint = str(payload.get("repo_id") or "").lower()
         norm_hint = str(payload.get("norm_tag") or "").lower()
-        if (repo_value and repo_hint == repo_value) or (
-            not repo_value and norm_value and norm_hint == norm_value
-        ):
+        if (repo_value and repo_hint == repo_value) or (not repo_value and norm_value and norm_hint == norm_value):
             return canonical
     return _default_embodiment()
 
@@ -179,8 +177,7 @@ def _role_matches_checkpoint(item: Mapping[str, Any], needles: Sequence[str]) ->
     """
     # Concatenate relevant fields into a single search string
     haystack = " ".join(
-        str(item.get(key) or "")
-        for key in ("role", "variant", "variant_id", "repo_id", "id", "name", "norm_tag")
+        str(item.get(key) or "") for key in ("role", "variant", "variant_id", "repo_id", "id", "name", "norm_tag")
     ).lower()
     # Check if all specified needles are present in the haystack
     return all(needle.lower() in haystack for needle in needles)
@@ -271,7 +268,9 @@ def select_molmoact2_checkpoint(
     if preferred is not None:
         repo = str(preferred.get("repo_id") or defaults[resolved_embodiment]["repo_id"])
         # Re-normalize embodiment using hints from the preferred checkpoint's metadata
-        resolved_embodiment = _normalize_embodiment(resolved_embodiment, repo_id=repo, norm_tag=str(preferred.get("norm_tag") or ""))
+        resolved_embodiment = _normalize_embodiment(
+            resolved_embodiment, repo_id=repo, norm_tag=str(preferred.get("norm_tag") or "")
+        )
         return {
             "embodiment": resolved_embodiment,
             "repo_id": repo,
@@ -380,12 +379,8 @@ def _load_in_tree_processor(local_dir: Path) -> Any:
         options.pop("processor_class", None)
         return options
 
-    image_processor = MolmoAct2ImageProcessor(
-        **component_options("image_processor", "image_processor_type")
-    )
-    video_processor = MolmoAct2VideoProcessor(
-        **component_options("video_processor", "video_processor_type")
-    )
+    image_processor = MolmoAct2ImageProcessor(**component_options("image_processor", "image_processor_type"))
+    video_processor = MolmoAct2VideoProcessor(**component_options("video_processor", "video_processor_type"))
     tokenizer_options: dict[str, Any] = {}
     tokenizer_config = json.loads((local_dir / "tokenizer_config.json").read_text(encoding="utf-8"))
     extra_tokens = tokenizer_config.get("extra_special_tokens")
@@ -393,9 +388,9 @@ def _load_in_tree_processor(local_dir: Path) -> Any:
         # Transformers 4 expects named extra tokens; the checkpoint uses the
         # Transformers 5 list form. Preserve token IDs and special-token status.
         tokenizer_options["extra_special_tokens"] = {}
-        tokenizer_options["additional_special_tokens"] = list(dict.fromkeys(
-            [*tokenizer_config.get("additional_special_tokens", []), *extra_tokens]
-        ))
+        tokenizer_options["additional_special_tokens"] = list(
+            dict.fromkeys([*tokenizer_config.get("additional_special_tokens", []), *extra_tokens])
+        )
     tokenizer = AutoTokenizer.from_pretrained(
         str(local_dir),
         trust_remote_code=False,
@@ -504,13 +499,8 @@ class MolmoAct2Runtime:
                 self.config.repo_id,
                 required_files=("config.json", "processor_config.json"),
             )
-        if not (
-            (resolved / "model.safetensors").is_file()
-            or (resolved / "model.safetensors.index.json").is_file()
-        ):
-            raise FileNotFoundError(
-                f"MolmoAct2 model weights are missing from local checkpoint: {resolved}"
-            )
+        if not ((resolved / "model.safetensors").is_file() or (resolved / "model.safetensors.index.json").is_file()):
+            raise FileNotFoundError(f"MolmoAct2 model weights are missing from local checkpoint: {resolved}")
 
         resolved_device = resolve_inference_device(self.config.device, allow_cpu_fallback=True)
         dtype = resolve_inference_dtype(resolved_device, self.config.torch_dtype)
@@ -521,14 +511,18 @@ class MolmoAct2Runtime:
             local_files_only=True,
             trust_remote_code=False,
         )
-        model = MolmoAct2ForConditionalGeneration.from_pretrained(
-            str(resolved),
-            config=model_config,
-            dtype=dtype,
-            local_files_only=True,
-            trust_remote_code=False,
-            use_safetensors=True,
-        ).to(resolved_device).eval()
+        model = (
+            MolmoAct2ForConditionalGeneration.from_pretrained(
+                str(resolved),
+                config=model_config,
+                dtype=dtype,
+                local_files_only=True,
+                trust_remote_code=False,
+                use_safetensors=True,
+            )
+            .to(resolved_device)
+            .eval()
+        )
         target_dtype = next(model.parameters()).dtype
 
         # Override the model's internal method for moving inputs to device
@@ -607,6 +601,7 @@ class MolmoAct2Runtime:
         # as it can vary (e.g., 'inference_action_mode', 'action_mode').
         try:
             import inspect
+
             parameters = inspect.signature(self.model.predict_action).parameters
             if action_mode_key not in parameters:
                 if "inference_action_mode" in parameters:
@@ -642,7 +637,7 @@ class MolmoAct2Runtime:
         # Ensure thread-safe inference and disable gradient computation for performance
         with self._lock, torch.inference_mode():
             output = self.model.predict_action(**kwargs)
-        
+
         # Post-process the raw action output
         raw = output.actions
         if torch.is_tensor(raw):
@@ -675,7 +670,7 @@ class MolmoAct2Runtime:
             "metadata": _jsonable(dict(extra_metadata or {})),
         }
         target.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        
+
         # Return a summary dictionary for external consumption
         return {
             "status": "success",

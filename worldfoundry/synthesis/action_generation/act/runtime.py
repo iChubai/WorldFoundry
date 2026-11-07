@@ -29,7 +29,9 @@ def _jsonable(value: Any) -> Any:
     return str(value)
 
 
-def select_act_checkpoint(*, checkpoint_path: str | Path | None, checkpoint_dir: str | Path | None, checkpoints: Sequence[Mapping[str, Any]]) -> Path:
+def select_act_checkpoint(
+    *, checkpoint_path: str | Path | None, checkpoint_dir: str | Path | None, checkpoints: Sequence[Mapping[str, Any]]
+) -> Path:
     """Select an ACT checkpoint file from explicit options or profile metadata.
 
     Args:
@@ -37,6 +39,7 @@ def select_act_checkpoint(*, checkpoint_path: str | Path | None, checkpoint_dir:
         checkpoint_dir: Explicit directory containing policy_best.ckpt or policy_last.ckpt.
         checkpoints: Profile checkpoint records.
     """
+
     def expand(value: str | Path) -> Path:
         path = resolve_worldfoundry_path(value)
         if not path.is_absolute():
@@ -79,6 +82,7 @@ class ACTRuntimeConfig:
         chunk_size: Number of actions predicted per policy query.
         temporal_agg: Whether to use ACT temporal aggregation.
     """
+
     checkpoint_path: Path
     device: str = "cuda"
     camera_names: tuple[str, ...] = ("head_cam", "left_cam", "right_cam")
@@ -147,9 +151,7 @@ class ACTRuntime:
         self.policy.load_state_dict(dict(payload), strict=True)
         self.stats = load_dataset_stats(checkpoint.parent)
         if self.config.require_dataset_stats and self.stats is None:
-            raise FileNotFoundError(
-                f"ACT requires dataset_stats.pkl beside the policy checkpoint: {checkpoint.parent}"
-            )
+            raise FileNotFoundError(f"ACT requires dataset_stats.pkl beside the policy checkpoint: {checkpoint.parent}")
         if self.config.temporal_agg:
             self.all_time_actions = torch.zeros(
                 [3000, 3000 + self.config.chunk_size, self.config.state_dim],

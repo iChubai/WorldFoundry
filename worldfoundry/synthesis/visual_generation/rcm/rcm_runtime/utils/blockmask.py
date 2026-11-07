@@ -27,14 +27,18 @@ def _compile_flex_attention():
         # PyTorch FlexAttention uses BACKEND="FLASH" for the FA4/CuTe backend.
         flex_fn = partial(torch_flex_attention, kernel_options={"BACKEND": backend.upper()})
 
-    return torch.compile(flex_fn, dynamic=False, mode=os.environ.get("RCM_FLEX_COMPILE_MODE", "max-autotune-no-cudagraphs"))
+    return torch.compile(
+        flex_fn, dynamic=False, mode=os.environ.get("RCM_FLEX_COMPILE_MODE", "max-autotune-no-cudagraphs")
+    )
 
 
 flex_attention = _compile_flex_attention()
 
 
 def flex_attention_op(q_B_S_H_D, k_B_S_H_D, v_B_S_H_D, block_mask):
-    return flex_attention(q_B_S_H_D.transpose(1, 2), k_B_S_H_D.transpose(1, 2), v_B_S_H_D.transpose(1, 2), block_mask=block_mask).transpose(1, 2)
+    return flex_attention(
+        q_B_S_H_D.transpose(1, 2), k_B_S_H_D.transpose(1, 2), v_B_S_H_D.transpose(1, 2), block_mask=block_mask
+    ).transpose(1, 2)
 
 
 def _call_magi_flex_flash(q, k, v, q_ranges, k_ranges):
@@ -131,7 +135,9 @@ class FlexOrSdpaLocalAttention(nn.Module):
         # training masks, streaming inference, and extrapolation share one definition.
         return build_mask_fn(spec, q_real=Q_real, kv_real=KV_real)
 
-    def _get_block_mask(self, spec: AttnMaskSpec, Q_real: int, KV_real: int, Q_pad: int, KV_pad: int, device: torch.device, block_size):
+    def _get_block_mask(
+        self, spec: AttnMaskSpec, Q_real: int, KV_real: int, Q_pad: int, KV_pad: int, device: torch.device, block_size
+    ):
         mask_fn, sig = self._make_mask_fn(spec, Q_real=Q_real, KV_real=KV_real)
         key = (sig, Q_pad, KV_pad, device.type, device.index, block_size, self.compile_block_mask)
 
@@ -188,7 +194,13 @@ class FlexOrSdpaLocalAttention(nn.Module):
         KV_pad = _ceil_to_multiple(KV, kv_block_size)
 
         block_mask = self._get_block_mask(
-            spec, Q_real=Q, KV_real=KV, Q_pad=Q_pad, KV_pad=KV_pad, device=q.device, block_size=(q_block_size, kv_block_size)
+            spec,
+            Q_real=Q,
+            KV_real=KV,
+            Q_pad=Q_pad,
+            KV_pad=KV_pad,
+            device=q.device,
+            block_size=(q_block_size, kv_block_size),
         )
 
         # right-pad q to Q_pad

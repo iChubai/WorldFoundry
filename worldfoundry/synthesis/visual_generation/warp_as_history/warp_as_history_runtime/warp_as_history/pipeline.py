@@ -226,9 +226,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             elif tensor.shape[-1] in {1, 3, 4}:
                 tensor = tensor.permute(0, 4, 1, 2, 3)
             else:
-                raise ValueError(
-                    "warp_visibility_mask must be [B,1,T,H,W], [B,T,H,W,1], or a compatible mask tensor."
-                )
+                raise ValueError("warp_visibility_mask must be [B,1,T,H,W], [B,T,H,W,1], or a compatible mask tensor.")
         elif tensor.ndim == 4:
             if tensor.shape[-1] in {1, 3, 4}:
                 tensor = tensor.permute(3, 0, 1, 2).unsqueeze(0)
@@ -298,9 +296,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
         elif torch.is_tensor(warp_video):
             tensor = warp_video.detach()
         else:
-            raise ValueError(
-                "warp_video must be a tensor, numpy array, or a list of PIL/numpy/torch image frames."
-            )
+            raise ValueError("warp_video must be a tensor, numpy array, or a list of PIL/numpy/torch image frames.")
 
         tensor = tensor.float()
         if tensor.ndim == 5:
@@ -370,9 +366,9 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             .view(1, self.vae.config.z_dim, 1, 1, 1)
             .to(device, self.vae.dtype)
         )
-        latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(
-            1, self.vae.config.z_dim, 1, 1, 1
-        ).to(device, self.vae.dtype)
+        latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(1, self.vae.config.z_dim, 1, 1, 1).to(
+            device, self.vae.dtype
+        )
         return latents_mean, latents_std
 
     @staticmethod
@@ -443,9 +439,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
 
     def _trim_decoded_video(self, video: torch.Tensor) -> torch.Tensor:
         generated_frames = int(video.size(2))
-        generated_frames = (
-            generated_frames - 1
-        ) // self.vae_scale_factor_temporal * self.vae_scale_factor_temporal + 1
+        generated_frames = (generated_frames - 1) // self.vae_scale_factor_temporal * self.vae_scale_factor_temporal + 1
         return video[:, :, :generated_frames]
 
     @staticmethod
@@ -562,8 +556,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
         history_capacity = int(sum(WAH_HISTORY_SIZES))
         if sum(prev_chunk_history_sizes) > history_capacity:
             raise ValueError(
-                "sum(prev_chunk_history_sizes) must be <= "
-                f"{history_capacity}, got {prev_chunk_history_sizes!r}."
+                f"sum(prev_chunk_history_sizes) must be <= {history_capacity}, got {prev_chunk_history_sizes!r}."
             )
         if any(size > cap for size, cap in zip(prev_chunk_history_sizes, WAH_HISTORY_SIZES)):
             raise ValueError(
@@ -695,11 +688,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                 )
             geometry = None
             pi3x_keyframe_images = state.get("pi3x_keyframe_images")
-            if (
-                int(chunk_index) > 0
-                and pi3x_keyframe_images is not None
-                and len(pi3x_keyframe_images) > 1
-            ):
+            if int(chunk_index) > 0 and pi3x_keyframe_images is not None and len(pi3x_keyframe_images) > 1:
                 geometry = state["camera_renderer"].estimate_keyframe_geometry(
                     image_tensors=list(pi3x_keyframe_images),
                     device=device,
@@ -902,7 +891,9 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             peft_state = load_file(str(path))
             if any(key.startswith("transformer.") for key in peft_state):
                 return str(path)
-            materialized = self._get_wah_runtime_lora_temp_dir() / f"materialized_prefixed_{safe_adapter_name}.safetensors"
+            materialized = (
+                self._get_wah_runtime_lora_temp_dir() / f"materialized_prefixed_{safe_adapter_name}.safetensors"
+            )
             save_file(
                 {f"transformer.{key}": value.detach().contiguous().cpu() for key, value in peft_state.items()},
                 str(materialized),
@@ -984,8 +975,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             latent_chunk = warp_latents[:, :, chunk_start : chunk_start + chunk_size]
             chunk_frames = int(latent_chunk.shape[2])
             frame_sigmas = (
-                torch.rand(chunk_frames, device=device, generator=rand_generator)
-                * (noise_sigma_max - noise_sigma_min)
+                torch.rand(chunk_frames, device=device, generator=rand_generator) * (noise_sigma_max - noise_sigma_min)
                 + noise_sigma_min
             ).to(dtype=latent_chunk.dtype)
             frame_sigmas = frame_sigmas.view(1, 1, chunk_frames, 1, 1)
@@ -1223,7 +1213,9 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                 device=device,
                 dtype=torch.long,
             )
-            prev_long_indices, prev_mid_indices, prev_short_indices = prev_indices.split(prev_chunk_history_sizes, dim=0)
+            prev_long_indices, prev_mid_indices, prev_short_indices = prev_indices.split(
+                prev_chunk_history_sizes, dim=0
+            )
         else:
             prev_long = prev_mid = prev_short = None
             prev_visible_long = prev_visible_mid = prev_visible_short = None
@@ -1271,9 +1263,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
             "history_visible_mask_short": None
             if short_visible_parts is None
             else torch.cat(short_visible_parts, dim=2),
-            "history_visible_mask_mid": None
-            if not state["visible_token_drop"] or mid_size <= 0
-            else prev_visible_mid,
+            "history_visible_mask_mid": None if not state["visible_token_drop"] or mid_size <= 0 else prev_visible_mid,
             "history_visible_mask_long": None
             if not state["visible_token_drop"] or long_size <= 0
             else prev_visible_long,
@@ -1413,17 +1403,25 @@ class WarpAsHistoryPipeline(HeliosPipeline):
 
         if bool(add_noise_to_image_latents):
             image_noise_sigma = torch.rand(1, device=device, generator=generator) * (0.135 - 0.111) + 0.111
-            image_latents = image_noise_sigma * randn_tensor(
-                image_latents.shape,
-                generator=generator,
-                device=device,
-            ) + (1 - image_noise_sigma) * image_latents
+            image_latents = (
+                image_noise_sigma
+                * randn_tensor(
+                    image_latents.shape,
+                    generator=generator,
+                    device=device,
+                )
+                + (1 - image_noise_sigma) * image_latents
+            )
             fake_image_noise_sigma = torch.rand(1, device=device, generator=generator) * (0.135 - 0.111) + 0.111
-            fake_image_latents = fake_image_noise_sigma * randn_tensor(
-                fake_image_latents.shape,
-                generator=generator,
-                device=device,
-            ) + (1 - fake_image_noise_sigma) * fake_image_latents
+            fake_image_latents = (
+                fake_image_noise_sigma
+                * randn_tensor(
+                    fake_image_latents.shape,
+                    generator=generator,
+                    device=device,
+                )
+                + (1 - fake_image_noise_sigma) * fake_image_latents
+            )
 
         history_sizes = sorted(list(WAH_HISTORY_SIZES), reverse=True)
         num_channels_latents = int(self.transformer.config.in_channels)
@@ -1538,9 +1536,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                     "camera_control_warp_invisible_fill": str(camera_control_warp_invisible_fill),
                     "camera_control_warp_render_mode": str(camera_control_warp_render_mode),
                     "camera_control_warp_target_fill_radius": int(camera_control_warp_target_fill_radius),
-                    "camera_control_warp_target_fill_min_neighbors": int(
-                        camera_control_warp_target_fill_min_neighbors
-                    ),
+                    "camera_control_warp_target_fill_min_neighbors": int(camera_control_warp_target_fill_min_neighbors),
                     "camera_control_mesh_break_mode": str(camera_control_mesh_break_mode),
                     "pi3x_keyframe_images": [source_image_tensor.detach().float().cpu()]
                     if bool(camera_control_pi3x_keyframe_memory)
@@ -1809,8 +1805,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
         latents_mean = state["latents_mean"].to(device=device, dtype=vae_dtype)
         latents_std = state["latents_std"].to(device=device, dtype=vae_dtype)
         current_latents = (
-            real_history_latents[:, :, -WAH_NUM_LATENT_FRAMES_PER_CHUNK:].to(vae_dtype) / latents_std
-            + latents_mean
+            real_history_latents[:, :, -WAH_NUM_LATENT_FRAMES_PER_CHUNK:].to(vae_dtype) / latents_std + latents_mean
         )
         current_video = self.vae.decode(current_latents, return_dict=False)[0]
         self._record_decoded_chunk_boundary(state, current_video)
@@ -2308,9 +2303,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                         batch_size * num_frames, num_channel, height // 2, width // 2
                     )
                     latents = F.interpolate(latents, size=(height, width), mode="nearest")
-                    latents = latents.reshape(batch_size, num_frames, num_channel, height, width).permute(
-                        0, 2, 1, 3, 4
-                    )
+                    latents = latents.reshape(batch_size, num_frames, num_channel, height, width).permute(0, 2, 1, 3, 4)
 
                     ori_sigma = 1 - self.scheduler.ori_start_sigmas[i_s]
                     gamma = self.scheduler.config.gamma
@@ -2346,9 +2339,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                 for idx, t in enumerate(timesteps):
                     if i_s == 0:
                         current_indices_hidden_states = pyramid_base_histories["indices_hidden_states"]
-                        current_indices_latents_history_short = pyramid_base_histories[
-                            "indices_latents_history_short"
-                        ]
+                        current_indices_latents_history_short = pyramid_base_histories["indices_latents_history_short"]
                         current_indices_latents_history_mid = pyramid_base_histories["indices_latents_history_mid"]
                         current_indices_latents_history_long = pyramid_base_histories["indices_latents_history_long"]
                         current_latents_history_short = pyramid_base_histories["latents_history_short"]
@@ -2383,9 +2374,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                             indices_latents_history_short=current_indices_latents_history_short,
                             indices_latents_history_mid=current_indices_latents_history_mid,
                             indices_latents_history_long=current_indices_latents_history_long,
-                            latents_history_short=_optional_to_dtype(
-                                current_latents_history_short, transformer_dtype
-                            ),
+                            latents_history_short=_optional_to_dtype(current_latents_history_short, transformer_dtype),
                             latents_history_mid=_optional_to_dtype(current_latents_history_mid, transformer_dtype),
                             latents_history_long=_optional_to_dtype(current_latents_history_long, transformer_dtype),
                             history_visible_mask_short=current_history_visible_mask_short,
@@ -2429,8 +2418,8 @@ class WarpAsHistoryPipeline(HeliosPipeline):
                             if (i_s == 0 and idx <= zero_steps) and use_zero_init:
                                 noise_pred = noise_pred_text * 0.0
                             else:
-                                noise_pred = (
-                                    noise_uncond * alpha + guidance_scale * (noise_pred_text - noise_uncond * alpha)
+                                noise_pred = noise_uncond * alpha + guidance_scale * (
+                                    noise_pred_text - noise_uncond * alpha
                                 )
                         else:
                             noise_pred = noise_uncond + guidance_scale * (noise_pred - noise_uncond)

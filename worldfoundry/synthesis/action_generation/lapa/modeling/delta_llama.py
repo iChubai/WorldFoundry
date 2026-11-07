@@ -28,19 +28,21 @@ VIDEO_LLAMA_STANDARD_CONFIGS = LLAMA_STANDARD_CONFIGS
 class VideoLLaMAConfig(LLaMAConfig):
     model_type = "video_llama"
 
-    def __init__(self, vision_vocab_size=8448, tie_vision_embeddings=False, delta_vocab_size=32, sample_mode='all', **kwargs):
+    def __init__(
+        self, vision_vocab_size=8448, tie_vision_embeddings=False, delta_vocab_size=32, sample_mode="all", **kwargs
+    ):
         super().__init__(**kwargs)
-        self.vision_vocab_size = vision_vocab_size # 8192 + 256
+        self.vision_vocab_size = vision_vocab_size  # 8192 + 256
         self.tie_vision_embeddings = tie_vision_embeddings
         self.sample_mode = sample_mode
         self.delta_vocab_size = delta_vocab_size
 
     @staticmethod
     def get_partition_rules(scan_layers=False, scan_axis=0):
-        """ Parition rules for GPTJ. Note that these rules are orderd, so that
-            the beginning rules match first. It is important to use
-            PartitionSpec() instead of None here because JAX does not treat
-            None as a pytree leaf.
+        """Parition rules for GPTJ. Note that these rules are orderd, so that
+        the beginning rules match first. It is important to use
+        PartitionSpec() instead of None here because JAX does not treat
+        None as a pytree leaf.
         """
         if scan_layers:
             if scan_axis == 0:
@@ -64,7 +66,7 @@ class VideoLLaMAConfig(LLaMAConfig):
                     ("lm_head/kernel", PS(("fsdp", "sp"), "tp")),
                     ("vision_head/kernel", PS(("fsdp", "sp"), "tp")),
                     ("delta_head/kernel", PS(("fsdp", "sp"), "tp")),
-                    ('.*', PS(None)),
+                    (".*", PS(None)),
                 )
             elif scan_axis == 1:
                 return (
@@ -87,7 +89,7 @@ class VideoLLaMAConfig(LLaMAConfig):
                     ("lm_head/kernel", PS(("fsdp", "sp"), "tp")),
                     ("vision_head/kernel", PS(("fsdp", "sp"), "tp")),
                     ("delta_head/kernel", PS(("fsdp", "sp"), "tp")),
-                    ('.*', PS(None)),
+                    (".*", PS(None)),
                 )
             else:
                 raise ValueError(f"Invalid scan_axis {scan_axis}")
@@ -112,22 +114,22 @@ class VideoLLaMAConfig(LLaMAConfig):
                 ("lm_head/kernel", PS(("fsdp", "sp"), "tp")),
                 ("vision_head/kernel", PS(("fsdp", "sp"), "tp")),
                 ("delta_head/kernel", PS(("fsdp", "sp"), "tp")),
-                ('.*', PS(None)),
+                (".*", PS(None)),
             )
 
     @classmethod
     def load_config(cls, path):
         if path in VIDEO_LLAMA_STANDARD_CONFIGS:
             return cls.from_dict(VIDEO_LLAMA_STANDARD_CONFIGS[path])
-        load_type, load_path = path.split('::', 1)
-        if load_type == 'pickle':
-            return cls.from_dict(load_pickle(load_path, allow_pickle=True)['llama_config'])
-        elif load_type == 'json':
-            with open_file(load_path, 'r') as fin:
+        load_type, load_path = path.split("::", 1)
+        if load_type == "pickle":
+            return cls.from_dict(load_pickle(load_path, allow_pickle=True)["llama_config"])
+        elif load_type == "json":
+            with open_file(load_path, "r") as fin:
                 raw_config = fin.read()
             return cls.from_dict(json.loads(raw_config))
         else:
-            raise ValueError(f'Unsupported load config type: {load_type}')
+            raise ValueError(f"Unsupported load config type: {load_type}")
 
 
 class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
@@ -162,7 +164,15 @@ class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
         delta_masks = jnp.ones((batch_size, max_length), dtype=bool)
 
         init_variables = self.module.init(
-            jax.random.PRNGKey(0), input_ids, vision_masks, delta_masks, attention_mask, segment_ids, position_ids, return_dict=False, init_cache=True
+            jax.random.PRNGKey(0),
+            input_ids,
+            vision_masks,
+            delta_masks,
+            attention_mask,
+            segment_ids,
+            position_ids,
+            return_dict=False,
+            init_cache=True,
         )
         return init_variables["cache"]
 
@@ -177,7 +187,9 @@ class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
         params_rng, dropout_rng = jax.random.split(rng)
         rngs = {"params": params_rng, "dropout": dropout_rng}
 
-        random_params = self.module.init(rngs, input_ids, vision_masks, delta_masks, attention_mask, segment_ids, position_ids, return_dict=False)["params"]
+        random_params = self.module.init(
+            rngs, input_ids, vision_masks, delta_masks, attention_mask, segment_ids, position_ids, return_dict=False
+        )["params"]
 
         if params is not None:
             random_params = flatten_dict(unfreeze(random_params))
@@ -222,7 +234,7 @@ class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
 
         if attention_mask is None:
             attention_mask = jnp.ones((batch_size, sequence_length))
-        
+
         if segment_ids is None:
             segment_ids = jnp.zeros((batch_size, sequence_length))
 
@@ -268,12 +280,12 @@ class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
 
         return outputs
 
-        
+
 class FlaxVideoLLaMAModule(nn.Module):
     config: VideoLLaMAConfig
     dtype: jnp.dtype = jnp.float32
-    param_dtype: jnp.dtype=jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]]=None
+    param_dtype: jnp.dtype = jnp.float32
+    precision: Optional[Union[jax.lax.Precision, str]] = None
 
     def setup(self):
         self.embed_dim = self.config.hidden_size
@@ -303,8 +315,12 @@ class FlaxVideoLLaMAModule(nn.Module):
         )
 
         self.dropout = nn.Dropout(rate=self.config.embd_pdrop)
-        self.h = FlaxLLaMABlockCollection(self.config, dtype=self.dtype, param_dtype=self.param_dtype, precision=self.precision)
-        self.ln_f = RMSNorm(self.config.hidden_size, eps=self.config.rms_norm_eps, dtype=self.dtype, param_dtype=self.param_dtype)
+        self.h = FlaxLLaMABlockCollection(
+            self.config, dtype=self.dtype, param_dtype=self.param_dtype, precision=self.precision
+        )
+        self.ln_f = RMSNorm(
+            self.config.hidden_size, eps=self.config.rms_norm_eps, dtype=self.dtype, param_dtype=self.param_dtype
+        )
 
     def __call__(
         self,
@@ -323,13 +339,13 @@ class FlaxVideoLLaMAModule(nn.Module):
         input_ids = input_ids.astype("i4")
 
         if input_ids.shape[1] == 1:
-            if self.config.sample_mode == 'text':
+            if self.config.sample_mode == "text":
                 input_embeds = self.wte(input_ids)
-            elif self.config.sample_mode == 'vision':
+            elif self.config.sample_mode == "vision":
                 input_embeds = self.vte(input_ids)
-            elif self.config.sample_mode == 'delta':
+            elif self.config.sample_mode == "delta":
                 input_embeds = self.dte(input_ids)
-            elif self.config.sample_mode == 'all':
+            elif self.config.sample_mode == "all":
                 raise NotImplementedError
             else:
                 raise ValueError(f"Invalid sample_mode: {self.config.sample_mode}")
@@ -337,8 +353,8 @@ class FlaxVideoLLaMAModule(nn.Module):
             input_text_embeds = self.wte(jnp.where(vision_masks, 0, input_ids))
             input_vision_embeds = self.vte(jnp.where(vision_masks, input_ids, 0))
             input_delta_embeds = self.dte(jnp.where(delta_masks, input_ids, 0))
-            vision_masks = vision_masks[..., None].astype("f4") # 1 is vision, 0 is text
-            delta_masks = delta_masks[..., None].astype("f4") # 1 is delta, 0 is others
+            vision_masks = vision_masks[..., None].astype("f4")  # 1 is vision, 0 is text
+            delta_masks = delta_masks[..., None].astype("f4")  # 1 is delta, 0 is others
             input_embeds = input_text_embeds * (1 - vision_masks) + input_vision_embeds * vision_masks
             input_embeds = input_embeds * (1 - delta_masks) + input_delta_embeds * delta_masks
 
@@ -378,8 +394,8 @@ class FlaxVideoLLaMAModule(nn.Module):
 class FlaxDeltaLaMAForCausalLMModule(nn.Module):
     config: VideoLLaMAConfig
     dtype: jnp.dtype = jnp.float32
-    param_dtype: jnp.dtype=jnp.float32
-    precision: Optional[Union[jax.lax.Precision, str]]=None
+    param_dtype: jnp.dtype = jnp.float32
+    precision: Optional[Union[jax.lax.Precision, str]] = None
 
     def setup(self):
         self.transformer = FlaxVideoLLaMAModule(self.config, dtype=self.dtype)
@@ -429,11 +445,9 @@ class FlaxDeltaLaMAForCausalLMModule(nn.Module):
             segment_ids = jnp.zeros_like(input_ids)
         if position_ids is None:
             position_ids = jnp.broadcast_to(
-                jnp.clip(jnp.cumsum(attention_mask, axis=-1) - 1, a_min=0),
-                (batch_size, seq_length)
+                jnp.clip(jnp.cumsum(attention_mask, axis=-1) - 1, a_min=0), (batch_size, seq_length)
             )
 
-            
         outputs = self.transformer(
             input_ids,
             vision_masks,
@@ -461,36 +475,45 @@ class FlaxDeltaLaMAForCausalLMModule(nn.Module):
             lm_logits = self.lm_head.apply({"params": {"kernel": shared_kernel}}, hidden_states)
         else:
             lm_logits = self.lm_head(hidden_states)
-        
+
         if self.config.tie_vision_embeddings:
             shared_kernel = self.transformer.variables["params"]["dte"]["embedding"].T
             delta_logits = self.delta_head.apply({"params": {"kernel": shared_kernel}}, hidden_states)
         else:
             delta_logits = self.delta_head(hidden_states)
-    
-        if self.config.sample_mode == 'all':
+
+        if self.config.sample_mode == "all":
             if not return_dict:
                 return (vision_logits, lm_logits, delta_logits) + outputs[1:]
 
-            return FlaxCausalLMOutput(logits=(vision_logits, lm_logits, delta_logits), hidden_states=outputs.hidden_states, attentions=outputs.attentions)
-        elif self.config.sample_mode == 'vision':
+            return FlaxCausalLMOutput(
+                logits=(vision_logits, lm_logits, delta_logits),
+                hidden_states=outputs.hidden_states,
+                attentions=outputs.attentions,
+            )
+        elif self.config.sample_mode == "vision":
             if not return_dict:
                 return (vision_logits,) + outputs[1:]
 
-            return FlaxCausalLMOutput(logits=vision_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions)
-        elif self.config.sample_mode == 'text':
+            return FlaxCausalLMOutput(
+                logits=vision_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions
+            )
+        elif self.config.sample_mode == "text":
             if not return_dict:
                 return (lm_logits,) + outputs[1:]
 
-            return FlaxCausalLMOutput(logits=lm_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions)
-        elif self.config.sample_mode == 'delta':
+            return FlaxCausalLMOutput(
+                logits=lm_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions
+            )
+        elif self.config.sample_mode == "delta":
             if not return_dict:
                 return (delta_logits,) + outputs[1:]
 
-            return FlaxCausalLMOutput(logits=delta_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions)
+            return FlaxCausalLMOutput(
+                logits=delta_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions
+            )
         else:
             raise ValueError(f"Invalid sample_mode: {self.config.sample_mode}")
-
 
 
 @add_start_docstrings("", "")
@@ -498,7 +521,7 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
     module_class = FlaxDeltaLaMAForCausalLMModule
 
     def prepare_inputs_for_generation(
-        self, input_ids, max_length, attention_mask: Optional[jax.Array] = None, vision_masks = None, delta_masks = None
+        self, input_ids, max_length, attention_mask: Optional[jax.Array] = None, vision_masks=None, delta_masks=None
     ):
         # initializing the cache
         batch_size, seq_length = input_ids.shape
@@ -524,11 +547,11 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
 
     def update_inputs_for_generation(self, model_outputs, model_kwargs):
         return {
-            "past_key_values":  model_outputs.past_key_values,
+            "past_key_values": model_outputs.past_key_values,
             "position_ids": model_kwargs["position_ids"][:, -1:] + 1,
             "attention_mask": model_kwargs["attention_mask"],
             "vision_masks": model_kwargs["vision_masks"],
-            "delta_masks": model_kwargs["delta_masks"]
+            "delta_masks": model_kwargs["delta_masks"],
         }
 
     def _sample_vision(
@@ -605,9 +628,9 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
             next_token = jax.lax.cond(
                 (state.cur_len - initial_len + 1) % 257 == 0,
                 lambda: jnp.full_like(next_token, 8192),
-                lambda: next_token
+                lambda: next_token,
             )
-            
+
             next_is_sent_finished = state.is_sent_finished
             next_token = next_token[:, None]
 
@@ -637,7 +660,7 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
     def generate_vision(
         self,
         input_ids: jnp.ndarray,
-        cfg_scales: jnp.ndarray= 1.0,
+        cfg_scales: jnp.ndarray = 1.0,
         generation_config: Optional[GenerationConfig] = None,
         prng_key: Optional[jnp.ndarray] = None,
         trace: bool = True,
@@ -647,7 +670,7 @@ class FlaxVideoLLaMAForCausalLM(FlaxVideoLLaMAPreTrainedModel):
     ):
         # Handle `generation_config` and kwargs that might update it, and validate the `.generate()` call
         self._validate_model_class()
-        self.config.sample_mode = 'delta'
+        self.config.sample_mode = "delta"
 
         # priority: `generation_config` argument > `model.generation_config` (the default generation config)
         if generation_config is None:

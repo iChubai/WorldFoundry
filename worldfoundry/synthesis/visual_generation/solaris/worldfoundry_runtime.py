@@ -285,8 +285,7 @@ class SolarisRuntime:
             eval_dir = model_output_dir / hydra_key
             # Search for side-by-side MP4 video files within the evaluation type's directory.
             generated_videos[eval_type] = [
-                str(video_path.resolve())
-                for video_path in sorted(eval_dir.glob("video_*_side_by_side.mp4"))
+                str(video_path.resolve()) for video_path in sorted(eval_dir.glob("video_*_side_by_side.mp4"))
             ]
         return generated_videos
 
@@ -339,25 +338,15 @@ class SolarisRuntime:
         selected_eval_types = normalize_eval_types(eval_types)
         # Resolve all paths, prioritizing method-specific overrides over instance defaults.
         resolved_output_dir = str(Path(output_dir or self.output_dir).expanduser().resolve())
-        resolved_checkpoint_dir = str(
-            Path(checkpoint_dir or self.checkpoint_dir).expanduser().resolve()
-        )
-        resolved_jax_cache_dir = str(
-            Path(jax_cache_dir or self.jax_cache_dir).expanduser().resolve()
-        )
-        resolved_model_weights_path = str(
-            Path(model_weights_path or self.model_weights_path).expanduser().resolve()
-        )
+        resolved_checkpoint_dir = str(Path(checkpoint_dir or self.checkpoint_dir).expanduser().resolve())
+        resolved_jax_cache_dir = str(Path(jax_cache_dir or self.jax_cache_dir).expanduser().resolve())
+        resolved_model_weights_path = str(Path(model_weights_path or self.model_weights_path).expanduser().resolve())
         # Verify that the model weights file actually exists before proceeding.
         if not Path(resolved_model_weights_path).exists():
-            raise FileNotFoundError(
-                f"Solaris model_weights_path not found: {resolved_model_weights_path}"
-            )
+            raise FileNotFoundError(f"Solaris model_weights_path not found: {resolved_model_weights_path}")
         # Determine the effective JAX cache setting, prioritizing method argument then instance default.
         effective_enable_jax_cache = bool(
-            enable_jax_cache
-            if enable_jax_cache is not None
-            else self.defaults["enable_jax_cache"]
+            enable_jax_cache if enable_jax_cache is not None else self.defaults["enable_jax_cache"]
         )
 
         # Create necessary output directories if they don't exist.
@@ -370,9 +359,7 @@ class SolarisRuntime:
         model_output_dir = output_root / experiment_name
         # Determine effective parameter values, prioritizing method arguments over instance defaults.
         effective_eval_num_samples = int(
-            eval_num_samples
-            if eval_num_samples is not None
-            else self.defaults["eval_num_samples"]
+            eval_num_samples if eval_num_samples is not None else self.defaults["eval_num_samples"]
         )
         if effective_eval_num_samples < 1:
             raise ValueError("Solaris eval_num_samples must be >= 1.")
@@ -383,13 +370,9 @@ class SolarisRuntime:
                 f"({visible_devices}); got {effective_eval_num_samples}. Set CUDA_VISIBLE_DEVICES to a "
                 "single GPU for one-sample evaluation, or use eval_num_samples equal to the GPU count."
             )
-        effective_num_workers = int(
-            num_workers if num_workers is not None else self.defaults["num_workers"]
-        )
+        effective_num_workers = int(num_workers if num_workers is not None else self.defaults["num_workers"])
         effective_num_frames_eval = int(
-            num_frames_eval
-            if num_frames_eval is not None
-            else self.defaults["num_frames_eval"]
+            num_frames_eval if num_frames_eval is not None else self.defaults["num_frames_eval"]
         )
 
         # Build the command for the Solaris inference script.
@@ -443,11 +426,7 @@ class SolarisRuntime:
         )
         # Find the path to the first generated video, if any, to use as a primary return value.
         primary_video = next(
-            (
-                videos[0]
-                for videos in generated_videos.values()
-                if videos
-            ),
+            (videos[0] for videos in generated_videos.values() if videos),
             "",
         )
         # Construct the detailed result dictionary.

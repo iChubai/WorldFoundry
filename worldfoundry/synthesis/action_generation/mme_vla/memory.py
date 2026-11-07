@@ -116,9 +116,7 @@ class MemoryBuffer:
         images, states = self._validate_inputs(images, states, step_idx_list)
         output = self._encode_images(images)
         image_by_size = {
-            size: np.asarray(
-                jax.device_get(pool_tokens_to_size(output, size * size, self.pool_type))
-            )
+            size: np.asarray(jax.device_get(pool_tokens_to_size(output, size * size, self.pool_type)))
             for size in (8, 4, 2)
         }
         positions = {size: self._positions(step_idx_list, size) for size in (8, 4, 2)}

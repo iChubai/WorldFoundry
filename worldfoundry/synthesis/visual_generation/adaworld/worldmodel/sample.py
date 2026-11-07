@@ -146,7 +146,9 @@ def get_sample(source_video_dict: dict[str, object], target_video_dict: dict[str
     }
 
 
-def run_fdm(fdm_model, source_video_dict: dict[str, object], target_video_dict: dict[str, object], args: argparse.Namespace):
+def run_fdm(
+    fdm_model, source_video_dict: dict[str, object], target_video_dict: dict[str, object], args: argparse.Namespace
+):
     value_dict = get_sample(source_video_dict, target_video_dict, args)
     sampler = init_sampling(steps=args.num_steps, cfg_scale=args.cfg_scale, n_context_frames=args.context_frame)
     return do_sample(

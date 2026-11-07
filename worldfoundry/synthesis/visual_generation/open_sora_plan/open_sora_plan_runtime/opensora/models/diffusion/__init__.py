@@ -12,4 +12,3 @@ from .opensora_v1_3.modeling_inpaint import OpenSoraInpaint_v1_3_models_class
 Diffusion_models_class = {}
 Diffusion_models_class.update(OpenSora_v1_3_models_class)
 Diffusion_models_class.update(OpenSoraInpaint_v1_3_models_class)
-    

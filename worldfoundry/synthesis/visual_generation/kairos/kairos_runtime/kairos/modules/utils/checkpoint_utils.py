@@ -1,16 +1,15 @@
-
 import os
 import torch
 from safetensors import safe_open
 from contextlib import contextmanager
 
+
 @contextmanager
-def init_weights_on_device(device = torch.device("meta"), include_buffers :bool = False):
-    
+def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = False):
     old_register_parameter = torch.nn.Module.register_parameter
     if include_buffers:
         old_register_buffer = torch.nn.Module.register_buffer
-    
+
     def register_empty_parameter(module, name, param):
         old_register_parameter(module, name, param)
         if param is not None:
@@ -23,14 +22,14 @@ def init_weights_on_device(device = torch.device("meta"), include_buffers :bool 
         old_register_buffer(module, name, buffer, persistent=persistent)
         if buffer is not None:
             module._buffers[name] = module._buffers[name].to(device)
-            
+
     def patch_tensor_constructor(fn):
         def wrapper(*args, **kwargs):
             kwargs["device"] = device
             return fn(*args, **kwargs)
 
         return wrapper
-    
+
     if include_buffers:
         tensor_constructors_to_patch = {
             torch_function_name: getattr(torch, torch_function_name)
@@ -38,7 +37,7 @@ def init_weights_on_device(device = torch.device("meta"), include_buffers :bool 
         }
     else:
         tensor_constructors_to_patch = {}
-    
+
     try:
         torch.nn.Module.register_parameter = register_empty_parameter
         if include_buffers:

@@ -4,6 +4,7 @@ to generate videos from text prompts and/or images.
 It encapsulates the logic for model initialization, task submission,
 and polling for results from the RunwayML API.
 """
+
 import time
 import base64
 from typing import Literal
@@ -18,6 +19,7 @@ class Gen3:
     This class handles initializing the RunwayML client and provides a method
     to submit video generation tasks and retrieve the results as video frames.
     """
+
     def __init__(
         self,
         model_name: str,
@@ -42,12 +44,12 @@ class Gen3:
         from runwayml import RunwayML
 
         self.client = RunwayML()
-        
+
     def generate_video(
         self,
         prompt: str,
         image_path: str | None,
-    ):    
+    ):
         """
         Generates a video using the configured RunwayML Gen3 model based on a text prompt and an optional image.
 
@@ -69,10 +71,10 @@ class Gen3:
 
         # Create a new image-to-video generation task with the RunwayML API.
         task = self.client.image_to_video.create(
-        model=self.model_id,
-        # Construct the data URI for the base64 encoded image.
-        prompt_image=f"data:image/png;base64,{base64_image}",
-        prompt_text=prompt,
+            model=self.model_id,
+            # Construct the data URI for the base64 encoded image.
+            prompt_image=f"data:image/png;base64,{base64_image}",
+            prompt_text=prompt,
         )
         task_id = task.id
 
@@ -81,13 +83,13 @@ class Gen3:
         task = self.client.tasks.retrieve(task_id)
         # Continuously poll the task status until it either succeeds or fails.
         # This loop prevents proceeding until the video generation is complete.
-        while task.status not in ['SUCCEEDED', 'FAILED']:
+        while task.status not in ["SUCCEEDED", "FAILED"]:
             # Pause for a duration before the next poll to avoid overwhelming the API
             # and to conserve resources.
             time.sleep(10)
             task = self.client.tasks.retrieve(task_id)
 
-        print('Task complete:', task)
+        print("Task complete:", task)
         video_url = task.output[0]
         # Extract individual frames from the URL of the newly generated video.
         frames = extract_frames_from_video_url(video_url)

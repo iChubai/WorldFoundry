@@ -221,7 +221,9 @@ class ATIRuntime:
         **_: Any,
     ) -> Any:
         if int(num_frames) != 81:
-            raise ValueError("ATI's released inference checkpoint and trajectory resampler require exactly 81 output frames.")
+            raise ValueError(
+                "ATI's released inference checkpoint and trajectory resampler require exactly 81 output frames."
+            )
         image_value = _image(image)
         image_width, image_height = image_value.size
         tracks = self._tracks(

@@ -95,11 +95,15 @@ class AlayaSpatialMemory:
         )
 
         if path.is_file():
-            self._da3 = DepthAnything3.from_pretrained(
-                "depth-anything/DA3NESTED-GIANT-LARGE-1.1",
-                model_name="da3nested-giant-large",
-                weights_path=str(path),
-            ).to(self.device).eval()
+            self._da3 = (
+                DepthAnything3.from_pretrained(
+                    "depth-anything/DA3NESTED-GIANT-LARGE-1.1",
+                    model_name="da3nested-giant-large",
+                    weights_path=str(path),
+                )
+                .to(self.device)
+                .eval()
+            )
         else:
             self._da3 = DepthAnything3.from_pretrained(str(path)).to(self.device).eval()
         return self._da3

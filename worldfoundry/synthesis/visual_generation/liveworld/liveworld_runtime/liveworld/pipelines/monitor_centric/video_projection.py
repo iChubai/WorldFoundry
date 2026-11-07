@@ -83,8 +83,7 @@ def _normalize_conf_threshold(conf_threshold: float, verbose: bool = True) -> fl
     conf_threshold = float(conf_threshold)
     if conf_threshold < MIN_CONF_THRESHOLD or conf_threshold > MAX_CONF_THRESHOLD:
         raise ValueError(
-            f"conf_threshold={conf_threshold:.3f} out of range "
-            f"[{MIN_CONF_THRESHOLD:.2f}, {MAX_CONF_THRESHOLD:.2f}]"
+            f"conf_threshold={conf_threshold:.3f} out of range [{MIN_CONF_THRESHOLD:.2f}, {MAX_CONF_THRESHOLD:.2f}]"
         )
     return conf_threshold
 
@@ -152,9 +151,7 @@ def estimate_depth_and_intrinsics(
     with torch.no_grad():
         predictions = model(image_tensor, mode="full")
 
-    extrinsic, intrinsic = pose_encoding_to_extri_intri(
-        predictions["pose_enc"], image_tensor.shape[-2:]
-    )
+    extrinsic, intrinsic = pose_encoding_to_extri_intri(predictions["pose_enc"], image_tensor.shape[-2:])
 
     w2c_34 = extrinsic[0, 0].cpu().numpy()
     w2c = np.eye(4, dtype=np.float32)
@@ -215,9 +212,7 @@ def _extract_depth_from_preds(preds: dict, frame_count: int):
     # We need the raw tensor for pose_encoding_to_extri_intri. Store it separately.
     pose_enc = cur.get("_pose_enc_tensor")
     if pose_enc is not None:
-        extrinsic, intrinsic = pose_encoding_to_extri_intri(
-            pose_enc, cur["_image_shape"]
-        )
+        extrinsic, intrinsic = pose_encoding_to_extri_intri(pose_enc, cur["_image_shape"])
         w2c_34 = extrinsic[0, -1].cpu().numpy()  # last frame
         w2c = np.eye(4, dtype=np.float32)
         w2c[:3, :] = w2c_34
@@ -303,7 +298,7 @@ def estimate_all_depths_with_session(
 
     with torch.no_grad():
         for i in range(images.shape[0]):
-            image = images[i:i + 1]
+            image = images[i : i + 1]
             predictions = session.forward_stream(image)
             frames_fed += 1
 
@@ -416,18 +411,11 @@ def compute_scale_factor(
     conf_threshold = _normalize_conf_threshold(conf_threshold, verbose=verbose)
 
     # 基础有效区域（不含置信度）
-    base_valid = (
-        background_mask
-        & (depth1 > 0.1)
-        & (depth2 > 0.1)
-        & np.isfinite(depth1)
-        & np.isfinite(depth2)
-    )
+    base_valid = background_mask & (depth1 > 0.1) & (depth2 > 0.1) & np.isfinite(depth1) & np.isfinite(depth2)
     base_valid_pixels = int(base_valid.sum())
     if base_valid_pixels < min_valid_pixels:
         raise RuntimeError(
-            "Scale estimation failed: too few valid background pixels "
-            f"({base_valid_pixels} < {min_valid_pixels})"
+            f"Scale estimation failed: too few valid background pixels ({base_valid_pixels} < {min_valid_pixels})"
         )
 
     if (conf1 is None) != (conf2 is None):
@@ -452,8 +440,7 @@ def compute_scale_factor(
     num_valid = int(valid_mask.sum())
     if num_valid < min_valid_pixels:
         raise RuntimeError(
-            "Scale estimation failed: too few pixels after filtering "
-            f"[{label}] ({num_valid} < {min_valid_pixels})"
+            f"Scale estimation failed: too few pixels after filtering [{label}] ({num_valid} < {min_valid_pixels})"
         )
 
     d1 = depth1[valid_mask]
@@ -462,8 +449,7 @@ def compute_scale_factor(
     ratios = ratios[np.isfinite(ratios)]
     if ratios.size < min_valid_pixels:
         raise RuntimeError(
-            "Scale estimation failed: too few finite ratios "
-            f"[{label}] ({ratios.size} < {min_valid_pixels})"
+            f"Scale estimation failed: too few finite ratios [{label}] ({ratios.size} < {min_valid_pixels})"
         )
 
     # Robustify: remove ratio tails to reduce reflective/glass outliers.
@@ -476,10 +462,7 @@ def compute_scale_factor(
         raise RuntimeError(f"Scale estimation produced invalid scale={scale}")
 
     std = float(np.std(ratios_used))
-    _log(
-        f"  Background scale [{label}]: scale={scale:.4f}, std={std:.4f}, "
-        f"num_pixels={ratios_used.size}"
-    )
+    _log(f"  Background scale [{label}]: scale={scale:.4f}, std={std:.4f}, num_pixels={ratios_used.size}")
     return scale
 
 
@@ -554,7 +537,7 @@ def unproject_to_pointcloud(
 
 def save_pointcloud_ply(path: str, points: np.ndarray, colors: np.ndarray):
     """保存点云为 PLY 格式"""
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         f.write("ply\n")
         f.write("format ascii 1.0\n")
         f.write(f"element vertex {len(points)}\n")
@@ -745,8 +728,12 @@ def update_dynamic_object_depth(
     print("\n[Step 4/6] Segmenting dynamic objects with SAM3...")
     foreground_mask1 = segment_with_sam3(image1, dynamic_object_prompts, sam3_segmenter)
     foreground_mask2 = segment_with_sam3(image2, dynamic_object_prompts, sam3_segmenter)
-    print(f"  Foreground pixels in image 1: {foreground_mask1.sum()} ({foreground_mask1.sum() / foreground_mask1.size * 100:.1f}%)")
-    print(f"  Foreground pixels in image 2: {foreground_mask2.sum()} ({foreground_mask2.sum() / foreground_mask2.size * 100:.1f}%)")
+    print(
+        f"  Foreground pixels in image 1: {foreground_mask1.sum()} ({foreground_mask1.sum() / foreground_mask1.size * 100:.1f}%)"
+    )
+    print(
+        f"  Foreground pixels in image 2: {foreground_mask2.sum()} ({foreground_mask2.sum() / foreground_mask2.size * 100:.1f}%)"
+    )
 
     # 释放 SAM3 分割器
     del sam3_segmenter
@@ -776,18 +763,30 @@ def update_dynamic_object_depth(
 
     if (depth_H1, depth_W1) != (H, W):
         print(f"\n[Step 4.5] Resizing masks to match depth size ({depth_W1}x{depth_H1})...")
-        sky_mask1 = cv2.resize(sky_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST).astype(bool)
-        foreground_mask1 = cv2.resize(foreground_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST).astype(bool)
-        background_mask1 = cv2.resize(background_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST).astype(bool)
+        sky_mask1 = cv2.resize(
+            sky_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST
+        ).astype(bool)
+        foreground_mask1 = cv2.resize(
+            foreground_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST
+        ).astype(bool)
+        background_mask1 = cv2.resize(
+            background_mask1.astype(np.uint8), (depth_W1, depth_H1), interpolation=cv2.INTER_NEAREST
+        ).astype(bool)
         # 也需要 resize image1 用于点云颜色
         image1_resized = cv2.resize(image1, (depth_W1, depth_H1), interpolation=cv2.INTER_LINEAR)
     else:
         image1_resized = image1
 
     if (depth_H2, depth_W2) != (H, W):
-        sky_mask2 = cv2.resize(sky_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST).astype(bool)
-        foreground_mask2 = cv2.resize(foreground_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST).astype(bool)
-        background_mask2 = cv2.resize(background_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST).astype(bool)
+        sky_mask2 = cv2.resize(
+            sky_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST
+        ).astype(bool)
+        foreground_mask2 = cv2.resize(
+            foreground_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST
+        ).astype(bool)
+        background_mask2 = cv2.resize(
+            background_mask2.astype(np.uint8), (depth_W2, depth_H2), interpolation=cv2.INTER_NEAREST
+        ).astype(bool)
         image2_resized = cv2.resize(image2, (depth_W2, depth_H2), interpolation=cv2.INTER_LINEAR)
     else:
         image2_resized = image2
@@ -808,22 +807,21 @@ def update_dynamic_object_depth(
 
     # 第一帧：背景点云（排除天空和前景）
     # 我们用第一帧的背景作为基础
-    points_bg1, colors_bg1 = unproject_to_pointcloud(
-        depth1, image1_resized, intrinsics1, mask=background_mask1
-    )
+    points_bg1, colors_bg1 = unproject_to_pointcloud(depth1, image1_resized, intrinsics1, mask=background_mask1)
     print(f"  Image 1 background points: {len(points_bg1)}")
 
     # 第一帧：前景点云
-    points_fg1, colors_fg1 = unproject_to_pointcloud(
-        depth1, image1_resized, intrinsics1, mask=foreground_mask1
-    )
+    points_fg1, colors_fg1 = unproject_to_pointcloud(depth1, image1_resized, intrinsics1, mask=foreground_mask1)
     print(f"  Image 1 foreground points: {len(points_fg1)}")
 
     # 第二帧：前景点云（使用 scaled depth）
     # 注意：我们用 depth2_scaled 和 intrinsics1（因为相机参数应该一致）
     # 实际上由于模型可能估计出略微不同的内参，我们用 intrinsics2 然后做变换
     points_fg2, colors_fg2 = unproject_to_pointcloud(
-        depth2_scaled, image2_resized, intrinsics1, mask=foreground_mask2  # 使用 intrinsics1 保持一致
+        depth2_scaled,
+        image2_resized,
+        intrinsics1,
+        mask=foreground_mask2,  # 使用 intrinsics1 保持一致
     )
     print(f"  Image 2 foreground points (scaled): {len(points_fg2)}")
 
@@ -1030,7 +1028,10 @@ def merge_video_foregrounds(
     _log("\n[Step 2] Estimating depth for all frames (session mode)...")
 
     depth_results, stream3r_frames_fed = estimate_all_depths_with_session(
-        frames, stream3r_model, device=device, verbose=verbose,
+        frames,
+        stream3r_model,
+        device=device,
+        verbose=verbose,
         session=stream3r_session,
         initial_frames_fed=stream3r_frames_fed,
     )
@@ -1071,8 +1072,7 @@ def merge_video_foregrounds(
             )
         _log(f"  Per-instance segmentation: {len(instance_masks_dict)} instances detected")
         for obj_id, masks_arr in instance_masks_dict.items():
-            _log(f"    obj_{obj_id}: shape={masks_arr.shape}, "
-                 f"pixels_frame0={masks_arr[0].sum()}")
+            _log(f"    obj_{obj_id}: shape={masks_arr.shape}, pixels_frame0={masks_arr[0].sum()}")
 
     # -- Rescale depth maps to video resolution and store per frame --
     depth1_raw, intrinsics1_raw, _, conf1_raw = depth_results[0]
@@ -1107,8 +1107,7 @@ def merge_video_foregrounds(
         foreground_mask1 = np.zeros((H, W), dtype=bool)
         for obj_id, inst_masks in instance_masks_dict.items():
             foreground_mask1 |= inst_masks[0]
-        _log(f"  Foreground mask (from {len(instance_masks_dict)} instances): "
-             f"{foreground_mask1.sum()} pixels")
+        _log(f"  Foreground mask (from {len(instance_masks_dict)} instances): {foreground_mask1.sum()} pixels")
     else:
         _log("  Segmenting foreground...")
         foreground_mask1 = segment_with_sam3(frames[0], dynamic_object_prompts, sam3_segmenter)
@@ -1121,17 +1120,21 @@ def merge_video_foregrounds(
         sky_mask1 = segment_with_sam3(frames[0], ["sky"], sam3_segmenter)
         background_mask1 = (~foreground_mask1) & (~sky_mask1)
         points_bg1, colors_bg1 = unproject_to_pointcloud(
-            depth1, frames[0], intrinsics1, mask=background_mask1, conf=conf1,
-            conf_threshold=effective_conf_threshold
+            depth1, frames[0], intrinsics1, mask=background_mask1, conf=conf1, conf_threshold=effective_conf_threshold
         )
         _log(f"  Background points: {len(points_bg1)}")
 
     points_fg1, colors_fg1 = unproject_to_pointcloud(
         # Foreground points keep all valid masked depths.
         # No confidence filter, no fg-mask erosion.
-        depth1, frames[0], intrinsics1, mask=foreground_mask1, conf=None,
-        conf_threshold=effective_conf_threshold, filter_depth_outliers=True,
-        depth_outlier_std_scale=depth_outlier_std_scale
+        depth1,
+        frames[0],
+        intrinsics1,
+        mask=foreground_mask1,
+        conf=None,
+        conf_threshold=effective_conf_threshold,
+        filter_depth_outliers=True,
+        depth_outlier_std_scale=depth_outlier_std_scale,
     )
     _log(f"  Foreground points: {len(points_fg1)}")
 
@@ -1167,9 +1170,14 @@ def merge_video_foregrounds(
         points_fg_i, colors_fg_i = unproject_to_pointcloud(
             # Foreground points keep all valid masked depths.
             # No confidence filter, no fg-mask erosion.
-            depth_i_scaled, frame, intrinsics1, mask=fg_mask_i, conf=None,
-            conf_threshold=effective_conf_threshold, filter_depth_outliers=True,
-            depth_outlier_std_scale=depth_outlier_std_scale
+            depth_i_scaled,
+            frame,
+            intrinsics1,
+            mask=fg_mask_i,
+            conf=None,
+            conf_threshold=effective_conf_threshold,
+            filter_depth_outliers=True,
+            depth_outlier_std_scale=depth_outlier_std_scale,
         )
 
         all_foreground_points.append(points_fg_i)
@@ -1194,7 +1202,10 @@ def merge_video_foregrounds(
                     continue
                 depth_t = depth_maps[t] * 1  # same scale as merged
                 pts, cols = unproject_to_pointcloud(
-                    depth_t, frames[t], intrinsics1, mask=inst_mask_t,
+                    depth_t,
+                    frames[t],
+                    intrinsics1,
+                    mask=inst_mask_t,
                     # Per-instance foreground points keep all valid masked depths.
                     # No confidence filter, no fg-mask erosion.
                     conf=None,
@@ -1248,11 +1259,13 @@ def merge_video_foregrounds(
 
             # 相机位置：在场景中心的后上方
             # x 不变，y 往上移动，z 往后移动（靠近相机原点）
-            cam_pos = np.array([
-                center[0],  # x 保持不变
-                center[1] - cam_distance * np.sin(elevation_angle),  # y 往上（相机坐标系 y 向下，所以减）
-                center[2] - cam_distance * np.cos(elevation_angle),  # z 往后（靠近相机原点）
-            ])
+            cam_pos = np.array(
+                [
+                    center[0],  # x 保持不变
+                    center[1] - cam_distance * np.sin(elevation_angle),  # y 往上（相机坐标系 y 向下，所以减）
+                    center[2] - cam_distance * np.cos(elevation_angle),  # z 往后（靠近相机原点）
+                ]
+            )
 
             # 构建相机到世界的变换矩阵
             # 相机看向场景中心
@@ -1314,7 +1327,7 @@ def merge_video_foregrounds(
     # 保存渲染视频（可选）
     if save_rendered_video:
         output_video_path = output_dir / "rendered_merged.mp4"
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(str(output_video_path), fourcc, fps, (W, H))
 
         for frame in rendered_frames:

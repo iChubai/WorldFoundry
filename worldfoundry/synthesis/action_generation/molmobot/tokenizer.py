@@ -65,20 +65,12 @@ class HfTokenizerWrapper:
 
     def decode(self, token_ids: List[int], truncate_at_eos: bool = True) -> str:
         token_ids = [int(token_id) for token_id in token_ids]
-        if (
-            token_ids
-            and self.eos_token_id == self.bos_token_id
-            and token_ids[0] == self.eos_token_id
-        ):
+        if token_ids and self.eos_token_id == self.bos_token_id and token_ids[0] == self.eos_token_id:
             token_ids = token_ids[1:]
         if truncate_at_eos and self.eos_token_id in token_ids:
             token_ids = token_ids[: token_ids.index(self.eos_token_id)]
         elif not truncate_at_eos:
-            token_ids = [
-                token_id
-                for token_id in token_ids
-                if token_id not in (self.eos_token_id, self.bos_token_id)
-            ]
+            token_ids = [token_id for token_id in token_ids if token_id not in (self.eos_token_id, self.bos_token_id)]
         return self.tokenizer.decode(token_ids)
 
     def vocab_size(self) -> int:
@@ -99,9 +91,7 @@ def _source_and_cache(identifier: str, tokenizer_dir: Optional[str]) -> tuple[st
             for filename in ("tokenizer.json", "tokenizer_config.json", "tokenizer.model")
         ):
             return str(directory), None
-        raise FileNotFoundError(
-            f"MolmoBot tokenizer files were not found in the staged checkpoint: {directory}"
-        )
+        raise FileNotFoundError(f"MolmoBot tokenizer files were not found in the staged checkpoint: {directory}")
     from worldfoundry.core.io.paths import resolve_local_hf_model_path
 
     directory = resolve_local_hf_model_path(identifier, required_files=("tokenizer_config.json",))
@@ -135,9 +125,7 @@ def _load_and_extend_tokenizer(
     present = [_has_exact_token(tokenizer, token) for token in EXTRA_TOKENS]
     if any(present):
         if not all(present):
-            raise ValueError(
-                f"Tokenizer {source!r} contains only a subset of Molmo visual tokens."
-            )
+            raise ValueError(f"Tokenizer {source!r} contains only a subset of Molmo visual tokens.")
         if pad_tokenizer_to is not None:
             actual = [tokenizer.encode(token, add_special_tokens=False)[0] for token in EXTRA_TOKENS]
             expected = list(range(pad_tokenizer_to, pad_tokenizer_to + len(EXTRA_TOKENS)))
@@ -163,9 +151,7 @@ def _load_and_extend_tokenizer(
         actual = [tokenizer.encode(token, add_special_tokens=False) for token in EXTRA_TOKENS]
         expected = [[pad_tokenizer_to + index] for index in range(len(EXTRA_TOKENS))]
         if actual != expected:
-            raise ValueError(
-                f"Failed to assign checkpoint-compatible visual token IDs: {actual} != {expected}."
-            )
+            raise ValueError(f"Failed to assign checkpoint-compatible visual token IDs: {actual} != {expected}.")
     return tokenizer
 
 
@@ -185,9 +171,7 @@ def build_tokenizer(
     if get_local_rank() == 0:
         for attempt in range(3):
             try:
-                tokenizer = _load_and_extend_tokenizer(
-                    source, cache_dir, has_extra_token, pad_tokenizer_to
-                )
+                tokenizer = _load_and_extend_tokenizer(source, cache_dir, has_extra_token, pad_tokenizer_to)
                 break
             except (OSError, TimeoutError) as error:
                 if attempt == 2:
@@ -196,9 +180,7 @@ def build_tokenizer(
                 time.sleep(1)
     barrier()
     if tokenizer is None:
-        tokenizer = _load_and_extend_tokenizer(
-            source, cache_dir, has_extra_token, pad_tokenizer_to
-        )
+        tokenizer = _load_and_extend_tokenizer(source, cache_dir, has_extra_token, pad_tokenizer_to)
 
     bos_token_id = tokenizer.bos_token_id
     if bos_token_id is None:

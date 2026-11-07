@@ -80,7 +80,9 @@ def prompt_clean(text):
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
-def retrieve_latents(encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"):
+def retrieve_latents(
+    encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
+):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
         return encoder_output.latent_dist.sample(generator)
     elif hasattr(encoder_output, "latent_dist") and sample_mode == "argmax":
@@ -159,7 +161,9 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         prompt_embeds = self.text_encoder(text_input_ids.to(device), mask.to(device)).last_hidden_state
         prompt_embeds = prompt_embeds.to(dtype=dtype, device=device)
         prompt_embeds = [u[:v] for u, v in zip(prompt_embeds, seq_lens)]
-        prompt_embeds = torch.stack([torch.cat([u, u.new_zeros(max_sequence_length - u.size(0), u.size(1))]) for u in prompt_embeds], dim=0)
+        prompt_embeds = torch.stack(
+            [torch.cat([u, u.new_zeros(max_sequence_length - u.size(0), u.size(1))]) for u in prompt_embeds], dim=0
+        )
 
         # duplicate text embeddings for each generation per prompt, using mps friendly method
         _, seq_len, _ = prompt_embeds.shape
@@ -213,7 +217,10 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             negative_prompt = batch_size * [negative_prompt] if isinstance(negative_prompt, str) else negative_prompt
 
             if prompt is not None and type(prompt) is not type(negative_prompt):
-                raise TypeError(f"`negative_prompt` should be the same type to `prompt`, but got {type(negative_prompt)} !=" f" {type(prompt)}.")
+                raise TypeError(
+                    f"`negative_prompt` should be the same type to `prompt`, but got {type(negative_prompt)} !="
+                    f" {type(prompt)}."
+                )
             elif batch_size != len(negative_prompt):
                 raise ValueError(
                     f"`negative_prompt`: {negative_prompt} has batch size {len(negative_prompt)}, but `prompt`:"
@@ -246,23 +253,29 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
     ):
         if image is not None and image_embeds is not None:
             raise ValueError(
-                f"Cannot forward both `image`: {image} and `image_embeds`: {image_embeds}. Please make sure to" " only forward one of the two."
+                f"Cannot forward both `image`: {image} and `image_embeds`: {image_embeds}. Please make sure to"
+                " only forward one of the two."
             )
         if image is None and image_embeds is None:
-            raise ValueError("Provide either `image` or `prompt_embeds`. Cannot leave both `image` and `image_embeds` undefined.")
+            raise ValueError(
+                "Provide either `image` or `prompt_embeds`. Cannot leave both `image` and `image_embeds` undefined."
+            )
         if image is not None and not isinstance(image, torch.Tensor) and not isinstance(image, PIL.Image.Image):
             raise ValueError(f"`image` has to be of type `torch.Tensor` or `PIL.Image.Image` but is {type(image)}")
         if height % 16 != 0 or width % 16 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 16 but are {height} and {width}.")
 
-        if callback_on_step_end_tensor_inputs is not None and not all(k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs):
+        if callback_on_step_end_tensor_inputs is not None and not all(
+            k in self._callback_tensor_inputs for k in callback_on_step_end_tensor_inputs
+        ):
             raise ValueError(
                 f"`callback_on_step_end_tensor_inputs` has to be in {self._callback_tensor_inputs}, but found {[k for k in callback_on_step_end_tensor_inputs if k not in self._callback_tensor_inputs]}"
             )
 
         if prompt is not None and prompt_embeds is not None:
             raise ValueError(
-                f"Cannot forward both `prompt`: {prompt} and `prompt_embeds`: {prompt_embeds}. Please make sure to" " only forward one of the two."
+                f"Cannot forward both `prompt`: {prompt} and `prompt_embeds`: {prompt_embeds}. Please make sure to"
+                " only forward one of the two."
             )
         elif negative_prompt is not None and negative_prompt_embeds is not None:
             raise ValueError(
@@ -270,10 +283,14 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 " only forward one of the two."
             )
         elif prompt is None and prompt_embeds is None:
-            raise ValueError("Provide either `prompt` or `prompt_embeds`. Cannot leave both `prompt` and `prompt_embeds` undefined.")
+            raise ValueError(
+                "Provide either `prompt` or `prompt_embeds`. Cannot leave both `prompt` and `prompt_embeds` undefined."
+            )
         elif prompt is not None and (not isinstance(prompt, str) and not isinstance(prompt, list)):
             raise ValueError(f"`prompt` has to be of type `str` or `list` but is {type(prompt)}")
-        elif negative_prompt is not None and (not isinstance(negative_prompt, str) and not isinstance(negative_prompt, list)):
+        elif negative_prompt is not None and (
+            not isinstance(negative_prompt, str) and not isinstance(negative_prompt, list)
+        ):
             raise ValueError(f"`negative_prompt` has to be of type `str` or `list` but is {type(negative_prompt)}")
 
         if self.config.boundary_ratio is None and guidance_scale_2 is not None:
@@ -298,7 +315,6 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         action_chunk: Optional[torch.Tensor] = None,
         action_dim: Optional[int] = 14,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-
         num_latent_frames = (num_frames - 1) // self.vae_scale_factor_temporal + 1
         latent_height = height // self.vae_scale_factor_spatial
         latent_width = width // self.vae_scale_factor_spatial
@@ -323,7 +339,9 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             video_condition = image
 
         elif last_image is None:
-            video_condition = torch.cat([image, image.new_zeros(image.shape[0], image.shape[1], num_frames - 1, height, width)], dim=2)
+            video_condition = torch.cat(
+                [image, image.new_zeros(image.shape[0], image.shape[1], num_frames - 1, height, width)], dim=2
+            )
         else:
             last_image = last_image.unsqueeze(2)
             video_condition = torch.cat(
@@ -332,11 +350,19 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             )
         video_condition = video_condition.to(device=device, dtype=self.vae.dtype)
 
-        latents_mean = torch.tensor(self.vae.config.latents_mean).view(1, self.vae.config.z_dim, 1, 1, 1).to(latents.device, latents.dtype)
-        latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(1, self.vae.config.z_dim, 1, 1, 1).to(latents.device, latents.dtype)
+        latents_mean = (
+            torch.tensor(self.vae.config.latents_mean)
+            .view(1, self.vae.config.z_dim, 1, 1, 1)
+            .to(latents.device, latents.dtype)
+        )
+        latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(1, self.vae.config.z_dim, 1, 1, 1).to(
+            latents.device, latents.dtype
+        )
 
         if isinstance(generator, list):
-            latent_condition = [retrieve_latents(self.vae.encode(video_condition), sample_mode="argmax") for _ in generator]
+            latent_condition = [
+                retrieve_latents(self.vae.encode(video_condition), sample_mode="argmax") for _ in generator
+            ]
             latent_condition = torch.cat(latent_condition)
         else:
             latent_condition = retrieve_latents(self.vae.encode(video_condition), sample_mode="argmax")
@@ -346,7 +372,9 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         latent_condition = (latent_condition - latents_mean) * latents_std
 
         if self.config.expand_timesteps:
-            first_frame_mask = torch.ones(1, 1, num_latent_frames, latent_height, latent_width, dtype=dtype, device=device)
+            first_frame_mask = torch.ones(
+                1, 1, num_latent_frames, latent_height, latent_width, dtype=dtype, device=device
+            )
             first_frame_mask[:, :, 0] = 0
             return latents, latent_condition, first_frame_mask, action
 
@@ -413,7 +441,9 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         output_type: Optional[str] = "np",
         return_dict: bool = True,
         attention_kwargs: Optional[Dict[str, Any]] = None,
-        callback_on_step_end: Optional[Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]] = None,
+        callback_on_step_end: Optional[
+            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
+        ] = None,
         callback_on_step_end_tensor_inputs: List[str] = ["latents"],
         max_sequence_length: int = 512,
         action_dim: int = 32,
@@ -436,7 +466,9 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         )
 
         if num_frames % self.vae_scale_factor_temporal != 1:
-            logger.warning(f"`num_frames - 1` has to be divisible by {self.vae_scale_factor_temporal}. Rounding to the nearest number.")
+            logger.warning(
+                f"`num_frames - 1` has to be divisible by {self.vae_scale_factor_temporal}. Rounding to the nearest number."
+            )
             num_frames = num_frames // self.vae_scale_factor_temporal * self.vae_scale_factor_temporal + 1
         num_frames = max(num_frames, 1)
 
@@ -497,7 +529,9 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         num_channels_latents = self.vae.config.z_dim
         image = self.video_processor.preprocess(image, height=height, width=width).to(device, dtype=torch.float32)
         if last_image is not None:
-            last_image = self.video_processor.preprocess(last_image, height=height, width=width).to(device, dtype=torch.float32)
+            last_image = self.video_processor.preprocess(last_image, height=height, width=width).to(
+                device, dtype=torch.float32
+            )
         state = state.unsqueeze(0).to(device=device, dtype=self.dtype)
         latents_outputs = self.prepare_latents(
             image,
@@ -584,9 +618,7 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
                         and not self.do_classifier_free_guidance
                     )
                     cache_context = (
-                        contextlib.nullcontext()
-                        if skip_cache_context
-                        else current_model.cache_context("cond")
+                        contextlib.nullcontext() if skip_cache_context else current_model.cache_context("cond")
                     )
                     with cache_context:
                         if getattr(self, "_torch_compile_mark_step", False):
@@ -672,12 +704,13 @@ def process_images(input_images, dst_width, dst_height):
     input_images = F.crop(input_images, y1, x1, dst_height, dst_width)
     return input_images
 
+
 def get_ref_image_3views(images, dst_size, layout="tshape"):
     dst_width, dst_height = dst_size
     img_front, img_left, img_right = images
 
     if layout == "tshape":
-        top_h = dst_height//2
+        top_h = dst_height // 2
         bottom_h = dst_height - top_h
         left_w = dst_width // 2
         right_w = dst_width - left_w
@@ -719,6 +752,7 @@ def _local_path(value: str | os.PathLike[str] | None, name: str, *, directory: b
         kind = "directory" if directory else "file"
         raise FileNotFoundError(f"{name} must reference an existing local {kind}: {path}")
     return str(path)
+
 
 def get_task_dir_from_checkpoint(checkpoint: str) -> str:
     """Resolve experiment task dir from checkpoint path under .../<task>/models/..."""
@@ -803,7 +837,6 @@ def resolve_torch_dtype(dtype_name):
     return aliases[normalized]
 
 
-
 def compile_policy_action_blocks(policy, mode="reduce-overhead", fullgraph=False, scope="action-blocks"):
     if not hasattr(torch, "compile"):
         raise RuntimeError("This PyTorch build does not provide torch.compile")
@@ -817,9 +850,7 @@ def compile_policy_action_blocks(policy, mode="reduce-overhead", fullgraph=False
             fn = getattr(module, "forward_action_stack_with_prefix_cache", None)
             if fn is None:
                 continue
-            module._compiled_forward_action_stack_with_prefix_cache = torch.compile(
-                fn, mode=mode, fullgraph=fullgraph
-            )
+            module._compiled_forward_action_stack_with_prefix_cache = torch.compile(fn, mode=mode, fullgraph=fullgraph)
             compiled.append(f"{name}.forward_action_stack_with_prefix_cache")
             continue
 
@@ -921,11 +952,11 @@ def get_policy(
     guidance_scale = 0.0
     num_inference_steps = 10
 
-    state_min = torch.tensor(stats_dict['norm_stats']['observation.state']['q01'])[..., :14].to(device=device)
-    state_max = torch.tensor(stats_dict['norm_stats']['observation.state']['q99'])[..., :14].to(device=device)
+    state_min = torch.tensor(stats_dict["norm_stats"]["observation.state"]["q01"])[..., :14].to(device=device)
+    state_max = torch.tensor(stats_dict["norm_stats"]["observation.state"]["q99"])[..., :14].to(device=device)
 
-    delta_min = torch.tensor(stats_dict['norm_stats']['action']['q01'][:14])[..., :14].to(device=device)
-    delta_max = torch.tensor(stats_dict['norm_stats']['action']['q99'][:14])[..., :14].to(device=device)
+    delta_min = torch.tensor(stats_dict["norm_stats"]["action"]["q01"][:14])[..., :14].to(device=device)
+    delta_max = torch.tensor(stats_dict["norm_stats"]["action"]["q99"][:14])[..., :14].to(device=device)
     eps = 1e-8
     state_range = (state_max - state_min).clamp_min(eps)
     delta_range = (delta_max - delta_min).clamp_min(eps)
@@ -947,17 +978,23 @@ def get_policy(
 
     def inference(self, data):
         images = {
-            'observation.images.cam_high': data['observation.images.cam_high'],  # 3 H W, tensor float64
-            'observation.images.cam_left_wrist': data['observation.images.cam_left_wrist'],  # 3 H W, tensor float64
-            'observation.images.cam_right_wrist': data['observation.images.cam_right_wrist'],  # 3 H W, tensor float64
+            "observation.images.cam_high": data["observation.images.cam_high"],  # 3 H W, tensor float64
+            "observation.images.cam_left_wrist": data["observation.images.cam_left_wrist"],  # 3 H W, tensor float64
+            "observation.images.cam_right_wrist": data["observation.images.cam_right_wrist"],  # 3 H W, tensor float64
         }
 
-        state = data['observation.state'].to(device)
+        state = data["observation.state"].to(device)
 
         pil_images = [
-            PIL.Image.fromarray((images['observation.images.cam_high'].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)),
-            PIL.Image.fromarray((images['observation.images.cam_left_wrist'].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)),
-            PIL.Image.fromarray((images['observation.images.cam_right_wrist'].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)),
+            PIL.Image.fromarray(
+                (images["observation.images.cam_high"].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+            ),
+            PIL.Image.fromarray(
+                (images["observation.images.cam_left_wrist"].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+            ),
+            PIL.Image.fromarray(
+                (images["observation.images.cam_right_wrist"].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+            ),
         ]
         ref_image = get_ref_image_3views(pil_images, dst_size)
 
@@ -971,12 +1008,14 @@ def get_policy(
         if norm_state.ndim == 1:
             norm_state = norm_state.unsqueeze(0)
         norm_state = torch_F.pad(norm_state, (0, 32 - norm_state.shape[-1]), value=0.0)
-        prompt_embedding = data.get('prompt_embedding', None)
-        prompt = data.get('prompt', None)
+        prompt_embedding = data.get("prompt_embedding", None)
+        prompt = data.get("prompt", None)
         if prompt_embedding is None and prompt is None:
             prompt_embedding = fixed_prompt_embedding
         if prompt_embedding is None and prompt is None:
-            raise ValueError("Request did not include prompt_embedding or prompt, and no fixed T5 embedding was loaded.")
+            raise ValueError(
+                "Request did not include prompt_embedding or prompt, and no fixed T5 embedding was loaded."
+            )
         if prompt_embedding is not None:
             prompt_embedding = prompt_embedding.to(device)
         if str(device).startswith("cuda") and torch.cuda.is_available():

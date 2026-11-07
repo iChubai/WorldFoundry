@@ -21,9 +21,7 @@ def preprocess_observation_pytorch(
     """Resize and mask an OpenPI observation without stochastic augmentation."""
 
     if not set(image_keys).issubset(observation.images):
-        raise ValueError(
-            f"images dict missing keys: expected {image_keys}, got {list(observation.images)}"
-        )
+        raise ValueError(f"images dict missing keys: expected {image_keys}, got {list(observation.images)}")
 
     out_images = {}
     for key in image_keys:

@@ -94,9 +94,7 @@ def _pad_prompt_embeds(
     if mask.ndim != 2:
         raise ValueError(f"prompt mask must be rank-2, got {tuple(mask.shape)}")
     if embeds.shape[:2] != mask.shape:
-        raise ValueError(
-            f"prompt embeds/mask shape mismatch: {tuple(embeds.shape)} vs {tuple(mask.shape)}"
-        )
+        raise ValueError(f"prompt embeds/mask shape mismatch: {tuple(embeds.shape)} vs {tuple(mask.shape)}")
     if embeds.shape[0] != 1:
         raise ValueError(f"batched CFG helper expects batch=1 inputs, got {embeds.shape[0]}")
     if embeds.shape[1] > target_length:
@@ -131,12 +129,8 @@ def batch_cfg_prompt_inputs(
         )
 
     target_length = max(int(prompt_embeds.shape[1]), int(negative_embeds.shape[1]))
-    prompt_padded, prompt_mask_padded = _pad_prompt_embeds(
-        prompt_embeds, prompt_mask, target_length
-    )
-    negative_padded, negative_mask_padded = _pad_prompt_embeds(
-        negative_embeds, negative_mask, target_length
-    )
+    prompt_padded, prompt_mask_padded = _pad_prompt_embeds(prompt_embeds, prompt_mask, target_length)
+    negative_padded, negative_mask_padded = _pad_prompt_embeds(negative_embeds, negative_mask, target_length)
     return (
         torch.cat([prompt_padded, negative_padded], dim=0),
         torch.cat([prompt_mask_padded, negative_mask_padded], dim=0),

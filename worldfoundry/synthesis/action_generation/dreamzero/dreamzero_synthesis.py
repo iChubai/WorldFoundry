@@ -271,7 +271,9 @@ class DreamZeroSynthesis(ActionModelSynthesis):
             },
         }
         # Write the generated plan payload to the specified plan file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         # If `plan_only` is true, return the plan details without initiating inference.
         if plan_only:

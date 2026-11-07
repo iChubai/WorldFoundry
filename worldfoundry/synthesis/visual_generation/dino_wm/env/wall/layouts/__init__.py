@@ -3,6 +3,7 @@ from .single import DotDataset, DotDatasetConfig, Sample
 from .wall import WallDataset, WallDatasetConfig
 from .configs import ConfigBase
 
+
 class DatasetType(Enum):
     Single = auto()
     Multiple = auto()

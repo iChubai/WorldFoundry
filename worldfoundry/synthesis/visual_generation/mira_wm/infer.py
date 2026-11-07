@@ -103,9 +103,11 @@ def _normalize_actions(value: Any) -> list[dict[str, Any]]:
             raise ValueError(f"MIRA player must be 'all' or an integer in [0, 3], got {player!r}")
 
         keys_value = row.get("keys", [])
-        keys = [item.strip() for item in keys_value.replace(",", "+").split("+")] if isinstance(
-            keys_value, str
-        ) else list(keys_value)
+        keys = (
+            [item.strip() for item in keys_value.replace(",", "+").split("+")]
+            if isinstance(keys_value, str)
+            else list(keys_value)
+        )
         keys = list(dict.fromkeys(str(key).strip() for key in keys if str(key).strip()))
         unknown = [key for key in keys if key not in valid_keys]
         if unknown:
@@ -242,9 +244,7 @@ def main() -> int:
         noise_level=args.noise_level,
     )
     autocast = (
-        torch.autocast(device_type="cuda", dtype=torch.bfloat16)
-        if device.type == "cuda"
-        else contextlib.nullcontext()
+        torch.autocast(device_type="cuda", dtype=torch.bfloat16) if device.type == "cuda" else contextlib.nullcontext()
     )
     with torch.no_grad(), autocast:
         outputs = model.inference(batch, config=inference_config, progress_bar=True)

@@ -88,7 +88,9 @@ class SpacedDiffusion(GaussianDiffusion):
                 self.timestep_map.append(i)
         kwargs["betas"] = torch.FloatTensor(new_betas)
         super().__init__(**kwargs)
-        self.map_tensor = torch.tensor(self.timestep_map, device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.map_tensor = torch.tensor(
+            self.timestep_map, device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        )
 
     def p_mean_variance(self, model, *args, **kwargs):  # pylint: disable=signature-differs
         return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)

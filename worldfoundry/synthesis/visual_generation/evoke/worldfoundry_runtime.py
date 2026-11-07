@@ -220,7 +220,10 @@ class EvokeRuntime:
         values = [value for value in (trajectory_npz, pose_path, camera_trajectory) if value is not None]
         if not values:
             return None
-        resolved = [require_path(_as_single_path(value, "camera trajectory"), "Evoke camera trajectory", kind="file") for value in values]
+        resolved = [
+            require_path(_as_single_path(value, "camera trajectory"), "Evoke camera trajectory", kind="file")
+            for value in values
+        ]
         if any(path != resolved[0] for path in resolved[1:]):
             raise ValueError("Evoke camera trajectory aliases refer to different files")
         return resolved[0]

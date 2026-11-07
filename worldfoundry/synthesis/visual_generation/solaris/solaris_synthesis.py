@@ -81,9 +81,7 @@ class SolarisSynthesis(BaseSynthesis):
             missing = [name for name, value in required.items() if value is None]
             if missing:
                 # Raise an error if any required arguments are not provided when instantiating runtime.
-                raise ValueError(
-                    "Missing Solaris runtime components: " + ", ".join(missing)
-                )
+                raise ValueError("Missing Solaris runtime components: " + ", ".join(missing))
             # All required arguments are present, instantiate SolarisRuntime.
             runtime = SolarisRuntime(
                 runtime_root=str(runtime_root),

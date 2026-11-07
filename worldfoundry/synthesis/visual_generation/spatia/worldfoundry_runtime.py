@@ -70,13 +70,7 @@ class SpatiaRuntime:
     @staticmethod
     def uniception_root() -> Path:
         worldfoundry_root = Path(__file__).resolve().parents[3]
-        return (
-            worldfoundry_root
-            / "base_models"
-            / "perception_core"
-            / "general_perception"
-            / "uniception"
-        )
+        return worldfoundry_root / "base_models" / "perception_core" / "general_perception" / "uniception"
 
     @classmethod
     def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "SpatiaRuntime":
@@ -126,10 +120,7 @@ class SpatiaRuntime:
         elif isinstance(mask_path, (str, Path)):
             masks = [require_path(mask_path, "Spatia foreground mask", kind="file")]
         elif isinstance(mask_path, (list, tuple)) and mask_path:
-            masks = [
-                require_path(path, "Spatia foreground mask", kind="file")
-                for path in mask_path
-            ]
+            masks = [require_path(path, "Spatia foreground mask", kind="file") for path in mask_path]
         else:
             raise ValueError("Spatia mask_path must be a file or non-empty sequence of files")
         if masks:

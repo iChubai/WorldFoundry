@@ -161,9 +161,12 @@ class MatrixGame2RealtimeSession:
 
         decoder_warmup_started = time.perf_counter()
         decoder = getattr(self.core, "vae_decoder", None)
-        warmup_decoder = os.getenv(
-            "WORLDFOUNDRY_MATRIX_REALTIME_WARMUP_DECODER", "1"
-        ).strip().lower() not in {"0", "false", "no", "off"}
+        warmup_decoder = os.getenv("WORLDFOUNDRY_MATRIX_REALTIME_WARMUP_DECODER", "1").strip().lower() not in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }
         if warmup_decoder and callable(decoder):
             # First and steady blocks take different causal VAE paths (9 then
             # 12 RGB frames). Exercise both with an isolated cache so no
@@ -208,7 +211,7 @@ class MatrixGame2RealtimeSession:
         block_end = start_frame + self.latent_frames_per_block
         if block_end <= self._condition_concat.shape[2]:
             return self._condition_concat[:, :, start_frame:block_end]
-        return self._condition_concat[:, :, -self.latent_frames_per_block:]
+        return self._condition_concat[:, :, -self.latent_frames_per_block :]
 
     @staticmethod
     def _normalize_actions(actions: Sequence[str]) -> list[str]:
@@ -272,9 +275,7 @@ class MatrixGame2RealtimeSession:
         if mouse_rows:
             mouse_chunk = torch.stack(mouse_rows).to(device=self.device, dtype=self.dtype)
             self._mouse_history = (
-                mouse_chunk
-                if self._mouse_history is None
-                else torch.cat((self._mouse_history, mouse_chunk), dim=0)
+                mouse_chunk if self._mouse_history is None else torch.cat((self._mouse_history, mouse_chunk), dim=0)
             )
 
     @torch.inference_mode()

@@ -76,17 +76,19 @@ def predict_cubemap_face(
     gaussians_ndc = predictor(image_resized, disparity_factor)
 
     f_resized = f_px * internal_shape[0] / face_size
-    intrinsics_resized = torch.tensor([
-        [f_resized, 0, internal_shape[0] / 2, 0],
-        [0, f_resized, internal_shape[1] / 2, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ], dtype=torch.float32, device=device)
+    intrinsics_resized = torch.tensor(
+        [
+            [f_resized, 0, internal_shape[0] / 2, 0],
+            [0, f_resized, internal_shape[1] / 2, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+        ],
+        dtype=torch.float32,
+        device=device,
+    )
 
     # Unproject to camera-space metric coordinates using identity extrinsics
-    gaussians_cam = unproject_gaussians(
-        gaussians_ndc, torch.eye(4, device=device), intrinsics_resized, internal_shape
-    )
+    gaussians_cam = unproject_gaussians(gaussians_ndc, torch.eye(4, device=device), intrinsics_resized, internal_shape)
 
     # Align Sharp's depth to DA-2 depth
     # Sharp positions are in camera space: z is depth along the view axis
@@ -159,14 +161,12 @@ def predict_equirectangular(
 
     print(f"Processing 6 cubemap faces through Sharp model...")
     for i, face_name in enumerate(CUBEMAP_FACE_NAMES):
-        print(f"  Face {i+1}/6: {face_name}...")
-        face_rgb = getattr(cubemap_rgb, face_name)    # (3, H, W)
+        print(f"  Face {i + 1}/6: {face_name}...")
+        face_rgb = getattr(cubemap_rgb, face_name)  # (3, H, W)
         face_depth = getattr(cubemap_depth, face_name)  # (1, H, W)
 
         # Run Sharp on this face and align to DA-2 depth
-        gaussians_cam = predict_cubemap_face(
-            predictor, face_rgb, face_depth.squeeze(0), face_size, device
-        )
+        gaussians_cam = predict_cubemap_face(predictor, face_rgb, face_depth.squeeze(0), face_size, device)
 
         # Transform from camera space to world space
         extrinsics = get_cubemap_extrinsics(face_name, device)

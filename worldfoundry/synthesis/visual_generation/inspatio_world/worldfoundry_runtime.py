@@ -25,10 +25,7 @@ from worldfoundry.evaluation.utils import worldfoundry_data_path
 from .inspatio_world_runtime.utils.reproducibility import SEED_ENV, reproducibility_env
 
 
-_BUNDLED_REPO_ROOT = (
-    package_root("worldfoundry.synthesis.visual_generation.inspatio_world")
-    / "inspatio_world_runtime"
-)
+_BUNDLED_REPO_ROOT = package_root("worldfoundry.synthesis.visual_generation.inspatio_world") / "inspatio_world_runtime"
 _CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "inspatio_world")
 _TRAJECTORY_ROOT = _CONFIG_ROOT / "traj"
 
@@ -184,8 +181,7 @@ class InspatioWorldRuntime:
                 return str(data_candidate.resolve())
 
         raise FileNotFoundError(
-            "Trajectory file not found: "
-            f"{raw_value}. Checked local path and data trajectory root {_TRAJECTORY_ROOT}."
+            f"Trajectory file not found: {raw_value}. Checked local path and data trajectory root {_TRAJECTORY_ROOT}."
         )
 
     def _resolve_optional_tae_checkpoint(self, tae_checkpoint_path: Optional[str], use_tae: bool) -> Optional[str]:
@@ -253,8 +249,10 @@ class InspatioWorldRuntime:
             self._link_or_copy(candidate.resolve(), target)
             return input_dir, [target], None
 
-        if isinstance(visual_input, (list, tuple)) and visual_input and all(
-            isinstance(item, (str, os.PathLike)) for item in visual_input
+        if (
+            isinstance(visual_input, (list, tuple))
+            and visual_input
+            and all(isinstance(item, (str, os.PathLike)) for item in visual_input)
         ):
             if len(visual_input) == 1 and Path(visual_input[0]).expanduser().is_dir():
                 # Workspace normalizes ``input_path`` into ``videos=[path]``.
@@ -369,9 +367,7 @@ class InspatioWorldRuntime:
         for name in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "DIFFUSERS_OFFLINE"):
             value = env.get(name)
             if value is not None and value.strip().lower() not in {"1", "true", "yes", "on"}:
-                raise ValueError(
-                    f"InSpatio-World requires offline model loading; {name}={value!r} is not allowed."
-                )
+                raise ValueError(f"InSpatio-World requires offline model loading; {name}={value!r} is not allowed.")
         source_root = str(package_root("worldfoundry").parent)
         pythonpath = [source_root, self.repo_root]
         if env.get("PYTHONPATH"):
@@ -570,24 +566,16 @@ class InspatioWorldRuntime:
             )
 
         if skip_step2 and not (input_dir / "new_vggt").exists():
-            raise ValueError(
-                "skip_step2=True requires precomputed new_vggt outputs in the input directory."
-            )
+            raise ValueError("skip_step2=True requires precomputed new_vggt outputs in the input directory.")
 
         resolved_checkpoint = (
-            self._resolve_checkpoint_path(self.checkpoint_source)
-            if not skip_step3
-            else str(self.checkpoint_source)
+            self._resolve_checkpoint_path(self.checkpoint_source) if not skip_step3 else str(self.checkpoint_source)
         )
         resolved_wan_dir = (
-            self._resolve_snapshot_dir(self.wan_model_source)
-            if not skip_step3
-            else str(self.wan_model_source)
+            self._resolve_snapshot_dir(self.wan_model_source) if not skip_step3 else str(self.wan_model_source)
         )
         resolved_da3_dir = (
-            self._resolve_snapshot_dir(self.da3_model_source)
-            if not skip_step2
-            else str(self.da3_model_source)
+            self._resolve_snapshot_dir(self.da3_model_source) if not skip_step2 else str(self.da3_model_source)
         )
         resolved_florence_dir = (
             self._resolve_snapshot_dir(self.florence_model_source)
@@ -677,10 +665,7 @@ class InspatioWorldRuntime:
             stderr=stderr,
         )
 
-        generated_video_paths = sorted(
-            path.resolve()
-            for path in resolved_output_root.rglob("*-pred_video_rank*.mp4")
-        )
+        generated_video_paths = sorted(path.resolve() for path in resolved_output_root.rglob("*-pred_video_rank*.mp4"))
 
         videos = [load_video_frames(str(path)) for path in generated_video_paths]
         result = {

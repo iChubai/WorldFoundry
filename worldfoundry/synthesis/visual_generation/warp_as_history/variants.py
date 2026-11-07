@@ -33,6 +33,7 @@ class WarpAsHistoryVariant:
         default_extension (str): The default file extension for generated artifacts.
         notes (str): Additional notes or information about the model variant.
     """
+
     model_id: str
     display_name: str
     task: str

@@ -27,7 +27,7 @@ def resize_for_crop(image, crop_h, crop_w):
     elif img_h <= crop_h and img_w <= crop_w:
         coef = max(crop_h / img_h, crop_w / img_w)
     else:
-        coef = crop_h / img_h if crop_h > img_h else crop_w / img_w 
+        coef = crop_h / img_h if crop_h > img_h else crop_w / img_w
     out_h, out_w = int(img_h * coef), int(img_w * coef)
     resized_image = transforms.functional.resize(image, (out_h, out_w), antialias=True)
     return resized_image
@@ -42,7 +42,7 @@ def prepare_frames(input_images, video_size, do_resize=True, do_crop=True):
         images_tensor = [transforms.functional.center_crop(x, video_size) for x in images_tensor]
     if isinstance(images_tensor, list):
         images_tensor = torch.stack(images_tensor)
-    return images_tensor.unsqueeze(0) 
+    return images_tensor.unsqueeze(0)
 
 
 def get_resize_crop_region_for_grid(src, tgt_width, tgt_height):
@@ -121,7 +121,7 @@ def retrieve_timesteps(
         scheduler.set_timesteps(num_inference_steps, device=device, **kwargs)
         timesteps = scheduler.timesteps
     return timesteps, num_inference_steps
-    
+
 
 class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
     _optional_components = []
@@ -132,7 +132,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
         "prompt_embeds",
         "negative_prompt_embeds",
     ]
-    
+
     def __init__(
         self,
         tokenizer: T5Tokenizer,
@@ -145,7 +145,12 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
         super().__init__()
 
         self.register_modules(
-            tokenizer=tokenizer, text_encoder=text_encoder, vae=vae, transformer=transformer, controlnet=controlnet, scheduler=scheduler
+            tokenizer=tokenizer,
+            text_encoder=text_encoder,
+            vae=vae,
+            transformer=transformer,
+            controlnet=controlnet,
+            scheduler=scheduler,
         )
         self.vae_scale_factor_spatial = (
             2 ** (len(self.vae.config.block_out_channels) - 1) if hasattr(self, "vae") and self.vae is not None else 8
@@ -155,11 +160,13 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
         )
 
         self.video_processor = VideoProcessor(vae_scale_factor=self.vae_scale_factor_spatial)
-    
+
     def prepare_controlnet_frames(self, controlnet_frames, height, width, do_classifier_free_guidance):
         prepared_frames = prepare_frames(controlnet_frames, (height, width))
-        controlnet_encoded_frames = prepared_frames.to(dtype=self.vae.dtype, device='cuda')
-        controlnet_encoded_frames = torch.cat([controlnet_encoded_frames] * 2) if do_classifier_free_guidance else controlnet_encoded_frames
+        controlnet_encoded_frames = prepared_frames.to(dtype=self.vae.dtype, device="cuda")
+        controlnet_encoded_frames = (
+            torch.cat([controlnet_encoded_frames] * 2) if do_classifier_free_guidance else controlnet_encoded_frames
+        )
         return controlnet_encoded_frames.contiguous()
 
     def _get_t5_prompt_embeds(
@@ -390,7 +397,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
                 )
         if controlnet_frames is not None and controlnet_latents is not None:
             raise ValueError("Only one of `controlnet_frames` or `controlnet_latents` should be provided")
-            
+
     def fuse_qkv_projections(self) -> None:
         r"""Enables fused QKV projections."""
         self.fusing_transformer = True
@@ -445,7 +452,7 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
     @property
     def interrupt(self):
         return self._interrupt
-        
+
     @torch.no_grad()
     def __call__(
         self,
@@ -536,9 +543,9 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
         # 4. Prepare timesteps
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps)
         self._num_timesteps = len(timesteps)
-        
+
         # 5. Prepare latents.
-        latent_channels = 16 #self.transformer.config.in_channels
+        latent_channels = 16  # self.transformer.config.in_channels
         latents = self.prepare_latents(
             batch_size * num_videos_per_prompt,
             latent_channels,
@@ -567,17 +574,19 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
 
             # If controlnet frames count greater than num_frames parameter
             controlnet_frames = controlnet_frames[:num_frames]
-            
+
             controlnet_latents = self.prepare_controlnet_frames(
                 controlnet_frames,
-                height, 
-                width, 
+                height,
+                width,
                 do_classifier_free_guidance,
             )
         else:
             controlnet_latents = controlnet_latents.to(latents.dtype)
-            controlnet_latents = torch.cat([controlnet_latents] * 2) if do_classifier_free_guidance else controlnet_latents       
-        
+            controlnet_latents = (
+                torch.cat([controlnet_latents] * 2) if do_classifier_free_guidance else controlnet_latents
+            )
+
         # 7. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
 
@@ -590,26 +599,26 @@ class ControlnetCogVideoXPipeline(DiffusionPipeline, CogVideoXLoraLoaderMixin):
 
         # 9. Denoising loop
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
-        
+
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             # for DPM-solver++
             old_pred_original_sample = None
             for i, t in enumerate(timesteps):
                 if self.interrupt:
                     continue
-                
+
                 latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
-                
+
                 timestep = t.expand(latent_model_input.shape[0])
 
                 current_sampling_percent = i / len(timesteps)
 
                 latent_model_input = latent_model_input.to(dtype=self.transformer.dtype)
                 prompt_embeds = prompt_embeds.to(dtype=self.transformer.dtype)
-                
+
                 controlnet_states = None
-                if (controlnet_guidance_start <= current_sampling_percent <= controlnet_guidance_end):
+                if controlnet_guidance_start <= current_sampling_percent <= controlnet_guidance_end:
                     # extract controlnet hidden state
                     controlnet_states = self.controlnet(
                         hidden_states=latent_model_input,

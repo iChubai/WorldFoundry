@@ -17,18 +17,16 @@ class ModalityTransform(BaseModel, ABC):
     """
 
     apply_to: list[str] = Field(..., description="The keys to apply the transform to.")
-    training: bool = Field(
-        default=False, description="Inference mode flag."
-    )
+    training: bool = Field(default=False, description="Inference mode flag.")
     _dataset_metadata: DatasetMetadata | None = PrivateAttr(default=None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def dataset_metadata(self) -> DatasetMetadata:
-        assert (
-            self._dataset_metadata is not None
-        ), "Dataset metadata is not set. Please call set_metadata() before calling apply()."
+        assert self._dataset_metadata is not None, (
+            "Dataset metadata is not set. Please call set_metadata() before calling apply()."
+        )
         return self._dataset_metadata
 
     @dataset_metadata.setter
@@ -81,12 +79,8 @@ class ComposedModalityTransform(ModalityTransform):
     """Compose multiple modality transforms."""
 
     transforms: list[ModalityTransform] = Field(..., description="The transforms to compose.")
-    apply_to: list[str] = Field(
-        default_factory=list, description="Will be ignored for composed transforms."
-    )
-    training: bool = Field(
-        default=False, description="Inference mode flag."
-    )
+    apply_to: list[str] = Field(default_factory=list, description="Will be ignored for composed transforms.")
+    training: bool = Field(default=False, description="Inference mode flag.")
 
     model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
 

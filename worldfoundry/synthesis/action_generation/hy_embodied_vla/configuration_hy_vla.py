@@ -59,6 +59,7 @@ class PolicyFeature:
 
 T = TypeVar("T", bound="HyVLAConfig")
 
+
 @dataclass
 class HyVLAConfig:
     """Configuration for the Hy-VLA policy."""
@@ -161,9 +162,7 @@ class HyVLAConfig:
         **overrides: Any,
     ) -> T:
         if not local_files_only or force_download:
-            raise ValueError(
-                "HyVLAConfig loading is local-only; stage Hub assets with hfd first"
-            )
+            raise ValueError("HyVLAConfig loading is local-only; stage Hub assets with hfd first")
         del cache_dir, revision, token
         model_id = str(pretrained_name_or_path)
         model_dir = resolve_local_hf_model_path(model_id, required_files=(CONFIG_NAME,))

@@ -7,6 +7,7 @@ This module primarily defines the `LingBotSynthesis` class, which wraps a
 performing synthesis tasks, such as predictions. It also re-exports
 key components and constants from the `lingbot_world` module for convenience.
 """
+
 from typing import Any
 
 from .runtime import (

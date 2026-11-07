@@ -30,10 +30,7 @@ class MemoryAttentionBlock(AttentionBlock):
         qkv = self.to_qkv(self.norm(frames))
         qkv = qkv.reshape(batch * time, 1, channels * 3, -1)
         q, k, v = qkv.permute(0, 1, 3, 2).contiguous().chunk(3, dim=-1)
-        q, k, v = (
-            rearrange(item, "b h l (n d) -> b (h n) l d", n=self.head_dim)
-            for item in (q, k, v)
-        )
+        q, k, v = (rearrange(item, "b h l (n d) -> b (h n) l d", n=self.head_dim) for item in (q, k, v))
         frames = scaled_dot_product_attention(q, k, v)
         frames = rearrange(frames, "b h l d -> b (h d) l")
         frames = self.proj(frames.reshape(batch * time, channels, height, width))
@@ -58,8 +55,11 @@ class CausalCompressConv3D(nn.Module):
             )
         if temporal_down:
             self.time_conv = CausalConv3d(
-                out_dim, out_dim, kernel_size=(3, 1, 1),
-                stride=(2, 1, 1), padding=(1, 0, 0),
+                out_dim,
+                out_dim,
+                kernel_size=(3, 1, 1),
+                stride=(2, 1, 1),
+                padding=(1, 0, 0),
             )
         self.avg_shortcut = (
             AvgDown3D(in_dim, out_dim, 2 if temporal_down else 1, 2 if spatial_down else 1)
@@ -96,7 +96,11 @@ class CausalMemCompressModel(nn.Module):
         self.input_layer = nn.Linear(input_dim, dims[0])
         self.blocks = nn.ModuleList(
             CausalCompressConv3D(
-                in_dim, out_dim, spatial_down[index], temporal_down[index], non_linearity,
+                in_dim,
+                out_dim,
+                spatial_down[index],
+                temporal_down[index],
+                non_linearity,
             )
             for index, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:]))
         )

@@ -118,7 +118,6 @@ class Florence2VisionConfig(PretrainedConfig):
         super().__init__(**kwargs)
 
 
-
 class Florence2LanguageConfig(PretrainedConfig):
     r"""
     This is the configuration class to store the configuration of a [`Florence2LanguagePreTrainedModel`]. It is used to instantiate a BART
@@ -262,14 +261,13 @@ class Florence2LanguageConfig(PretrainedConfig):
         )
 
         # ensure backward compatibility for BART CNN models
-        if getattr(self, "forced_bos_token_id", None) is None and kwargs.get(
-            "force_bos_token_to_be_generated", False
-        ):
+        if getattr(self, "forced_bos_token_id", None) is None and kwargs.get("force_bos_token_to_be_generated", False):
             self.forced_bos_token_id = self.bos_token_id
             warnings.warn(
                 f"Please make sure the config includes `forced_bos_token_id={self.bos_token_id}` in future versions. "
                 "The config can simply be saved and uploaded again to be fixed."
             )
+
 
 class Florence2Config(PretrainedConfig):
     r"""
@@ -336,6 +334,5 @@ class Florence2Config(PretrainedConfig):
         self.text_config = text_config
         if text_config is not None:
             self.text_config = Florence2LanguageConfig(**text_config)
-
 
         super().__init__(**kwargs)

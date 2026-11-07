@@ -46,12 +46,7 @@ def video_depth_anything_runtime_root() -> Path:
     This path is relative to the current file, navigating up three directories
     then down into a specific `three_dimensions` structure.
     """
-    return (
-        Path(__file__).resolve().parents[3]
-        / "three_dimensions"
-        / "depth"
-        / "video_depth_anything_longvie"
-    )
+    return Path(__file__).resolve().parents[3] / "three_dimensions" / "depth" / "video_depth_anything_longvie"
 
 
 def project_root() -> Path:

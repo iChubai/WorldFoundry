@@ -20,6 +20,7 @@ from ..utils import fps_with_idx, quatFromAxisAngle, find_min_distance, rand_flo
 
 BASE_DIR = os.path.abspath(os.path.join(__file__, "../../../../../../"))
 
+
 class FlexEnv(gym.Env):
     def __init__(self, config=None) -> None:
         super().__init__()
@@ -74,11 +75,11 @@ class FlexEnv(gym.Env):
         # others
         self.gripper = self.dataset_config["gripper"]
         self.stick_len = self.dataset_config["pusher_len"]
-    
+
         self.scene.set_scene(self.obj, self.obj_params)
         # set camera
         self.camera.set_init_camera(self.camera_view)
-        save_data = True # default to render obs
+        save_data = True  # default to render obs
         if save_data:
             (
                 self.camPos_list,
@@ -113,11 +114,7 @@ class FlexEnv(gym.Env):
                 pyflex.resetJointState(self.flex_robot_helper, j, jointPositions[index])
                 index = index + 1
 
-        pyflex.set_shape_states(
-            self.robot_to_shape_states(
-                pyflex.getRobotShapeStates(self.flex_robot_helper)
-            )
-        )
+        pyflex.set_shape_states(self.robot_to_shape_states(pyflex.getRobotShapeStates(self.flex_robot_helper)))
 
     def add_table(self):
         ## add table board
@@ -126,9 +123,7 @@ class FlexEnv(gym.Env):
         self.wkspace_height = 0.5
         self.wkspace_width = 3.5  # 3.5*2=7 grid = 700mm
         self.wkspace_length = 4.5  # 4.5*2=9 grid = 900mm
-        halfEdge = np.array(
-            [self.wkspace_width, self.wkspace_height, self.wkspace_length]
-        )
+        halfEdge = np.array([self.wkspace_width, self.wkspace_height, self.wkspace_length])
         center = np.array([0.0, 0.0, 0.0])
         quats = quatFromAxisAngle(axis=np.array([0.0, 1.0, 0.0]), angle=0.0)
         hideShape = 0
@@ -197,9 +192,7 @@ class FlexEnv(gym.Env):
             pyflex.set_camAngle(self.camAngle_list[j])
 
             if store_cam_param:
-                self.cam_intrinsic_params[j], self.cam_extrinsic_matrix[j] = (
-                    self.camera.get_cam_params()
-                )
+                self.cam_intrinsic_params[j], self.cam_extrinsic_matrix[j] = self.camera.get_cam_params()
 
             # save images
             img = self.render()
@@ -213,9 +206,7 @@ class FlexEnv(gym.Env):
                 # particles_pos = particles[:, :3] #!!! this is changed
                 if self.fps:
                     if init_fps:
-                        _, self.sampled_idx = fps_with_idx(
-                            particles_pos, self.fps_number
-                        )
+                        _, self.sampled_idx = fps_with_idx(particles_pos, self.fps_number)
                     particles_pos = particles_pos[self.sampled_idx]
                 self.particle_pos_list.append(particles_pos)
                 # save eef pos
@@ -249,29 +240,19 @@ class FlexEnv(gym.Env):
     def robot_close_gripper(self, close, jointPoses=None):
         for j in range(8, self.num_joints):
             pyflex.resetJointState(self.flex_robot_helper, j, close)
-        pyflex.set_shape_states(
-            self.robot_to_shape_states(
-                pyflex.getRobotShapeStates(self.flex_robot_helper)
-            )
-        )
+        pyflex.set_shape_states(self.robot_to_shape_states(pyflex.getRobotShapeStates(self.flex_robot_helper)))
 
     def robot_open_gripper(self):
         for j in range(8, self.num_joints):
             pyflex.resetJointState(self.flex_robot_helper, j, 0.0)
-    
+
     def reset_partial(self, save_data=False):
-        pyflex.set_shape_states(
-            self.robot_to_shape_states(
-                pyflex.getRobotShapeStates(self.flex_robot_helper)
-            )
-        )
+        pyflex.set_shape_states(self.robot_to_shape_states(pyflex.getRobotShapeStates(self.flex_robot_helper)))
 
         ## update robot shape states
         for idx, joint in enumerate(self.rest_joints):
             pyflex.set_shape_states(
-                self.robot_to_shape_states(
-                    pyflex.resetJointState(self.flex_robot_helper, idx, joint)
-                )
+                self.robot_to_shape_states(pyflex.resetJointState(self.flex_robot_helper, idx, joint))
             )
 
         self.num_joints = p.getNumJoints(self.robotId)
@@ -302,18 +283,12 @@ class FlexEnv(gym.Env):
 
     ### reset env
     def reset(self, save_data=False):
-        pyflex.set_shape_states(
-            self.robot_to_shape_states(
-                pyflex.getRobotShapeStates(self.flex_robot_helper)
-            )
-        )
+        pyflex.set_shape_states(self.robot_to_shape_states(pyflex.getRobotShapeStates(self.flex_robot_helper)))
 
         ## update robot shape states
         for idx, joint in enumerate(self.rest_joints):
             pyflex.set_shape_states(
-                self.robot_to_shape_states(
-                    pyflex.resetJointState(self.flex_robot_helper, idx, joint)
-                )
+                self.robot_to_shape_states(pyflex.resetJointState(self.flex_robot_helper, idx, joint))
             )
 
         self.num_joints = p.getNumJoints(self.robotId)
@@ -432,27 +407,16 @@ class FlexEnv(gym.Env):
                             if j == 0:
                                 # fine the k pick point
                                 pick_k = 5
-                                left_min_dist, left_pick_index = find_min_distance(
-                                    left_finger_pos, obj_pos, pick_k
-                                )
-                                right_min_dist, right_pick_index = find_min_distance(
-                                    right_finger_pos, obj_pos, pick_k
-                                )
-                                min_dist, pick_index = find_min_distance(
-                                    new_finger_pos, obj_pos, pick_k
-                                )
+                                left_min_dist, left_pick_index = find_min_distance(left_finger_pos, obj_pos, pick_k)
+                                right_min_dist, right_pick_index = find_min_distance(right_finger_pos, obj_pos, pick_k)
+                                min_dist, pick_index = find_min_distance(new_finger_pos, obj_pos, pick_k)
                                 # save the original setting for restoring
                                 pick_origin = new_particle_pos[pick_index]
 
-                            if (
-                                left_min_dist <= grasp_thresd
-                                or right_min_dist <= grasp_thresd
-                            ):
+                            if left_min_dist <= grasp_thresd or right_min_dist <= grasp_thresd:
                                 new_particle_pos[left_pick_index, :3] = left_finger_pos
                                 new_particle_pos[left_pick_index, 3] = 0
-                                new_particle_pos[right_pick_index, :3] = (
-                                    right_finger_pos
-                                )
+                                new_particle_pos[right_pick_index, :3] = right_finger_pos
                                 new_particle_pos[right_pick_index, 3] = 0
                             self._set_pos(new_finger_pos, new_particle_pos)
 
@@ -487,17 +451,12 @@ class FlexEnv(gym.Env):
                 # save img in each step
                 obj_pos = self.get_positions().reshape(-1, 4)[:, [0, 2]]
                 obj_pos[:, 1] *= -1
-                robot_obj_dist = np.min(
-                    cdist(end_effector_pos[:2].reshape(1, 2), obj_pos)
-                )
+                robot_obj_dist = np.min(cdist(end_effector_pos[:2].reshape(1, 2), obj_pos))
                 if save_data:
                     rob_obj_dist_thresh = self.dataset_config["rob_obj_dist_thresh"]
                     contact_interval = self.dataset_config["contact_interval"]
                     non_contact_interval = self.dataset_config["non_contact_interval"]
-                    if (
-                        robot_obj_dist < rob_obj_dist_thresh
-                        and i % contact_interval == 0
-                    ):  # robot-object contact
+                    if robot_obj_dist < rob_obj_dist_thresh and i % contact_interval == 0:  # robot-object contact
                         self.store_data()
                     elif i % non_contact_interval == 0:  # not contact
                         self.store_data()
@@ -543,9 +502,7 @@ class FlexEnv(gym.Env):
             action = self.sample_deform_actions()
             return action
         elif self.obj in ["cloth"]:
-            action, boundary_points, boundary = self.sample_grasp_actions_corner(
-                init, boundary_points, boundary
-            )
+            action, boundary_points, boundary = self.sample_grasp_actions_corner(init, boundary_points, boundary)
             return action, boundary_points, boundary
         else:
             raise ValueError("action not defined")
@@ -570,9 +527,7 @@ class FlexEnv(gym.Env):
         # random choose a start point which can not be overlapped with the object
         valid = False
         for _ in range(1000):
-            startpoint_pos_origin = np.random.uniform(
-                -self.action_space, self.action_space, size=(1, 2)
-            )
+            startpoint_pos_origin = np.random.uniform(-self.action_space, self.action_space, size=(1, 2))
             startpoint_pos = startpoint_pos_origin.copy()
             startpoint_pos = startpoint_pos.reshape(-1)
 
@@ -598,17 +553,13 @@ class FlexEnv(gym.Env):
                 break
 
         if valid:
-            action = np.concatenate(
-                [startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0
-            )
+            action = np.concatenate([startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0)
         else:
             action = None
 
         return action
 
-    def sample_grasp_actions_corner(
-        self, init=False, boundary_points=None, boundary=None
-    ):
+    def sample_grasp_actions_corner(self, init=False, boundary_points=None, boundary=None):
         positions = self.get_positions().reshape(-1, 4)
         positions[:, 2] *= -1
         particle_x, particle_y, particle_z = (
@@ -661,9 +612,7 @@ class FlexEnv(gym.Env):
                 break
 
         if valid:
-            action = np.concatenate(
-                [startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0
-            )
+            action = np.concatenate([startpoint_pos.reshape(-1), endpoint_pos.reshape(-1)], axis=0)
         else:
             action = None
 

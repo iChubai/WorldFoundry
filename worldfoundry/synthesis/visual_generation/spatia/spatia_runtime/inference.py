@@ -68,6 +68,8 @@ def run_command(command, cwd=None, quiet=False, env=None):
             )
     else:
         subprocess.run(command, check=True, **run_kwargs)
+
+
 def save_extrinsic_and_intrinsics(extrinsic=None, intrinsic=None, extrinsic_path=None, intrinsics_path=None):
     if extrinsic_path is not None:
         os.makedirs(os.path.dirname(extrinsic_path), exist_ok=True)
@@ -235,9 +237,7 @@ def run_render(args, round_idx, points_path, map_video_path, round_extrinsic, in
     render_video_path = render_output_dir / "render.mp4"
     render_score_path = render_output_dir / "render-score.mp4"
     need_render = (
-        args.force_rebuild_intermediate
-        or (not render_video_path.exists())
-        or (not render_score_path.exists())
+        args.force_rebuild_intermediate or (not render_video_path.exists()) or (not render_score_path.exists())
     )
     if need_render:
         render_cmd = [
@@ -457,7 +457,7 @@ def generate_video(args):
         )
 
         round_hist_frames = all_hist_frames[-args.hist_frames :]
-        round_ref_frames = all_hist_frames[:-args.hist_frames]
+        round_ref_frames = all_hist_frames[: -args.hist_frames]
         round_hist_latents_num = max(0, (len(round_hist_frames) - 1) // 4 + 1)
         input_point = load_video_frames(point_video_path, args.height, args.width)
         input_point_score = load_video_frames(point_score_path, args.height, args.width)
@@ -553,7 +553,11 @@ def get_args():
     parser.add_argument("--save_path", type=str, default="test_cases/case_2/output.mp4")
     parser.add_argument("--prompt", type=str, default="")
     parser.add_argument("--prompt_path", type=str, default="")
-    parser.add_argument("--vace_path", type=str, default="/home/aiscuser/4D-Representation/wan2.2/outputs/vace_point-bs64-lr1e-5/step-8500.safetensors")
+    parser.add_argument(
+        "--vace_path",
+        type=str,
+        default="/home/aiscuser/4D-Representation/wan2.2/outputs/vace_point-bs64-lr1e-5/step-8500.safetensors",
+    )
     parser.add_argument("--control_path", type=str, default="", help="Alias of --vace_path.")
     parser.add_argument("--lora_path", type=str, default="")
     parser.add_argument("--model_root", type=str, default="", help="Wan2.2-TI2V-5B checkpoint directory.")

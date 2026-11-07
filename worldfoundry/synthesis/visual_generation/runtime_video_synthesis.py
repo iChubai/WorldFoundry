@@ -244,11 +244,7 @@ def _filter_supported_constructor_kwargs(runtime_cls, kwargs: Dict[str, Any]) ->
     if any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values()):
         return kwargs
     # Otherwise, filter kwargs to only include those explicitly defined in the signature.
-    return {
-        key: value
-        for key, value in kwargs.items()
-        if key in parameters
-    }
+    return {key: value for key, value in kwargs.items() if key in parameters}
 
 
 class RuntimeVideoSynthesis(BaseSynthesis):
@@ -353,10 +349,7 @@ class RuntimeVideoSynthesis(BaseSynthesis):
             overrides[primary_path_key] = pretrained_model_path
         runtime_kwargs.update(overrides)
         # Expand any WorldFoundry environment tokens in the final runtime kwargs.
-        runtime_kwargs = {
-            key: _expand_worldfoundry_tokens(value)
-            for key, value in runtime_kwargs.items()
-        }
+        runtime_kwargs = {key: _expand_worldfoundry_tokens(value) for key, value in runtime_kwargs.items()}
         return runtime_kwargs
 
     @classmethod
@@ -417,7 +410,9 @@ class RuntimeVideoSynthesis(BaseSynthesis):
         """
         if self.generator is None:
             # Filter kwargs to only pass arguments supported by the runtime_cls constructor.
-            self.generator = self.runtime_cls(**_filter_supported_constructor_kwargs(self.runtime_cls, self.runtime_kwargs))
+            self.generator = self.runtime_cls(
+                **_filter_supported_constructor_kwargs(self.runtime_cls, self.runtime_kwargs)
+            )
         return self.generator
 
     def _prediction_runtime_overrides(self, kwargs: Mapping[str, Any], *, fps: Optional[int]) -> Dict[str, Any]:
@@ -499,10 +494,7 @@ class RuntimeVideoSynthesis(BaseSynthesis):
         signature = inspect.signature(self.runtime_cls)
         parameters = signature.parameters
         # Check if the runtime constructor accepts arbitrary keyword arguments (**kwargs).
-        supports_var_kwargs = any(
-            parameter.kind == inspect.Parameter.VAR_KEYWORD
-            for parameter in parameters.values()
-        )
+        supports_var_kwargs = any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters.values())
         overrides: Dict[str, Any] = {}
 
         def add_supported(candidates: tuple[str, ...], value: Any) -> None:
@@ -610,6 +602,7 @@ class RuntimeVideoSynthesis(BaseSynthesis):
             save_path = Path(target_path).expanduser().resolve()
             save_path.parent.mkdir(parents=True, exist_ok=True)
             import imageio
+
             # Save the video using imageio, prioritizing explicit fps, then kwargs fps, then generator's fps, then a default.
             imageio.mimsave(str(save_path), video, fps=fps or kwargs.get("fps") or getattr(generator, "fps", 16) or 16)
 

@@ -172,9 +172,7 @@ def ensure_moge2_runtime(moge_path=None) -> None:
     """Bind MoGe to the in-tree utils3d implementation; no external source runtime."""
 
     if moge_path:
-        raise RuntimeError(
-            "FantasyWorld no longer accepts an external MoGe checkout; pass moge_pretrained weights"
-        )
+        raise RuntimeError("FantasyWorld no longer accepts an external MoGe checkout; pass moge_pretrained weights")
     from worldfoundry.base_models.three_dimensions.general_3d.eastern_journalist import (
         utils3d as vendored_utils3d,
     )

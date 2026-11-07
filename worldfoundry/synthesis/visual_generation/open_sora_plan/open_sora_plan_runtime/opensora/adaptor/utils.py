@@ -36,7 +36,7 @@ torch_memory_reserved = get_accelerator().memory_reserved
 torch_max_memory_reserved = get_accelerator().max_memory_reserved
 
 
-class DummyOptim():
+class DummyOptim:
     """
     Dummy optimizer presents model parameters as a param group, this is
     primarily used to allow ZeRO-3 without an optimizer
@@ -44,7 +44,7 @@ class DummyOptim():
 
     def __init__(self, params):
         self.param_groups = []
-        self.param_groups.append({'params': params})
+        self.param_groups.append({"params": params})
 
 
 graph_cache = {}
@@ -73,7 +73,6 @@ def noop_decorator(func):
 
 
 class noop_context(object):
-
     def __init__(self):
         pass
 
@@ -102,16 +101,17 @@ def set_random_seed(seed):
     """
     import numpy
     import random
+
     random.seed(seed)
     numpy.random.seed(seed)
     torch.manual_seed(seed)
 
 
 def is_model_parallel_parameter(p) -> bool:
-    if hasattr(p, 'model_parallel') and p.model_parallel:
+    if hasattr(p, "model_parallel") and p.model_parallel:
         return True
 
-    if hasattr(p, 'tensor_model_parallel') and p.tensor_model_parallel:
+    if hasattr(p, "tensor_model_parallel") and p.tensor_model_parallel:
         return True
 
     return False
@@ -144,10 +144,10 @@ def bwc_tensor_model_parallel_rank(mpu=None):
         # No model parallelism in easy :)
         return 0
 
-    if hasattr(mpu, 'get_tensor_model_parallel_rank'):
+    if hasattr(mpu, "get_tensor_model_parallel_rank"):
         # New Megatron and DeepSpeed convention (post pipeline-parallelism release)
         return mpu.get_tensor_model_parallel_rank()
-    elif hasattr(mpu, 'get_slice_parallel_rank'):
+    elif hasattr(mpu, "get_slice_parallel_rank"):
         # Some DeepSpeed + pipeline parallelism versions
         return mpu.get_slice_parallel_rank()
     else:
@@ -206,7 +206,7 @@ def move_to_device(item, device, criterion_func):
 
 
 class CheckOverflow(object):
-    '''Checks for overflow in gradient across parallel process'''
+    """Checks for overflow in gradient across parallel process"""
 
     def __init__(self, param_groups=None, mpu=None, zero_reduce_scatter=False, deepspeed=None):
         self.mpu = mpu
@@ -247,8 +247,7 @@ class CheckOverflow(object):
             params = self.params
             has_moe_params = self.has_moe_params
         else:
-            assert param_groups is not None, \
-                "self.params and param_groups both cannot be none"
+            assert param_groups is not None, "self.params and param_groups both cannot be none"
 
             for group in param_groups:
                 for param in group:
@@ -283,9 +282,10 @@ class CheckOverflow(object):
             dist.all_reduce(overflow_gpu, op=dist.ReduceOp.MAX, group=dist.get_world_group())
         elif self.mpu is not None:
             if self.deepspeed is not None:
-                using_pipeline = hasattr(self.deepspeed, 'pipeline_enable_backward_allreduce')
+                using_pipeline = hasattr(self.deepspeed, "pipeline_enable_backward_allreduce")
                 if (using_pipeline and self.deepspeed.pipeline_enable_backward_allreduce is False) or (
-                        not using_pipeline and self.deepspeed.enable_backward_allreduce is False):
+                    not using_pipeline and self.deepspeed.enable_backward_allreduce is False
+                ):
                     dist.all_reduce(overflow_gpu, op=dist.ReduceOp.MAX, group=self.mpu.get_data_parallel_group())
             dist.all_reduce(overflow_gpu, op=dist.ReduceOp.MAX, group=self.mpu.get_model_parallel_group())
         elif self.deepspeed is not None and self.deepspeed.enable_backward_allreduce is False:
@@ -312,13 +312,14 @@ class CheckOverflow(object):
                 raise
             return True
         else:
-            if cpu_sum == float('inf') or cpu_sum == -float('inf') or cpu_sum != cpu_sum:
+            if cpu_sum == float("inf") or cpu_sum == -float("inf") or cpu_sum != cpu_sum:
                 return True
             return False
 
 
 def _handle_overflow(cpu_sum, x, i):
     import math
+
     rank = dist.get_rank()
     if rank == 0:
         t_i = -1
@@ -330,8 +331,7 @@ def _handle_overflow(cpu_sum, x, i):
 
 
 def get_global_norm(norm_list):
-    """ Compute total from a list of norms
-    """
+    """Compute total from a list of norms"""
     total_norm = 0.0
     for norm in norm_list:
         total_norm += norm**2.0
@@ -378,16 +378,16 @@ def clip_grad_norm_(parameters, max_norm, norm_type=2, mpu=None):
             if mpu is not None:
                 if (mpu.get_model_parallel_rank() == 0) or is_model_parallel_parameter(p):
                     param_norm = p.grad.data.norm(norm_type)
-                    total_norm += param_norm.item()**norm_type
+                    total_norm += param_norm.item() ** norm_type
             else:
                 param_norm = p.grad.data.float().norm(norm_type)
-                total_norm += param_norm.item()**norm_type
+                total_norm += param_norm.item() ** norm_type
 
         # Sum across all model parallel GPUs.
         total_norm_cuda = get_accelerator().FloatTensor([float(total_norm)])
         if mpu is not None:
             dist.all_reduce(total_norm_cuda, op=dist.ReduceOp.SUM, group=mpu.get_model_parallel_group())
-        total_norm = total_norm_cuda[0].item()**(1. / norm_type)
+        total_norm = total_norm_cuda[0].item() ** (1.0 / norm_type)
 
     # Need to average total_norm across different GPUs due to the presence of moe params
     pg = groups._get_data_parallel_group()
@@ -433,7 +433,7 @@ def get_grad_norm(parameters, norm_type=2, mpu=None):
             dist.all_reduce(total_norm_cuda, op=dist.ReduceOp.MAX, group=mpu.get_model_parallel_group())
         total_norm = total_norm_cuda[0].item()
     else:
-        total_norm = 0.
+        total_norm = 0.0
         tensor_mp_rank = bwc_tensor_model_parallel_rank(mpu=mpu)
         for p in parameters:
             # Pipeline parallelism may replicate parameters. Avoid multi-counting.
@@ -446,15 +446,15 @@ def get_grad_norm(parameters, norm_type=2, mpu=None):
                 continue
 
             param_norm = p.grad.data.float().norm(norm_type)
-            total_norm += param_norm.item()**norm_type
+            total_norm += param_norm.item() ** norm_type
 
         # Sum across all model parallel GPUs.
         total_norm_cuda = get_accelerator().FloatTensor([float(total_norm)])
         if mpu is not None:
             dist.all_reduce(total_norm_cuda, op=dist.ReduceOp.SUM, group=mpu.get_model_parallel_group())
-        total_norm = total_norm_cuda[0].item()**(1. / norm_type)
+        total_norm = total_norm_cuda[0].item() ** (1.0 / norm_type)
 
-    if total_norm == float('inf') or total_norm == -float('inf') or total_norm != total_norm:
+    if total_norm == float("inf") or total_norm == -float("inf") or total_norm != total_norm:
         total_norm = -1
 
     return total_norm
@@ -476,7 +476,7 @@ def get_grad_zeros(parameters, mpu=None):
         parameters = [parameters]
     parameters = list(filter(lambda p: p.grad is not None, parameters))
 
-    total_zeros = 0.
+    total_zeros = 0.0
     tensor_mp_rank = bwc_tensor_model_parallel_rank(mpu=mpu)
     for p in parameters:
         # Pipeline parallelism may replicate parameters. Avoid multi-counting.
@@ -529,7 +529,7 @@ def get_weight_norm(parameters, norm_type=2, mpu=None):
             dist.all_reduce(total_norm_cuda, op=dist.ReduceOp.MAX, group=mpu.get_model_parallel_group())
         total_norm = total_norm_cuda[0].item()
     else:
-        total_norm = 0.
+        total_norm = 0.0
         tensor_mp_rank = bwc_tensor_model_parallel_rank(mpu=mpu)
         for p in parameters:
             # Pipeline parallelism may replicate parameters. Avoid multi-counting.
@@ -548,16 +548,16 @@ def get_weight_norm(parameters, norm_type=2, mpu=None):
         total_norm_cuda = get_accelerator().FloatTensor([float(total_norm)])
         if mpu is not None:
             dist.all_reduce(total_norm_cuda, op=dist.ReduceOp.SUM, group=mpu.get_model_parallel_group())
-        total_norm = total_norm_cuda[0].item()**(1. / norm_type)
+        total_norm = total_norm_cuda[0].item() ** (1.0 / norm_type)
 
-    if total_norm == float('inf') or total_norm == -float('inf') or total_norm != total_norm:
+    if total_norm == float("inf") or total_norm == -float("inf") or total_norm != total_norm:
         total_norm = -1
 
     return total_norm
 
 
 def prefix_sum_inc(weights):
-    """ Compute an inclusive prefix sum.
+    """Compute an inclusive prefix sum.
 
     Example:
         >>> prefix_sum_inc([3,4,5])
@@ -571,6 +571,7 @@ def prefix_sum_inc(weights):
 
 def partition_uniform(num_items, num_parts):
     import numpy
+
     parts = [0] * (num_parts + 1)
     # First check for the trivial edge case
     if num_items <= num_parts:
@@ -584,7 +585,7 @@ def partition_uniform(num_items, num_parts):
     parts = numpy.arange(0, (num_parts + 1) * chunksize, chunksize)
 
     for i in range(residual):
-        parts[i + 1:] += 1
+        parts[i + 1 :] += 1
     parts = parts.tolist()
 
     return parts
@@ -596,6 +597,7 @@ def partition_balanced(weights, num_parts):
     see https://www8.cs.umu.se/kurser/TDBAfl/VT06/algorithms/BOOK/BOOK2/NODE45.HTM
     """
     import numpy as np
+
     n = len(weights)
     m = num_parts
 
@@ -632,7 +634,6 @@ def partition_balanced(weights, num_parts):
 
 
 class PartitionedTensor:
-
     def __init__(self, tensor, group, partition_meta=None):
         super().__init__()
 
@@ -653,8 +654,8 @@ class PartitionedTensor:
         meta = meta.tolist()
 
         # [N, list0, ..., listN-1]
-        part_obj.orig_size = meta[1:(1 + meta[0])]
-        meta = meta[1 + meta[0]:]
+        part_obj.orig_size = meta[1 : (1 + meta[0])]
+        meta = meta[1 + meta[0] :]
 
         part_obj.orig_device = device
         part_obj.local_data = local_part.detach()
@@ -762,9 +763,12 @@ def memory_status(msg, print_rank=-1, reset_max=False):
     max_cached /= 1024**3
 
     print(
-        f'RANK={rank} MEMSTATS', msg, f'device={get_accelerator().current_device_name()} '
-        f'current alloc={new_alloced:0.4f}GB (delta={delta_alloced:0.4f}GB max={max_alloced:0.4f}GB) '
-        f'current cache={new_cached:0.4f}GB (delta={delta_cached:0.4f}GB max={max_cached:0.4f}GB)')
+        f"RANK={rank} MEMSTATS",
+        msg,
+        f"device={get_accelerator().current_device_name()} "
+        f"current alloc={new_alloced:0.4f}GB (delta={delta_alloced:0.4f}GB max={max_alloced:0.4f}GB) "
+        f"current cache={new_cached:0.4f}GB (delta={delta_cached:0.4f}GB max={max_cached:0.4f}GB)",
+    )
 
 
 def get_ma_status():
@@ -789,14 +793,16 @@ def see_memory_usage(message, force=False):
 
     # Print message except when distributed but not rank 0
     logger.info(message)
-    logger.info(f"MA {round(get_accelerator().memory_allocated() / (1024 * 1024 * 1024),2 )} GB \
-        Max_MA {round(get_accelerator().max_memory_allocated() / (1024 * 1024 * 1024),2)} GB \
-        CA {round(torch_memory_reserved() / (1024 * 1024 * 1024),2)} GB \
-        Max_CA {round(torch_max_memory_reserved() / (1024 * 1024 * 1024))} GB ")
+    logger.info(
+        f"MA {round(get_accelerator().memory_allocated() / (1024 * 1024 * 1024), 2)} GB \
+        Max_MA {round(get_accelerator().max_memory_allocated() / (1024 * 1024 * 1024), 2)} GB \
+        CA {round(torch_memory_reserved() / (1024 * 1024 * 1024), 2)} GB \
+        Max_CA {round(torch_max_memory_reserved() / (1024 * 1024 * 1024))} GB "
+    )
 
     vm_stats = psutil.virtual_memory()
     used_GB = round(((vm_stats.total - vm_stats.available) / (1024**3)), 2)
-    logger.info(f'CPU Virtual Memory:  used = {used_GB} GB, percent = {vm_stats.percent}%')
+    logger.info(f"CPU Virtual Memory:  used = {used_GB} GB, percent = {vm_stats.percent}%")
 
     # get the peak memory to report correct data, so reset the counter for the next call
     get_accelerator().reset_peak_memory_stats()
@@ -813,14 +819,14 @@ def call_to_str(base, *args, **kwargs):
     Returns:
         str: A string representation of base(*args, **kwargs)
     """
-    name = f'{base}('
+    name = f"{base}("
     if args:
-        name += ', '.join(repr(arg) for arg in args)
+        name += ", ".join(repr(arg) for arg in args)
         if kwargs:
-            name += ', '
+            name += ", "
     if kwargs:
-        name += ', '.join(f'{key}={repr(arg)}' for key, arg in kwargs.items())
-    name += ')'
+        name += ", ".join(f"{key}={repr(arg)}" for key, arg in kwargs.items())
+    name += ")"
     return name
 
 
@@ -828,7 +834,7 @@ def get_only_unique_item(items):
     item_set = set(items)
     if len(item_set) != 1:
         raise RuntimeError(f"expected there to be only one unique element in {items}")
-    unique_item, = item_set
+    (unique_item,) = item_set
 
     return unique_item
 
@@ -866,8 +872,8 @@ def get_global_norm_of_tensors(input_tensors, norm_type=2, mpu=None, use_graph=F
     Returns:
         Total norm of the tensors (viewed as a single vector).
     """
-    assert isinstance(input_tensors, Iterable), f'expected Iterable type not {type(input_tensors)}'
-    assert all([torch.is_tensor(t) for t in input_tensors]), f'expected list of only tensors'
+    assert isinstance(input_tensors, Iterable), f"expected Iterable type not {type(input_tensors)}"
+    assert all([torch.is_tensor(t) for t in input_tensors]), f"expected list of only tensors"
 
     norm_type = float(norm_type)
     if norm_type == inf:
@@ -878,13 +884,13 @@ def get_global_norm_of_tensors(input_tensors, norm_type=2, mpu=None, use_graph=F
             total_norm = total_norm_cuda[0].item()
     else:
         if use_graph:
-            if 'norm_tensors_compute_buffer' not in graph_cache:
-                graph_cache['norm_tensors_compute_buffer'] = [t.data.float().norm(norm_type) for t in input_tensors]
-            compute_buffer = graph_cache['norm_tensors_compute_buffer']
+            if "norm_tensors_compute_buffer" not in graph_cache:
+                graph_cache["norm_tensors_compute_buffer"] = [t.data.float().norm(norm_type) for t in input_tensors]
+            compute_buffer = graph_cache["norm_tensors_compute_buffer"]
 
             def _norm_tensors(tensor_list, _compute_buffer, _norm_type):
                 for i, t in enumerate(tensor_list):
-                    _compute_buffer[i].data.copy_(t.data.float().norm(_norm_type)**_norm_type)
+                    _compute_buffer[i].data.copy_(t.data.float().norm(_norm_type) ** _norm_type)
                     if i != 0:
                         _compute_buffer[0].data.add_(_compute_buffer[i].data)
 
@@ -892,14 +898,14 @@ def get_global_norm_of_tensors(input_tensors, norm_type=2, mpu=None, use_graph=F
 
             total_norm = compute_buffer[0]
         else:
-            total_norm = sum([t.data.float().norm(norm_type).item()**norm_type for t in input_tensors])
+            total_norm = sum([t.data.float().norm(norm_type).item() ** norm_type for t in input_tensors])
 
         total_norm_cuda = get_accelerator().FloatTensor([float(total_norm)]).detach()
         if mpu is not None:
             dist.all_reduce(total_norm_cuda, op=dist.ReduceOp.SUM, group=mpu.get_model_parallel_group())
-        total_norm = total_norm_cuda[0].item()**(1. / norm_type)
+        total_norm = total_norm_cuda[0].item() ** (1.0 / norm_type)
 
-    if total_norm == float('inf') or total_norm == -float('inf') or total_norm != total_norm:
+    if total_norm == float("inf") or total_norm == -float("inf") or total_norm != total_norm:
         total_norm = -1
 
     return total_norm
@@ -925,11 +931,12 @@ def clip_tensors_by_global_norm(input_tensors, max_norm=1.0, global_norm=None, m
                 for t in _tensor_list:
                     t.detach().mul_(_clip_coef_tensor)
 
-            if 'clip_coef_tensor' not in graph_cache:
+            if "clip_coef_tensor" not in graph_cache:
                 # Alloc memory
-                graph_cache['clip_coef_tensor'] = torch.tensor(clip_coef,
-                                                               dtype=torch.float32).to(get_accelerator().device_name())
-            clip_coef_tensor = graph_cache['clip_coef_tensor']
+                graph_cache["clip_coef_tensor"] = torch.tensor(clip_coef, dtype=torch.float32).to(
+                    get_accelerator().device_name()
+                )
+            clip_coef_tensor = graph_cache["clip_coef_tensor"]
             clip_coef_tensor.copy_(torch.tensor(clip_coef, dtype=torch.float32))
             graph_process(False, clip_tensors, input_tensors, clip_coef_tensor)
 
@@ -954,7 +961,6 @@ def align_dense_tensors(tensor_list, alignment):
 
 
 def all_gather_into_tensor_dp_groups(groups_flat, partitioned_param_groups, zp_process_group, dp_process_group=None):
-
     for group_id, (group_flat, partitioned_params) in enumerate(zip(groups_flat, partitioned_param_groups)):
         partition_id = dist.get_rank(group=zp_process_group[group_id])
         dp_world_size = dist.get_world_size(group=dp_process_group)
@@ -966,8 +972,14 @@ def all_gather_into_tensor_dp_groups(groups_flat, partitioned_param_groups, zp_p
         dist.all_gather_into_tensor(group_flat, partitioned_params[partition_id].contiguous(), dp_process_group)
 
 
-def all_gather_dp_groups(groups_flat, partitioned_param_groups, zp_process_group, start_alignment_factor,
-                         allgather_bucket_size, dp_process_group=None):
+def all_gather_dp_groups(
+    groups_flat,
+    partitioned_param_groups,
+    zp_process_group,
+    start_alignment_factor,
+    allgather_bucket_size,
+    dp_process_group=None,
+):
     # if dist.has_all_gather_into_tensor():
     return all_gather_into_tensor_dp_groups(groups_flat, partitioned_param_groups, zp_process_group, dp_process_group)
 
@@ -1004,7 +1016,6 @@ def all_gather_dp_groups(groups_flat, partitioned_param_groups, zp_process_group
 
 
 class TLinear(torch.nn.Linear):
-
     def __init__(self, orig_layer, name=""):
         self.name = name
         super().__init__(orig_layer.weight.shape[1], orig_layer.weight.shape[0], bias=(orig_layer.bias is not None))
@@ -1024,8 +1035,10 @@ class TLinear(torch.nn.Linear):
 
 def get_inactive_params(param_list):
     from deepspeed.runtime.zero.partition_parameters import ZeroParamStatus
-    return [param for param in param_list if (hasattr(param, 'ds_id') and \
-                            param.ds_status == ZeroParamStatus.NOT_AVAILABLE)]
+
+    return [
+        param for param in param_list if (hasattr(param, "ds_id") and param.ds_status == ZeroParamStatus.NOT_AVAILABLE)
+    ]
 
 
 def required_torch_version(min_version=None, max_version=None):

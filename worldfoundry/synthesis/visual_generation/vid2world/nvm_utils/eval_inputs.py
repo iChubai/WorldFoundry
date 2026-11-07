@@ -35,6 +35,7 @@ import random
 # Help NumPy 1.x unpickle NumPy 2.x pickles, please use this sparingly and only temporarily
 if np.__version__[:2] == "1.":
     import sys
+
     # More comprehensive compatibility mapping for NumPy 2.x pickles
     try:
         sys.modules["numpy._core.numeric"] = np.core.numeric
@@ -69,6 +70,7 @@ if np.__version__[:2] == "1.":
         # Some modules might not exist in older NumPy versions
         pass
 
+
 class BaseDataset(Dataset):
     def __init__(
         self,
@@ -99,7 +101,6 @@ class BaseDataset(Dataset):
         self.dataset_name = dataset_name
         self.goals_per_obs = goals_per_obs
 
-
         traj_names_file = os.path.join(self.data_split_folder, traj_names)
         with open(traj_names_file, "r") as f:
             file_lines = f.read()
@@ -126,8 +127,8 @@ class BaseDataset(Dataset):
         self.transform = transform
         self._load_index(predefined_index)
         self.ACTION_STATS = {}
-        for key in all_data_config['action_stats']:
-            self.ACTION_STATS[key] = np.expand_dims(all_data_config['action_stats'][key], axis=0)
+        for key in all_data_config["action_stats"]:
+            self.ACTION_STATS[key] = np.expand_dims(all_data_config["action_stats"][key], axis=0)
 
     def _load_index(self, predefined_index) -> None:
         """
@@ -174,8 +175,8 @@ class BaseDataset(Dataset):
     def _get_trajectory(self, trajectory_name):
         with open(os.path.join(self.data_folder, trajectory_name, "traj_data.pkl"), "rb") as f:
             traj_data = pickle.load(f)
-        for k,v in traj_data.items():
-            traj_data[k] = v.astype('float')
+        for k, v in traj_data.items():
+            traj_data[k] = v.astype("float")
         return traj_data
 
     def __len__(self) -> int:
@@ -221,6 +222,7 @@ class BaseDataset(Dataset):
             goal_pos = goal_pos.squeeze(0)
         return actions, goal_pos
 
+
 class RECONVIDDataset(BaseDataset):
     def __init__(
         self,
@@ -232,15 +234,30 @@ class RECONVIDDataset(BaseDataset):
         max_dist_cat: int,
         len_traj_pred: int,
         traj_stride: int,
-        context_size: int, # dummy
+        context_size: int,  # dummy
         transform: object,
-        traj_names: str = 'traj_names.txt',
+        traj_names: str = "traj_names.txt",
         normalize: bool = True,
         predefined_index: list = None,
-        mode: str = 'training',
+        mode: str = "training",
         video_length: int = 16,
     ):
-        super().__init__(data_folder, data_split_folder, dataset_name, image_size, min_dist_cat, max_dist_cat, len_traj_pred, traj_stride, context_size, transform, traj_names, normalize, predefined_index, goals_per_obs=video_length)
+        super().__init__(
+            data_folder,
+            data_split_folder,
+            dataset_name,
+            image_size,
+            min_dist_cat,
+            max_dist_cat,
+            len_traj_pred,
+            traj_stride,
+            context_size,
+            transform,
+            traj_names,
+            normalize,
+            predefined_index,
+            goals_per_obs=video_length,
+        )
         self.mode = mode
         self.video_length = video_length
 
@@ -253,28 +270,29 @@ class RECONVIDDataset(BaseDataset):
             if max_goal_dist < self.video_length:
                 raise ValueError(f"max_goal_dist < video_length, skipping {i}")
                 # self.__getitem__(i+1)
-            goal_offset = np.arange(self.video_length-1) + 1 # [1, 2, ..., video_length-1]
-            goal_time = (curr_time + goal_offset).astype('int')
-            rel_time = (goal_offset).astype('float')/(128.) # TODO: refactor, currently a fixed const
-            context_times = list(range(curr_time, curr_time + 1)) # [curr_time]
+            goal_offset = np.arange(self.video_length - 1) + 1  # [1, 2, ..., video_length-1]
+            goal_time = (curr_time + goal_offset).astype("int")
+            rel_time = (goal_offset).astype("float") / (128.0)  # TODO: refactor, currently a fixed const
+            context_times = list(range(curr_time, curr_time + 1))  # [curr_time]
             context = [(f_curr, t) for t in context_times] + [(f_curr, t) for t in goal_time]
 
-            obs_image = torch.stack([self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in context])
+            obs_image = torch.stack(
+                [self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in context]
+            )
 
             # Load other trajectory data
             curr_traj_data = self._get_trajectory(f_curr)
             actions_seq = np.zeros((self.video_length, 3))
             # Compute actions
-            for j,t in enumerate(goal_time):
-                if j==0:
-                    assert t-1 == curr_time # just making sure it is continuous
-                _, t_goal_pos = self._compute_actions(curr_traj_data, t-1, t, only_goal=True)
+            for j, t in enumerate(goal_time):
+                if j == 0:
+                    assert t - 1 == curr_time  # just making sure it is continuous
+                _, t_goal_pos = self._compute_actions(curr_traj_data, t - 1, t, only_goal=True)
                 actions_seq[j] = t_goal_pos
             actions_seq[:, :2] = normalize_data(actions_seq[:, :2], self.ACTION_STATS)
             # one may realize that such instantiation method makes the last action in actions_seq all zeros before normalization
             # after normalization, it is [-0.33333333,  0., 0.]
             # this is very much correct since we never use this action anyway.
-
 
             return (
                 torch.as_tensor(obs_image, dtype=torch.float32),
@@ -286,6 +304,7 @@ class RECONVIDDataset(BaseDataset):
             print(f"Exception in {self.dataset_name}", e)
             raise Exception(e)
 
+
 class RECONEvalDataset(BaseDataset):
     def __init__(
         self,
@@ -295,17 +314,32 @@ class RECONEvalDataset(BaseDataset):
         image_size: Tuple[int, int],
         min_dist_cat: int,
         max_dist_cat: int,
-        len_traj_pred: int, # should be 16
+        len_traj_pred: int,  # should be 16
         traj_stride: int,
-        context_size: int, # should be 4
+        context_size: int,  # should be 4
         transform: object,
         traj_names: str,
         normalize: bool = True,
         predefined_index: list = None,
-        mode: str = 'training',
+        mode: str = "training",
         video_length: int = 20,
     ):
-        super().__init__(data_folder, data_split_folder, dataset_name, image_size, min_dist_cat, max_dist_cat, len_traj_pred, traj_stride, context_size, transform, traj_names, normalize, predefined_index, goals_per_obs=video_length)
+        super().__init__(
+            data_folder,
+            data_split_folder,
+            dataset_name,
+            image_size,
+            min_dist_cat,
+            max_dist_cat,
+            len_traj_pred,
+            traj_stride,
+            context_size,
+            transform,
+            traj_names,
+            normalize,
+            predefined_index,
+            goals_per_obs=video_length,
+        )
         self.mode = mode
         self.video_length = video_length
 
@@ -316,7 +350,7 @@ class RECONEvalDataset(BaseDataset):
             # 2. actions are relative to the current frame: i.e. a_{t} = x_{t+1} - x_{t}
             f_curr, curr_time, min_goal_dist, max_goal_dist = self.index_to_data[i]
             if max_goal_dist < self.video_length:
-                self.__getitem__(i+1)
+                self.__getitem__(i + 1)
                 print(f"max_goal_dist < video_length, skipping {i}")
 
             context_times = list(range(curr_time - self.context_size + 1, curr_time + 1))
@@ -326,24 +360,25 @@ class RECONEvalDataset(BaseDataset):
             pred = [(f_curr, t) for t in pred_times]
             all_frames = context + pred
             all_times = context_times + pred_times
-            all_frames_image = torch.stack([self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in all_frames])
+            all_frames_image = torch.stack(
+                [self.transform(Image.open(get_data_path(self.data_folder, f, t))) for f, t in all_frames]
+            )
 
             # Load other trajectory data
             curr_traj_data = self._get_trajectory(f_curr)
             actions_seq = np.zeros((self.video_length, 3))
             # Compute actions
-            for j,t in enumerate(all_times):
-                if j==0:
+            for j, t in enumerate(all_times):
+                if j == 0:
                     continue
-                if j==1:
-                    assert t-1 == curr_time - self.context_size + 1 # just making sure it is continuous
-                _, t_goal_pos = self._compute_actions(curr_traj_data, t-1, t, only_goal=True)
-                actions_seq[j-1] = t_goal_pos
+                if j == 1:
+                    assert t - 1 == curr_time - self.context_size + 1  # just making sure it is continuous
+                _, t_goal_pos = self._compute_actions(curr_traj_data, t - 1, t, only_goal=True)
+                actions_seq[j - 1] = t_goal_pos
             actions_seq[:, :2] = normalize_data(actions_seq[:, :2], self.ACTION_STATS)
             # one may realize that such instantiation method makes the last action in actions_seq all zeros before normalization
             # after normalization, it is [-0.33333333,  0., 0.]
             # this is very much correct since we never use this action anyway.
-
 
             return (
                 torch.as_tensor(all_frames_image, dtype=torch.float32),

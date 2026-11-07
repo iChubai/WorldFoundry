@@ -42,9 +42,7 @@ class PrefixGroup(TokenGroup):
     attention_rules: Mapping[str, AttentionRule]
 
     def __post_init__(self):
-        assert (
-            len(self.tokens.shape) == 3
-        ), "PrefixGroup tokens must be (batch, n_tokens, d)"
+        assert len(self.tokens.shape) == 3, "PrefixGroup tokens must be (batch, n_tokens, d)"
         assert len(self.mask.shape) == 2, "PrefixGroup mask must be (batch, n_tokens)"
 
 
@@ -59,12 +57,8 @@ class TimestepGroup(TokenGroup):
     attention_rules: Mapping[str, AttentionRule] = flax.struct.field(pytree_node=False)
 
     def __post_init__(self):
-        assert (
-            len(self.tokens.shape) == 4
-        ), "TimestepGroup tokens must be (batch, horizon, n_tokens, d)"
-        assert (
-            len(self.mask.shape) == 3
-        ), "TimestepGroup mask must be (batch, horizon, n_tokens)"
+        assert len(self.tokens.shape) == 4, "TimestepGroup tokens must be (batch, horizon, n_tokens, d)"
+        assert len(self.mask.shape) == 3, "TimestepGroup mask must be (batch, horizon, n_tokens)"
 
 
 def find_match(pattern_dict: Dict[str, Any], name: str, default: Any) -> Any:
@@ -95,9 +89,7 @@ class TokenMetadata:
         )
 
     def should_attend_to(self, other_metadata: "TokenMetadata") -> bool:
-        attention_rule = find_match(
-            self.attention_rules, other_metadata.name, AttentionRule.NEVER
-        )
+        attention_rule = find_match(self.attention_rules, other_metadata.name, AttentionRule.NEVER)
 
         if attention_rule == AttentionRule.CAUSAL:
             return other_metadata.timestep <= self.timestep
@@ -177,14 +169,10 @@ class BlockTransformer(nn.Module):
         self.sow("intermediates", "attention_mask", attention_mask)
 
         # Run transformer
-        output = Transformer(**self.transformer_kwargs)(
-            input_tokens, attention_mask, train=train
-        )
+        output = Transformer(**self.transformer_kwargs)(input_tokens, attention_mask, train=train)
 
         # Split output into prefix and timestep groups
-        all_prefix_outputs, all_timestep_outputs = self.split_output_tokens(
-            output, prefix_groups, timestep_groups
-        )
+        all_prefix_outputs, all_timestep_outputs = self.split_output_tokens(output, prefix_groups, timestep_groups)
         return all_prefix_outputs, all_timestep_outputs
 
     def assemble_input_tokens(
@@ -201,9 +189,7 @@ class BlockTransformer(nn.Module):
             tokens: A tensor of shape (batch, total_tokens, token_embedding_size)
         """
         if len(prefix_groups) > 0:
-            all_prefix_tokens = jnp.concatenate(
-                [group.tokens for group in prefix_groups], axis=1
-            )
+            all_prefix_tokens = jnp.concatenate([group.tokens for group in prefix_groups], axis=1)
         else:
             all_prefix_tokens = jnp.zeros(
                 (
@@ -214,9 +200,7 @@ class BlockTransformer(nn.Module):
                 dtype=jnp.float32,
             )
 
-        all_timestep_tokens = jnp.concatenate(
-            [group.tokens for group in timestep_groups], axis=2
-        )
+        all_timestep_tokens = jnp.concatenate([group.tokens for group in timestep_groups], axis=2)
         all_timestep_tokens = einops.rearrange(
             all_timestep_tokens,
             "batch horizon n_tokens d -> batch (horizon n_tokens) d",
@@ -236,18 +220,13 @@ class BlockTransformer(nn.Module):
         tokens_per_prefix_group = [group.tokens.shape[1] for group in prefix_groups]
         n_prefix_tokens = sum(tokens_per_prefix_group)
 
-        prefix_embeddings, timestep_embeddings = jnp.split(
-            output_tokens, [n_prefix_tokens], axis=1
-        )
+        prefix_embeddings, timestep_embeddings = jnp.split(output_tokens, [n_prefix_tokens], axis=1)
 
         # Process prefix group outputs
         if len(prefix_groups) > 0:
-            prefix_embeddings_split = split_tokens(
-                prefix_embeddings, tokens_per_prefix_group, axis=1
-            )
+            prefix_embeddings_split = split_tokens(prefix_embeddings, tokens_per_prefix_group, axis=1)
             all_prefix_outputs = [
-                group.replace(tokens=embeddings)
-                for group, embeddings in zip(prefix_groups, prefix_embeddings_split)
+                group.replace(tokens=embeddings) for group, embeddings in zip(prefix_groups, prefix_embeddings_split)
             ]
         else:
             all_prefix_outputs = []
@@ -260,13 +239,10 @@ class BlockTransformer(nn.Module):
         )
 
         tokens_per_timestep_group = [group.tokens.shape[2] for group in timestep_groups]
-        timestep_embeddings_split = split_tokens(
-            timestep_embeddings, tokens_per_timestep_group, axis=2
-        )
+        timestep_embeddings_split = split_tokens(timestep_embeddings, tokens_per_timestep_group, axis=2)
 
         all_timestep_outputs = [
-            group.replace(tokens=embeddings)
-            for group, embeddings in zip(timestep_groups, timestep_embeddings_split)
+            group.replace(tokens=embeddings) for group, embeddings in zip(timestep_groups, timestep_embeddings_split)
         ]
         return all_prefix_outputs, all_timestep_outputs
 
@@ -292,9 +268,7 @@ class BlockTransformer(nn.Module):
 
         if not self.use_correct_attention:
             # No longer used in new models, but keeping for backward compatibility w/ models released in DEcember
-            logging.warning(
-                "Using old attention computation from released December models."
-            )
+            logging.warning("Using old attention computation from released December models.")
             side = "left"
         else:
             side = "right"
@@ -329,9 +303,7 @@ class BlockTransformer(nn.Module):
                 mask = int(metadata_i.should_attend_to(metadata_j))
                 attention_mask[i, j] = mask
 
-        pad_attention_mask = self.generate_pad_attention_mask(
-            prefix_groups, timestep_groups
-        )
+        pad_attention_mask = self.generate_pad_attention_mask(prefix_groups, timestep_groups)
         attention_mask = jnp.logical_and(attention_mask, pad_attention_mask)
         return attention_mask
 
@@ -347,14 +319,10 @@ class BlockTransformer(nn.Module):
         """
         batch_size, horizon = timestep_groups[0].tokens.shape[:2]
         if len(prefix_groups) > 0:
-            prefix_pad_mask = jnp.concatenate(
-                [group.mask for group in prefix_groups], axis=1
-            )
+            prefix_pad_mask = jnp.concatenate([group.mask for group in prefix_groups], axis=1)
         else:
             prefix_pad_mask = jnp.zeros((batch_size, 0), dtype=jnp.bool_)
-        timestep_pad_mask = jnp.concatenate(
-            [group.mask for group in timestep_groups], axis=2
-        )
+        timestep_pad_mask = jnp.concatenate([group.mask for group in timestep_groups], axis=2)
         timestep_pad_mask = einops.rearrange(
             timestep_pad_mask,
             "batch horizon n_tokens -> batch (horizon n_tokens)",
@@ -381,23 +349,16 @@ class BlockTransformer(nn.Module):
         # First verify that prefix group isn't attending to any timestep group
         for prefix_group in prefix_groups:
             for ts_group in timestep_groups:
-                rule = find_match(
-                    prefix_group.attention_rules, ts_group.name, AttentionRule.NEVER
+                rule = find_match(prefix_group.attention_rules, ts_group.name, AttentionRule.NEVER)
+                assert prefix_group.attention_rules.get(ts_group.name, AttentionRule.NEVER) == AttentionRule.NEVER, (
+                    f"Causality broken! Prefix group {prefix_group.name} is attending to timestep group {ts_group.name}"
                 )
-                assert (
-                    prefix_group.attention_rules.get(ts_group.name, AttentionRule.NEVER)
-                    == AttentionRule.NEVER
-                ), f"Causality broken! Prefix group {prefix_group.name} is attending to timestep group {ts_group.name}"
 
         # Next, make sure that nothing is attending to future timesteps
         for group in prefix_groups + timestep_groups:
             for other_group in prefix_groups + timestep_groups:
-                rule = find_match(
-                    group.attention_rules, other_group.name, AttentionRule.NEVER
-                )
-                assert (
-                    rule != AttentionRule.ALL
-                ), "Causality broken! WhenToAttend.ALL attends to future timesteps too."
+                rule = find_match(group.attention_rules, other_group.name, AttentionRule.NEVER)
+                assert rule != AttentionRule.ALL, "Causality broken! WhenToAttend.ALL attends to future timesteps too."
 
     def pretty_print_attention_mask(
         self,
@@ -432,16 +393,12 @@ class BlockTransformer(nn.Module):
         column_names = []
 
         for prefix_group in prefix_groups:
-            column_names.append(
-                f"{prefix_group.name} ({prefix_group.tokens.shape[1]} tokens)"
-            )
+            column_names.append(f"{prefix_group.name} ({prefix_group.tokens.shape[1]} tokens)")
             all_metadatas.append(TokenMetadata.create(prefix_group, timestep=-1))
 
         for ts in range(horizon):
             for timestep_group in timestep_groups:
-                column_names.append(
-                    f"t={ts} {timestep_group.name} ({timestep_group.tokens.shape[2]} tokens) "
-                )
+                column_names.append(f"t={ts} {timestep_group.name} ({timestep_group.tokens.shape[2]} tokens) ")
                 all_metadatas.append(TokenMetadata.create(timestep_group, timestep=ts))
 
         rows = []

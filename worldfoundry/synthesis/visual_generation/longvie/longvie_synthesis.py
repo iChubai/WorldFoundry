@@ -128,9 +128,7 @@ class LongVieSynthesis(BaseSynthesis):
             options.pop(key, None)
 
         # Determine the model ID, prioritizing 'variant', then 'model_id', then the class default.
-        resolved_model_id = str(
-            options.pop("variant", None) or requested_model_id or model_id or cls.MODEL_ID
-        )
+        resolved_model_id = str(options.pop("variant", None) or requested_model_id or model_id or cls.MODEL_ID)
         # Normalize model ID aliases to standard forms.
         if resolved_model_id in {"longvie2", "longvie-v2"}:
             resolved_model_id = "longvie-2"
@@ -446,9 +444,7 @@ class LongVieSynthesis(BaseSynthesis):
                 "interaction_mode": "queued_control_video_segments",
                 "resident_weights": self.runtime.loaded,
                 "history_frames": len(self.history),
-                "continued_from_previous_final_frame": bool(
-                    continue_from_memory and supplied_image is not input_image
-                ),
+                "continued_from_previous_final_frame": bool(continue_from_memory and supplied_image is not input_image),
             },
             "video": generated,
             "video_chunk": VideoChunk(frames=generated, layout="frame-list", value_range="0,255"),

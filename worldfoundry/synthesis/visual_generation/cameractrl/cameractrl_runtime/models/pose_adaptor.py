@@ -61,14 +61,12 @@ class PoseAdaptor(nn.Module):
 
     def forward(self, noisy_latents, timesteps, encoder_hidden_states, pose_embedding):
         assert pose_embedding.ndim == 5
-        bs = pose_embedding.shape[0]            # b c f h w
-        pose_embedding_features = self.pose_encoder(pose_embedding)      # bf c h w
-        pose_embedding_features = [rearrange(x, '(b f) c h w -> b c f h w', b=bs)
-                                   for x in pose_embedding_features]
-        noise_pred = self.unet(noisy_latents,
-                               timesteps,
-                               encoder_hidden_states,
-                               pose_embedding_features=pose_embedding_features).sample
+        bs = pose_embedding.shape[0]  # b c f h w
+        pose_embedding_features = self.pose_encoder(pose_embedding)  # bf c h w
+        pose_embedding_features = [rearrange(x, "(b f) c h w -> b c f h w", b=bs) for x in pose_embedding_features]
+        noise_pred = self.unet(
+            noisy_latents, timesteps, encoder_hidden_states, pose_embedding_features=pose_embedding_features
+        ).sample
         return noise_pred
 
 
@@ -100,7 +98,6 @@ class Downsample(nn.Module):
 
 
 class ResnetBlock(nn.Module):
-
     def __init__(self, in_c, out_c, down, ksize=3, sk=False, use_conv=True):
         super().__init__()
         ps = ksize // 2
@@ -137,10 +134,10 @@ class ResnetBlock(nn.Module):
 
 class PositionalEncoding(nn.Module):
     def __init__(
-            self,
-            d_model,
-            dropout=0.,
-            max_len=32,
+        self,
+        d_model,
+        dropout=0.0,
+        max_len=32,
     ):
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
@@ -150,29 +147,30 @@ class PositionalEncoding(nn.Module):
         pe[0, :, 0::2, ...] = torch.sin(position * div_term)
         pe[0, :, 1::2, ...] = torch.cos(position * div_term)
         pe.unsqueeze_(-1).unsqueeze_(-1)
-        self.register_buffer('pe', pe)
+        self.register_buffer("pe", pe)
 
     def forward(self, x):
-        x = x + self.pe[:, :x.size(1), ...]
+        x = x + self.pe[:, : x.size(1), ...]
         return self.dropout(x)
 
 
 class CameraPoseEncoder(nn.Module):
-
-    def __init__(self,
-                 downscale_factor,
-                 channels=[320, 640, 1280, 1280],
-                 nums_rb=3,
-                 cin=64,
-                 ksize=3,
-                 sk=False,
-                 use_conv=True,
-                 compression_factor=1,
-                 temporal_attention_nhead=8,
-                 attention_block_types=("Temporal_Self", ),
-                 temporal_position_encoding=False,
-                 temporal_position_encoding_max_len=16,
-                 rescale_output_factor=1.0):
+    def __init__(
+        self,
+        downscale_factor,
+        channels=[320, 640, 1280, 1280],
+        nums_rb=3,
+        cin=64,
+        ksize=3,
+        sk=False,
+        use_conv=True,
+        compression_factor=1,
+        temporal_attention_nhead=8,
+        attention_block_types=("Temporal_Self",),
+        temporal_position_encoding=False,
+        temporal_position_encoding_max_len=16,
+        rescale_output_factor=1.0,
+    ):
         super(CameraPoseEncoder, self).__init__()
         self.unshuffle = nn.PixelUnshuffle(downscale_factor)
         self.channels = channels
@@ -199,15 +197,17 @@ class CameraPoseEncoder(nn.Module):
                     in_dim = int(channels[i] / compression_factor)
                     out_dim = int(channels[i] / compression_factor)
                     conv_layer = ResnetBlock(in_dim, out_dim, down=False, ksize=ksize, sk=sk, use_conv=use_conv)
-                temporal_attention_layer = TemporalTransformerBlock(dim=out_dim,
-                                                                    num_attention_heads=temporal_attention_nhead,
-                                                                    attention_head_dim=int(out_dim / temporal_attention_nhead),
-                                                                    attention_block_types=attention_block_types,
-                                                                    dropout=0.0,
-                                                                    cross_attention_dim=None,
-                                                                    temporal_position_encoding=temporal_position_encoding,
-                                                                    temporal_position_encoding_max_len=temporal_position_encoding_max_len,
-                                                                    rescale_output_factor=rescale_output_factor)
+                temporal_attention_layer = TemporalTransformerBlock(
+                    dim=out_dim,
+                    num_attention_heads=temporal_attention_nhead,
+                    attention_head_dim=int(out_dim / temporal_attention_nhead),
+                    attention_block_types=attention_block_types,
+                    dropout=0.0,
+                    cross_attention_dim=None,
+                    temporal_position_encoding=temporal_position_encoding,
+                    temporal_position_encoding_max_len=temporal_position_encoding_max_len,
+                    rescale_output_factor=rescale_output_factor,
+                )
                 conv_layers.append(conv_layer)
                 temporal_attention_layers.append(temporal_attention_layer)
             self.encoder_down_conv_blocks.append(conv_layers)
@@ -234,8 +234,8 @@ class CameraPoseEncoder(nn.Module):
             for res_layer, attention_layer in zip(res_block, attention_block):
                 x = res_layer(x)
                 h, w = x.shape[-2:]
-                x = rearrange(x, '(b f) c h w -> (b h w) f c', b=bs)
+                x = rearrange(x, "(b f) c h w -> (b h w) f c", b=bs)
                 x = attention_layer(x)
-                x = rearrange(x, '(b h w) f c -> (b f) c h w', h=h, w=w)
+                x = rearrange(x, "(b h w) f c -> (b f) c h w", h=h, w=w)
             features.append(x)
         return features

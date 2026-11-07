@@ -4,6 +4,7 @@ This module provides similarity matching between detected entities using
 DINOv3 foreground embeddings. It's used to determine if a newly detected
 entity is the same as one already tracked in the EventPool.
 """
+
 from __future__ import annotations
 
 from typing import Optional
@@ -73,7 +74,7 @@ class EntityMatcher:
 
         num_patches = patch_tokens.shape[0]
         hidden_dim = patch_tokens.shape[1]
-        grid_size = int(num_patches ** 0.5)
+        grid_size = int(num_patches**0.5)
 
         # Require SAM mask for foreground token selection.
         if mask is None:

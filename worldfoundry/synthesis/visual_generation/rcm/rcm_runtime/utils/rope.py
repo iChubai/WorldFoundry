@@ -39,7 +39,9 @@ def rotate_half(x: torch.Tensor, interleaved: bool = False) -> torch.Tensor:
     return rearrange(torch.stack((-x2, x1), dim=-1), "... d two -> ... (d two)", two=2)
 
 
-def apply_rotary_emb_torch(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor, interleaved: bool = False) -> torch.Tensor:
+def apply_rotary_emb_torch(
+    x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor, interleaved: bool = False
+) -> torch.Tensor:
     ro_dim = cos.shape[-1] * 2
     assert ro_dim <= x.shape[-1]
     cos = repeat(cos, "... d -> ... 1 (2 d)" if not interleaved else "... d -> ... 1 (d 2)")

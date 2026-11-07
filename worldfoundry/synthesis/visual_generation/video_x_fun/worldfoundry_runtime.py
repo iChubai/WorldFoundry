@@ -132,9 +132,7 @@ class _WanFunCameraRuntime:
         source = upstream.read_text(encoding="utf-8")
         values = {
             "GPU_memory_mode": self.gpu_memory_mode,
-            "config_path": str(
-                resolve_data_path("models", "runtime", "configs", "video_x_fun", self.CONFIG)
-            ),
+            "config_path": str(resolve_data_path("models", "runtime", "configs", "video_x_fun", self.CONFIG)),
             "model_name": str(checkpoint),
             "sample_size": [int(height), int(width)],
             "video_length": int(num_frames),

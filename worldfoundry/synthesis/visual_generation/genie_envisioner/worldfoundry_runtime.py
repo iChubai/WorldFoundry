@@ -16,9 +16,7 @@ RUNTIME_DIR = PACKAGE_DIR / "genie_envisioner_runtime"
 OFFICIAL_ENTRYPOINT = PACKAGE_DIR / "infer.py"
 OFFICIAL_REPO_URL = "https://github.com/AgibotTech/Genie-Envisioner"
 
-DEFAULT_CHECKPOINT_PATH = checkpoint_root_path(
-    "agibot-world--Genie-Envisioner", "GE_base_fast_v0.1.safetensors"
-)
+DEFAULT_CHECKPOINT_PATH = checkpoint_root_path("agibot-world--Genie-Envisioner", "GE_base_fast_v0.1.safetensors")
 DEFAULT_BASE_MODEL_DIR = checkpoint_root_path("Lightricks--LTX-Video")
 DEFAULT_INPUT_IMAGE = (
     project_root(__file__)
@@ -122,9 +120,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
             }
         )
 
-    checkpoint_missing = _missing_file(
-        _checkpoint_path(options), "Genie Envisioner checkpoint is missing or empty"
-    )
+    checkpoint_missing = _missing_file(_checkpoint_path(options), "Genie Envisioner checkpoint is missing or empty")
     if checkpoint_missing is not None:
         missing.append(checkpoint_missing)
 
@@ -192,9 +188,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
     else:
         image = _path_option(options, "image_path", "input_image", default=DEFAULT_INPUT_IMAGE)
         if not image.is_file():
-            missing.append(
-                {"kind": "asset", "path": str(image), "reason": "Genie Envisioner input image is missing"}
-            )
+            missing.append({"kind": "asset", "path": str(image), "reason": "Genie Envisioner input image is missing"})
 
     for module_name in (
         "torch",

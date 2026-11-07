@@ -3,6 +3,7 @@ This module provides the InspatioWorldSynthesis class, which acts as a thin adap
 InspatioWorldRuntime for easy integration into evaluation frameworks. It abstracts the underlying
 runtime's initialization and core functionalities like `plan` and `predict`.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, Optional

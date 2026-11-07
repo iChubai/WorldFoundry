@@ -175,8 +175,7 @@ class SpiritV15Runtime:
         expected_dim = model.config.input_features["observation.state"].shape[0]
         if state_tensor.shape[-1] != expected_dim:
             raise ValueError(
-                f"Spirit-v1.5 checkpoint expects {expected_dim} state values, "
-                f"received {state_tensor.shape[-1]}"
+                f"Spirit-v1.5 checkpoint expects {expected_dim} state values, received {state_tensor.shape[-1]}"
             )
 
         batch: dict[str, Any] = {

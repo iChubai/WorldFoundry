@@ -114,7 +114,7 @@ def default_config_path(runtime_override: Optional[str | Path] = None) -> Path:
         custom = runtime_root(runtime_override) / "configs" / "inference" / "inference.yaml"
         if custom.is_file():
             return custom
-    return package_data_path('models', 'runtime', 'configs', 'vmem', 'inference/inference.yaml')
+    return package_data_path("models", "runtime", "configs", "vmem", "inference/inference.yaml")
 
 
 def canonical_cut3r_parent() -> Path:
@@ -139,14 +139,7 @@ def canonical_dust3r_parent() -> Path:
     The packaged DUSt3R code still imports itself as top-level ``dust3r`` internally, so this
     parent directory is prepended to ``sys.path`` when VMem is initialized.
     """
-    return (
-        project_root()
-        / "worldfoundry"
-        / "base_models"
-        / "three_dimensions"
-        / "general_3d"
-        / "dust3r"
-    )
+    return project_root() / "worldfoundry" / "base_models" / "three_dimensions" / "general_3d" / "dust3r"
 
 
 def _iter_runtime_module_names() -> Iterable[str]:
@@ -270,9 +263,7 @@ def ensure_vmem_runtime(runtime_override: Optional[str | Path] = None) -> Path:
 
     cut3r_root = canonical_cut3r_root()
     if not (cut3r_root / "__init__.py").is_file():
-        raise FileNotFoundError(
-            f"VMem requires the canonical in-tree CUT3R package at {cut3r_root}."
-        )
+        raise FileNotFoundError(f"VMem requires the canonical in-tree CUT3R package at {cut3r_root}.")
 
     # Purge any modules that conflict with the intended VMem runtime root.
     _purge_conflicting_runtime_modules(root)

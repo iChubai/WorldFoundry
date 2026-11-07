@@ -1,4 +1,3 @@
-
 """Native Cosmos component."""
 
 from typing import Callable, Optional, Tuple
@@ -31,8 +30,10 @@ from worldfoundry.synthesis.visual_generation.genie_envisioner.genie_envisioner_
 
 logger = logging.get_logger(__name__)
 
+
 class CosmosRotaryPosEmbed(nn.Module):
     """Cosmos rotary pos embed implementation."""
+
     def __init__(
         self,
         hidden_size: int,
@@ -68,10 +69,7 @@ class CosmosRotaryPosEmbed(nn.Module):
         self.t_ntk_factor = rope_scale[0] ** (self.dim_t / (self.dim_t - 2))
 
     def forward(
-        self,
-        hidden_states: torch.Tensor,
-        fps: Optional[int] = None,
-        **kwargs
+        self, hidden_states: torch.Tensor, fps: Optional[int] = None, **kwargs
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward.
 
@@ -125,6 +123,7 @@ class CosmosRotaryPosEmbed(nn.Module):
 
 class MultiViewCosmosAttnProcessor2_0:
     """Multi view cosmos attn processor implementation."""
+
     def __init__(self):
         """Init."""
         if not hasattr(F, "scaled_dot_product_attention"):
@@ -171,23 +170,20 @@ class MultiViewCosmosAttnProcessor2_0:
         # 2. QK normalization
         query = attn.norm_q(query)
         key = attn.norm_k(key)
-    
+
         # 3. Apply RoPE
         if image_rotary_emb is not None:
             if len(image_rotary_emb[0].shape) == 3:
-                assert(image_rotary_emb[0].shape[0] == 1 and image_rotary_emb[1].shape[0] == 1)
-                image_rotary_emb = (
-                    image_rotary_emb[0].squeeze(0),
-                    image_rotary_emb[1].squeeze(0)                
-                )
+                assert image_rotary_emb[0].shape[0] == 1 and image_rotary_emb[1].shape[0] == 1
+                image_rotary_emb = (image_rotary_emb[0].squeeze(0), image_rotary_emb[1].squeeze(0))
             query = apply_rotary_emb(query, image_rotary_emb, use_real=True, use_real_unbind_dim=-2)
             key = apply_rotary_emb(key, image_rotary_emb, use_real=True, use_real_unbind_dim=-2)
             if cross_view_attn:
-                query = rearrange(query, '(b v) n l c -> b n (v l) c', v=n_view)  # n: head_num, c: head_dim
-                key = rearrange(key, '(b v) n l c -> b n (v l) c', v=n_view)
-                value = rearrange(value, '(b v) n l c -> b n (v l) c', v=n_view)
-        else:   # for cross attn, extend the sequence length
-            query = rearrange(query, '(b v) n l c -> b n (v l) c', v=n_view)
+                query = rearrange(query, "(b v) n l c -> b n (v l) c", v=n_view)  # n: head_num, c: head_dim
+                key = rearrange(key, "(b v) n l c -> b n (v l) c", v=n_view)
+                value = rearrange(value, "(b v) n l c -> b n (v l) c", v=n_view)
+        else:  # for cross attn, extend the sequence length
+            query = rearrange(query, "(b v) n l c -> b n (v l) c", v=n_view)
 
         # 4. Prepare for GQA
         query_idx = torch.tensor(query.size(3), device=query.device)
@@ -203,7 +199,7 @@ class MultiViewCosmosAttnProcessor2_0:
         hidden_states = hidden_states.transpose(1, 2).flatten(2, 3).type_as(query)
 
         if cross_view_attn or image_rotary_emb is None:
-            hidden_states = rearrange(hidden_states, 'b (v l) c -> (b v) l c', v=n_view)
+            hidden_states = rearrange(hidden_states, "b (v l) c -> (b v) l c", v=n_view)
 
         # 6. Output projection
         hidden_states = attn.to_out[0](hidden_states)
@@ -213,9 +209,10 @@ class MultiViewCosmosAttnProcessor2_0:
 
 
 class CosmosTransformerBlock(nn.Module):
-    '''
+    """
     multi-view version of CosmosTransformerBlock
-    '''
+    """
+
     def __init__(
         self,
         num_attention_heads: int,
@@ -306,20 +303,19 @@ class CosmosTransformerBlock(nn.Module):
 
         # 1. Self Attention
         norm_hidden_states, gate = self.norm1(hidden_states, embedded_timestep, temb)
-        attn_output = self.attn1(norm_hidden_states, 
-                                 image_rotary_emb=image_rotary_emb,
-                                 n_view=n_view,
-                                 cross_view_attn=cross_view_attn
-            )
+        attn_output = self.attn1(
+            norm_hidden_states, image_rotary_emb=image_rotary_emb, n_view=n_view, cross_view_attn=cross_view_attn
+        )
         hidden_states = hidden_states + gate * attn_output
 
         # 2. Cross Attention
         norm_hidden_states, gate = self.norm2(hidden_states, embedded_timestep, temb)
-        attn_output = self.attn2(norm_hidden_states, 
-                                 encoder_hidden_states=encoder_hidden_states,
-                                 attention_mask=attention_mask,
-                                 n_view=n_view
-            )
+        attn_output = self.attn2(
+            norm_hidden_states,
+            encoder_hidden_states=encoder_hidden_states,
+            attention_mask=attention_mask,
+            n_view=n_view,
+        )
         hidden_states = hidden_states + gate * attn_output
 
         # 3. Feed Forward
@@ -440,10 +436,10 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         if self.use_view_embed:
             self.view_embed = nn.Parameter(torch.randn(max_view, hidden_size))
             self.view_ada = nn.Sequential(
-                                            nn.SiLU(),
-                                            # nn.Linear(hidden_size, 6 * hidden_size, bias=True)
-                                            nn.Linear(hidden_size, 3 * hidden_size, bias=True)
-                                        )
+                nn.SiLU(),
+                # nn.Linear(hidden_size, 6 * hidden_size, bias=True)
+                nn.Linear(hidden_size, 3 * hidden_size, bias=True),
+            )
 
         # 4. Transformer Blocks
         self.transformer_blocks = nn.ModuleList(
@@ -463,9 +459,7 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
 
         # 5. Output norm & projection
         self.norm_out = CosmosAdaLayerNorm(hidden_size, adaln_lora_dim)
-        self.proj_out = nn.Linear(
-            hidden_size, patch_size[0] * patch_size[1] * patch_size[2] * out_channels, bias=False
-        )
+        self.proj_out = nn.Linear(hidden_size, patch_size[0] * patch_size[1] * patch_size[2] * out_channels, bias=False)
 
         self.gradient_checkpointing = False
 
@@ -483,11 +477,10 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                 qk_norm="rms_norm",
                 attention_class=Attention,
                 attention_processor=MultiViewCosmosAttnProcessor2_0(),
-                **kwargs
+                **kwargs,
             )
 
         self.unpack_in_forward = True
-        
 
     def forward(
         self,
@@ -547,26 +540,37 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                 hidden_states = rearrange(hidden_states, "b (t h w) c -> b c t h w", t=num_frames, h=height, w=width)
                 timestep = rearrange(timestep, "b (t h w) -> b t h w", t=num_frames, h=1, w=1).unsqueeze(dim=1)
                 if condition_mask is not None:
-                    condition_mask = rearrange(condition_mask, "b (t h w) -> b t h w", t=num_frames, h=height, w=width).unsqueeze(dim=1)
+                    condition_mask = rearrange(
+                        condition_mask, "b (t h w) -> b t h w", t=num_frames, h=height, w=width
+                    ).unsqueeze(dim=1)
             else:
                 hidden_state_type = "unflatten"
         else:
             hidden_state_type = "none"
 
         if return_video or store_buffer:
-
             if store_buffer:
                 video_states_buffer = []
 
             batch_size, num_channels, num_frames, height, width = hidden_states.shape
-            
+
             # 1. Concatenate padding mask if needed & prepare attention mask
             if condition_mask is not None:
                 hidden_states = torch.cat([hidden_states, condition_mask], dim=1)
 
             if self.config.concat_padding_mask:
                 if padding_mask is None:
-                    hidden_states = torch.cat([hidden_states, torch.zeros([batch_size, 1, num_frames, height, width], device=hidden_states.device, dtype=hidden_states.dtype)], dim=1)
+                    hidden_states = torch.cat(
+                        [
+                            hidden_states,
+                            torch.zeros(
+                                [batch_size, 1, num_frames, height, width],
+                                device=hidden_states.device,
+                                dtype=hidden_states.dtype,
+                            ),
+                        ],
+                        dim=1,
+                    )
                 else:
                     padding_mask = transforms.functional.resize(
                         padding_mask, list(hidden_states.shape[-2:]), interpolation=transforms.InterpolationMode.NEAREST
@@ -587,10 +591,10 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
             post_patch_num_frames = num_frames // p_t
             post_patch_height = height // p_h
             post_patch_width = width // p_w
-            
+
             hidden_states = self.patch_embed(hidden_states)
             hidden_states = hidden_states.flatten(1, 3)  # [B, T, H, W, C] -> [B, THW, C]
-            
+
             # 4. Timestep embeddings
             if timestep.ndim == 1:
                 temb, embedded_timestep = self.time_embed(hidden_states, timestep)
@@ -611,12 +615,11 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                 assert False
 
             if self.use_view_embed:
-                embedded_view = self.view_embed[:n_view].unsqueeze(0).repeat(batch_size//n_view, 1, 1) # b v c
-                embedded_view = rearrange(embedded_view, 'b v c -> (b v) c').unsqueeze(1)
+                embedded_view = self.view_embed[:n_view].unsqueeze(0).repeat(batch_size // n_view, 1, 1)  # b v c
+                embedded_view = rearrange(embedded_view, "b v c -> (b v) c").unsqueeze(1)
                 vemb = self.view_ada(embedded_view)
                 temb = temb + vemb
                 # embedded_timestep = embedded_timestep + embedded_view
-
 
         if return_action:
             ### when video_states_buffer is not None, action blocks will directly use the input buffers
@@ -625,10 +628,11 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                 assert store_buffer or return_video
             if history_action_state is not None:
                 action_states = torch.cat((history_action_state, action_states), dim=1)
-                action_timestep = torch.cat((torch.zeros_like(action_timestep[:,0:1]), action_timestep), dim=1)
+                action_timestep = torch.cat((torch.zeros_like(action_timestep[:, 0:1]), action_timestep), dim=1)
 
-            action_temb, action_embedded_timestep, action_rotary_emb, action_hidden_states = preprocessing_action_states(self, action_states, action_timestep)
-
+            action_temb, action_embedded_timestep, action_rotary_emb, action_hidden_states = (
+                preprocessing_action_states(self, action_states, action_timestep)
+            )
 
         # 5. Transformer blocks
         for block_idx, block in enumerate(self.transformer_blocks):
@@ -650,12 +654,12 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                         video_states_buffer.append(hidden_states.clone())
                 else:
                     hidden_states = video_states_buffer[block_idx]
-                
+
                 if return_action:
                     ### final_hidden_states:  video features, b (v t h w) c
                     ### action_hidden_states: random actions, b v c
-                    ### 
-                    final_hidden_states = rearrange(hidden_states, '(b v) l c -> b (v l) c', v=n_view)
+                    ###
+                    final_hidden_states = rearrange(hidden_states, "(b v) l c -> b (v l) c", v=n_view)
                     action_hidden_states = torch.utils.checkpoint.checkpoint(
                         self.action_blocks[block_idx],
                         action_hidden_states,
@@ -675,7 +679,7 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                         extra_pos_emb=extra_pos_emb,
                         attention_mask=encoder_attention_mask,
                         n_view=n_view,
-                        cross_view_attn=block_idx % 3 == 0
+                        cross_view_attn=block_idx % 3 == 0,
                     )
                     if store_buffer:
                         video_states_buffer.append(hidden_states.clone())
@@ -685,8 +689,8 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                 if return_action:
                     ### final_hidden_states:  video features, b (v t h w) c
                     ### action_hidden_states: random actions, b v c
-                    ### 
-                    final_hidden_states = rearrange(hidden_states, '(b v) l c -> b (v l) c', v=n_view)
+                    ###
+                    final_hidden_states = rearrange(hidden_states, "(b v) l c -> b (v l) c", v=n_view)
                     action_hidden_states = self.action_blocks[block_idx](
                         hidden_states=action_hidden_states,
                         encoder_hidden_states=final_hidden_states,
@@ -697,7 +701,7 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
         final_output = {}
 
         if store_buffer:
-            final_output['video_states_buffer'] = video_states_buffer
+            final_output["video_states_buffer"] = video_states_buffer
 
         if return_video:
             # 6. Output norm & projection & unpatchify
@@ -714,12 +718,14 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
             if hidden_state_type == "flatten":
                 hidden_states = rearrange(hidden_states, "b c t h w -> b (t h w) c")
 
-            final_output['video'] = hidden_states
+            final_output["video"] = hidden_states
 
         if return_action:
             if self.action_final_embeddings:
-                action_scale_shift_values = self.action_scale_shift_table[None, None] + action_embedded_timestep[:, :, None]
-                action_shift, action_scale = action_scale_shift_values[:,:,0], action_scale_shift_values[:,:,1]
+                action_scale_shift_values = (
+                    self.action_scale_shift_table[None, None] + action_embedded_timestep[:, :, None]
+                )
+                action_shift, action_scale = action_scale_shift_values[:, :, 0], action_scale_shift_values[:, :, 1]
                 action_hidden_states = self.action_norm_out(action_hidden_states)
                 action_hidden_states = action_hidden_states * (1 + action_scale) + action_shift
             else:
@@ -730,13 +736,12 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
 
             action_output = self.action_proj_out(action_hidden_states)
 
-            final_output['action'] = action_output
+            final_output["action"] = action_output
 
         if not return_dict:
             return (final_output,)
 
         return Transformer2DModelOutput(sample=final_output)
-
 
     def _set_gradient_checkpointing(
         self, enable: bool = True, gradient_checkpointing_func: Callable = torch.utils.checkpoint.checkpoint

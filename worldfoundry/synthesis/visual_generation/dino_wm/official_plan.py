@@ -42,9 +42,7 @@ ALL_MODEL_KEYS = [
     "action_encoder",
 ]
 
-DATASET_MODULE_PREFIX = (
-    "worldfoundry.synthesis.visual_generation.dino_wm.datasets."
-)
+DATASET_MODULE_PREFIX = "worldfoundry.synthesis.visual_generation.dino_wm.datasets."
 
 
 def _use_vendored_dataset_modules(model_cfg):
@@ -62,9 +60,11 @@ def _use_vendored_dataset_modules(model_cfg):
                 DATASET_MODULE_PREFIX + target.removeprefix("datasets."),
             )
 
+
 def planning_main_in_dir(working_dir, cfg_dict):
     os.chdir(working_dir)
     return planning_main(cfg_dict=cfg_dict)
+
 
 def launch_plan_jobs(
     epoch,
@@ -78,23 +78,15 @@ def launch_plan_jobs(
         for cfg_dict in cfg_dicts:
             subdir_name = f"{cfg_dict['planner']['name']}_goal_source={cfg_dict['goal_source']}_goal_H={cfg_dict['goal_H']}_alpha={cfg_dict['objective']['alpha']}"
             subdir_path = os.path.join(plan_output_dir, subdir_name)
-            executor = submitit.AutoExecutor(
-                folder=subdir_path, slurm_max_num_timeout=20
-            )
+            executor = submitit.AutoExecutor(folder=subdir_path, slurm_max_num_timeout=20)
             executor.update_parameters(
-                **{
-                    k: v
-                    for k, v in cfg_dict["hydra"]["launcher"].items()
-                    if k != "submitit_folder"
-                }
+                **{k: v for k, v in cfg_dict["hydra"]["launcher"].items() if k != "submitit_folder"}
             )
             cfg_dict["saved_folder"] = subdir_path
             cfg_dict["wandb_logging"] = False  # don't init wandb
             job = executor.submit(planning_main_in_dir, subdir_path, cfg_dict)
             jobs.append((epoch, subdir_name, job))
-            print(
-                f"Submitted evaluation job for checkpoint: {subdir_path}, job id: {job.job_id}"
-            )
+            print(f"Submitted evaluation job for checkpoint: {subdir_path}, job id: {job.job_id}")
         return jobs
 
 
@@ -128,9 +120,7 @@ def build_plan_cfg_dicts(
     cfg_dicts = []
     for override_args in overrides:
         planner = override_args["planner"]
-        planner_cfg = OmegaConf.load(
-            os.path.join(config_path, f"planner/{planner}.yaml")
-        )
+        planner_cfg = OmegaConf.load(os.path.join(config_path, f"planner/{planner}.yaml"))
         cfg["planner"] = OmegaConf.merge(cfg.get("planner", {}), planner_cfg)
         override_args.pop("planner")
         cfg = OmegaConf.merge(cfg, OmegaConf.create(override_args))
@@ -221,6 +211,7 @@ class PlanWorkspace:
 
         # optional: assume planning horizon equals to goal horizon
         from inference_planning.mpc import MPCPlanner
+
         if isinstance(self.planner, MPCPlanner):
             self.planner.sub_planner.horizon = cfg_dict["goal_H"]
             self.planner.n_taken_actions = cfg_dict["goal_H"]
@@ -233,19 +224,15 @@ class PlanWorkspace:
         states = []
         actions = []
         observations = []
-        
+
         if self.goal_source == "random_state":
             # update env config from val trajs
-            observations, states, actions, env_info = (
-                self.sample_traj_segment_from_dset(traj_len=2)
-            )
+            observations, states, actions, env_info = self.sample_traj_segment_from_dset(traj_len=2)
             self.env.update_env(env_info)
 
             # sample random states
-            rand_init_state, rand_goal_state = self.env.sample_random_init_goal_states(
-                self.eval_seed
-            )
-            if self.env_name == "deformable_env": # take rand init state from dset for deformable envs
+            rand_init_state, rand_goal_state = self.env.sample_random_init_goal_states(self.eval_seed)
+            if self.env_name == "deformable_env":  # take rand init state from dset for deformable envs
                 rand_init_state = np.array([x[0] for x in states])
 
             obs_0, state_0 = self.env.prepare(self.eval_seed, rand_init_state)
@@ -263,8 +250,8 @@ class PlanWorkspace:
             self.gt_actions = None
         else:
             # update env config from val trajs
-            observations, states, actions, env_info = (
-                self.sample_traj_segment_from_dset(traj_len=self.frameskip * self.goal_H + 1)
+            observations, states, actions, env_info = self.sample_traj_segment_from_dset(
+                traj_len=self.frameskip * self.goal_H + 1
             )
             self.env.update_env(env_info)
 
@@ -277,17 +264,9 @@ class PlanWorkspace:
             wm_actions = rearrange(actions, "b (t f) d -> b t (f d)", f=self.frameskip)
             exec_actions = self.data_preprocessor.denormalize_actions(actions)
             # replay actions in env to get gt obses
-            rollout_obses, rollout_states = self.env.rollout(
-                self.eval_seed, init_state, exec_actions.numpy()
-            )
-            self.obs_0 = {
-                key: np.expand_dims(arr[:, 0], axis=1)
-                for key, arr in rollout_obses.items()
-            }
-            self.obs_g = {
-                key: np.expand_dims(arr[:, -1], axis=1)
-                for key, arr in rollout_obses.items()
-            }
+            rollout_obses, rollout_states = self.env.rollout(self.eval_seed, init_state, exec_actions.numpy())
+            self.obs_0 = {key: np.expand_dims(arr[:, 0], axis=1) for key, arr in rollout_obses.items()}
+            self.obs_g = {key: np.expand_dims(arr[:, -1], axis=1) for key, arr in rollout_obses.items()}
             self.state_0 = init_state  # (b, d)
             self.state_g = rollout_states[:, -1]  # (b, d)
             self.gt_actions = wm_actions
@@ -316,10 +295,7 @@ class PlanWorkspace:
                 max_offset = obs["visual"].shape[0] - traj_len
             state = state.numpy()
             offset = random.randint(0, max_offset)
-            obs = {
-                key: arr[offset : offset + traj_len]
-                for key, arr in obs.items()
-            }
+            obs = {key: arr[offset : offset + traj_len] for key, arr in obs.items()}
             state = state[offset : offset + traj_len]
             act = act[offset : offset + self.frameskip * self.goal_H]
             actions.append(act)
@@ -370,11 +346,7 @@ class PlanWorkspace:
         logs = {f"final_eval/{k}": v for k, v in logs.items()}
         self.wandb_run.log(logs)
         logs_entry = {
-            key: (
-                value.item()
-                if isinstance(value, (np.float32, np.int32, np.int64))
-                else value
-            )
+            key: (value.item() if isinstance(value, (np.float32, np.int32, np.int64)) else value)
             for key, value in logs.items()
         }
         with open(self.log_filename, "a") as file:
@@ -465,9 +437,7 @@ def planning_main(cfg_dict):
     if cfg_dict["wandb_logging"]:
         if wandb is None:
             raise RuntimeError("DINO-WM wandb_logging=True requires wandb, but wandb is not installed.")
-        wandb_run = wandb.init(
-            project=f"plan_{cfg_dict['planner']['name']}", config=cfg_dict
-        )
+        wandb_run = wandb.init(project=f"plan_{cfg_dict['planner']['name']}", config=cfg_dict)
         wandb.run.name = "{}".format(output_dir.split("plan_outputs/")[-1])
     else:
         wandb_run = None
@@ -489,9 +459,7 @@ def planning_main(cfg_dict):
     dset = dset["valid"]
 
     num_action_repeat = model_cfg.num_action_repeat
-    model_ckpt = (
-        Path(model_path) / "checkpoints" / f"model_{cfg_dict['model_epoch']}.pth"
-    )
+    model_ckpt = Path(model_path) / "checkpoints" / f"model_{cfg_dict['model_epoch']}.pth"
     model = load_model(model_ckpt, model_cfg, num_action_repeat, device=device)
 
     if model_cfg.env.name == "point_maze":
@@ -502,20 +470,17 @@ def planning_main(cfg_dict):
     # use dummy vector env for wall and deformable envs
     if model_cfg.env.name == "wall" or model_cfg.env.name == "deformable_env":
         from env.serial_vector_env import SerialVectorEnv
+
         env = SerialVectorEnv(
             [
-                gym.make(
-                    model_cfg.env.name, *model_cfg.env.args, **model_cfg.env.kwargs
-                )
+                gym.make(model_cfg.env.name, *model_cfg.env.args, **model_cfg.env.kwargs)
                 for _ in range(cfg_dict["n_evals"])
             ]
         )
     else:
         env = SubprocVectorEnv(
             [
-                lambda: gym.make(
-                    model_cfg.env.name, *model_cfg.env.args, **model_cfg.env.kwargs
-                )
+                lambda: gym.make(model_cfg.env.name, *model_cfg.env.args, **model_cfg.env.kwargs)
                 for _ in range(cfg_dict["n_evals"])
             ]
         )

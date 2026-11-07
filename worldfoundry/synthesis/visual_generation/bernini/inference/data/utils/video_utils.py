@@ -54,8 +54,7 @@ def smart_video_nframes(
     nframes = total_frames / video_fps * fps
 
     if frame_factor is not None:
-        nframes = math.floor(nframes / frame_factor) *\
-            frame_factor + int(add_one)
+        nframes = math.floor(nframes / frame_factor) * frame_factor + int(add_one)
         nframes = max(nframes, frame_factor + int(add_one))
     else:
         nframes = int(nframes + int(add_one))
@@ -75,11 +74,12 @@ def smart_video_nframes(
             max_frames = math.floor(max_frames / frame_factor) * frame_factor
         nframes = min(max_frames + int(add_one), nframes)
     if len(idx) > int(nframes):
-        idx = idx[:int(nframes)]
+        idx = idx[: int(nframes)]
 
     if frame_factor is not None:
-        assert len(idx) % frame_factor == int(
-            add_one), f"{len(idx)} % {frame_factor} != {int(add_one)}, total_frames: {total_frames}, video_fps: {video_fps}, fps: {fps}"
+        assert len(idx) % frame_factor == int(add_one), (
+            f"{len(idx)} % {frame_factor} != {int(add_one)}, total_frames: {total_frames}, video_fps: {video_fps}, fps: {fps}"
+        )
 
     return idx
 
@@ -88,8 +88,7 @@ class VideoReader:
     def __init__(self, video_bytes) -> None:
         video_buffer = io.BytesIO(video_bytes)
 
-        self.vr = decord.VideoReader(
-            video_buffer, num_threads=1, ctx=decord.cpu(0), fault_tol=1)
+        self.vr = decord.VideoReader(video_buffer, num_threads=1, ctx=decord.cpu(0), fault_tol=1)
         self.vr.seek(0)
         self._max_frame_id = len(self.vr) - 1
         self._fps = self.vr.get_avg_fps()
@@ -106,17 +105,16 @@ class VideoReader:
     def fps(self):
         return self._fps
 
-    def sample(self, frame_indices) -> (List[Image.Image]):
+    def sample(self, frame_indices) -> List[Image.Image]:
         frames = self.vr.get_batch(frame_indices).asnumpy()
-        frames = [Image.fromarray(f).convert('RGB') for f in frames]
+        frames = [Image.fromarray(f).convert("RGB") for f in frames]
         return frames
 
 
 class PathVideoReader(VideoReader):
     def __init__(self, video_path, duration=None, crop_method=None):
         if os.path.exists(video_path):
-            self.vr = decord.VideoReader(
-                video_path, num_threads=1, ctx=decord.cpu(0), fault_tol=1)
+            self.vr = decord.VideoReader(video_path, num_threads=1, ctx=decord.cpu(0), fault_tol=1)
         else:
             raise ValueError(f"video path {video_path} not exists")
 
@@ -125,7 +123,6 @@ class PathVideoReader(VideoReader):
         self._total_frames = len(self.vr)
 
         if duration is None:
-
             self._start_frame = 0
             self._end_frame = self._total_frames - 1
         else:

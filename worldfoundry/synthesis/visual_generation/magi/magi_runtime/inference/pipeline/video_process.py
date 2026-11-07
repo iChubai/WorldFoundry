@@ -267,7 +267,7 @@ def save_video_to_disk(video: torch.Tensor, save_path: str, fps: int) -> bytes:
 
     output, _ = (
         ffmpeg.input(temp_file_path, format="rawvideo", pix_fmt="rgb24", s=f"{W}x{H}", r=fps)
-        .output(save_path, format='mp4', vcodec='libx264', pix_fmt='yuv420p')
+        .output(save_path, format="mp4", vcodec="libx264", pix_fmt="yuv420p")
         .overwrite_output()
         .run(capture_stdout=True, capture_stderr=True)
     )

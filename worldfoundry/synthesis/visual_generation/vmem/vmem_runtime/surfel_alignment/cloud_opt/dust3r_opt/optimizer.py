@@ -27,19 +27,12 @@ class PointCloudOptimizer(BasePCOptimizer):
         self.focal_break = focal_break
 
         # adding thing to optimize
-        self.im_depthmaps = nn.ParameterList(
-            torch.randn(H, W) / 10 - 3 for H, W in self.imshapes
-        )  # log(depth)
-        self.im_poses = nn.ParameterList(
-            self.rand_pose(self.POSE_DIM) for _ in range(self.n_imgs)
-        )  # camera poses
+        self.im_depthmaps = nn.ParameterList(torch.randn(H, W) / 10 - 3 for H, W in self.imshapes)  # log(depth)
+        self.im_poses = nn.ParameterList(self.rand_pose(self.POSE_DIM) for _ in range(self.n_imgs))  # camera poses
         self.im_focals = nn.ParameterList(
-            torch.FloatTensor([self.focal_break * np.log(max(H, W))])
-            for H, W in self.imshapes
+            torch.FloatTensor([self.focal_break * np.log(max(H, W))]) for H, W in self.imshapes
         )  # camera intrinsics
-        self.im_pp = nn.ParameterList(
-            torch.zeros((2,)) for _ in range(self.n_imgs)
-        )  # camera intrinsics
+        self.im_pp = nn.ParameterList(torch.zeros((2,)) for _ in range(self.n_imgs))  # camera intrinsics
         self.im_pp.requires_grad_(optimize_pp)
 
         self.imshape = self.imshapes[0]
@@ -54,9 +47,7 @@ class PointCloudOptimizer(BasePCOptimizer):
         self.im_poses = ParameterStack(self.im_poses, is_param=True)
         self.im_focals = ParameterStack(self.im_focals, is_param=True)
         self.im_pp = ParameterStack(self.im_pp, is_param=True)
-        self.register_buffer(
-            "_pp", torch.tensor([(w / 2, h / 2) for h, w in self.imshapes])
-        )
+        self.register_buffer("_pp", torch.tensor([(w / 2, h / 2) for h, w in self.imshapes]))
         self.register_buffer(
             "_grid",
             ParameterStack(
@@ -96,9 +87,7 @@ class PointCloudOptimizer(BasePCOptimizer):
         self.total_area_j = sum([im_areas[j] for i, j in self.edges])
 
     def _check_all_imgs_are_selected(self, msk):
-        assert np.all(
-            self._get_msk_indices(msk) == np.arange(self.n_imgs)
-        ), "incomplete mask!"
+        assert np.all(self._get_msk_indices(msk) == np.arange(self.n_imgs)), "incomplete mask!"
 
     def preset_pose(self, known_poses, pose_msk=None):  # cam-to-world
         self._check_all_imgs_are_selected(pose_msk)
@@ -107,7 +96,7 @@ class PointCloudOptimizer(BasePCOptimizer):
             known_poses = [known_poses]
         for idx, pose in zip(self._get_msk_indices(pose_msk), known_poses):
             if self.verbose:
-                print(f" (setting pose #{idx} = {pose[:3,3]})")
+                print(f" (setting pose #{idx} = {pose[:3, 3]})")
             self._no_grad(self._set_pose(self.im_poses, idx, torch.tensor(pose)))
 
         # normalize scale if there's less than 1 known pose
@@ -115,7 +104,6 @@ class PointCloudOptimizer(BasePCOptimizer):
         n_known_poses = sum((p.requires_grad is False) for p in self.im_poses)
         self.norm_pw_scale = n_known_poses <= 1
 
-        
         self.norm_pw_scale = False
 
     def preset_focal(self, known_focals, msk=None):
@@ -138,9 +126,6 @@ class PointCloudOptimizer(BasePCOptimizer):
 
         self.im_pp.requires_grad_(False)
 
-
-        
-
     def _get_msk_indices(self, msk):
         if msk is None:
             return range(self.n_imgs)
@@ -157,15 +142,11 @@ class PointCloudOptimizer(BasePCOptimizer):
             raise ValueError(f"bad {msk=}")
 
     def _no_grad(self, tensor):
-        assert (
-            tensor.requires_grad
-        ), "it must be True at this point, otherwise no modification occurs"
+        assert tensor.requires_grad, "it must be True at this point, otherwise no modification occurs"
 
     def _set_focal(self, idx, focal, force=False):
         param = self.im_focals[idx]
-        if (
-            param.requires_grad or force
-        ):  # can only init a parameter not already initialized
+        if param.requires_grad or force:  # can only init a parameter not already initialized
             param.data[:] = self.focal_break * np.log(focal)
         return param
 
@@ -179,9 +160,7 @@ class PointCloudOptimizer(BasePCOptimizer):
     def _set_principal_point(self, idx, pp, force=False):
         param = self.im_pp[idx]
         H, W = self.imshapes[idx]
-        if (
-            param.requires_grad or force
-        ):  # can only init a parameter not already initialized
+        if param.requires_grad or force:  # can only init a parameter not already initialized
             param.data[:] = to_cpu(to_numpy(pp) - (W / 2, H / 2)) / 10
         return param
 
@@ -200,10 +179,9 @@ class PointCloudOptimizer(BasePCOptimizer):
         cam2world = self._get_poses(self.im_poses)
         return cam2world
 
-
     def preset_depth(self, known_depths, msk=None):
         """Preset known depth maps for specified images.
-        
+
         Args:
             known_depths: List of depth maps or single depth map (should be in normal depth space, not log space)
             msk: Mask or indices indicating which images to preset. If None, applies to all images.
@@ -212,7 +190,7 @@ class PointCloudOptimizer(BasePCOptimizer):
 
         if isinstance(known_depths, (torch.Tensor, np.ndarray)) and known_depths.ndim == 2:
             known_depths = [known_depths]
-            
+
         for idx, depth in zip(self._get_msk_indices(msk), known_depths):
             if self.verbose:
                 print(f" (setting depth #{idx})")
@@ -221,10 +199,9 @@ class PointCloudOptimizer(BasePCOptimizer):
             self._no_grad(self._set_depthmap(idx, torch.tensor(depth)))
             self.im_depthmaps[idx].requires_grad_(False)
 
-
     def _set_depthmap(self, idx, depth, force=False):
         """Set a depth map for an image.
-        
+
         Args:
             idx: Image index
             depth: Depth map in normal space (not log space)
@@ -234,9 +211,7 @@ class PointCloudOptimizer(BasePCOptimizer):
         depth = depth.view(self.imshapes[idx])
         depth = depth.nan_to_num(neginf=0)
         param = self.im_depthmaps[idx]
-        if (
-            param.requires_grad or force
-        ):  # can only init a parameter not already initialized
+        if param.requires_grad or force:  # can only init a parameter not already initialized
             param.data[:] = depth.log().nan_to_num(neginf=0)  # Store in log space
         return param
 
@@ -274,14 +249,8 @@ class PointCloudOptimizer(BasePCOptimizer):
         aligned_pred_j = geotrf(pw_poses, pw_adapt * self._stacked_pred_j)
 
         # compute the less
-        li = (
-            self.dist(proj_pts3d[self._ei], aligned_pred_i, weight=self._weight_i).sum()
-            / self.total_area_i
-        )
-        lj = (
-            self.dist(proj_pts3d[self._ej], aligned_pred_j, weight=self._weight_j).sum()
-            / self.total_area_j
-        )
+        li = self.dist(proj_pts3d[self._ei], aligned_pred_i, weight=self._weight_i).sum() / self.total_area_i
+        lj = self.dist(proj_pts3d[self._ej], aligned_pred_j, weight=self._weight_j).sum() / self.total_area_j
 
         return li + lj
 
@@ -320,16 +289,12 @@ def _ravel_hw(tensor, fill=0):
     tensor = tensor.view((tensor.shape[0] * tensor.shape[1],) + tensor.shape[2:])
 
     if len(tensor) < fill:
-        tensor = torch.cat(
-            (tensor, tensor.new_zeros((fill - len(tensor),) + tensor.shape[1:]))
-        )
+        tensor = torch.cat((tensor, tensor.new_zeros((fill - len(tensor),) + tensor.shape[1:])))
     return tensor
 
 
 def acceptable_focal_range(H, W, minf=0.5, maxf=3.5):
-    focal_base = max(H, W) / (
-        2 * np.tan(np.deg2rad(60) / 2)
-    )  # size / 1.1547005383792515
+    focal_base = max(H, W) / (2 * np.tan(np.deg2rad(60) / 2))  # size / 1.1547005383792515
     return minf * focal_base, maxf * focal_base
 
 

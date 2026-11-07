@@ -48,7 +48,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         out_channels: int = 4,
         center_input_sample: bool = False,
         flip_sin_to_cos: bool = True,
-        freq_shift: int = 0,      
+        freq_shift: int = 0,
         down_block_types: Tuple[str] = (
             "CrossAttnDownBlock3D",
             "CrossAttnDownBlock3D",
@@ -56,12 +56,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
             "DownBlock3D",
         ),
         mid_block_type: str = "UNetMidBlock3DCrossAttn",
-        up_block_types: Tuple[str] = (
-            "UpBlock3D",
-            "CrossAttnUpBlock3D",
-            "CrossAttnUpBlock3D",
-            "CrossAttnUpBlock3D"
-        ),
+        up_block_types: Tuple[str] = ("UpBlock3D", "CrossAttnUpBlock3D", "CrossAttnUpBlock3D", "CrossAttnUpBlock3D"),
         only_cross_attention: Union[bool, Tuple[bool]] = False,
         block_out_channels: Tuple[int] = (320, 640, 1280, 1280),
         layers_per_block: int = 2,
@@ -78,21 +73,19 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         num_class_embeds: Optional[int] = None,
         upcast_attention: bool = False,
         resnet_time_scale_shift: str = "default",
-        
         use_inflated_groupnorm=False,
-        
         # Additional
-        use_motion_module              = False,
-        motion_module_resolutions      = ( 1,2,4,8 ),
-        motion_module_mid_block        = False,
-        motion_module_decoder_only     = False,
-        motion_module_type             = None,
-        motion_module_kwargs           = {},
-        unet_use_cross_frame_attention = False,
-        unet_use_temporal_attention    = False,
+        use_motion_module=False,
+        motion_module_resolutions=(1, 2, 4, 8),
+        motion_module_mid_block=False,
+        motion_module_decoder_only=False,
+        motion_module_type=None,
+        motion_module_kwargs={},
+        unet_use_cross_frame_attention=False,
+        unet_use_temporal_attention=False,
     ):
         super().__init__()
-        
+
         self.sample_size = sample_size
         time_embed_dim = block_out_channels[0] * 4
 
@@ -128,7 +121,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         # down
         output_channel = block_out_channels[0]
         for i, down_block_type in enumerate(down_block_types):
-            res = 2 ** i
+            res = 2**i
             input_channel = output_channel
             output_channel = block_out_channels[i]
             is_final_block = i == len(block_out_channels) - 1
@@ -151,12 +144,12 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
                 only_cross_attention=only_cross_attention[i],
                 upcast_attention=upcast_attention,
                 resnet_time_scale_shift=resnet_time_scale_shift,
-
                 unet_use_cross_frame_attention=unet_use_cross_frame_attention,
                 unet_use_temporal_attention=unet_use_temporal_attention,
                 use_inflated_groupnorm=use_inflated_groupnorm,
-                
-                use_motion_module=use_motion_module and (res in motion_module_resolutions) and (not motion_module_decoder_only),
+                use_motion_module=use_motion_module
+                and (res in motion_module_resolutions)
+                and (not motion_module_decoder_only),
                 motion_module_type=motion_module_type,
                 motion_module_kwargs=motion_module_kwargs,
             )
@@ -177,18 +170,16 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
                 dual_cross_attention=dual_cross_attention,
                 use_linear_projection=use_linear_projection,
                 upcast_attention=upcast_attention,
-
                 unet_use_cross_frame_attention=unet_use_cross_frame_attention,
                 unet_use_temporal_attention=unet_use_temporal_attention,
                 use_inflated_groupnorm=use_inflated_groupnorm,
-                
                 use_motion_module=use_motion_module and motion_module_mid_block,
                 motion_module_type=motion_module_type,
                 motion_module_kwargs=motion_module_kwargs,
             )
         else:
             raise ValueError(f"unknown mid_block_type : {mid_block_type}")
-        
+
         # count how many layers upsample the videos
         self.num_upsamplers = 0
 
@@ -230,11 +221,9 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
                 only_cross_attention=only_cross_attention[i],
                 upcast_attention=upcast_attention,
                 resnet_time_scale_shift=resnet_time_scale_shift,
-
                 unet_use_cross_frame_attention=unet_use_cross_frame_attention,
                 unet_use_temporal_attention=unet_use_temporal_attention,
                 use_inflated_groupnorm=use_inflated_groupnorm,
-
                 use_motion_module=use_motion_module and (res in motion_module_resolutions),
                 motion_module_type=motion_module_type,
                 motion_module_kwargs=motion_module_kwargs,
@@ -244,9 +233,13 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
 
         # out
         if use_inflated_groupnorm:
-            self.conv_norm_out = InflatedGroupNorm(num_channels=block_out_channels[0], num_groups=norm_num_groups, eps=norm_eps)
+            self.conv_norm_out = InflatedGroupNorm(
+                num_channels=block_out_channels[0], num_groups=norm_num_groups, eps=norm_eps
+            )
         else:
-            self.conv_norm_out = nn.GroupNorm(num_channels=block_out_channels[0], num_groups=norm_num_groups, eps=norm_eps)
+            self.conv_norm_out = nn.GroupNorm(
+                num_channels=block_out_channels[0], num_groups=norm_num_groups, eps=norm_eps
+            )
         self.conv_act = nn.SiLU()
         self.conv_out = InflatedConv3d(block_out_channels[0], out_channels, kernel_size=3, padding=1)
 
@@ -326,11 +319,9 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         encoder_hidden_states: torch.Tensor,
         class_labels: Optional[torch.Tensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
-
         # support controlnet
         down_block_additional_residuals: Optional[Tuple[torch.Tensor]] = None,
         mid_block_additional_residual: Optional[torch.Tensor] = None,
-
         return_dict: bool = True,
     ) -> Union[UNet3DConditionOutput, Tuple]:
         r"""
@@ -417,7 +408,9 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
                     attention_mask=attention_mask,
                 )
             else:
-                sample, res_samples = downsample_block(hidden_states=sample, temb=emb, encoder_hidden_states=encoder_hidden_states)
+                sample, res_samples = downsample_block(
+                    hidden_states=sample, temb=emb, encoder_hidden_states=encoder_hidden_states
+                )
 
             down_block_res_samples += res_samples
 
@@ -425,18 +418,16 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         down_block_res_samples = list(down_block_res_samples)
         if down_block_additional_residuals is not None:
             for i, down_block_additional_residual in enumerate(down_block_additional_residuals):
-                if down_block_additional_residual.dim() == 4: # boardcast
+                if down_block_additional_residual.dim() == 4:  # boardcast
                     down_block_additional_residual = down_block_additional_residual.unsqueeze(2)
                 down_block_res_samples[i] = down_block_res_samples[i] + down_block_additional_residual
 
         # mid
-        sample = self.mid_block(
-            sample, emb, encoder_hidden_states=encoder_hidden_states, attention_mask=attention_mask
-        )
+        sample = self.mid_block(sample, emb, encoder_hidden_states=encoder_hidden_states, attention_mask=attention_mask)
 
         # support controlnet
         if mid_block_additional_residual is not None:
-            if mid_block_additional_residual.dim() == 4: # boardcast
+            if mid_block_additional_residual.dim() == 4:  # boardcast
                 mid_block_additional_residual = mid_block_additional_residual.unsqueeze(2)
             sample = sample + mid_block_additional_residual
 
@@ -463,7 +454,11 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
                 )
             else:
                 sample = upsample_block(
-                    hidden_states=sample, temb=emb, res_hidden_states_tuple=res_samples, upsample_size=upsample_size, encoder_hidden_states=encoder_hidden_states,
+                    hidden_states=sample,
+                    temb=emb,
+                    res_hidden_states_tuple=res_samples,
+                    upsample_size=upsample_size,
+                    encoder_hidden_states=encoder_hidden_states,
                 )
 
         # post-process
@@ -480,6 +475,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
     def from_pretrained_2d(cls, pretrained_model_name_or_path, unet_additional_kwargs={}, **kwargs):
         from diffusers import __version__
         from diffusers.utils import SAFETENSORS_WEIGHTS_NAME, WEIGHTS_NAME, is_safetensors_available
+
         try:
             from diffusers.utils import DIFFUSERS_CACHE
         except ImportError:
@@ -563,22 +559,17 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
             "CrossAttnDownBlock3D",
             "CrossAttnDownBlock3D",
             "CrossAttnDownBlock3D",
-            "DownBlock3D"
+            "DownBlock3D",
         ]
-        config["up_block_types"] = [
-            "UpBlock3D",
-            "CrossAttnUpBlock3D",
-            "CrossAttnUpBlock3D",
-            "CrossAttnUpBlock3D"
-        ]
+        config["up_block_types"] = ["UpBlock3D", "CrossAttnUpBlock3D", "CrossAttnUpBlock3D", "CrossAttnUpBlock3D"]
 
         model = cls.from_config(config, **unused_kwargs, **unet_additional_kwargs)
         state_dict = load_state_dict(model_file)
 
         m, u = model.load_state_dict(state_dict, strict=False)
         print(f"### missing keys: {len(m)}; \n### unexpected keys: {len(u)};")
-        
+
         params = [p.numel() if "motion_modules." in n else 0 for n, p in model.named_parameters()]
         print(f"### Motion Module Parameters: {sum(params) / 1e6} M")
-        
+
         return model

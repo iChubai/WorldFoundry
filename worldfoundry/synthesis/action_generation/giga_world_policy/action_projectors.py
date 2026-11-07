@@ -33,9 +33,13 @@ class EmbodimentSpecificLinear(nn.Module):
         if embodiment_id.numel() == 1 and batch_size != 1:
             embodiment_id = embodiment_id.expand(batch_size)
         if embodiment_id.numel() != batch_size:
-            raise ValueError(f"embodiment_id batch size mismatch: got {tuple(embodiment_id.shape)}, expected batch={batch_size}")
+            raise ValueError(
+                f"embodiment_id batch size mismatch: got {tuple(embodiment_id.shape)}, expected batch={batch_size}"
+            )
         if torch.any((embodiment_id < 0) | (embodiment_id >= self.num_categories)):
-            raise ValueError(f"embodiment_id out of range for num_categories={self.num_categories}: {embodiment_id.detach().cpu().tolist()}")
+            raise ValueError(
+                f"embodiment_id out of range for num_categories={self.num_categories}: {embodiment_id.detach().cpu().tolist()}"
+            )
         return embodiment_id
 
     def forward(self, x: torch.Tensor, embodiment_id: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -48,8 +52,7 @@ class EmbodimentSpecificLinear(nn.Module):
 
     def extra_repr(self):
         return (
-            f"num_categories={self.num_categories}, "
-            f"input_dim={self.weight.shape[1]}, output_dim={self.weight.shape[2]}"
+            f"num_categories={self.num_categories}, input_dim={self.weight.shape[1]}, output_dim={self.weight.shape[2]}"
         )
 
 

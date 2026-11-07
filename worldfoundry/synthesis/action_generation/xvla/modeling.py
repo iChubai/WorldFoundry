@@ -33,8 +33,7 @@ class XVLA(PreTrainedModel):
     # expose the fully-qualified mapping so the omitted alias is restored by
     # weight tying instead of being treated as a randomly initialized tensor.
     _tied_weights_keys = {
-        "vlm.language_model.model.encoder.embed_tokens.weight":
-            "vlm.language_model.model.shared.weight",
+        "vlm.language_model.model.encoder.embed_tokens.weight": "vlm.language_model.model.shared.weight",
     }
 
     def __init__(self, config: XVLAConfig, *args, **kwargs) -> None:

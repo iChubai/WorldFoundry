@@ -693,8 +693,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
         vae_autocast_enabled = (vae_dtype != torch.float32) and not self.args.val_disable_autocast
 
         camera_input = (
-            torch.cat([uncond_cam_latents, cam_latents], dim=0)
-            if self.do_classifier_free_guidance else cam_latents
+            torch.cat([uncond_cam_latents, cam_latents], dim=0) if self.do_classifier_free_guidance else cam_latents
         )
         split_camera_cfg = latents.shape[-1] * latents.shape[-2] > 64 * 112 and cpu_offload
         camera_condition = CameraConditionCache(camera_input)

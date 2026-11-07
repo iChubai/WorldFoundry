@@ -1,12 +1,14 @@
-"""Modified from https://github.com/kijai/ComfyUI-MochiWrapper
-"""
+"""Modified from https://github.com/kijai/ComfyUI-MochiWrapper"""
+
 import importlib.util
 
 import torch
 import torch.nn as nn
 
+
 def replace_parameters_by_name(module, name_keywords, device):
     from torch import nn
+
     for name, param in list(module.named_parameters(recurse=False)):
         if any(keyword in name for keyword in name_keywords):
             if isinstance(param, nn.Parameter):
@@ -16,7 +18,8 @@ def replace_parameters_by_name(module, name_keywords, device):
     for child_name, child_module in module.named_children():
         replace_parameters_by_name(child_module, name_keywords, device)
 
-def convert_model_weight_to_float8(model, exclude_module_name=['embed_tokens'], device=None):
+
+def convert_model_weight_to_float8(model, exclude_module_name=["embed_tokens"], device=None):
     for name, module in model.named_modules():
         flag = False
         for _exclude_module_name in exclude_module_name:
@@ -33,6 +36,7 @@ def convert_model_weight_to_float8(model, exclude_module_name=['embed_tokens'], 
                 continue
             param.data = param.data.to(torch.float8_e4m3fn)
 
+
 def autocast_model_forward(cls, origin_dtype, *inputs, **kwargs):
     weight_dtype = cls.weight.dtype
     cls.to(origin_dtype)
@@ -44,6 +48,7 @@ def autocast_model_forward(cls, origin_dtype, *inputs, **kwargs):
     cls.to(weight_dtype)
     return out
 
+
 def convert_weight_dtype_wrapper(module, origin_dtype):
     for name, module in module.named_modules():
         if name == "" or "embed_tokens" in name:
@@ -54,8 +59,9 @@ def convert_weight_dtype_wrapper(module, origin_dtype):
             setattr(
                 module,
                 "forward",
-                lambda *inputs, m=module, **kwargs: autocast_model_forward(m, origin_dtype, *inputs, **kwargs)
+                lambda *inputs, m=module, **kwargs: autocast_model_forward(m, origin_dtype, *inputs, **kwargs),
             )
+
 
 def undo_convert_weight_dtype_wrapper(module):
     for name, module in module.named_modules():

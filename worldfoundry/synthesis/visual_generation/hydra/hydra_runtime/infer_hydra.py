@@ -126,7 +126,9 @@ def _dict77_to_tensor(cam_dict: Dict[str, Any], name: str) -> torch.Tensor:
     return torch.stack(mats, dim=0)
 
 
-def _compute_relative_20x12_from_77x4x4(context_77: torch.Tensor, target_77: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+def _compute_relative_20x12_from_77x4x4(
+    context_77: torch.Tensor, target_77: torch.Tensor
+) -> Tuple[torch.Tensor, torch.Tensor]:
     cam_idx = list(range(77))[::4]  # 20
     ref_c2w = _apply_coordinate_transform(target_77[0])
     ref_w2c = torch.inverse(ref_c2w)
@@ -264,11 +266,18 @@ def build_pipeline(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="HyDRA inference: concat condition video + prediction")
-    p.add_argument("--examples_dir", type=str, default=None, help="Run batch inference over examples folder (expects 1.mp4.. and cam1.json.. + caption.txt).")
+    p.add_argument(
+        "--examples_dir",
+        type=str,
+        default=None,
+        help="Run batch inference over examples folder (expects 1.mp4.. and cam1.json.. + caption.txt).",
+    )
     p.add_argument("--cond_video", type=str, default=None, help="Condition video path (single mode).")
     p.add_argument("--cond_json", type=str, default=None, help="Camera json path (single mode).")
     p.add_argument("--caption_txt", type=str, default=None, help="Caption txt path (single mode).")
-    p.add_argument("--ckpt_path", type=str, default="./ckpts/hydra.ckpt", help="Finetuned HyDRA checkpoint (state_dict).")
+    p.add_argument(
+        "--ckpt_path", type=str, default="./ckpts/hydra.ckpt", help="Finetuned HyDRA checkpoint (state_dict)."
+    )
     p.add_argument("--output_path", type=str, default="./outputs", help="Output dir (batch) or mp4 path (single).")
     p.add_argument("--device", type=str, default="cuda")
     p.add_argument("--height", type=int, default=480)
@@ -285,7 +294,9 @@ def parse_args() -> argparse.Namespace:
         help="Enable HyDRA dynamic retrieval attention (use --no-hydra for dense attention).",
     )
     p.add_argument("--base_dit_path", type=str, default="./ckpts/Wan2.1-T2V-1.3B/diffusion_pytorch_model.safetensors")
-    p.add_argument("--base_text_encoder_path", type=str, default="./ckpts/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth")
+    p.add_argument(
+        "--base_text_encoder_path", type=str, default="./ckpts/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth"
+    )
     p.add_argument("--base_vae_path", type=str, default="./ckpts/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth")
     return p.parse_args()
 
@@ -372,7 +383,7 @@ def main() -> None:
                 raise ValueError(f"caption.txt must have a line for {mp4_name} (index {caption_idx}).")
             prompt = captions[caption_idx].strip()
             if not prompt:
-                raise ValueError(f"Empty caption at line {caption_idx+1} for {mp4_name}.")
+                raise ValueError(f"Empty caption at line {caption_idx + 1} for {mp4_name}.")
 
             cond_video_path = os.path.join(examples_dir, mp4_name)
             cam_json_path = os.path.join(examples_dir, f"cam{sample_id}.json")
@@ -397,7 +408,9 @@ def main() -> None:
         return
 
     if args.cond_video is None or args.cond_json is None or args.caption_txt is None:
-        raise ValueError("Provide --examples_dir for batch mode, or --cond_video/--cond_json/--caption_txt for single mode.")
+        raise ValueError(
+            "Provide --examples_dir for batch mode, or --cond_video/--cond_json/--caption_txt for single mode."
+        )
 
     with open(args.caption_txt, "r", encoding="utf-8") as f:
         prompt = f.read().strip()

@@ -77,9 +77,7 @@ class Gr00tN1d7ActionHead(nn.Module):
             output_dim=self.action_dim,
         )
 
-        self.vlln = (
-            nn.LayerNorm(config.backbone_embedding_dim) if config.use_vlln else nn.Identity()
-        )
+        self.vlln = nn.LayerNorm(config.backbone_embedding_dim) if config.use_vlln else nn.Identity()
 
         vl_self_attention_cfg = getattr(config, "vl_self_attention_cfg", None)
         if vl_self_attention_cfg and vl_self_attention_cfg.get("num_layers", 0) > 0:
@@ -95,9 +93,6 @@ class Gr00tN1d7ActionHead(nn.Module):
         self.requires_grad_(False)
         self.eval()
 
-
-
-
     def process_backbone_output(self, backbone_output: BatchFeature) -> BatchFeature:
         backbone_features = backbone_output["backbone_features"]
         backbone_features = self.vlln(backbone_features)
@@ -105,10 +100,7 @@ class Gr00tN1d7ActionHead(nn.Module):
         backbone_output["backbone_features"] = backbone_features
         return backbone_output
 
-
-    def _encode_features(
-        self, backbone_output: BatchFeature, action_input: BatchFeature
-    ) -> BatchFeature:
+    def _encode_features(self, backbone_output: BatchFeature, action_input: BatchFeature) -> BatchFeature:
         """
         Encode features for the action head.
 
@@ -193,8 +185,7 @@ class Gr00tN1d7ActionHead(nn.Module):
             # Use previous action instead of pure noise to do inpainting
             actions[:, : options["rtc_overlap_steps"], :] = action_input["action"][
                 :,
-                action_horizon_before_padding
-                - options["rtc_overlap_steps"] : action_horizon_before_padding,
+                action_horizon_before_padding - options["rtc_overlap_steps"] : action_horizon_before_padding,
                 :,
             ]
             vel_strength[:, : options["rtc_frozen_steps"], :] = 0.0
@@ -204,9 +195,7 @@ class Gr00tN1d7ActionHead(nn.Module):
             t = torch.linspace(0.0, 1.0, intermediate_steps + 2, device=device)
             ramp = 1 - torch.exp(-options["rtc_ramp_rate"] * t)
             ramp = ramp / ramp[-1].clamp_min(1e-8)  # normalize to [0,1]
-            ramp = ramp[
-                1:-1
-            ]  # we will only take the middle part of the ramp, ignore the 0.0 and 1.0
+            ramp = ramp[1:-1]  # we will only take the middle part of the ramp, ignore the 0.0 and 1.0
             # Apply ramp to the intermediate steps [batch, intermediate_steps, action_dim]
             vel_strength[
                 :,
@@ -220,9 +209,7 @@ class Gr00tN1d7ActionHead(nn.Module):
             t_discretized = int(t_cont * self.num_timestep_buckets)
 
             # Embed noised action trajectory.
-            timesteps_tensor = torch.full(
-                size=(batch_size,), fill_value=t_discretized, device=device
-            )
+            timesteps_tensor = torch.full(size=(batch_size,), fill_value=t_discretized, device=device)
             action_features = self.action_encoder(actions, timesteps_tensor, embodiment_id)
             # Add position embedding.
             if self.config.add_pos_embed:
@@ -323,6 +310,7 @@ class Gr00tN1d7(PreTrainedModel):
     """Gr00tN1d7: VLA model with Cosmos-Reason2-2B (Qwen3-VL) backbone."""
 
     config_class = Gr00tN1d7Config
+
     def __init__(
         self,
         config: Gr00tN1d7Config,
@@ -343,9 +331,7 @@ class Gr00tN1d7(PreTrainedModel):
         The loading kwargs select the local inference backbone checkpoint.
         """
         super().__init__(config)
-        transformers_loading_kwargs = dict(
-            transformers_loading_kwargs or {"trust_remote_code": False}
-        )
+        transformers_loading_kwargs = dict(transformers_loading_kwargs or {"trust_remote_code": False})
         self.config = config
 
         backbone_cls = get_backbone_cls(config)
@@ -405,7 +391,6 @@ class Gr00tN1d7(PreTrainedModel):
         action_inputs = tree.map_structure(to_device_with_dtype, action_inputs)
 
         return backbone_inputs, action_inputs
-
 
     def get_action(self, inputs: dict, options: dict[str, Any] | None = None) -> BatchFeature:
         """

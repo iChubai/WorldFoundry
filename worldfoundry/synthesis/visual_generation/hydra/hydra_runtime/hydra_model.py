@@ -69,9 +69,7 @@ class MemoryTokenizer(nn.Module):
 
 
 def _precompute_axis_freqs(dim: int, positions: torch.Tensor, theta: float) -> torch.Tensor:
-    frequencies = 1.0 / (
-        theta ** (torch.arange(0, dim, 2, device=positions.device)[: dim // 2].float() / dim)
-    )
+    frequencies = 1.0 / (theta ** (torch.arange(0, dim, 2, device=positions.device)[: dim // 2].float() / dim))
     phases = torch.outer(positions, frequencies)
     return torch.polar(torch.ones_like(phases), phases)
 
@@ -144,8 +142,7 @@ class DynamicRetrievalAttention(nn.Module):
         expected_length = frames * frame_hw
         if sequence_length != expected_length:
             raise ValueError(
-                f"HyDRA attention expected {expected_length} tokens ({frames}x{frame_hw}), "
-                f"got {sequence_length}"
+                f"HyDRA attention expected {expected_length} tokens ({frames}x{frame_hw}), got {sequence_length}"
             )
 
         q_frames = rearrange(q, "b (f hw) d -> b f hw d", f=frames, hw=frame_hw)
@@ -215,9 +212,7 @@ class DynamicRetrievalAttention(nn.Module):
         compressed_frames: int,
     ) -> torch.Tensor:
         if self.top_k > compressed_frames:
-            raise ValueError(
-                f"HyDRA top_k={self.top_k} exceeds the {compressed_frames} compressed memory frames"
-            )
+            raise ValueError(f"HyDRA top_k={self.top_k} exceeds the {compressed_frames} compressed memory frames")
         radius = self.window_size // 2
         frame_indices = torch.arange(self.num_frames, device=similarity.device)
         window_starts = (frame_indices - radius).clamp(min=0, max=self.num_frames - self.window_size)

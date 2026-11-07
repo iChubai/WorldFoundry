@@ -74,10 +74,7 @@ def apg_delta(
     proj_coeff = (delta_f * ref_f).sum(dim=1, keepdim=True) / ref_norm_sq
     delta_parallel_f = proj_coeff * ref_f
     delta_orthogonal_f = delta_f - delta_parallel_f
-    return (
-        parallel_scale * delta_parallel_f.reshape_as(delta)
-        + orthogonal_scale * delta_orthogonal_f.reshape_as(delta)
-    )
+    return parallel_scale * delta_parallel_f.reshape_as(delta) + orthogonal_scale * delta_orthogonal_f.reshape_as(delta)
 
 
 class MomentumBuffer:
@@ -107,9 +104,7 @@ def _normalize_diff(diff, base_pred, momentum_buffer, eta, norm_threshold):
     return diff_orthogonal + eta * diff_parallel
 
 
-def normalized_guidance(
-    pred_cond, pred_uncond, guidance_scale, momentum_buffer=None, eta=1.0, norm_threshold=0.0
-):
+def normalized_guidance(pred_cond, pred_uncond, guidance_scale, momentum_buffer=None, eta=1.0, norm_threshold=0.0):
     """Single-condition APG."""
     nd = _normalize_diff(pred_cond - pred_uncond, pred_cond, momentum_buffer, eta, norm_threshold)
     return pred_uncond + guidance_scale * nd
@@ -249,8 +244,17 @@ class GEN_Wanx22(nn.Module):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-    def shared_step(self, model_id, noisy_latents, timesteps, cond_embeds, rotary_embs,
-                    batch_vae_seqlen=None, batch_text_seqlen=None, **kwargs):
+    def shared_step(
+        self,
+        model_id,
+        noisy_latents,
+        timesteps,
+        cond_embeds,
+        rotary_embs,
+        batch_vae_seqlen=None,
+        batch_text_seqlen=None,
+        **kwargs,
+    ):
         cur_transformer = self.transformer if model_id == "transformer_1" else self.transformer_2
         if cur_transformer is None:
             cur_transformer = self.transformer
@@ -374,9 +378,7 @@ class GEN_Wanx22(nn.Module):
             cond_text = prompt_embeds_t1 if t >= boundary_timestep else prompt_embeds_t2
             uncond_text = uncond_embeds_t1 if t >= boundary_timestep else uncond_embeds_t2
 
-            if t < boundary_timestep and not switched and (
-                self.transformer_2 is not None or self._lazy_expert_loading
-            ):
+            if t < boundary_timestep and not switched and (self.transformer_2 is not None or self._lazy_expert_loading):
                 self._switch_to_low_expert(device)
                 switched = True
                 omega_vid *= omega_scale
@@ -429,8 +431,8 @@ class GEN_Wanx22(nn.Module):
             # image-only combo holds just the images on its own axis.
             vi_sids = _make_sids(num_videos + num_images)
             i_sids = _make_sids(num_images)
-            vi_ptr = 0    # cursor into vi_sids
-            i_ptr = 0     # cursor into i_sids
+            vi_ptr = 0  # cursor into vi_sids
+            i_ptr = 0  # cursor into i_sids
 
             for idx, video_latent in enumerate(target_video_latents):
                 cur_latent, rotary_emb = cur_transformer.patch_vae_latent(
@@ -536,11 +538,7 @@ class GEN_Wanx22(nn.Module):
                 eps_uncond = _fwd(none_inp, none_rot, none_msk, none_total, uncond_text)
                 eps_V = _fwd(v_inp, v_rot, v_msk, v_total, uncond_text)
                 eps_VTI = _fwd(vi_inp, vi_rot, vi_msk, vi_total, cond_text)
-                noise_pred = (
-                    eps_uncond
-                    + omega_vid * (eps_V - eps_uncond)
-                    + omega_txt * (eps_VTI - eps_V)
-                )
+                noise_pred = eps_uncond + omega_vid * (eps_V - eps_uncond) + omega_txt * (eps_VTI - eps_V)
 
             elif guidance_mode == "t2v":
                 # Text-to-video, plain CFG: ε̂ = ε_∅ + ω_TI(ε_T-ε_∅)
@@ -643,14 +641,16 @@ class GEN_Wanx22(nn.Module):
         omega_scale=1.0,
         flow_shift=5.0,
         seed=42,
-        device='cuda',
+        device="cuda",
         **kwargs,
     ):
         # only support batchsize=1
         weight_dtype = torch.bfloat16
 
         if self.use_unipc:
-            self.scheduler = UniPCMultistepScheduler.from_config(self.config.scheduler_config_path, flow_shift=flow_shift)
+            self.scheduler = UniPCMultistepScheduler.from_config(
+                self.config.scheduler_config_path, flow_shift=flow_shift
+            )
             self.scheduler.set_timesteps(num_inference_steps)
         else:
             self.scheduler.set_timesteps(num_inference_steps, training=False, shift=flow_shift)
@@ -662,22 +662,24 @@ class GEN_Wanx22(nn.Module):
         boundary_timestep = self.switch_dit_boundary * self.scheduler.num_train_timesteps
 
         num_channels_latents = (
-                self.transformer.config.in_channels
-                if self.transformer is not None
-                else self.transformer_2.config.in_channels
+            self.transformer.config.in_channels
+            if self.transformer is not None
+            else self.transformer_2.config.in_channels
         )
 
         num_latent_frames = (num_frames - 1) // self.vae_scale_factor_temporal + 1
-        shape = (1,
-                 num_channels_latents,
-                 num_latent_frames,
-                 int(height) // self.vae_scale_factor_spatial,
-                 int(width) // self.vae_scale_factor_spatial)
+        shape = (
+            1,
+            num_channels_latents,
+            num_latent_frames,
+            int(height) // self.vae_scale_factor_spatial,
+            int(width) // self.vae_scale_factor_spatial,
+        )
 
-        gen = torch.Generator(device='cpu').manual_seed(seed)
+        gen = torch.Generator(device="cpu").manual_seed(seed)
         noise = randn_tensor(shape, device=device, dtype=torch.float32, generator=gen)
-        noisy_vae_latent = rearrange(noise, 'b c t (h ph) (w pw) -> b (t h w) (ph pw c)', ph=2, pw=2)
-        noisy_vae_latent = noisy_vae_latent.to(device) #.to(weight_dtype)
+        noisy_vae_latent = rearrange(noise, "b c t (h ph) (w pw) -> b (t h w) (ph pw c)", ph=2, pw=2)
+        noisy_vae_latent = noisy_vae_latent.to(device)  # .to(weight_dtype)
 
         def _module_device(module):
             if module is None:
@@ -691,7 +693,7 @@ class GEN_Wanx22(nn.Module):
 
         if local_device_moves:
             if self.transformer_2 is not None:
-                self.transformer_2.to('cpu')
+                self.transformer_2.to("cpu")
             self.transformer.to(device)
         torch.cuda.empty_cache()
 
@@ -706,9 +708,8 @@ class GEN_Wanx22(nn.Module):
         for t_idx, t in enumerate(timesteps):
             model_id = "transformer_1" if t >= boundary_timestep else "transformer_2"
             if t < boundary_timestep and not switched and self.transformer_2 is not None:
-
                 if local_device_moves:
-                    self.transformer.to('cpu')
+                    self.transformer.to("cpu")
                     self.transformer_2.to(device)
                 torch.cuda.empty_cache()
                 switched = True
@@ -729,7 +730,9 @@ class GEN_Wanx22(nn.Module):
             rotary_embeds_wvae, rotary_embeds_wovae = [], []
 
             if source_image_vae_latents is not None and len(source_image_vae_latents) > 0:
-                cur_latent = cur_transformer.patch_vae_embedding(source_image_vae_latents.to(dtype=weight_dtype)).unsqueeze(0)
+                cur_latent = cur_transformer.patch_vae_embedding(
+                    source_image_vae_latents.to(dtype=weight_dtype)
+                ).unsqueeze(0)
                 rotary_emb = source_image_vae_rope.permute(1, 0, 2).unsqueeze(0)
                 rotary_embeds_wvae.append(rotary_emb)
                 latent_model_inputs_wvae.append(cur_latent)
@@ -740,7 +743,9 @@ class GEN_Wanx22(nn.Module):
                 target_img_vae_latent_masks.append(vae_latent_mask)
 
             if source_video_vae_latents is not None and len(source_video_vae_latents) > 0:
-                cur_latent = cur_transformer.patch_vae_embedding(source_video_vae_latents.to(dtype=weight_dtype)).unsqueeze(0)
+                cur_latent = cur_transformer.patch_vae_embedding(
+                    source_video_vae_latents.to(dtype=weight_dtype)
+                ).unsqueeze(0)
                 rotary_emb = source_video_vae_rope.permute(1, 0, 2).unsqueeze(0)
                 rotary_embeds_wvae.append(rotary_emb)
                 latent_model_inputs_wvae.append(cur_latent)
@@ -752,10 +757,10 @@ class GEN_Wanx22(nn.Module):
 
             unpacked_noisy_latent = rearrange(
                 noisy_vae_latent,
-                'b (t h w) (pt ph pw c) -> b c (t pt) (h ph) (w pw)',
+                "b (t h w) (pt ph pw c) -> b c (t pt) (h ph) (w pw)",
                 t=shape[2],
-                h=shape[3]//2,
-                w=shape[4]//2,
+                h=shape[3] // 2,
+                w=shape[4] // 2,
                 pt=1,
                 ph=2,
                 pw=2,
@@ -818,7 +823,7 @@ class GEN_Wanx22(nn.Module):
                 target_imgvae_latent_masks=target_img_vae_latent_masks,
                 target_vidvae_latent_masks=target_vid_vae_latent_masks,
                 noisy_vae_latent=noisy_vae_latent,
-                shape=shape
+                shape=shape,
             )
 
             if isinstance(self.scheduler, FlowMatchScheduler):
@@ -828,16 +833,16 @@ class GEN_Wanx22(nn.Module):
 
             progress_bar.update(1)
         if local_device_moves:
-            self.transformer.to('cpu')
+            self.transformer.to("cpu")
             if self.transformer_2 is not None:
-                self.transformer_2.to('cpu')
+                self.transformer_2.to("cpu")
         torch.cuda.empty_cache()
         pred_vae_latent = rearrange(
             noisy_vae_latent,
-            'b (t h w) (pt ph pw c) -> b c (t pt) (h ph) (w pw)',
+            "b (t h w) (pt ph pw c) -> b c (t pt) (h ph) (w pw)",
             t=shape[2],
-            h=shape[3]//2,
-            w=shape[4]//2,
+            h=shape[3] // 2,
+            w=shape[4] // 2,
             pt=1,
             ph=2,
             pw=2,
@@ -869,16 +874,12 @@ class GEN_Wanx22(nn.Module):
         target_vidvae_latent_masks,
         shape,
         noisy_vae_latent,
-        norm_threshold=[50., 50., 50.],
+        norm_threshold=[50.0, 50.0, 50.0],
     ):
         def _seq_lens_kwargs(latent_inputs: torch.Tensor, cond_embeds: torch.Tensor):
             return dict(
-                batch_vae_seqlen=torch.tensor(
-                    [latent_inputs.shape[1]], dtype=torch.int32, device=latent_inputs.device
-                ),
-                batch_text_seqlen=torch.tensor(
-                    [cond_embeds.shape[1]], dtype=torch.int32, device=cond_embeds.device
-                ),
+                batch_vae_seqlen=torch.tensor([latent_inputs.shape[1]], dtype=torch.int32, device=latent_inputs.device),
+                batch_text_seqlen=torch.tensor([cond_embeds.shape[1]], dtype=torch.int32, device=cond_embeds.device),
             )
 
         # shared conditional results
@@ -887,7 +888,7 @@ class GEN_Wanx22(nn.Module):
             cond_embeds=prompt_embeds_wtxt_wvit,
             rotary_embs=rotary_embeds_wvae,
             **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wtxt_wvit),
-            **shared_kwargs
+            **shared_kwargs,
         )[:, target_vae_latent_masks, :]
 
         # shared unconditional baseline
@@ -896,7 +897,7 @@ class GEN_Wanx22(nn.Module):
             rotary_embs=rotary_embeds_wovae,
             cond_embeds=prompt_embeds_wotxt_wovit,
             **_seq_lens_kwargs(latent_model_inputs_wovae, prompt_embeds_wotxt_wovit),
-            **shared_kwargs
+            **shared_kwargs,
         )
         if guidance_mode in ["rv2v_wapg"]:
             if cur_omega_vid > 0.0:
@@ -905,7 +906,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvidvae,
                     cond_embeds=prompt_embeds_wotxt_wovit,
                     **_seq_lens_kwargs(latent_model_inputs_wvidvae, prompt_embeds_wotxt_wovit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vidvae_latent_masks, :]
             else:
                 eps_V = cond_pred_wotxt_wovit_wovae
@@ -916,7 +917,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvae,
                     cond_embeds=prompt_embeds_wotxt_wovit,
                     **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wotxt_wovit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vae_latent_masks, :]
             else:
                 eps_VI = eps_V
@@ -927,7 +928,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvae,
                     cond_embeds=prompt_embeds_wtxt_wovit,
                     **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wtxt_wovit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vae_latent_masks, :]
             else:
                 eps_VTI = eps_VI
@@ -938,7 +939,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvae,
                     cond_embeds=prompt_embeds_wtxt_wvit,
                     **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wtxt_wvit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vae_latent_masks, :]
             else:
                 eps_VTIC = eps_VTI
@@ -958,7 +959,7 @@ class GEN_Wanx22(nn.Module):
 
             noise_pred = (
                 base
-                 + cur_omega_vid * delta_vid_vae_apg
+                + cur_omega_vid * delta_vid_vae_apg
                 + cur_omega_img * delta_img_vae_apg
                 + cur_omega_txt * delta_txt_apg
                 + cur_omega_tgt * delta_vit_apg
@@ -973,14 +974,18 @@ class GEN_Wanx22(nn.Module):
                 sigma_apg = self.scheduler.sigmas[self.scheduler.step_index]
             # Get v_preds
             eps_uncond = cond_pred_wotxt_wovit_wovae  # ε_∅
-            eps_T      = cond_pred_wtxt_wvit_wvae    # ε_T
+            eps_T = cond_pred_wtxt_wvit_wvae  # ε_T
 
             def rearrange_eps(pred, pred_shape):
                 return rearrange(
                     pred,
-                    'b (t h w) (pt ph pw c) -> b c (t pt) (h ph) (w pw)',
-                    t=pred_shape[2], h=pred_shape[3]//2, w=pred_shape[4]//2,
-                    pt=1, ph=2, pw=2,
+                    "b (t h w) (pt ph pw c) -> b c (t pt) (h ph) (w pw)",
+                    t=pred_shape[2],
+                    h=pred_shape[3] // 2,
+                    w=pred_shape[4] // 2,
+                    pt=1,
+                    ph=2,
+                    pw=2,
                 )
 
             # Compute x_preds: x = noisy_vae_latent - sigma * v
@@ -988,7 +993,7 @@ class GEN_Wanx22(nn.Module):
 
             noisy_latents_r = rearrange_eps(noisy_vae_latent, shape)
             eps_uncond_r = noisy_latents_r - sigma_apg * rearrange_eps(eps_uncond, shape)
-            eps_T_r      = noisy_latents_r - sigma_apg * rearrange_eps(eps_T, shape)
+            eps_T_r = noisy_latents_r - sigma_apg * rearrange_eps(eps_T, shape)
 
             noise_pred = normalized_guidance(
                 pred_uncond=eps_uncond_r,
@@ -1003,9 +1008,13 @@ class GEN_Wanx22(nn.Module):
             # Rearrange back
             noise_pred = rearrange(
                 noise_pred,
-                'b c (t pt) (h ph) (w pw) -> b (t h w) (pt ph pw c)',
-                t=shape[2], h=shape[3]//2, w=shape[4]//2,
-                pt=1, ph=2, pw=2
+                "b c (t pt) (h ph) (w pw) -> b (t h w) (pt ph pw c)",
+                t=shape[2],
+                h=shape[3] // 2,
+                w=shape[4] // 2,
+                pt=1,
+                ph=2,
+                pw=2,
             )
 
         elif guidance_mode == "vae_txt_vit":
@@ -1015,7 +1024,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvae,
                     cond_embeds=prompt_embeds_wotxt_wovit,
                     **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wotxt_wovit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vae_latent_masks, :]
             else:
                 cond_pred_wotxt_wovit_wvae = cond_pred_wotxt_wovit_wovae
@@ -1026,7 +1035,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvae,
                     cond_embeds=prompt_embeds_wtxt_wovit,
                     **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wtxt_wovit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vae_latent_masks, :]
             else:
                 cond_pred_wtxt_wovit_wvae = cond_pred_wotxt_wovit_wvae
@@ -1045,7 +1054,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvae,
                     cond_embeds=prompt_embeds_wotxt_wovit,
                     **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wotxt_wovit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vae_latent_masks, :]
             else:
                 cond_pred_wotxt_wovit_wvae = cond_pred_wotxt_wovit_wovae
@@ -1056,7 +1065,7 @@ class GEN_Wanx22(nn.Module):
                     rotary_embs=rotary_embeds_wvae,
                     cond_embeds=prompt_embeds_wtxt_wovit,
                     **_seq_lens_kwargs(latent_model_inputs_wvae, prompt_embeds_wtxt_wovit),
-                    **shared_kwargs
+                    **shared_kwargs,
                 )[:, target_vae_latent_masks, :]
             else:
                 cond_pred_wtxt_wovit_wvae = cond_pred_wotxt_wovit_wvae
@@ -1089,10 +1098,7 @@ class GEN_Wanx22(nn.Module):
             )
 
             noise_pred = (
-                base
-                + cur_omega_img * delta_img_apg
-                + cur_omega_txt * delta_txt_apg
-                + cur_omega_tgt * delta_vit_apg
+                base + cur_omega_img * delta_img_apg + cur_omega_txt * delta_txt_apg + cur_omega_tgt * delta_vit_apg
             )
 
         else:

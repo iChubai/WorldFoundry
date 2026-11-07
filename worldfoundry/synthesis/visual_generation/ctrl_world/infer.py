@@ -83,9 +83,18 @@ def _parser() -> argparse.ArgumentParser:
         default="absolute-pose",
         help="Use an official physical Cartesian pose, or explicitly opt into the old zero-pose smoke input.",
     )
-    parser.add_argument("--initial-pose", type=float, nargs=ACTION_DIM, metavar=("X", "Y", "Z", "RX", "RY", "RZ", "GRIPPER"))
-    parser.add_argument("--action-distance", type=float, default=0.08, help="Physical XYZ displacement in metres, as in official key_board_control.")
-    parser.add_argument("--action-scale", type=float, help="Normalized delta for synthetic-zero-smoke only (default 0.2).")
+    parser.add_argument(
+        "--initial-pose", type=float, nargs=ACTION_DIM, metavar=("X", "Y", "Z", "RX", "RY", "RZ", "GRIPPER")
+    )
+    parser.add_argument(
+        "--action-distance",
+        type=float,
+        default=0.08,
+        help="Physical XYZ displacement in metres, as in official key_board_control.",
+    )
+    parser.add_argument(
+        "--action-scale", type=float, help="Normalized delta for synthetic-zero-smoke only (default 0.2)."
+    )
     parser.add_argument("--height", type=int, default=192)
     parser.add_argument("--width", type=int, default=320)
     parser.add_argument("--num-frames", type=int, default=NUM_FRAMES)
@@ -212,9 +221,7 @@ def _absolute_pose_action_rollout(initial_pose: list[float] | tuple[float, ...],
 
     # The official helper also clips XYZ and contains task 1799's special up/down paths.
     keyboard_action = OFFICIAL_KEYBOARD_ACTIONS.get(direction, "r")
-    future = key_board_control(
-        pose[None, :], keyboard_action, distance=0.0 if direction == "stationary" else distance
-    )
+    future = key_board_control(pose[None, :], keyboard_action, distance=0.0 if direction == "stationary" else distance)
     physical = np.concatenate((np.repeat(pose[None, :], NUM_HISTORY, axis=0), future), axis=0)
 
     stats = json.loads(OFFICIAL_ACTION_STATS.read_text(encoding="utf-8"))
@@ -293,13 +300,19 @@ def run(args: argparse.Namespace) -> Path:
         current_latent = torch.cat([view_latents[index] for index in range(3)], dim=1).unsqueeze(0)
         expected_shape = (1, 4, 72, 40)
         if tuple(current_latent.shape) != expected_shape:
-            raise RuntimeError(f"Ctrl-World three-view latent shape must be {expected_shape}, got {tuple(current_latent.shape)}")
+            raise RuntimeError(
+                f"Ctrl-World three-view latent shape must be {expected_shape}, got {tuple(current_latent.shape)}"
+            )
         history = current_latent.unsqueeze(1).repeat(1, NUM_HISTORY, 1, 1, 1)
         if args.action_mode == "absolute-pose":
             actions = _absolute_pose_action_rollout(args.initial_pose, args.action_direction, args.action_distance)
         else:
-            print("Using synthetic zero-pose actions for smoke testing only; motion direction is not physically validated.")
-            actions = _normalized_action_rollout(args.action_direction, args.action_scale if args.action_scale is not None else 0.2)
+            print(
+                "Using synthetic zero-pose actions for smoke testing only; motion direction is not physically validated."
+            )
+            actions = _normalized_action_rollout(
+                args.action_direction, args.action_scale if args.action_scale is not None else 0.2
+            )
         actions = actions.to(device=device, dtype=dtype)
         text_token = model.action_encoder(
             actions,

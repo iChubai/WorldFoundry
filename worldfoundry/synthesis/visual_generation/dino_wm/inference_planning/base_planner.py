@@ -27,11 +27,7 @@ class BasePlanner(ABC):
 
     def dump_logs(self, logs):
         logs_entry = {
-            key: (
-                value.item()
-                if isinstance(value, (np.float32, np.int32, np.int64))
-                else value
-            )
+            key: (value.item() if isinstance(value, (np.float32, np.int32, np.int64)) else value)
             for key, value in logs.items()
         }
         if self.log_filename is not None:

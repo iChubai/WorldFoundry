@@ -28,12 +28,12 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
     """
 
     def forward(
-            self,
-            x: torch.Tensor,
-            emb: torch.Tensor,
-            context: Optional[torch.Tensor] = None,
-            time_context: Optional[int] = None,
-            num_frames: Optional[int] = None
+        self,
+        x: torch.Tensor,
+        emb: torch.Tensor,
+        context: Optional[torch.Tensor] = None,
+        time_context: Optional[int] = None,
+        num_frames: Optional[int] = None,
     ):
         from .video_model import VideoResBlock
 
@@ -59,12 +59,7 @@ class Upsample(nn.Module):
     """
 
     def __init__(
-            self,
-            channels: int,
-            use_conv: bool,
-            dims: int = 2,
-            out_channels: Optional[int] = None,
-            third_up: bool = False
+        self, channels: int, use_conv: bool, dims: int = 2, out_channels: Optional[int] = None, third_up: bool = False
     ):
         super(Upsample, self).__init__()
         self.channels = channels
@@ -79,11 +74,7 @@ class Upsample(nn.Module):
         assert x.shape[1] == self.channels
         if self.dims == 3:
             t_factor = 2 if self.third_up else 1
-            x = F.interpolate(
-                x,
-                (t_factor * x.shape[2], x.shape[3] * 2, x.shape[4] * 2),
-                mode="bicubic"
-            )
+            x = F.interpolate(x, (t_factor * x.shape[2], x.shape[3] * 2, x.shape[4] * 2), mode="bicubic")
         else:
             x = F.interpolate(x, scale_factor=2, mode="bicubic")
         if self.use_conv:
@@ -101,12 +92,7 @@ class Downsample(nn.Module):
     """
 
     def __init__(
-            self,
-            channels: int,
-            use_conv: bool,
-            dims: int = 2,
-            out_channels: Optional[int] = None,
-            third_down: bool = False
+        self, channels: int, use_conv: bool, dims: int = 2, out_channels: Optional[int] = None, third_down: bool = False
     ):
         super(Downsample, self).__init__()
         self.channels = channels
@@ -146,20 +132,20 @@ class ResBlock(TimestepBlock):
     """
 
     def __init__(
-            self,
-            channels: int,
-            emb_channels: int,
-            dropout: float,
-            out_channels: Optional[int] = None,
-            use_conv: bool = False,
-            use_scale_shift_norm: bool = False,
-            dims: int = 2,
-            use_checkpoint: bool = False,
-            up: bool = False,
-            down: bool = False,
-            kernel_size: int = 3,
-            exchange_temb_dims: bool = False,
-            skip_t_emb: bool = False
+        self,
+        channels: int,
+        emb_channels: int,
+        dropout: float,
+        out_channels: Optional[int] = None,
+        use_conv: bool = False,
+        use_scale_shift_norm: bool = False,
+        dims: int = 2,
+        use_checkpoint: bool = False,
+        up: bool = False,
+        down: bool = False,
+        kernel_size: int = 3,
+        exchange_temb_dims: bool = False,
+        skip_t_emb: bool = False,
     ):
         super(ResBlock, self).__init__()
         self.channels = channels
@@ -177,9 +163,7 @@ class ResBlock(TimestepBlock):
             padding = kernel_size // 2
 
         self.in_layers = nn.Sequential(
-            normalization(channels),
-            nn.SiLU(),
-            conv_nd(dims, channels, self.out_channels, kernel_size, padding=padding)
+            normalization(channels), nn.SiLU(), conv_nd(dims, channels, self.out_channels, kernel_size, padding=padding)
         )
 
         self.updown = up or down
@@ -194,27 +178,20 @@ class ResBlock(TimestepBlock):
             self.h_upd = self.x_upd = nn.Identity()
 
         self.skip_t_emb = skip_t_emb
-        self.emb_out_channels = (
-            2 * self.out_channels if use_scale_shift_norm else self.out_channels
-        )
+        self.emb_out_channels = 2 * self.out_channels if use_scale_shift_norm else self.out_channels
         if self.skip_t_emb:
             print(f"Skipping timestep embedding in {self.__class__.__name__}")
             assert not self.use_scale_shift_norm
             self.emb_layers = None
             self.exchange_temb_dims = False
         else:
-            self.emb_layers = nn.Sequential(
-                nn.SiLU(),
-                linear(emb_channels, self.emb_out_channels)
-            )
+            self.emb_layers = nn.Sequential(nn.SiLU(), linear(emb_channels, self.emb_out_channels))
 
         self.out_layers = nn.Sequential(
             normalization(self.out_channels),
             nn.SiLU(),
             nn.Dropout(p=dropout),
-            zero_module(
-                conv_nd(dims, self.out_channels, self.out_channels, kernel_size, padding=padding)
-            )
+            zero_module(conv_nd(dims, self.out_channels, self.out_channels, kernel_size, padding=padding)),
         )
 
         if self.out_channels == channels:

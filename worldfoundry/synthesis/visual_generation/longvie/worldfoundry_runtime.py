@@ -164,9 +164,7 @@ class LongVieOfficialRuntime:
         )
         if self.variant == "longvie-1":
             if self.dit_weight_path:
-                raise ValueError(
-                    "LongVie-1 does not accept a DiT override; dit.safetensors belongs to LongVie2."
-                )
+                raise ValueError("LongVie-1 does not accept a DiT override; dit.safetensors belongs to LongVie2.")
             if (control_path.parent / "dit.safetensors").is_file():
                 raise ValueError(
                     "LongVie-1 cannot use a checkpoint directory containing LongVie2's "
@@ -192,9 +190,7 @@ class LongVieOfficialRuntime:
 
             transformers_version = Version(importlib_metadata.version("transformers"))
         except (importlib_metadata.PackageNotFoundError, ImportError, ValueError) as exc:
-            raise RuntimeError(
-                "LongVie requires transformers>=4.57,<5 in its isolated runtime environment."
-            ) from exc
+            raise RuntimeError("LongVie requires transformers>=4.57,<5 in its isolated runtime environment.") from exc
         if not (Version("4.57.0") <= transformers_version < Version("5")):
             raise RuntimeError(
                 "LongVie requires transformers>=4.57,<5; "

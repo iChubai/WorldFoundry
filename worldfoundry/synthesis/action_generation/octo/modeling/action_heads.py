@@ -65,9 +65,7 @@ class ContinuousActionHead(nn.Module, ActionHead):
             self.map_head = MAPHead()
         self.mean_proj = nn.Dense(self.action_horizon * self.action_dim)
 
-    def __call__(
-        self, transformer_outputs: Dict[str, TokenGroup], train: bool = False
-    ) -> jax.Array:
+    def __call__(self, transformer_outputs: Dict[str, TokenGroup], train: bool = False) -> jax.Array:
         """
         Returns:
             mean: Predicted actions w/ shape (batch_size, window_size, action_horizon, action_dim)
@@ -84,9 +82,7 @@ class ContinuousActionHead(nn.Module, ActionHead):
         # Now, embeddings is (batch_size, window_size, embedding_size)
 
         mean = self.mean_proj(embeddings)
-        mean = rearrange(
-            mean, "b w (h a) -> b w h a", h=self.action_horizon, a=self.action_dim
-        )
+        mean = rearrange(mean, "b w (h a) -> b w h a", h=self.action_horizon, a=self.action_dim)
         mean = jnp.tanh(mean / self.max_action) * self.max_action
         return mean
 
@@ -153,9 +149,7 @@ class DiscreteActionHead(nn.Module, ActionHead):
             bin_type=self.normalization_type,
         )
 
-    def __call__(
-        self, transformer_outputs: Dict[str, TokenGroup], train: bool = False
-    ) -> jax.Array:
+    def __call__(self, transformer_outputs: Dict[str, TokenGroup], train: bool = False) -> jax.Array:
         """
         Returns:
             logits: array w/ shape (batch_size, window_size, action_horizon, action_dim, vocab_size)
@@ -169,9 +163,7 @@ class DiscreteActionHead(nn.Module, ActionHead):
             embeddings = self.map_head(token_group, train=train)
         else:
             embeddings = token_group.tokens
-            assert (
-                embeddings.shape[-2] == self.n_tokens
-            ), f"Discrete action head expects {self.n_tokens} tokens"
+            assert embeddings.shape[-2] == self.n_tokens, f"Discrete action head expects {self.n_tokens} tokens"
 
         # Now, embeddings is (batch_size, window_size, n_tokens, embedding_size)
         batch_size, window_size = embeddings.shape[:2]
@@ -202,9 +194,7 @@ class DiscreteActionHead(nn.Module, ActionHead):
 
         if argmax:
             action_tokens = jnp.argmax(action_logits, axis=-1).astype(jnp.int32)
-            action_tokens = jnp.broadcast_to(
-                action_tokens, sample_shape + action_tokens.shape
-            )
+            action_tokens = jnp.broadcast_to(action_tokens, sample_shape + action_tokens.shape)
         else:
             if rng is None:
                 raise ValueError("Discrete Octo action sampling requires an RNG key.")
@@ -303,9 +293,7 @@ class DiffusionActionHead(nn.Module):
 
         # time and noisy_actions are None during initialization, so we replace them with a dummy array
         if (time is None or noisy_actions is None) and not self.is_initializing():
-            raise ValueError(
-                "Must provide time and noisy_actions when calling diffusion action head"
-            )
+            raise ValueError("Must provide time and noisy_actions when calling diffusion action head")
         elif self.is_initializing():
             time = jnp.zeros((*embeddings.shape[:2], 1), dtype=jnp.float32)
             noisy_actions = jnp.zeros(
@@ -352,9 +340,7 @@ class DiffusionActionHead(nn.Module):
             current_x, rng = carry
             input_time = jnp.broadcast_to(time, (*current_x.shape[:-1], 1))
 
-            eps_pred = module.apply(
-                variables, transformer_outputs, input_time, current_x, train=train
-            )
+            eps_pred = module.apply(variables, transformer_outputs, input_time, current_x, train=train)
 
             alpha_1 = 1 / jnp.sqrt(self.alphas[time])
             alpha_2 = (1 - self.alphas[time]) / (jnp.sqrt(1 - self.alpha_hats[time]))
@@ -367,9 +353,7 @@ class DiffusionActionHead(nn.Module):
             current_x = jnp.clip(current_x, -self.max_action, self.max_action)
 
             # set non-eval actions to the noise that would have been seen during training
-            current_x = jnp.where(
-                flat_action_mask, current_x, jnp.sqrt(1 - self.alpha_hats[time]) * z
-            )
+            current_x = jnp.where(flat_action_mask, current_x, jnp.sqrt(1 - self.alpha_hats[time]) * z)
 
             return (current_x, rng), ()
 
@@ -461,9 +445,7 @@ class UNetDDPMActionHead(nn.Module):
 
         # time and noisy_actions are None during initialization, so we replace them with a dummy array
         if (time is None or noisy_actions is None) and not self.is_initializing():
-            raise ValueError(
-                "Must provide time and noisy_actions when calling diffusion action head"
-            )
+            raise ValueError("Must provide time and noisy_actions when calling diffusion action head")
         elif self.is_initializing():
             time = jnp.zeros((*embeddings.shape[:2], 1), dtype=jnp.float32)
             noisy_actions = jnp.zeros(
@@ -537,9 +519,7 @@ class UNetDDPMActionHead(nn.Module):
 
             # Compute x_{t-1} using x_0
             orig_coeff = jnp.sqrt(alpha_prod_t_prev) * (1 - alpha) / (1 - alpha_prod_t)
-            current_coeff = (
-                jnp.sqrt(alpha) * (1 - alpha_prod_t_prev) / (1 - alpha_prod_t)
-            )
+            current_coeff = jnp.sqrt(alpha) * (1 - alpha_prod_t_prev) / (1 - alpha_prod_t)
 
             prev = orig_coeff * orig + current_coeff * sample
 
@@ -553,9 +533,7 @@ class UNetDDPMActionHead(nn.Module):
                 raise ValueError("Invalid schedule provided")
 
             rng, key = jax.random.split(rng)
-            variance = jnp.where(
-                time > 0, variance, jnp.zeros(eps.shape, dtype=jnp.float32)
-            )
+            variance = jnp.where(time > 0, variance, jnp.zeros(eps.shape, dtype=jnp.float32))
             z = jax.random.normal(key, shape=sample.shape, dtype=jnp.float32)
             prev = prev + jnp.sqrt(variance) * z
 
@@ -575,8 +553,6 @@ class UNetDDPMActionHead(nn.Module):
             ),
         )
 
-        noisy_action, _ = jax.lax.fori_loop(
-            0, self.timesteps, loop_body, (noisy_action, rng)
-        )
+        noisy_action, _ = jax.lax.fori_loop(0, self.timesteps, loop_body, (noisy_action, rng))
 
         return noisy_action

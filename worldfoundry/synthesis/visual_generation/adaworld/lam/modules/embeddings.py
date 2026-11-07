@@ -41,8 +41,9 @@ def apply_rotary_emb(freqs, t, start_index=0, scale=1.0, seq_dim=-2):
     rot_dim = freqs.shape[-1]
     end_index = start_index + rot_dim
 
-    assert rot_dim <= t.shape[
-        -1], f"Feature dimension {t.shape[-1]} is not of sufficient size to rotate in all the positions {rot_dim}"
+    assert rot_dim <= t.shape[-1], (
+        f"Feature dimension {t.shape[-1]} is not of sufficient size to rotate in all the positions {rot_dim}"
+    )
 
     # Split t into three parts: left, middle (to be transformed), and right
     t_left = t[..., :start_index]
@@ -67,21 +68,21 @@ def apply_learned_rotations(rotations, t, start_index=0, freq_ranges=None):
 
 class RotaryEmbedding(Module):
     def __init__(
-            self,
-            dim,
-            custom_freqs: Union[Tensor, None] = None,
-            freqs_for: Literal["lang", "pixel", "constant"] = "lang",
-            theta=10000,
-            max_freq=10,
-            num_freqs=1,
-            learned_freq=False,
-            use_xpos=False,
-            xpos_scale_base=512,
-            interpolate_factor=1.0,
-            theta_rescale_factor=1.0,
-            seq_before_head_dim=False,
-            cache_if_possible=True,
-            cache_max_seq_len=8192
+        self,
+        dim,
+        custom_freqs: Union[Tensor, None] = None,
+        freqs_for: Literal["lang", "pixel", "constant"] = "lang",
+        theta=10000,
+        max_freq=10,
+        num_freqs=1,
+        learned_freq=False,
+        use_xpos=False,
+        xpos_scale_base=512,
+        interpolate_factor=1.0,
+        theta_rescale_factor=1.0,
+        seq_before_head_dim=False,
+        cache_if_possible=True,
+        cache_max_seq_len=8192,
     ) -> None:
         super(RotaryEmbedding, self).__init__()
         theta *= theta_rescale_factor ** (dim / (dim - 2))
@@ -141,9 +142,10 @@ class RotaryEmbedding(Module):
     def rotate_queries_or_keys(self, t, freqs, seq_dim=None, offset=0, scale=None):
         seq_dim = default(seq_dim, self.default_seq_dim)
 
-        assert not self.use_xpos or exists(
-            scale), ("You must use '.rotate_queries_and_keys' method instead and pass in both queries and keys "
-                     "for length extrapolatable rotary embeddings")
+        assert not self.use_xpos or exists(scale), (
+            "You must use '.rotate_queries_and_keys' method instead and pass in both queries and keys "
+            "for length extrapolatable rotary embeddings"
+        )
 
         device, dtype, seq_len = t.device, t.dtype, t.shape[seq_dim]
 
@@ -171,7 +173,7 @@ class RotaryEmbedding(Module):
             scale = rearrange(scale, "n d -> n 1 d")
 
         rotated_q = apply_rotary_emb(seq_freqs, q, scale=scale, seq_dim=seq_dim)
-        rotated_k = apply_rotary_emb(seq_freqs, k, scale=scale ** -1, seq_dim=seq_dim)
+        rotated_k = apply_rotary_emb(seq_freqs, k, scale=scale**-1, seq_dim=seq_dim)
 
         rotated_q = rotated_q.type(q.dtype)
         rotated_k = rotated_k.type(k.dtype)
@@ -183,7 +185,7 @@ class RotaryEmbedding(Module):
         should_cache = self.cache_if_possible and exists(seq_len) and (offset + seq_len) <= self.cache_max_seq_len
 
         if should_cache and exists(self.cached_scales) and (seq_len + offset) <= self.cached_scales_seq_len.item():
-            return self.cached_scales[offset: (offset + seq_len)]
+            return self.cached_scales[offset : (offset + seq_len)]
 
         scale = 1.0
         if self.use_xpos:
@@ -224,11 +226,16 @@ class RotaryEmbedding(Module):
 
     @autocast("cuda", enabled=False)
     def forward(self, t: Tensor, freqs: Tensor, seq_len=None, offset=0):
-        should_cache = self.cache_if_possible and not self.learned_freq and exists(
-            seq_len) and self.freqs_for != "pixel" and (offset + seq_len) <= self.cache_max_seq_len
+        should_cache = (
+            self.cache_if_possible
+            and not self.learned_freq
+            and exists(seq_len)
+            and self.freqs_for != "pixel"
+            and (offset + seq_len) <= self.cache_max_seq_len
+        )
 
         if should_cache and exists(self.cached_freqs) and (offset + seq_len) <= self.cached_freqs_seq_len.item():
-            return self.cached_freqs[offset: (offset + seq_len)].detach()
+            return self.cached_freqs[offset : (offset + seq_len)].detach()
         else:
             freqs = einsum("..., f -> ... f", t.type(freqs.dtype), freqs)
             freqs = repeat(freqs, "... n -> ... (n r)", r=2)

@@ -127,7 +127,7 @@ class VideoTokenizerABC(ABC):
             tile_sample_min_length=tile_sample_min_length,
             spatial_tile_overlap_factor=spatial_tile_overlap_factor,
             temporal_tile_overlap_factor=temporal_tile_overlap_factor,
-            sr_ratio=getattr(self, 'sr_ratio', 1),
+            sr_ratio=getattr(self, "sr_ratio", 1),
             spatial_downsample_factor=self.spatial_downsample_factor,
             temporal_downsample_factor=self.temporal_downsample_factor,
             first_frame_as_image=self.first_frame_as_image,
@@ -221,13 +221,13 @@ class VideoTokenizerABC(ABC):
 
 class ViTVAE(ModelMixin, ConfigMixin, VideoTokenizerABC):
     @register_to_config
-    def __init__(self, ddconfig: dict, model_type: Literal['vit', 'vit_ncthw'] = 'vit'):
+    def __init__(self, ddconfig: dict, model_type: Literal["vit", "vit_ncthw"] = "vit"):
         super().__init__()
 
-        if model_type == 'vit':
+        if model_type == "vit":
             self.encoder = ViTEncoder(**ddconfig)
             self.decoder = ViTDecoder(**ddconfig)
-        elif model_type == 'vit_ncthw':
+        elif model_type == "vit_ncthw":
             from videotokenizer.modules.vit_ncthw import ViTDecoderNCTHW, ViTEncoderNCTHW
 
             self.encoder = ViTEncoderNCTHW(**ddconfig)
@@ -235,13 +235,13 @@ class ViTVAE(ModelMixin, ConfigMixin, VideoTokenizerABC):
         else:
             raise ValueError(f"model_type {model_type} not supported")
 
-        if 'patch_length' in ddconfig:
-            self._temporal_downsample_factor = ddconfig['patch_length']
+        if "patch_length" in ddconfig:
+            self._temporal_downsample_factor = ddconfig["patch_length"]
         else:
             self._temporal_downsample_factor = 1
 
-        if 'patch_size' in ddconfig:
-            self._spatial_downsample_factor = ddconfig['patch_size']
+        if "patch_size" in ddconfig:
+            self._spatial_downsample_factor = ddconfig["patch_size"]
         else:
             self._spatial_downsample_factor = 8
 
@@ -351,11 +351,11 @@ class AutoModel:
 
     @classmethod
     def from_pretrained(cls, pretrained_model_name_or_path, *args, **kwargs) -> VideoTokenizerABC:
-        config = os.path.join(pretrained_model_name_or_path, 'config.json')
+        config = os.path.join(pretrained_model_name_or_path, "config.json")
         if not os.path.exists(config):
             raise ValueError("Can't find a model config file at {}.".format(config))
         # Load config
-        with open(config, 'r') as json_file:
+        with open(config, "r") as json_file:
             config_dict = json.load(json_file)
-        assert config_dict['_class_name'] == 'ViTVAE'
+        assert config_dict["_class_name"] == "ViTVAE"
         return ViTVAE.from_pretrained(pretrained_model_name_or_path, *args, **kwargs)

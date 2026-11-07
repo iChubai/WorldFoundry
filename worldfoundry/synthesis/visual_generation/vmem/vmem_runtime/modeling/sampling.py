@@ -29,24 +29,17 @@ def get_camera_dist(
             ).clamp(-1, 1)
         ) * (180 / torch.pi)
     elif mode == "translation":
-        dists = torch.norm(
-            source_c2ws[:, None, :3, 3] - target_c2ws[None, :, :3, 3], dim=-1
-        )
+        dists = torch.norm(source_c2ws[:, None, :3, 3] - target_c2ws[None, :, :3, 3], dim=-1)
     else:
-        raise NotImplementedError(
-            f"Mode {mode} is not implemented for finding nearest source indices."
-        )
+        raise NotImplementedError(f"Mode {mode} is not implemented for finding nearest source indices.")
     return dists
-
 
 
 def append_dims(x: torch.Tensor, target_dims: int) -> torch.Tensor:
     """Appends dimensions to the end of a tensor until it has target_dims dimensions."""
     dims_to_append = target_dims - x.ndim
     if dims_to_append < 0:
-        raise ValueError(
-            f"input has {x.ndim} dims but target_dims is {target_dims}, which is less"
-        )
+        raise ValueError(f"input has {x.ndim} dims but target_dims is {target_dims}, which is less")
     return x[(...,) + (None,) * dims_to_append]
 
 
@@ -58,28 +51,17 @@ def to_d(x: torch.Tensor, sigma: torch.Tensor, denoised: torch.Tensor) -> torch.
     return (x - denoised) / append_dims(sigma, x.ndim)
 
 
-def make_betas(
-    num_timesteps: int, linear_start: float = 1e-4, linear_end: float = 2e-2
-) -> np.ndarray:
-    betas = (
-        torch.linspace(
-            linear_start**0.5, linear_end**0.5, num_timesteps, dtype=torch.float64
-        )
-        ** 2
-    )
+def make_betas(num_timesteps: int, linear_start: float = 1e-4, linear_end: float = 2e-2) -> np.ndarray:
+    betas = torch.linspace(linear_start**0.5, linear_end**0.5, num_timesteps, dtype=torch.float64) ** 2
     return betas.numpy()
 
 
-def generate_roughly_equally_spaced_steps(
-    num_substeps: int, max_step: int
-) -> np.ndarray:
+def generate_roughly_equally_spaced_steps(num_substeps: int, max_step: int) -> np.ndarray:
     return np.linspace(max_step - 1, 0, num_substeps, endpoint=False).astype(int)[::-1]
 
 
 class EpsScaling(object):
-    def __call__(
-        self, sigma: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def __call__(self, sigma: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         c_skip = torch.ones_like(sigma, device=sigma.device)
         c_out = -sigma
         c_in = 1 / (sigma**2 + 1.0) ** 0.5
@@ -119,9 +101,7 @@ class DDPMDiscretization(object):
         sigmas = ((1 - alphas_cumprod) / alphas_cumprod) ** 0.5
         if self.log_snr_shift is not None:
             sigmas = sigmas * np.exp(self.log_snr_shift)
-        return torch.flip(
-            torch.tensor(sigmas, dtype=torch.float32, device=device), (0,)
-        )
+        return torch.flip(torch.tensor(sigmas, dtype=torch.float32, device=device), (0,))
 
     def __call__(
         self,
@@ -152,9 +132,7 @@ class DiscreteDenoiser(object):
         self.register_sigmas()
 
     def register_sigmas(self):
-        self.sigmas = self.discretization(
-            self.num_idx, do_append_zero=False, flip=True, device=self.device
-        )
+        self.sigmas = self.discretization(self.num_idx, do_append_zero=False, flip=True, device=self.device)
 
     def sigma_to_idx(self, sigma: torch.Tensor) -> torch.Tensor:
         dists = sigma - self.sigmas[:, None]
@@ -178,12 +156,9 @@ class DiscreteDenoiser(object):
         c_noise = self.sigma_to_idx(c_noise.reshape(sigma_shape))
         if "replace" in cond:
             x, mask = cond.get("replace").split((input.shape[1], 1), dim=1)
-        
+
             input = input * (1 - mask) + x * mask
-        return (
-            network(input * c_in, c_noise, cond, **additional_model_inputs) * c_out
-            + input * c_skip
-        )
+        return network(input * c_in, c_noise, cond, **additional_model_inputs) * c_out + input * c_skip
 
 
 class ConstantScaleRule(object):
@@ -204,12 +179,8 @@ class MultiviewScaleRule(object):
     ) -> torch.Tensor:
         c2w_input = c2w[input_frame_mask]
         rotation_diff = get_camera_dist(c2w, c2w_input, mode="rotation").min(-1).values
-        translation_diff = (
-            get_camera_dist(c2w, c2w_input, mode="translation").min(-1).values
-        )
-        K_diff = (
-            ((K[:, None] - K[input_frame_mask][None]).flatten(-2) == 0).all(-1).any(-1)
-        )
+        translation_diff = get_camera_dist(c2w, c2w_input, mode="translation").min(-1).values
+        K_diff = ((K[:, None] - K[input_frame_mask][None]).flatten(-2) == 0).all(-1).any(-1)
         close_frame = (rotation_diff < 10.0) & (translation_diff < 1e-5) & K_diff
         if isinstance(scale, torch.Tensor):
             scale = scale.clone()
@@ -304,9 +275,7 @@ class MultiviewTemporalCFG(MultiviewCFG):
         super().__init__(cfg_min=cfg_min)
 
         self.num_frames = num_frames
-        distance_matrix = (
-            torch.arange(num_frames)[None] - torch.arange(num_frames)[:, None]
-        ).abs()
+        distance_matrix = (torch.arange(num_frames)[None] - torch.arange(num_frames)[:, None]).abs()
         self.distance_matrix = distance_matrix
 
     def __call__(
@@ -318,13 +287,10 @@ class MultiviewTemporalCFG(MultiviewCFG):
         K: torch.Tensor,
         input_frame_mask: torch.Tensor,
     ) -> torch.Tensor:
-        input_frame_mask = rearrange(
-            input_frame_mask, "(b t) ... -> b t ...", t=self.num_frames
-        )
-        min_distance = (
-            self.distance_matrix[None].to(x.device)
-            + (~input_frame_mask[:, None]) * self.num_frames
-        ).min(-1)[0]
+        input_frame_mask = rearrange(input_frame_mask, "(b t) ... -> b t ...", t=self.num_frames)
+        min_distance = (self.distance_matrix[None].to(x.device) + (~input_frame_mask[:, None]) * self.num_frames).min(
+            -1
+        )[0]
         min_distance = min_distance / min_distance.max(-1, keepdim=True)[0].clamp(min=1)
         scale = min_distance * (scale - self.scale_min) + self.scale_min
         scale = rearrange(scale, "b t ... -> (b t) ...")
@@ -420,11 +386,7 @@ class EulerEDMSampler(object):
             num_steps,
         )
         for i in self.get_sigma_gen(num_sigmas, verbose=verbose):
-            gamma = (
-                min(self.s_churn / (num_sigmas - 1), 2**0.5 - 1)
-                if self.s_tmin <= sigmas[i] <= self.s_tmax
-                else 0.0
-            )
+            gamma = min(self.s_churn / (num_sigmas - 1), 2**0.5 - 1) if self.s_tmin <= sigmas[i] <= self.s_tmax else 0.0
             x = self.sampler_step(
                 s_in * sigmas[i],
                 s_in * sigmas[i + 1],
@@ -443,9 +405,9 @@ def create_samplers(
     guider_types: Union[int, list[int]],
     discretization,
     num_frames: Union[list[int], None],
-    num_steps: int=50,
+    num_steps: int = 50,
     cfg_min: float = 1.2,
-    device: Union[str, torch.device] = "cuda"
+    device: Union[str, torch.device] = "cuda",
 ):
     guider_mapping = {
         0: VanillaCFG,
@@ -457,9 +419,7 @@ def create_samplers(
         guider_types = [guider_types]
     for i, guider_type in enumerate(guider_types):
         if guider_type not in guider_mapping:
-            raise ValueError(
-                f"Invalid guider type {guider_type}. Must be one of {list(guider_mapping.keys())}"
-            )
+            raise ValueError(f"Invalid guider type {guider_type}. Must be one of {list(guider_mapping.keys())}")
         guider_cls = guider_mapping[guider_type]
         guider_args = ()
         if guider_type > 0:

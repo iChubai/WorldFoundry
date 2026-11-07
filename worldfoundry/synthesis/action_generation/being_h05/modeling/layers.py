@@ -16,6 +16,7 @@ class ProprioProjector(nn.Module):
     """
     Projects proprio state inputs into the LLM's embedding space.
     """
+
     def __init__(self, llm_dim: int, max_state_dim: int) -> None:
         super().__init__()
         self.llm_dim = llm_dim
@@ -60,6 +61,7 @@ class SinusoidalPositionalEncoding(nn.Module):
         emb = torch.cat((emb.sin(), emb.cos()), dim=-1)  # shape: (batch_size, D)
         return emb
 
+
 class FlowMatchingHead(nn.Module):
     def __init__(self, condition_dim: int, action_dim: int, hidden_dim: int):
         super().__init__()
@@ -77,7 +79,7 @@ class FlowMatchingHead(nn.Module):
             nn.ReLU(),  # Apply activation immediately after fusion
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, action_dim)
+            nn.Linear(hidden_dim, action_dim),
         )
 
         # (Optional but recommended) Add layer normalization after fusion to stabilize training
@@ -105,8 +107,10 @@ class FlowMatchingHead(nn.Module):
 
         return predicted_velocity
 
+
 class MLPResNetBlock(nn.Module):
     """One MLP ResNet block with a residual connection."""
+
     def __init__(self, dim):
         super().__init__()
         self.dim = dim
@@ -128,6 +132,7 @@ class MLPResNetBlock(nn.Module):
 
 class MLPResNet(nn.Module):
     """MLP with residual connection blocks."""
+
     def __init__(self, num_blocks, input_dim, hidden_dim, output_dim):
         super().__init__()
         self.layer_norm1 = nn.LayerNorm(input_dim)
@@ -159,7 +164,7 @@ class InternVLConnector(nn.Module):
             nn.LayerNorm(vit_hidden_size * int(1 / self.downsample_ratio) ** 2),
             nn.Linear(vit_hidden_size * int(1 / self.downsample_ratio) ** 2, llm_hidden_size),
             nn.GELU(),
-            nn.Linear(llm_hidden_size, llm_hidden_size)
+            nn.Linear(llm_hidden_size, llm_hidden_size),
         )
 
     def init_weights(self, state_dict, logger):
@@ -174,7 +179,6 @@ class InternVLConnector(nn.Module):
 
     def forward(self, x):
         return self.mlp1(x)
-
 
 
 def swish(x):
@@ -207,6 +211,7 @@ class SinusoidalPositionalEncoding(nn.Module):
         enc = torch.cat([sin, cos], dim=-1)
 
         return enc
+
 
 class CategorySpecificLinear(nn.Module):
     def __init__(self, num_categories, input_dim, hidden_dim):
@@ -288,6 +293,7 @@ class SimpleMLP(nn.Module):
     A simple two-layer MLP using standard torch.nn.Linear layers.
     This is the standard version of CategorySpecificMLP.
     """
+
     def __init__(self, input_dim, hidden_dim, output_dim):
         super().__init__()
         # Use standard linear layers where all inputs share the same weights
@@ -311,6 +317,7 @@ class ActionEncoder(nn.Module):
     """
     Action encoder for Flow Matching.
     """
+
     def __init__(self, action_dim, hidden_size):
         super().__init__()
         self.hidden_size = hidden_size
@@ -400,6 +407,7 @@ class ActionEncoder(nn.Module):
 # MPG: Manifold-Preserving Gating Enhancement Module
 # =============================================================================
 
+
 class SlicedWassersteinDistance(nn.Module):
     """
     Compute Sliced Wasserstein-2 distance between two distributions.
@@ -455,12 +463,7 @@ class SlicedWassersteinDistance(nn.Module):
 
         for k in range(self.num_projections):
             # Generate random unit direction theta_k
-            direction = torch.randn(
-                feature_dim,
-                device=device,
-                dtype=dtype,
-                generator=generator
-            )
+            direction = torch.randn(feature_dim, device=device, dtype=dtype, generator=generator)
             direction = direction / torch.norm(direction)  # Normalize to unit vector
 
             # Project features onto direction: x*theta, y*theta
@@ -632,7 +635,7 @@ class MPGEnhancement(nn.Module):
             return obs_features
 
         # 1. Project features to common embedding space
-        obs_emb = self.obs_proj(obs_features)        # (B_obs, T_obs, D)
+        obs_emb = self.obs_proj(obs_features)  # (B_obs, T_obs, D)
         action_emb = self.action_proj(action_features)  # (B_act, T_act, D)
 
         # 2. Handle batch dimension mismatch
@@ -643,7 +646,7 @@ class MPGEnhancement(nn.Module):
 
         # 3. Apply LayerNorm for scale-invariant Wasserstein computation
         # This ensures transport cost stays bounded (~1.0) regardless of feature magnitude
-        obs_emb_norm = self.obs_layer_norm(obs_emb)        # (B, T_obs, D)
+        obs_emb_norm = self.obs_layer_norm(obs_emb)  # (B, T_obs, D)
         action_emb_norm = self.action_layer_norm(action_emb)  # (B, T_act, D)
 
         # 4. Pool action features and align with observation sequence
@@ -685,11 +688,11 @@ class MPGEnhancement(nn.Module):
     def extra_repr(self) -> str:
         """String representation for debugging."""
         return (
-            f'obs_feature_dim={self.obs_feature_dim}, '
-            f'action_feature_dim={self.action_feature_dim}, '
-            f'embedding_dim={self.embedding_dim}, '
-            f'num_projections={self.num_projections}, '
-            f'lambda_strength={self.lambda_strength}, '
-            f'use_stop_gradient={self.use_stop_gradient}, '
-            f'gate_temperature={self.gate_temperature}'
+            f"obs_feature_dim={self.obs_feature_dim}, "
+            f"action_feature_dim={self.action_feature_dim}, "
+            f"embedding_dim={self.embedding_dim}, "
+            f"num_projections={self.num_projections}, "
+            f"lambda_strength={self.lambda_strength}, "
+            f"use_stop_gradient={self.use_stop_gradient}, "
+            f"gate_temperature={self.gate_temperature}"
         )

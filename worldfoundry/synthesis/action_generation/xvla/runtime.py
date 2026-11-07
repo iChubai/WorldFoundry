@@ -191,15 +191,12 @@ class XVLARuntime:
             raise ValueError(f"X-VLA runtime expects one proprio vector, got {tuple(proprio.shape)}")
         if int(proprio.shape[-1]) != expected_proprio:
             raise ValueError(
-                f"X-VLA {model.action_mode} expects {expected_proprio} proprio values, "
-                f"got {proprio.shape[-1]}"
+                f"X-VLA {model.action_mode} expects {expected_proprio} proprio values, got {proprio.shape[-1]}"
             )
 
         domain_id = int(self.config.domain_id)
         if domain_id < 0 or domain_id >= int(model.config.num_domains):
-            raise ValueError(
-                f"domain_id must be in [0, {model.config.num_domains}), got {domain_id}"
-            )
+            raise ValueError(f"domain_id must be in [0, {model.config.num_domains}), got {domain_id}")
         model_inputs: dict[str, torch.Tensor] = {}
         for key, value in inputs.items():
             if value.is_floating_point():
@@ -212,10 +209,14 @@ class XVLARuntime:
 
         set_seed_everywhere(int(self.config.seed))
         with torch.inference_mode():
-            action = model.generate_actions(
-                **model_inputs,
-                steps=int(self.config.denoising_steps),
-            )[0].float().cpu()
+            action = (
+                model.generate_actions(
+                    **model_inputs,
+                    steps=int(self.config.denoising_steps),
+                )[0]
+                .float()
+                .cpu()
+            )
         return completed_action_result(
             model_id="xvla",
             instruction=instruction,

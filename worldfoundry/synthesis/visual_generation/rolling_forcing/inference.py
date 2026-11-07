@@ -57,9 +57,7 @@ def _extended_prompts(path: str | Path | None, count: int) -> list[str | None]:
         return [None] * count
     values = _read_prompts(path)
     if len(values) != count:
-        raise ValueError(
-            f"Extended prompt count ({len(values)}) must match prompt count ({count})."
-        )
+        raise ValueError(f"Extended prompt count ({len(values)}) must match prompt count ({count}).")
     return values
 
 
@@ -108,9 +106,7 @@ def _distributed_device(seed: int) -> tuple[torch.device, int, int]:
 def main() -> None:
     args = _parser().parse_args()
     if args.wan_models_root:
-        os.environ["WORLDFOUNDRY_WAN_MODELS_ROOT"] = str(
-            Path(args.wan_models_root).expanduser().resolve()
-        )
+        os.environ["WORLDFOUNDRY_WAN_MODELS_ROOT"] = str(Path(args.wan_models_root).expanduser().resolve())
     import torch
     import torch.distributed as dist
     from einops import rearrange
@@ -126,9 +122,7 @@ def main() -> None:
     )
 
     if args.i2v:
-        raise ValueError(
-            "The public RollingForcing checkpoint and official runner support text-to-video only."
-        )
+        raise ValueError("The public RollingForcing checkpoint and official runner support text-to-video only.")
     if args.num_samples < 1:
         raise ValueError("num_samples must be positive.")
 
@@ -144,9 +138,7 @@ def main() -> None:
     config = OmegaConf.merge(OmegaConf.load(default_path), OmegaConf.load(config_path))
     block_size = int(config.num_frame_per_block)
     if args.num_output_frames < block_size or args.num_output_frames % block_size:
-        raise ValueError(
-            f"num_output_frames must be a positive multiple of num_frame_per_block={block_size}."
-        )
+        raise ValueError(f"num_output_frames must be a positive multiple of num_frame_per_block={block_size}.")
 
     pipeline = CausalInferencePipeline(config, device=device)
     checkpoint_path = Path(args.checkpoint_path).expanduser().resolve()

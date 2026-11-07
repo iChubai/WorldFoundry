@@ -164,9 +164,7 @@ class DiffLoss_FM(nn.Module):
 
         # Denoising loop
         samples = noise.to(z.dtype)
-        progress_bar = (
-            tqdm(timesteps, desc=f"Vit diffusion with cfg={cfg}") if verbose else None
-        )
+        progress_bar = tqdm(timesteps, desc=f"Vit diffusion with cfg={cfg}") if verbose else None
         for i, t in enumerate(timesteps):
             timestep = t.unsqueeze(0).to(dtype=z.dtype, device=device)
 
@@ -258,8 +256,8 @@ class ResBlock(nn.Module):
 
         self.in_ln = nn.LayerNorm(channels, eps=1e-6)
 
-        USE_MLP_NORM = os.environ.get('USE_MLP_NORM_IN_RESBLOCK_OF_FM', 'False').lower()
-        if USE_MLP_NORM in ('true', '1'):
+        USE_MLP_NORM = os.environ.get("USE_MLP_NORM_IN_RESBLOCK_OF_FM", "False").lower()
+        if USE_MLP_NORM in ("true", "1"):
             self.mlp = nn.Sequential(
                 nn.Linear(channels, channels, bias=True),
                 nn.LayerNorm(channels, eps=1e-6),
@@ -452,9 +450,7 @@ class SimpleMLPAdaLN(nn.Module):
 
         eps, rest = model_out[:, : self.in_channels], model_out[:, self.in_channels :]
         cond_eps, uncond_eps, imgcond_eps = torch.split(eps, len(eps) // 3, dim=0)
-        part_eps = uncond_eps + \
-            img_cfg_scale * (imgcond_eps - uncond_eps) + \
-            txt_cfg_scale * (cond_eps - imgcond_eps)
+        part_eps = uncond_eps + img_cfg_scale * (imgcond_eps - uncond_eps) + txt_cfg_scale * (cond_eps - imgcond_eps)
 
         eps = torch.cat([part_eps, part_eps, part_eps], dim=0)
         return torch.cat([eps, rest], dim=1)

@@ -5,14 +5,10 @@ from transformers import AutoModelForImageTextToText, AutoProcessor
 
 
 class PromptRewriter:
-    def __init__(self, model_path: str, dtype="auto",device_map="auto"):
+    def __init__(self, model_path: str, dtype="auto", device_map="auto"):
         print("Loading VLM from:", model_path)
 
-        self.model = AutoModelForImageTextToText.from_pretrained(
-            model_path,
-            dtype="auto",
-            device_map="auto"
-        )
+        self.model = AutoModelForImageTextToText.from_pretrained(model_path, dtype="auto", device_map="auto")
         self.processor = AutoProcessor.from_pretrained(model_path)
         self.processor.tokenizer.padding_side = "left"
 
@@ -45,8 +41,7 @@ class PromptRewriter:
             """
 
         self.instruction_alignment = (
-            "\n\nBelow is the user-provided short prompt. "
-            "Expand it according to the style and guidance above:\n"
+            "\n\nBelow is the user-provided short prompt. Expand it according to the style and guidance above:\n"
         )
 
     def load_image(self, image_path: str, max_size=None):
@@ -75,7 +70,6 @@ class PromptRewriter:
         max_new_tokens: int = 1024,
         max_image_size: int | None = None,
     ) -> str:
-
         text = self.prompt_alignment + self.instruction_alignment + user_prompt
 
         if image_path is None or image_path == "":
@@ -103,28 +97,15 @@ class PromptRewriter:
             # print(f"[Mode] Multimodal prompt expansion, image={image_path}")
 
         inputs = self.processor.apply_chat_template(
-            messages,
-            tokenize=True,
-            add_generation_prompt=True,
-            return_dict=True,
-            return_tensors="pt",
-            padding=True
+            messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt", padding=True
         ).to(self.model.device)
 
-        generated_ids = self.model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens
-        )
+        generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
 
-        generated_ids_trimmed = [
-            out_ids[len(in_ids):]
-            for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-        ]
+        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
 
         output_text = self.processor.batch_decode(
-            generated_ids_trimmed,
-            skip_special_tokens=True,
-            clean_up_tokenization_spaces=False
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )[0]
 
         return output_text.strip()

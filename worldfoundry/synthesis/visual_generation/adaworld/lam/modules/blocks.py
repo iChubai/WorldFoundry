@@ -11,7 +11,7 @@ from torch import Tensor
 
 def patchify(videos: Tensor, size: int) -> Tensor:
     B, T, H, W, C = videos.shape
-    videos = videos[:, :, :H - (H % size), :W - (W % size), :]
+    videos = videos[:, :, : H - (H % size), : W - (W % size), :]
     x = rearrange(videos, "b t (hn hp) (wn wp) c -> b t (hn wn) (hp wp c)", hp=size, wp=size)
     return x
 
@@ -35,34 +35,27 @@ class PositionalEncoding(nn.Module):
         self.pos_enc = pe
 
     def forward(self, x: Tensor) -> Tensor:
-        return x + self.pos_enc[:x.shape[2]].cuda()
+        return x + self.pos_enc[: x.shape[2]].cuda()
 
 
 class SelfAttention(nn.Module):
     def __init__(self, model_dim: int, num_heads: int, dropout: float = 0.0, rot_emb: bool = False) -> None:
         super(SelfAttention, self).__init__()
         inner_dim = model_dim // num_heads
-        self.scale = inner_dim ** -0.5
+        self.scale = inner_dim**-0.5
         self.heads = num_heads
 
         self.to_q = nn.Linear(model_dim, model_dim, bias=False)
         self.to_k = nn.Linear(model_dim, model_dim, bias=False)
         self.to_v = nn.Linear(model_dim, model_dim, bias=False)
-        self.to_out = nn.Sequential(
-            nn.Linear(model_dim, model_dim),
-            nn.Dropout(dropout)
-        )
+        self.to_out = nn.Sequential(nn.Linear(model_dim, model_dim), nn.Dropout(dropout))
 
         self.rot_emb = rot_emb
         if rot_emb:
             self.rotary_embedding = RotaryEmbedding(dim=inner_dim)
 
     def scaled_dot_product_attention(
-            self,
-            query: Tensor,
-            key: Tensor,
-            value: Tensor,
-            is_causal: bool = False
+        self, query: Tensor, key: Tensor, value: Tensor, is_causal: bool = False
     ) -> Tensor:
         L, S = query.shape[-2], key.shape[-2]
         attn_bias = torch.zeros(L, S, dtype=query.dtype).to(query)
@@ -95,10 +88,7 @@ class SpatioBlock(nn.Module):
         super(SpatioBlock, self).__init__()
         self.spatial_attn = SelfAttention(model_dim, num_heads, dropout=dropout)
         self.ffn = nn.Sequential(
-            nn.Linear(model_dim, model_dim * 4),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(model_dim * 4, model_dim)
+            nn.Linear(model_dim, model_dim * 4), nn.GELU(), nn.Dropout(dropout), nn.Linear(model_dim * 4, model_dim)
         )
 
         self.norm1 = nn.LayerNorm(model_dim)
@@ -127,10 +117,7 @@ class SpatioTemporalBlock(nn.Module):
         self.spatial_attn = SelfAttention(model_dim, num_heads, dropout=dropout)
         self.temporal_attn = SelfAttention(model_dim, num_heads, dropout=dropout, rot_emb=True)
         self.ffn = nn.Sequential(
-            nn.Linear(model_dim, model_dim * 4),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(model_dim * 4, model_dim)
+            nn.Linear(model_dim, model_dim * 4), nn.GELU(), nn.Dropout(dropout), nn.Linear(model_dim * 4, model_dim)
         )
 
         self.norm1 = nn.LayerNorm(model_dim)
@@ -166,30 +153,12 @@ class SpatioTemporalBlock(nn.Module):
 
 class SpatioTransformer(nn.Module):
     def __init__(
-            self,
-            in_dim: int,
-            model_dim: int,
-            out_dim: int,
-            num_blocks: int,
-            num_heads: int,
-            dropout: float = 0.0
+        self, in_dim: int, model_dim: int, out_dim: int, num_blocks: int, num_heads: int, dropout: float = 0.0
     ) -> None:
         super(SpatioTransformer, self).__init__()
-        self.ffn = nn.Sequential(
-            nn.LayerNorm(in_dim),
-            nn.Linear(in_dim, model_dim),
-            nn.LayerNorm(model_dim)
-        )
+        self.ffn = nn.Sequential(nn.LayerNorm(in_dim), nn.Linear(in_dim, model_dim), nn.LayerNorm(model_dim))
         self.pos_enc = PositionalEncoding(model_dim)
-        self.transformer_blocks = nn.ModuleList(
-            [
-                SpatioBlock(
-                    model_dim,
-                    num_heads,
-                    dropout
-                ) for _ in range(num_blocks)
-            ]
-        )
+        self.transformer_blocks = nn.ModuleList([SpatioBlock(model_dim, num_heads, dropout) for _ in range(num_blocks)])
         self.out = nn.Linear(model_dim, out_dim)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -203,30 +172,20 @@ class SpatioTransformer(nn.Module):
 
 class SpatioTemporalTransformer(nn.Module):
     def __init__(
-            self,
-            in_dim: int,
-            model_dim: int,
-            out_dim: int,
-            num_blocks: int,
-            num_heads: int,
-            dropout: float = 0.0,
-            causal_temporal: bool = False
+        self,
+        in_dim: int,
+        model_dim: int,
+        out_dim: int,
+        num_blocks: int,
+        num_heads: int,
+        dropout: float = 0.0,
+        causal_temporal: bool = False,
     ) -> None:
         super(SpatioTemporalTransformer, self).__init__()
-        self.ffn = nn.Sequential(
-            nn.LayerNorm(in_dim),
-            nn.Linear(in_dim, model_dim),
-            nn.LayerNorm(model_dim)
-        )
+        self.ffn = nn.Sequential(nn.LayerNorm(in_dim), nn.Linear(in_dim, model_dim), nn.LayerNorm(model_dim))
         self.pos_enc = PositionalEncoding(model_dim)
         self.transformer_blocks = nn.ModuleList(
-            [
-                SpatioTemporalBlock(
-                    model_dim,
-                    num_heads,
-                    dropout
-                ) for _ in range(num_blocks)
-            ]
+            [SpatioTemporalBlock(model_dim, num_heads, dropout) for _ in range(num_blocks)]
         )
         self.out = nn.Linear(model_dim, out_dim)
         self.causal_temporal = causal_temporal

@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Conversion script for the Stable Diffusion checkpoints."""
+"""Conversion script for the Stable Diffusion checkpoints."""
 
 import re
 from io import BytesIO
@@ -56,13 +56,11 @@ def _local_clip_text_model_path():
     for name in ("openai--clip-vit-large-patch14", "clip-vit-large-patch14"):
         candidate = root / name
         if (candidate / "config.json").is_file() and any(
-            (candidate / filename).is_file()
-            for filename in ("model.safetensors", "pytorch_model.bin")
+            (candidate / filename).is_file() for filename in ("model.safetensors", "pytorch_model.bin")
         ):
             return candidate.resolve()
     raise FileNotFoundError(
-        "AnimateDiff requires openai/clip-vit-large-patch14 under "
-        "$WORLDFOUNDRY_CKPT_DIR/openai--clip-vit-large-patch14"
+        "AnimateDiff requires openai/clip-vit-large-patch14 under $WORLDFOUNDRY_CKPT_DIR/openai--clip-vit-large-patch14"
     )
 
 
@@ -444,9 +442,7 @@ def convert_ldm_unet_checkpoint(checkpoint, config, path=None, extract_ema=False
 
         paths = renew_resnet_paths(resnets)
         meta_path = {"old": f"input_blocks.{i}.0", "new": f"down_blocks.{block_id}.resnets.{layer_in_block_id}"}
-        assign_to_checkpoint(
-            paths, new_checkpoint, unet_state_dict, additional_replacements=[meta_path], config=config
-        )
+        assign_to_checkpoint(paths, new_checkpoint, unet_state_dict, additional_replacements=[meta_path], config=config)
 
         if len(attentions):
             paths = renew_attention_paths(attentions)

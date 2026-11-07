@@ -10,7 +10,7 @@ from .io import PathOrStr, read_file
 from .modeling.model import ModelBase
 
 
-def get_model_types() -> Dict[str, Type['BaseModelConfig']]:
+def get_model_types() -> Dict[str, Type["BaseModelConfig"]]:
     """Return the action-policy model types supported by this inference runtime."""
     # Imported lazily to avoid the BaseModelConfig/MolmoBotConfig cycle.
     from .modeling.molmobot import MolmoBotConfig
@@ -54,12 +54,7 @@ class BaseModelConfig(BaseConfig):
         """
         raise NotImplementedError()
 
-    def build_collator(
-        self,
-        shapes_to_pad_to,
-        pad_mode: str,
-        include_metadata=True
-    ) -> Callable[[List[Dict]], Dict]:
+    def build_collator(self, shapes_to_pad_to, pad_mode: str, include_metadata=True) -> Callable[[List[Dict]], Dict]:
         """
         Build a collator to build batches from preprocessed examples,
 
@@ -87,8 +82,8 @@ class BaseModelConfig(BaseConfig):
         overrides: Optional[List[str]] = None,
         key: Optional[str] = None,
         validate_paths: bool = True,
-        override_model_name: Optional[str] = None
-    ) -> 'BaseModelConfig':
+        override_model_name: Optional[str] = None,
+    ) -> "BaseModelConfig":
         """Load only the model section needed by the in-tree inference runtime."""
         del validate_paths
         raw = om.create(read_file(path))

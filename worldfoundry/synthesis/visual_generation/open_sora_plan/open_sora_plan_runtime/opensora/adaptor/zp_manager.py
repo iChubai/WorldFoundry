@@ -5,8 +5,8 @@ import torch.distributed as dist
 
 class ZPManager(object):
     def __init__(self, zp_size=8):
-        self.rank = int(os.getenv('RANK', '0'))
-        self.world_size = int(os.getenv("WORLD_SIZE", '1'))
+        self.rank = int(os.getenv("RANK", "0"))
+        self.world_size = int(os.getenv("WORLD_SIZE", "1"))
         self.zp_size = zp_size
         self.zp_group = None
         self.zp_rank = None

@@ -612,14 +612,18 @@ class WanVideoDiT(torch.nn.Module):
         f_rope = f_freqs[frame_positions.long()].view(num_frames, 1, 1, -1)
         h_rope = h_freqs[:grid_h].view(1, grid_h, 1, -1)
         w_rope = w_freqs[:grid_w].view(1, 1, grid_w, -1)
-        freqs = torch.cat(
-            (
-                f_rope.expand(-1, grid_h, grid_w, -1),
-                h_rope.expand(num_frames, -1, grid_w, -1),
-                w_rope.expand(num_frames, grid_h, -1, -1),
-            ),
-            dim=-1,
-        ).reshape(num_frames * grid_h * grid_w, 1, -1).to(x.device)
+        freqs = (
+            torch.cat(
+                (
+                    f_rope.expand(-1, grid_h, grid_w, -1),
+                    h_rope.expand(num_frames, -1, grid_w, -1),
+                    w_rope.expand(num_frames, grid_h, -1, -1),
+                ),
+                dim=-1,
+            )
+            .reshape(num_frames * grid_h * grid_w, 1, -1)
+            .to(x.device)
+        )
         tokens = rearrange(x, "b c f h w -> b (f h w) c")
         return {
             "tokens": tokens,

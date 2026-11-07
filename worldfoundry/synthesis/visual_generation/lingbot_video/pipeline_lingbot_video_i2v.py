@@ -130,9 +130,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
             latents = self.vae.encode(norm_pixel).latent_dist.sample(generator)
 
         mean = torch.tensor(self.vae.config.latents_mean, device=latents.device, dtype=torch.float32)
-        std_inv = 1.0 / torch.tensor(
-            self.vae.config.latents_std, device=latents.device, dtype=torch.float32
-        )
+        std_inv = 1.0 / torch.tensor(self.vae.config.latents_std, device=latents.device, dtype=torch.float32)
         mean = mean.view(1, -1, 1, 1, 1)
         std_inv = std_inv.view(1, -1, 1, 1, 1)
         return (latents.float() - mean) * std_inv
@@ -188,9 +186,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
             cfg_parallel_rank = dist.get_rank(cfg_parallel_group)
             cfg_parallel_world_size = dist.get_world_size(cfg_parallel_group)
             if cfg_parallel_world_size != 2:
-                raise ValueError(
-                    f"CFG parallel currently requires exactly 2 ranks, got {cfg_parallel_world_size}."
-                )
+                raise ValueError(f"CFG parallel currently requires exactly 2 ranks, got {cfg_parallel_world_size}.")
 
         pixel = image_tensor if image_tensor is not None else self.preprocess_image(image, height, width)
         pixel = pixel.to(device=device, dtype=torch.float32)
@@ -203,9 +199,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
             prompt_mask = prompt_mask.to(device=device)
         if negative_prompt_embeds is not None:
             if negative_prompt_mask is None:
-                raise ValueError(
-                    "`negative_prompt_mask` is required when `negative_prompt_embeds` is provided."
-                )
+                raise ValueError("`negative_prompt_mask` is required when `negative_prompt_embeds` is provided.")
             negative_prompt_embeds = negative_prompt_embeds.to(device=device)
             negative_prompt_mask = negative_prompt_mask.to(device=device)
 
@@ -213,9 +207,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
             if negative_prompt_embeds is not None:
                 negative_embeds, negative_mask = negative_prompt_embeds, negative_prompt_mask
             else:
-                negative_embeds, negative_mask = self.encode_prompt(
-                    negative_prompt, images=[vlm_image], device=device
-                )
+                negative_embeds, negative_mask = self.encode_prompt(negative_prompt, images=[vlm_image], device=device)
             prompt_embeds = prompt_mask = None
         else:
             if prompt_embeds is None:
@@ -294,9 +286,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
                             return_dict=False,
                         )[0].float()
                     noise_pred, noise_pred_uncond = noise_batched.chunk(2, dim=0)
-                    noise_pred = noise_pred_uncond + guidance_scale * (
-                        noise_pred - noise_pred_uncond
-                    )
+                    noise_pred = noise_pred_uncond + guidance_scale * (noise_pred - noise_pred_uncond)
                 else:
                     with _transformer_autocast(device, transformer_dtype):
                         noise_pred = self.transformer(
@@ -317,9 +307,7 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
                                 encoder_attention_mask=negative_mask,
                                 return_dict=False,
                             )[0].float()
-                        noise_pred = noise_pred_uncond + guidance_scale * (
-                            noise_pred - noise_pred_uncond
-                        )
+                        noise_pred = noise_pred_uncond + guidance_scale * (noise_pred - noise_pred_uncond)
 
             latents = self.scheduler.step(
                 noise_pred,

@@ -217,9 +217,7 @@ class LDA1BRuntime:
         except TypeError as exc:
             raise RuntimeError("LDA-1B meta loading requires load_state_dict(assign=True)") from exc
         if missing or unexpected:
-            raise RuntimeError(
-                f"LDA-1B checkpoint key mismatch: missing={missing}, unexpected={unexpected}"
-            )
+            raise RuntimeError(f"LDA-1B checkpoint key mismatch: missing={missing}, unexpected={unexpected}")
         model.qwen_vl_interface.model.tie_weights()
         model.qwen_vl_interface.to(device=vlm_device, dtype=vlm_dtype).eval()
         model.action_model.to(device=action_device, dtype=action_dtype).eval()
@@ -273,8 +271,7 @@ class LDA1BRuntime:
             path = root / self.config.statistics_file
         if not path.is_file():
             raise FileNotFoundError(
-                "LDA-1B requires dataset_statistics.json paired with the staged checkpoint: "
-                f"{path}"
+                f"LDA-1B requires dataset_statistics.json paired with the staged checkpoint: {path}"
             )
         payload: Any = json.loads(path.read_text(encoding="utf-8"))
         if self.config.statistics_key:
@@ -302,10 +299,7 @@ class LDA1BRuntime:
             if all(str(part["key"]) in observation for part in parts):
                 value = observation
             elif all(f"state.{part['key']}" in observation for part in parts):
-                value = {
-                    str(part["key"]): observation[f"state.{part['key']}"]
-                    for part in parts
-                }
+                value = {str(part["key"]): observation[f"state.{part['key']}"] for part in parts}
         if value is None:
             raise ValueError("LDA-1B requires robot state/proprio input")
         return value
@@ -395,9 +389,7 @@ class LDA1BRuntime:
             device=self._vlm_device,
             dtype=self._vlm_dtype,
         )
-        vision_pixels = self._vision_processor(images=list(frames), return_tensors="pt")[
-            "pixel_values"
-        ]
+        vision_pixels = self._vision_processor(images=list(frames), return_tensors="pt")["pixel_values"]
         vision_pixels = vision_pixels.reshape(1, 1, steps, *vision_pixels.shape[1:])
         with torch.inference_mode():
             outputs = model.qwen_vl_interface.model(
@@ -510,16 +502,12 @@ def predict_action(
         cache_dir=str(options["cache_dir"]) if options.get("cache_dir") else None,
         revision=str(options["revision"]) if options.get("revision") else None,
         qwen_revision=str(options["qwen_revision"]) if options.get("qwen_revision") else None,
-        vision_revision=(
-            str(options["vision_revision"]) if options.get("vision_revision") else None
-        ),
+        vision_revision=(str(options["vision_revision"]) if options.get("vision_revision") else None),
         statistics_path=str(options["statistics_path"]) if options.get("statistics_path") else None,
         statistics_file=str(options.get("statistics_file") or "dataset_statistics.json"),
         statistics_key=str(options["statistics_key"]) if options.get("statistics_key") else None,
         action_horizon=(
-            option_int(options.get("action_horizon"), 0)
-            if options.get("action_horizon") is not None
-            else None
+            option_int(options.get("action_horizon"), 0) if options.get("action_horizon") is not None else None
         ),
         seed=option_int(options.get("seed"), 42),
         compile_action_model=option_bool(options.get("compile_action_model"), False),

@@ -73,9 +73,7 @@ class PatchEncoder(nn.Module):
     def __call__(self, observations: jnp.ndarray, train: bool = False, cond_var=None):
         expecting_cond_var = self.use_film
         received_cond_var = cond_var is not None
-        assert (
-            expecting_cond_var == received_cond_var
-        ), "Only pass in cond var iff model expecting cond var"
+        assert expecting_cond_var == received_cond_var, "Only pass in cond var iff model expecting cond var"
         x = normalize_images(observations, self.img_norm_type)
         x = nn.Conv(
             features=self.num_features,
@@ -110,9 +108,7 @@ class SmallStem(nn.Module):
     def __call__(self, observations: jnp.ndarray, train: bool = False, cond_var=None):
         expecting_cond_var = self.use_film
         received_cond_var = cond_var is not None
-        assert (
-            expecting_cond_var == received_cond_var
-        ), "Only pass in cond var iff model expecting cond var"
+        assert expecting_cond_var == received_cond_var, "Only pass in cond var iff model expecting cond var"
 
         x = normalize_images(observations, self.img_norm_type)
         for n, (kernel_size, stride, features, padding) in enumerate(
@@ -166,9 +162,7 @@ class ResidualUnit(nn.Module):
             )(residual)
             residual = nn.GroupNorm(name="gn_proj")(residual)
 
-        y = StdConv(
-            features=self.features, kernel_size=(1, 1), use_bias=False, name="conv1"
-        )(x)
+        y = StdConv(features=self.features, kernel_size=(1, 1), use_bias=False, name="conv1")(x)
         y = nn.GroupNorm(name="gn1")(y)
         y = nn.relu(y)
         y = StdConv(
@@ -180,9 +174,7 @@ class ResidualUnit(nn.Module):
         )(y)
         y = nn.GroupNorm(name="gn2")(y)
         y = nn.relu(y)
-        y = StdConv(
-            features=self.features * 4, kernel_size=(1, 1), use_bias=False, name="conv3"
-        )(y)
+        y = StdConv(features=self.features * 4, kernel_size=(1, 1), use_bias=False, name="conv3")(y)
 
         y = nn.GroupNorm(name="gn3", scale_init=nn.initializers.zeros)(y)
         y = nn.relu(residual + y)
@@ -221,9 +213,7 @@ class ViTResnet(nn.Module):
     def __call__(self, observations: jnp.ndarray, train: bool = False, cond_var=None):
         expecting_cond_var = self.use_film
         received_cond_var = cond_var is not None
-        assert (
-            expecting_cond_var == received_cond_var
-        ), "Only pass in cond var iff model expecting cond var"
+        assert expecting_cond_var == received_cond_var, "Only pass in cond var iff model expecting cond var"
 
         x = normalize_images(observations, self.img_norm_type)
         width = int(64 * self.width)
@@ -253,9 +243,7 @@ class ViTResnet(nn.Module):
                     name=f"block{i + 1}",
                 )(x)
                 if self.use_film:
-                    assert (
-                        cond_var is not None
-                    ), "Cond var is None, nothing to condition on"
+                    assert cond_var is not None, "Cond var is None, nothing to condition on"
                     x = FilmConditioning()(x, cond_var)
         else:
             if self.use_film:

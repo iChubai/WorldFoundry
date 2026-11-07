@@ -312,7 +312,7 @@ class TesserActDepthNormal(TesserActDepth):
         )
         # Override the class name for PEFT compatibility
         self.__class__.__name__ = "CogVideoXTransformer3DModel"
-        
+
         inner_dim = num_attention_heads * attention_head_dim
 
         # Redefine Patch embedding

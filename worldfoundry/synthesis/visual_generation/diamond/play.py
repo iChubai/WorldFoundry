@@ -31,16 +31,16 @@ def download(filename: str, pretrained_dir: str | None = None) -> Path:
         )
     local_path = Path(pretrained_dir).expanduser() / filename
     if not local_path.is_file():
-        raise FileNotFoundError(
-            f"DIAMOND local pretrained asset is missing: {local_path.resolve()}"
-        )
+        raise FileNotFoundError(f"DIAMOND local pretrained asset is missing: {local_path.resolve()}")
     return local_path.resolve()
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--pretrained", action="store_true", help="Use a local pretrained world model and agent.")
-    parser.add_argument("--pretrained-game", type=str, default=None, help="Atari game id for non-interactive pretrained mode.")
+    parser.add_argument(
+        "--pretrained-game", type=str, default=None, help="Atari game id for non-interactive pretrained mode."
+    )
     parser.add_argument(
         "--pretrained-dir",
         type=str,
@@ -188,18 +188,7 @@ def run_headless(play_env: PlayEnv, output_path: str, *, num_steps: int, fps: in
     def to_rgb(observation: torch.Tensor) -> np.ndarray:
         if observation.ndim != 4 or observation.size(0) != 1:
             raise ValueError(f"Expected one BCHW observation, got {tuple(observation.shape)}")
-        return (
-            observation[0]
-            .detach()
-            .clamp(-1, 1)
-            .add(1)
-            .div(2)
-            .mul(255)
-            .byte()
-            .permute(1, 2, 0)
-            .cpu()
-            .numpy()
-        )
+        return observation[0].detach().clamp(-1, 1).add(1).div(2).mul(255).byte().permute(1, 2, 0).cpu().numpy()
 
     observation, _ = play_env.reset()
     frames = [to_rgb(observation)]

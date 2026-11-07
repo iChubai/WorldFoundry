@@ -39,7 +39,8 @@ DEFAULT_MATRIX_GAME3_ALIASES = {
 DEFAULT_MATRIX_GAME3_CHECKPOINT_DIR = resolve_hfd_root() / "Skywork--Matrix-Game-3.0"
 DEFAULT_MATRIX_GAME3_ASSET_ROOT = worldfoundry_data_path(
     "models",
-    "runtime", "configs",
+    "runtime",
+    "configs",
     "matrix_game_3",
     "assets",
 )
@@ -247,7 +248,9 @@ class MatrixGame3Runtime:
         show_progress: bool = True,
         **kwargs,
     ):
-        resolved_checkpoint_dir = resolve_checkpoint_dir(checkpoint_dir) if checkpoint_dir is not None else self.checkpoint_dir
+        resolved_checkpoint_dir = (
+            resolve_checkpoint_dir(checkpoint_dir) if checkpoint_dir is not None else self.checkpoint_dir
+        )
         self._ensure_checkpoint_layout(resolved_checkpoint_dir)
 
         output_dir_path = Path(output_dir or tempfile.mkdtemp(prefix="matrix_game3_")).expanduser().resolve()
@@ -292,9 +295,21 @@ class MatrixGame3Runtime:
             "--num_iterations",
             str(int(num_iterations)),
             "--num_inference_steps",
-            str(int(num_inference_steps if num_inference_steps is not None else self.defaults.get("num_inference_steps", 3))),
+            str(
+                int(
+                    num_inference_steps
+                    if num_inference_steps is not None
+                    else self.defaults.get("num_inference_steps", 3)
+                )
+            ),
             "--sample_guide_scale",
-            str(float(sample_guide_scale if sample_guide_scale is not None else self.defaults.get("sample_guide_scale", 5.0))),
+            str(
+                float(
+                    sample_guide_scale
+                    if sample_guide_scale is not None
+                    else self.defaults.get("sample_guide_scale", 5.0)
+                )
+            ),
             "--ulysses_size",
             str(int(ulysses_size if ulysses_size is not None else self.defaults.get("ulysses_size", 1))),
             "--vae_type",
@@ -304,7 +319,12 @@ class MatrixGame3Runtime:
         if resolved_fa_version is not None:
             command.extend(["--fa_version", str(resolved_fa_version)])
         if sample_shift is not None or self.defaults.get("sample_shift") is not None:
-            command.extend(["--sample_shift", str(float(sample_shift if sample_shift is not None else self.defaults["sample_shift"]))])
+            command.extend(
+                [
+                    "--sample_shift",
+                    str(float(sample_shift if sample_shift is not None else self.defaults["sample_shift"])),
+                ]
+            )
         if lightvae_pruning_rate is not None:
             command.extend(["--lightvae_pruning_rate", str(float(lightvae_pruning_rate))])
         elif self.defaults.get("lightvae_pruning_rate") is not None:
@@ -312,7 +332,10 @@ class MatrixGame3Runtime:
 
         for flag_name, flag_value in [
             ("--visualize_ops", visualize_ops),
-            ("--use_base_model", self.defaults.get("use_base_model", False) if use_base_model is None else use_base_model),
+            (
+                "--use_base_model",
+                self.defaults.get("use_base_model", False) if use_base_model is None else use_base_model,
+            ),
             ("--use_int8", self.defaults.get("use_int8", False) if use_int8 is None else use_int8),
             ("--verify_quant", self.defaults.get("verify_quant", False) if verify_quant is None else verify_quant),
             ("--use_async_vae", self.defaults.get("use_async_vae", False) if use_async_vae is None else use_async_vae),
@@ -320,15 +343,16 @@ class MatrixGame3Runtime:
             ("--t5_fsdp", self.defaults.get("t5_fsdp", False) if t5_fsdp is None else t5_fsdp),
             ("--t5_cpu", self.defaults.get("t5_cpu", False) if t5_cpu is None else t5_cpu),
             ("--dit_fsdp", self.defaults.get("dit_fsdp", False) if dit_fsdp is None else dit_fsdp),
-            ("--convert_model_dtype", self.defaults.get("convert_model_dtype", False) if convert_model_dtype is None else convert_model_dtype),
+            (
+                "--convert_model_dtype",
+                self.defaults.get("convert_model_dtype", False) if convert_model_dtype is None else convert_model_dtype,
+            ),
         ]:
             if flag_value:
                 command.append(flag_name)
 
         async_vae_warmup_iters = (
-            self.defaults.get("async_vae_warmup_iters", 0)
-            if async_vae_warmup_iters is None
-            else async_vae_warmup_iters
+            self.defaults.get("async_vae_warmup_iters", 0) if async_vae_warmup_iters is None else async_vae_warmup_iters
         )
         if int(async_vae_warmup_iters) > 0:
             command.extend(["--async_vae_warmup_iters", str(int(async_vae_warmup_iters))])
@@ -376,10 +400,7 @@ class MatrixGame3Runtime:
             return self._resident_pipeline
         self._ensure_checkpoint_layout(self.checkpoint_dir)
         world_size = int(os.environ.get("WORLD_SIZE", "1") or "1")
-        distributed = (
-            torch.distributed.is_available()
-            and torch.distributed.is_initialized()
-        )
+        distributed = torch.distributed.is_available() and torch.distributed.is_initialized()
         if world_size > 1 and not distributed:
             raise RuntimeError(
                 "Matrix-Game 3 multi-GPU realtime requires an initialized torch.distributed "

@@ -76,10 +76,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
             {
                 "kind": "source_repo",
                 "path": str(source),
-                "reason": (
-                    f"EgoWM checkout is not staged; clone {OFFICIAL_REPO_URL} here or set "
-                    f"{SOURCE_ENV_VAR}"
-                ),
+                "reason": (f"EgoWM checkout is not staged; clone {OFFICIAL_REPO_URL} here or set {SOURCE_ENV_VAR}"),
             }
         )
     else:
@@ -116,7 +113,11 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
         path = base_model / relative
         if not path.is_file() or path.stat().st_size == 0:
             missing.append(
-                {"kind": "checkpoint", "path": str(path), "reason": "Stable Video Diffusion base-model asset is missing or empty"}
+                {
+                    "kind": "checkpoint",
+                    "path": str(path),
+                    "reason": "Stable Video Diffusion base-model asset is missing or empty",
+                }
             )
 
     variant = str(_option(options, "variant", "egowm_variant", default="25dof"))
@@ -126,8 +127,13 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
         if not image.is_file():
             missing.append({"kind": "asset", "path": str(image), "reason": "EgoWM input image is missing"})
     elif variant == "25dof":
-        missing.append({"kind": "condition", "path": "image_path",
-                        "reason": "EgoWM 25-DoF requires an explicit initial image paired with conditions_path"})
+        missing.append(
+            {
+                "kind": "condition",
+                "path": "image_path",
+                "reason": "EgoWM 25-DoF requires an explicit initial image paired with conditions_path",
+            }
+        )
 
     conditions_path = _option(options, "conditions_path", "egowm_conditions_path")
     actions_path = _option(options, "actions_path", "egowm_actions_path")
@@ -135,44 +141,74 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
     if variant not in ("25dof", "3dof"):
         missing.append({"kind": "condition", "path": "variant", "reason": f"unsupported EgoWM variant {variant!r}"})
     if conditions_path not in (None, "") and smoke_synthetic:
-        missing.append({"kind": "condition", "path": "smoke_synthetic",
-                        "reason": "EgoWM conditions_path and smoke_synthetic are mutually exclusive"})
+        missing.append(
+            {
+                "kind": "condition",
+                "path": "smoke_synthetic",
+                "reason": "EgoWM conditions_path and smoke_synthetic are mutually exclusive",
+            }
+        )
     if actions_path not in (None, "") and conditions_path not in (None, ""):
-        missing.append({"kind": "condition", "path": "actions_path",
-                        "reason": "EgoWM actions_path and conditions_path are mutually exclusive"})
+        missing.append(
+            {
+                "kind": "condition",
+                "path": "actions_path",
+                "reason": "EgoWM actions_path and conditions_path are mutually exclusive",
+            }
+        )
     if actions_path not in (None, "") and smoke_synthetic:
-        missing.append({"kind": "condition", "path": "actions_path",
-                        "reason": "EgoWM actions_path and smoke_synthetic are mutually exclusive"})
+        missing.append(
+            {
+                "kind": "condition",
+                "path": "actions_path",
+                "reason": "EgoWM actions_path and smoke_synthetic are mutually exclusive",
+            }
+        )
     if actions_path not in (None, "") and options.get("action_scale") not in (None, "", 0, 0.0, "0", "0.0"):
-        missing.append({"kind": "condition", "path": "action_scale",
-                        "reason": "EgoWM action_scale cannot be combined with actions_path"})
+        missing.append(
+            {
+                "kind": "condition",
+                "path": "action_scale",
+                "reason": "EgoWM action_scale cannot be combined with actions_path",
+            }
+        )
     if conditions_path not in (None, "") and options.get("action_scale") not in (None, "", 0, 0.0, "0", "0.0"):
-        missing.append({"kind": "condition", "path": "action_scale",
-                        "reason": "EgoWM action_scale cannot be combined with physical conditions"})
+        missing.append(
+            {
+                "kind": "condition",
+                "path": "action_scale",
+                "reason": "EgoWM action_scale cannot be combined with physical conditions",
+            }
+        )
     if conditions_path not in (None, ""):
         conditions = expand_worldfoundry_path(str(conditions_path))
         if not conditions.is_file():
-            missing.append({"kind": "asset", "path": str(conditions), "reason": "EgoWM 25-DoF conditions file is missing"})
+            missing.append(
+                {"kind": "asset", "path": str(conditions), "reason": "EgoWM 25-DoF conditions file is missing"}
+            )
     elif variant == "25dof" and not smoke_synthetic:
-        missing.append({
-            "kind": "condition", "path": "conditions_path",
-            "reason": "EgoWM 25-DoF requires paired physical_initial_state and physical_actions; set conditions_path",
-        })
+        missing.append(
+            {
+                "kind": "condition",
+                "path": "conditions_path",
+                "reason": "EgoWM 25-DoF requires paired physical_initial_state and physical_actions; set conditions_path",
+            }
+        )
     if variant == "3dof" and (conditions_path not in (None, "") or smoke_synthetic):
         missing.append({"kind": "condition", "path": "variant", "reason": "3-DoF uses actions_path or action_scale"})
     if actions_path not in (None, ""):
         actions = expand_worldfoundry_path(str(actions_path))
         if variant != "3dof":
-            missing.append({"kind": "condition", "path": "variant",
-                            "reason": "actions_path requires the 3dof variant"})
+            missing.append({"kind": "condition", "path": "variant", "reason": "actions_path requires the 3dof variant"})
         elif not actions.is_file():
             missing.append({"kind": "asset", "path": str(actions), "reason": "EgoWM 3-DoF actions file is missing"})
         else:
             try:
                 load_3dof_actions(actions, int(options.get("num_frames", 8)))
             except (OSError, UnicodeError, ValueError, TypeError) as exc:
-                missing.append({"kind": "condition", "path": str(actions),
-                                "reason": f"invalid EgoWM 3-DoF actions: {exc}"})
+                missing.append(
+                    {"kind": "condition", "path": str(actions), "reason": f"invalid EgoWM 3-DoF actions: {exc}"}
+                )
 
     for module_name in ("torch", "diffusers", "transformers", "PIL", "einops", "imageio"):
         if importlib.util.find_spec(module_name) is None:

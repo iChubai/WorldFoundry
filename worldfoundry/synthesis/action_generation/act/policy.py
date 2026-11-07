@@ -20,9 +20,7 @@ class _DatasetStatsUnpickler(pickle.Unpickler):
 
     def find_class(self, module: str, name: str) -> Any:
         if (module, name) not in self._ALLOWED_GLOBALS:
-            raise pickle.UnpicklingError(
-                f"ACT dataset statistics contain a forbidden pickle global: {module}.{name}"
-            )
+            raise pickle.UnpicklingError(f"ACT dataset statistics contain a forbidden pickle global: {module}.{name}")
         return super().find_class(module, name)
 
 

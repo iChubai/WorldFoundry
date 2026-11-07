@@ -14,7 +14,7 @@ class ActionOutput:
 
 @dataclass
 class SamplingConfig:
-    num_steps: int = 10       # flow matching / DDIM steps
+    num_steps: int = 10  # flow matching / DDIM steps
     cfg_scale: float = 1.5
     seed: Optional[int] = None
 

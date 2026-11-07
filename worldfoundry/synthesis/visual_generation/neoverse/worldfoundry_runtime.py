@@ -184,9 +184,7 @@ class NeoVerseOfficialRuntime:
         )
         reconstructor_config = dict(reconstructor_config)
         strict_reconstructor = bool(reconstructor_config.pop("strict_load", True))
-        reconstructor_dtype = (
-            torch.float32 if reconstructor_config.pop("upcast_to_float32", False) else weight_dtype
-        )
+        reconstructor_dtype = torch.float32 if reconstructor_config.pop("upcast_to_float32", False) else weight_dtype
         reconstructor = load_model(
             reconstructor_class,
             path=None,
@@ -221,7 +219,9 @@ class NeoVerseOfficialRuntime:
             default_prompt=default_prompt,
             default_negative_prompt=default_negative_prompt,
             default_cfg_scale=cfg_scale if cfg_scale is not None else (1.0 if resolved_lora_path else 5.0),
-            default_num_inference_steps=num_inference_steps if num_inference_steps is not None else (4 if resolved_lora_path else 50),
+            default_num_inference_steps=num_inference_steps
+            if num_inference_steps is not None
+            else (4 if resolved_lora_path else 50),
             height=height,
             width=width,
         )
@@ -298,9 +298,7 @@ class NeoVerseOfficialRuntime:
                 )
 
             if not isinstance(trajectory_data, dict):
-                raise TypeError(
-                    f"trajectory_data must be a list or dict, got {type(trajectory_data)!r}."
-                )
+                raise TypeError(f"trajectory_data must be a list or dict, got {type(trajectory_data)!r}.")
 
             resolved_mode = trajectory_data.get("mode", trajectory_mode)
             resolved_name = trajectory_data.get("name", trajectory_name)
@@ -327,9 +325,7 @@ class NeoVerseOfficialRuntime:
             if "trajectory" in trajectory_data:
                 trajectory = trajectory_data["trajectory"]
                 if "frame_indices" not in trajectory or "frame_matrices" not in trajectory:
-                    raise ValueError(
-                        "trajectory_data['trajectory'] must contain frame_indices and frame_matrices."
-                    )
+                    raise ValueError("trajectory_data['trajectory'] must contain frame_indices and frame_matrices.")
                 cameras = CameraTrajectory._interpolate_sparse_matrices(
                     trajectory["frame_indices"],
                     trajectory["frame_matrices"],
@@ -467,9 +463,7 @@ class NeoVerseOfficialRuntime:
                 intrinsics = intrinsics[:1].repeat(len(cam_traj), 1, 1)
                 timestamps = timestamps[:1].repeat(len(cam_traj))
             elif input_cam2world.shape[0] != len(cam_traj):
-                raise ValueError(
-                    "For non-static NeoVerse inputs, trajectory length must match the input-frame count."
-                )
+                raise ValueError("For non-static NeoVerse inputs, trajectory length must match the input-frame count.")
 
             ratio = torch.linspace(1.0, cam_traj.zoom_ratio, intrinsics.shape[0], device=self.device)
             zoomed_intrinsics = intrinsics.clone()
@@ -482,16 +476,14 @@ class NeoVerseOfficialRuntime:
 
             if isinstance(gaussians, list):
                 target_world2cam = homo_matrix_inverse(target_cam2world)
-                target_rgb, target_depth, target_alpha = (
-                    self.pipeline.reconstructor.gs_renderer.rasterizer.forward(
-                        gaussians,
-                        render_viewmats=[target_world2cam],
-                        render_Ks=[zoomed_intrinsics],
-                        render_timestamps=[timestamps],
-                        sh_degree=0,
-                        width=width,
-                        height=height,
-                    )
+                target_rgb, target_depth, target_alpha = self.pipeline.reconstructor.gs_renderer.rasterizer.forward(
+                    gaussians,
+                    render_viewmats=[target_world2cam],
+                    render_Ks=[zoomed_intrinsics],
+                    render_timestamps=[timestamps],
+                    sh_degree=0,
+                    width=width,
+                    height=height,
                 )
             else:
                 render_chunk_size = max(1, int(os.environ.get("NEOVERSE_RENDER_CHUNK_SIZE", "1")))
@@ -545,9 +537,7 @@ class NeoVerseOfficialRuntime:
                 num_frames=len(cam_traj),
                 cfg_scale=cfg_scale if cfg_scale is not None else self.default_cfg_scale,
                 num_inference_steps=(
-                    num_inference_steps
-                    if num_inference_steps is not None
-                    else self.default_num_inference_steps
+                    num_inference_steps if num_inference_steps is not None else self.default_num_inference_steps
                 ),
                 tiled=False,
                 **wrapped_data,

@@ -16,7 +16,6 @@ from worldfoundry.core import jsonable
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path
 
 
-
 def _install_tux_jax_compat() -> None:
     """Provide JAX symbols expected by tux 0.0.2 on newer JAX wheels.
 
@@ -47,6 +46,7 @@ def _install_tux_jax_compat() -> None:
     if not hasattr(jnp, "DeviceArray") and hasattr(jax, "Array"):
         jnp.DeviceArray = jax.Array
     if not hasattr(transformers, "FlaxLogitsWarper"):
+
         class FlaxLogitsWarper:
             """Compatibility base removed from recent Transformers releases."""
 
@@ -86,7 +86,7 @@ def _install_tux_checkpoint_compat() -> None:
             unpacker = tux_checkpoint.msgpack.Unpacker(
                 fin,
                 read_size=83886080,  # Larger read size for performance
-                max_buffer_size=32 * 2 ** 30,  # 32 GB max buffer to handle large tensors
+                max_buffer_size=32 * 2**30,  # 32 GB max buffer to handle large tensors
             )
             for key, value in unpacker:
                 key = tuple(key)
@@ -105,9 +105,7 @@ def _install_tux_checkpoint_compat() -> None:
 
         # If a target state dict is provided, merge in any missing empty nodes from the target.
         if target is not None:
-            flattened_target = tux_checkpoint.flatten_dict(
-                tux_checkpoint.to_state_dict(target), keep_empty_nodes=True
-            )
+            flattened_target = tux_checkpoint.flatten_dict(tux_checkpoint.to_state_dict(target), keep_empty_nodes=True)
             for key, value in flattened_target.items():
                 if key not in flattened_train_state and value == tux_checkpoint.empty_node:
                     flattened_train_state[key] = value

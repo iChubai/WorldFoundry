@@ -47,7 +47,11 @@ class InferenceInput:
 
 
 def _process_txt_embeddings(
-    caption_embs: torch.Tensor, emb_masks: torch.Tensor, null_emb: torch.Tensor, infer_chunk_num: int, clean_chunk_num: int
+    caption_embs: torch.Tensor,
+    emb_masks: torch.Tensor,
+    null_emb: torch.Tensor,
+    infer_chunk_num: int,
+    clean_chunk_num: int,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     special_token_keys = get_special_token_keys()
     print_rank_0(f"special_token = {list(special_token_keys)}")
@@ -60,7 +64,8 @@ def _process_txt_embeddings(
     # clean chunk with null_emb
     caption_embs = torch.cat([null_emb.repeat(1, clean_chunk_num, 1, 1), caption_embs], dim=1)
     emb_masks = torch.cat(
-        [torch.zeros(1, clean_chunk_num, emb_masks.size(2), dtype=emb_masks.dtype, device=emb_masks.device), emb_masks], dim=1
+        [torch.zeros(1, clean_chunk_num, emb_masks.size(2), dtype=emb_masks.dtype, device=emb_masks.device), emb_masks],
+        dim=1,
     )
     return caption_embs, emb_masks
 
@@ -383,7 +388,9 @@ class SampleTransport:
         k_chunk_start = torch.clamp(k_chunk_end - prev_chunk_num, min=0).reshape((range_num, 1))
         k_chunk_range = torch.concat([k_chunk_start, k_chunk_end], dim=1)
         k_batch_range = (
-            torch.concat([k_chunk_range + i * range_num for i in range(batch_size)], dim=0).to(torch.int32).to(self.device)
+            torch.concat([k_chunk_range + i * range_num for i in range(batch_size)], dim=0)
+            .to(torch.int32)
+            .to(self.device)
         )
         return k_batch_range * chunk_token_nums
 
@@ -445,7 +452,9 @@ class SampleTransport:
         padding_length = min(prefix_length - prefix_video_start, x_chunk.size(2))
         prefix_video_end = prefix_video_start + padding_length
         ret = x_chunk.clone()
-        ret[:, :, :padding_length] = self.transport_inputs[infer_idx].prefix_video[:, :, prefix_video_start:prefix_video_end]
+        ret[:, :, :padding_length] = self.transport_inputs[infer_idx].prefix_video[
+            :, :, prefix_video_start:prefix_video_end
+        ]
 
         num_clean_t = (prefix_length - prefix_video_start) // self.chunk_width
         if num_clean_t > 0:
@@ -457,11 +466,15 @@ class SampleTransport:
         batch_size, chunk_token_nums = self.get_batch_size_and_chunk_token_nums(infer_idx)
         range_num = slice_point + denoising_range_num
 
-        k_chunk_end = torch.linspace(slice_point + 1, range_num, steps=denoising_range_num).reshape((denoising_range_num, 1))
+        k_chunk_end = torch.linspace(slice_point + 1, range_num, steps=denoising_range_num).reshape(
+            (denoising_range_num, 1)
+        )
         k_chunk_start = torch.Tensor([0] * denoising_range_num).reshape((denoising_range_num, 1))
         k_chunk_range = torch.concat([k_chunk_start, k_chunk_end], dim=1)
         k_batch_range = (
-            torch.concat([k_chunk_range + i * range_num for i in range(batch_size)], dim=0).to(torch.int32).to(self.device)
+            torch.concat([k_chunk_range + i * range_num for i in range(batch_size)], dim=0)
+            .to(torch.int32)
+            .to(self.device)
         )
         return k_batch_range * chunk_token_nums
 
@@ -500,7 +513,10 @@ class SampleTransport:
                 k_chunk_start = max(0, k_chunk_end - denoise_kv_range[j])
                 k_ranges.append(
                     torch.Tensor(
-                        [(k_batch_start + k_chunk_start) * chunk_token_nums, (k_batch_start + k_chunk_end) * chunk_token_nums]
+                        [
+                            (k_batch_start + k_chunk_start) * chunk_token_nums,
+                            (k_batch_start + k_chunk_end) * chunk_token_nums,
+                        ]
                     )
                     .reshape(1, 2)
                     .to(self.device)
@@ -559,7 +575,10 @@ class SampleTransport:
 
         transport_input = self.transport_inputs[infer_idx]
         denoise_step_per_stage = transport_input.num_steps // self.window_size
-        denoise_stage, denoise_idx = (cur_denoise_step // denoise_step_per_stage, cur_denoise_step % denoise_step_per_stage)
+        denoise_stage, denoise_idx = (
+            cur_denoise_step // denoise_step_per_stage,
+            cur_denoise_step % denoise_step_per_stage,
+        )
         chunk_start_s, chunk_end_s, t_start_s, t_end_s = generate_sequences(
             transport_input.chunk_num, self.window_size, chunk_offset
         )
@@ -569,7 +588,13 @@ class SampleTransport:
             t_start_s[denoise_stage],
             t_end_s[denoise_stage],
         )
-        return (denoise_step_per_stage, denoise_stage, denoise_idx), (chunk_offset, chunk_start, chunk_end, t_start, t_end)
+        return (denoise_step_per_stage, denoise_stage, denoise_idx), (
+            chunk_offset,
+            chunk_start,
+            chunk_end,
+            t_start,
+            t_end,
+        )
 
     def total_forward_step(self, infer_idx: int) -> int:
         denoise_step_per_stage = self.transport_inputs[infer_idx].num_steps // self.window_size
@@ -589,14 +614,19 @@ class SampleTransport:
         transport_input = self.transport_inputs[infer_idx]
 
         # 2. Extract prefix video KV cache
-        (denoise_step_per_stage, denoise_stage, denoise_idx), (
-            chunk_offset,
-            chunk_start,
-            chunk_end,
-            t_start,
-            t_end,
+        (
+            (denoise_step_per_stage, denoise_stage, denoise_idx),
+            (
+                chunk_offset,
+                chunk_start,
+                chunk_end,
+                t_start,
+                t_end,
+            ),
         ) = self.generate_denoise_status_and_sequences(infer_idx, cur_denoise_step)
-        model_kwargs = dict(chunk_width=self.chunk_width, fwd_extra_1st_chunk=False, num_steps=transport_input.num_steps)
+        model_kwargs = dict(
+            chunk_width=self.chunk_width, fwd_extra_1st_chunk=False, num_steps=transport_input.num_steps
+        )
 
         if chunk_offset > 0 and cur_denoise_step == 0:
             self.extract_prefix_video_feature(
@@ -619,7 +649,9 @@ class SampleTransport:
 
             # clean feature without y embedding
             y_chunk = torch.cat([transport_input.y[1:2, 0:1].expand(y_chunk.size(0), -1, -1, -1), y_chunk], dim=1)
-            mask_chunk = torch.cat([transport_input.emb_masks[1:2, 1:2].expand(mask_chunk.size(0), -1, -1), mask_chunk], dim=1)
+            mask_chunk = torch.cat(
+                [transport_input.emb_masks[1:2, 1:2].expand(mask_chunk.size(0), -1, -1), mask_chunk], dim=1
+            )
 
             model_kwargs["slice_point"] = chunk_start - 1
             model_kwargs["denoising_range_num"] = chunk_end - chunk_start + 1
@@ -674,12 +706,15 @@ class SampleTransport:
         velocity = self.velocities[infer_idx]
         chunk_denoise_count = self.chunk_denoise_count[infer_idx]
 
-        (denoise_step_per_stage, denoise_stage, denoise_idx), (
-            chunk_offset,
-            chunk_start,
-            chunk_end,
-            t_start,
-            t_end,
+        (
+            (denoise_step_per_stage, denoise_stage, denoise_idx),
+            (
+                chunk_offset,
+                chunk_start,
+                chunk_end,
+                t_start,
+                t_end,
+            ),
         ) = self.generate_denoise_status_and_sequences(infer_idx, cur_denoise_step)
         fwd_extra_1st_chunk = chunk_start > chunk_offset and denoise_idx == 0
 
@@ -689,7 +724,9 @@ class SampleTransport:
             velocity = velocity[:, :, self.chunk_width :]
 
         # 9. Walk and integrate
-        x_chunk = self.integrate(x_chunk, velocity, self.ts[infer_idx], denoise_step_per_stage, t_start, t_end, denoise_idx)
+        x_chunk = self.integrate(
+            x_chunk, velocity, self.ts[infer_idx], denoise_step_per_stage, t_start, t_end, denoise_idx
+        )
 
         # 10. chunk denoise count
         for chunk_index in range(chunk_start, chunk_end):
@@ -710,7 +747,9 @@ class SampleTransport:
                 if chunk_start == 0 and prefix_video_length == 1:
                     real_start = 0
 
-                clean_chunk, _ = self.xs[infer_idx][:, :, real_start : (chunk_start + 1) * self.chunk_width].chunk(2, dim=0)
+                clean_chunk, _ = self.xs[infer_idx][:, :, real_start : (chunk_start + 1) * self.chunk_width].chunk(
+                    2, dim=0
+                )
                 return clean_chunk, chunk_start - chunk_offset
             else:
                 clean_chunk, _ = self.xs[infer_idx][
@@ -746,7 +785,9 @@ class SampleTransport:
                 if torch.distributed.get_rank() == 0:
                     self.time_record[work_status.infer_idx].close()
                 continue
-            self.work_queue.put(WorkStatus(infer_idx=work_status.infer_idx, cur_denoise_step=work_status.cur_denoise_step + 1))
+            self.work_queue.put(
+                WorkStatus(infer_idx=work_status.infer_idx, cur_denoise_step=work_status.cur_denoise_step + 1)
+            )
             velocity = self.forward_velocity(work_status.infer_idx, work_status.cur_denoise_step + 1)
 
             if mpu.get_pp_world_size() > 1 and mpu.is_pipeline_first_stage():

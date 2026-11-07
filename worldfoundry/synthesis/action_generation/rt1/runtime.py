@@ -115,7 +115,6 @@ class RT1SavedModelRuntime:
             import tensorflow as tf
             import tensorflow_probability as _tfp  # noqa: F401
 
-
             self._tf = tf
             with tf.device(self.tf_device):
                 self._model = tf.saved_model.load(str(self.config.checkpoint_dir))

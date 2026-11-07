@@ -41,7 +41,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         elif not Path(value).expanduser().exists():
             missing.append({"kind": "asset", "path": value, "reason": f"MineWorld `{key}` path does not exist"})
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "MineWorld inference.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "MineWorld inference.py is missing"}
+        )
     return missing
 
 

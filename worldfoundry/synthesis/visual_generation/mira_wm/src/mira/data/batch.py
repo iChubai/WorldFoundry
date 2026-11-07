@@ -34,9 +34,7 @@ class VideoActionBatch:
 
     def to(self, *args: Any, **kwargs: Any) -> VideoActionBatch:
         """Propagate ``torch.Tensor.to`` to the video and the actions."""
-        return VideoActionBatch(
-            video=self.video.to(*args, **kwargs), actions=self.actions.to(*args, **kwargs)
-        )
+        return VideoActionBatch(video=self.video.to(*args, **kwargs), actions=self.actions.to(*args, **kwargs))
 
     def pin_memory(self) -> VideoActionBatch:
         """Propagate ``torch.Tensor.pin_memory`` to the video and the actions (called by the loader)."""

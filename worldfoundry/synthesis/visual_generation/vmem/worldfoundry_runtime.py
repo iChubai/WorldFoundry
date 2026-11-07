@@ -245,9 +245,7 @@ class VMemRuntime:
             alpha = (frame_idx + 1) / num_frames
             pose = np.eye(4, dtype=np.float32)
             pose[:3, :3] = slerp(alpha).as_matrix().astype(np.float32)
-            pose[:3, 3] = (
-                (1.0 - alpha) * start_translation + alpha * end_translation
-            ).astype(np.float32)
+            pose[:3, 3] = ((1.0 - alpha) * start_translation + alpha * end_translation).astype(np.float32)
             interpolated.append(pose)
         return interpolated
 

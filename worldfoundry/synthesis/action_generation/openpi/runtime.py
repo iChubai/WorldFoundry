@@ -29,11 +29,7 @@ def _checkpoint_complete(path: Path) -> bool:
         for candidate in path.rglob("*"):
             if candidate.name.endswith(_PARTIAL_CHECKPOINT_SUFFIXES):
                 return False
-            if (
-                candidate.name == "._____temp"
-                and candidate.is_dir()
-                and next(candidate.iterdir(), None) is not None
-            ):
+            if candidate.name == "._____temp" and candidate.is_dir() and next(candidate.iterdir(), None) is not None:
                 return False
 
         pytorch_weights = path / "model.safetensors"
@@ -217,7 +213,11 @@ def _preferred_checkpoint_candidates(
     return tuple(
         item
         for item in candidates
-        if any(token in " ".join(str(item.get(key) or "").lower().replace("-", "_") for key in ("role", "local_dir", "path")) for token in tokens)
+        if any(
+            token
+            in " ".join(str(item.get(key) or "").lower().replace("-", "_") for key in ("role", "local_dir", "path"))
+            for token in tokens
+        )
     )
 
 
@@ -345,9 +345,7 @@ def _required_image(
 ) -> Any:
     value = _camera_value(observation, image, aliases, position=position)
     if value is None:
-        raise ValueError(
-            f"OpenPI {label} is required; accepted camera keys are {tuple(aliases)}."
-        )
+        raise ValueError(f"OpenPI {label} is required; accepted camera keys are {tuple(aliases)}.")
     return _load_rgb_array(value)
 
 
@@ -362,9 +360,7 @@ def _state_vector(
 
     value = _first_observation_value(observation, aliases)
     if value is None:
-        raise ValueError(
-            f"OpenPI {label} is required; pass an explicit {width}-D state using one of {tuple(aliases)}."
-        )
+        raise ValueError(f"OpenPI {label} is required; pass an explicit {width}-D state using one of {tuple(aliases)}.")
     array = np.asarray(value, dtype=np.float32).reshape(-1)
     if array.shape != (width,):
         raise ValueError(f"OpenPI {label} must have shape ({width},), got {array.shape}.")
@@ -516,9 +512,7 @@ def _resolve_aloha_observation(
         value = _camera_value(observation, image, aliases, position=position)
         if value is None:
             if required:
-                raise ValueError(
-                    f"OpenPI ALOHA base image is required; accepted camera keys are {aliases}."
-                )
+                raise ValueError(f"OpenPI ALOHA base image is required; accepted camera keys are {aliases}.")
             continue
         # The retained AlohaInputs transform consumes CHW uint8 frames.
         images[name] = np.transpose(_load_rgb_array(value), (2, 0, 1))

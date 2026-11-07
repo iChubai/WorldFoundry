@@ -181,9 +181,7 @@ class VideoCodec(nn.Module):
 
         # _target_ keys may exist at any nesting if saved from hydra instantiation; strip them all,
         # then drop fields removed from the schema since the checkpoint was written.
-        raw_dict = strip_hydra_targets(
-            OmegaConf.to_container(config_raw.model.architecture.config, resolve=True)
-        )
+        raw_dict = strip_hydra_targets(OmegaConf.to_container(config_raw.model.architecture.config, resolve=True))
         raw_dict = drop_removed_fields(raw_dict, REMOVED_CONFIG_FIELDS)
         assert isinstance(raw_dict, dict), "expected dict at architecture.config"
         config = VideoCodecConfig.model_validate(raw_dict)

@@ -32,9 +32,7 @@ class LangEncoder(nn.Module):
             encoded_input = self.tokenizer(langs, return_tensors="pt", padding=True)
             input_ids = encoded_input["input_ids"].to(self.device)
             attention_mask = encoded_input["attention_mask"].to(self.device)
-            lang_embedding = self.model(
-                input_ids, attention_mask=attention_mask
-            ).last_hidden_state
+            lang_embedding = self.model(input_ids, attention_mask=attention_mask).last_hidden_state
             lang_embedding = lang_embedding.mean(1)
         return lang_embedding
 

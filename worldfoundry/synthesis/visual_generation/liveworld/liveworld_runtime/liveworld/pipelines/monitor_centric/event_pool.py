@@ -4,6 +4,7 @@ The pool owns event lifecycle and manages shared model instances
 across all EventAgent objects. It also holds the shared prompts
 (system prompt and evolution template) for all agents.
 """
+
 from __future__ import annotations
 
 import os
@@ -25,6 +26,7 @@ from .logger import logger
 @dataclass
 class EventPoolConfig:
     """Configuration for the event pool."""
+
     max_events: int
     # System prompt template for I2V prompt generation.
     # Variables: {entity}, {entities}, {iteration}
@@ -126,8 +128,7 @@ class EventPool:
         for det in detections:
             if det.cropped_mask is None:
                 raise RuntimeError(
-                    f"Detection '{det.name}' is missing cropped_mask; "
-                    "SAM mask is required for DINO similarity."
+                    f"Detection '{det.name}' is missing cropped_mask; SAM mask is required for DINO similarity."
                 )
             emb = matcher.compute_embedding(
                 det.cropped_image,
@@ -135,8 +136,7 @@ class EventPool:
             )
             if emb is None:
                 raise RuntimeError(
-                    f"Failed to compute DINO embedding for '{det.name}' with SAM mask. "
-                    "Check instance mask quality."
+                    f"Failed to compute DINO embedding for '{det.name}' with SAM mask. Check instance mask quality."
                 )
             embeddings.append(emb)
             crops.append(det.cropped_image)
@@ -210,9 +210,7 @@ class EventPool:
             merged_masks.extend(new_masks)
             merged_labels.extend(new_labels)
             return merged, merged_crops, merged_masks, merged_labels
-        for emb_new, crop_new, mask_new, label_new in zip(
-            new_embeddings, new_crops, new_masks, new_labels
-        ):
+        for emb_new, crop_new, mask_new, label_new in zip(new_embeddings, new_crops, new_masks, new_labels):
             best = 0.0
             for emb_old in merged:
                 best = max(best, matcher.compute_similarity(emb_new, emb_old))
@@ -239,10 +237,7 @@ class EventPool:
             return
         debug_dir.mkdir(parents=True, exist_ok=True)
 
-        prefix = (
-            f"vs_{compared_event_id[:12]}_sim{max_pair_sim:.3f}"
-            f"_obs{obs_idx:02d}_ref{ref_idx:02d}"
-        )
+        prefix = f"vs_{compared_event_id[:12]}_sim{max_pair_sim:.3f}_obs{obs_idx:02d}_ref{ref_idx:02d}"
         if obs_rgb is not None:
             cv2.imwrite(
                 str(debug_dir / f"{prefix}_obs_rgb.png"),
@@ -410,9 +405,7 @@ class EventPool:
         if self.cpu_offload_dinov3 and matcher is not None:
             matcher.to_device()
         try:
-            obs_embeddings, obs_crops, obs_masks, obs_labels = (
-                self._compute_scene_entity_features(detections, matcher)
-            )
+            obs_embeddings, obs_crops, obs_masks, obs_labels = self._compute_scene_entity_features(detections, matcher)
             debug_path = Path(debug_dir) if debug_dir else None
             logger.info(
                 f"  Instance matching: {len(detections)} detections, "
@@ -427,9 +420,7 @@ class EventPool:
 
             # Per-instance matching: for each obs instance, find best matching event.
             # matched_instances[i] = (agent, best_sim) or None
-            matched_instances: List[Optional[Tuple[EventAgent, float]]] = [
-                None for _ in range(len(obs_embeddings))
-            ]
+            matched_instances: List[Optional[Tuple[EventAgent, float]]] = [None for _ in range(len(obs_embeddings))]
 
             for agent in active_agents:
                 state = agent.state
@@ -472,17 +463,13 @@ class EventPool:
             for eid, indices in agent_to_indices.items():
                 agent = self._agents[eid]
                 state = agent.state
-                matched_entities = self._normalize_entities(
-                    [obs_labels[i] for i in indices]
-                )
+                matched_entities = self._normalize_entities([obs_labels[i] for i in indices])
                 matched_embs = [obs_embeddings[i] for i in indices]
                 matched_crops = [obs_crops[i] for i in indices]
                 matched_masks = [obs_masks[i] for i in indices]
                 matched_labels = [obs_labels[i] for i in indices]
 
-                state.entities = self._normalize_entities(
-                    (state.entities or []) + matched_entities
-                )
+                state.entities = self._normalize_entities((state.entities or []) + matched_entities)
                 (
                     state.scene_entity_embeddings,
                     state.scene_entity_crops,
@@ -502,32 +489,25 @@ class EventPool:
                 if state.entity_embedding is None and state.scene_entity_embeddings:
                     state.entity_embedding = state.scene_entity_embeddings[0]
                 sims = [matched_instances[i][1] for i in indices]
-                logger.info(
-                    f"  Reuse event {eid[:12]} <- {matched_entities} "
-                    f"(sims={[f'{s:.3f}' for s in sims]})"
-                )
+                logger.info(f"  Reuse event {eid[:12]} <- {matched_entities} (sims={[f'{s:.3f}' for s in sims]})")
                 if first_result is None:
                     first_result = agent
 
             # Create new event for unmatched instances.
             if unmatched_indices:
-                new_entities = self._normalize_entities(
-                    [obs_labels[i] for i in unmatched_indices]
-                )
+                new_entities = self._normalize_entities([obs_labels[i] for i in unmatched_indices])
                 if not new_entities:
-                    new_entities = self._normalize_entities(
-                        [entities[i] for i in unmatched_indices if i < len(entities)]
-                    ) or entities
+                    new_entities = (
+                        self._normalize_entities([entities[i] for i in unmatched_indices if i < len(entities)])
+                        or entities
+                    )
                 new_embs = [obs_embeddings[i] for i in unmatched_indices]
                 new_crops = [obs_crops[i] for i in unmatched_indices]
                 new_masks = [obs_masks[i] for i in unmatched_indices]
                 new_labels = [obs_labels[i] for i in unmatched_indices]
 
                 if len(self._agents) >= self.config.max_events:
-                    logger.warning(
-                        f"  Event capacity reached; skip new event for: "
-                        f"{', '.join(new_entities)}"
-                    )
+                    logger.warning(f"  Event capacity reached; skip new event for: {', '.join(new_entities)}")
                 else:
                     # Use caller-provided event_id when all instances are unmatched
                     # (first registration); generate new id for partial unmatched.
@@ -559,9 +539,7 @@ class EventPool:
                             default_fps=self.default_fps,
                         )
                         self._agents[event_id] = agent
-                        logger.info(
-                            f"  Register new event {event_id[:12]} <- {new_entities}"
-                        )
+                        logger.info(f"  Register new event {event_id[:12]} <- {new_entities}")
                     if first_result is None:
                         first_result = agent
 

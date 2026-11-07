@@ -5,6 +5,7 @@ integrating it into the `RuntimeVideoSynthesis` framework.
 This module sets up the necessary configuration and runtime class
 for performing text-to-video synthesis using the specified CogVideoX variant.
 """
+
 from __future__ import annotations
 
 from .worldfoundry_runtime import CogVideoX

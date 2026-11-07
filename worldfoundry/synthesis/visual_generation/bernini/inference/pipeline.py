@@ -38,7 +38,17 @@ from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from .data.bernini_process import bernini_process_sample
 from .data.bernini_template import BerniniTemplate
 from .data.utils.video_utils import PathVideoReader, smart_video_nframes
-from .data_utils import make_divisible, preprocess_image, preprocess_video, tensor_to_bytes, get_vit_features, get_vae_features, FakeVideoReader, create_fake_image, VAEVideoTransform
+from .data_utils import (
+    make_divisible,
+    preprocess_image,
+    preprocess_video,
+    tensor_to_bytes,
+    get_vit_features,
+    get_vae_features,
+    FakeVideoReader,
+    create_fake_image,
+    VAEVideoTransform,
+)
 from .io_utils import save_output
 from .models import BerniniRendererConfig, BerniniRendererModel
 from .models.transformer_wan import WanRotaryPosEmbed
@@ -102,9 +112,7 @@ def _prefer_local_dir(current, config_dir, *required):
     config_dir = _resolve_cached_hf_path(config_dir)
     if current is not None and os.path.exists(current):
         return current
-    if os.path.isdir(config_dir) and all(
-        os.path.exists(os.path.join(config_dir, r)) for r in required if r
-    ):
+    if os.path.isdir(config_dir) and all(os.path.exists(os.path.join(config_dir, r)) for r in required if r):
         if current is not None and current != config_dir:
             logger.info(
                 "component path '%s' not found locally; loading from '%s' instead",
@@ -232,9 +240,7 @@ class BerniniRendererPipeline:
         **config_overrides,
     ) -> "BerniniRendererPipeline":
         config = BerniniRendererConfig.from_pretrained(config_dir, **config_overrides)
-        config.wan22_base = _prefer_local_dir(
-            config.wan22_base, config_dir, "tokenizer", "text_encoder", "vae"
-        )
+        config.wan22_base = _prefer_local_dir(config.wan22_base, config_dir, "tokenizer", "text_encoder", "vae")
         tokenizer = AutoTokenizer.from_pretrained(
             config.wan22_base,
             subfolder="tokenizer",
@@ -291,7 +297,7 @@ class BerniniRendererPipeline:
         system_prompt: str = "",
         output_path: str = "output.mp4",
         write_output: bool = True,
-        **kwargs
+        **kwargs,
     ):
         """Generate one clip and write it to `output_path`.
 
@@ -389,6 +395,7 @@ class BerniniRendererPipeline:
         logger.info("saved -> %s  (%d frames, %dx%d)", output_path, output.shape[0], h, w)
         return output_path
 
+
 class BerniniPipeline:
     """Loads the model once; each call generates one video / image."""
 
@@ -415,7 +422,8 @@ class BerniniPipeline:
 
         config = BerniniConfig.from_pretrained(config_dir, **config_overrides)
         _localize_bernini_config(config, config_dir)
-        if ckpt is None: ckpt = config_dir
+        if ckpt is None:
+            ckpt = config_dir
         model = BerniniModel.from_pretrained(
             ckpt,
             subfolder=config.bernini_ckpt_subfolder,
@@ -504,6 +512,7 @@ class BerniniPipeline:
         max_duration: int = None,
     ):
         from .data_utils import generate_unified_inputs
+
         # Build image/video path lists, filtering out None values.
         if images is not None:
             input_image_paths = [img for img in images if img is not None]
@@ -527,27 +536,27 @@ class BerniniPipeline:
             output_w=width,
         )
         row_data = {}
-        row_data['inputs'] = inputs_structure
+        row_data["inputs"] = inputs_structure
         if (images is not None and len(images) > 0) or image is not None or num_frames == 1:
             images = [image] if image is not None else list(images or [])
-            if num_frames == 1: images.append("output_img_flag")
+            if num_frames == 1:
+                images.append("output_img_flag")
             images = [create_fake_image(height, width) if img == "output_img_flag" else img for img in images]
             image_inputs = self.vit_processor.image_processor(
-                images=images, return_tensors="pt",
-                min_pixels=vit_min_pixels, max_pixels=vit_max_pixels
+                images=images, return_tensors="pt", min_pixels=vit_min_pixels, max_pixels=vit_max_pixels
             )
-            pixel_values = image_inputs['pixel_values']
-            image_grid_thw = image_inputs['image_grid_thw']
+            pixel_values = image_inputs["pixel_values"]
+            image_grid_thw = image_inputs["image_grid_thw"]
             image_embeds = get_vit_features(mllm_model, pixel_values, image_grid_thw)
-            row_data['image_embeds'] = [tensor_to_bytes(embed.detach().cpu()) for embed in image_embeds]
-            row_data['image_grid_thw'] = image_grid_thw.numpy().tolist()
+            row_data["image_embeds"] = [tensor_to_bytes(embed.detach().cpu()) for embed in image_embeds]
+            row_data["image_grid_thw"] = image_grid_thw.numpy().tolist()
             # VAE
             image_tensors = [vae_transform(img) for img in images]
             image_vae_latents = []
             for img_tensor in image_tensors:
                 latent = get_vae_features(vae_model, img_tensor)
                 image_vae_latents.append(latent)
-            row_data['image_vae_latents'] = image_vae_latents
+            row_data["image_vae_latents"] = image_vae_latents
             del image_tensors
             torch.cuda.empty_cache()
 
@@ -565,50 +574,52 @@ class BerniniPipeline:
                 if video is not None:
                     video_meta.append(video_meta[0])
                 else:
-                    video_meta.append('output_vid_flag')
+                    video_meta.append("output_vid_flag")
             for video_path in video_meta:
                 if video_path != "output_vid_flag":
                     duration = None
-                    if row is not None and 'videos' in row:
-                        for v_meta in row['videos']:
-                            if v_meta.get('video_path') == video_path:
-                                duration = v_meta.get('duration', None)
+                    if row is not None and "videos" in row:
+                        for v_meta in row["videos"]:
+                            if v_meta.get("video_path") == video_path:
+                                duration = v_meta.get("duration", None)
                                 break
                     if duration is not None and max_duration is not None and duration > max_duration:
                         duration = max_duration
-                    video_reader = PathVideoReader(video_path, duration=duration, crop_method='left')
+                    video_reader = PathVideoReader(video_path, duration=duration, crop_method="left")
                 else:
-                    video_reader = FakeVideoReader(
-                        num_frames=num_frames,
-                        height=height,
-                        width=width,
-                        fps=vae_fps
-                    )
+                    video_reader = FakeVideoReader(num_frames=num_frames, height=height, width=width, fps=vae_fps)
                 vit_idx = smart_video_nframes(
-                    total_frames=video_reader.length, video_fps=video_reader.fps,
-                    fps=vit_fps, frame_factor=2,
-                    max_frames=num_frames, add_one=False
+                    total_frames=video_reader.length,
+                    video_fps=video_reader.fps,
+                    fps=vit_fps,
+                    frame_factor=2,
+                    max_frames=num_frames,
+                    add_one=False,
                 )
                 video_for_vit = video_reader.sample(vit_idx)
                 video_inputs = self.vit_processor.video_processor(
-                    videos=video_for_vit, return_tensors="pt",
-                    size={'shortest_edge': vit_min_pixels, 'longest_edge': vit_max_pixels},
+                    videos=video_for_vit,
+                    return_tensors="pt",
+                    size={"shortest_edge": vit_min_pixels, "longest_edge": vit_max_pixels},
                 )
-                vid_pixel_values = video_inputs['pixel_values_videos']
-                vid_grid_thw = video_inputs['video_grid_thw']
+                vid_pixel_values = video_inputs["pixel_values_videos"]
+                vid_grid_thw = video_inputs["video_grid_thw"]
                 video_embeds = get_vit_features(mllm_model, vid_pixel_values, vid_grid_thw)
-                row_data['video_embeds'].extend([tensor_to_bytes(embed.detach().cpu()) for embed in video_embeds])
-                row_data['video_grid_thw'].extend(vid_grid_thw.numpy().tolist())
+                row_data["video_embeds"].extend([tensor_to_bytes(embed.detach().cpu()) for embed in video_embeds])
+                row_data["video_grid_thw"].extend(vid_grid_thw.numpy().tolist())
                 del video_inputs
                 vae_idx = smart_video_nframes(
-                    total_frames=video_reader.length, video_fps=video_reader.fps,
-                    fps=vae_fps, frame_factor=4,
-                    max_frames=num_frames, add_one=True
+                    total_frames=video_reader.length,
+                    video_fps=video_reader.fps,
+                    fps=vae_fps,
+                    frame_factor=4,
+                    max_frames=num_frames,
+                    add_one=True,
                 )
                 video_for_vae = video_reader.sample(vae_idx)
                 video_tensor = torch.stack([vae_transform(frame) for frame in video_for_vae], dim=1)
                 video_vae_latent = get_vae_features(vae_model, video_tensor)
-                row_data['video_vae_latents'].append(video_vae_latent)
+                row_data["video_vae_latents"].append(video_vae_latent)
                 del video_tensor
 
                 torch.cuda.empty_cache()
@@ -647,17 +658,14 @@ class BerniniPipeline:
         position_id_func = partial(Qwen2_5_VLModel.get_rope_index, fake_model)
 
         processor = self.vit_processor
-        chat_template = BerniniTemplate(
-            processor.tokenizer,
-            t5_tokenizer=self.t5_tokenizer
-        )
+        chat_template = BerniniTemplate(processor.tokenizer, t5_tokenizer=self.t5_tokenizer)
 
-        with open(vae_config_path, 'r') as f:
+        with open(vae_config_path, "r") as f:
             vae_config = json.load(f)
-        vae_latent_mean = torch.tensor(vae_config['latents_mean'], device="cpu")
-        vae_latent_std = torch.tensor(vae_config['latents_std'], device="cpu")
-        vae_latent_mean = vae_latent_mean.view(vae_config['z_dim'], 1, 1, 1)
-        vae_latent_std = vae_latent_std.view(vae_config['z_dim'], 1, 1, 1)
+        vae_latent_mean = torch.tensor(vae_config["latents_mean"], device="cpu")
+        vae_latent_std = torch.tensor(vae_config["latents_std"], device="cpu")
+        vae_latent_mean = vae_latent_mean.view(vae_config["z_dim"], 1, 1, 1)
+        vae_latent_std = vae_latent_std.view(vae_config["z_dim"], 1, 1, 1)
 
         src_id_kwargs = dict(
             interpolate_src_id=getattr(self.config, "interpolate_src_id", True),
@@ -708,8 +716,9 @@ class BerniniPipeline:
             source_name=task_name,
             **src_id_kwargs,
         )
+
         def process_sample(sample, sample_idx):
-            neg_prompt = sample.get('neg_prompt', t5_neg_prompt)
+            neg_prompt = sample.get("neg_prompt", t5_neg_prompt)
             tokenized_example = transform(sample)[0]
             imgcond_tokenized_example = imgcond_transform(sample)[0]
             uncond_tokenized_example = uncond_transform(sample, neg_prompt=neg_prompt if use_qwen_neg_prompt else "")[0]
@@ -720,14 +729,14 @@ class BerniniPipeline:
                     uncond_tokenized_example[k] = uncond_tokenized_example[k]
                     imgcond_tokenized_example[k] = imgcond_tokenized_example[k]
 
-            sample.pop('inputs')
+            sample.pop("inputs")
             return dict(
-                uid=sample.pop('uid', f'{sample_idx:03d}').split('/')[-1].split('.')[0],
-                edit_type=sample.pop('edit_type', 'unknown'),
+                uid=sample.pop("uid", f"{sample_idx:03d}").split("/")[-1].split(".")[0],
+                edit_type=sample.pop("edit_type", "unknown"),
                 inputs=tokenized_example,
                 uncond_inputs=uncond_tokenized_example,
                 imgcond_inputs=imgcond_tokenized_example,
-                **sample
+                **sample,
             )
 
         return process_sample(sample, 0)
@@ -762,14 +771,11 @@ class BerniniPipeline:
         mask = torch.ones(n_query_tokens).to(device)
 
         if position_ids.shape[1] == 3:
-            position_ids = position_ids.transpose(
-                0, 1).contiguous()  # bs, dim, l -> dim, bs, l
+            position_ids = position_ids.transpose(0, 1).contiguous()  # bs, dim, l -> dim, bs, l
         if uncond_position_ids.shape[1] == 3:
-            uncond_position_ids = uncond_position_ids.transpose(
-                0, 1).contiguous()  # bs, dim, l -> dim, bs, l
+            uncond_position_ids = uncond_position_ids.transpose(0, 1).contiguous()  # bs, dim, l -> dim, bs, l
         if imgcond_position_ids.shape[1] == 3:
-            imgcond_position_ids = imgcond_position_ids.transpose(
-                0, 1).contiguous()  # bs, dim, l -> dim, bs, l
+            imgcond_position_ids = imgcond_position_ids.transpose(0, 1).contiguous()  # bs, dim, l -> dim, bs, l
 
         if self.model.vit_decoder is not None:
             for step in tqdm(range(planning_step), desc=f"Sample FM+MAR clip in {planning_step} steps"):
@@ -863,27 +869,27 @@ class BerniniPipeline:
             hidden_states=outputs.hidden_states[-2],
             visual_output_mask=visual_output_token_mask,
             tgt_vit_mask=None,
-            inference=True
+            inference=True,
         )
         uncond_outputs = self.model.feat_from_planner_to_renderer(
             hidden_states=uncond_outputs.hidden_states[-2],
             visual_output_mask=uncond_visual_output_token_mask,
             tgt_vit_mask=None,
-            inference=True
+            inference=True,
         )
 
         if self.model.feature_type_from_stage_one in ["masked_tgt_embed_with_qwen_txt_tokens"]:
-            cond_embeds_wotxt_wovit = uncond_outputs['diff_mllm_contexts']
-            cond_embeds_wtxt_wvit = cond_outputs['diff_mllm_contexts']
+            cond_embeds_wotxt_wovit = uncond_outputs["diff_mllm_contexts"]
+            cond_embeds_wtxt_wvit = cond_outputs["diff_mllm_contexts"]
             cond_embeds_wtxt_wovit = None
             cond_embeds_wotxt_wvit = None
         else:
-            uncond_cond_embeds = uncond_outputs['diff_mllm_contexts']
-            diff_mllm_context_txt_mask = uncond_outputs['diff_mllm_context_txt_mask']
+            uncond_cond_embeds = uncond_outputs["diff_mllm_contexts"]
+            diff_mllm_context_txt_mask = uncond_outputs["diff_mllm_context_txt_mask"]
             cond_embeds_wotxt_wovit = uncond_cond_embeds[:, diff_mllm_context_txt_mask]
-            diff_mllm_context_txt_mask = cond_outputs['diff_mllm_context_txt_mask']
-            diff_mllm_context_vit_mask = cond_outputs['diff_mllm_context_vit_mask']
-            cond_embeds_wtxt_wvit = cond_outputs['diff_mllm_contexts']
+            diff_mllm_context_txt_mask = cond_outputs["diff_mllm_context_txt_mask"]
+            diff_mllm_context_vit_mask = cond_outputs["diff_mllm_context_vit_mask"]
+            cond_embeds_wtxt_wvit = cond_outputs["diff_mllm_contexts"]
             cond_embeds_wtxt_wovit = cond_embeds_wtxt_wvit[:, diff_mllm_context_txt_mask]
             cond_embeds_wotxt_wvit = cond_embeds_wtxt_wvit[:, diff_mllm_context_vit_mask]
 
@@ -892,7 +898,7 @@ class BerniniPipeline:
             cond_embeds_wtxt_wovit=cond_embeds_wtxt_wovit,
             cond_embeds_wotxt_wvit=cond_embeds_wotxt_wvit,
             cond_embeds_wotxt_wovit=cond_embeds_wotxt_wovit,
-            pred_vit_embed=pred_vit_embed_diff
+            pred_vit_embed=pred_vit_embed_diff,
         )
 
     @torch.no_grad()
@@ -1002,95 +1008,93 @@ class BerniniPipeline:
             return obj
 
         input_dict = _move_to_device(input_dict)
-        inputs = input_dict['inputs']
-        uncond_inputs = input_dict['uncond_inputs']
-        imgcond_inputs = input_dict['imgcond_inputs']
+        inputs = input_dict["inputs"]
+        uncond_inputs = input_dict["uncond_inputs"]
+        imgcond_inputs = input_dict["imgcond_inputs"]
 
         input_embeds = self.model.format_mllm_inputs_embeds(
-            input_ids=inputs['input_ids'],
-            visual_embeds=inputs['visual_embeds'],
-            visual_input_mask=inputs['visual_input_token_mask'],
-            visual_output_mask=inputs['visual_output_token_mask'],
+            input_ids=inputs["input_ids"],
+            visual_embeds=inputs["visual_embeds"],
+            visual_input_mask=inputs["visual_input_token_mask"],
+            visual_output_mask=inputs["visual_output_token_mask"],
         ).to(self.weight_dtype)
         uncond_input_embeds = self.model.format_mllm_inputs_embeds(
-            input_ids=uncond_inputs['input_ids'],
-            visual_embeds=uncond_inputs['visual_embeds'],
-            visual_input_mask=uncond_inputs['visual_input_token_mask'],
-            visual_output_mask=uncond_inputs['visual_output_token_mask'],
+            input_ids=uncond_inputs["input_ids"],
+            visual_embeds=uncond_inputs["visual_embeds"],
+            visual_input_mask=uncond_inputs["visual_input_token_mask"],
+            visual_output_mask=uncond_inputs["visual_output_token_mask"],
         ).to(self.weight_dtype)
         imgcond_input_embeds = self.model.format_mllm_inputs_embeds(
-            input_ids=imgcond_inputs['input_ids'],
-            visual_embeds=imgcond_inputs['visual_embeds'],
-            visual_input_mask=imgcond_inputs['visual_input_token_mask'],
-            visual_output_mask=imgcond_inputs['visual_output_token_mask'],
+            input_ids=imgcond_inputs["input_ids"],
+            visual_embeds=imgcond_inputs["visual_embeds"],
+            visual_input_mask=imgcond_inputs["visual_input_token_mask"],
+            visual_output_mask=imgcond_inputs["visual_output_token_mask"],
         ).to(self.weight_dtype)
 
         post_process_out = self.model.post_process_input_embeds(
-                input_embeds.unsqueeze(0),
-                inputs['visual_output_token_mask'],
-                tgt_vit_mask=None,
-                inference=True
-            )
-        inputs_embed = post_process_out['input_embeds']
+            input_embeds.unsqueeze(0), inputs["visual_output_token_mask"], tgt_vit_mask=None, inference=True
+        )
+        inputs_embed = post_process_out["input_embeds"]
         uncond_post_process_out = self.model.post_process_input_embeds(
-                uncond_input_embeds.unsqueeze(0),
-                uncond_inputs['visual_output_token_mask'],
-                tgt_vit_mask=None,
-                inference=True
-            )
-        uncond_inputs_embed = uncond_post_process_out['input_embeds']
+            uncond_input_embeds.unsqueeze(0),
+            uncond_inputs["visual_output_token_mask"],
+            tgt_vit_mask=None,
+            inference=True,
+        )
+        uncond_inputs_embed = uncond_post_process_out["input_embeds"]
         imgcond_post_process_out = self.model.post_process_input_embeds(
-                imgcond_input_embeds.unsqueeze(0),
-                imgcond_inputs['visual_output_token_mask'],
-                tgt_vit_mask=None,
-                inference=True
-            )
-        imgcond_inputs_embed = imgcond_post_process_out['input_embeds']
+            imgcond_input_embeds.unsqueeze(0),
+            imgcond_inputs["visual_output_token_mask"],
+            tgt_vit_mask=None,
+            inference=True,
+        )
+        imgcond_inputs_embed = imgcond_post_process_out["input_embeds"]
         ret = self.sample_vit_embed(
             input_embeds=inputs_embed,
-            attention_mask_4d=inputs['attention_mask_4d'].unsqueeze(0),
-            position_ids=inputs['position_ids'].unsqueeze(0),
-            visual_output_token_mask=inputs['visual_output_token_mask'],
+            attention_mask_4d=inputs["attention_mask_4d"].unsqueeze(0),
+            position_ids=inputs["position_ids"].unsqueeze(0),
+            visual_output_token_mask=inputs["visual_output_token_mask"],
             uncond_input_embeds=uncond_inputs_embed,
-            uncond_position_ids=uncond_inputs['position_ids'].unsqueeze(0),
-            uncond_attention_mask_4d=uncond_inputs['attention_mask_4d'].unsqueeze(0),
-            uncond_visual_output_token_mask=uncond_inputs['visual_output_token_mask'],
+            uncond_position_ids=uncond_inputs["position_ids"].unsqueeze(0),
+            uncond_attention_mask_4d=uncond_inputs["attention_mask_4d"].unsqueeze(0),
+            uncond_visual_output_token_mask=uncond_inputs["visual_output_token_mask"],
             imgcond_input_embeds=imgcond_inputs_embed,
-            imgcond_position_ids=imgcond_inputs['position_ids'].unsqueeze(0),
-            imgcond_attention_mask_4d=imgcond_inputs['attention_mask_4d'].unsqueeze(0),
-            imgcond_visual_output_token_mask=imgcond_inputs['visual_output_token_mask'],
+            imgcond_position_ids=imgcond_inputs["position_ids"].unsqueeze(0),
+            imgcond_attention_mask_4d=imgcond_inputs["attention_mask_4d"].unsqueeze(0),
+            imgcond_visual_output_token_mask=imgcond_inputs["visual_output_token_mask"],
             planning_step=planning_step,
             vit_txt_cfg=vit_txt_cfg,
             vit_img_cfg=vit_img_cfg,
             vit_denoising_step=vit_denoising_step,
         )
 
-        cond_embeds_wtxt_wvit = ret['cond_embeds_wtxt_wvit']
-        cond_embeds_wtxt_wovit = ret['cond_embeds_wtxt_wovit']
-        cond_embeds_wotxt_wvit = ret['cond_embeds_wotxt_wvit']
-        cond_embeds_wotxt_wovit = ret['cond_embeds_wotxt_wovit']
+        cond_embeds_wtxt_wvit = ret["cond_embeds_wtxt_wvit"]
+        cond_embeds_wtxt_wovit = ret["cond_embeds_wtxt_wovit"]
+        cond_embeds_wotxt_wvit = ret["cond_embeds_wotxt_wvit"]
+        cond_embeds_wotxt_wovit = ret["cond_embeds_wotxt_wovit"]
 
-        self.model.mllm.to('cpu')
+        self.model.mllm.to("cpu")
         if self.connector is not None:
-            self.connector.to('cpu')
+            self.connector.to("cpu")
         if getattr(self.model, "vit_decoder", None) is not None:
-            self.model.vit_decoder.to('cpu')
+            self.model.vit_decoder.to("cpu")
         torch.cuda.empty_cache()
 
         if getattr(self.model, "t5_text_encoder", None) is not None:
             self.model.t5_text_encoder.to(device)
         t5_input_ids, t5_attention_mask = _get_t5_text_ids(
-            t5_prompt, self.t5_tokenizer,
+            t5_prompt,
+            self.t5_tokenizer,
         )
-        t5_embeds = self.model.get_t5_text_embeddings_sample(
-            t5_input_ids.to(device), t5_attention_mask.to(device)
-        )
+        t5_embeds = self.model.get_t5_text_embeddings_sample(t5_input_ids.to(device), t5_attention_mask.to(device))
 
         neg_prompt_ids, neg_prompt_attention_mask = _get_t5_text_ids(
             _prompt_clean(neg_prompt),
             self.t5_tokenizer,
         )
-        neg_t5_embeds = self.model.get_t5_text_embeddings_sample(neg_prompt_ids.to(device), neg_prompt_attention_mask.to(device))
+        neg_t5_embeds = self.model.get_t5_text_embeddings_sample(
+            neg_prompt_ids.to(device), neg_prompt_attention_mask.to(device)
+        )
 
         cond_embeds_wtxt_wvit = torch.cat([t5_embeds, cond_embeds_wtxt_wvit], dim=1)
         if cond_embeds_wtxt_wovit is not None:
@@ -1099,7 +1103,7 @@ class BerniniPipeline:
             cond_embeds_wotxt_wvit = torch.cat([neg_t5_embeds, cond_embeds_wotxt_wvit], dim=1)
         cond_embeds_wotxt_wovit = torch.cat([neg_t5_embeds, cond_embeds_wotxt_wovit], dim=1)
         if getattr(self.model, "t5_text_encoder", None) is not None:
-            self.model.t5_text_encoder.to('cpu')
+            self.model.t5_text_encoder.to("cpu")
         torch.cuda.empty_cache()
 
         def is_image_vae_shape(shape):
@@ -1111,8 +1115,7 @@ class BerniniPipeline:
                 return None
             if feat.shape[1] < max_sequence_length:
                 feat = torch.cat(
-                    [feat, feat.new_zeros((1, max_sequence_length-feat.shape[1], feat.shape[-1]))],
-                    dim=1
+                    [feat, feat.new_zeros((1, max_sequence_length - feat.shape[1], feat.shape[-1]))], dim=1
                 )
             if truncate and feat.shape[1] > max_sequence_length:
                 feat = feat[:, :max_sequence_length, :]
@@ -1127,14 +1130,14 @@ class BerniniPipeline:
                 cond_embeds_wotxt_wvit = pad_and_truncate_feat(cond_embeds_wotxt_wvit)
 
         pos = 0
-        all_vae_latents = inputs['input_vae_latents']
-        all_vae_rope = inputs['input_vae_rope']
+        all_vae_latents = inputs["input_vae_latents"]
+        all_vae_rope = inputs["input_vae_rope"]
         src_image_vae_latents, src_image_vae_shapes, src_image_vae_rope = [], [], []
         src_video_vae_latents, src_video_vae_shapes, src_video_vae_rope = [], [], []
-        for i, shape in enumerate(inputs['input_vae_shape'][:-1]):
+        for i, shape in enumerate(inputs["input_vae_shape"][:-1]):
             vae_len = shape[1] * shape[2] // 4 * shape[0]
-            cur_vae_rope = all_vae_rope[pos:pos+vae_len]
-            cur_vae_latent = all_vae_latents[pos:pos+vae_len]
+            cur_vae_rope = all_vae_rope[pos : pos + vae_len]
+            cur_vae_latent = all_vae_latents[pos : pos + vae_len]
             if is_image_vae_shape(shape):
                 src_image_vae_latents.append(cur_vae_latent)
                 src_image_vae_shapes.append(shape)
@@ -1146,7 +1149,7 @@ class BerniniPipeline:
             pos += vae_len
 
         # Diffusion dimensions are derived from the transformed target VAE shape
-        target_vae_shape = inputs['input_vae_shape'][-1]
+        target_vae_shape = inputs["input_vae_shape"][-1]
         target_t = int(target_vae_shape[0])
         num_frames = min(num_frames, 1 + (target_t - 1) * 4)
         if height is None or height <= 0:
@@ -1157,12 +1160,20 @@ class BerniniPipeline:
         torch.cuda.empty_cache()
         latents = self.model.diff_dec.sample_bernini_wvitcfg(
             prompt_embeds_wtxt_wvit=cond_embeds_wtxt_wvit.to(self.weight_dtype),
-            prompt_embeds_wtxt_wovit=cond_embeds_wtxt_wovit.to(self.weight_dtype) if cond_embeds_wtxt_wovit is not None else None,
-            prompt_embeds_wotxt_wvit=cond_embeds_wotxt_wvit.to(self.weight_dtype) if cond_embeds_wotxt_wvit is not None else None,
+            prompt_embeds_wtxt_wovit=cond_embeds_wtxt_wovit.to(self.weight_dtype)
+            if cond_embeds_wtxt_wovit is not None
+            else None,
+            prompt_embeds_wotxt_wvit=cond_embeds_wotxt_wvit.to(self.weight_dtype)
+            if cond_embeds_wotxt_wvit is not None
+            else None,
             prompt_embeds_wotxt_wovit=cond_embeds_wotxt_wovit.to(self.weight_dtype),
-            source_image_vae_latents=None if len(src_image_vae_latents) == 0 else torch.cat(src_image_vae_latents, dim=0),
+            source_image_vae_latents=None
+            if len(src_image_vae_latents) == 0
+            else torch.cat(src_image_vae_latents, dim=0),
             source_image_vae_rope=None if len(src_image_vae_rope) == 0 else torch.cat(src_image_vae_rope, dim=0),
-            source_video_vae_latents=None if len(src_video_vae_latents) == 0 else torch.cat(src_video_vae_latents, dim=0),
+            source_video_vae_latents=None
+            if len(src_video_vae_latents) == 0
+            else torch.cat(src_video_vae_latents, dim=0),
             source_video_vae_rope=None if len(src_video_vae_rope) == 0 else torch.cat(src_video_vae_rope, dim=0),
             num_frames=num_frames,
             width=width,

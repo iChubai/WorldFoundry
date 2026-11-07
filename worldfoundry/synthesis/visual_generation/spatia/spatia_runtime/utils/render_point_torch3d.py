@@ -1,6 +1,7 @@
 import logging
 
 import torch
+
 try:
     from pytorch3d.ops import sample_farthest_points
     from pytorch3d.renderer import (
@@ -100,7 +101,9 @@ def opencv_to_pytorch3d_transform(w2c_opencv):
         T_opencv.unsqueeze(-1),
     ).squeeze(-1)
 
-    c2w_pytorch3d = torch.eye(4, device=w2c_opencv.device, dtype=w2c_opencv.dtype)[None].repeat(R_pytorch3d.shape[0], 1, 1)
+    c2w_pytorch3d = torch.eye(4, device=w2c_opencv.device, dtype=w2c_opencv.dtype)[None].repeat(
+        R_pytorch3d.shape[0], 1, 1
+    )
     c2w_pytorch3d[:, :3, :3] = R_pytorch3d
     c2w_pytorch3d[:, :3, 3] = T_pytorch3d
     w2c_pytorch3d = torch.inverse(c2w_pytorch3d)

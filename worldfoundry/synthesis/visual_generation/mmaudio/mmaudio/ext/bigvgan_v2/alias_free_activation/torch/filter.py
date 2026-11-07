@@ -27,7 +27,9 @@ else:
 # This code is adopted from adefossez's julius.lowpass.LowPassFilters under the MIT License
 # https://adefossez.github.io/julius/julius/lowpass.html
 #   LICENSE is in incl_licenses directory.
-from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import kaiser_sinc_filter1d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import (
+    kaiser_sinc_filter1d,
+)
 
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import LowPassFilter1d

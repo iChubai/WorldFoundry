@@ -431,6 +431,7 @@ class GigaBrain0RuntimeConfig:
         enable_2d_traj_output: If True, enable 2D trajectory output from the policy.
         depth_img_prefix_name: Optional prefix name for depth images, if used.
     """
+
     model_path: Path
     norm_stats_path: Path
     tokenizer_model_path: str
@@ -481,7 +482,7 @@ class GigaBrain0Runtime:
 
         # Load and parse normalization statistics from the JSON file
         payload = json.loads(self.config.norm_stats_path.read_text(encoding="utf-8"))
-        norm_stats = payload.get("norm_stats", payload) # Handle cases where 'norm_stats' might be top-level
+        norm_stats = payload.get("norm_stats", payload)  # Handle cases where 'norm_stats' might be top-level
 
         # Initialize the GigaBrain-0 pipeline with configuration and normalized stats
         pipe = GigaBrain0Pipeline(
@@ -526,7 +527,7 @@ class GigaBrain0Runtime:
         Returns:
             A dictionary summarizing the prediction result, including the artifact path.
         """
-        self.load() # Ensure the model is loaded before prediction
+        self.load()  # Ensure the model is loaded before prediction
         assert self.policy is not None
 
         started = time.monotonic()
@@ -563,7 +564,7 @@ class GigaBrain0Runtime:
             "artifact_kind": "action_trace",
             "instruction": prompt,
             "action_shape": list(action.shape),
-            "actions": _jsonable(action.detach().cpu()), # Detach from GPU and convert to JSON-serializable format
+            "actions": _jsonable(action.detach().cpu()),  # Detach from GPU and convert to JSON-serializable format
             "trajectory_2d": _jsonable(traj.detach().cpu()) if traj is not None else None,
             "duration_seconds": round(time.monotonic() - started, 3),
             "metadata": _jsonable(dict(extra_metadata or {})),

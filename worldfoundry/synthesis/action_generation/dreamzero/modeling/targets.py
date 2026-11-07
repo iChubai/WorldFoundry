@@ -122,17 +122,13 @@ def validate_inference_targets(value, *, path: str = "config") -> None:
             try:
                 child = value[key]
             except Exception as error:
-                raise TypeError(
-                    f"DreamZero configuration value is not inspectable at {path}.{key}"
-                ) from error
+                raise TypeError(f"DreamZero configuration value is not inspectable at {path}.{key}") from error
             child_path = f"{path}.{key}"
             if key == "_target_":
                 if not isinstance(child, str):
                     raise TypeError(f"DreamZero Hydra target must be a string at {child_path}")
                 if "${" in child or not child.startswith(_ALLOWED_INFERENCE_TARGET_PREFIXES):
-                    raise ValueError(
-                        f"DreamZero Hydra target is not allowlisted at {child_path}: {child}"
-                    )
+                    raise ValueError(f"DreamZero Hydra target is not allowlisted at {child_path}: {child}")
             else:
                 validate_inference_targets(child, path=child_path)
     elif isinstance(value, list) or value.__class__.__name__ == "ListConfig":

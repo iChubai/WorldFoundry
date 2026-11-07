@@ -19,6 +19,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 i
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5EncoderModel
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE
 
+
 def upsample_conv3d_weights(conv_small: nn.Conv3d, size: Tuple[int, int, int]):
     old_weight = conv_small.weight.data
     new_weight = F.interpolate(
@@ -72,7 +73,6 @@ def load_yume_checkpoint(model: nn.Module, checkpoint_dir: str) -> nn.Module:
 
 
 class YumeI2V:
-
     def __init__(
         self,
         config,
@@ -104,21 +104,11 @@ class YumeI2V:
         }
 
         self.model = WanModel.from_config(config_wan)
-        self.model.patch_embedding_2x = upsample_conv3d_weights(
-            deepcopy(self.model.patch_embedding), (1, 4, 4)
-        )
-        self.model.patch_embedding_2x_f = torch.nn.Conv3d(
-            36, 36, kernel_size=(1, 4, 4), stride=(1, 4, 4)
-        )
-        self.model.patch_embedding_4x = upsample_conv3d_weights(
-            deepcopy(self.model.patch_embedding), (1, 8, 8)
-        )
-        self.model.patch_embedding_8x = upsample_conv3d_weights(
-            deepcopy(self.model.patch_embedding), (1, 16, 16)
-        )
-        self.model.patch_embedding_16x = upsample_conv3d_weights(
-            deepcopy(self.model.patch_embedding), (1, 32, 32)
-        )
+        self.model.patch_embedding_2x = upsample_conv3d_weights(deepcopy(self.model.patch_embedding), (1, 4, 4))
+        self.model.patch_embedding_2x_f = torch.nn.Conv3d(36, 36, kernel_size=(1, 4, 4), stride=(1, 4, 4))
+        self.model.patch_embedding_4x = upsample_conv3d_weights(deepcopy(self.model.patch_embedding), (1, 8, 8))
+        self.model.patch_embedding_8x = upsample_conv3d_weights(deepcopy(self.model.patch_embedding), (1, 16, 16))
+        self.model.patch_embedding_16x = upsample_conv3d_weights(deepcopy(self.model.patch_embedding), (1, 32, 32))
 
         self.model = load_yume_checkpoint(self.model, os.path.join(checkpoint_dir, "Yume-Dit"))
         self.model.eval().requires_grad_(False)
@@ -226,8 +216,8 @@ class YumeI2V:
         else:
             model_input = self.vae.encode([model_input])[0]
 
-        max_seq_len = ((frame_num - 1) // self.vae_stride[0] + 1) * lat_h * lat_w // (
-            self.patch_size[1] * self.patch_size[2]
+        max_seq_len = (
+            ((frame_num - 1) // self.vae_stride[0] + 1) * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
         )
         max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
 
@@ -366,8 +356,8 @@ class YumeI2V:
         img = model_input
         model_input = model_input_1
 
-        max_seq_len = ((frame_num - 1) // self.vae_stride[0] + 1) * lat_h * lat_w // (
-            self.patch_size[1] * self.patch_size[2]
+        max_seq_len = (
+            ((frame_num - 1) // self.vae_stride[0] + 1) * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
         )
         max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
 

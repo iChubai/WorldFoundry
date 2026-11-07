@@ -7,5 +7,5 @@ __all__ = [
     "BidirectionalDiffusionInferencePipeline",
     "BidirectionalInferencePipeline",
     "CausalDiffusionInferencePipeline",
-    "CausalInferencePipeline"
+    "CausalInferencePipeline",
 ]

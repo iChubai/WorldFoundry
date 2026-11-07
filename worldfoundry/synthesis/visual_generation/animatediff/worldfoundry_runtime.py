@@ -119,7 +119,6 @@ class AnimateDiffRuntime:
             negative_prompt=synthesis.negative_prompt,
         )
 
-
     def ensure_pipe(self):
         """
         Ensures the AnimateDiff `AnimationPipeline` is initialized and ready.
@@ -191,8 +190,8 @@ class AnimateDiffRuntime:
             pipe,
             motion_module_path=self.motion_module_path,
             dreambooth_model_path=self.dreambooth_model_path,
-        ).to("cuda") # Ensure pipeline is moved to cuda after weights are loaded
-        pipe = pipe.to(device) # Final move to the specified device
+        ).to("cuda")  # Ensure pipeline is moved to cuda after weights are loaded
+        pipe = pipe.to(device)  # Final move to the specified device
         self.device = device
         self._pipe = pipe
         return pipe
@@ -292,7 +291,7 @@ class AnimateDiffRuntime:
         Raises:
             RuntimeError: Always, as this method is explicitly blocked.
         """
-        del config_path, output_path, timeout_seconds # Acknowledge unused parameters
+        del config_path, output_path, timeout_seconds  # Acknowledge unused parameters
         raise RuntimeError(
             "AnimateDiff config execution is blocked because this path previously used a subprocess. "
             "Use the in-process AnimationPipeline path after staging the required checkpoints."
@@ -338,15 +337,13 @@ class AnimateDiffRuntime:
             ValueError: If `images` or `video` inputs are provided (as this is text-to-video).
             RuntimeError: If `official_config_path` is used, triggering the blocked legacy path.
         """
-        del interactions # Acknowledge unused parameter
+        del interactions  # Acknowledge unused parameter
         if images is not None or video is not None:
             raise ValueError("AnimateDiff text-to-video does not accept image/video inputs in this integration.")
 
         # Check for legacy official config path and raise error if used
         official_config_path = (
-            kwargs.pop("official_config_path", None)
-            or kwargs.pop("config_path", None)
-            or kwargs.pop("config", None)
+            kwargs.pop("official_config_path", None) or kwargs.pop("config_path", None) or kwargs.pop("config", None)
         )
         if official_config_path:
             return self.run_official_config(

@@ -18,6 +18,7 @@ from .constants import EmbodimentTag
 # Rotation Representation
 # ==============================================================================
 
+
 class RotationType(Enum):
     """Type of rotation representation"""
 
@@ -39,13 +40,11 @@ class RotationType(Enum):
 # LeRobot Schema Compatibility
 # ==============================================================================
 
+
 class LeRobotModalityField(BaseModel):
     """Base metadata for LeRobot modality field."""
 
-    original_key: Optional[str] = Field(
-        default=None,
-        description="Original key in LeRobot dataset"
-    )
+    original_key: Optional[str] = Field(default=None, description="Original key in LeRobot dataset")
 
 
 class LeRobotStateActionMetadata(LeRobotModalityField):
@@ -59,12 +58,8 @@ class LeRobotStateActionMetadata(LeRobotModalityField):
         ...,
         description="End index of the modality in concatenated state/action vector",
     )
-    rotation_type: Optional[RotationType] = Field(
-        default=None, description="The type of rotation for the modality"
-    )
-    absolute: bool = Field(
-        default=True, description="Whether the modality is absolute"
-    )
+    rotation_type: Optional[RotationType] = Field(default=None, description="The type of rotation for the modality")
+    absolute: bool = Field(default=True, description="Whether the modality is absolute")
     dtype: str = Field(
         default="float64",
         description="The data type of the modality. Defaults to float64.",
@@ -154,9 +149,7 @@ class LeRobotModalityMetadata(BaseModel):
                 )
             return self.video[subkey]
         elif modality == "annotation":
-            assert (
-                self.annotation is not None
-            ), "Trying to get annotation metadata for a dataset with no annotations"
+            assert self.annotation is not None, "Trying to get annotation metadata for a dataset with no annotations"
             if subkey not in self.annotation:
                 raise ValueError(
                     f"Key: {key}, annotation key {subkey} not found in metadata, available annotation keys: {self.annotation.keys()}"
@@ -169,6 +162,7 @@ class LeRobotModalityMetadata(BaseModel):
 # ==============================================================================
 # Dataset Statistics
 # ==============================================================================
+
 
 class DatasetStatisticalValues(BaseModel):
     """Statistical values for dataset normalization."""
@@ -195,6 +189,7 @@ class DatasetStatistics(BaseModel):
 # ==============================================================================
 # Modality Metadata
 # ==============================================================================
+
 
 class VideoMetadata(BaseModel):
     """Metadata of the video modality"""

@@ -42,9 +42,11 @@ from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 from transformers.processing_utils import Unpack
 from transformers.utils import TransformersKwargs, auto_docstring, is_torchdynamo_compiling
 from transformers.utils.deprecation import deprecate_kwarg
+
 try:
     from transformers.utils.generic import check_model_inputs
 except ImportError:
+
     def check_model_inputs(func):
         """Inference-only compatibility wrapper for Transformers 5.x.
 
@@ -67,6 +69,8 @@ except ImportError:
             return outputs
 
         return wrapper
+
+
 from transformers.models.qwen3_vl.configuration_qwen3_vl import Qwen3VLConfig, Qwen3VLTextConfig, Qwen3VLVisionConfig
 
 
@@ -338,13 +342,7 @@ class Qwen3VLTextRotaryEmbedding(nn.Module):
             rope_config = {}
         base = rope_config.get("rope_theta", getattr(config, "rope_theta", 5_000_000.0))
         dim = getattr(config, "head_dim", None) or config.hidden_size // config.num_attention_heads
-        inv_freq = 1.0 / (
-            base
-            ** (
-                torch.arange(0, dim, 2, dtype=torch.int64, device=device).float()
-                / dim
-            )
-        )
+        inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2, dtype=torch.int64, device=device).float() / dim))
         return inv_freq, 1.0
 
     def apply_interleaved_mrope(self, freqs, mrope_section):
@@ -488,7 +486,9 @@ class Qwen3VLTextAttention(nn.Module):
             if use_cache:
                 # sin and cos are specific to RoPE models; cache_position needed for the static cache
                 cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-                key_states, value_states = past_key_values.update(key_states, value_states, self.layer_idx, cache_kwargs)
+                key_states, value_states = past_key_values.update(
+                    key_states, value_states, self.layer_idx, cache_kwargs
+                )
             else:
                 # Transformers 5 stores cache tensors on per-layer objects and
                 # removed ``DynamicCache.__getitem__``.  Keep the 4.57 path for
@@ -1277,9 +1277,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             else:
                 batch_size, seq_length, _ = inputs_embeds.shape
                 delta = (
-                    (cache_position[0] + self.rope_deltas).to(inputs_embeds.device)
-                    if cache_position is not None
-                    else 0
+                    (cache_position[0] + self.rope_deltas).to(inputs_embeds.device) if cache_position is not None else 0
                 )
                 position_ids = torch.arange(seq_length, device=inputs_embeds.device)
                 position_ids = position_ids.view(1, -1).expand(batch_size, -1)

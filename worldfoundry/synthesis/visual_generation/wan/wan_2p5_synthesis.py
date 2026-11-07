@@ -42,14 +42,14 @@ class Wan2p5Synthesis(CredentialedSynthesis):
     def generate_t2av(
         self,
         input_prompt: str,
-        size: str = '832*480',
+        size: str = "832*480",
         duration: int = 10,
         negative_prompt: str = "",
         audio: bool = True,
         prompt_extend: bool = True,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """文本到音视频生成。
 
@@ -66,7 +66,7 @@ class Wan2p5Synthesis(CredentialedSynthesis):
         """
         return _dashscope_video_synthesis(self.endpoint).call(
             api_key=self.api_key,
-            model='wan2.5-t2v-preview',
+            model="wan2.5-t2v-preview",
             prompt=input_prompt,
             size=size,
             duration=duration,
@@ -75,21 +75,21 @@ class Wan2p5Synthesis(CredentialedSynthesis):
             prompt_extend=prompt_extend,
             watermark=watermark,
             seed=seed if seed is not None else DEFAULT_SEED,
-            **kwargs
+            **kwargs,
         )
 
     def generate_i2av(
         self,
         encoded_image: str,
         input_prompt: str,
-        resolution: str = '480P',
+        resolution: str = "480P",
         duration: int = 10,
         negative_prompt: str = "",
         audio: bool = True,
         prompt_extend: bool = True,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ):
         """图像到音视频生成。
 
@@ -107,7 +107,7 @@ class Wan2p5Synthesis(CredentialedSynthesis):
         """
         return _dashscope_video_synthesis(self.endpoint).call(
             api_key=self.api_key,
-            model='wan2.5-i2v-preview',
+            model="wan2.5-i2v-preview",
             prompt=input_prompt,
             img_url=encoded_image,
             resolution=resolution,
@@ -117,22 +117,22 @@ class Wan2p5Synthesis(CredentialedSynthesis):
             prompt_extend=prompt_extend,
             watermark=watermark,
             seed=seed if seed is not None else DEFAULT_SEED,
-            **kwargs
+            **kwargs,
         )
 
     def predict(
         self,
         processed_data: Dict[str, Any],
         task_type: str = "auto",
-        size: str = '832*480',
-        resolution: str = '480P',
+        size: str = "832*480",
+        resolution: str = "480P",
         duration: int = 10,
         negative_prompt: str = "",
         audio: bool = True,
         prompt_extend: bool = True,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """生成预测结果。
 
@@ -163,23 +163,15 @@ class Wan2p5Synthesis(CredentialedSynthesis):
             prompt_extend=prompt_extend,
             watermark=watermark,
             seed=seed,
-            **kwargs
+            **kwargs,
         )
         if task_type == "i2av":
             if encoded_image is None:
                 raise ValueError("i2av 任务需要提供 encoded_image 参数")
-            response = self.generate_i2av(
-                encoded_image=encoded_image,
-                resolution=resolution,
-                **common
-            )
+            response = self.generate_i2av(encoded_image=encoded_image, resolution=resolution, **common)
         elif task_type == "t2av":
             response = self.generate_t2av(size=size, **common)
         else:
             raise ValueError(f"不支持的任务类型: {task_type}")
 
-        return {
-            "task_type": task_type,
-            "prompt": prompt,
-            "response": response
-        }
+        return {"task_type": task_type, "prompt": prompt, "response": response}

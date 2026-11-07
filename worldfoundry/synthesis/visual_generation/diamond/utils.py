@@ -1,4 +1,3 @@
-
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
@@ -85,15 +84,12 @@ class CommonTools(StateDictMixin):
         return setattr(self, name, value)
 
 
-
-
 def count_parameters(model: nn.Module) -> int:
     return sum(p.numel() for p in model.parameters())
 
 
 def extract_state_dict(state_dict: OrderedDict, module_name: str) -> OrderedDict:
     return OrderedDict({k.split(".", 1)[1]: v for k, v in state_dict.items() if k.startswith(module_name)})
-
 
 
 def init_lstm(model: nn.Module) -> None:
@@ -121,8 +117,6 @@ def get_path_agent_ckpt(path_ckpt_dir: Union[str, Path], epoch: int, num_zeros: 
         return all_[epoch]
 
 
-
-
 def prompt_atari_game():
     for i, game in enumerate(ATARI_100K_GAMES):
         print(f"{i:2d}: {game}")
@@ -138,9 +132,6 @@ def prompt_atari_game():
         break
     game = ATARI_100K_GAMES[x]
     return game
-
-
-
 
 
 def set_seed(seed: int) -> None:

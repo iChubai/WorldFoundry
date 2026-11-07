@@ -29,9 +29,7 @@ class SmolVLAConfig:
 
     input_features: dict[str, PolicyFeature] = field(default_factory=dict)
     output_features: dict[str, PolicyFeature] = field(default_factory=dict)
-    normalization_mapping: dict[str, str] = field(
-        default_factory=dict
-    )
+    normalization_mapping: dict[str, str] = field(default_factory=dict)
     device: str | None = "cuda"
     n_obs_steps: int = 1
     chunk_size: int = 50
@@ -66,16 +64,13 @@ class SmolVLAConfig:
         allowed = set(cls.__dataclass_fields__)
         values = {key: value for key, value in payload.items() if key in allowed}
         values["input_features"] = {
-            key: PolicyFeature.from_value(value)
-            for key, value in payload.get("input_features", {}).items()
+            key: PolicyFeature.from_value(value) for key, value in payload.get("input_features", {}).items()
         }
         values["output_features"] = {
-            key: PolicyFeature.from_value(value)
-            for key, value in payload.get("output_features", {}).items()
+            key: PolicyFeature.from_value(value) for key, value in payload.get("output_features", {}).items()
         }
         values["normalization_mapping"] = {
-            str(key).upper(): str(value).upper()
-            for key, value in payload.get("normalization_mapping", {}).items()
+            str(key).upper(): str(value).upper() for key, value in payload.get("normalization_mapping", {}).items()
         }
         resize = values.get("resize_imgs_with_padding")
         if resize is not None:
@@ -84,11 +79,7 @@ class SmolVLAConfig:
 
     @property
     def image_features(self) -> dict[str, PolicyFeature]:
-        return {
-            key: feature
-            for key, feature in self.input_features.items()
-            if feature.type in {"VISUAL", "IMAGE"}
-        }
+        return {key: feature for key, feature in self.input_features.items() if feature.type in {"VISUAL", "IMAGE"}}
 
     @property
     def state_feature(self) -> PolicyFeature:

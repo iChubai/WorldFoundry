@@ -46,7 +46,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         elif not Path(value).expanduser().exists():
             missing.append({"kind": "asset", "path": value, "reason": f"Open-Oasis `{key}` path does not exist"})
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Open-Oasis generate.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Open-Oasis generate.py is missing"}
+        )
     return missing
 
 

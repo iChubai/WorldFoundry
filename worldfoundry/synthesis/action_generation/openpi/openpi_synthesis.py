@@ -154,14 +154,11 @@ class OpenPISynthesis(ActionModelSynthesis):
         config_name = str(merged["config_name"])
         data_family = config_name.rsplit("_", 1)[-1].lower()
         if data_family not in {"aloha", "droid", "libero"}:
-            raise ValueError(
-                f"OpenPI config {config_name!r} does not identify a supported data family"
-            )
+            raise ValueError(f"OpenPI config {config_name!r} does not identify a supported data family")
         configured_family = str(merged.get("data_family") or data_family).lower()
         if configured_family != data_family:
             raise ValueError(
-                f"OpenPI config {config_name!r} implies data family {data_family!r}, "
-                f"not {configured_family!r}"
+                f"OpenPI config {config_name!r} implies data family {data_family!r}, not {configured_family!r}"
             )
         # Resolve the checkpoint directory from multiple possible keys in explicit_options.
         checkpoint_dir = (
@@ -324,7 +321,9 @@ class OpenPISynthesis(ActionModelSynthesis):
             },
         }
         # Write the plan payload to a JSON file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         if plan_only:
             return {

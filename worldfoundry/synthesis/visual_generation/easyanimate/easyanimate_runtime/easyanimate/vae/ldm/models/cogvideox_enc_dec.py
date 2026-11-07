@@ -18,8 +18,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 from diffusers.models.autoencoders.autoencoder_kl_cogvideox import (
-    CogVideoXCausalConv3d, CogVideoXDownBlock3D, CogVideoXMidBlock3D,
-    CogVideoXSafeConv3d, CogVideoXSpatialNorm3D, CogVideoXUpBlock3D)
+    CogVideoXCausalConv3d,
+    CogVideoXDownBlock3D,
+    CogVideoXMidBlock3D,
+    CogVideoXSafeConv3d,
+    CogVideoXSpatialNorm3D,
+    CogVideoXUpBlock3D,
+)
 from diffusers.utils import logging
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -121,7 +126,7 @@ class CogVideoXEncoder3D(nn.Module):
         )
 
         self.gradient_checkpointing = False
-        
+
     def _clear_fake_context_parallel_cache(self):
         for name, module in self.named_modules():
             if isinstance(module, CogVideoXCausalConv3d):

@@ -2,6 +2,7 @@
 
 Stores static scene point clouds and dynamic event point clouds.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from .event_types import EventPointCloud, EventID
 @dataclass
 class WorldState:
     """Container for global static and dynamic geometry."""
+
     static_points: Optional[np.ndarray] = None
     static_colors: Optional[np.ndarray] = None
     event_pointclouds: Dict[EventID, EventPointCloud] = field(default_factory=dict)
@@ -59,11 +61,7 @@ class WorldState:
             # otherwise fall back to merged points.
             if epc.per_frame_points and len(epc.per_frame_points) > 0:
                 pts_local = epc.per_frame_points[-1]
-                cols_local = (
-                    epc.per_frame_colors[-1]
-                    if epc.per_frame_colors
-                    else epc.colors
-                )
+                cols_local = epc.per_frame_colors[-1] if epc.per_frame_colors else epc.colors
             else:
                 pts_local = epc.points
                 cols_local = epc.colors

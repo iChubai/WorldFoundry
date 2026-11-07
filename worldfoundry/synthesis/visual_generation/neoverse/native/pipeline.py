@@ -10,12 +10,14 @@ from einops import rearrange
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+
 try:
     from gsplat.rendering import rasterization
     from gsplat.cuda._torch_impl import (
         _fully_fused_projection,
         _quat_scale_to_covar_preci,
     )
+
     _GSPLAT_PIPELINE_IMPORT_ERROR = None
 except ModuleNotFoundError as error:
     rasterization = None
@@ -40,7 +42,12 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan import WanMode
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants import NeoVerseControlBranch
 from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanPrompter, WanTextEncoder
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding, T5LayerNorm
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import WanVideoVAE, RMS_norm, CausalConv3d, Upsample
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
+    WanVideoVAE,
+    RMS_norm,
+    CausalConv3d,
+    Upsample,
+)
 from worldfoundry.core.nn import FlowMatchScheduler, RMSNorm, sinusoidal_embedding_1d
 from worldfoundry.core.vram import enable_vram_management, AutoWrappedModule, AutoWrappedLinear, WanAutoCastLayerNorm
 from worldfoundry.core.io import save_video
@@ -59,8 +66,12 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             pipeline_kwargs: The pipeline kwargs.
         """
         super().__init__(
-            device=device, torch_dtype=torch_dtype,
-            height_division_factor=16, width_division_factor=16, time_division_factor=4, time_division_remainder=1
+            device=device,
+            torch_dtype=torch_dtype,
+            height_division_factor=16,
+            width_division_factor=16,
+            time_division_factor=4,
+            time_division_remainder=1,
         )
         pipeline_kwargs = dict(pipeline_kwargs or {})
         self.scheduler = FlowMatchScheduler(shift=5, sigma_min=0.0, extra_one_step=True)
@@ -86,7 +97,6 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
         self.model_fn = model_fn_wan_video
         self.save_root = None
 
-
     def load_lora(self, module, path=None, state_dict=None, alpha=1, lora_type="general"):
         """Load lora.
 
@@ -109,7 +119,6 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             lora = state_dict
         loader.load(module, lora, alpha=alpha)
 
-
     def enable_vram_management(self, num_persistent_param_in_dit=None, vram_limit=None, vram_buffer=0.5):
         """Enable vram management.
 
@@ -129,13 +138,13 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             dtype = next(iter(self.text_encoder.parameters())).dtype
             enable_vram_management(
                 self.text_encoder,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Embedding: AutoWrappedModule,
                     T5RelativeEmbedding: AutoWrappedModule,
                     T5LayerNorm: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -150,14 +159,14 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             device = "cpu" if vram_limit is not None else self.device
             enable_vram_management(
                 self.dit,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv3d: AutoWrappedModule,
                     torch.nn.LayerNorm: WanAutoCastLayerNorm,
                     RMSNorm: AutoWrappedModule,
                     torch.nn.Conv2d: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -166,7 +175,7 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                     computation_device=self.device,
                 ),
                 max_num_param=num_persistent_param_in_dit,
-                overflow_vram_config = dict(
+                overflow_vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -180,7 +189,7 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             dtype = next(iter(self.vae.parameters())).dtype
             enable_vram_management(
                 self.vae,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv2d: AutoWrappedModule,
                     RMS_norm: AutoWrappedModule,
@@ -189,7 +198,7 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                     torch.nn.SiLU: AutoWrappedModule,
                     torch.nn.Dropout: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -203,7 +212,7 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             device = "cpu" if vram_limit is not None else self.device
             enable_vram_management(
                 self.control_branch,
-                module_map = {
+                module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                     torch.nn.Conv3d: AutoWrappedModule,
                     torch.nn.LayerNorm: AutoWrappedModule,
@@ -211,7 +220,7 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                     torch.nn.SiLU: AutoWrappedModule,
                     torch.nn.GroupNorm: AutoWrappedModule,
                 },
-                vram_config = dict(
+                vram_config=dict(
                     offload_dtype=dtype,
                     offload_device="cpu",
                     onload_dtype=dtype,
@@ -221,7 +230,6 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                 ),
                 vram_limit=vram_limit,
             )
-
 
     @classmethod
     def from_components(
@@ -270,7 +278,6 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             pipe.to(device)
         pipe.eval()
         return pipe
-
 
     @torch.no_grad()
     def __call__(
@@ -350,18 +357,32 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
             "negative_prompt": negative_prompt if isinstance(negative_prompt, list) else [negative_prompt],
         }
         inputs_shared = {
-            "input_video": input_video, "denoising_strength": denoising_strength,
-            "control_scale": control_scale, "source_views": source_views,
-            "target_rgb": target_rgb, "target_depth": target_depth, "target_mask": target_mask,
-            "target_poses": target_poses, "target_intrs": target_intrs,
-            "seed": seed, "rand_device": rand_device,
-            "height": height, "width": width, "num_frames": num_frames,
-            "cfg_scale": cfg_scale, "sigma_shift": sigma_shift,
-            "tiled": tiled, "tile_size": tile_size, "tile_stride": tile_stride,
-            "sliding_window_size": sliding_window_size, "sliding_window_stride": sliding_window_stride,
+            "input_video": input_video,
+            "denoising_strength": denoising_strength,
+            "control_scale": control_scale,
+            "source_views": source_views,
+            "target_rgb": target_rgb,
+            "target_depth": target_depth,
+            "target_mask": target_mask,
+            "target_poses": target_poses,
+            "target_intrs": target_intrs,
+            "seed": seed,
+            "rand_device": rand_device,
+            "height": height,
+            "width": width,
+            "num_frames": num_frames,
+            "cfg_scale": cfg_scale,
+            "sigma_shift": sigma_shift,
+            "tiled": tiled,
+            "tile_size": tile_size,
+            "tile_stride": tile_stride,
+            "sliding_window_size": sliding_window_size,
+            "sliding_window_stride": sliding_window_stride,
         }
         for unit in self.units:
-            inputs_shared, inputs_posi, inputs_nega = self.unit_runner(unit, self, inputs_shared, inputs_posi, inputs_nega)
+            inputs_shared, inputs_posi, inputs_nega = self.unit_runner(
+                unit, self, inputs_shared, inputs_posi, inputs_nega
+            )
 
         # Denoise
         self.load_models_to_device(self.in_iteration_models)
@@ -379,11 +400,15 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
                 noise_pred = noise_pred_posi
 
             # Scheduler
-            inputs_shared["latents"] = self.scheduler.step(noise_pred, self.scheduler.timesteps[progress_id], inputs_shared["latents"])
+            inputs_shared["latents"] = self.scheduler.step(
+                noise_pred, self.scheduler.timesteps[progress_id], inputs_shared["latents"]
+            )
 
         # Decode
         self.load_models_to_device(["vae"])
-        video = self.vae.decode(inputs_shared["latents"], device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride)
+        video = self.vae.decode(
+            inputs_shared["latents"], device=self.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        )
         video = self.vae_output_to_video(video)
         self.load_models_to_device([])
         return video
@@ -391,6 +416,7 @@ class WanVideoNeoVersePipeline(StagedDiffusionPipeline):
 
 class WanVideoUnit_4DPreprocesser(InferenceStage):
     """Wan video unit d preprocesser implementation."""
+
     def __init__(
         self,
         novel_view_sampling_trans=[0.1, 0.5],
@@ -415,7 +441,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
         """
         super().__init__(
             input_params=("source_views", "target_rgb", "target_depth", "target_mask", "target_poses", "target_intrs"),
-            onload_model_names=("reconstructor",)
+            onload_model_names=("reconstructor",),
         )
         self.novel_view_sampling_trans = novel_view_sampling_trans
         self.novel_view_sampling_max_rot = novel_view_sampling_max_rot
@@ -425,7 +451,16 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
         self.alpha_thresh = alpha_thresh
         self.color_thresh = color_thresh
 
-    def process(self, pipe: WanVideoNeoVersePipeline, source_views, target_rgb, target_depth, target_mask, target_poses, target_intrs):
+    def process(
+        self,
+        pipe: WanVideoNeoVersePipeline,
+        source_views,
+        target_rgb,
+        target_depth,
+        target_mask,
+        target_poses,
+        target_intrs,
+    ):
         """Process.
 
         Args:
@@ -444,7 +479,13 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
             source_views = self.compose_batches_from_list(source_views)
         input_video = None
 
-        if target_rgb is not None and target_depth is not None and target_mask is not None and target_poses is not None and target_intrs is not None:
+        if (
+            target_rgb is not None
+            and target_depth is not None
+            and target_mask is not None
+            and target_poses is not None
+            and target_intrs is not None
+        ):
             return {
                 "input_video": input_video,
                 "target_rgb": target_rgb,
@@ -465,7 +506,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
         if np.random.rand() < self.culling_prob:
             kernel_size = 0
         else:
-            kernel_size = np.random.randint(self.kernel_size_range[0], self.kernel_size_range[1]+1)
+            kernel_size = np.random.randint(self.kernel_size_range[0], self.kernel_size_range[1] + 1)
         H, W = input_video.shape[-2:]
         splats = self.degradation_simulation(
             recon_output["splats"],
@@ -477,10 +518,12 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
         )
         target_rgb, target_depth, target_alpha = pipe.reconstructor.gs_renderer.rasterizer.forward(
             splats,
-            render_viewmats=homo_matrix_inverse(recon_output["rendered_extrinsics"]),   # c2w -> w2c
+            render_viewmats=homo_matrix_inverse(recon_output["rendered_extrinsics"]),  # c2w -> w2c
             render_Ks=recon_output["rendered_intrinsics"],
             render_timestamps=recon_output["rendered_timestamps"],
-            sh_degree=0, width=W, height=H,
+            sh_degree=0,
+            width=W,
+            height=H,
         )
         target_mask = target_alpha > self.alpha_thresh
 
@@ -552,9 +595,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
         batch_size = len(poses)
         novel_context_poses_list = []
         for batch_idx in range(batch_size):
-            novel_context_poses = self._generate_novel_pose(
-                poses[batch_idx], depths[batch_idx]
-            )
+            novel_context_poses = self._generate_novel_pose(poses[batch_idx], depths[batch_idx])
             novel_context_poses_list.append(novel_context_poses)
         novel_context_poses = torch.stack(novel_context_poses_list, dim=0)  # [B, S_context, 4, 4]
         return novel_context_poses
@@ -602,8 +643,11 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
 
         # Use the same perpendicular direction for all frames
         random_direction = perpendicular_dir.expand(N_context, -1)  # [N_context, 3]
-        translation_distance = torch.rand((1, 1), device=original_poses.device) *\
-            (self.novel_view_sampling_trans[1] - self.novel_view_sampling_trans[0]) + self.novel_view_sampling_trans[0]
+        translation_distance = (
+            torch.rand((1, 1), device=original_poses.device)
+            * (self.novel_view_sampling_trans[1] - self.novel_view_sampling_trans[0])
+            + self.novel_view_sampling_trans[0]
+        )
         new_pos = original_pos + random_direction * translation_distance
 
         # Calculate new forward direction pointing toward view center
@@ -621,8 +665,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
         # Apply small rotation to forward direction
         cos_angle = torch.cos(random_rotation_angle)
         sin_angle = torch.sin(random_rotation_angle)
-        new_forward = (cos_angle * new_forward +
-                      sin_angle * torch.cross(random_axis, new_forward, dim=-1))
+        new_forward = cos_angle * new_forward + sin_angle * torch.cross(random_axis, new_forward, dim=-1)
         new_forward = F.normalize(new_forward, dim=-1)
 
         # Construct new rotation matrix (assuming up vector is [0,1,0])
@@ -640,7 +683,9 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
         new_pose[:, 3, 3] = 1.0
         return new_pose
 
-    def degradation_simulation(self, gaussians, novel_context_poses, context_intrinsics, image_size_hw, kernel_size, occlusion_thresh=0.1):
+    def degradation_simulation(
+        self, gaussians, novel_context_poses, context_intrinsics, image_size_hw, kernel_size, occlusion_thresh=0.1
+    ):
         """
         Degradation simulation via visibility-based Gaussian culling and average geometry filter.
         More details can be found in Section 3.2 of [NeoVerse](https://arxiv.org/abs/2601.00393).
@@ -662,18 +707,15 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
 
                 # Project Gaussians to novel views
                 covars, _ = _quat_scale_to_covar_preci(
-                    cur_gaussian.rotations,
-                    cur_gaussian.scales,
-                    True,
-                    False,
-                    triu=False
+                    cur_gaussian.rotations, cur_gaussian.scales, True, False, triu=False
                 )
                 radii, means2d, depths, conics, compensations = _fully_fused_projection(
                     cur_gaussian.means,
                     covars,
                     cur_extrinsic[None],
                     cur_intrinsic[None],
-                    w, h,
+                    w,
+                    h,
                 )
                 valid_gs_indices = torch.where((radii[0, :, 0] > 0) & (radii[0, :, 1] > 0))[0]
                 if len(valid_gs_indices) == 0:
@@ -698,7 +740,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
                     render_mode="ED",
                 )
                 rendered_depths = rendered_depths[0, ..., 0]
-                visible_mask = (gs_depths < (rendered_depths[gs_y, gs_x] + occlusion_thresh))
+                visible_mask = gs_depths < (rendered_depths[gs_y, gs_x] + occlusion_thresh)
                 visible_indices = valid_gs_indices[visible_mask]
                 if kernel_size == 0:
                     # Visibility-based Gaussian Culling
@@ -712,8 +754,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
 
                     # Convert pixel coordinates to world coordinates
                     world_coords = pixel_to_world_coords(
-                        visible_gs_x, visible_gs_y, smoothed_gs_depths,
-                        cur_intrinsic, cur_extrinsic
+                        visible_gs_x, visible_gs_y, smoothed_gs_depths, cur_intrinsic, cur_extrinsic
                     )
                     cur_gaussian.means[visible_indices] = world_coords
                     cur_gaussian.keep_indices(visible_indices)
@@ -722,6 +763,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
 
 class WanVideoUnit_CameraProcesser(InferenceStage):
     """Wan video unit camera processer implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
@@ -764,7 +806,7 @@ class WanVideoUnit_CameraProcesser(InferenceStage):
         y, x = torch.meshgrid(
             torch.arange(height, device=device, dtype=dtype),
             torch.arange(width, device=device, dtype=dtype),
-            indexing="ij"
+            indexing="ij",
         )
         # Add a homogeneous coordinate (z=1)
         # Shape: [3, H*W]
@@ -780,14 +822,14 @@ class WanVideoUnit_CameraProcesser(InferenceStage):
         # Transform ray directions from camera space to world space
         # Apply rotation: R * d_cam
         # (B*F, 3, 3) @ (B*F, 3, H*W) -> (B*F, 3, H*W)
-        rotation_matrices = poses[:, :3, :3] # Shape: [B*F, 3, 3]
+        rotation_matrices = poses[:, :3, :3]  # Shape: [B*F, 3, 3]
         rays_d_world = rotation_matrices @ rays_d_cam
         # Normalize the directions
         rays_d_world = F.normalize(rays_d_world, dim=1)
         rays_d_world = rays_d_world.reshape(batch_size * num_frames, 3, height, width)
 
         # Get ray origins from camera poses
-        rays_o_world = poses[:, :3, 3] # Shape: [B*F, 3]
+        rays_o_world = poses[:, :3, 3]  # Shape: [B*F, 3]
         # Expand to match the shape of the direction tensor: [B*F, 3, H, W]
         rays_o_world = rays_o_world[..., None, None].expand_as(rays_d_world)
 
@@ -805,6 +847,7 @@ class WanVideoUnit_CameraProcesser(InferenceStage):
 
 class WanVideoUnit_RandomDrop(InferenceStage):
     """Wan video unit random drop implementation."""
+
     def __init__(self, prompt_drop_prob=0.0, mask_drop_prob=0.0, condition_drop_prob=0.0, **kwargs):
         """Init.
 
@@ -832,7 +875,13 @@ class WanVideoUnit_RandomDrop(InferenceStage):
         target_depth = inputs_shared["target_depth"]
         target_camera_embed = inputs_shared["target_camera_embed"]
         target_mask = inputs_shared["target_mask"]
-        assert len(prompt) == target_rgb.shape[0] == target_depth.shape[0] == target_camera_embed.shape[0] == target_mask.shape[0], "Batch size must be the same for prompt and target conditions"
+        assert (
+            len(prompt)
+            == target_rgb.shape[0]
+            == target_depth.shape[0]
+            == target_camera_embed.shape[0]
+            == target_mask.shape[0]
+        ), "Batch size must be the same for prompt and target conditions"
 
         batch_size = target_rgb.shape[0]
         for b_idx in range(batch_size):
@@ -855,19 +904,34 @@ class WanVideoUnit_RandomDrop(InferenceStage):
 
 class WanVideoUnit_4DEmbedder(InferenceStage):
     """Wan video unit d embedder implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
-            input_params=("source_views", "target_rgb", "target_depth", "target_camera_embed", "target_mask",
-                          "tiled", "tile_size", "tile_stride"),
-            onload_model_names=("vae",)
+            input_params=(
+                "source_views",
+                "target_rgb",
+                "target_depth",
+                "target_camera_embed",
+                "target_mask",
+                "tiled",
+                "tile_size",
+                "tile_stride",
+            ),
+            onload_model_names=("vae",),
         )
 
     def process(
         self,
         pipe: WanVideoNeoVersePipeline,
-        source_views, target_rgb, target_depth, target_camera_embed, target_mask,
-        tiled, tile_size, tile_stride
+        source_views,
+        target_rgb,
+        target_depth,
+        target_camera_embed,
+        target_mask,
+        tiled,
+        tile_size,
+        tile_stride,
     ):
         """Process.
 
@@ -907,7 +971,9 @@ class WanVideoUnit_4DEmbedder(InferenceStage):
                 save_video(video, output_path, fps=15)
 
             target_rgb = pipe.preprocess_video(target_rgb)
-            target_rgb_latents = pipe.vae.encode(target_rgb, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+            target_rgb_latents = pipe.vae.encode(
+                target_rgb, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+            ).to(dtype=pipe.torch_dtype, device=pipe.device)
 
             target_depth = repeat(target_depth, "B T H W 1 -> B T C H W", C=3)
 
@@ -925,7 +991,9 @@ class WanVideoUnit_4DEmbedder(InferenceStage):
                 save_video(video, output_path, fps=15)
 
             target_depth = pipe.preprocess_video(target_depth, normalize=d_max).clamp(min=-1, max=1)
-            target_depth_latents = pipe.vae.encode(target_depth, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+            target_depth_latents = pipe.vae.encode(
+                target_depth, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+            ).to(dtype=pipe.torch_dtype, device=pipe.device)
 
             if pipe.save_root is not None:
                 for_save = rearrange(target_mask, "B T H W C -> (B T) H W C").squeeze(-1)
@@ -943,7 +1011,9 @@ class WanVideoUnit_4DEmbedder(InferenceStage):
                 "target_rgb": target_rgb_latents,
                 "target_depth": target_depth_latents,
                 "target_camera_embed": target_camera_embed.to(dtype=pipe.torch_dtype, device=pipe.device),
-                "target_mask": rearrange(target_mask, "B T H W C -> B T C H W").to(dtype=pipe.torch_dtype, device=pipe.device),
+                "target_mask": rearrange(target_mask, "B T H W C -> B T C H W").to(
+                    dtype=pipe.torch_dtype, device=pipe.device
+                ),
             }
         else:
             return {}
@@ -951,6 +1021,7 @@ class WanVideoUnit_4DEmbedder(InferenceStage):
 
 class WanVideoUnit_ShapeChecker(InferenceStage):
     """Wan video unit shape checker implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(input_params=("height", "width", "num_frames"))
@@ -968,9 +1039,9 @@ class WanVideoUnit_ShapeChecker(InferenceStage):
         return {"height": height, "width": width, "num_frames": num_frames}
 
 
-
 class WanVideoUnit_NoiseInitializer(InferenceStage):
     """Wan video unit noise initializer implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(input_params=("height", "width", "num_frames", "seed", "rand_device"))
@@ -987,19 +1058,24 @@ class WanVideoUnit_NoiseInitializer(InferenceStage):
             rand_device: The rand device.
         """
         length = (num_frames - 1) // 4 + 1
-        shape = (1, pipe.vae.model.z_dim, length, height // pipe.vae.upsampling_factor, width // pipe.vae.upsampling_factor)
+        shape = (
+            1,
+            pipe.vae.model.z_dim,
+            length,
+            height // pipe.vae.upsampling_factor,
+            width // pipe.vae.upsampling_factor,
+        )
         noise = pipe.generate_noise(shape, seed=seed, rand_device=rand_device)
         return {"noise": noise}
 
 
-
 class WanVideoUnit_InputVideoEmbedder(InferenceStage):
     """Wan video unit input video embedder implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
-            input_params=("input_video", "noise", "tiled", "tile_size", "tile_stride"),
-            onload_model_names=("vae",)
+            input_params=("input_video", "noise", "tiled", "tile_size", "tile_stride"), onload_model_names=("vae",)
         )
 
     def process(self, pipe: WanVideoNeoVersePipeline, input_video, noise, tiled, tile_size, tile_stride):
@@ -1017,7 +1093,9 @@ class WanVideoUnit_InputVideoEmbedder(InferenceStage):
             return {"latents": noise}
         pipe.load_models_to_device(["vae"])
         input_video = pipe.preprocess_video(input_video)
-        input_latents = pipe.vae.encode(input_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride).to(dtype=pipe.torch_dtype, device=pipe.device)
+        input_latents = pipe.vae.encode(
+            input_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        ).to(dtype=pipe.torch_dtype, device=pipe.device)
         if pipe.scheduler.training:
             return {"latents": noise, "input_latents": input_latents}
         else:
@@ -1025,16 +1103,16 @@ class WanVideoUnit_InputVideoEmbedder(InferenceStage):
             return {"latents": latents}
 
 
-
 class WanVideoUnit_PromptEmbedder(InferenceStage):
     """Wan video unit prompt embedder implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(
             seperate_cfg=True,
             input_params_posi={"prompt": "prompt", "positive": "positive"},
             input_params_nega={"prompt": "negative_prompt", "positive": "positive"},
-            onload_model_names=("text_encoder",)
+            onload_model_names=("text_encoder",),
         )
 
     def process(self, pipe: WanVideoNeoVersePipeline, prompt, positive) -> dict:
@@ -1053,21 +1131,20 @@ class WanVideoUnit_PromptEmbedder(InferenceStage):
         return {"context": prompt_emb}
 
 
-
 def model_fn_wan_video(
     dit: WanModel,
     control_branch: NeoVerseControlBranch = None,
     latents: torch.Tensor = None,
     timestep: torch.Tensor = None,
     context: torch.Tensor = None,
-    control_scale = 1.0,
-    target_rgb = None,
-    target_depth = None,
-    target_camera_embed = None,
-    target_mask = None,
+    control_scale=1.0,
+    target_rgb=None,
+    target_depth=None,
+    target_camera_embed=None,
+    target_mask=None,
     use_gradient_checkpointing: bool = False,
     use_gradient_checkpointing_offload: bool = False,
-    control_camera_latents_input = None,
+    control_camera_latents_input=None,
     fuse_vae_embedding_in_latents: bool = False,
     **kwargs,
 ):
@@ -1091,10 +1168,17 @@ def model_fn_wan_video(
     """
     # Timestep
     if dit.seperated_timestep and fuse_vae_embedding_in_latents:
-        timestep = torch.concat([
-            torch.zeros((1, latents.shape[3] * latents.shape[4] // 4), dtype=latents.dtype, device=latents.device),
-            torch.ones((latents.shape[2] - 1, latents.shape[3] * latents.shape[4] // 4), dtype=latents.dtype, device=latents.device) * timestep
-        ]).flatten()
+        timestep = torch.concat(
+            [
+                torch.zeros((1, latents.shape[3] * latents.shape[4] // 4), dtype=latents.dtype, device=latents.device),
+                torch.ones(
+                    (latents.shape[2] - 1, latents.shape[3] * latents.shape[4] // 4),
+                    dtype=latents.dtype,
+                    device=latents.device,
+                )
+                * timestep,
+            ]
+        ).flatten()
         t = dit.time_embedding(sinusoidal_embedding_1d(dit.freq_dim, timestep).unsqueeze(0))
         t_mod = dit.time_projection(t).unflatten(2, (6, dit.dim))
     else:
@@ -1108,16 +1192,31 @@ def model_fn_wan_video(
     # Add camera control
     x, (f, h, w) = dit.patchify(x, control_camera_latents_input)
 
-    freqs = torch.cat([
-        dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
-        dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
-        dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)
-    ], dim=-1).reshape(f * h * w, 1, -1).to(x.device)
+    freqs = (
+        torch.cat(
+            [
+                dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
+                dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
+                dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1),
+            ],
+            dim=-1,
+        )
+        .reshape(f * h * w, 1, -1)
+        .to(x.device)
+    )
 
     if target_rgb is not None:
         control_hints = control_branch(
-            x, target_rgb, target_depth, target_camera_embed, target_mask,
-            context, t_mod, freqs, use_gradient_checkpointing, use_gradient_checkpointing_offload,
+            x,
+            target_rgb,
+            target_depth,
+            target_camera_embed,
+            target_mask,
+            context,
+            t_mod,
+            freqs,
+            use_gradient_checkpointing,
+            use_gradient_checkpointing_offload,
         )
 
     def create_custom_forward(module):
@@ -1126,9 +1225,11 @@ def model_fn_wan_video(
         Args:
             module: The module.
         """
+
         def custom_forward(*inputs):
             """Custom forward."""
             return module(*inputs)
+
         return custom_forward
 
     for block_id, block in enumerate(dit.blocks):
@@ -1136,13 +1237,19 @@ def model_fn_wan_video(
             with torch.autograd.graph.save_on_cpu():
                 x = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(block),
-                    x, context, t_mod, freqs,
+                    x,
+                    context,
+                    t_mod,
+                    freqs,
                     use_reentrant=False,
                 )
         elif use_gradient_checkpointing:
             x = torch.utils.checkpoint.checkpoint(
                 create_custom_forward(block),
-                x, context, t_mod, freqs,
+                x,
+                context,
+                t_mod,
+                freqs,
                 use_reentrant=False,
             )
         else:

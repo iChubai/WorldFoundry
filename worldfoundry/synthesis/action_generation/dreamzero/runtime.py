@@ -7,6 +7,7 @@ It defines functions for validating runtime parameters, constructing command-lin
 arguments for the distributed server, and a client implementation for
 simulating a demo interaction with a running DreamZero inference server.
 """
+
 from __future__ import annotations
 
 import json
@@ -23,9 +24,7 @@ from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_
 # Root directory for the DreamZero runtime files.
 RUNTIME_ROOT = dreamzero_runtime_root()
 # Full module path for the optimized DreamZero AR server entrypoint.
-OFFICIAL_SERVER_MODULE = (
-    "worldfoundry.synthesis.action_generation.dreamzero.server"
-)
+OFFICIAL_SERVER_MODULE = "worldfoundry.synthesis.action_generation.dreamzero.server"
 
 
 def _require_mapping(value: Any, field_name: str) -> Mapping[str, Any]:
@@ -258,11 +257,7 @@ def select_dreamzero_checkpoint(
         # If an explicit checkpoint directory is provided, use it directly.
         selected = _expand_runtime_path(checkpoint_dir)
     else:
-        checkpoint_items = [
-            dict(item)
-            for item in checkpoints
-            if str(item.get("role") or "").endswith("_checkpoint")
-        ]
+        checkpoint_items = [dict(item) for item in checkpoints if str(item.get("role") or "").endswith("_checkpoint")]
         candidates = checkpoint_items or [dict(item) for item in checkpoints]
         if not candidates:
             raise ValueError("DreamZero requires checkpoint_dir or profile checkpoint metadata.")
@@ -454,10 +449,7 @@ def load_camera_frames(video_dir: str | Path, camera_files: Mapping[str, str]) -
     """
     video_dir = Path(video_dir)
     files = dict(camera_files)
-    return {
-        camera_key: load_all_frames(video_dir / file_name)
-        for camera_key, file_name in files.items()
-    }
+    return {camera_key: load_all_frames(video_dir / file_name) for camera_key, file_name in files.items()}
 
 
 def build_frame_schedule(
@@ -605,7 +597,7 @@ class DreamZeroWebsocketClient:
         self._ws = websockets.sync.client.connect(
             self._uri,
             compression=None,  # Compression disabled as per official client.
-            max_size=None,     # No limit on message size.
+            max_size=None,  # No limit on message size.
             ping_interval=60,  # Send a ping every 60 seconds.
             ping_timeout=600,  # Close connection if no pong received within 600 seconds.
         )

@@ -8,7 +8,12 @@ optional CUDA attention packages.
 from __future__ import annotations
 
 from worldfoundry.core.attention.sparse.block_pattern import BlockPattern
-from worldfoundry.core.attention.cache.kv_cache_policy import CachedBlock, CacheState, KVCachePolicy, SlidingWindowPolicy
+from worldfoundry.core.attention.cache.kv_cache_policy import (
+    CachedBlock,
+    CacheState,
+    KVCachePolicy,
+    SlidingWindowPolicy,
+)
 
 
 def make_kv_cache_plan(
@@ -40,8 +45,7 @@ def make_kv_cache_plan(
         return None, total_frames
     if normalized != "sliding_window":
         raise ValueError(
-            f"Unsupported --kv_cache_policy {policy_name!r}. "
-            "Causal-rCM supports keep_all and sliding_window."
+            f"Unsupported --kv_cache_policy {policy_name!r}. Causal-rCM supports keep_all and sliding_window."
         )
 
     policy = SlidingWindowPolicy(window_blocks=window_blocks, sink_blocks=sink_blocks)

@@ -341,9 +341,7 @@ class ModuleGroup:
             for param in module.parameters():
                 cpu_param_dict[param] = param.data.cpu() if self.low_cpu_mem_usage else param.data.cpu().pin_memory()
             for buffer in module.buffers():
-                cpu_param_dict[buffer] = (
-                    buffer.data.cpu() if self.low_cpu_mem_usage else buffer.data.cpu().pin_memory()
-                )
+                cpu_param_dict[buffer] = buffer.data.cpu() if self.low_cpu_mem_usage else buffer.data.cpu().pin_memory()
 
         for param in self.parameters:
             cpu_param_dict[param] = param.data.cpu() if self.low_cpu_mem_usage else param.data.cpu().pin_memory()
@@ -1182,7 +1180,7 @@ def remove_group_offloading(
         exclude_modules = []
 
     # Check if this is a pipeline with components
-    if hasattr(module, 'components'):
+    if hasattr(module, "components"):
         unknown = set(exclude_modules) - module.components.keys()
         if unknown:
             logger.info(
@@ -1208,7 +1206,7 @@ def safe_remove_group_offloading(obj, *args, **kwargs):
     """Safely call remove_group_offloading, and restore _execution_device if it was patched."""
     result = remove_group_offloading(obj, *args, **kwargs)
     # Restore the original _execution_device from the MRO if we had patched it.
-    if hasattr(obj, 'components') and hasattr(obj.__class__, '_execution_device_original'):
+    if hasattr(obj, "components") and hasattr(obj.__class__, "_execution_device_original"):
         obj.__class__._execution_device = obj.__class__._execution_device_original
         del obj.__class__._execution_device_original
         logger.debug("Restored original _execution_device after removing group offload.")
@@ -1345,19 +1343,19 @@ def safe_enable_group_offload(obj, *args, **kwargs):
     falling back to self.device (which may be CPU after offloading).
     """
 
-    if not hasattr(obj, 'enable_group_offload'):
+    if not hasattr(obj, "enable_group_offload"):
         obj.enable_group_offload = types.MethodType(enable_group_offload, obj)
 
     result = obj.enable_group_offload(*args, **kwargs)
 
     # Patch _execution_device on the pipeline so it correctly returns the
     # onload (GPU) device instead of self.device (CPU) when group offload is active.
-    onload_device = kwargs.get('onload_device') or (args[0] if args else None)
-    if onload_device is not None and hasattr(obj, 'components'):
+    onload_device = kwargs.get("onload_device") or (args[0] if args else None)
+    if onload_device is not None and hasattr(obj, "components"):
         onload_device = torch.device(onload_device) if isinstance(onload_device, str) else onload_device
 
         # Save the original _execution_device before patching so safe_remove can restore it.
-        if not hasattr(obj.__class__, '_execution_device_original'):
+        if not hasattr(obj.__class__, "_execution_device_original"):
             obj.__class__._execution_device_original = obj.__class__._execution_device
 
         @property
@@ -1431,7 +1429,7 @@ def register_auto_device_hook(model):
 
         # Check if device transfer is needed
         # Condition: module_device is not 'meta' and different from input_device
-        if module_device.type != 'meta' and module_device != input_device:
+        if module_device.type != "meta" and module_device != input_device:
             # print(f"Moving {module.__class__.__name__} from {module_device} to {input_device}")
             module.to(input_device)
 
@@ -1454,8 +1452,8 @@ def remove_auto_device_hook(model):
     Args:
         model: The model to process
     """
-    if hasattr(model, '_auto_device_hooks'):
+    if hasattr(model, "_auto_device_hooks"):
         for hook in model._auto_device_hooks:
             hook.remove()
-        delattr(model, '_auto_device_hooks')
+        delattr(model, "_auto_device_hooks")
         print("Auto device hooks removed")

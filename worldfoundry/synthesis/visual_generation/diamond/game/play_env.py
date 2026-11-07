@@ -155,7 +155,7 @@ class PlayEnv:
             if self.store_denoising_trajectory and "denoising_trajectory" in env_info:
                 self.buffer["info"]["denoising_trajectory"].append(env_info["denoising_trajectory"])
             if self.store_original_obs and "original_obs" in env_info:
-                original_obs = (torch.tensor(env_info["original_obs"][0]).permute(2, 0, 1).unsqueeze(0).contiguous())
+                original_obs = torch.tensor(env_info["original_obs"][0]).permute(2, 0, 1).unsqueeze(0).contiguous()
                 self.buffer["info"]["original_obs"].append(original_obs)
             if end or trunc:
                 ep_dict = {k: torch.cat(v, dim=0) for k, v in self.buffer.items() if k != "info"}

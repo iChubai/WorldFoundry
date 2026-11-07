@@ -35,12 +35,8 @@ class KVCache:
         else:
             # ... otherwise we concatenate the new keys with the existing ones.
             # each tensor has shape: [Batch_Size, Num_Heads_KV, Seq_Len, Head_Dim]
-            self.key_cache[layer_idx] = torch.cat(
-                [self.key_cache[layer_idx], key_states], dim=-2
-            )
-            self.value_cache[layer_idx] = torch.cat(
-                [self.value_cache[layer_idx], value_states], dim=-2
-            )
+            self.key_cache[layer_idx] = torch.cat([self.key_cache[layer_idx], key_states], dim=-2)
+            self.value_cache[layer_idx] = torch.cat([self.value_cache[layer_idx], value_states], dim=-2)
 
         # ... and then we return all the existing keys + the new ones.
         return self.key_cache[layer_idx], self.value_cache[layer_idx]

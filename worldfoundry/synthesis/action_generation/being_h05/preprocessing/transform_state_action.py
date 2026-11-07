@@ -91,15 +91,11 @@ class RotationTransform:
         return x
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert isinstance(
-            x, torch.Tensor
-        ), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
+        assert isinstance(x, torch.Tensor), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
         return self._apply_funcs(x, self.forward_funcs)
 
     def inverse(self, x: torch.Tensor) -> torch.Tensor:
-        assert isinstance(
-            x, torch.Tensor
-        ), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
+        assert isinstance(x, torch.Tensor), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
         return self._apply_funcs(x, self.inverse_funcs)
 
 
@@ -113,9 +109,7 @@ class Normalizer:
             self.statistics[key] = torch.tensor(value)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        assert isinstance(
-            x, torch.Tensor
-        ), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
+        assert isinstance(x, torch.Tensor), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
 
         # Normalize the tensor
         if self.mode == "q99":
@@ -130,9 +124,7 @@ class Normalizer:
 
             # Normalize the values where q01 != q99
             # Formula: 2 * (x - q01) / (q99 - q01) - 1
-            normalized[..., mask] = (x[..., mask] - q01[..., mask]) / (
-                q99[..., mask] - q01[..., mask]
-            )
+            normalized[..., mask] = (x[..., mask] - q01[..., mask]) / (q99[..., mask] - q01[..., mask])
             normalized[..., mask] = 2 * normalized[..., mask] - 1
 
             # Set the normalized values to the original values where q01 == q99
@@ -170,9 +162,7 @@ class Normalizer:
 
             # Normalize the values where min != max
             # Formula: 2 * (x - min) / (max - min) - 1
-            normalized[..., mask] = (x[..., mask] - min[..., mask]) / (
-                max[..., mask] - min[..., mask]
-            )
+            normalized[..., mask] = (x[..., mask] - min[..., mask]) / (max[..., mask] - min[..., mask])
             normalized[..., mask] = 2 * normalized[..., mask] - 1
 
             # Set the normalized values to the original values where min == max
@@ -199,9 +189,7 @@ class Normalizer:
         return normalized
 
     def inverse(self, x: torch.Tensor) -> torch.Tensor:
-        assert isinstance(
-            x, torch.Tensor
-        ), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
+        assert isinstance(x, torch.Tensor), f"Unexpected input type: {type(x)}. Expected type: {torch.Tensor}"
         if self.mode == "q99":
             q01 = self.statistics["q01"].to(x.dtype)
             q99 = self.statistics["q99"].to(x.dtype)
@@ -225,9 +213,7 @@ class StateActionToTensor(InvertibleModalityTransform):
     Transforms states and actions to tensors.
     """
 
-    input_dtypes: dict[str, np.dtype] = Field(
-        default_factory=dict, description="The input dtypes for each state key."
-    )
+    input_dtypes: dict[str, np.dtype] = Field(default_factory=dict, description="The input dtypes for each state key.")
     output_dtypes: dict[str, torch.dtype] = Field(
         default_factory=dict, description="The output dtypes for each state key."
     )
@@ -259,9 +245,7 @@ class StateActionToTensor(InvertibleModalityTransform):
             if key not in data:
                 continue
             value = data[key]
-            assert isinstance(
-                value, np.ndarray
-            ), f"Unexpected input type: {type(value)}. Expected type: {np.ndarray}"
+            assert isinstance(value, np.ndarray), f"Unexpected input type: {type(value)}. Expected type: {np.ndarray}"
             data[key] = torch.from_numpy(value)
             if key in self.output_dtypes:
                 data[key] = data[key].to(self.output_dtypes[key])
@@ -272,9 +256,9 @@ class StateActionToTensor(InvertibleModalityTransform):
             if key not in data:
                 continue
             value = data[key]
-            assert isinstance(
-                value, torch.Tensor
-            ), f"Unexpected input type: {type(value)}. Expected type: {torch.Tensor}"
+            assert isinstance(value, torch.Tensor), (
+                f"Unexpected input type: {type(value)}. Expected type: {torch.Tensor}"
+            )
             data[key] = value.numpy()
             if key in self.input_dtypes:
                 data[key] = data[key].astype(self.input_dtypes[key])
@@ -347,9 +331,7 @@ class StateActionTransform(InvertibleModalityTransform):
             if isinstance(config, dict):
                 config = StateActionMetadata.model_validate(config)
             else:
-                assert isinstance(
-                    config, StateActionMetadata
-                ), f"Invalid source rotation config: {config}"
+                assert isinstance(config, StateActionMetadata), f"Invalid source rotation config: {config}"
             v[modality_key] = config
         return v
 
@@ -359,30 +341,30 @@ class StateActionTransform(InvertibleModalityTransform):
             if modality_key in self.normalization_modes:
                 normalization_mode = self.normalization_modes[modality_key]
                 if normalization_mode == "min_max":
-                    assert (
-                        "min" in normalization_statistics and "max" in normalization_statistics
-                    ), f"Min and max statistics are required for min_max normalization, but got {normalization_statistics}"
-                    assert len(normalization_statistics["min"]) == len(
-                        normalization_statistics["max"]
-                    ), f"Min and max statistics must have the same length, but got {normalization_statistics['min']} and {normalization_statistics['max']}"
+                    assert "min" in normalization_statistics and "max" in normalization_statistics, (
+                        f"Min and max statistics are required for min_max normalization, but got {normalization_statistics}"
+                    )
+                    assert len(normalization_statistics["min"]) == len(normalization_statistics["max"]), (
+                        f"Min and max statistics must have the same length, but got {normalization_statistics['min']} and {normalization_statistics['max']}"
+                    )
                 elif normalization_mode == "mean_std":
-                    assert (
-                        "mean" in normalization_statistics and "std" in normalization_statistics
-                    ), f"Mean and std statistics are required for mean_std normalization, but got {normalization_statistics}"
-                    assert len(normalization_statistics["mean"]) == len(
-                        normalization_statistics["std"]
-                    ), f"Mean and std statistics must have the same length, but got {normalization_statistics['mean']} and {normalization_statistics['std']}"
+                    assert "mean" in normalization_statistics and "std" in normalization_statistics, (
+                        f"Mean and std statistics are required for mean_std normalization, but got {normalization_statistics}"
+                    )
+                    assert len(normalization_statistics["mean"]) == len(normalization_statistics["std"]), (
+                        f"Mean and std statistics must have the same length, but got {normalization_statistics['mean']} and {normalization_statistics['std']}"
+                    )
                 elif normalization_mode == "q99":
-                    assert (
-                        "q01" in normalization_statistics and "q99" in normalization_statistics
-                    ), f"q01 and q99 statistics are required for q99 normalization, but got {normalization_statistics}"
-                    assert len(normalization_statistics["q01"]) == len(
-                        normalization_statistics["q99"]
-                    ), f"q01 and q99 statistics must have the same length, but got {normalization_statistics['q01']} and {normalization_statistics['q99']}"
+                    assert "q01" in normalization_statistics and "q99" in normalization_statistics, (
+                        f"q01 and q99 statistics are required for q99 normalization, but got {normalization_statistics}"
+                    )
+                    assert len(normalization_statistics["q01"]) == len(normalization_statistics["q99"]), (
+                        f"q01 and q99 statistics must have the same length, but got {normalization_statistics['q01']} and {normalization_statistics['q99']}"
+                    )
                 elif normalization_mode == "binary":
-                    assert (
-                        len(normalization_statistics) == 1
-                    ), f"Binary normalization should only have one value, but got {normalization_statistics}"
+                    assert len(normalization_statistics) == 1, (
+                        f"Binary normalization should only have one value, but got {normalization_statistics}"
+                    )
                     assert normalization_statistics[0] in [
                         0,
                         1,
@@ -404,9 +386,7 @@ class StateActionTransform(InvertibleModalityTransform):
                 modality, state_key = split_key
 
                 assert hasattr(modality_metadata, modality), f"{modality} config not found"
-                assert state_key in getattr(
-                    modality_metadata, modality
-                ), f"{state_key} config not found"
+                assert state_key in getattr(modality_metadata, modality), f"{state_key} config not found"
                 self.modality_metadata[key] = getattr(modality_metadata, modality)[state_key]
 
         # Check that all state keys specified in normalization_modes have their statistics in state_statistics
@@ -415,15 +395,11 @@ class StateActionTransform(InvertibleModalityTransform):
             assert len(split_key) == 2, "State keys should have two parts: 'modality.key'"
             modality, state_key = split_key
             assert hasattr(dataset_statistics, modality), f"{modality} statistics not found"
-            assert state_key in getattr(
-                dataset_statistics, modality
-            ), f"{state_key} statistics not found"
-            assert (
-                len(getattr(modality_metadata, modality)[state_key].shape) == 1
-            ), f"{getattr(modality_metadata, modality)[state_key].shape=}"
-            self.normalization_statistics[key] = getattr(dataset_statistics, modality)[
-                state_key
-            ].model_dump()
+            assert state_key in getattr(dataset_statistics, modality), f"{state_key} statistics not found"
+            assert len(getattr(modality_metadata, modality)[state_key].shape) == 1, (
+                f"{getattr(modality_metadata, modality)[state_key].shape=}"
+            )
+            self.normalization_statistics[key] = getattr(dataset_statistics, modality)[state_key].model_dump()
 
         # Initialize the rotation transformers
         for key in self.target_rotations:
@@ -436,9 +412,7 @@ class StateActionTransform(InvertibleModalityTransform):
 
             # If the original representation is not the same as the target representation, initialize the rotation transformer
             if from_rep != to_rep:
-                self._rotation_transformers[key] = RotationTransform(
-                    from_rep=from_rep.value, to_rep=to_rep.value
-                )
+                self._rotation_transformers[key] = RotationTransform(from_rep=from_rep.value, to_rep=to_rep.value)
 
         # Initialize the normalizers
         for key in self.normalization_modes:
@@ -451,9 +425,9 @@ class StateActionTransform(InvertibleModalityTransform):
                 # Case 1: Absolute rotation
                 if self.modality_metadata[key].absolute:
                     # Check that the normalization mode is valid
-                    assert (
-                        self.normalization_modes[key] == "min_max"
-                    ), "Absolute rotations that are converted to other formats must be normalized using `min_max` mode"
+                    assert self.normalization_modes[key] == "min_max", (
+                        "Absolute rotations that are converted to other formats must be normalized using `min_max` mode"
+                    )
                     rotation_type = RotationType(self.target_rotations[key]).value
                     # If the target representation is euler angles, we need to parse the convention
                     if rotation_type.startswith("euler_angles"):
@@ -466,19 +440,12 @@ class StateActionTransform(InvertibleModalityTransform):
                         f"Cannot normalize relative rotations: {key} that's converted to {self.target_rotations[key]}"
                     )
             # If the state is not continuous, we should not use normalization modes other than binary
-            elif (
-                not self.modality_metadata[key].continuous
-                and self.normalization_modes[key] != "binary"
-            ):
-                raise ValueError(
-                    f"{key} is not continuous, so it should be normalized using `binary` mode"
-                )
+            elif not self.modality_metadata[key].continuous and self.normalization_modes[key] != "binary":
+                raise ValueError(f"{key} is not continuous, so it should be normalized using `binary` mode")
             # Initialize the normalizer
             else:
                 statistics = self.normalization_statistics[key]
-            self._normalizers[key] = Normalizer(
-                mode=self.normalization_modes[key], statistics=statistics
-            )
+            self._normalizers[key] = Normalizer(mode=self.normalization_modes[key], statistics=statistics)
 
     def apply(self, data: dict[str, Any]) -> dict[str, Any]:
         for key in self.apply_to:
@@ -487,14 +454,14 @@ class StateActionTransform(InvertibleModalityTransform):
                 continue
             if key not in self._input_dtypes:
                 input_dtype = data[key].dtype
-                assert isinstance(
-                    input_dtype, torch.dtype
-                ), f"Unexpected input dtype: {input_dtype}. Expected type: {torch.dtype}"
+                assert isinstance(input_dtype, torch.dtype), (
+                    f"Unexpected input dtype: {input_dtype}. Expected type: {torch.dtype}"
+                )
                 self._input_dtypes[key] = input_dtype
             else:
-                assert (
-                    data[key].dtype == self._input_dtypes[key]
-                ), f"All states corresponding to the same key must be of the same dtype, input dtype: {data[key].dtype}, expected dtype: {self._input_dtypes[key]}"
+                assert data[key].dtype == self._input_dtypes[key], (
+                    f"All states corresponding to the same key must be of the same dtype, input dtype: {data[key].dtype}, expected dtype: {self._input_dtypes[key]}"
+                )
             # Rotate the state
             state = data[key]
             if key in self._rotation_transformers:
@@ -510,18 +477,18 @@ class StateActionTransform(InvertibleModalityTransform):
             if key not in data:
                 continue
             state = data[key]
-            assert isinstance(
-                state, torch.Tensor
-            ), f"Unexpected state type: {type(state)}. Expected type: {torch.Tensor}"
+            assert isinstance(state, torch.Tensor), (
+                f"Unexpected state type: {type(state)}. Expected type: {torch.Tensor}"
+            )
             # Unnormalize the state
             if key in self._normalizers:
                 state = self._normalizers[key].inverse(state)
             # Change the state back to its original representation
             if key in self._rotation_transformers:
                 state = self._rotation_transformers[key].inverse(state)
-            assert isinstance(
-                state, torch.Tensor
-            ), f"State should be tensor after unapplying transformations, but got {type(state)}"
+            assert isinstance(state, torch.Tensor), (
+                f"State should be tensor after unapplying transformations, but got {type(state)}"
+            )
             # Only convert back to the original dtype if it's known, i.e. `apply` was called before
             # If not, we don't know the original dtype, so we don't convert
             if key in self._input_dtypes:
@@ -534,8 +501,6 @@ class StateActionTransform(InvertibleModalityTransform):
                     raise ValueError(f"Invalid input dtype: {original_dtype}")
             data[key] = state
         return data
-
-
 
 
 class StateActionSinCosTransform(ModalityTransform):

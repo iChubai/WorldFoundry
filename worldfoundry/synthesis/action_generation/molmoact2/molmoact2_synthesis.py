@@ -175,7 +175,9 @@ class MolmoAct2Synthesis(ActionModelSynthesis):
                 or variant_config.get("embodiment")
                 or self.profile.input_schema.get("default_embodiment")
             ),
-            variant_id=explicit_options.get("variant_id") or explicit_options.get("variant") or explicit_options.get("model_variant"),
+            variant_id=explicit_options.get("variant_id")
+            or explicit_options.get("variant")
+            or explicit_options.get("model_variant"),
             checkpoints=self.profile.checkpoints,
         )
 
@@ -212,7 +214,9 @@ class MolmoAct2Synthesis(ActionModelSynthesis):
             camera_keys = tuple(defaults["camera_keys"])
 
         # Resolve state dimension from explicit options, defaults, or profile schema.
-        state_dim = int(explicit_options.get("state_dim") or defaults["state_dim"] or self.profile.input_schema.get("state_dim"))
+        state_dim = int(
+            explicit_options.get("state_dim") or defaults["state_dim"] or self.profile.input_schema.get("state_dim")
+        )
 
         return MolmoAct2RuntimeConfig(
             repo_id=str(checkpoint["repo_id"]),
@@ -223,10 +227,14 @@ class MolmoAct2Synthesis(ActionModelSynthesis):
             state_dim=state_dim,
             action_mode_key=str(explicit_options.get("action_mode_key") or defaults["action_mode_key"]),
             device=str(merged.get("device") or self.device),
-            torch_dtype=str(explicit_options.get("torch_dtype") or explicit_options.get("dtype") or runtime_defaults["torch_dtype"]),
+            torch_dtype=str(
+                explicit_options.get("torch_dtype") or explicit_options.get("dtype") or runtime_defaults["torch_dtype"]
+            ),
             num_steps=int(explicit_options.get("num_steps") or runtime_defaults["num_steps"]),
             enable_cuda_graph=bool(explicit_options.get("enable_cuda_graph", runtime_defaults["enable_cuda_graph"])),
-            enable_depth_reasoning=bool(merged.get("enable_depth_reasoning", runtime_defaults["enable_depth_reasoning"])),
+            enable_depth_reasoning=bool(
+                merged.get("enable_depth_reasoning", runtime_defaults["enable_depth_reasoning"])
+            ),
             enable_adaptive_depth=bool(merged.get("enable_adaptive_depth", False)),
             normalize_language=bool(explicit_options.get("normalize_language", runtime_defaults["normalize_language"])),
         )
@@ -403,7 +411,9 @@ class MolmoAct2Synthesis(ActionModelSynthesis):
             },
         }
         # Write the plan payload to the designated plan file.
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         # If only planning is requested, return the plan details without running the model.
         if plan_only:

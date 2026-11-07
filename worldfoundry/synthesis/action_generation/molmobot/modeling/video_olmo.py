@@ -35,12 +35,8 @@ class VideoOlmoConfig(BaseModelConfig):
 
     data_formatter: DataFormatter = field(default_factory=DataFormatter)
     llm: LlmConfig = field(default_factory=LlmConfig)
-    vision_backbone: Optional[MolmoVisionBackboneConfig] = field(
-        default_factory=MolmoVisionBackboneConfig
-    )
-    mm_preprocessor: MultiModalVideoPreprocessorConfig = field(
-        default_factory=MultiModalVideoPreprocessorConfig
-    )
+    vision_backbone: Optional[MolmoVisionBackboneConfig] = field(default_factory=MolmoVisionBackboneConfig)
+    mm_preprocessor: MultiModalVideoPreprocessorConfig = field(default_factory=MultiModalVideoPreprocessorConfig)
     bi_directional_attn: Optional[str] = None
     shared_low_high_embedding: bool = True
 
@@ -58,8 +54,7 @@ class VideoOlmoConfig(BaseModelConfig):
     def update_legacy_settings(cls, config: D) -> D:
         if "llm" not in config:
             raise ValueError(
-                "Legacy monolithic Molmo checkpoints are not supported by the "
-                "inference-only MolmoBot integration."
+                "Legacy monolithic Molmo checkpoints are not supported by the inference-only MolmoBot integration."
             )
         if "image_as_video" in config:
             if config.image_as_video is None:
@@ -68,13 +63,9 @@ class VideoOlmoConfig(BaseModelConfig):
                 raise ValueError("image_as_video checkpoints are not MolmoBot action policies.")
         config.llm = LlmConfig.update_legacy_settings(config.llm)
         if config.vision_backbone is not None:
-            config.vision_backbone = MolmoVisionBackboneConfig.update_legacy_settings(
-                config.vision_backbone
-            )
+            config.vision_backbone = MolmoVisionBackboneConfig.update_legacy_settings(config.vision_backbone)
         config.data_formatter = DataFormatter.update_legacy_settings(config.data_formatter)
-        config.mm_preprocessor = MultiModalVideoPreprocessorConfig.update_legacy_settings(
-            config.mm_preprocessor
-        )
+        config.mm_preprocessor = MultiModalVideoPreprocessorConfig.update_legacy_settings(config.mm_preprocessor)
         return config
 
     def build_tokenizer(self):
@@ -119,9 +110,7 @@ class VideoOlmoConfig(BaseModelConfig):
         include_metadata: bool = True,
     ) -> MMCollator:
         if self.cp_enabled:
-            raise ValueError(
-                "Released MolmoBot inference checkpoints do not use context-parallel collation."
-            )
+            raise ValueError("Released MolmoBot inference checkpoints do not use context-parallel collation.")
         return MMCollator(
             get_special_token_ids(self.build_tokenizer()),
             output_shapes,
@@ -183,9 +172,7 @@ class VideoOlmo(ModelBase):
         if config.bi_directional_attn == "within_image":
             if config.mm_preprocessor.image is not None:
                 if not config.mm_preprocessor.image.use_single_crop_start_token:
-                    raise ValueError(
-                        "within_image attention requires use_single_crop_start_token."
-                    )
+                    raise ValueError("within_image attention requires use_single_crop_start_token.")
             if not config.mm_preprocessor.use_frame_special_tokens:
                 raise ValueError("within_image attention requires frame special tokens.")
 
@@ -209,17 +196,12 @@ class VideoOlmo(ModelBase):
             attention_mask = input_ids != -1
         elif attention_mask.ndim != 2 or attention_mask.shape != input_ids.shape:
             raise ValueError(
-                "MolmoBot attention_mask must have shape "
-                f"{tuple(input_ids.shape)}, got {tuple(attention_mask.shape)}."
+                f"MolmoBot attention_mask must have shape {tuple(input_ids.shape)}, got {tuple(attention_mask.shape)}."
             )
         attention_mask = attention_mask.to(dtype=torch.bool)
 
         causal = self.__cache.get("causal_mask")
-        if (
-            causal is None
-            or causal.device != input_ids.device
-            or causal.shape[-1] < sequence_length
-        ):
+        if causal is None or causal.device != input_ids.device or causal.shape[-1] < sequence_length:
             causal = torch.ones(
                 sequence_length,
                 sequence_length,
@@ -233,28 +215,18 @@ class VideoOlmo(ModelBase):
         bidirectional = None
         mode = self.config.bi_directional_attn
         image_token_ids = self._image_token_ids.to(input_ids.device)
-        is_image_token = torch.any(
-            input_ids[:, :, None] == image_token_ids[None, None, :], dim=-1
-        )
+        is_image_token = torch.any(input_ids[:, :, None] == image_token_ids[None, None, :], dim=-1)
         if mode == "image_tokens":
             bidirectional = is_image_token[:, :, None] & is_image_token[:, None, :]
         elif mode == "within_image":
-            is_frame_start = (input_ids == self._frame_start) | (
-                input_ids == self._low_res_image_start
-            )
+            is_frame_start = (input_ids == self._frame_start) | (input_ids == self._low_res_image_start)
             frame_id = torch.cumsum(is_frame_start, dim=-1)
             same_or_earlier_frame = frame_id[:, None] <= frame_id[:, :, None]
-            bidirectional = (
-                is_image_token[:, :, None]
-                & is_image_token[:, None, :]
-                & same_or_earlier_frame
-            )
+            bidirectional = is_image_token[:, :, None] & is_image_token[:, None, :] & same_or_earlier_frame
         elif mode == "image_to_question":
             if response_mask is None:
                 raise ValueError("image_to_question attention requires response_mask.")
-            bidirectional = is_image_token[:, :, None] & ~response_mask.to(
-                dtype=torch.bool
-            )[:, None, :]
+            bidirectional = is_image_token[:, :, None] & ~response_mask.to(dtype=torch.bool)[:, None, :]
         elif mode is not None:
             raise ValueError(f"Unsupported bi_directional_attn mode: {mode!r}")
 
@@ -270,13 +242,10 @@ class VideoOlmo(ModelBase):
             bias = torch.where(allowed, attention_bias.to(dtype=x_dtype), minimum)
         if bias.shape != (batch_size, 1, sequence_length, sequence_length):
             try:
-                bias = torch.broadcast_to(
-                    bias, (batch_size, 1, sequence_length, sequence_length)
-                )
+                bias = torch.broadcast_to(bias, (batch_size, 1, sequence_length, sequence_length))
             except RuntimeError as error:
                 raise ValueError(
-                    "attention_bias is not broadcastable to "
-                    f"{(batch_size, 1, sequence_length, sequence_length)}."
+                    f"attention_bias is not broadcastable to {(batch_size, 1, sequence_length, sequence_length)}."
                 ) from error
         return attention_mask, bias
 
@@ -331,9 +300,7 @@ class VideoOlmo(ModelBase):
             deep_masks = [None, None]
             image_positions = [None, None]  # type: ignore[list-item]
 
-        for feature_index, token_id in enumerate(
-            (self._image_low_res_id, self._image_high_res_id)
-        ):
+        for feature_index, token_id in enumerate((self._image_low_res_id, self._image_high_res_id)):
             image_features, valid_mask = all_image_features[feature_index]
             if isinstance(image_features, list):
                 assert deep_features is not None
@@ -346,9 +313,9 @@ class VideoOlmo(ModelBase):
                 image_positions[feature_index] = positions
                 deep_masks[feature_index] = valid_mask
             x = x.clone()
-            x.reshape(-1, x.shape[-1])[positions] += image_features.reshape(
-                -1, image_features.shape[-1]
-            )[valid_mask.reshape(-1)]
+            x.reshape(-1, x.shape[-1])[positions] += image_features.reshape(-1, image_features.shape[-1])[
+                valid_mask.reshape(-1)
+            ]
         return x, deep_features, deep_masks, image_positions
 
     @staticmethod
@@ -358,14 +325,8 @@ class VideoOlmo(ModelBase):
         image_positions: List[torch.Tensor],
         deep_masks: List[Optional[torch.Tensor]],
     ) -> torch.Tensor:
-        for features, positions, valid_mask in zip(
-            layer_features, image_positions, deep_masks
-        ):
-            added = (
-                features
-                if valid_mask is None
-                else features.reshape(-1, features.shape[-1])[valid_mask.reshape(-1)]
-            )
+        for features, positions, valid_mask in zip(layer_features, image_positions, deep_masks):
+            added = features if valid_mask is None else features.reshape(-1, features.shape[-1])[valid_mask.reshape(-1)]
             x = x.clone()
             x.reshape(-1, x.shape[-1])[positions] += added
         return x
@@ -387,9 +348,7 @@ class VideoOlmo(ModelBase):
     ) -> OLMoOutput:
         """Encode text and images and return pre-norm hidden states per LLM layer."""
         active_unsupported = {
-            key: value
-            for key, value in unsupported.items()
-            if value is not None and value is not False
+            key: value for key, value in unsupported.items() if value is not None and value is not False
         }
         if active_unsupported:
             raise ValueError(
@@ -406,9 +365,7 @@ class VideoOlmo(ModelBase):
         safe_input_ids = torch.where(valid_tokens, raw_input_ids, 0)
         if position_ids is None:
             base_mask = valid_tokens if attention_mask is None else attention_mask.to(torch.bool)
-            position_ids = torch.clamp(
-                torch.cumsum(base_mask.to(torch.int32), dim=-1) - 1, min=0
-            )
+            position_ids = torch.clamp(torch.cumsum(base_mask.to(torch.int32), dim=-1) - 1, min=0)
 
         if input_embeddings is None:
             embedding_ids = safe_input_ids
@@ -444,17 +401,13 @@ class VideoOlmo(ModelBase):
             )
 
         if not self.config.llm.rope:
-            positions = torch.arange(
-                safe_input_ids.shape[1], dtype=torch.long, device=x.device
-            )[None]
+            positions = torch.arange(safe_input_ids.shape[1], dtype=torch.long, device=x.device)[None]
             x = x + self.transformer.wpe(positions)
         x = self.transformer.emb_drop(x)
         if self.config.llm.normalize_input_embeds:
             x = x * (self.config.llm.d_model**0.5)
 
-        layer_states: Optional[List[torch.Tensor]] = (
-            [] if collect_layer_hidden_states else None
-        )
+        layer_states: Optional[List[torch.Tensor]] = [] if collect_layer_hidden_states else None
         for layer_index, block in enumerate(self.transformer.blocks):
             x, _ = block(
                 x,

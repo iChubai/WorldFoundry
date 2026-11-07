@@ -88,8 +88,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 "kind": "source_repo",
                 "path": str(root),
                 "reason": (
-                    f"ShotStream checkout is not staged; clone {OFFICIAL_REPO_URL} here or set "
-                    f"{SOURCE_ENV_VAR}"
+                    f"ShotStream checkout is not staged; clone {OFFICIAL_REPO_URL} here or set {SOURCE_ENV_VAR}"
                 ),
             }
         )
@@ -151,9 +150,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 {"kind": "asset", "path": str(resolved_data_path), "reason": "ShotStream input CSV is missing"}
             )
 
-    for module_name in (
-        "torch", "torchvision", "omegaconf", "pandas", "decord", "flash_attn", "easydict", "flask"
-    ):
+    for module_name in ("torch", "torchvision", "omegaconf", "pandas", "decord", "flash_attn", "easydict", "flask"):
         if importlib.util.find_spec(module_name) is None:
             missing.append(
                 {

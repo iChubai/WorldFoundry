@@ -23,7 +23,7 @@ def runtime_root() -> Path:
     """
     # Resolve the absolute path of the current file and then get its parent directory
     # Finally, append 'easyanimate_runtime' to locate the specific runtime asset directory.
-    return Path(__file__).resolve().parent / 'easyanimate_runtime'
+    return Path(__file__).resolve().parent / "easyanimate_runtime"
 
 
 from .worldfoundry_runtime import EasyAnimate, default_model_path, resolve_config_path

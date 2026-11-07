@@ -102,17 +102,11 @@ class SiglipAttention(nn.Module):
         # value_states: [Batch_Size, Num_Patches, Embed_Dim]
         value_states = self.v_proj(hidden_states)
         # query_states: [Batch_Size, Num_Heads, Num_Patches, Head_Dim]
-        query_states = query_states.view(
-            batch_size, seq_len, self.num_heads, self.head_dim
-        ).transpose(1, 2)
+        query_states = query_states.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
 
-        key_states = key_states.view(
-            batch_size, seq_len, self.num_heads, self.head_dim
-        ).transpose(1, 2)
+        key_states = key_states.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
 
-        value_states = value_states.view(
-            batch_size, seq_len, self.num_heads, self.head_dim
-        ).transpose(1, 2)
+        value_states = value_states.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1, 2)
         attn_output = scaled_dot_product_attention(
             query_states,
             key_states,
@@ -199,12 +193,7 @@ class SiglipEncoder(nn.Module):
     ):
         super().__init__()
         self.config = config
-        self.layers = nn.ModuleList(
-            [
-                SiglipEncoderLayer(config)
-                for _ in range(config.num_hidden_layers)
-            ]
-        )
+        self.layers = nn.ModuleList([SiglipEncoderLayer(config) for _ in range(config.num_hidden_layers)])
 
     # Ignore copy
     def forward(self, inputs_embeds: torch.Tensor) -> torch.Tensor:

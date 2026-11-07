@@ -67,7 +67,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
                 }
             )
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Vid2World main/inference.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Vid2World main/inference.py is missing"}
+        )
     return missing
 
 

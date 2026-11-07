@@ -267,7 +267,9 @@ class DiffusionPolicySynthesis(ActionModelSynthesis):
                 "device": runtime_config.device,
             },
         }
-        plan_path.write_text(json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        plan_path.write_text(
+            json.dumps(plan_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
         # If only planning is requested, return the plan details without executing the model.
         if plan_only:

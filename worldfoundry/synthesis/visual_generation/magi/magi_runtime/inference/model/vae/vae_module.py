@@ -45,7 +45,7 @@ def ndgrid(*tensors) -> Tuple[torch.Tensor, ...]:
 
     """
     try:
-        return torch.meshgrid(*tensors, indexing='ij')
+        return torch.meshgrid(*tensors, indexing="ij")
     except TypeError:
         # old PyTorch < 1.10 will follow this path as it does not have indexing arg,
         # the old behaviour of meshgrid was 'ij'
@@ -127,7 +127,7 @@ def build_fourier_pos_embed(
             t = [torch.arange(s, device=device, dtype=torch.int64).to(torch.float32) for s in feat_shape]
 
     if ref_feat_shape is not None:
-        assert len(feat_shape) == len(ref_feat_shape), 'shape must be in same dimension'
+        assert len(feat_shape) == len(ref_feat_shape), "shape must be in same dimension"
         # eva's scheme for resizing rope embeddings (ref shape = pretrain)
         t = [x / f * r for x, f, r in zip(t, feat_shape, ref_feat_shape)]
 
@@ -246,7 +246,7 @@ class ManualLayerNorm(nn.Module):
 # Attention
 ###################################################
 @lru_cache(maxsize=50)
-def cache_rotary_emb(feat_shape, device='cuda', dim=64, dtype=torch.bfloat16, max_res=512, ref_feat_shape=(4, 16, 16)):
+def cache_rotary_emb(feat_shape, device="cuda", dim=64, dtype=torch.bfloat16, max_res=512, ref_feat_shape=(4, 16, 16)):
     return build_rotary_pos_embed(
         feat_shape=feat_shape,
         dim=dim,
@@ -260,7 +260,15 @@ def cache_rotary_emb(feat_shape, device='cuda', dim=64, dtype=torch.bfloat16, ma
 
 class Attention(nn.Module):
     def __init__(
-        self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0.0, proj_drop=0.0, ln_in_attn=False, use_rope=False
+        self,
+        dim,
+        num_heads=8,
+        qkv_bias=False,
+        qk_scale=None,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        ln_in_attn=False,
+        use_rope=False,
     ):
         super().__init__()
         self.num_heads = num_heads
@@ -358,7 +366,9 @@ class PatchEmbed(nn.Module):
         video_size = to_2tuple(video_size)
         patch_size = to_2tuple(patch_size)
 
-        num_patches = (video_length // patch_length) * (video_size[1] // patch_size[1]) * (video_size[0] // patch_size[0])
+        num_patches = (
+            (video_length // patch_length) * (video_size[1] // patch_size[1]) * (video_size[0] // patch_size[0])
+        )
 
         self.video_size = video_size
         self.patch_size = patch_size
@@ -401,7 +411,7 @@ class PatchEmbed(nn.Module):
 def resize_pos_embed(posemb, src_shape, target_shape):
     posemb = posemb.reshape(1, src_shape[0], src_shape[1], src_shape[2], -1)
     posemb = posemb.permute(0, 4, 1, 2, 3)
-    posemb = nn.functional.interpolate(posemb, size=target_shape, mode='trilinear', align_corners=False)
+    posemb = nn.functional.interpolate(posemb, size=target_shape, mode="trilinear", align_corners=False)
     posemb = posemb.permute(0, 2, 3, 4, 1)
     posemb = posemb.reshape(1, target_shape[0] * target_shape[1] * target_shape[2], -1)
     return posemb
@@ -510,7 +520,7 @@ class ViTEncoder(nn.Module):
 
     @torch.jit.ignore
     def no_weight_decay(self):
-        return {'pos_embed', 'cls_token'}
+        return {"pos_embed", "cls_token"}
 
     def forward(self, x):
         B = x.shape[0]
@@ -650,10 +660,14 @@ class ViTDecoder(nn.Module):
         self.use_final_proj = use_final_proj
         if self.use_final_proj:
             self.unpatch_channels = 4
-            self.final_proj = nn.Linear(embed_dim, self.unpatch_channels * (patch_size * patch_size * patch_length), bias=True)
+            self.final_proj = nn.Linear(
+                embed_dim, self.unpatch_channels * (patch_size * patch_size * patch_length), bias=True
+            )
             self.final_norm = norm_layer(self.unpatch_channels * (patch_size * patch_size * patch_length))
 
-        self.last_layer = nn.Conv3d(in_channels=self.unpatch_channels, out_channels=3, kernel_size=3, stride=1, padding=1)
+        self.last_layer = nn.Conv3d(
+            in_channels=self.unpatch_channels, out_channels=3, kernel_size=3, stride=1, padding=1
+        )
 
         trunc_normal_(self.pos_embed, std=0.02)
 
@@ -672,7 +686,7 @@ class ViTDecoder(nn.Module):
 
     @torch.jit.ignore
     def no_weight_decay(self):
-        return {'pos_embed', 'cls_token'}
+        return {"pos_embed", "cls_token"}
 
     def forward(self, x):
         B, C, latentT, latentH, latentW = x.shape  # x: (B, C, latentT, latentH, latenW)
@@ -710,8 +724,10 @@ class ViTDecoder(nn.Module):
         if self.use_final_proj:
             x = self.final_proj(x)
             x = self.final_norm(x)
-        x = x.reshape(B, latentT, latentH, latentW, self.patch_length, self.patch_size, self.patch_size, self.unpatch_channels)
-        x = rearrange(x, 'B lT lH lW pT pH pW C -> B C (lT pT) (lH pH) (lW pW)', C=self.unpatch_channels)
+        x = x.reshape(
+            B, latentT, latentH, latentW, self.patch_length, self.patch_size, self.patch_size, self.unpatch_channels
+        )
+        x = rearrange(x, "B lT lH lW pT pH pW C -> B C (lT pT) (lH pH) (lW pW)", C=self.unpatch_channels)
 
         x = self.last_layer(x)
         return x
@@ -743,7 +759,11 @@ class DiagonalGaussianDistribution(object):
                 return 0.5 * torch.sum(torch.pow(self.mean, 2) + self.var - 1.0 - self.logvar, dim=[1, 2, 3])
             else:
                 return 0.5 * torch.sum(
-                    torch.pow(self.mean - other.mean, 2) / other.var + self.var / other.var - 1.0 - self.logvar + other.logvar,
+                    torch.pow(self.mean - other.mean, 2) / other.var
+                    + self.var / other.var
+                    - 1.0
+                    - self.logvar
+                    + other.logvar,
                     dim=[1, 2, 3],
                 )
 

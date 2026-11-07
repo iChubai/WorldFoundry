@@ -208,9 +208,7 @@ class WallDataset(DotDataset):
 
         return check_wall_intersection
 
-    def check_pass_through_door(
-        self, current_location, next_location, wall_loc, door_loc
-    ):
+    def check_pass_through_door(self, current_location, next_location, wall_loc, door_loc):
         """
         Args:
             current_location (2,):
@@ -235,34 +233,18 @@ class WallDataset(DotDataset):
         b = current_location[1] - a * current_location[0]
 
         # if path intersects left wall
-        if (
-            torch.sign(left_wall - current_location[0])
-            * torch.sign(left_wall - next_location[0])
-            < 0
-        ):
+        if torch.sign(left_wall - current_location[0]) * torch.sign(left_wall - next_location[0]) < 0:
             # calcualte y coordinate of intersection point with left wall
             y_left = a * left_wall + b
-            pass_left_wall = (
-                door_loc - self.config.door_space
-                <= y_left
-                <= door_loc + self.config.door_space
-            )
+            pass_left_wall = door_loc - self.config.door_space <= y_left <= door_loc + self.config.door_space
         else:
             pass_left_wall = True
 
         # if path intersects right wall
-        if (
-            torch.sign(right_wall - current_location[0])
-            * torch.sign(right_wall - next_location[0])
-            < 0
-        ):
+        if torch.sign(right_wall - current_location[0]) * torch.sign(right_wall - next_location[0]) < 0:
             # calculate y coordinate of intersection point with right wall
             y_right = a * right_wall + b
-            pass_right_wall = (
-                door_loc - self.config.door_space
-                <= y_right
-                <= door_loc + self.config.door_space
-            )
+            pass_right_wall = door_loc - self.config.door_space <= y_right <= door_loc + self.config.door_space
         else:
             pass_right_wall = True
 
@@ -374,39 +356,16 @@ class WallDataset(DotDataset):
             top_border, bot_border = left_border, right_border
 
             check_border_intersection = (
-                (
-                    (
-                        torch.sign(locations[-1][:, 0] - left_border)
-                        * torch.sign(next_location[:, 0] - left_border)
-                    )
-                    <= 0
-                )
+                ((torch.sign(locations[-1][:, 0] - left_border) * torch.sign(next_location[:, 0] - left_border)) <= 0)
                 | (
-                    (
-                        torch.sign(locations[-1][:, 0] - right_border)
-                        * torch.sign(next_location[:, 0] - right_border)
-                    )
+                    (torch.sign(locations[-1][:, 0] - right_border) * torch.sign(next_location[:, 0] - right_border))
                     <= 0
                 )
-                | (
-                    (
-                        torch.sign(locations[-1][:, 1] - top_border)
-                        * torch.sign(next_location[:, 1] - top_border)
-                    )
-                    <= 0
-                )
-                | (
-                    (
-                        torch.sign(locations[-1][:, 1] - bot_border)
-                        * torch.sign(next_location[:, 1] - bot_border)
-                    )
-                    <= 0
-                )
+                | ((torch.sign(locations[-1][:, 1] - top_border) * torch.sign(next_location[:, 1] - top_border)) <= 0)
+                | ((torch.sign(locations[-1][:, 1] - bot_border) * torch.sign(next_location[:, 1] - bot_border)) <= 0)
             )
 
-            check_wall_intersection = self.check_wall_intersection(
-                locations[-1], next_location, walls[0]
-            )
+            check_wall_intersection = self.check_wall_intersection(locations[-1], next_location, walls[0])
 
             check_wall_width_intersection = self.check_wall_width_intersection(
                 locations=locations[-1],
@@ -415,11 +374,7 @@ class WallDataset(DotDataset):
                 doors=walls[1],
             )
 
-            check_intersection = (
-                check_border_intersection
-                | check_wall_intersection
-                | check_wall_width_intersection
-            )
+            check_intersection = check_border_intersection | check_wall_intersection | check_wall_width_intersection
 
             for j in check_intersection.nonzero():
                 if check_border_intersection[j] or check_wall_width_intersection[j]:
@@ -444,9 +399,7 @@ class WallDataset(DotDataset):
         states_with_walls = torch.cat([states, walls], dim=-3)
 
         if self.config.n_steps_reduce_factor > 1:
-            states_with_walls = states_with_walls[
-                :, :: self.config.n_steps_reduce_factor
-            ]
+            states_with_walls = states_with_walls[:, :: self.config.n_steps_reduce_factor]
             locations = locations[:, :: self.config.n_steps_reduce_factor]
             reduced_chunks = actions.shape[1] // self.config.n_steps_reduce_factor
             action_chunks = torch.chunk(actions, chunks=reduced_chunks, dim=1)
@@ -475,9 +428,7 @@ class WallDataset(DotDataset):
             layout_codes = random.sample(layout_codes, self.config.fix_wall_batch_k)
 
         weights = [1] * len(layout_codes)
-        sampled_codes = random.choices(
-            layout_codes, weights=weights, k=self.config.batch_size
-        )
+        sampled_codes = random.choices(layout_codes, weights=weights, k=self.config.batch_size)
         wall_locs = []
         door_locs = []
         types = []
@@ -506,12 +457,8 @@ class WallDataset(DotDataset):
         grid_x = grid_x.unsqueeze(0).repeat(self.config.batch_size, 1, 1)
         grid_y = grid_y.unsqueeze(0).repeat(self.config.batch_size, 1, 1)
 
-        wall_locs_r = wall_locs.view(self.config.batch_size, 1, 1).repeat(
-            1, self.config.img_size, self.config.img_size
-        )
-        hole_locs_r = hole_locs.view(self.config.batch_size, 1, 1).repeat(
-            1, self.config.img_size, self.config.img_size
-        )
+        wall_locs_r = wall_locs.view(self.config.batch_size, 1, 1).repeat(1, self.config.img_size, self.config.img_size)
+        hole_locs_r = hole_locs.view(self.config.batch_size, 1, 1).repeat(1, self.config.img_size, self.config.img_size)
 
         # Calculate offsets for wall width
         offset = self.config.wall_width // 2
@@ -519,10 +466,7 @@ class WallDataset(DotDataset):
 
         res = (
             wall_mask
-            * (
-                (hole_locs_r < grid_y - self.config.door_space)
-                + (hole_locs_r > grid_y + self.config.door_space)
-            )
+            * ((hole_locs_r < grid_y - self.config.door_space) + (hole_locs_r > grid_y + self.config.door_space))
         ).float()
 
         # set border walls

@@ -249,8 +249,7 @@ class SmolVLARuntime:
         expected_state_dim = config.state_feature.shape[0]
         if state_tensor.shape[-1] != expected_state_dim:
             raise ValueError(
-                f"SmolVLA checkpoint expects {expected_state_dim} state values, "
-                f"received {state_tensor.shape[-1]}"
+                f"SmolVLA checkpoint expects {expected_state_dim} state values, received {state_tensor.shape[-1]}"
             )
         state_tensor = _apply_normalization(
             state_tensor,
@@ -272,10 +271,7 @@ class SmolVLARuntime:
             pil_image = load_pil_image(value, first_sequence_item=False).convert("RGB")
             array = np.asarray(pil_image, dtype=np.float32).copy() / 255.0
             batch[key] = (
-                torch.from_numpy(array)
-                .permute(2, 0, 1)
-                .unsqueeze(0)
-                .to(device=self._device, dtype=self._dtype)
+                torch.from_numpy(array).permute(2, 0, 1).unsqueeze(0).to(device=self._device, dtype=self._dtype)
             )
 
         tokenizer = model.model.vlm_with_expert.processor.tokenizer

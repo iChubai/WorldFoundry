@@ -76,9 +76,7 @@ def _map_vision_key(key: str) -> str:
         key = "vision_backbone.featurizer." + key.removeprefix("dino_featurizer.")
     elif key.startswith("siglip_featurizer."):
         key = "vision_backbone.fused_featurizer." + key.removeprefix("siglip_featurizer.")
-    return key.replace(".ls1.gamma", ".ls1.scale_factor").replace(
-        ".ls2.gamma", ".ls2.scale_factor"
-    )
+    return key.replace(".ls1.gamma", ".ls1.scale_factor").replace(".ls2.gamma", ".ls2.scale_factor")
 
 
 def _map_vlm_state_dict(groups: Mapping[str, Mapping[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
@@ -218,9 +216,7 @@ def load_vla(
         else future_action_window_size
     )
     past_window = int(
-        run_config.get("past_action_window_size", 0)
-        if past_action_window_size is None
-        else past_action_window_size
+        run_config.get("past_action_window_size", 0) if past_action_window_size is None else past_action_window_size
     )
 
     resolved_device = resolve_inference_device(device)

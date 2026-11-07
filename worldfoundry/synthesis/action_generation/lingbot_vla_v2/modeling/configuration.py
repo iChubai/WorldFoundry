@@ -20,6 +20,7 @@ from typing import Any, Dict, Literal, Optional
 
 from transformers import AutoConfig, PretrainedConfig
 
+
 class LingbotVLAConfig(PretrainedConfig):
     """Configuration class for Lingbot-VLA.
     This is the configuration class to store the configuration of a [`Lingbot-VLA`].
@@ -33,22 +34,18 @@ class LingbotVLAConfig(PretrainedConfig):
         vlm_repo_id: Optional[str] = None,
         expert_vision_path: Optional[str] = None,
         tokenizer_path: Optional[str] = None,
-
         post_training: bool = False,
         adanorm_time: bool = False,
         split_gate_liner: bool = False,
         nosplit_gate_liner: bool = False,
         separate_time_proj: bool = False,
         final_norm_adanorm: bool = False,
-
         enable_expert_vision: bool = False,
         expert_vision_type: Optional[str] = None,
         freeze_vision_encoder: bool = False,
-
         incremental_training: bool = False,
         depth_incremental_training: bool = False,
         reinit_mismatched_weights: bool = False,
-
         action_dim: int = 14,
         max_action_dim: int = 14,
         max_state_dim: int = 14,
@@ -59,7 +56,6 @@ class LingbotVLAConfig(PretrainedConfig):
         norm_qkv: bool = False,
         align_params: Optional[Dict[str, Any]] = None,
         use_compile: bool = False,
-
         use_moe: bool = False,
         token_moe_layers: Optional[list] = None,
         token_num_experts: int = 32,
@@ -86,16 +82,13 @@ class LingbotVLAConfig(PretrainedConfig):
         qwen3vl_use_vision_boundaries: bool = False,
         precompute_grid_thw: bool = False,
         use_qwen3_fixed_grid_cache: bool = False,
-
         use_lm_head: bool = False,
         vocab_size: int = 0,
         vit_attn_implementation: str = "flash_attention_2",
         attention_implementation: str = "flex",
-
         train_expert_only: bool = False,
         train_state_proj: bool = True,
-
-        **kwargs
+        **kwargs,
     ):
         super().__init__()
         if moe_implementation is None:
@@ -108,8 +101,9 @@ class LingbotVLAConfig(PretrainedConfig):
         self.num_steps = 10
         self.n_obs_steps = 1
 
-        assert not (split_gate_liner and nosplit_gate_liner), \
+        assert not (split_gate_liner and nosplit_gate_liner), (
             "split_gate_liner and nosplit_gate_liner can not be both True."
+        )
 
         self.vlm_repo_id = vlm_repo_id
         self.expert_vision_path = expert_vision_path
@@ -170,15 +164,16 @@ class LingbotVLAConfig(PretrainedConfig):
         self.use_qwen3_fixed_grid_cache = use_qwen3_fixed_grid_cache
         self.use_lm_head = use_lm_head
         if vocab_size == 0:
-            if vlm_repo_id and 'paligemma' in vlm_repo_id.lower():
+            if vlm_repo_id and "paligemma" in vlm_repo_id.lower():
                 self.vocab_size = 257216
-            elif vlm_repo_id and 'qwen' in vlm_repo_id.lower():
+            elif vlm_repo_id and "qwen" in vlm_repo_id.lower():
                 self.vocab_size = 151936
             else:
                 self.vocab_size = 257152
         else:
             self.vocab_size = vocab_size
         self.vit_attn_implementation = vit_attn_implementation
+
 
 class LingbotVLAV2Config(LingbotVLAConfig):
     def __init__(self, **kwargs):

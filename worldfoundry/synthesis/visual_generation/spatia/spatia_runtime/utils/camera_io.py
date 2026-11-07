@@ -16,12 +16,7 @@ def read_intrinsics_from_txt(path: str | Path | None) -> np.ndarray | None:
     if path is None:
         return None
     values = np.asarray(
-        [
-            float(value)
-            for value in _NUMBER_PATTERN.findall(
-                Path(path).read_text(encoding="utf-8")
-            )
-        ],
+        [float(value) for value in _NUMBER_PATTERN.findall(Path(path).read_text(encoding="utf-8"))],
         dtype=np.float32,
     )
     if values.shape != (4,):
@@ -45,9 +40,7 @@ def read_w2cs_from_txt(
     elif matrices.shape[1] == 4:
         matrices_4x4 = matrices
     else:
-        raise ValueError(
-            f"Expected [T,3,4] or [T,4,4] matrices in {path}, got {matrices.shape}."
-        )
+        raise ValueError(f"Expected [T,3,4] or [T,4,4] matrices in {path}, got {matrices.shape}.")
     return matrices_4x4 if homogeneous else matrices_4x4[:, :3]
 
 

@@ -76,12 +76,14 @@ def vae_decode_fake(latents):
         [-0.2315, -0.1920, -0.1355],
         [-0.0270, 0.0401, -0.0821],
         [-0.0616, -0.0997, -0.0727],
-        [0.0249, -0.0469, -0.1703]
+        [0.0249, -0.0469, -0.1703],
     ]  # From comfyui
 
     latent_rgb_factors_bias = [0.0259, -0.0192, -0.0761]
 
-    weight = torch.tensor(latent_rgb_factors, device=latents.device, dtype=latents.dtype).transpose(0, 1)[:, :, None, None, None]
+    weight = torch.tensor(latent_rgb_factors, device=latents.device, dtype=latents.dtype).transpose(0, 1)[
+        :, :, None, None, None
+    ]
     bias = torch.tensor(latent_rgb_factors_bias, device=latents.device, dtype=latents.dtype)
 
     images = torch.nn.functional.conv3d(latents, weight, bias=bias, stride=1, padding=0, dilation=1, groups=1)

@@ -51,7 +51,8 @@ def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = 
 
     if include_buffers:
         tensor_constructors_to_patch = {
-            torch_function_name: getattr(torch, torch_function_name) for torch_function_name in ["empty", "zeros", "ones", "full"]
+            torch_function_name: getattr(torch, torch_function_name)
+            for torch_function_name in ["empty", "zeros", "ones", "full"]
         }
     else:
         tensor_constructors_to_patch = {}
@@ -96,7 +97,9 @@ def load_state_dict_from_safetensors(file_path, torch_dtype=None):
 
 def load_state_dict_from_bin(file_path, torch_dtype=None):
     backend_args = None
-    state_dict = easy_io.load(file_path, backend_args=backend_args, file_format="pt", map_location="cpu", weights_only=False)
+    state_dict = easy_io.load(
+        file_path, backend_args=backend_args, file_format="pt", map_location="cpu", weights_only=False
+    )
     if torch_dtype is not None:
         for i in state_dict:
             if isinstance(state_dict[i], torch.Tensor):
@@ -158,7 +161,9 @@ def build_rename_dict(source_state_dict, target_state_dict, split_qkv=False):
                 length = source_state_dict[name].shape[0] // 3
                 rename = []
                 for i in range(3):
-                    rename.append(search_parameter(source_state_dict[name][i * length : i * length + length], target_state_dict))
+                    rename.append(
+                        search_parameter(source_state_dict[name][i * length : i * length + length], target_state_dict)
+                    )
                 if None not in rename:
                     print(f'"{name}": {rename},')
                     for rename_ in rename:

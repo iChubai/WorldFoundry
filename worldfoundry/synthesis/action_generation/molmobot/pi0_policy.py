@@ -85,13 +85,15 @@ class Pi0JointPositionPolicy:
             self.checkpoint_dir,
             pytorch_device=self.device if ":" in self.device else None,
         )
-        self.model.infer({
-            EXO_INPUT_KEY: np.zeros((224, 224, 3), dtype=np.uint8),
-            WRIST_INPUT_KEY: np.zeros((224, 224, 3), dtype=np.uint8),
-            "observation/joint_position": np.zeros(7, dtype=np.float32),
-            "observation/gripper_position": np.zeros(1, dtype=np.float32),
-            "prompt": "place the red block on the green block",
-        })
+        self.model.infer(
+            {
+                EXO_INPUT_KEY: np.zeros((224, 224, 3), dtype=np.uint8),
+                WRIST_INPUT_KEY: np.zeros((224, 224, 3), dtype=np.uint8),
+                "observation/joint_position": np.zeros(7, dtype=np.float32),
+                "observation/gripper_position": np.zeros(1, dtype=np.float32),
+                "prompt": "place the red block on the green block",
+            }
+        )
 
     def reset(self) -> None:
         """Each WorldFoundry call infers a new first action; no episode buffer."""

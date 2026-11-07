@@ -25,7 +25,11 @@ from transformers.utils import (
 )
 from transformers.activations import ACT2FN
 from transformers.modeling_attn_mask_utils import AttentionMaskConverter
-from transformers.modeling_flash_attention_utils import FlashAttentionKwargs, flash_attn_supports_top_left_mask, is_flash_attn_available
+from transformers.modeling_flash_attention_utils import (
+    FlashAttentionKwargs,
+    flash_attn_supports_top_left_mask,
+    is_flash_attn_available,
+)
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 from transformers.processing_utils import Unpack
 import torch.distributed._tensor as dt
@@ -43,13 +47,14 @@ from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
     Qwen2_5_VisionTransformerPretrainedModel,
     Qwen2_5_VLRotaryEmbedding,
     apply_rotary_pos_emb_vision,
-    eager_attention_forward
+    eager_attention_forward,
 )
 
 from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
     Qwen2_5_VLTextModel as _Qwen2_5_VLTextModel,
-    Qwen2_5_VLForConditionalGeneration as _Qwen2_5_VLForConditionalGeneration
+    Qwen2_5_VLForConditionalGeneration as _Qwen2_5_VLForConditionalGeneration,
 )
+
 logger = logging.get_logger(__name__)
 
 
@@ -97,7 +102,11 @@ class Qwen2_5_VLVisionAttention(nn.Module):
             out_fp32_atten = False
             if key_states.dtype == torch.float32:
                 out_fp32_atten = True
-                query_states, key_states, value_states = query_states.to(torch.bfloat16), key_states.to(torch.bfloat16), value_states.to(torch.bfloat16)
+                query_states, key_states, value_states = (
+                    query_states.to(torch.bfloat16),
+                    key_states.to(torch.bfloat16),
+                    value_states.to(torch.bfloat16),
+                )
             attn_output, _ = attention_interface(
                 self,
                 query_states,
@@ -278,7 +287,9 @@ class Qwen2_5_VLDecoderLayer(GradientCheckpointingLayer):
             return out_emb
 
         else:
-            raise ValueError(f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2_5_VLDecoderLayer in LingBot-VLA")
+            raise ValueError(
+                f"Invaild Operation compute_kqv={compute_kqv} and output_atten={output_atten} with Qwen2_5_VLDecoderLayer in LingBot-VLA"
+            )
 
 
 class Qwen2_5_VLTextModel(Qwen2_5_VLPreTrainedModel):
@@ -317,6 +328,7 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
     set_decoder = _Qwen2_5_VLForConditionalGeneration.set_decoder
     forward = _Qwen2_5_VLForConditionalGeneration.forward
     prepare_inputs_for_generation = _Qwen2_5_VLForConditionalGeneration.prepare_inputs_for_generation
+
     def __init__(self, config):
         super().__init__(config)
         self.visual = Qwen2_5_VisionTransformerPretrainedModel._from_config(config.vision_config)
@@ -327,7 +339,6 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
 
         # Initialize weights and apply final processing
         self.post_init()
-
 
 
 def preprcess_grid_thw(self, grid_thw: torch.Tensor):
@@ -353,11 +364,11 @@ def forward_without_grid_thw(
     self,
     hidden_states: torch.Tensor,
     grid_thw: torch.Tensor = None,
-    rotary_pos_emb = None,
-    window_index = None,
-    cu_window_seqlens = None,
-    cu_seqlens = None,
-    **kwargs
+    rotary_pos_emb=None,
+    window_index=None,
+    cu_window_seqlens=None,
+    cu_seqlens=None,
+    **kwargs,
 ) -> torch.Tensor:
     hidden_states = self.patch_embed(hidden_states)
 

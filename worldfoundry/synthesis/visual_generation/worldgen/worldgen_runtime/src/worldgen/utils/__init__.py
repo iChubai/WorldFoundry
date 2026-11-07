@@ -9,7 +9,7 @@ from .general_utils import (
     batch_nearest_dot,
     fill_mask_from_contour,
     map_image_to_pano,
-    depth_match
+    depth_match,
 )
 
 _SPLAT_EXPORTS = {
@@ -28,6 +28,7 @@ def __getattr__(name: str):
         return value
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 __all__ = [
     "pano_to_cube",
     "cube_to_pano",
@@ -38,9 +39,8 @@ __all__ = [
     "fill_mask_from_contour",
     "map_image_to_pano",
     "depth_match",
-
     "SplatFile",
     "convert_rgbd_to_gs",
     "mask_splat",
-    "merge_splats"
+    "merge_splats",
 ]

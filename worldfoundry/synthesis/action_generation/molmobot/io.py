@@ -29,9 +29,7 @@ def _local_read_path(path: PathOrStr) -> Path:
     normalized = normalize_path(path)
     if not is_url(normalized):
         return Path(normalized)
-    raise FileNotFoundError(
-        f"Remote reads are disabled for MolmoBot inference; stage this asset locally: {normalized}"
-    )
+    raise FileNotFoundError(f"Remote reads are disabled for MolmoBot inference; stage this asset locally: {normalized}")
 
 
 def get_bytes_range(path: PathOrStr, bytes_start: int, num_bytes: Optional[int]) -> bytes:

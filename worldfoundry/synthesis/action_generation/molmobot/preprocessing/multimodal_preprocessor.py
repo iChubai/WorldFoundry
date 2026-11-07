@@ -63,11 +63,7 @@ class MultimodalPreprocessor:
         if tokenized is None:
             return self.text_preprocessor.tokenize_and_interleave(messages, [])
         if isinstance(tokenized, list):
-            position_ids = (
-                None
-                if tokenized[0].position_ids is None
-                else [item.position_ids for item in tokenized]
-            )
+            position_ids = None if tokenized[0].position_ids is None else [item.position_ids for item in tokenized]
             example = self.text_preprocessor.tokenize_and_interleave(
                 messages,
                 [item.tokens for item in tokenized],
@@ -80,9 +76,7 @@ class MultimodalPreprocessor:
                 pooling = []
                 for item in tokenized:
                     offset = sum(np.prod(previous.shape[:2]) for previous in images)
-                    pooling.append(
-                        np.where(item.token_pooling >= 0, item.token_pooling + offset, item.token_pooling)
-                    )
+                    pooling.append(np.where(item.token_pooling >= 0, item.token_pooling + offset, item.token_pooling))
                     images.append(item.images)
                 example["images"] = np.concatenate(images)
                 example["token_pooling"] = np.concatenate(pooling)
@@ -108,11 +102,7 @@ class MultimodalPreprocessor:
     def get_output_shapes(self) -> Dict[str, TensorSpec]:
         if self._output_shapes is not None:
             return self._output_shapes
-        preprocessors = [
-            item
-            for item in (self.image_preprocessor, self.multi_image_preprocessor)
-            if item is not None
-        ]
+        preprocessors = [item for item in (self.image_preprocessor, self.multi_image_preprocessor) if item is not None]
         if not preprocessors:
             raise ValueError("MolmoBot requires at least one image preprocessor.")
         spec = TensorSpec.max_dictionaries(*(item.get_output_shapes() for item in preprocessors))

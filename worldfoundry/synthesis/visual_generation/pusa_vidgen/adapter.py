@@ -75,8 +75,14 @@ class PusaVidGenRuntime:
             base_model_root,
             required_files=("models_t5_umt5-xxl-enc-bf16.pth", "Wan2.1_VAE.pth"),
         )
-        self.high_lora_path = Path(high_lora_path).expanduser() if high_lora_path else self.checkpoint_root / "high_noise_pusa.safetensors"
-        self.low_lora_path = Path(low_lora_path).expanduser() if low_lora_path else self.checkpoint_root / "low_noise_pusa.safetensors"
+        self.high_lora_path = (
+            Path(high_lora_path).expanduser()
+            if high_lora_path
+            else self.checkpoint_root / "high_noise_pusa.safetensors"
+        )
+        self.low_lora_path = (
+            Path(low_lora_path).expanduser() if low_lora_path else self.checkpoint_root / "low_noise_pusa.safetensors"
+        )
         self.lightx2v_root = resolve_hf_snapshot_path(lightx2v_root) if lightx2v_root else None
         self.device = device
         self.python_executable = Path(python_executable).expanduser() if python_executable else Path(sys.executable)
@@ -134,7 +140,9 @@ class PusaVidGenRuntime:
             "sampling": {
                 "num_inference_steps": int(kwargs.pop("num_inference_steps", kwargs.pop("num_steps", 30))),
                 "cfg_scale": cfg_scale,
-                "switch_dit_boundary": float(kwargs.pop("switch_dit_boundary", kwargs.pop("switch_DiT_boundary", 0.875))),
+                "switch_dit_boundary": float(
+                    kwargs.pop("switch_dit_boundary", kwargs.pop("switch_DiT_boundary", 0.875))
+                ),
                 "num_frames": int(kwargs.pop("num_frames", 81)),
                 "height": int(kwargs.pop("height", 720)),
                 "width": int(kwargs.pop("width", 1280)),

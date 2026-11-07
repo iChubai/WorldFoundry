@@ -54,14 +54,12 @@ class CausalPipelineBase:
             # (not on block.self_attn which is a _SelfAttnProj without max_attention_size).
             # Skip those blocks — MMDiT inference does not use height-concat so no
             # patching is needed for them.
-            if not hasattr(block.self_attn, 'local_attn_size'):
+            if not hasattr(block.self_attn, "local_attn_size"):
                 continue
             if block.self_attn.local_attn_size == -1:
                 block.self_attn.max_attention_size = num_max_frames * frame_seq_length
             else:
-                block.self_attn.max_attention_size = (
-                    block.self_attn.local_attn_size * frame_seq_length
-                )
+                block.self_attn.max_attention_size = block.self_attn.local_attn_size * frame_seq_length
 
     # ------------------------------------------------------------------
     # 2. Frame-block utilities
@@ -93,9 +91,7 @@ class CausalPipelineBase:
             num_input_frames:  Frames in initial_latent (0 if None).
             num_output_frames: num_frames + num_input_frames.
         """
-        if not self.independent_first_frame or (
-            self.independent_first_frame and initial_latent is not None
-        ):
+        if not self.independent_first_frame or (self.independent_first_frame and initial_latent is not None):
             assert num_frames % self.num_frame_per_block == 0
             num_blocks = num_frames // self.num_frame_per_block
         else:
@@ -188,14 +184,14 @@ class CausalPipelineBase:
         """
         kv_cache = []
         for _ in range(self.num_transformer_blocks):
-            kv_cache.append({
-                "k": torch.zeros(
-                    [batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                "v": torch.zeros(
-                    [batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
-                "local_end_index":  torch.tensor([0], dtype=torch.long, device=device),
-            })
+            kv_cache.append(
+                {
+                    "k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                    "v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                    "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
+                    "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
+                }
+            )
         return kv_cache
 
     def _make_memrope_kv_cache(
@@ -222,6 +218,7 @@ class CausalPipelineBase:
         plus a shared ``"committed_frame"`` (last frame index pushed; -1 = empty). ``fs`` is
         the per-half token count (frame_seq_length // 2, e.g. 1560). See SUMMARY_MEMROPE.md.
         """
+
         def _half(cfg: dict, fs: int) -> dict:
             """One half/tier-set with ``fs`` tokens per frame (fs = full 3120 in fused mode,
             1560 per half in split mode)."""
@@ -255,19 +252,21 @@ class CausalPipelineBase:
                 entry = _half(g, ffs)
                 entry["committed_frame"] = -1
                 entry["roped_keys_buf"] = torch.zeros(
-                    [batch_size, max_frames * ffs, 12, 128], dtype=dtype, device=device)
-                entry["vals_buf"] = torch.zeros(
-                    [batch_size, max_frames * ffs, 12, 128], dtype=dtype, device=device)
+                    [batch_size, max_frames * ffs, 12, 128], dtype=dtype, device=device
+                )
+                entry["vals_buf"] = torch.zeros([batch_size, max_frames * ffs, 12, 128], dtype=dtype, device=device)
                 cache.append(entry)
         else:
             # SPLIT: independent gen/cond half-caches (1560 tokens per half-frame).
             fs = self.frame_seq_length // 2
             for _ in range(self.num_transformer_blocks):
-                cache.append({
-                    "gen": _half(memrope_cfg["gen"], fs),
-                    "cond": _half(memrope_cfg["cond"], fs),
-                    "committed_frame": -1,
-                })
+                cache.append(
+                    {
+                        "gen": _half(memrope_cfg["gen"], fs),
+                        "cond": _half(memrope_cfg["cond"], fs),
+                        "committed_frame": -1,
+                    }
+                )
         return cache
 
     @staticmethod
@@ -276,17 +275,19 @@ class CausalPipelineBase:
 
         Handles both the fused (flat tier-set) and split (gen/cond sub-dicts) layouts.
         """
+
         def _reset_half(hb: dict) -> None:
             hb["sink_count"] = 0
             hb["local_count"] = 0
             hb["muL_init"] = False
             hb["muS_init"] = False
+
         for entry in cache:
             entry["committed_frame"] = -1
             if "gen" in entry:  # split layout
                 _reset_half(entry["gen"])
                 _reset_half(entry["cond"])
-            else:               # fused layout (flat)
+            else:  # fused layout (flat)
                 _reset_half(entry)
 
     def _make_crossattn_cache(
@@ -318,13 +319,13 @@ class CausalPipelineBase:
         """
         crossattn_cache = []
         for _ in range(self.num_transformer_blocks):
-            crossattn_cache.append({
-                "k": torch.zeros(
-                    [batch_size, 512, 12, 128], dtype=dtype, device=device),
-                "v": torch.zeros(
-                    [batch_size, 512, 12, 128], dtype=dtype, device=device),
-                "is_init": False,
-            })
+            crossattn_cache.append(
+                {
+                    "k": torch.zeros([batch_size, 512, 12, 128], dtype=dtype, device=device),
+                    "v": torch.zeros([batch_size, 512, 12, 128], dtype=dtype, device=device),
+                    "is_init": False,
+                }
+            )
         return crossattn_cache
 
     # ------------------------------------------------------------------
@@ -347,7 +348,7 @@ class CausalPipelineBase:
         """
         for block in kv_cache:
             block["global_end_index"] = torch.tensor([0], dtype=torch.long, device=device)
-            block["local_end_index"]  = torch.tensor([0], dtype=torch.long, device=device)
+            block["local_end_index"] = torch.tensor([0], dtype=torch.long, device=device)
 
     @staticmethod
     def _reset_crossattn_cache(crossattn_cache: List[dict]) -> None:
@@ -452,21 +453,25 @@ class CausalPipelineBase:
         kv_cache = []
         for i in range(self.num_transformer_blocks):
             if i in double_set:
-                kv_cache.append({
-                    "x_k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                    "x_v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                    "c_k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                    "c_v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                    "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
-                    "local_end_index":  torch.tensor([0], dtype=torch.long, device=device),
-                })
+                kv_cache.append(
+                    {
+                        "x_k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                        "x_v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                        "c_k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                        "c_v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                        "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
+                        "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
+                    }
+                )
             else:
-                kv_cache.append({
-                    "k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                    "v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
-                    "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
-                    "local_end_index":  torch.tensor([0], dtype=torch.long, device=device),
-                })
+                kv_cache.append(
+                    {
+                        "k": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                        "v": torch.zeros([batch_size, kv_cache_size, 12, 128], dtype=dtype, device=device),
+                        "global_end_index": torch.tensor([0], dtype=torch.long, device=device),
+                        "local_end_index": torch.tensor([0], dtype=torch.long, device=device),
+                    }
+                )
         return kv_cache
 
     @staticmethod
@@ -485,7 +490,7 @@ class CausalPipelineBase:
         """
         for block in kv_cache:
             block["global_end_index"] = torch.tensor([0], dtype=torch.long, device=device)
-            block["local_end_index"]  = torch.tensor([0], dtype=torch.long, device=device)
+            block["local_end_index"] = torch.tensor([0], dtype=torch.long, device=device)
 
     # ------------------------------------------------------------------
     # 6. KV cache x-token broadcast helper (skip_clean_rerun_copy_x_last_c_full)
@@ -678,4 +683,4 @@ class CausalPipelineBase:
         """
         if cond_latent is None:
             return None
-        return cond_latent[:, start:start + length]
+        return cond_latent[:, start : start + length]

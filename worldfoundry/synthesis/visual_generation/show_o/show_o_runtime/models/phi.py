@@ -1085,6 +1085,7 @@ class PhiModel(PhiPreTrainedModel):
 
 class PhiForCausalLM(PhiPreTrainedModel):
     _tied_weights_keys = ["lm_head.weight"]
+
     def __init__(self, config):
         super().__init__(config)
         config.qk_layernorm = True
@@ -1475,9 +1476,7 @@ class PhiForTokenClassification(PhiPreTrainedModel):
             labels = labels.to(logits.device)
             batch_size, seq_length = labels.shape
             loss_fct = CrossEntropyLoss()
-            loss = loss_fct(
-                logits.view(batch_size * seq_length, self.num_labels), labels.view(batch_size * seq_length)
-            )
+            loss = loss_fct(logits.view(batch_size * seq_length, self.num_labels), labels.view(batch_size * seq_length))
 
         if not return_dict:
             output = (logits,) + model_outputs[2:]

@@ -40,19 +40,33 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
     )
 
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "LeWorldModel infer.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "LeWorldModel infer.py is missing"}
+        )
     if not config_file.is_file():
         missing.append({"kind": "asset", "path": str(config_file), "reason": "LeWorldModel eval config does not exist"})
     for module_name in ("stable_worldmodel", "stable_pretraining"):
         if importlib.util.find_spec(module_name) is None:
-            missing.append({"kind": "python_module", "path": module_name, "reason": "required LeWorldModel runtime package is not importable"})
+            missing.append(
+                {
+                    "kind": "python_module",
+                    "path": module_name,
+                    "reason": "required LeWorldModel runtime package is not importable",
+                }
+            )
 
     if config_file.is_file():
         try:
             from omegaconf import OmegaConf
         except Exception:
             OmegaConf = None
-            missing.append({"kind": "python_module", "path": "omegaconf", "reason": "required LeWorldModel config parser is not importable"})
+            missing.append(
+                {
+                    "kind": "python_module",
+                    "path": "omegaconf",
+                    "reason": "required LeWorldModel config parser is not importable",
+                }
+            )
         dataset_name = str(options.get("dataset_name") or "")
         if OmegaConf is not None and not dataset_name:
             cfg = OmegaConf.load(config_file)
@@ -72,7 +86,13 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         policy_path = resolve_worldfoundry_path(policy)
         checkpoint_path = policy_path if policy_path.is_absolute() else cache_dir / f"{policy}_object.ckpt"
         if not checkpoint_path.is_file():
-            missing.append({"kind": "checkpoint", "path": str(checkpoint_path), "reason": "LeWorldModel policy checkpoint is missing"})
+            missing.append(
+                {
+                    "kind": "checkpoint",
+                    "path": str(checkpoint_path),
+                    "reason": "LeWorldModel policy checkpoint is missing",
+                }
+            )
     return missing
 
 
@@ -115,4 +135,11 @@ def build_command(context):
     return command
 
 
-__all__ = ["BLOCKED_REASON", "CONFIG_DIR", "OFFICIAL_ENTRYPOINT", "RUNTIME_DIR", "build_command", "missing_requirements"]
+__all__ = [
+    "BLOCKED_REASON",
+    "CONFIG_DIR",
+    "OFFICIAL_ENTRYPOINT",
+    "RUNTIME_DIR",
+    "build_command",
+    "missing_requirements",
+]

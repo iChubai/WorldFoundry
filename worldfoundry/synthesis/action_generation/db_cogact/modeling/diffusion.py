@@ -14,16 +14,7 @@ import torch as th
 # diffusion utils
 
 
-
-
-
-
-
-
-
 # gaussian diffusion
-
-
 
 
 class ModelMeanType(enum.Enum):
@@ -49,13 +40,10 @@ class ModelVarType(enum.Enum):
     LEARNED_RANGE = enum.auto()
 
 
-
-
 def _warmup_beta(beta_start, beta_end, num_diffusion_timesteps, warmup_frac):
     betas = beta_end * np.ones(num_diffusion_timesteps, dtype=np.float64)
     warmup_time = int(num_diffusion_timesteps * warmup_frac)
-    betas[:warmup_time] = np.linspace(
-        beta_start, beta_end, warmup_time, dtype=np.float64)
+    betas[:warmup_time] = np.linspace(beta_start, beta_end, warmup_time, dtype=np.float64)
     return betas
 
 
@@ -67,19 +55,15 @@ def get_beta_schedule(beta_schedule, *, beta_start, beta_end, num_diffusion_time
     if beta_schedule == "quad":
         betas = (
             np.linspace(
-                beta_start ** 0.5,
-                beta_end ** 0.5,
+                beta_start**0.5,
+                beta_end**0.5,
                 num_diffusion_timesteps,
                 dtype=np.float64,
-            ) **
-            2
+            )
+            ** 2
         )
     elif beta_schedule == "linear":
-        betas = np.linspace(
-            beta_start,
-            beta_end,
-            num_diffusion_timesteps,
-            dtype=np.float64)
+        betas = np.linspace(beta_start, beta_end, num_diffusion_timesteps, dtype=np.float64)
     elif beta_schedule == "warmup10":
         betas = _warmup_beta(beta_start, beta_end, num_diffusion_timesteps, 0.1)
     elif beta_schedule == "warmup50":
@@ -87,9 +71,7 @@ def get_beta_schedule(beta_schedule, *, beta_start, beta_end, num_diffusion_time
     elif beta_schedule == "const":
         betas = beta_end * np.ones(num_diffusion_timesteps, dtype=np.float64)
     elif beta_schedule == "jsd":  # 1/T, 1/(T-1), 1/(T-2), ..., 1
-        betas = 1.0 / np.linspace(
-            num_diffusion_timesteps, 1, num_diffusion_timesteps, dtype=np.float64
-        )
+        betas = 1.0 / np.linspace(num_diffusion_timesteps, 1, num_diffusion_timesteps, dtype=np.float64)
     else:
         raise NotImplementedError(beta_schedule)
     assert betas.shape == (num_diffusion_timesteps,)
@@ -158,7 +140,6 @@ class GaussianDiffusion:
         model_mean_type,
         model_var_type,
     ):
-
         self.model_mean_type = model_mean_type
         self.model_var_type = model_var_type
 
@@ -184,24 +165,17 @@ class GaussianDiffusion:
         self.sqrt_recipm1_alphas_cumprod = np.sqrt(1.0 / self.alphas_cumprod - 1)
 
         # calculations for posterior q(x_{t-1} | x_t, x_0)
-        self.posterior_variance = (
-            betas * (1.0 - self.alphas_cumprod_prev) / (1.0 - self.alphas_cumprod)
-        )
+        self.posterior_variance = betas * (1.0 - self.alphas_cumprod_prev) / (1.0 - self.alphas_cumprod)
         # below: log calculation clipped because the posterior variance is 0 at
         # the beginning of the diffusion chain
-        self.posterior_log_variance_clipped = np.log(
-            np.append(self.posterior_variance[1], self.posterior_variance[1:])
-        ) if len(self.posterior_variance) > 1 else np.array([])
-
-        self.posterior_mean_coef1 = (
-            betas * np.sqrt(self.alphas_cumprod_prev) / (1.0 - self.alphas_cumprod)
-        )
-        self.posterior_mean_coef2 = (
-            (1.0 - self.alphas_cumprod_prev) *
-            np.sqrt(alphas) / (1.0 - self.alphas_cumprod)
+        self.posterior_log_variance_clipped = (
+            np.log(np.append(self.posterior_variance[1], self.posterior_variance[1:]))
+            if len(self.posterior_variance) > 1
+            else np.array([])
         )
 
-
+        self.posterior_mean_coef1 = betas * np.sqrt(self.alphas_cumprod_prev) / (1.0 - self.alphas_cumprod)
+        self.posterior_mean_coef2 = (1.0 - self.alphas_cumprod_prev) * np.sqrt(alphas) / (1.0 - self.alphas_cumprod)
 
     def q_posterior_mean_variance(self, x_start, x_t, t):
         """
@@ -210,8 +184,8 @@ class GaussianDiffusion:
         """
         assert x_start.shape == x_t.shape
         posterior_mean = (
-            _extract_into_tensor(self.posterior_mean_coef1, t, x_t.shape) * x_start +
-            _extract_into_tensor(self.posterior_mean_coef2, t, x_t.shape) * x_t
+            _extract_into_tensor(self.posterior_mean_coef1, t, x_t.shape) * x_start
+            + _extract_into_tensor(self.posterior_mean_coef2, t, x_t.shape) * x_t
         )
         posterior_variance = _extract_into_tensor(self.posterior_variance, t, x_t.shape)
         posterior_log_variance_clipped = self.posterior_log_variance_clipped
@@ -219,15 +193,15 @@ class GaussianDiffusion:
         #     self.posterior_log_variance_clipped, t, x_t.shape
         # )
         assert (
-            posterior_mean.shape[0] ==
-            posterior_variance.shape[0] ==
+            posterior_mean.shape[0]
+            == posterior_variance.shape[0]
+            ==
             # == posterior_log_variance_clipped.shape[0]
             x_start.shape[0]
         )
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def p_mean_variance(self, model, x, t, clip_denoised=True,
-                        denoised_fn=None, model_kwargs=None):
+    def p_mean_variance(self, model, x, t, clip_denoised=True, denoised_fn=None, model_kwargs=None):
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
         the initial x, x_0.
@@ -261,8 +235,7 @@ class GaussianDiffusion:
         if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
             assert model_output.shape == (B, C * 2, *x.shape[2:])
             model_output, model_var_values = th.split(model_output, C, dim=1)
-            min_log = _extract_into_tensor(
-                self.posterior_log_variance_clipped, t, x.shape)
+            min_log = _extract_into_tensor(self.posterior_log_variance_clipped, t, x.shape)
             max_log = _extract_into_tensor(np.log(self.betas), t, x.shape)
             # The model_var_values is [-1, 1] for [min_var, max_var].
             frac = (model_var_values + 1) / 2
@@ -270,10 +243,11 @@ class GaussianDiffusion:
             model_variance = th.exp(model_log_variance)
         else:
             if len(self.betas) == 1:
-                model_variance, model_log_variance = {ModelVarType.FIXED_SMALL: (
-                    self.posterior_variance,
-                    self.posterior_log_variance_clipped,
-                ),
+                model_variance, model_log_variance = {
+                    ModelVarType.FIXED_SMALL: (
+                        self.posterior_variance,
+                        self.posterior_log_variance_clipped,
+                    ),
                 }[self.model_var_type]
                 model_variance = _extract_into_tensor(model_variance, t, x.shape)
             else:
@@ -290,8 +264,7 @@ class GaussianDiffusion:
                     ),
                 }[self.model_var_type]
                 model_variance = _extract_into_tensor(model_variance, t, x.shape)
-                model_log_variance = _extract_into_tensor(
-                    model_log_variance, t, x.shape)
+                model_log_variance = _extract_into_tensor(model_log_variance, t, x.shape)
 
         def process_xstart(x):
             if denoised_fn is not None:
@@ -303,11 +276,8 @@ class GaussianDiffusion:
         if self.model_mean_type == ModelMeanType.START_X:
             pred_xstart = process_xstart(model_output)
         else:
-            pred_xstart = process_xstart(
-                self._predict_xstart_from_eps(x_t=x, t=t, eps=model_output)
-            )
-        model_mean, _, _ = self.q_posterior_mean_variance(
-            x_start=pred_xstart, x_t=x, t=t)
+            pred_xstart = process_xstart(self._predict_xstart_from_eps(x_t=x, t=t, eps=model_output))
+        model_mean, _, _ = self.q_posterior_mean_variance(x_start=pred_xstart, x_t=x, t=t)
 
         assert model_mean.shape == pred_xstart.shape == x.shape  # == model_log_variance.shape
         return {
@@ -321,14 +291,13 @@ class GaussianDiffusion:
     def _predict_xstart_from_eps(self, x_t, t, eps):
         assert x_t.shape == eps.shape
         return (
-            _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t -
-            _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * eps
+            _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
+            - _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * eps
         )
 
     def _predict_eps_from_xstart(self, x_t, t, pred_xstart):
         return (
-            _extract_into_tensor(self.sqrt_recip_alphas_cumprod,
-                                 t, x_t.shape) * x_t - pred_xstart
+            _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - pred_xstart
         ) / _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
 
     def condition_mean(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
@@ -340,8 +309,7 @@ class GaussianDiffusion:
         This uses the conditioning strategy from Sohl-Dickstein et al. (2015).
         """
         gradient = cond_fn(x, t, **model_kwargs)
-        new_mean = p_mean_var["mean"].float(
-        ) + p_mean_var["variance"] * gradient.float()
+        new_mean = p_mean_var["mean"].float() + p_mean_var["variance"] * gradient.float()
         return new_mean
 
     def condition_score(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
@@ -359,8 +327,7 @@ class GaussianDiffusion:
 
         out = p_mean_var.copy()
         out["pred_xstart"] = self._predict_xstart_from_eps(x, t, eps)
-        out["mean"], _, _ = self.q_posterior_mean_variance(
-            x_start=out["pred_xstart"], x_t=x, t=t)
+        out["mean"], _, _ = self.q_posterior_mean_variance(x_start=out["pred_xstart"], x_t=x, t=t)
         return out
 
     def p_sample(
@@ -398,12 +365,9 @@ class GaussianDiffusion:
             model_kwargs=model_kwargs,
         )
         noise = th.randn_like(x)
-        nonzero_mask = (
-            (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
-        )  # no noise when t == 0
+        nonzero_mask = (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))  # no noise when t == 0
         if cond_fn is not None:
-            out["mean"] = self.condition_mean(
-                cond_fn, out, x, t, model_kwargs=model_kwargs)
+            out["mean"] = self.condition_mean(cond_fn, out, x, t, model_kwargs=model_kwargs)
         sample = out["mean"] + nonzero_mask * th.exp(0.5 * out["log_variance"]) * noise
         return {"sample": sample, "pred_xstart": out["pred_xstart"]}
 
@@ -533,20 +497,11 @@ class GaussianDiffusion:
 
         alpha_bar = _extract_into_tensor(self.alphas_cumprod, t, x.shape)
         alpha_bar_prev = _extract_into_tensor(self.alphas_cumprod_prev, t, x.shape)
-        sigma = (
-            eta *
-            th.sqrt((1 - alpha_bar_prev) / (1 - alpha_bar)) *
-            th.sqrt(1 - alpha_bar / alpha_bar_prev)
-        )
+        sigma = eta * th.sqrt((1 - alpha_bar_prev) / (1 - alpha_bar)) * th.sqrt(1 - alpha_bar / alpha_bar_prev)
         # Equation 12.
         noise = th.randn_like(x)
-        mean_pred = (
-            out["pred_xstart"] * th.sqrt(alpha_bar_prev) +
-            th.sqrt(1 - alpha_bar_prev - sigma ** 2) * eps
-        )
-        nonzero_mask = (
-            (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
-        )  # no noise when t == 0
+        mean_pred = out["pred_xstart"] * th.sqrt(alpha_bar_prev) + th.sqrt(1 - alpha_bar_prev - sigma**2) * eps
+        nonzero_mask = (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))  # no noise when t == 0
         sample = mean_pred + nonzero_mask * sigma * noise
         return {"sample": sample, "pred_xstart": out["pred_xstart"]}
 
@@ -578,14 +533,12 @@ class GaussianDiffusion:
         # Usually our model outputs epsilon, but we re-derive it
         # in case we used x_start or x_prev prediction.
         eps = (
-            _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x.shape) * x -
-            out["pred_xstart"]
+            _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x.shape) * x - out["pred_xstart"]
         ) / _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x.shape)
         alpha_bar_next = _extract_into_tensor(self.alphas_cumprod_next, t, x.shape)
 
         # Equation 12. reversed
-        mean_pred = out["pred_xstart"] * \
-            th.sqrt(alpha_bar_next) + th.sqrt(1 - alpha_bar_next) * eps
+        mean_pred = out["pred_xstart"] * th.sqrt(alpha_bar_next) + th.sqrt(1 - alpha_bar_next) * eps
 
         return {"sample": mean_pred, "pred_xstart": out["pred_xstart"]}
 
@@ -672,10 +625,6 @@ class GaussianDiffusion:
                 img = out["sample"]
 
 
-
-
-
-
 def _extract_into_tensor(arr, timesteps, broadcast_shape):
     """
     Extract values from a 1-D numpy array for a batch of indices.
@@ -692,6 +641,7 @@ def _extract_into_tensor(arr, timesteps, broadcast_shape):
 
 
 # respace
+
 
 def space_timesteps(num_timesteps, section_counts):
     """
@@ -714,15 +664,13 @@ def space_timesteps(num_timesteps, section_counts):
     """
     if isinstance(section_counts, str):
         if section_counts.startswith("ddim"):
-            desired_count = int(section_counts[len("ddim"):])
+            desired_count = int(section_counts[len("ddim") :])
             if desired_count == 1:
                 return set([50])
             for i in range(1, num_timesteps):
                 if len(range(0, num_timesteps, i)) == desired_count:
                     return set(range(0, num_timesteps, i))
-            raise ValueError(
-                f"cannot create exactly {num_timesteps} steps with an integer stride"
-            )
+            raise ValueError(f"cannot create exactly {num_timesteps} steps with an integer stride")
         section_counts = [int(x) for x in section_counts.split(",")]
     size_per = num_timesteps // len(section_counts)
     extra = num_timesteps % len(section_counts)
@@ -731,9 +679,7 @@ def space_timesteps(num_timesteps, section_counts):
     for i, section_count in enumerate(section_counts):
         size = size_per + (1 if i < extra else 0)
         if size < section_count:
-            raise ValueError(
-                f"cannot divide section of {size} steps into {section_count}"
-            )
+            raise ValueError(f"cannot divide section of {size} steps into {section_count}")
         if section_count <= 1:
             frac_stride = 1
         else:
@@ -772,11 +718,8 @@ class SpacedDiffusion(GaussianDiffusion):
         kwargs["betas"] = np.array(new_betas)
         super().__init__(**kwargs)
 
-    def p_mean_variance(
-        self, model, *args, **kwargs
-    ):  # pylint: disable=signature-differs
+    def p_mean_variance(self, model, *args, **kwargs):  # pylint: disable=signature-differs
         return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
-
 
     def condition_mean(self, cond_fn, *args, **kwargs):
         return super().condition_mean(self._wrap_model(cond_fn), *args, **kwargs)
@@ -787,9 +730,7 @@ class SpacedDiffusion(GaussianDiffusion):
     def _wrap_model(self, model):
         if isinstance(model, _WrappedModel):
             return model
-        return _WrappedModel(
-            model, self.timestep_map, self.original_num_steps
-        )
+        return _WrappedModel(model, self.timestep_map, self.original_num_steps)
 
     def _scale_timesteps(self, t):
         # Scaling is done by the wrapped model.
@@ -817,7 +758,7 @@ def create_diffusion(
     sigma_small=False,
     predict_xstart=False,
     learn_sigma=True,
-    diffusion_steps=1000
+    diffusion_steps=1000,
 ):
     betas = get_named_beta_schedule(noise_schedule, diffusion_steps)
     if timestep_respacing is None or timestep_respacing == "":
@@ -825,15 +766,9 @@ def create_diffusion(
     return SpacedDiffusion(
         use_timesteps=space_timesteps(diffusion_steps, timestep_respacing),
         betas=betas,
-        model_mean_type=(
-            ModelMeanType.EPSILON if not predict_xstart else ModelMeanType.START_X
-        ),
+        model_mean_type=(ModelMeanType.EPSILON if not predict_xstart else ModelMeanType.START_X),
         model_var_type=(
-            (
-                ModelVarType.FIXED_LARGE
-                if not sigma_small
-                else ModelVarType.FIXED_SMALL
-            )
+            (ModelVarType.FIXED_LARGE if not sigma_small else ModelVarType.FIXED_SMALL)
             if not learn_sigma
             else ModelVarType.LEARNED_RANGE
         ),

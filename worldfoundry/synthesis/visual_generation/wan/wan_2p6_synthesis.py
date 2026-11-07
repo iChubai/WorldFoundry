@@ -27,7 +27,7 @@ class Wan2p6Synthesis(DashScopeVideoSynthesis):
         shot_type: Optional[str] = None,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a text-to-video task."""
         payload = _task_payload(
@@ -58,7 +58,7 @@ class Wan2p6Synthesis(DashScopeVideoSynthesis):
         prompt_extend: bool = True,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit an image-to-video task anchored on ``encoded_image``."""
         payload = _task_payload(
@@ -88,7 +88,7 @@ class Wan2p6Synthesis(DashScopeVideoSynthesis):
         prompt_extend: bool = True,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a reference-driven video task."""
         payload = _task_payload(
@@ -120,7 +120,7 @@ class Wan2p6Synthesis(DashScopeVideoSynthesis):
         shot_type: Optional[str] = None,
         watermark: bool = False,
         seed: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Submit a generation, choosing the route from what ``processed_data`` carries.
 
@@ -201,7 +201,7 @@ def _task_payload(
     prompt_extend: bool,
     watermark: bool,
     seed: Optional[int],
-    **kwargs
+    **kwargs,
 ) -> Dict[str, Any]:
     """Build the DashScope task body shared by every Wan2.6 route.
 

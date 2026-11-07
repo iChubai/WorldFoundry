@@ -130,12 +130,8 @@ def granular_scene(obj_params):
     # granular_dis = rand_float(0.1 * granular_scale, 0.2 * granular_scale)
     granular_dis = obj_params["granular_dis"]
 
-    num_granular_ft_x = (x_max - x_min - granular_scale) / (
-        granular_dis + granular_scale
-    ) + 1
-    num_granular_ft_z = (z_max - z_min - granular_scale) / (
-        granular_dis + granular_scale
-    ) + 1
+    num_granular_ft_x = (x_max - x_min - granular_scale) / (granular_dis + granular_scale) + 1
+    num_granular_ft_z = (z_max - z_min - granular_scale) / (granular_dis + granular_scale) + 1
 
     # shape
     shape_type = 0  # 0: irreular shape; 1: regular shape

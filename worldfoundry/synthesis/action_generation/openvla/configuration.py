@@ -30,12 +30,10 @@ TIMM_OVERRIDE_ACT_LAYER: Dict[str, List[Optional[str]]] = {
     for name, payload in _ARCHITECTURE_DATA["vision_backbones"].items()
 }
 LLM_BACKBONE_TO_HF_PATH = {
-    str(name): str(payload["hf_path"])
-    for name, payload in _ARCHITECTURE_DATA["language_backbones"].items()
+    str(name): str(payload["hf_path"]) for name, payload in _ARCHITECTURE_DATA["language_backbones"].items()
 }
 LLM_BACKBONE_TO_HF_METACLASS = {
-    str(name): str(payload["hf_metaclass"])
-    for name, payload in _ARCHITECTURE_DATA["language_backbones"].items()
+    str(name): str(payload["hf_metaclass"]) for name, payload in _ARCHITECTURE_DATA["language_backbones"].items()
 }
 
 VALID_VISION_BACKBONES = set(VISION_BACKBONE_TO_RESOLUTION.keys())

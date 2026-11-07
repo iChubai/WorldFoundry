@@ -76,7 +76,10 @@ class _LingBotV2Runtime:
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
         from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
         from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
-        from worldfoundry.core.execution.inference import compile_module_if_enabled, install_worldfoundry_inference_infra
+        from worldfoundry.core.execution.inference import (
+            compile_module_if_enabled,
+            install_worldfoundry_inference_infra,
+        )
         from worldfoundry.core.io.assets.hf import materialize_hf_snapshot
         from worldfoundry.core.io.paths import resolve_local_hf_model_path
         from worldfoundry.core.utils.tensors.torch import freeze_params, set_random_seed
@@ -316,7 +319,9 @@ class _LingBotV2Runtime:
                 if key not in output:
                     raise RuntimeError(f"LingBot-VLA v2 output is missing configured action key {key!r}")
                 value = output[key]
-                chunks[key].append(value.float().cpu().numpy() if isinstance(value, torch.Tensor) else np.asarray(value))
+                chunks[key].append(
+                    value.float().cpu().numpy() if isinstance(value, torch.Tensor) else np.asarray(value)
+                )
 
         use_length = option_int(self.options.get("use_length"), -1)
         result: dict[str, Any] = {}

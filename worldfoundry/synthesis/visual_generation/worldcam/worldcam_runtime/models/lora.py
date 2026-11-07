@@ -50,7 +50,9 @@ class GeneralLoRAFromPeft:
         lora_name_dict = self.get_name_dict(state_dict_lora)
         for name in lora_name_dict:
             weight_up = state_dict_lora[lora_name_dict[name][0]].to(device=computation_device, dtype=computation_dtype)
-            weight_down = state_dict_lora[lora_name_dict[name][1]].to(device=computation_device, dtype=computation_dtype)
+            weight_down = state_dict_lora[lora_name_dict[name][1]].to(
+                device=computation_device, dtype=computation_dtype
+            )
             if len(weight_up.shape) == 4:
                 weight_up = weight_up.squeeze(3).squeeze(2)
                 weight_down = weight_down.squeeze(3).squeeze(2)
@@ -75,7 +77,12 @@ class WanLoRAConverter:
 
     @staticmethod
     def align_to_diffsynth_format(state_dict, **kwargs):
-        state_dict = {name.replace("diffusion_model.", "").replace(".lora_A.weight", ".lora_A.default.weight").replace(".lora_B.weight", ".lora_B.default.weight"): param for name, param in state_dict.items()}
+        state_dict = {
+            name.replace("diffusion_model.", "")
+            .replace(".lora_A.weight", ".lora_A.default.weight")
+            .replace(".lora_B.weight", ".lora_B.default.weight"): param
+            for name, param in state_dict.items()
+        }
         return state_dict
 
 

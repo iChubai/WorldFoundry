@@ -225,9 +225,7 @@ def visualize_batch(videos: Tensor, actions: ActionTensors, action_temporal_down
     assert videos.shape[:2] == actions.key_presses.shape[:2], (
         f"Mismatch: {videos.shape[:2]=}, {actions.key_presses.shape[:2]=}"
     )
-    visualized_videos = [
-        visualize_sample(videos[i], actions.slice_batch(i, i + 1)) for i in range(videos.shape[0])
-    ]
+    visualized_videos = [visualize_sample(videos[i], actions.slice_batch(i, i + 1)) for i in range(videos.shape[0])]
     return torch.stack(visualized_videos, dim=0)
 
 

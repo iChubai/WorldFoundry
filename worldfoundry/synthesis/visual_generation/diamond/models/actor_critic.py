@@ -13,8 +13,6 @@ from utils import init_lstm
 ActorCriticOutput = namedtuple("ActorCriticOutput", "logits_act val hx_cx")
 
 
-
-
 @dataclass
 class ActorCriticConfig:
     lstm_dim: int
@@ -45,14 +43,12 @@ class ActorCritic(nn.Module):
     def device(self) -> torch.device:
         return self.lstm.weight_hh.device
 
-
     def predict_act_value(self, obs: Tensor, hx_cx: Tuple[Tensor, Tensor]) -> ActorCriticOutput:
         assert obs.ndim == 4
         x = self.encoder(obs)
         x = x.flatten(start_dim=1)
         hx, cx = self.lstm(x, hx_cx)
         return ActorCriticOutput(self.actor_linear(hx), self.critic_linear(hx).squeeze(dim=1), (hx, cx))
-
 
 
 class ActorCriticEncoder(nn.Module):

@@ -19,9 +19,9 @@ class ModalityTransform(BaseModel, ABC):
 
     @property
     def dataset_metadata(self) -> DatasetMetadata:
-        assert (
-            self._dataset_metadata is not None
-        ), "Dataset metadata is not set. Please call set_metadata() before calling apply()."
+        assert self._dataset_metadata is not None, (
+            "Dataset metadata is not set. Please call set_metadata() before calling apply()."
+        )
         return self._dataset_metadata
 
     @dataset_metadata.setter
@@ -75,9 +75,7 @@ class InvertibleModalityTransform(ModalityTransform):
 class IdentityModalityTransform(ModalityTransform):
     """Identity transform."""
 
-    apply_to: list[str] = Field(
-        default_factory=list, description="Will be ignored for identity transforms."
-    )
+    apply_to: list[str] = Field(default_factory=list, description="Will be ignored for identity transforms.")
 
     def apply(self, data: dict[str, Any]) -> dict[str, Any]:
         return data
@@ -90,9 +88,7 @@ class ComposedModalityTransform(ModalityTransform):
     """Compose multiple modality transforms."""
 
     transforms: list[ModalityTransform] = Field(..., description="The transforms to compose.")
-    apply_to: list[str] = Field(
-        default_factory=list, description="Will be ignored for composed transforms."
-    )
+    apply_to: list[str] = Field(default_factory=list, description="Will be ignored for composed transforms.")
     model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
 
     def set_metadata(self, dataset_metadata: DatasetMetadata):

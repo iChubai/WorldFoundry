@@ -80,9 +80,7 @@ class ConditionalResidualBlock1D(nn.Module):
     @nn.compact
     def __call__(self, x: jax.Array, cond: jax.Array):
         residual = x
-        x = Conv1dBlock(
-            self.features, kernel_size=self.kernel_size, n_groups=self.n_groups
-        )(x)
+        x = Conv1dBlock(self.features, kernel_size=self.kernel_size, n_groups=self.n_groups)(x)
 
         cond_features = 2 * self.features
         cond = nn.Dense(cond_features, kernel_init=default_init())(mish(cond))
@@ -90,14 +88,10 @@ class ConditionalResidualBlock1D(nn.Module):
         # Scale, bias are (B, D) and x is shape (B, T, D)
         # We need to broadcast over time, so choose axis = -2
         x = x * jnp.expand_dims(scale, axis=-2) + jnp.expand_dims(bias, axis=-2)
-        x = Conv1dBlock(
-            self.features, kernel_size=self.kernel_size, n_groups=self.n_groups
-        )(x)
+        x = Conv1dBlock(self.features, kernel_size=self.kernel_size, n_groups=self.n_groups)(x)
 
         if self.residual_proj:
-            residual = nn.Conv(self.features, kernel_size=(1,), strides=1, padding=0)(
-                residual
-            )
+            residual = nn.Conv(self.features, kernel_size=(1,), strides=1, padding=0)(residual)
 
         return x + residual
 
@@ -129,9 +123,9 @@ class ConditionalUnet1D(nn.Module):
                 n_groups=self.n_groups,
                 residual_proj=True,
             )(action, cond)
-            action = ConditionalResidualBlock1D(
-                features, kernel_size=self.kernel_size, n_groups=self.n_groups
-            )(action, cond)
+            action = ConditionalResidualBlock1D(features, kernel_size=self.kernel_size, n_groups=self.n_groups)(
+                action, cond
+            )
             if i != 0:
                 hidden_reps.append(action)
             if i != len(self.down_features) - 1:
@@ -147,12 +141,8 @@ class ConditionalUnet1D(nn.Module):
             )(action, cond)
 
         # Project Up
-        for features, hidden_rep in reversed(
-            list(zip(self.down_features[:-1], hidden_reps, strict=False))
-        ):
-            action = jnp.concatenate(
-                (action, hidden_rep), axis=-1
-            )  # concat on feature dim
+        for features, hidden_rep in reversed(list(zip(self.down_features[:-1], hidden_reps, strict=False))):
+            action = jnp.concatenate((action, hidden_rep), axis=-1)  # concat on feature dim
             # Always project since we are adding in the hidden rep
             action = ConditionalResidualBlock1D(
                 features,
@@ -160,14 +150,12 @@ class ConditionalUnet1D(nn.Module):
                 n_groups=self.n_groups,
                 residual_proj=True,
             )(action, cond)
-            action = ConditionalResidualBlock1D(
-                features, kernel_size=self.kernel_size, n_groups=self.n_groups
-            )(action, cond)
+            action = ConditionalResidualBlock1D(features, kernel_size=self.kernel_size, n_groups=self.n_groups)(
+                action, cond
+            )
             # Upsample
             action = Upsample1d(features)(action)
 
         # Should be the same as the input shape
-        action = Conv1dBlock(
-            self.down_features[0], kernel_size=self.kernel_size, n_groups=self.n_groups
-        )(action)
+        action = Conv1dBlock(self.down_features[0], kernel_size=self.kernel_size, n_groups=self.n_groups)(action)
         return action

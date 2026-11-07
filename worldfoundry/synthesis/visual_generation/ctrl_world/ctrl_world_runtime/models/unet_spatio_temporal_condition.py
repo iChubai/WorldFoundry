@@ -444,7 +444,9 @@ class UNetSpatioTemporalConditionModel(ModelMixin, ConfigMixin, UNet2DConditionL
         if not frame_level_cond:
             encoder_hidden_states = encoder_hidden_states.repeat_interleave(num_frames, dim=0)
         else:
-            encoder_hidden_states = encoder_hidden_states.reshape(batch_size * num_frames, -1, encoder_hidden_states.shape[-1])
+            encoder_hidden_states = encoder_hidden_states.reshape(
+                batch_size * num_frames, -1, encoder_hidden_states.shape[-1]
+            )
         ############################################################################################################################
 
         # 2. pre-process

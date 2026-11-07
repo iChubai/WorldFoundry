@@ -24,6 +24,7 @@ class VisionBackboneType(StrEnum):
 
 class SdpaBackendType(StrEnum):
     """SDPA backend to use"""
+
     math = "math"
     efficient = "efficient"
     cudnn = "cudnn"
@@ -34,6 +35,7 @@ class SdpaBackendType(StrEnum):
 @dataclass
 class VitConfig(BaseConfig):
     """Config for a vision transformer"""
+
     image_model_type: VisionBackboneType = VisionBackboneType.openai
     image_default_input_size: Tuple[int, int] = (336, 336)
     image_patch_size: int = 14
@@ -125,13 +127,13 @@ class ViTMultiHeadDotProductAttention(nn.Module):
             self.num_heads * self.head_dim,
             bias=use_bias,
             device=device,
-            )
+        )
         self.wk = nn.Linear(
             input_dim,
             self.num_key_value_heads * self.head_dim,
             bias=use_bias,
             device=device,
-            )
+        )
         self.wv = nn.Linear(
             input_dim,
             self.num_key_value_heads * self.head_dim,
@@ -143,7 +145,7 @@ class ViTMultiHeadDotProductAttention(nn.Module):
             self.embed_dim,
             bias=use_bias,
             device=device,
-            )
+        )
         self.attention_dropout: Optional[nn.Dropout] = None
         if config.attention_dropout > 0:
             self.attention_dropout = nn.Dropout(config.attention_dropout)
@@ -177,7 +179,6 @@ class ViTMultiHeadDotProductAttention(nn.Module):
         return hidden_states.reshape(hidden_states.shape[:2] + (self.embed_dim,))
 
     def forward(self, inputs_q: torch.Tensor, inputs_kv: Optional[torch.Tensor] = None, attn_mask=None) -> torch.Tensor:
-
         if inputs_kv is not None:
             inputs_k = inputs_kv
             inputs_v = inputs_kv
@@ -200,12 +201,8 @@ class ViTMultiHeadDotProductAttention(nn.Module):
         if self.config.attention_type == AttentionType.direct:
             assert attn_mask is None
             if self.num_heads != self.num_key_value_heads:
-                xk = xk.repeat_interleave(
-                    self.num_key_value_groups, dim=2, output_size=self.num_heads
-                )
-                xv = xv.repeat_interleave(
-                    self.num_key_value_groups, dim=2, output_size=self.num_heads
-                )
+                xk = xk.repeat_interleave(self.num_key_value_groups, dim=2, output_size=self.num_heads)
+                xv = xv.repeat_interleave(self.num_key_value_groups, dim=2, output_size=self.num_heads)
             attn_weights = torch.einsum("...qhd,...khd->...hqk", xq / math.sqrt(xq.size(-1)), xk)
             attn_weights = F.softmax(attn_weights, dim=-1, dtype=torch.float32).to(xq.dtype)
             if self.attention_dropout is not None:
@@ -236,7 +233,6 @@ class ViTMultiHeadDotProductAttention(nn.Module):
 
 
 class ViTMLP(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
@@ -271,13 +267,10 @@ class ViTMLP(nn.Module):
 
 
 class BlockCollection(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
-        self.resblocks = nn.ModuleList([
-            ResidualAttentionBlock(config, device) for _ in range(config.image_num_layers)
-        ])
+        self.resblocks = nn.ModuleList([ResidualAttentionBlock(config, device) for _ in range(config.image_num_layers)])
 
     def reset_parameters(self):
         for r in self.resblocks:
@@ -292,13 +285,12 @@ class BlockCollection(nn.Module):
 
 
 class DinoBlockCollection(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
-        self.resblocks = nn.ModuleList([
-            DinoResidualAttentionBlock(config, device) for _ in range(config.image_num_layers)
-        ])
+        self.resblocks = nn.ModuleList(
+            [DinoResidualAttentionBlock(config, device) for _ in range(config.image_num_layers)]
+        )
 
     def reset_parameters(self):
         for r in self.resblocks:
@@ -313,7 +305,6 @@ class DinoBlockCollection(nn.Module):
 
 
 class ResidualAttentionBlock(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
@@ -343,7 +334,6 @@ class ResidualAttentionBlock(nn.Module):
 
 
 class DinoResidualAttentionBlock(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
@@ -381,12 +371,11 @@ class DinoResidualAttentionBlock(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
         # class embeddings and positional embeddings
-        self.scale = config.image_emb_dim ** -0.5
+        self.scale = config.image_emb_dim**-0.5
         self.class_embedding = nn.Parameter(
             torch.zeros(config.image_emb_dim, device=device),
         )
@@ -401,7 +390,7 @@ class VisionTransformer(nn.Module):
             config.image_emb_dim,
             bias=False,
             device=device,
-            )
+        )
 
         self.pre_ln = nn.LayerNorm(
             config.image_emb_dim,
@@ -433,7 +422,11 @@ class VisionTransformer(nn.Module):
             # antialias: default True in jax.image.resize
             pos_emb = pos_emb.unsqueeze(0).permute(0, 3, 1, 2)
             pos_emb = F.interpolate(
-                pos_emb, size=(patch_num_0, patch_num_1), mode="bicubic", align_corners=False, antialias=True,
+                pos_emb,
+                size=(patch_num_0, patch_num_1),
+                mode="bicubic",
+                align_corners=False,
+                antialias=True,
             )
             pos_emb = pos_emb.permute(0, 2, 3, 1).squeeze(0)
 
@@ -462,13 +455,12 @@ class VisionTransformer(nn.Module):
 
 
 class SiglipVisionTransformer(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
         # positional embeddings
-        self.scale = config.image_emb_dim ** -0.5
-        self.num_prefix_tokens: int = 0 # no class embeddings
+        self.scale = config.image_emb_dim**-0.5
+        self.num_prefix_tokens: int = 0  # no class embeddings
         self.positional_embedding = nn.Parameter(
             torch.zeros(config.image_num_pos, config.image_emb_dim, device=device),
         )
@@ -503,7 +495,11 @@ class SiglipVisionTransformer(nn.Module):
             # antialias: default True in jax.image.resize
             pos_emb = pos_emb.unsqueeze(0).permute(0, 3, 1, 2)
             pos_emb = F.interpolate(
-                pos_emb, size=(patch_num_0, patch_num_1), mode="bicubic", align_corners=False, antialias=True,
+                pos_emb,
+                size=(patch_num_0, patch_num_1),
+                mode="bicubic",
+                align_corners=False,
+                antialias=True,
             )
             pos_emb = pos_emb.permute(0, 2, 3, 1).squeeze(0)
 
@@ -529,12 +525,11 @@ class SiglipVisionTransformer(nn.Module):
 
 
 class DinoVisionTransformer(nn.Module):
-
     def __init__(self, config: VitConfig, device=None):
         super().__init__()
         self.config = config
         # class embeddings and positional embeddings
-        self.scale = config.image_emb_dim ** -0.5
+        self.scale = config.image_emb_dim**-0.5
         self.class_embedding = nn.Parameter(
             torch.zeros(config.image_emb_dim, device=device),
         )
@@ -574,7 +569,11 @@ class DinoVisionTransformer(nn.Module):
             # antialias: default True in jax.image.resize
             pos_emb = pos_emb.unsqueeze(0).permute(0, 3, 1, 2)
             pos_emb = F.interpolate(
-                pos_emb, size=(patch_num_0, patch_num_1), mode="bicubic", align_corners=False, antialias=True,
+                pos_emb,
+                size=(patch_num_0, patch_num_1),
+                mode="bicubic",
+                align_corners=False,
+                antialias=True,
             )
             pos_emb = pos_emb.permute(0, 2, 3, 1).squeeze(0)
 

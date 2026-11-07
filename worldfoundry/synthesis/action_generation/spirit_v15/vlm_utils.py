@@ -8,7 +8,8 @@
 import torch
 from typing import Optional, Dict, Tuple
 
-SYSTEM_MESSAGE="You are a helpful assistant."
+SYSTEM_MESSAGE = "You are a helpful assistant."
+
 
 def get_user_prompt(image_placeholders, robot_type, template):
     return template.format(image_placeholders=image_placeholders, robot_type=robot_type)
@@ -31,6 +32,7 @@ def _chat_template_token_ids(tokenizer, messages) -> list[int]:
             raise ValueError("Spirit-v1.5 expected one chat-template sequence")
         encoded = encoded[0]
     return [int(token_id) for token_id in encoded]
+
 
 def preprocess_qwen_visual(
     sources,

@@ -405,6 +405,7 @@ class BeingH05Runtime:
             return self._policy
 
         from .policy import BeingHPolicy
+
         # Instantiate the policy with parameters from the runtime configuration.
         self._policy = BeingHPolicy(
             model_path=str(self.config.checkpoint_dir),

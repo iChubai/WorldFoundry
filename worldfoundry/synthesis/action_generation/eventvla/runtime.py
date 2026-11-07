@@ -230,16 +230,11 @@ class EventVLARuntime:
         # exact mode only in qwen_memory_injection.mode.  RoboTwin-MeM carries
         # both fields.  Accept those two released, checkpoint-authored modes
         # while still rejecting an ambiguous or inconsistent configuration.
-        memory_mode = (
-            injection_mode
-            if raw_memory_mode is None
-            else str(raw_memory_mode).strip().lower()
-        )
+        memory_mode = injection_mode if raw_memory_mode is None else str(raw_memory_mode).strip().lower()
         released_modes = {self.config.supported_memory_mode, "raw_anchors_only"}
         if memory_mode not in released_modes or injection_mode != memory_mode:
             raise ValueError(
-                f"unsupported EventVLA memory mode {memory_mode!r}; "
-                f"released modes={sorted(released_modes)}"
+                f"unsupported EventVLA memory mode {memory_mode!r}; released modes={sorted(released_modes)}"
             )
         keyframe_position = (
             str(
@@ -364,7 +359,9 @@ class EventVLARuntime:
             device_name,
         )
         device = torch.device(device_name)
-        effective_max_keyframes = self.config.max_keyframe_images if memory_mode == self.config.supported_memory_mode else 0
+        effective_max_keyframes = (
+            self.config.max_keyframe_images if memory_mode == self.config.supported_memory_mode else 0
+        )
         model = restore_eventvla_policy(
             checkpoint,
             base_vlm=base_vlm,

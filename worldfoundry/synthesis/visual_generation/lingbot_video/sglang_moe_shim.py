@@ -82,9 +82,7 @@ def fp8_scale_from_amax(amax: torch.Tensor) -> torch.Tensor:
 
 
 def quantize_to_fp8_e4m3fn(input: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
-    return torch.clamp(input.float() / scale, -FP8_E4M3_MAX, FP8_E4M3_MAX).to(
-        torch.float8_e4m3fn
-    )
+    return torch.clamp(input.float() / scale, -FP8_E4M3_MAX, FP8_E4M3_MAX).to(torch.float8_e4m3fn)
 
 
 def raise_unsupported_sglang_quantization(*args, **kwargs):
@@ -188,9 +186,7 @@ def install_sglang_moe_import_shims() -> None:
     ensure_module("sglang.srt.layers.moe", moe_dir)
     moe_runner_module = ensure_module("sglang.srt.layers.moe.moe_runner", moe_runner_dir)
     moe_runner_module.MoeRunnerConfig = LightSglangMoeRunnerConfig
-    triton_utils_module = ensure_module(
-        "sglang.srt.layers.moe.moe_runner.triton_utils", triton_utils_dir
-    )
+    triton_utils_module = ensure_module("sglang.srt.layers.moe.moe_runner.triton_utils", triton_utils_dir)
     triton_utils_module.get_config = lambda: None
     triton_utils_module.override_config = null_sglang_config_override
     ensure_module("sglang.jit_kernel", jit_kernel_dir)
@@ -221,9 +217,7 @@ def install_sglang_moe_import_shims() -> None:
     utils_module.is_xpu = lambda: False
     utils_module.use_intel_xpu_backend = lambda: False
     utils_module.get_device_name = lambda: torch.cuda.get_device_name() if torch.cuda.is_available() else "cpu"
-    utils_module.is_sm90_supported = (
-        lambda: torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 9
-    )
+    utils_module.is_sm90_supported = lambda: torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 9
 
     custom_op_module = ensure_module("sglang.srt.utils.custom_op")
     custom_op_module.register_custom_op = lambda *args, **kwargs: (lambda fn: fn)

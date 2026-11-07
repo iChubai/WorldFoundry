@@ -31,9 +31,22 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import checkpoi
 from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.a2a_cp import MinimalA2AAttnOp
 from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
-from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.context_parallel import split_inputs_cp, cat_outputs_cp, cat_outputs_cp_with_grad, broadcast
-from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.kv_cache import KVCache, AttnContext, CausalInferenceState, KVCacheMode
-from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.blockmask import AttnMaskSpec, FlexOrSdpaLocalAttention
+from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.context_parallel import (
+    split_inputs_cp,
+    cat_outputs_cp,
+    cat_outputs_cp_with_grad,
+    broadcast,
+)
+from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.kv_cache import (
+    KVCache,
+    AttnContext,
+    CausalInferenceState,
+    KVCacheMode,
+)
+from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.blockmask import (
+    AttnMaskSpec,
+    FlexOrSdpaLocalAttention,
+)
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.rope import RopeCache
 
 T5_CONTEXT_TOKEN_NUMBER = 512
@@ -119,9 +132,9 @@ class VideoRopePosition3DEmb(nn.Module):
         t_ntk_factor: Optional[float] = None,
     ):
         B, T, H, W, _ = B_T_H_W_C
-        assert (
-            H <= self.max_h and W <= self.max_w
-        ), f"Input dimensions (H={H}, W={W}) exceed the maximum dimensions (max_h={self.max_h}, max_w={self.max_w})"
+        assert H <= self.max_h and W <= self.max_w, (
+            f"Input dimensions (H={H}, W={W}) exceed the maximum dimensions (max_h={self.max_h}, max_w={self.max_w})"
+        )
         total_tokens = T * H * W
 
         _t_indices_provided = t_indices is not None
@@ -593,7 +606,10 @@ class WanModel(nn.Module):
         # blocks
         cross_attn_type = "t2v_cross_attn" if model_type == "t2v" else "i2v_cross_attn"
         self.blocks = nn.ModuleList(
-            [WanAttentionBlock(cross_attn_type, dim, ffn_dim, num_heads, qk_norm, cross_attn_norm, eps) for _ in range(num_layers)]
+            [
+                WanAttentionBlock(cross_attn_type, dim, ffn_dim, num_heads, qk_norm, cross_attn_norm, eps)
+                for _ in range(num_layers)
+            ]
         )
 
         # head
@@ -619,7 +635,14 @@ class WanModel(nn.Module):
         return self.patch_size[1] * self.patch_size[2]
 
     def _compute_rope(
-        self, B: int, T: int, H: int, W: int, inference_state: Optional[CausalInferenceState], attn_meta: Optional[AttnMaskSpec], use_fused: bool
+        self,
+        B: int,
+        T: int,
+        H: int,
+        W: int,
+        inference_state: Optional[CausalInferenceState],
+        attn_meta: Optional[AttnMaskSpec],
+        use_fused: bool,
     ) -> RopeCache:
         """Compute RoPE frequencies and populate inference_state.
 
@@ -644,7 +667,11 @@ class WanModel(nn.Module):
             current_key_freqs = gen(torch.Size([B, T, H, W, self.dim]), t_indices=inference_state.current_t_indices)
 
             shared_rope = RopeCache(
-                query_freqs=query_freqs, key_freqs=key_freqs, current_key_freqs=current_key_freqs, use_fused=use_fused, cached_k_rotated=False
+                query_freqs=query_freqs,
+                key_freqs=key_freqs,
+                current_key_freqs=current_key_freqs,
+                use_fused=use_fused,
+                cached_k_rotated=False,
             )
             inference_state.rope = shared_rope
             return shared_rope
@@ -902,7 +929,9 @@ class WanModel(nn.Module):
     def enable_context_parallel(self, process_group: Optional[ProcessGroup] = None):
         cp_ranks = get_process_group_ranks(process_group)
         for block in self.blocks:
-            block.self_attn.set_context_parallel_group(process_group=process_group, ranks=cp_ranks, stream=torch.cuda.Stream())
+            block.self_attn.set_context_parallel_group(
+                process_group=process_group, ranks=cp_ranks, stream=torch.cuda.Stream()
+            )
 
         self._is_context_parallel_enabled = True
         self._cp_group = process_group
@@ -915,13 +944,17 @@ class WanModel(nn.Module):
         if sac_config.mode == CheckpointMode.NONE:
             return self
 
-        log.info(f"Enable selective checkpoint with mm_only, for every {sac_config.every_n_blocks} blocks. Total blocks: {len(self.blocks)}")
+        log.info(
+            f"Enable selective checkpoint with mm_only, for every {sac_config.every_n_blocks} blocks. Total blocks: {len(self.blocks)}"
+        )
         _context_fn = sac_config.get_context_fn()
         for block_id, block in self.blocks.named_children():
             if int(block_id) % sac_config.every_n_blocks == 0:
                 block = CacheAwareCheckpointWrapper(block, context_fn=_context_fn, preserve_rng_state=False)
                 self.blocks.register_module(block_id, block)
-        self.register_module("head", ptd_checkpoint_wrapper(self.head, context_fn=_context_fn, preserve_rng_state=False))
+        self.register_module(
+            "head", ptd_checkpoint_wrapper(self.head, context_fn=_context_fn, preserve_rng_state=False)
+        )
 
         return self
 

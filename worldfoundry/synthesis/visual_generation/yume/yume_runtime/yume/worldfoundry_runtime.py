@@ -30,7 +30,6 @@ def get_sampling_sigmas(sampling_steps, shift):
 
 
 class YumeRuntime:
-
     def __init__(
         self,
         model,
@@ -48,12 +47,8 @@ class YumeRuntime:
         try:
             forward = self.model.model.forward
             signature = inspect.signature(forward)
-            accepts_rand_num_img = (
-                "rand_num_img" in signature.parameters
-                or any(
-                    param.kind == inspect.Parameter.VAR_KEYWORD
-                    for param in signature.parameters.values()
-                )
+            accepts_rand_num_img = "rand_num_img" in signature.parameters or any(
+                param.kind == inspect.Parameter.VAR_KEYWORD for param in signature.parameters.values()
             )
         except (TypeError, ValueError):
             accepts_rand_num_img = True
@@ -196,9 +191,7 @@ class YumeRuntime:
                 if video.ndim != 4:
                     raise ValueError(f"Expected video tensor shape (F,C,H,W), got {tuple(video.shape)}")
                 image = video[0].add(1.0).div(2.0).clamp(0, 1)
-            base_video = torch.zeros(
-                image.shape[0], 1 + current_frame_num, size[0], size[1], device=self.device
-            )
+            base_video = torch.zeros(image.shape[0], 1 + current_frame_num, size[0], size[1], device=self.device)
             base_video[:, 0] = (image.to(self.device) - 0.5) * 2
         elif task_type == "v2v":
             if video is None:
@@ -208,9 +201,7 @@ class YumeRuntime:
             v = video.to(self.device)
             expected = 1 + current_frame_num
             if v.shape[0] < expected:
-                pad = torch.zeros(
-                    expected - v.shape[0], v.shape[1], v.shape[2], v.shape[3], device=self.device
-                )
+                pad = torch.zeros(expected - v.shape[0], v.shape[1], v.shape[2], v.shape[3], device=self.device)
                 v = torch.cat([v, pad], dim=0)
             v = v[:expected]
             base_video = v.permute(1, 0, 2, 3).contiguous()
@@ -232,9 +223,7 @@ class YumeRuntime:
             return "ode"
         method = sampling_method.lower()
         if method not in ("ode", "sde"):
-            raise ValueError(
-                f"Unsupported sampling_method: {sampling_method}. Supported values: ['ode', 'sde']"
-            )
+            raise ValueError(f"Unsupported sampling_method: {sampling_method}. Supported values: ['ode', 'sde']")
         return method
 
     @torch.no_grad()
@@ -344,9 +333,7 @@ class YumeRuntime:
                     pred_original_sample = latent_tail + (0 - sigma_i) * noise_pred_tail
                     delta_t = 0.0 if i + 1 == sample_step_num else max(0.0, sigma_i - sigma_i_next)
                     std_dev_t = eta * math.sqrt(delta_t)
-                    score_estimate = -(
-                        latent_tail - pred_original_sample * (1 - sigma_i)
-                    ) / (sigma_i ** 2 + 1e-8)
+                    score_estimate = -(latent_tail - pred_original_sample * (1 - sigma_i)) / (sigma_i**2 + 1e-8)
                     log_term = -0.5 * (eta**2) * score_estimate
                     prev_sample_mean = temp_x0 + log_term * dsigma
                     temp_x0 = prev_sample_mean + torch.randn_like(prev_sample_mean) * std_dev_t
@@ -404,8 +391,7 @@ class YumeRuntime:
             next_caption = "First-person perspective." + next_interaction_caption
             if "camera_" not in next_interaction.lower():
                 next_caption += (
-                    f"Actual distance moved: {next_interaction_distance} "
-                    f"at {next_interaction_speed} meters per second."
+                    f"Actual distance moved: {next_interaction_distance} at {next_interaction_speed} meters per second."
                 )
             else:
                 next_caption += f"View rotation speed: {next_interaction_speed}."
@@ -503,17 +489,11 @@ class YumeRuntime:
         history_state: Optional[Dict[str, torch.Tensor]] = None
         for interaction_idx, interaction_caption in enumerate(interaction_captions):
             next_caption = (
-                interaction_captions[interaction_idx + 1]
-                if interaction_idx + 1 < len(interaction_captions)
-                else None
+                interaction_captions[interaction_idx + 1] if interaction_idx + 1 < len(interaction_captions) else None
             )
             next_interaction = interactions[interaction_idx + 1] if next_caption is not None else None
-            next_speed = (
-                interaction_speeds[interaction_idx + 1] if next_caption is not None else None
-            )
-            next_distance = (
-                interaction_distances[interaction_idx + 1] if next_caption is not None else None
-            )
+            next_speed = interaction_speeds[interaction_idx + 1] if next_caption is not None else None
+            next_distance = interaction_distances[interaction_idx + 1] if next_caption is not None else None
 
             output_video_per_interaction, history_state = self.predict_per_interaction(
                 prompt=prompt,

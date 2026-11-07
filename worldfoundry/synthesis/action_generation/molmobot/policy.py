@@ -117,9 +117,11 @@ class SynthManipMolmoInferenceWrapper:
             self.model_config.states_mode = self.states_mode
         selected_states_mode = self.model_config.states_mode
 
-        log.info(f"Model config: action_horizon={self.action_horizon}, "
-                 f"action_dim={self.action_dim}, n_obs_steps={self.n_obs_steps}, "
-                 f"flow_steps={self.num_flow_steps}, States mode: {selected_states_mode}")
+        log.info(
+            f"Model config: action_horizon={self.action_horizon}, "
+            f"action_dim={self.action_dim}, n_obs_steps={self.n_obs_steps}, "
+            f"flow_steps={self.num_flow_steps}, States mode: {selected_states_mode}"
+        )
 
         # Build model
         log.info("Building MolmoBot model on the meta device")
@@ -179,7 +181,7 @@ class SynthManipMolmoInferenceWrapper:
                 for key, feature_stats in stats.items():
                     if isinstance(feature_stats, dict):
                         for stat_name, stat_val in feature_stats.items():
-                            if hasattr(stat_val, '__len__'):
+                            if hasattr(stat_val, "__len__"):
                                 log.info(f"    {repo_id}/{key}/{stat_name}: len={len(stat_val)}")
         else:
             log.warning("No robot_postprocessor in config - actions will not be unnormalized!")
@@ -191,9 +193,7 @@ class SynthManipMolmoInferenceWrapper:
         try:
             return self.state_preprocessor.normalize_state(state, self.norm_repo_id)
         except Exception as exc:
-            raise RuntimeError(
-                f"State normalization failed for norm_repo_id={self.norm_repo_id!r}."
-            ) from exc
+            raise RuntimeError(f"State normalization failed for norm_repo_id={self.norm_repo_id!r}.") from exc
 
     def _unnormalize_action(self, actions: np.ndarray) -> np.ndarray:
         """Unnormalize actions using checkpoint's normalization stats."""
@@ -202,19 +202,16 @@ class SynthManipMolmoInferenceWrapper:
             return actions
         try:
             unnormed = self.action_postprocessor.unnormalize_action(actions, self.norm_repo_id)
-            log.debug(f"Unnormalized actions: shape={actions.shape}, "
-                     f"input_range=[{actions.min():.3f}, {actions.max():.3f}], "
-                     f"output_range=[{unnormed.min():.3f}, {unnormed.max():.3f}]")
+            log.debug(
+                f"Unnormalized actions: shape={actions.shape}, "
+                f"input_range=[{actions.min():.3f}, {actions.max():.3f}], "
+                f"output_range=[{unnormed.min():.3f}, {unnormed.max():.3f}]"
+            )
             return unnormed
         except Exception as exc:
-            raise RuntimeError(
-                f"Action unnormalization failed for norm_repo_id={self.norm_repo_id!r}."
-            ) from exc
+            raise RuntimeError(f"Action unnormalization failed for norm_repo_id={self.norm_repo_id!r}.") from exc
 
-    def _prepare_images(
-        self,
-        images: Union[List[np.ndarray], List[str], np.ndarray, str]
-    ) -> List[np.ndarray]:
+    def _prepare_images(self, images: Union[List[np.ndarray], List[str], np.ndarray, str]) -> List[np.ndarray]:
         """Convert various image formats to list of numpy arrays."""
         if isinstance(images, (str, Path)):
             images = [images]

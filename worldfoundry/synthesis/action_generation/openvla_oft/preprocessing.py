@@ -14,6 +14,7 @@ from PIL import Image
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
 from transformers import PreTrainedTokenizerBase
 from transformers.image_processing_utils import BatchFeature, ImageProcessingMixin
+
 try:
     from transformers.processing_utils import ImagesKwargs, ProcessorMixin
 except ImportError:  # Transformers < 5 does not expose ImagesKwargs.
@@ -21,6 +22,8 @@ except ImportError:  # Transformers < 5 does not expose ImagesKwargs.
 
     class ImagesKwargs(TypedDict, total=False):
         return_tensors: Any
+
+
 from transformers.tokenization_utils_base import (
     PaddingStrategy,
     PreTokenizedInput,

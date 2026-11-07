@@ -2,7 +2,7 @@ from mmengine.registry import Registry
 
 from .utils import set_grad_checkpoint
 
-MODELS = Registry('models')
+MODELS = Registry("models")
 
 _NETS_IMPORTED = False
 
@@ -15,6 +15,7 @@ def build_model(cfg, use_grad_checkpoint=False, use_fp32_attention=False, gc_ste
     global _NETS_IMPORTED
     if not _NETS_IMPORTED:
         from worldfoundry.synthesis.visual_generation.worldfm.worldfm_runtime.diffusion.model.nets import nets  # noqa: F401
+
         _NETS_IMPORTED = True
     model = MODELS.build(cfg, default_args=kwargs)
     if use_grad_checkpoint:

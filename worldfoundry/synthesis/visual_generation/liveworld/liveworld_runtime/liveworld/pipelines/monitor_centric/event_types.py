@@ -3,6 +3,7 @@
 This module keeps event-related types minimal and explicit to avoid
 implicit behaviors in the pipeline.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -45,6 +46,7 @@ def make_event_id(entities: List[str], anchor_pose_c2w: np.ndarray, seed: str = 
 @dataclass
 class EntityDetectionResult:
     """Detection result for a single entity in a frame."""
+
     # Entity name (e.g., "car", "person").
     name: str
     # SAM3 segmentation mask for this entity (H, W), bool or uint8.
@@ -62,6 +64,7 @@ class EntityDetectionResult:
 @dataclass
 class EventObservation:
     """Observation of a potential event at a specific frame."""
+
     event_id: EventID
     frame_path: str
     frame_index: int
@@ -79,6 +82,7 @@ class EventObservation:
 @dataclass
 class EventScript:
     """Script used to evolve an event in time."""
+
     event_id: EventID
     text: str
     horizon: int
@@ -88,6 +92,7 @@ class EventScript:
 @dataclass
 class EventVideo:
     """Generated event video (fixed camera)."""
+
     event_id: EventID
     video_path: str
     fps: int
@@ -101,6 +106,7 @@ class EventVideo:
 @dataclass
 class EventPointCloud:
     """Event point cloud in the anchor camera coordinate system."""
+
     event_id: EventID
     points: np.ndarray
     colors: np.ndarray
@@ -125,6 +131,7 @@ class EventPointCloud:
 @dataclass
 class EventState:
     """Persistent state for a single event agent."""
+
     status: Literal["active", "ended", "paused"]
     anchor_pose_c2w: np.ndarray
     entities: List[str]

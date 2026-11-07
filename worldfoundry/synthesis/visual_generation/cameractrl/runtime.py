@@ -22,7 +22,8 @@ from worldfoundry.runtime.env import resolve_hfd_root
 
 DEFAULT_CAMERACTRL_CONFIG = worldfoundry_data_path(
     "models",
-    "runtime", "configs",
+    "runtime",
+    "configs",
     "camera_control",
     "cameractrl_256_384.yaml",
 )
@@ -88,9 +89,7 @@ class CameraCtrlRuntime:
         self.pose_adaptor_ckpt = str(Path(pose_adaptor_ckpt).expanduser())
         self.model_config = str(Path(model_config).expanduser())
         self.motion_module_ckpt = None if motion_module_ckpt is None else str(Path(motion_module_ckpt).expanduser())
-        self.motion_adapter_ckpt = (
-            None if motion_adapter_ckpt is None else str(Path(motion_adapter_ckpt).expanduser())
-        )
+        self.motion_adapter_ckpt = None if motion_adapter_ckpt is None else str(Path(motion_adapter_ckpt).expanduser())
         self.image_lora_ckpt = None if image_lora_ckpt is None else str(Path(image_lora_ckpt).expanduser())
         self.image_lora_rank = int(image_lora_rank)
         self.unet_subfolder = unet_subfolder

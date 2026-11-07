@@ -36,6 +36,7 @@ LIBS = [
     # {"name": "otherlib", "path": "OtherLib"},
 ]
 
+
 # ---------- Helper Functions ----------
 def get_expected_version(lib_root: Path, version_file: str) -> str:
     """
@@ -51,6 +52,7 @@ def get_expected_version(lib_root: Path, version_file: str) -> str:
         raise ValueError(f"Cannot extract __version__ from {version_path}")
     return match.group(1)
 
+
 def get_installed_version(lib_name: str) -> str:
     """Get the installed version of the library; return empty string if not installed"""
     try:
@@ -59,10 +61,12 @@ def get_installed_version(lib_name: str) -> str:
     except ModuleNotFoundError:
         return ""
 
+
 def install_library(lib_path: Path):
     """Run python setup.py install"""
     cmd = [sys.executable, "setup.py", "install"]
     subprocess.check_call(cmd, cwd=str(lib_path))
+
 
 def ensure_torch():
     """Ensure PyTorch is installed in the current environment"""
@@ -71,6 +75,7 @@ def ensure_torch():
     except ModuleNotFoundError:
         print("PyTorch is not installed. Installing torch...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "torch"])
+
 
 # ---------- Main Logic ----------
 def main():
@@ -86,10 +91,7 @@ def main():
         lib_path = THIRDPARTY_ROOT / lib["path"]
         lib_name = lib["name"]
 
-        expected_version = get_expected_version(
-            lib_path,
-            lib["version_file"]
-        )
+        expected_version = get_expected_version(lib_path, lib["version_file"])
 
         installed_version = get_installed_version(lib_name)
 
@@ -105,6 +107,7 @@ def main():
             install_library(lib_path)
         else:
             print(f"{lib_name} is installed and version matches. No action needed.")
+
 
 if __name__ == "__main__":
     main()

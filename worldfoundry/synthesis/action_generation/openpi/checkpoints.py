@@ -27,9 +27,7 @@ def resolve_local_path(
         raise ValueError(f"{label} path must not be empty")
     parsed = urlparse(text)
     if parsed.scheme:
-        raise ValueError(
-            f"{label} must be a staged local path, not a URI: {text!r}"
-        )
+        raise ValueError(f"{label} must be a staged local path, not a URI: {text!r}")
     path = resolve_worldfoundry_path(text).resolve()
     if require_directory is True and not path.is_dir():
         raise FileNotFoundError(f"{label} directory does not exist: {path}")

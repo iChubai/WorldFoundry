@@ -110,9 +110,7 @@ def _dataset(cfg: DictConfig, swm: Any):
             )
             return dataset
     checked = ", ".join(str(path) for path in candidates)
-    raise FileNotFoundError(
-        f"LeWorldModel dataset {dataset_name!r} was not found. Checked: {checked}"
-    )
+    raise FileNotFoundError(f"LeWorldModel dataset {dataset_name!r} was not found. Checked: {checked}")
 
 
 def _overrides(args: argparse.Namespace) -> list[str]:
@@ -276,7 +274,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "results_file": _portable_path(text_path),
         "output_dir": _portable_path(output_dir),
     }
-    artifact_path = Path(args.artifact_path).expanduser().resolve() if args.artifact_path else output_dir / "worldfoundry_leworldmodel_result.json"
+    artifact_path = (
+        Path(args.artifact_path).expanduser().resolve()
+        if args.artifact_path
+        else output_dir / "worldfoundry_leworldmodel_result.json"
+    )
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
     artifact_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload

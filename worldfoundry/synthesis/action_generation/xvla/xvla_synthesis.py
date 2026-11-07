@@ -40,8 +40,7 @@ class XVLASynthesis(OfficialPolicySynthesis, ActionModelSynthesis):
         requested = {**self.runtime_options, **dict(options)}
         selector = requested.get("checkpoint_variant") or requested.get("variant_id") or requested.get("variant")
         has_explicit_path = any(
-            requested.get(key) not in (None, "")
-            for key in ("checkpoint_path", "checkpoint_dir", "ckpt_path")
+            requested.get(key) not in (None, "") for key in ("checkpoint_path", "checkpoint_dir", "ckpt_path")
         )
         has_explicit_ref = any(
             requested.get(key) not in (None, "")
@@ -83,8 +82,7 @@ class XVLASynthesis(OfficialPolicySynthesis, ActionModelSynthesis):
         if selected is not None and explicit_record is not None:
             if selected.get("repo_id") != explicit_record.get("repo_id"):
                 raise ValueError(
-                    f"X-VLA variant {selector!r} conflicts with explicit checkpoint "
-                    f"{explicit_record.get('repo_id')!r}"
+                    f"X-VLA variant {selector!r} conflicts with explicit checkpoint {explicit_record.get('repo_id')!r}"
                 )
         domain_record = selected or explicit_record
         if requested.get("domain_id") in (None, "") and (

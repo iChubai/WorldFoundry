@@ -56,9 +56,7 @@ class FlowMatchScheduler:
                 sigma_start, self.sigma_min, num_inference_steps + 1, device=device, dtype=dtype
             )[:-1]
         else:
-            self.sigmas = torch.linspace(
-                sigma_start, self.sigma_min, num_inference_steps, device=device, dtype=dtype
-            )
+            self.sigmas = torch.linspace(sigma_start, self.sigma_min, num_inference_steps, device=device, dtype=dtype)
         if self.inverse_timesteps:
             self.sigmas = torch.flip(self.sigmas, dims=[0])
         self.sigmas = self.shift * self.sigmas / (1 + (self.shift - 1) * self.sigmas)

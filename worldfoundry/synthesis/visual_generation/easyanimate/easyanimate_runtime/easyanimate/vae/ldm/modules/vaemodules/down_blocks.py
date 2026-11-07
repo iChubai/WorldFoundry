@@ -3,8 +3,7 @@ import torch.nn as nn
 
 from .attention import SpatialAttention, TemporalAttention
 from .common import ResidualBlock3D
-from .downsamplers import (SpatialDownsampler3D, SpatialTemporalDownsampler3D,
-                           TemporalDownsampler3D)
+from .downsamplers import SpatialDownsampler3D, SpatialTemporalDownsampler3D, TemporalDownsampler3D
 from .gc_block import GlobalContextBlock
 
 

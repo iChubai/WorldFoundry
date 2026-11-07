@@ -53,9 +53,7 @@ class Gr00tN1d7Config(PretrainedConfig):
     crop_fraction: float | None = None
 
     formalize_language: bool = True
-    apply_sincos_state_encoding: bool = (
-        False  # Global flag to enable per-embodiment sin/cos encoding
-    )
+    apply_sincos_state_encoding: bool = False  # Global flag to enable per-embodiment sin/cos encoding
     use_percentiles: bool = True
     use_relative_action: bool = False
 

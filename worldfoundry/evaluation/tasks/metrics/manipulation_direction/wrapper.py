@@ -73,7 +73,7 @@ def compute_manipulation_direction_batch(
     *,
     model: str = "openai:ViT-B-32",
     device: str | None = None,
-) -> dict[str, float]:
+) -> dict[str, float | list[float]]:
     """Compute mean MD over multiple manipulation pairs."""
     if not pairs:
         raise ValueError("pairs must be non-empty")

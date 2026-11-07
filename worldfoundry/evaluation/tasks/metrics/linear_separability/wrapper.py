@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -20,7 +20,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _ls_fn() -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    from linear_separability_core import compute_linear_separability
+    if TYPE_CHECKING:
+        from .linear_separability_core import compute_linear_separability
+    else:
+        from linear_separability_core import compute_linear_separability
 
     return compute_linear_separability
 

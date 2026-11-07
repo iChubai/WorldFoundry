@@ -1,7 +1,8 @@
 # The code is adapted from https://github.com/jindongwang/transferlearning/blob/master/code/distance/mmd_numpy_sklearn.py
 # Compute MMD (maximum mean discrepancy) using numpy and scikit-learn.
 import numpy as np
-from sklearn import metrics
+
+metrics = __import__("sklearn", fromlist=["metrics"]).metrics
 
 
 def mmd_poly(X, Y, degree=2, gamma=None, coef0=0):

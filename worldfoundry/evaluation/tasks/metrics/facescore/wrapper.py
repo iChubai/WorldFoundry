@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from worldfoundry.evaluation.tasks.metrics._shared.imports import prepend_import_path
 
@@ -18,7 +18,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _facescore_class() -> Any:
     prepend_import_path(PACKAGE_ROOT / "facescore_pkg")
-    from FaceScore import FaceScore
+    if TYPE_CHECKING:
+        from .facescore_pkg.FaceScore import FaceScore
+    else:
+        from FaceScore import FaceScore
 
     return FaceScore
 

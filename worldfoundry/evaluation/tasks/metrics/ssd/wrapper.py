@@ -28,7 +28,7 @@ def compute_ssd(
     conditions: np.ndarray,
 ) -> float:
     """Compute SSD from paired condition/output embedding arrays (TensorFlow backend)."""
-    import tensorflow as tf
+    tf = __import__("tensorflow")
 
     y_true = tf.constant(real_outputs, dtype=tf.float32)
     y_predict = tf.constant(generated_outputs, dtype=tf.float32)

@@ -1,9 +1,14 @@
 """PyTorch reimplementation from https://github.com/kynkaat/improved-precision-and-recall-metric"""
 
 import math
+from typing import TYPE_CHECKING
 
 import torch
-from fld.metrics.Metric import Metric
+
+if TYPE_CHECKING:
+    from .Metric import Metric
+else:
+    from fld.metrics.Metric import Metric
 
 # Batch implementation for memory issues (equivalent)
 BATCH_SIZE = 10000

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
@@ -21,7 +21,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _fld_class() -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    from fld.metrics.FLD import FLD
+    if TYPE_CHECKING:
+        from .fld.metrics.FLD import FLD
+    else:
+        from fld.metrics.FLD import FLD
 
     return FLD
 

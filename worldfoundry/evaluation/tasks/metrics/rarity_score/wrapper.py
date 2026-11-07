@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -20,7 +20,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _manifold_class() -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    from rarity_score import MANIFOLD
+    if TYPE_CHECKING:
+        from .rarity_score import MANIFOLD
+    else:
+        from rarity_score import MANIFOLD
 
     return MANIFOLD
 

@@ -1,8 +1,15 @@
 # From https://github.com/toshas/torch-fidelity/blob/master/torch_fidelity/metric_kid.py
+from typing import TYPE_CHECKING
+
 import numpy as np
 import torch
-from fld.metrics.Metric import Metric
-from fld.utils import shuffle
+
+if TYPE_CHECKING:
+    from ..utils import shuffle
+    from .Metric import Metric
+else:
+    from fld.metrics.Metric import Metric
+    from fld.utils import shuffle
 from tqdm import tqdm
 
 KEY_METRIC_KID_MEAN = "kernel_inception_distance_mean"

@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
+from typing import TYPE_CHECKING, cast
 
 import torch
-from fld.datasets.ImageFilesDataset import ImageFilesDataset
-from fld.datasets.ImageTensorDataset import ImageTensorDataset
-from fld.features.FeatureExtractor import FeatureExtractor
+
+if TYPE_CHECKING:
+    from ..datasets.ImageFilesDataset import ImageFilesDataset
+    from ..datasets.ImageTensorDataset import ImageTensorDataset
+    from .FeatureExtractor import FeatureExtractor
+else:
+    from fld.datasets.ImageFilesDataset import ImageFilesDataset
+    from fld.datasets.ImageTensorDataset import ImageTensorDataset
+    from fld.features.FeatureExtractor import FeatureExtractor
 from tqdm import tqdm
 
 BATCH_SIZE = 256
@@ -22,12 +30,12 @@ class ImageFeatureExtractor(FeatureExtractor):
         dataset = ImageFilesDataset(dir, extension=extension)
         return self.get_features(dataset, name, recompute)
 
-    def get_model_features(self, gen_fn: function, num_samples: int):
+    def get_model_features(self, gen_fn: Callable[[], torch.Tensor], num_samples: int):
         img_tensor = gen_fn()
         batch_size = img_tensor.shape[0]
 
         num_batches = math.ceil(num_samples / batch_size)
-        features = torch.zeros(num_batches * batch_size, self.features_size)
+        features = torch.zeros(num_batches * batch_size, cast(int, self.features_size))
 
         for i in tqdm(range(num_batches)):
             img_tensor = gen_fn()

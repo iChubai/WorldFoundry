@@ -22,7 +22,7 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _fsim_fn() -> Any:
     prepend_import_path(VENDOR_ROOT)
-    from piq.fsim import fsim
+    fsim = __import__("piq.fsim", fromlist=["fsim"]).fsim
 
     return fsim
 

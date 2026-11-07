@@ -14,7 +14,9 @@ def compute_ms_ssim(
     data_range: float | None = None,
     device: str | None = None,
 ) -> float:
-    from torchmetrics.image import MultiScaleStructuralSimilarityIndexMeasure
+    MultiScaleStructuralSimilarityIndexMeasure = __import__(
+        "torchmetrics.image", fromlist=["MultiScaleStructuralSimilarityIndexMeasure"]
+    ).MultiScaleStructuralSimilarityIndexMeasure
 
     device_t = resolve_device(device)
     data_range = default_data_range(reference, generated) if data_range is None else data_range

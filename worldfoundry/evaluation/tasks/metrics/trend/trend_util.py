@@ -1,7 +1,9 @@
 import numpy as np
 from scipy import integrate, stats
+from scipy import special as special
 from torch.nn.functional import adaptive_avg_pool2d
 from tqdm import tqdm
+from tqdm import trange as trange
 
 
 def get_activations_loader(loader, model, batch_size=50, dims=2048, cuda=True, n_images=None):

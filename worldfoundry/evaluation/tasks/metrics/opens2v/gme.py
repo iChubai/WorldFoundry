@@ -23,8 +23,8 @@ def compute_gme_score(
 ) -> dict[str, Any]:
     """Run OpenS2V GmeScore text-video relevance evaluation."""
     ensure_opens2v_eval_path()
-    from get_gmescore import sample_video_frames
-    from utils.gme.gme_model import GmeQwen2VL
+    sample_video_frames = __import__("get_gmescore", fromlist=["sample_video_frames"]).sample_video_frames
+    GmeQwen2VL = __import__("utils.gme.gme_model", fromlist=["GmeQwen2VL"]).GmeQwen2VL
 
     model_path = model_path or os.environ.get("WORLDFOUNDRY_GME_MODEL_PATH", "Alibaba-NLP/gme-Qwen2-VL-7B-Instruct/")
     with open(input_json_file, encoding="utf-8") as handle:

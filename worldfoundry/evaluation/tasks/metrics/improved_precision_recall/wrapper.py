@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -21,7 +21,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _ipr_class() -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    from improved_precision_recall import IPR
+    if TYPE_CHECKING:
+        from .improved_precision_recall import IPR
+    else:
+        from improved_precision_recall import IPR
 
     return IPR
 
@@ -48,13 +51,17 @@ def compute_improved_precision_recall(
 
 def _custom_loader(path: str, **kwargs: Any) -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    from improved_precision_recall import get_custom_loader
+    if TYPE_CHECKING:
+        from .improved_precision_recall import get_custom_loader
+    else:
+        from improved_precision_recall import get_custom_loader
 
     inputs = [path] if Path(path).is_file() else path
     return get_custom_loader(inputs, **kwargs)
 
 
 def _load_image_tensor(image: np.ndarray, device: str) -> Any:
+    from PIL import Image
     from torchvision import transforms
 
     arr = np.asarray(image)
@@ -64,8 +71,8 @@ def _load_image_tensor(image: np.ndarray, device: str) -> Any:
         arr = arr[..., :3]
     if arr.dtype != np.uint8 and arr.max() <= 1.0:
         arr = (arr * 255.0).clip(0, 255).astype(np.uint8)
-    pil = __import__("PIL").Image.fromarray(arr.astype(np.uint8))
-    pil = pil.resize((224, 224), __import__("PIL").Image.BICUBIC)
+    pil = Image.fromarray(arr.astype(np.uint8))
+    pil = pil.resize((224, 224), Image.Resampling.BICUBIC)
     transform = transforms.Compose(
         [
             transforms.ToTensor(),

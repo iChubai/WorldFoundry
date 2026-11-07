@@ -103,9 +103,14 @@ def compute_paired_fid_kid(
     Returns ``(fid, kid_mean)``.
     """
     import torch
-    from torchmetrics.image.fid import FrechetInceptionDistance
-    from torchmetrics.image.kid import KernelInceptionDistance
-    from torchmetrics.utilities.data import dim_zero_cat
+
+    FrechetInceptionDistance = __import__(
+        "torchmetrics.image.fid", fromlist=["FrechetInceptionDistance"]
+    ).FrechetInceptionDistance
+    KernelInceptionDistance = __import__(
+        "torchmetrics.image.kid", fromlist=["KernelInceptionDistance"]
+    ).KernelInceptionDistance
+    dim_zero_cat = __import__("torchmetrics.utilities.data", fromlist=["dim_zero_cat"]).dim_zero_cat
 
     fid_metric = FrechetInceptionDistance(normalize=True).to(device)
     kid_metric = KernelInceptionDistance(normalize=True, subset_size=kid_subset_size).to(device)

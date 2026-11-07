@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path as Path
 
 from worldfoundry.evaluation.tasks.metrics.mask_accuracy.wrapper import (
     compute_mask_accuracy,

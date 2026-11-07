@@ -34,7 +34,7 @@ def compute_natural_score(
 ) -> dict[str, Any]:
     """Run OpenS2V NaturalScore GPT-based naturalness evaluation."""
     ensure_opens2v_eval_path()
-    from get_naturalscore import process_folder
+    process_folder = __import__("get_naturalscore", fromlist=["process_folder"]).process_folder
 
     api_key = api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:

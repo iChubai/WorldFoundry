@@ -25,9 +25,9 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _dae_classes() -> tuple[Any, Any]:
     prepend_import_path(VENDOR_ROOT)
-    from DAE.model import AutoEncoder, AutoEncoderConfig
+    model = __import__("DAE.model", fromlist=["AutoEncoder", "AutoEncoderConfig"])
 
-    return AutoEncoder, AutoEncoderConfig
+    return model.AutoEncoder, model.AutoEncoderConfig
 
 
 def _resolve_checkpoint(checkpoint: str | Path | None) -> str | Path | io.BytesIO:
@@ -40,7 +40,7 @@ def _resolve_checkpoint(checkpoint: str | Path | None) -> str | Path | io.BytesI
     if env_path and Path(env_path).is_file():
         return Path(env_path)
     try:
-        import gdown
+        gdown = __import__("gdown")
     except ImportError as exc:
         raise ImportError(
             "FDD requires the pretrained DAE checkpoint. Install gdown or set "

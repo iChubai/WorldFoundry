@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import os
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -75,14 +76,14 @@ class FJDMetric:
         image_embed = []
         cond_embed = []
 
-        for i, data in tqdm(
+        for _i, data in tqdm(
             enumerate(self.condition_loader), desc="Computing generated distribution", total=len(self.condition_loader)
         ):
             _, condition = data  # it is assumed data contains (image, condition)
             condition = condition.cuda()
 
             with torch.no_grad():
-                for n in range(self.samples_per_condition):
+                for _n in range(self.samples_per_condition):
                     image = self.gan(condition)
 
                     img_e = self.image_embedding(image)
@@ -246,7 +247,9 @@ class FJDMetric:
         fid = self.get_fjd(alpha=0.0, resample=resample)
         return fid
 
-    def sweep_alpha(self, alphas=[]):
+    _DEFAULT_ALPHAS: ClassVar[list[float]] = []
+
+    def sweep_alpha(self, alphas=_DEFAULT_ALPHAS):
         """Calculate FJD at a range of alpha values.
 
         Args:
@@ -343,10 +346,10 @@ def sqrt_newton_schulz(A, numIters, dtype=None):
         dim = A.shape[1]
         normA = A.mul(A).sum(dim=1).sum(dim=1).sqrt()
         Y = A.div(normA.view(batchSize, 1, 1).expand_as(A))
-        I = torch.eye(dim, dim).view(1, dim, dim).repeat(batchSize, 1, 1).type(dtype)
+        identity = torch.eye(dim, dim).view(1, dim, dim).repeat(batchSize, 1, 1).type(dtype)
         Z = torch.eye(dim, dim).view(1, dim, dim).repeat(batchSize, 1, 1).type(dtype)
-        for i in range(numIters):
-            T = 0.5 * (3.0 * I - Z.bmm(Y))
+        for _i in range(numIters):
+            T = 0.5 * (3.0 * identity - Z.bmm(Y))
             Y = Y.bmm(T)
             Z = T.bmm(Z)
         sA = Y * torch.sqrt(normA).view(batchSize, 1, 1).expand_as(A)
@@ -387,7 +390,7 @@ def numpy_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     # Product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))

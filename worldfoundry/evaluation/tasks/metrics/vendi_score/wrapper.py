@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -21,7 +21,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _vendi_module() -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    from vendi_score import vendi
+    if TYPE_CHECKING:
+        from .vendi_score import vendi
+    else:
+        from vendi_score import vendi
 
     return vendi
 

@@ -3,11 +3,23 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, TypedDict
 
 import numpy as np
 
 from worldfoundry.evaluation.tasks.metrics._shared.bbox import bbox_iou
+
+
+class _ConsistencyResult(TypedDict):
+    object_wise_iou_mean: float
+    object_wise_success_rate: float
+    object_wise_ious: list[float]
+
+
+class _ConsistencyBatchResult(TypedDict):
+    object_wise_iou_mean: float
+    object_wise_success_rate: float
+    per_image: list[_ConsistencyResult]
 
 
 def _normalize_label(label: str) -> str:
@@ -36,7 +48,7 @@ def compute_object_wise_consistency(
     detections: Sequence[tuple[Sequence[float], str]],
     *,
     iou_threshold: float = 0.5,
-) -> dict[str, float]:
+) -> _ConsistencyResult:
     """Compute mean IoU and success rate R_suc for object-wise guidance."""
     if not guidance_boxes:
         raise ValueError("guidance_boxes must be non-empty")
@@ -53,7 +65,7 @@ def compute_object_wise_consistency_batch(
     samples: list[dict[str, Any]],
     *,
     iou_threshold: float = 0.5,
-) -> dict[str, float]:
+) -> _ConsistencyBatchResult:
     """Aggregate object-wise consistency over multiple generated images."""
     if not samples:
         raise ValueError("samples must be non-empty")

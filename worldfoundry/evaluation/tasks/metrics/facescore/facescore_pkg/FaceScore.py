@@ -2,19 +2,20 @@ import cv2
 import numpy as np
 import torch
 import torch.nn as nn
-from batch_face import RetinaFace
 from PIL import Image
 from torchvision import transforms
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
 
 from .utils import load
 
+RetinaFace = __import__("batch_face", fromlist=["RetinaFace"]).RetinaFace
+
 try:
     from torchvision.transforms import InterpolationMode
 
     BICUBIC = InterpolationMode.BICUBIC
 except ImportError:
-    BICUBIC = Image.BICUBIC
+    BICUBIC = Image.Resampling.BICUBIC
 
 
 def _convert_image_to_rgb(image):
@@ -70,7 +71,7 @@ class FaceScore(nn.Module):
 
         self.preprocess = _transform(224)
 
-    def score(self, faces: torch.tensor):
+    def score(self, faces: torch.Tensor):
         # face [bs,c,h,w]
         bs = faces.shape[0]
         text_input = self.blip.tokenizer(

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 import torch
 import torchvision
@@ -5,8 +7,15 @@ from matplotlib import pyplot as plt
 from torch import nn
 from torchvision import transforms
 from torchvision.models import Inception_V3_Weights, inception_v3
-from vendi_score import data_utils, vendi
-from vendi_score.data_utils import Example
+
+if TYPE_CHECKING:
+    from . import data_utils, vendi
+    from .data_utils import Example
+else:
+    from vendi_score import data_utils, vendi
+    from vendi_score.data_utils import Example
+
+_DEFAULT_EMBEDDING_DEVICE = torch.device("cpu")
 
 
 def get_cifar100(root, split="test"):
@@ -40,10 +49,7 @@ def get_mnist(root, split="train", transform=None):
 
 
 def get_inception(pretrained=True, pool=True):
-    if pretrained:
-        weights = Inception_V3_Weights.DEFAULT
-    else:
-        weights = None
+    weights = Inception_V3_Weights.DEFAULT if pretrained else None
     model = inception_v3(weights=weights, transform_input=True).eval()
     if pool:
         model.fc = nn.Identity()
@@ -66,22 +72,22 @@ def get_embeddings(
     model=None,
     transform=None,
     batch_size=64,
-    device=torch.device("cpu"),
+    device=_DEFAULT_EMBEDDING_DEVICE,
 ):
-    if type(device) == str:
+    if type(device) is str:
         device = torch.device(device)
     if model is None:
         model = get_inception(pretrained=True, pool=True).to(device)
         transform = inception_transforms()
     if transform is None:
         transform = transforms.ToTensor()
-    uids = []
+    _uids = []
     embeddings = []
     for batch in data_utils.to_batches(images, batch_size):
         x = torch.stack([transform(img) for img in batch], 0).to(device)
         with torch.no_grad():
             output = model(x)
-        if type(output) == list:
+        if type(output) is list:
             output = output[0]
         output_arr = output.squeeze().cpu().numpy()
         if output_arr.ndim == 1:
@@ -97,7 +103,7 @@ def get_pixel_vectors(images, resize=32):
 
 
 def get_inception_embeddings(images, batch_size=64, device="cpu"):
-    if type(device) == str:
+    if type(device) is str:
         device = torch.device(device)
     model = get_inception(pretrained=True, pool=True).to(device)
     transform = inception_transforms()

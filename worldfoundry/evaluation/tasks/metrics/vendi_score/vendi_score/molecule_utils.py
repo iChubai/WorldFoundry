@@ -40,7 +40,7 @@ def load_molecules(fn, max_samples=2000, unique=False):
     examples = []
     seen = set()
     disable_rdkit_log()
-    for i, line in enumerate(lines):
+    for _i, line in enumerate(lines):
         s = line.strip().split(",")[0]
         features = {"s": s}
         if unique and s in seen:

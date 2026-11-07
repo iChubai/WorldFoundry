@@ -39,10 +39,7 @@ def compute_bcis(
     splits: int = 10,
 ) -> float:
     """Between-class CIS component: exp(E_c[KL(p(y|c) || p(y))])."""
-    if isinstance(class_probs, Mapping):
-        items = list(class_probs.items())
-    else:
-        items = list(class_probs)
+    items = list(class_probs.items()) if isinstance(class_probs, Mapping) else list(class_probs)
     if not items:
         raise ValueError("class_probs must be non-empty")
     stacked = np.stack([_normalize_probs(probs) for _, probs in items], axis=0)
@@ -60,10 +57,7 @@ def compute_wcis(
     splits: int = 10,
 ) -> float:
     """Within-class CIS component: exp(E_c[IS(X_c; Y_c)])."""
-    if isinstance(class_probs, Mapping):
-        items = list(class_probs.items())
-    else:
-        items = list(class_probs)
+    items = list(class_probs.items()) if isinstance(class_probs, Mapping) else list(class_probs)
     within_scores = [_inception_score(probs, splits=splits) for _, probs in items if len(probs) > 0]
     if not within_scores:
         raise ValueError("WCIS requires at least one non-empty class bucket")

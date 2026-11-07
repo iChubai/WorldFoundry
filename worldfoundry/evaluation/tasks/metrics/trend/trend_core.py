@@ -2,14 +2,16 @@ import os
 
 import numpy as np
 import torchvision.transforms as transforms
-from pytorch_fid.inception import InceptionV3
 from scipy import special
 from scipy.optimize import Bounds, minimize
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm, trange
 
-from worldfoundry.evaluation.tasks.metrics.trend.trend_util import *
+from worldfoundry.evaluation.tasks.metrics.trend.trend_util import *  # noqa: F403 - Preserve upstream module exports.
+from worldfoundry.evaluation.tasks.metrics.trend.trend_util import get_activations_loader, get_init, get_pdf, jsd
+
+InceptionV3 = __import__("pytorch_fid.inception", fromlist=["InceptionV3"]).InceptionV3
 
 
 class TrendEstimator:
@@ -56,10 +58,9 @@ def extract_embeddings(dir_sub, transform=None, batch_size=None, cuda=True, n_im
 
 
 def estimate_params(activations):  # [n * 2048] dimension
-    if isinstance(activations, str):
-        if os.path.isfile(activations):
-            with open(activations, "rb") as f:
-                return np.load(f)
+    if isinstance(activations, str) and os.path.isfile(activations):
+        with open(activations, "rb") as f:
+            return np.load(f)
 
     bounds = Bounds([-np.inf, 0, 0], [np.inf, np.inf, np.inf])
 

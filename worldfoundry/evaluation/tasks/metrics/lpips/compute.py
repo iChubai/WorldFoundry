@@ -15,7 +15,9 @@ def compute_lpips(
     net_type: NetType = "alex",
     device: str | None = None,
 ) -> float:
-    from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
+    LearnedPerceptualImagePatchSimilarity = __import__(
+        "torchmetrics.image.lpip", fromlist=["LearnedPerceptualImagePatchSimilarity"]
+    ).LearnedPerceptualImagePatchSimilarity
 
     device_t = resolve_device(device)
     metric = LearnedPerceptualImagePatchSimilarity(net_type=net_type, normalize=True).to(device_t)

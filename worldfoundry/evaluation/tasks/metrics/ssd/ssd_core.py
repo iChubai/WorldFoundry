@@ -1,5 +1,3 @@
-import tensorflow as tf
-
 from worldfoundry.evaluation.tasks.metrics._shared.conditional_frechet import (
     cfid,
     no_embedding,
@@ -7,6 +5,8 @@ from worldfoundry.evaluation.tasks.metrics._shared.conditional_frechet import (
     symmetric_matrix_square_root,
     trace_sqrt_product,
 )
+
+tf = __import__("tensorflow")
 
 
 @tf.function

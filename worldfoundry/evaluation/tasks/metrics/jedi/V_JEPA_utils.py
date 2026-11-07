@@ -5,15 +5,20 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+from typing import cast
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-import vjepa.datasets.utils.video.transforms as video_transforms
-import vjepa.datasets.utils.video.volume_transforms as volume_transforms
-from vjepa.datasets.utils.video.randerase import RandomErasing
-from vjepa.masks.utils import apply_masks
-from vjepa.models.utils.pos_embs import get_1d_sincos_pos_embed
+
+video_transforms = __import__("vjepa.datasets.utils.video.transforms", fromlist=["*"])
+volume_transforms = __import__("vjepa.datasets.utils.video.volume_transforms", fromlist=["*"])
+RandomErasing = __import__("vjepa.datasets.utils.video.randerase", fromlist=["RandomErasing"]).RandomErasing
+apply_masks = __import__("vjepa.masks.utils", fromlist=["apply_masks"]).apply_masks
+get_1d_sincos_pos_embed = __import__(
+    "vjepa.models.utils.pos_embs", fromlist=["get_1d_sincos_pos_embed"]
+).get_1d_sincos_pos_embed
 
 
 class FrameAggregation(nn.Module):
@@ -130,7 +135,7 @@ class ClipAggregation(nn.Module):
                 pos_embed = pos_embed.flatten(1, 2)
                 outputs += pos_embed
 
-            all_outputs[i] = outputs
+            cast(list[torch.Tensor], all_outputs)[i] = outputs
 
         return all_outputs
 
@@ -279,10 +284,7 @@ class EvalVideoTransform:
         all_views = []
         for i in range(num_views):
             start = i * spatial_step
-            if H > W:
-                view = buffer[:, start : start + side_len, :, :]
-            else:
-                view = buffer[:, :, start : start + side_len, :]
+            view = buffer[:, start : start + side_len, :, :] if H > W else buffer[:, :, start : start + side_len, :]
             view = self.to_tensor(view)
             all_views.append(view)
 
@@ -300,9 +302,9 @@ def tensor_normalize(tensor, mean, std):
     if tensor.dtype == torch.uint8:
         tensor = tensor.float()
         tensor = tensor / 255.0
-    if type(mean) == list:
+    if type(mean) is list:
         mean = torch.tensor(mean)
-    if type(std) == list:
+    if type(std) is list:
         std = torch.tensor(std)
     tensor = tensor - mean
     tensor = tensor / std

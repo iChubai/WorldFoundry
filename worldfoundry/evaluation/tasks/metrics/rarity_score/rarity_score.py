@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 import torch
 
@@ -60,10 +62,11 @@ class MANIFOLD:
             )
         real2samples_distances = real2samples_distances.detach().cpu().numpy()
 
-        r = self.real2real_sorted[:, k] if not cluster else self.mode2mode_sorted[:, k]
+        # The upstream cluster path reads a mode-distance cache it does not initialize.
+        r = self.real2real_sorted[:, k] if not cluster else self.mode2mode_sorted[:, k]  # ty: ignore[unresolved-attribute]
 
-        dist_radi = r[:, None].repeat(samples.shape[0], axis=1) - real2samples_distances
-        out_ball_ids = np.where((dist_radi > 0).any(axis=0) == False)[0]
+        dist_radi = r[:, None].repeat(cast(np.ndarray, samples).shape[0], axis=1) - real2samples_distances
+        out_ball_ids = np.where(np.logical_not((dist_radi > 0).any(axis=0)))[0]
 
         return dist_radi, r, out_ball_ids
 

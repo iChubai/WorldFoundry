@@ -36,7 +36,8 @@ class ImageFilesDataset(Dataset):
 
         return len(self.files)
 
-    def __getitem__(self, idx):
+    # Retain the upstream idx keyword rather than Dataset's index parameter.
+    def __getitem__(self, idx):  # ty: ignore[invalid-method-override]
         if not self.files_loaded:
             self.load_files()
 

@@ -69,7 +69,7 @@ def train_classifier_and_compute_cas(
     val_x = torch.from_numpy(np.asarray(real_images, dtype=np.float32))
     if val_x.ndim == 4 and val_x.shape[1] not in (1, 3):
         val_x = val_x.permute(0, 3, 1, 2)
-    val_y = torch.from_numpy(np.asarray(real_labels, dtype=np.int64))
+    _val_y = torch.from_numpy(np.asarray(real_labels, dtype=np.int64))
 
     channels = int(train_x.shape[1])
     model = nn.Sequential(

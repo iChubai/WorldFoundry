@@ -67,7 +67,7 @@ def compute_lqs(
     if not pairs:
         return {"lqs": lr + lp, "lr": lr, "lp": lp, "lc": 0.0, "ac": 0.0}
     alc_values = []
-    rlc_values = []
+    _rlc_values = []
     gt_centers = []
     pred_centers = []
     gt_areas = []

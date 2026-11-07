@@ -33,7 +33,7 @@ def compute_fvmd(
     log_dir: str | Path | None = None,
 ) -> float:
     prepend_import_path(_VENDOR_ROOT)
-    from fvmd.fvmd import fvmd as _fvmd
+    _fvmd = __import__("fvmd.fvmd", fromlist=["fvmd"]).fvmd
 
     work_dir = Path(log_dir) if log_dir is not None else Path(tempfile.mkdtemp(prefix="worldfoundry-fvmd-"))
     work_dir.mkdir(parents=True, exist_ok=True)

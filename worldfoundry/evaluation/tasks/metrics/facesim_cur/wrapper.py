@@ -25,9 +25,13 @@ def compute_facesim_cur(
     """Run OpenS2V FaceSim-Cur evaluation and return per-video CurricularFace scores."""
     ensure_opens2v_eval_path()
     import torch
-    from get_facesim import get_image_path_from_json, process_image, process_video
-    from insightface.app import FaceAnalysis
-    from utils.curricularface import get_model
+
+    get_facesim = __import__("get_facesim", fromlist=["get_image_path_from_json", "process_image", "process_video"])
+    get_image_path_from_json = get_facesim.get_image_path_from_json
+    process_image = get_facesim.process_image
+    process_video = get_facesim.process_video
+    FaceAnalysis = __import__("insightface.app", fromlist=["FaceAnalysis"]).FaceAnalysis
+    get_model = __import__("utils.curricularface", fromlist=["get_model"]).get_model
 
     model_path = Path(model_path or os.environ.get("WORLDFOUNDRY_OPENS2V_WEIGHT_DIR", "BestWishYsh/OpenS2V-Weight"))
     face_arc_path = model_path / "face_extractor"
@@ -55,7 +59,7 @@ def compute_facesim_cur(
         align_face_image, arcface_image_embedding = process_image(face_arc_model, image_path)
         if align_face_image is None:
             continue
-        from get_facesim import inference
+        inference = __import__("get_facesim", fromlist=["inference"]).inference
 
         cur_image_embedding = inference(face_cur_model, align_face_image, device)
         cur_score, arc_score = process_video(

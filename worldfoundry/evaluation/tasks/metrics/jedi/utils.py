@@ -18,7 +18,7 @@ def feature_aggregator(model, data_loader, num_samples, filename=None):
     import numpy as np
 
     all_features = None
-    for i, (data, target) in enumerate(data_loader):
+    for _i, (data, _target) in enumerate(data_loader):
         # data shape = (B, T, C, H, W); data range = [0, 1]
         device = (
             next(model.encoder.parameters()).device

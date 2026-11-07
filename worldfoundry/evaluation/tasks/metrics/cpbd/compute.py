@@ -1,8 +1,13 @@
 from math import atan2, pi
 from sys import argv
+from typing import TYPE_CHECKING
 
 import numpy as np
-from octave import sobel
+
+if TYPE_CHECKING:
+    from .octave import sobel
+else:
+    from octave import sobel
 from skimage.feature import canny
 from skimage.io import imread
 
@@ -166,7 +171,7 @@ def _calculate_sharpness_metric(image, edges, edge_widths):
 
                 # update the statistics using the block information
                 for probability in prob_blur_detection:
-                    bucket = int(round(probability * 100))
+                    bucket = round(probability * 100)
                     hist_pblur[bucket] += 1
                     total_num_edges += 1
 
@@ -192,4 +197,4 @@ def get_block_contrast(block):
 if __name__ == "__main__":
     input_image = imread(argv[1], mode="L")
     sharpness = compute(input_image)
-    print("CPBD sharpness for %s: %f" % (argv[1], sharpness))
+    print(f"CPBD sharpness for {argv[1]}: {sharpness:f}")

@@ -1,7 +1,14 @@
+from typing import TYPE_CHECKING
+
 import torch
 import torchvision.transforms as TF
-from fld.features.ImageFeatureExtractor import ImageFeatureExtractor
-from pytorch_fid.inception import InceptionV3
+
+if TYPE_CHECKING:
+    from .ImageFeatureExtractor import ImageFeatureExtractor
+else:
+    from fld.features.ImageFeatureExtractor import ImageFeatureExtractor
+
+InceptionV3 = __import__("pytorch_fid.inception", fromlist=["InceptionV3"]).InceptionV3
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

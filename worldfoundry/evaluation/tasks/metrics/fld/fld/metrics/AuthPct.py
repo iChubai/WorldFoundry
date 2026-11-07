@@ -1,8 +1,15 @@
 # Faster implementation of Authenticity metric defined here https://arxiv.org/abs/2102.08921
 
+from typing import TYPE_CHECKING
+
 import torch
-from fld.metrics.Metric import Metric
-from fld.utils import shuffle
+
+if TYPE_CHECKING:
+    from ..utils import shuffle
+    from .Metric import Metric
+else:
+    from fld.metrics.Metric import Metric
+    from fld.utils import shuffle
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

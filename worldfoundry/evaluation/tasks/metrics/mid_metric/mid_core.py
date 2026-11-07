@@ -4,7 +4,7 @@ Copyright (c) 2022-present NAVER Corp.
 Apache-2.0
 """
 
-from typing import *
+from typing import *  # noqa: F403 - Preserve upstream module exports.
 
 import torch
 from torch import Tensor
@@ -69,8 +69,8 @@ def _compute_pmi(
     x_mean = x.mean(dim=0, keepdim=True)
     y_mean = y.mean(dim=0, keepdim=True)
     z_mean = torch.cat([x_mean, y_mean], dim=-1)
-    x0_mean = x0.mean(dim=0, keepdim=True)
-    z0_mean = z0.mean(dim=0, keepdim=True)
+    _x0_mean = x0.mean(dim=0, keepdim=True)
+    _z0_mean = z0.mean(dim=0, keepdim=True)
 
     X = (x - x_mean).t() @ (x - x_mean) / (N - 1)
     Y = (y - y_mean).t() @ (y - y_mean) / (N - 1)

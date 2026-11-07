@@ -1,8 +1,14 @@
 import warnings
+from typing import TYPE_CHECKING
 
-from fld.metrics.Metric import Metric
-from fld.MoG import MoG, preprocess_feat
-from fld.utils import shuffle
+if TYPE_CHECKING:
+    from ..MoG import MoG, preprocess_feat
+    from ..utils import shuffle
+    from .Metric import Metric
+else:
+    from fld.metrics.Metric import Metric
+    from fld.MoG import MoG, preprocess_feat
+    from fld.utils import shuffle
 
 GEN_SIZE = 10000
 
@@ -46,7 +52,9 @@ class FLD(Metric):
             test_nll = mog_gen.get_dim_adjusted_nlls(test_feat).mean().item()
             metric_val = self.get_nll_diff(train_nll, test_nll)
             if metric_val < -1_000:
-                warnings.warn("Very high FLD gen gap value: your generated data is likely completely memorized.")
+                warnings.warn(
+                    "Very high FLD gen gap value: your generated data is likely completely memorized.", stacklevel=1
+                )
             return metric_val
         else:
             raise Exception(f"Invalid mode for FLD metric: {self.eval_feat}")
@@ -61,7 +69,7 @@ class FLD(Metric):
         metric_val = self.get_nll_diff(nll, baseline_nll)
 
         if metric_val > 1_000:
-            warnings.warn("Very high FLD value, your generated data is likely completely memorized.")
+            warnings.warn("Very high FLD value, your generated data is likely completely memorized.", stacklevel=1)
 
         return metric_val
 

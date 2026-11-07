@@ -1,6 +1,12 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 import torch
-from fld.utils import shuffle
+
+if TYPE_CHECKING:
+    from .utils import shuffle
+else:
+    from fld.utils import shuffle
 from tqdm import tqdm
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -26,7 +32,8 @@ def preprocess_feat(train_feat, test_feat, gen_feat, normalize=True):
         feat = (feat - mean_vals) / (std_vals)
         return feat
 
-    if normalize:
+    # Preserve upstream scoring: the local callable shadows the normalization flag.
+    if normalize:  # ty: ignore[redundant-condition]
         train_feat = normalize(train_feat)
         test_feat = normalize(test_feat)
         gen_feat = normalize(gen_feat)

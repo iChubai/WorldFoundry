@@ -12,7 +12,8 @@ class ImageTensorDataset(Dataset):
     def __len__(self):
         return len(self.tensor)
 
-    def __getitem__(self, idx: int):
+    # Retain the upstream idx keyword rather than Dataset's index parameter.
+    def __getitem__(self, idx: int):  # ty: ignore[invalid-method-override]
         img = self.tensor[idx]
         img = torchvision.transforms.ToPILImage()(img)
 

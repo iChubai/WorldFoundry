@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from worldfoundry.evaluation.api import (
     AggregateResult,
@@ -235,7 +236,7 @@ def _numeric_container_values(container: Any) -> dict[str, float]:
 def _numeric_values(result: GenerationResult) -> dict[str, float]:
     values: dict[str, float] = {}
     metadata = result.metadata if isinstance(result.metadata, Mapping) else {}
-    extra = metadata.get("extra") if isinstance(metadata.get("extra"), Mapping) else {}
+    extra = cast(Mapping[str, Any], metadata.get("extra")) if isinstance(metadata.get("extra"), Mapping) else {}
     for container in (
         metadata.get("metrics"),
         metadata.get("scores"),
@@ -329,10 +330,8 @@ class BuiltinExistingResultsMetric:
         } or metric_id.startswith("has_artifact:")
         direction = True if artifact_metric else None
         if not artifact_metric:
-            try:
+            with contextlib.suppress(KeyError):
                 direction = default_metric_registry().get(metric_id).higher_is_better
-            except KeyError:
-                pass
         return {
             "parameters": {} if artifact_metric else {"source": metric_id},
             "required_artifacts": self.required_artifacts if metric_id == "required_artifacts_present" else (),
@@ -843,7 +842,7 @@ class MetricRegistry:
                 higher_is_better=entry.get("higher_is_better", True),
                 tags=tuple(str(item) for item in entry.get("tags", ())),
             )
-        normalized_keys = tuple(_normalise_key(key) for key in entry.keys())
+        normalized_keys = tuple(_normalise_key(key) for key in entry.keys())  # noqa: SIM118 - Entry keys are not dictionary keys.
         entry_key = _normalise_key(entry.id)
         if not replace:
             for key in normalized_keys:
@@ -856,7 +855,7 @@ class MetricRegistry:
                 if owner is not None and owner is not existing:
                     raise DuplicateMetricRegistryKeyError(f"metric registry key already exists: {key}")
             if existing is not None:
-                for key in tuple(_normalise_key(key) for key in existing.keys()):
+                for key in tuple(_normalise_key(key) for key in existing.keys()):  # noqa: SIM118 - Entry keys are not dictionary keys.
                     if self._by_key.get(key) is existing:
                         self._by_key.pop(key)
         for key in normalized_keys:

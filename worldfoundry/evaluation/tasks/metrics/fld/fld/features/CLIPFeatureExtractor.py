@@ -1,6 +1,12 @@
+from typing import TYPE_CHECKING
+
 import torch
 import torchvision.transforms as transforms
-from fld.features.ImageFeatureExtractor import ImageFeatureExtractor
+
+if TYPE_CHECKING:
+    from .ImageFeatureExtractor import ImageFeatureExtractor
+else:
+    from fld.features.ImageFeatureExtractor import ImageFeatureExtractor
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 

@@ -21,7 +21,7 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _rke_class() -> Any:
     prepend_import_path(VENDOR_ROOT)
-    from rke_score import RKE
+    RKE = __import__("rke_score", fromlist=["RKE"]).RKE
 
     return RKE
 

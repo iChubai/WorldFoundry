@@ -46,10 +46,10 @@ def _resolve_image_path(image_root: Path, key: str) -> Path:
 def _save_crop(image: Image.Image, box: Sequence[float], dest: Path, *, min_crop_size: int) -> bool:
     width, height = image.size
     x1, y1, x2, y2 = bbox_xyxy(box)
-    left = max(0, min(width, int(round(min(x1, x2)))))
-    top = max(0, min(height, int(round(min(y1, y2)))))
-    right = max(0, min(width, int(round(max(x1, x2)))))
-    bottom = max(0, min(height, int(round(max(y1, y2)))))
+    left = max(0, min(width, round(min(x1, x2))))
+    top = max(0, min(height, round(min(y1, y2))))
+    right = max(0, min(width, round(max(x1, x2))))
+    bottom = max(0, min(height, round(max(y1, y2))))
     if right - left < min_crop_size or bottom - top < min_crop_size:
         return False
     crop = image.crop((left, top, right, bottom))

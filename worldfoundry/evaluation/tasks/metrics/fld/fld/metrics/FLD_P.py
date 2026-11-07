@@ -1,6 +1,13 @@
-from fld.metrics.Metric import Metric
-from fld.MoG import MoG, preprocess_feat
-from fld.utils import shuffle
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..MoG import MoG, preprocess_feat
+    from ..utils import shuffle
+    from .Metric import Metric
+else:
+    from fld.metrics.Metric import Metric
+    from fld.MoG import MoG, preprocess_feat
+    from fld.utils import shuffle
 
 GEN_SIZE = 10000
 TEST_SIZE = 10000
@@ -42,10 +49,7 @@ class FLD_P(Metric):
         nlls = mog.get_dim_adjusted_nlls(gen_feat)
         nll = nlls.mean().item()
 
-        if not self.baseline_nll:
-            baseline_nll = self.get_baseline_nll(train_feat, test_feat)
-        else:
-            baseline_nll = self.baseline_nll
+        baseline_nll = self.get_baseline_nll(train_feat, test_feat) if not self.baseline_nll else self.baseline_nll
 
         return self.get_nll_diff(nll, baseline_nll)
 

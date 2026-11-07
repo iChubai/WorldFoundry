@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable, Sized
+from typing import Any, cast
 
 import torch
 from tqdm import tqdm
@@ -18,7 +20,8 @@ class TransformedDataset(torch.utils.data.Dataset):
         self.dataset = dataset
         self.transform = transform
 
-    def __getitem__(self, idx):
+    # Retain the upstream idx keyword rather than Dataset's index parameter.
+    def __getitem__(self, idx):  # ty: ignore[invalid-method-override]
         img, labels = self.dataset[idx]
         img = self.transform(img)
         return img, labels
@@ -28,6 +31,10 @@ class TransformedDataset(torch.utils.data.Dataset):
 
 
 class FeatureExtractor:
+    name: str
+    features_size: int | None
+    preprocess: Callable[[Any], Any] | None
+
     def __init__(self, save_path: str | None):
         if save_path is None:
             curr_path = os.path.dirname(os.path.abspath(__file__))
@@ -60,9 +67,8 @@ class FeatureExtractor:
         if self.save_path and name:
             file_path = os.path.join(self.save_path, f"{name}.pt")
 
-            if not recompute:
-                if os.path.exists(file_path):
-                    return torch.load(file_path)
+            if not recompute and os.path.exists(file_path):
+                return torch.load(file_path)
 
         if isinstance(imgs, torch.utils.data.Dataset):
             features = self.get_dataset_features(imgs)
@@ -75,8 +81,8 @@ class FeatureExtractor:
         return features
 
     def get_dataset_features(self, dataset: torch.utils.data.Dataset):
-        size = len(dataset)
-        features = torch.zeros(size, self.features_size)
+        size = len(cast(Sized, dataset))
+        features = torch.zeros(size, cast(int, self.features_size))
 
         # Add preprocessing to dataset transforms
         dataset = TransformedDataset(dataset, self.preprocess)

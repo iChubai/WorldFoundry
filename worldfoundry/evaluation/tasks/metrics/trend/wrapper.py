@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -20,7 +20,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _trend_module() -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    import trend_core as mod
+    if TYPE_CHECKING:
+        from . import trend_core as mod
+    else:
+        import trend_core as mod
 
     return mod
 

@@ -11,10 +11,22 @@ import os
 
 import torch
 import yaml
-from vjepa.models import vit_base, vit_giant, vit_gigantic, vit_huge, vit_large, vit_small, vit_tiny
-from vjepa.models.attentive_pooler import AttentiveClassifier
 
-from .V_JEPA_utils import *
+_vjepa_models = __import__(
+    "vjepa.models", fromlist=["vit_base", "vit_giant", "vit_gigantic", "vit_huge", "vit_large", "vit_small", "vit_tiny"]
+)
+vit_base = _vjepa_models.vit_base
+vit_giant = _vjepa_models.vit_giant
+vit_gigantic = _vjepa_models.vit_gigantic
+vit_huge = _vjepa_models.vit_huge
+vit_large = _vjepa_models.vit_large
+vit_small = _vjepa_models.vit_small
+vit_tiny = _vjepa_models.vit_tiny
+AttentiveClassifier = __import__("vjepa.models.attentive_pooler", fromlist=["AttentiveClassifier"]).AttentiveClassifier
+
+# Preserve upstream exports after provider model initialization.
+from .V_JEPA_utils import *  # noqa: E402, F403
+from .V_JEPA_utils import ClipAggregation, FrameAggregation  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +50,7 @@ class VJEPA:
         self.encoder, self.classifier = get_default_vjepa(
             config_fname=config_fname, model_dir=model_dir, finetuned=finetuned
         )
-        import vjepa.datasets.utils.video.transforms as video_transforms
+        video_transforms = __import__("vjepa.datasets.utils.video.transforms", fromlist=["*"])
 
         self.transforms = video_transforms.Normalize(mean=normalize[0], std=normalize[1])
         self.finetuned = finetuned
@@ -175,42 +187,42 @@ def get_default_vjepa(
     patch_size = args_pretrain.get("patch_size", None)
     pretrain_folder = args_pretrain.get("folder", None)
     ckp_fname = args_pretrain.get("checkpoint", None)
-    tag = args_pretrain.get("write_tag", None)
+    _tag = args_pretrain.get("write_tag", None)
     use_sdpa = args_pretrain.get("use_sdpa", True)
     use_SiLU = args_pretrain.get("use_silu", False)
     tight_SiLU = args_pretrain.get("tight_silu", True)
     uniform_power = args_pretrain.get("uniform_power", False)
-    pretrained_path = os.path.join(pretrain_folder, ckp_fname)
+    _pretrained_path = os.path.join(pretrain_folder, ckp_fname)
     # Optional [for Video model]:
     tubelet_size = args_pretrain.get("tubelet_size", 2)
     pretrain_frames_per_clip = args_pretrain.get("frames_per_clip", 1)
 
     # -- DATA
     args_data = args_eval.get("data")
-    train_data_path = [args_data.get("dataset_train")]
-    val_data_path = [args_data.get("dataset_val")]
-    dataset_type = args_data.get("dataset_type", "VideoDataset")
+    _train_data_path = [args_data.get("dataset_train")]
+    _val_data_path = [args_data.get("dataset_val")]
+    _dataset_type = args_data.get("dataset_type", "VideoDataset")
     num_classes = args_data.get("num_classes")
-    eval_num_segments = args_data.get("num_segments", 1)
-    eval_frames_per_clip = args_data.get("frames_per_clip", 16)
-    eval_frame_step = args_pretrain.get("frame_step", 4)
-    eval_duration = args_pretrain.get("clip_duration", None)
-    eval_num_views_per_segment = args_data.get("num_views_per_segment", 1)
+    _eval_num_segments = args_data.get("num_segments", 1)
+    _eval_frames_per_clip = args_data.get("frames_per_clip", 16)
+    _eval_frame_step = args_pretrain.get("frame_step", 4)
+    _eval_duration = args_pretrain.get("clip_duration", None)
+    _eval_num_views_per_segment = args_data.get("num_views_per_segment", 1)
 
     # -- OPTIMIZATION
     args_opt = args_eval.get("optimization")
     resolution = args_opt.get("resolution", 224)
-    batch_size = args_opt.get("batch_size")
+    _batch_size = args_opt.get("batch_size")
     attend_across_segments = args_opt.get("attend_across_segments", False)
-    num_epochs = args_opt.get("num_epochs")
-    wd = args_opt.get("weight_decay")
-    start_lr = args_opt.get("start_lr")
-    lr = args_opt.get("lr")
-    final_lr = args_opt.get("final_lr")
-    warmup = args_opt.get("warmup")
-    use_bfloat16 = args_opt.get("use_bfloat16")
+    _num_epochs = args_opt.get("num_epochs")
+    _wd = args_opt.get("weight_decay")
+    _start_lr = args_opt.get("start_lr")
+    _lr = args_opt.get("lr")
+    _final_lr = args_opt.get("final_lr")
+    _warmup = args_opt.get("warmup")
+    _use_bfloat16 = args_opt.get("use_bfloat16")
 
-    eval_tag = args_eval.get("tag", None)
+    _eval_tag = args_eval.get("tag", None)
 
     if not torch.cuda.is_available():
         device = torch.device("cpu")

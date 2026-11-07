@@ -28,6 +28,7 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from collections import namedtuple
 from functools import partial
 from glob import glob
+from typing import cast
 
 import numpy as np
 from PIL import Image
@@ -54,7 +55,8 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
 Manifold = namedtuple("Manifold", ["features", "radii"])
-PrecisionAndRecall = namedtuple("PrecisinoAndRecall", ["precision", "recall"])
+# Preserve the upstream tuple type name used in repr and serialization.
+PrecisionAndRecall = namedtuple("PrecisinoAndRecall", ["precision", "recall"])  # ty: ignore[mismatched-type-name]
 
 
 class IPR:
@@ -160,11 +162,11 @@ class IPR:
         returns:
             A numpy array of dimension (num images, dims)
         """
-        desc = "extracting features of %d images" % images.size(0)
+        desc = f"extracting features of {images.size(0):d} images"
         num_batches = int(np.ceil(images.size(0) / self.batch_size))
         _, _, height, width = images.shape
         if height != 224 or width != 224:
-            print("IPR: resizing %s to (224, 224)" % str((height, width)))
+            print(f"IPR: resizing {(height, width)!s} to (224, 224)")
             resize = partial(F.interpolate, size=(224, 224))
         else:
 
@@ -198,9 +200,9 @@ class IPR:
 
         dataloader = get_custom_loader(path_or_fnames, batch_size=self.batch_size, num_samples=self.num_samples)
         num_found_images = len(dataloader.dataset)
-        desc = "extracting features of %d images" % num_found_images
+        desc = f"extracting features of {num_found_images:d} images"
         if num_found_images < self.num_samples:
-            print("WARNING: num_found_images(%d) < num_samples(%d)" % (num_found_images, self.num_samples))
+            print(f"WARNING: num_found_images({num_found_images:d}) < num_samples({self.num_samples:d})")
 
         features = []
         for batch in tqdm(dataloader, desc=desc):
@@ -216,7 +218,8 @@ class IPR:
 
     def save_ref(self, fname):
         print("saving manifold to", fname, "...")
-        np.savez_compressed(fname, feature=self.manifold_ref.features, radii=self.manifold_ref.radii)
+        manifold = cast(Manifold, self.manifold_ref)
+        np.savez_compressed(fname, feature=manifold.features, radii=manifold.radii)
 
 
 # def compute_pairwise_distances(X, Y=None, metric = 'euclidian', device = 'cpu'):
@@ -275,16 +278,10 @@ def compute_pairwise_distances(X, Y=None, metric="euclidian", device="cpu"):
 
     if metric == "euclidian":
         num_X = X.shape[0]
-        if Y is None:
-            num_Y = num_X
-        else:
-            num_Y = Y.shape[0]
+        num_Y = num_X if Y is None else Y.shape[0]
         X = X.type(torch.float64)  # to prevent underflow
-        X_norm_square = torch.sum(X**2, dim=1, keepdims=True)
-        if Y is None:
-            Y_norm_square = X_norm_square
-        else:
-            Y_norm_square = torch.sum(Y**2, dim=1, keepdims=True)
+        X_norm_square = torch.sum(X**2, dim=1, keepdim=True)
+        Y_norm_square = X_norm_square if Y is None else torch.sum(Y**2, dim=1, keepdim=True)
 
         torch.cuda.empty_cache()
         # X_square = torch.repeat(X_norm_square, num_Y, dim=1)
@@ -305,7 +302,8 @@ def compute_pairwise_distances(X, Y=None, metric="euclidian", device="cpu"):
             idx = diff_square < 0
             diff_square[idx] = 0
             print(
-                "WARNING: %d negative diff_squares found and set to zero, min_diff_square=" % idx.sum(), min_diff_square
+                f"WARNING: {int(idx.sum())} negative diff_squares found and set to zero, min_diff_square=",
+                min_diff_square,
             )
 
         distances = torch.sqrt(diff_square).detach().cpu()
@@ -314,10 +312,7 @@ def compute_pairwise_distances(X, Y=None, metric="euclidian", device="cpu"):
         X = X.type(torch.float64)
         X = (X.T / torch.linalg.norm(X, dim=1)).T
 
-        if Y is None:
-            Y = X.T
-        else:
-            Y = Y.T / torch.linalg.norm(Y, dim=1)
+        Y = X.T if Y is None else Y.T / torch.linalg.norm(Y, dim=1)
 
         distances = (-(1 + X @ Y)).detach().cpu()
 
@@ -370,7 +365,7 @@ def realism(manifold_real, feat_subject):
 
 def _load_dataset_image(image_path, transform):
     image = Image.open(image_path).convert("RGB")
-    image = image.resize((224, 224), Image.BICUBIC)
+    image = image.resize((224, 224), Image.Resampling.BICUBIC)
     return transform(image) if transform is not None else image
 
 
@@ -480,7 +475,7 @@ if __name__ == "__main__":
         # python improved_precision_recall.py [path_real] [dummy_str] --fname_precalc [filename]
         if len(args.fname_precalc) > 0:
             ipr.save_ref(args.fname_precalc)
-            print("path_fake (%s) is ignored for precalc" % args.path_fake)
+            print(f"path_fake ({args.path_fake}) is ignored for precalc")
             exit()
 
         # fake
@@ -494,7 +489,7 @@ if __name__ == "__main__":
         print("skip realism score for real image because [path_real] is .npz file")
     else:
         dataloader = get_custom_loader(args.path_real, batch_size=args.batch_size, num_samples=1)
-        desc = "found %d images in " % len(dataloader.dataset) + args.path_real
+        desc = f"found {len(dataloader.dataset):d} images in " + args.path_real
         print(desc)
         first_image = iter(dataloader).next()
         realism_score = ipr.realism(first_image)
@@ -502,7 +497,7 @@ if __name__ == "__main__":
 
     # Example usage: realism of a fake image
     dataloader = get_custom_loader(args.path_fake, batch_size=args.batch_size, num_samples=1)
-    desc = "found %d images in " % len(dataloader.dataset) + args.path_fake
+    desc = f"found {len(dataloader.dataset):d} images in " + args.path_fake
     print(desc)
     first_image = iter(dataloader).next()
     realism_score = ipr.realism(first_image)

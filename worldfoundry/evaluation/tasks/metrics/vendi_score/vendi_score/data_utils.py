@@ -12,7 +12,7 @@ class Example:
 
 @dataclass
 class Group:
-    name: str = ""
+    name: str | int = ""
     examples: list[Example] = field(default_factory=list)
     metrics: dict[str, Any] = field(default_factory=dict)
     features: dict[str, Any] = field(default_factory=dict)

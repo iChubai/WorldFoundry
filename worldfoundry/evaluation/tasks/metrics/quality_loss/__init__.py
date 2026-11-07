@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any as Any
 
 from worldfoundry.evaluation.tasks.metrics._shared.lazy import lazy_export
 from worldfoundry.evaluation.tasks.metrics.registry import metric_module_from_globals

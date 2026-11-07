@@ -15,7 +15,7 @@ VENDOR_ROOT = Path(__file__).resolve().parent / "vendor" / "swav"
 @lru_cache(maxsize=1)
 def _swav_fid_module() -> Any:
     prepend_import_path(VENDOR_ROOT)
-    import fid_score as mod
+    mod = __import__("fid_score")
 
     return mod
 

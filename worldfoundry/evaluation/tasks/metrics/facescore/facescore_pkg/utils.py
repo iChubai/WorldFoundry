@@ -1,10 +1,11 @@
 import os
-import urllib
+import urllib.request
 
 import torch
-from huggingface_hub import hf_hub_download
-from ImageReward import ImageReward
 from tqdm import tqdm
+
+hf_hub_download = __import__("huggingface_hub", fromlist=["hf_hub_download"]).hf_hub_download
+ImageReward = __import__("ImageReward", fromlist=["ImageReward"]).ImageReward
 
 # os.environ['HF_ENDPOINT']='https://hf-mirror.com'
 
@@ -12,6 +13,7 @@ from tqdm import tqdm
 _MODELS = {
     "FaceScore": "https://hf-mirror.com/AIGCer-OPPO/FaceScore/blob/main/FS_model.pt",
 }
+_DEFAULT_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def available_models() -> list[str]:
@@ -29,9 +31,9 @@ def FaceScore_download(url: str, root: str):
 
 def load(
     name: str = "FaceScore",
-    device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu",
-    download_root: str = None,
-    med_config: str = None,
+    device: str | torch.device = _DEFAULT_DEVICE,
+    download_root: str | None = None,
+    med_config: str | None = None,
 ):
     """Load a FaceScore model
 
@@ -58,7 +60,7 @@ def load(
     else:
         raise RuntimeError(f"Model {name} not found; available models = {available_models()}")
 
-    print("load checkpoint from %s" % model_path)
+    print(f"load checkpoint from {model_path}")
     state_dict = torch.load(model_path, map_location="cpu")
 
     # med_config
@@ -69,7 +71,7 @@ def load(
         )
 
     model = ImageReward(device=device, med_config=med_config).to(device)
-    msg = model.load_state_dict(state_dict, strict=False)
+    _msg = model.load_state_dict(state_dict, strict=False)
     print("checkpoint loaded")
     model.eval()
 
@@ -88,16 +90,19 @@ def _download(url: str, root: str):
     if os.path.isfile(download_target):
         return download_target
 
-    with urllib.request.urlopen(url) as source, open(download_target, "wb") as output:
-        with tqdm(
+    with (
+        urllib.request.urlopen(url) as source,
+        open(download_target, "wb") as output,
+        tqdm(
             total=int(source.info().get("Content-Length")), ncols=80, unit="iB", unit_scale=True, unit_divisor=1024
-        ) as loop:
-            while True:
-                buffer = source.read(8192)
-                if not buffer:
-                    break
+        ) as loop,
+    ):
+        while True:
+            buffer = source.read(8192)
+            if not buffer:
+                break
 
-                output.write(buffer)
-                loop.update(len(buffer))
+            output.write(buffer)
+            loop.update(len(buffer))
 
     return download_target

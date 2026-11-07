@@ -1,7 +1,14 @@
 # Taken from https://github.com/mseitzer/pytorch-fid
+from typing import TYPE_CHECKING
+
 import numpy as np
-from fld.metrics.Metric import Metric
-from fld.utils import shuffle
+
+if TYPE_CHECKING:
+    from ..utils import shuffle
+    from .Metric import Metric
+else:
+    from fld.metrics.Metric import Metric
+    from fld.utils import shuffle
 from scipy import linalg
 
 
@@ -41,7 +48,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     # Product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))

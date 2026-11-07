@@ -6,12 +6,15 @@ from .utils import feature_aggregator, model_cleanup
 
 
 class JEDiMetric:
+    train_features: np.ndarray
+    test_features: np.ndarray
+
     def __init__(self, feature_path=None, model_dir=None, config_path=None):
         self.feature_path = feature_path
         if not feature_path:
             import warnings
 
-            warnings.warn("feature_path is not provided, will not save computed features.")
+            warnings.warn("feature_path is not provided, will not save computed features.", stacklevel=1)
         self.model_dir = model_dir if model_dir is not None else os.getcwd()
         self.config_path = config_path
         if self.feature_path:

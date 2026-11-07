@@ -12,7 +12,7 @@ def standardize_string(value: str) -> str:
 
 def extract_noun_adjective(phrase: str) -> tuple[list[str], list[str]]:
     try:
-        import spacy
+        spacy = __import__("spacy")
     except ImportError as exc:
         raise ImportError("object_detection helpers require spacy (en_core_web_sm).") from exc
 

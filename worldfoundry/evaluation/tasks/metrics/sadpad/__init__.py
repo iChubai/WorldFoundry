@@ -18,7 +18,7 @@ VENDOR_ROOT = Path(__file__).resolve().parent / "vendor"
 @lru_cache(maxsize=1)
 def _get_sad_fn() -> Any:
     prepend_import_path(VENDOR_ROOT)
-    from sad import get_SaD
+    get_SaD = __import__("sad", fromlist=["get_SaD"]).get_SaD
 
     return get_SaD
 
@@ -26,7 +26,7 @@ def _get_sad_fn() -> Any:
 @lru_cache(maxsize=1)
 def _get_pad_fn() -> Any:
     prepend_import_path(VENDOR_ROOT)
-    from pad import get_PaD
+    get_PaD = __import__("pad", fromlist=["get_PaD"]).get_PaD
 
     return get_PaD
 

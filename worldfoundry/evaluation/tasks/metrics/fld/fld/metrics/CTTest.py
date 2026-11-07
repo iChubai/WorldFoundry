@@ -1,10 +1,17 @@
 # Taken from https://github.com/casey-meehan/data-copying
+from typing import TYPE_CHECKING
+
 import numpy as np
-from fld.metrics.Metric import Metric
 from scipy.stats import mannwhitneyu
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.neighbors import NearestNeighbors as NN
+
+if TYPE_CHECKING:
+    from .Metric import Metric
+else:
+    from fld.metrics.Metric import Metric
+
+KMeans = __import__("sklearn.cluster", fromlist=["KMeans"]).KMeans
+PCA = __import__("sklearn.decomposition", fromlist=["PCA"]).PCA
+NN = __import__("sklearn.neighbors", fromlist=["NearestNeighbors"]).NearestNeighbors
 
 
 def Zu(Pn, Qm, T):

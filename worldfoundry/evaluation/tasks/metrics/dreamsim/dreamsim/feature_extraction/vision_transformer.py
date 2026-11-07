@@ -24,11 +24,17 @@ https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision
 
 import math
 from functools import partial
+from typing import Any, cast
 
 import torch
 import torch.nn as nn
 
-trunc_normal_ = lambda *args, **kwargs: None
+_DEFAULT_IMAGE_SIZES = [224]
+
+
+def trunc_normal_(*args: Any, **kwargs: Any) -> None:
+    """Return without modifying the supplied tensors."""
+    return None
 
 
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):
@@ -46,11 +52,11 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob=None):
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
-        return drop_path(x, self.drop_prob, self.training)
+        return drop_path(x, cast(float, self.drop_prob), self.training)
 
 
 class Mlp(nn.Module):
@@ -155,7 +161,7 @@ class VisionTransformer(nn.Module):
 
     def __init__(
         self,
-        img_size=[224],
+        img_size=_DEFAULT_IMAGE_SIZES,
         patch_size=16,
         in_chans=3,
         num_classes=0,
@@ -302,9 +308,9 @@ class DINOHead(nn.Module):
             self.mlp = nn.Sequential(*layers)
         self.apply(self._init_weights)
         self.last_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim, bias=False))
-        self.last_layer.weight_g.data.fill_(1)
+        cast(nn.Parameter, self.last_layer.weight_g).data.fill_(1)
         if norm_last_layer:
-            self.last_layer.weight_g.requires_grad = False
+            cast(nn.Parameter, self.last_layer.weight_g).requires_grad = False
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):

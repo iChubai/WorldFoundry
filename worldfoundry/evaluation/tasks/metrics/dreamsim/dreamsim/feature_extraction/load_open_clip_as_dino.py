@@ -1,9 +1,11 @@
 import os
+from typing import Any, cast
 
-import open_clip
 import torch
 
 from .vision_transformer import VisionTransformer, vit_base
+
+open_clip = __import__("open_clip")
 
 
 def load_open_clip_as_dino(patch_size, load_dir="./models", l14=False):
@@ -19,7 +21,7 @@ def load_open_clip_as_dino(patch_size, load_dir="./models", l14=False):
             "state_dict"
         ]
 
-    dino_vit.pos_drop = torch.nn.LayerNorm(dino_vit.embed_dim)
+    cast(Any, dino_vit).pos_drop = torch.nn.LayerNorm(dino_vit.embed_dim)
     proj = sd.pop("proj")
     dino_vit.load_state_dict(sd)
     for m in dino_vit.modules():

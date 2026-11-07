@@ -1,4 +1,6 @@
-dreamsim_args = {
+from typing import Any
+
+dreamsim_args: dict[str, Any] = {
     "model_config": {
         "ensemble": {
             "feat_type": "cls,embedding,embedding",

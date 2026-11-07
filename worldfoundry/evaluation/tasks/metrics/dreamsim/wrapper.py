@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 
@@ -26,7 +26,10 @@ def _load_dreamsim_model(
     device: str,
 ) -> tuple[Any, Any]:
     prepend_import_path(PACKAGE_ROOT)
-    from dreamsim.model import dreamsim
+    if TYPE_CHECKING:
+        from .dreamsim.model import dreamsim
+    else:
+        from dreamsim.model import dreamsim
 
     model, preprocess = dreamsim(
         pretrained=True,

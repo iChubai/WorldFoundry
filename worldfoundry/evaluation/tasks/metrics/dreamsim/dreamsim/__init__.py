@@ -1,1 +1,2 @@
-from .model import PerceptualModel, dreamsim
+from .model import PerceptualModel as PerceptualModel
+from .model import dreamsim as dreamsim

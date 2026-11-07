@@ -1,18 +1,20 @@
 import json
 import os
 import zipfile
+from typing import cast
 
-import peft
 import torch
 import torch.nn.functional as F
 from packaging import version
-from peft import LoraConfig, PeftModel, get_peft_model
 from torch import nn
 from torchvision import transforms
 
 from .config import dreamsim_args, dreamsim_weights
-from .constants import *
+from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, OPENAI_CLIP_MEAN, OPENAI_CLIP_STD
 from .feature_extraction.extractor import ViTExtractor
+
+peft = __import__("peft", fromlist=["LoraConfig", "PeftModel", "get_peft_model"])
+LoraConfig, PeftModel, get_peft_model = peft.LoraConfig, peft.PeftModel, peft.get_peft_model
 
 peft_version = version.parse(peft.__version__)
 min_version = version.parse("0.2.0")
@@ -71,8 +73,10 @@ class PerceptualModel(torch.nn.Module):
         self.embed_size = 0
         self.hidden_size = hidden_size
         self.baseline = baseline
-        for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list, strict=False):
-            self.extractor_list.append(ViTExtractor(model_type, stride, load_dir, device=device))
+        for model_type, feat_type, model_stride in zip(
+            self.model_list, self.feat_type_list, self.stride_list, strict=False
+        ):
+            self.extractor_list.append(ViTExtractor(model_type, model_stride, load_dir, device=device))
             extract_fn, num_feats = self._get_extract_fn(model_type, feat_type)
             self.extract_feats_list.append(extract_fn)
             self.num_feats.append(num_feats)
@@ -137,7 +141,7 @@ class PerceptualModel(torch.nn.Module):
     def _validate_args(self):
         assert len(self.model_list) == len(self.feat_type_list) == len(self.stride_list)
 
-        for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list, strict=False):
+        for model_type, feat_type, _stride in zip(self.model_list, self.feat_type_list, self.stride_list, strict=False):
             if feat_type == "cls_patch" and "dino" not in model_type:
                 raise ValueError(f"cls_patch only available for dino_vitb16 and dinov2_vitb14, not {model_type}")
             if feat_type == "embedding" and ("dino" in model_type or "mae" in model_type):
@@ -168,11 +172,11 @@ class PerceptualModel(torch.nn.Module):
 
     def _extract_cls_and_patch(self, img, extractor_index=0):
         layer = 11
-        out = self.extractor_list[extractor_index].extract_descriptors(img, layer)
+        out = cast(ViTExtractor, self.extractor_list[extractor_index]).extract_descriptors(img, layer)
         return out
 
     def _extract_cls(self, img, extractor_index=0):
-        layer = 11
+        _layer = 11
         return self._extract_cls_and_patch(img, extractor_index)[:, :, :, 0, :]
 
     def _extract_embedding(self, img, extractor_index=0):

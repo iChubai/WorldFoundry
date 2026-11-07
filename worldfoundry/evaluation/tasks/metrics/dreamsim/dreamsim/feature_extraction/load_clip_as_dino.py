@@ -1,4 +1,5 @@
 import os
+from typing import Any, cast
 
 import torch
 
@@ -21,13 +22,13 @@ def load_clip_as_dino(patch_size, load_dir="./models", l14=False):
         ]
         dino_vit = vit_base(patch_size=patch_size)
 
-    dino_vit.pos_drop = torch.nn.LayerNorm(dino_vit.embed_dim)
+    cast(Any, dino_vit).pos_drop = torch.nn.LayerNorm(dino_vit.embed_dim)
     proj = sd.pop("proj")
     dino_vit.load_state_dict(sd)
 
     # GeLU -> QuickGeLU
     for blk in dino_vit.blocks:
-        blk.mlp.act = QuickGELU()
+        cast(Any, blk.mlp).act = QuickGELU()
 
     # LN eps 1e-6 -> 1e-5
     for m in dino_vit.modules():

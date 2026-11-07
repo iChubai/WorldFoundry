@@ -1,6 +1,7 @@
 import math
 import os
 import types
+from typing import Any, cast
 
 import torch
 import torch.nn.modules.utils as nn_utils
@@ -40,25 +41,29 @@ class ViTExtractor(nn.Module):
         :param stride: stride of first convolution layer. small stride -> higher resolution.
         :param load_dir: location of pretrained ViT checkpoints.
         """
-        super(ViTExtractor, self).__init__()
+        super().__init__()
         self.model_type = model_type
         self.device = device
         self.model = ViTExtractor.create_model(model_type, load_dir)
         if type(self.model) is tuple:
             self.proj = self.model[1]
             self.model = self.model[0]
-        self.model = ViTExtractor.patch_vit_resolution(self.model, stride=stride).eval().to(self.device)
-        self.p = self.model.patch_embed.patch_size
+        self.model = (
+            ViTExtractor.patch_vit_resolution(cast(nn.Module, self.model), stride=stride).eval().to(self.device)
+        )
+        self.p = cast(Any, self.model).patch_embed.patch_size
         if type(self.p) is tuple:
             self.p = self.p[0]
-        self.stride = self.model.patch_embed.proj.stride
+        self.stride = cast(Any, self.model).patch_embed.proj.stride
         self._feats = []
         self.hook_handlers = []
         self.load_size = None
         self.num_patches = None
 
     @staticmethod
-    def create_model(model_type: str, load_dir: str = "./models") -> nn.Module:
+    def create_model(
+        model_type: str, load_dir: str = "./models"
+    ) -> nn.Module | tuple[nn.Module, nn.Module | torch.Tensor]:
         """
         :param model_type: a string specifying which model to load. ['dino_vits8' | 'dino_vits16' | 'dino_vitb8' |
             'dino_vitb16' | 'clip_vitb16' | 'clip_vitb32' | 'clip_vitl14' | 'mae_vitb16' | 'mae_vitl16' | 'mae_vith14' |
@@ -77,12 +82,12 @@ class ViTExtractor(nn.Module):
                     os.path.join(load_dir, "dino_vitb16_pretrain.pth"), map_location="cpu", weights_only=True
                 )
                 proj = DINOHead(768, 2048)
-                proj.mlp[0].weight.data = sd["student"]["module.head.mlp.0.weight"]
-                proj.mlp[0].bias.data = sd["student"]["module.head.mlp.0.bias"]
-                proj.mlp[2].weight.data = sd["student"]["module.head.mlp.2.weight"]
-                proj.mlp[2].bias.data = sd["student"]["module.head.mlp.2.bias"]
-                proj.mlp[4].weight.data = sd["student"]["module.head.mlp.4.weight"]
-                proj.mlp[4].bias.data = sd["student"]["module.head.mlp.4.bias"]
+                cast(Any, proj.mlp)[0].weight.data = sd["student"]["module.head.mlp.0.weight"]
+                cast(Any, proj.mlp)[0].bias.data = sd["student"]["module.head.mlp.0.bias"]
+                cast(Any, proj.mlp)[2].weight.data = sd["student"]["module.head.mlp.2.weight"]
+                cast(Any, proj.mlp)[2].bias.data = sd["student"]["module.head.mlp.2.bias"]
+                cast(Any, proj.mlp)[4].weight.data = sd["student"]["module.head.mlp.4.weight"]
+                cast(Any, proj.mlp)[4].bias.data = sd["student"]["module.head.mlp.4.bias"]
                 proj.last_layer.weight.data = sd["student"]["module.head.last_layer.weight"]
                 model = (model, proj)
         elif "open_clip" in model_type:
@@ -160,36 +165,38 @@ class ViTExtractor(nn.Module):
         :param stride: the new stride parameter.
         :return: the adjusted model
         """
-        patch_size = model.patch_embed.patch_size
+        patch_size = cast(Any, model).patch_embed.patch_size
         if stride == patch_size or (stride, stride) == patch_size:  # nothing to do
             return model
 
-        stride = nn_utils._pair(stride)
-        assert all([(patch_size // s_) * s_ == patch_size for s_ in stride]), (
-            f"stride {stride} should divide patch_size {patch_size}"
+        stride_hw = cast(tuple[int, int], nn_utils._pair(stride))
+        assert all([(patch_size // s_) * s_ == patch_size for s_ in stride_hw]), (  # noqa: C419 - Validate every stride eagerly.
+            f"stride {stride_hw} should divide patch_size {patch_size}"
         )
 
         # fix the stride
-        model.patch_embed.proj.stride = stride
+        cast(Any, model).patch_embed.proj.stride = stride_hw
         # fix the positional encoding code
-        model.interpolate_pos_encoding = types.MethodType(ViTExtractor._fix_pos_enc(patch_size, stride), model)
+        cast(Any, model).interpolate_pos_encoding = types.MethodType(
+            ViTExtractor._fix_pos_enc(patch_size, stride_hw), model
+        )
         return model
 
     def forward(self, x, is_proj=False):
         if is_proj:
             if "clip" in self.model_type:
-                return self.model(x) @ self.proj.to(self.device)
+                return cast(nn.Module, self.model)(x) @ cast(torch.Tensor, self.proj).to(self.device)
             elif "dino" in self.model_type:
                 if self.model_type == "dino_vitb16":
-                    self.proj = self.proj.to(self.device)
-                    return self.proj(self.model(x))
+                    self.proj = cast(nn.Module, self.proj).to(self.device)
+                    return self.proj(cast(nn.Module, self.model)(x))
                 raise NotImplementedError
             elif "mae" in self.model_type:
                 raise NotImplementedError
             else:
                 raise NotImplementedError
         else:
-            return self.model(x)
+            return cast(nn.Module, self.model)(x)
 
     def _get_drop_hook(self, drop_rate):
         def dt_pre_hook(module, tkns):
@@ -224,8 +231,10 @@ class ViTExtractor(nn.Module):
         :param layers: layers from which to extract features.
         """
         if drop_rate > 0:
-            self.hook_handlers.append(self.model.blocks[0].register_forward_pre_hook(self._get_drop_hook(drop_rate)))
-        for block_idx, block in enumerate(self.model.blocks):
+            self.hook_handlers.append(
+                cast(Any, self.model).blocks[0].register_forward_pre_hook(self._get_drop_hook(drop_rate))
+            )
+        for block_idx, block in enumerate(cast(Any, self.model).blocks):
             if block_idx in layers:
                 self.hook_handlers.append(block.register_forward_hook(self._get_hook()))
 
@@ -237,7 +246,7 @@ class ViTExtractor(nn.Module):
             handle.remove()
         self.hook_handlers = []
 
-    def _extract_features(self, batch: torch.Tensor, layers: list[int] = 11, drop_rate=0) -> list[torch.Tensor]:
+    def _extract_features(self, batch: torch.Tensor, layers: int | list[int] = 11, drop_rate=0) -> list[torch.Tensor]:
         """
         extract features from the model
         :param batch: batch to extract features for. Has shape BxCxHxW.
@@ -246,9 +255,9 @@ class ViTExtractor(nn.Module):
         """
         B, C, H, W = batch.shape
         self._feats = []
-        self._register_hooks(layers, drop_rate)
+        self._register_hooks(cast(list[int], layers), drop_rate)
         try:
-            _ = self.model(batch)
+            _ = cast(nn.Module, self.model)(batch)
             self._unregister_hooks()
         except Exception as e:
             self._unregister_hooks()
@@ -257,17 +266,16 @@ class ViTExtractor(nn.Module):
         self.num_patches = (1 + (H - self.p) // self.stride[0], 1 + (W - self.p) // self.stride[1])
         return self._feats
 
-    def extract_descriptors(self, batch: torch.Tensor, layer: int = 11, drop_rate=0) -> torch.Tensor:
+    def extract_descriptors(self, batch: torch.Tensor, layer: int | list[int] = 11, drop_rate=0) -> torch.Tensor:
         """
         extract descriptors from the model
         :param batch: batch to extract descriptors for. Has shape BxCxHxW.
         :param layers: layer to extract. A number between 0 to 11.
         :return: tensor of descriptors. Bxlx1xtxd' where d' is the dimension of the descriptors.
         """
-        if type(layer) is not list:
-            layer = [layer]
+        layers = cast(list[int], [layer] if type(layer) is not list else layer)
 
-        self._extract_features(batch, layer, drop_rate)
+        self._extract_features(batch, layers, drop_rate)
         x = torch.stack(self._feats, dim=1)
         x = x.unsqueeze(dim=2)  # Bxlx1xtxd # Default to facet = "token", always include CLS token
         desc = x.permute(0, 1, 3, 4, 2).flatten(start_dim=-2, end_dim=-1).unsqueeze(dim=2)  # Bxlx1xtx(dxh)

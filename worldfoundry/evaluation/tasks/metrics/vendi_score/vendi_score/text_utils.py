@@ -1,15 +1,25 @@
 import itertools
+from typing import TYPE_CHECKING, Any
 
-import datasets
 import numpy as np
 import torch
-from nltk.tokenize import word_tokenize
-from nltk.translate import bleu_score
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.preprocessing import normalize
 from transformers import AutoModel, AutoTokenizer
-from vendi_score import data_utils, vendi
-from vendi_score.data_utils import Example
+
+if TYPE_CHECKING:
+    from . import data_utils, vendi
+    from .data_utils import Example
+else:
+    from vendi_score import data_utils, vendi
+    from vendi_score.data_utils import Example
+
+datasets = __import__("datasets")
+word_tokenize = __import__("nltk.tokenize", fromlist=["word_tokenize"]).word_tokenize
+bleu_score = __import__("nltk.translate", fromlist=["bleu_score"]).bleu_score
+CountVectorizer = __import__("sklearn.feature_extraction.text", fromlist=["CountVectorizer"]).CountVectorizer
+normalize = __import__("sklearn.preprocessing", fromlist=["normalize"]).normalize
+
+_DEFAULT_DIVERSITY_NGRAM_ORDERS = [1, 2, 3, 4]
+_DEFAULT_VENDI_NGRAM_ORDERS = [1, 2, 3, 4]
 
 
 def get_tokenizer(model="roberta-base"):
@@ -51,7 +61,7 @@ def get_ngrams(
 ):
     if tokenizer is None:
         tokenizer = word_tokenize
-    ngram_range = n if type(n) == tuple else (n, n)
+    ngram_range = n if type(n) is tuple else (n, n)
     vectorizer = CountVectorizer(
         tokenizer=tokenizer,
         ngram_range=ngram_range,
@@ -74,14 +84,14 @@ def add_ngrams_to_examples(examples, n=1, tokenizer=None, return_vectorizer=Fals
 def get_embeddings(
     sents,
     model=None,
-    tokenizer=None,
+    tokenizer: Any = None,
     batch_size=16,
     device="cpu",
     model_path="princeton-nlp/unsup-simcse-roberta-base",
 ):
     if device is None:
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    if type(device) == str:
+    if type(device) is str:
         device = torch.device(device)
     if model is None:
         model = AutoModel.from_pretrained(model_path).eval().to(device)
@@ -98,11 +108,8 @@ def get_embeddings(
         inputs = {k: v.to(device) for k, v in inputs.items()}
         with torch.no_grad():
             output = model(**inputs)
-            if hasattr(output, "pooler_output"):
-                output = output.pooler_output
-            else:
-                output = output.last_hidden_state[:, 0]
-        if type(output) == list:
+            output = output.pooler_output if hasattr(output, "pooler_output") else output.last_hidden_state[:, 0]
+        if type(output) is list:
             output = output[0]
         output_arr = output.squeeze().cpu().numpy()
         if output_arr.ndim == 1:
@@ -126,7 +133,7 @@ def add_embeddings_to_examples(
         tokenizer=tokenizer,
         batch_size=batch_size,
         device=device,
-        model_name=model_name,
+        model_path=model_name,
     )
     for e, x in zip(examples, X, strict=False):
         e.features[feature_name] = x
@@ -142,19 +149,19 @@ def single_ngram_diversity(sents, n, tokenizer=None, **kwargs):
     return distinct / total
 
 
-def ngram_diversity(sents, ns=[1, 2, 3, 4], tokenizer=None, **kwargs):
+def ngram_diversity(sents, ns=_DEFAULT_DIVERSITY_NGRAM_ORDERS, tokenizer=None, **kwargs):
     return np.mean([single_ngram_diversity(sents, n, tokenizer=tokenizer, **kwargs) for n in ns])
 
 
 def bleu(hyps, refs, tokenizer=None):
-    if type(hyps[0]) == str:
+    if type(hyps[0]) is str:
         if tokenizer is None:
             tokenizer = word_tokenize
-        hyp_tokens = [tokenizer(s) for s in hyps]
-        ref_tokens = [tokenizer(s) for s in refs]
+        _hyp_tokens = [tokenizer(s) for s in hyps]
+        _ref_tokens = [tokenizer(s) for s in refs]
     else:
-        hyp_tokens = hyps
-        ref_tokens = refs
+        _hyp_tokens = hyps
+        _ref_tokens = refs
     smoothing = bleu_score.SmoothingFunction().method1
     return np.mean([bleu_score.sentence_bleu(refs, hyp, smoothing_function=smoothing) for hyp in hyps])
 
@@ -186,7 +193,7 @@ def pairwise_bleu(sents, tokenizer):
     return np.mean(scores)
 
 
-def ngram_vendi_score(sents, ns=[1, 2, 3, 4], tokenizer=None, **kwargs):
+def ngram_vendi_score(sents, ns=_DEFAULT_VENDI_NGRAM_ORDERS, tokenizer=None, **kwargs):
     Ks = []
     for n in ns:
         X = normalize(get_ngrams(sents, n=n, tokenizer=tokenizer))

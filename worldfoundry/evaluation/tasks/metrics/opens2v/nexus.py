@@ -29,17 +29,25 @@ def compute_nexus_score(
     from PIL import Image
 
     eval_root = ensure_opens2v_eval_path()
-    from get_nexusscore import load_model_and_config, sample_video_frames, yoloworld_inference
-    from utils.gme.gme_model import GmeQwen2VL
+    nexus_runtime = __import__(
+        "get_nexusscore", fromlist=["load_model_and_config", "sample_video_frames", "yoloworld_inference"]
+    )
+    load_model_and_config = nexus_runtime.load_model_and_config
+    sample_video_frames = nexus_runtime.sample_video_frames
+    yoloworld_inference = nexus_runtime.yoloworld_inference
+    GmeQwen2VL = __import__("utils.gme.gme_model", fromlist=["GmeQwen2VL"]).GmeQwen2VL
+
+    resolved_model_config = model_config or str(
+        eval_root / "utils/yoloworld/configs/yolo_world_v2_l_vlpan_bn_2e-4_80e_8gpus_image_prompt_demo.py"
+    )
+    resolved_yolo_model_path = yolo_model_path or os.environ.get(
+        "WORLDFOUNDRY_YOLO_WORLD_CKPT",
+        "BestWishYsh/OpenS2V-Weight/yolo_world_v2_l_image_prompt_adapter-719a7afb.pth",
+    )
 
     class _Args:
-        model_config = model_config or str(
-            eval_root / "utils/yoloworld/configs/yolo_world_v2_l_vlpan_bn_2e-4_80e_8gpus_image_prompt_demo.py"
-        )
-        yolo_model_path = yolo_model_path or os.environ.get(
-            "WORLDFOUNDRY_YOLO_WORLD_CKPT",
-            "BestWishYsh/OpenS2V-Weight/yolo_world_v2_l_image_prompt_adapter-719a7afb.pth",
-        )
+        model_config = resolved_model_config
+        yolo_model_path = resolved_yolo_model_path
         work_dir = None
         cfg_options = None
 

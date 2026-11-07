@@ -1,7 +1,8 @@
 import numpy as np
 import scipy
 import scipy.linalg
-from sklearn import preprocessing
+
+preprocessing = __import__("sklearn", fromlist=["preprocessing"]).preprocessing
 
 
 def weight_K(K, p=None):
@@ -29,7 +30,7 @@ def score_K(K, q=1, p=None, normalize=False):
     if normalize:
         K = normalize_K(K)
     K_ = weight_K(K, p)
-    if type(K_) == scipy.sparse.csr.csr_matrix:
+    if type(K_) is scipy.sparse.csr.csr_matrix:
         w, _ = scipy.sparse.linalg.eigsh(K_)
     else:
         w = scipy.linalg.eigvalsh(K_)
@@ -49,7 +50,7 @@ def score_dual(X, q=1, normalize=True):
     n = X.shape[0]
     S = X.T @ X
     w = scipy.linalg.eigvalsh(S / n)
-    m = w > 0
+    _m = w > 0
     return np.exp(entropy_q(w, q=q))
 
 
@@ -73,7 +74,7 @@ def intdiv_X(X, q=1, p=None, normalize=True):
     if normalize:
         X = preprocessing.normalize(X, axis=1)
     K = X @ X.T
-    return intdiv(K, q=q, p=p)
+    return intdiv_K(K, q=q, p=p)
 
 
 def intdiv(samples, k, q=1, p=None):

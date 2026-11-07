@@ -343,12 +343,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "nudenet", "perception_core/safety/nudenet", ("detection", "text"), "perception_core/safety/nudenet/nudenet.py"
     ),
     _cap(
-        "efficient-sam",
-        "perception_core/segment/efficient_sam",
-        ("mask",),
-        "perception_core/segment/efficient_sam/efficient_sam.py",
-    ),
-    _cap(
         "grounded-sam",
         "perception_core/segment/grounded_segment_anything",
         ("detection", "mask"),

@@ -4,6 +4,7 @@ from typing import Any, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.utils.checkpoint
 from icecream import ic
 from transformers.modeling_outputs import (

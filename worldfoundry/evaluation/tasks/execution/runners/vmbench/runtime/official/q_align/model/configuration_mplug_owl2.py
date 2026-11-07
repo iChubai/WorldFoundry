@@ -11,6 +11,8 @@ from transformers.models.auto import CONFIG_MAPPING
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 from transformers.utils import logging
 
+logger = logging.get_logger(__name__)
+
 
 class LlamaConfig(PretrainedConfig):
     r"""

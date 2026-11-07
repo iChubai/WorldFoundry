@@ -3,18 +3,32 @@ import random
 import zipfile
 from collections.abc import Callable
 from glob import glob
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
-import cleanfid
 import numpy as np
 import torch
-from cleanfid.features import build_feature_extractor, get_reference_statistics
-from cleanfid.resize import *
-from cleanfid.utils import *
 from numpy import ndarray
 from scipy import linalg
-from torch import nn
+from torch import nn as nn
 from tqdm import tqdm
+
+if TYPE_CHECKING:
+    from .. import cleanfid
+    from .features import build_feature_extractor, get_reference_statistics
+    from .resize import *  # noqa: F403 - Preserve upstream module exports.
+    from .resize import build_resizer
+    from .utils import *  # noqa: F403 - Preserve upstream module exports.
+    from .utils import EXTENSIONS, ResizeDataset
+else:
+    import cleanfid
+    from cleanfid.features import build_feature_extractor, get_reference_statistics
+    from cleanfid.resize import *  # noqa: F403 - Preserve upstream module exports.
+    from cleanfid.resize import build_resizer
+    from cleanfid.utils import *  # noqa: F403 - Preserve upstream module exports.
+    from cleanfid.utils import EXTENSIONS, ResizeDataset
+
+_FeatureExtractor = Callable[[torch.Tensor], torch.Tensor]
+_DEFAULT_DEVICE = torch.device("cuda")
 
 """
 Numpy implementation of the Frechet Distance.
@@ -61,7 +75,7 @@ def frechet_distance(mu1: ndarray, sigma1: ndarray, mu2: ndarray, sigma2: ndarra
     # Product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        msg = ("fid calculation produces singular product; adding %s to diagonal of cov estimates") % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -108,7 +122,7 @@ Compute the inception features for a batch of images
 """
 
 
-def get_batch_features(batch: torch.Tensor, model: nn.Module, device: str | torch.device):
+def get_batch_features(batch: torch.Tensor, model: _FeatureExtractor, device: str | torch.device):
     with torch.no_grad():
         feat = model(batch.to(device))
     return feat.detach().cpu().numpy()
@@ -121,10 +135,10 @@ Compute the inception features for a list of files
 
 def get_files_features(
     l_files: list[str],
-    model: torch.nn.Module | None = None,
+    model: _FeatureExtractor | None = None,
     num_workers: int = 12,
     batch_size: int = 128,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     mode: str = "clean",
     custom_fn_resize: Callable[[Any], Any] | None = None,
     description: str = "",
@@ -140,7 +154,7 @@ def get_files_features(
 
     Args:
         l_files (List[str]): List of file paths to the images.
-        model (Optional[torch.nn.Module], optional): The model to use for feature extraction. Defaults to None.
+        model (Optional[Callable], optional): Feature extractor supplied by the caller. Defaults to None.
         num_workers (int, optional): Number of worker threads for DataLoader. Defaults to 12.
         batch_size (int, optional): Batch size for DataLoader. Defaults to 128.
         device (torch.device, optional): Device to run the model on. Defaults to torch.device("cuda").
@@ -172,13 +186,10 @@ def get_files_features(
 
     # collect all inception features
     l_feats = []
-    if verbose:
-        pbar = tqdm(dataloader, desc=description)
-    else:
-        pbar = dataloader
+    pbar = tqdm(dataloader, desc=description) if verbose else dataloader
 
     for batch in pbar:
-        l_feats.append(get_batch_features(batch, model, device))
+        l_feats.append(get_batch_features(batch, cast(_FeatureExtractor, model), device))
     np_feats = np.concatenate(l_feats)
     return np_feats
 
@@ -190,13 +201,13 @@ Compute the inception features for a folder of image files
 
 def get_folder_features(
     fdir: str,
-    model: torch.nn.Module | None = None,
+    model: _FeatureExtractor | None = None,
     num_workers: int = 12,
     num: int | None = None,
     shuffle: bool = False,
     seed: int = 0,
     batch_size: int = 128,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     mode: str = "clean",
     custom_fn_resize: Callable | None = None,
     description: str = "",
@@ -277,12 +288,12 @@ def fid_folder(
     dataset_name: str,
     dataset_res: int,
     dataset_split: str,
-    model: torch.nn.Module | None = None,
+    model: _FeatureExtractor | None = None,
     mode: str = "clean",
     model_name: str = "inception_v3",
     num_workers: int = 12,
     batch_size: int = 128,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     verbose: bool = True,
     custom_image_tranform: Callable[[np.ndarray], np.ndarray] | None = None,
     custom_fn_resize: Callable[[np.ndarray], np.ndarray] | None = None,
@@ -296,10 +307,10 @@ def fid_folder(
         dataset_name: Name of the reference dataset to compare against.
         dataset_res: Resolution of the images in the reference dataset.
         dataset_split: The split of the reference dataset to use.
-        model: The model to use for feature extraction. If None, a default model
-            specified by `model_name` is used.
+        model: Feature extractor supplied by the caller. High-level compute_fid
+            builds the extractor before calling this helper.
         mode: The mode of operation for processing images.
-        model_name: Name of the model to use for feature extraction if `model` is None.
+        model_name: Model identifier used to select reference statistics.
         num_workers: Number of worker threads for loading and processing images.
         batch_size: Number of images to process in each batch.
         device: The device to perform computations on.
@@ -346,12 +357,12 @@ Compute the FID stats from a generator model
 
 def get_model_features(
     G: Callable,
-    model: torch.nn.Module,
+    model: _FeatureExtractor,
     mode: str = "clean",
     z_dim: int = 512,
     num_gen: int = 50_000,
     batch_size: int = 128,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     desc: str = "FID model: ",
     verbose: bool = True,
     return_z: bool = False,
@@ -381,19 +392,13 @@ def get_model_features(
         Concatenated features extracted from the generated images. If `return_z`
         is True, also returns a tensor of generated latent vectors.
     """
-    if custom_fn_resize is None:
-        fn_resize = build_resizer(mode)
-    else:
-        fn_resize = custom_fn_resize
+    fn_resize = build_resizer(mode) if custom_fn_resize is None else custom_fn_resize
 
     # Generate test features
     num_iters = int(np.ceil(num_gen / batch_size))
     l_feats = []
     latents = []
-    if verbose:
-        pbar = tqdm(range(num_iters), desc=desc)
-    else:
-        pbar = range(num_iters)
+    pbar = tqdm(range(num_iters), desc=desc) if verbose else range(num_iters)
     for idx in pbar:
         with torch.no_grad():
             z_batch = torch.randn((batch_size, z_dim)).to(device)
@@ -441,7 +446,7 @@ def fid_model(
     mode: str = "clean",
     num_workers: int = 0,
     batch_size: int = 128,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     verbose: bool = True,
     custom_image_tranform=None,
     custom_fn_resize=None,
@@ -482,7 +487,7 @@ def fid_model(
     # Generate features of images generated by the model
     np_feats = get_model_features(
         G,
-        model,
+        cast(_FeatureExtractor, model),
         mode=mode,
         z_dim=z_dim,
         num_gen=num_gen,
@@ -510,7 +515,7 @@ def compare_folders(
     mode: str,
     num_workers: int = 0,
     batch_size: int = 8,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     verbose: bool = True,
     custom_image_tranform=None,
     custom_fn_resize=None,
@@ -589,10 +594,7 @@ def test_stats_exists(name: str, mode: str, model_name: str = "inception_v3", me
     """
     stats_folder = os.path.join(os.path.dirname(cleanfid.__file__), "stats")
     split, res = "custom", "na"
-    if model_name == "inception_v3":
-        model_modifier = ""
-    else:
-        model_modifier = "_" + model_name
+    model_modifier = "" if model_name == "inception_v3" else "_" + model_name
     if metric == "FID":
         fname = f"{name}_{mode}{model_modifier}_{split}_{res}.npz"
     elif metric == "KID":
@@ -621,10 +623,7 @@ def remove_custom_stats(name: str, mode: str = "clean", model_name: str = "incep
     stats_folder = os.path.join(os.path.dirname(cleanfid.__file__), "stats")
     # remove the FID stats
     split, res = "custom", "na"
-    if model_name == "inception_v3":
-        model_modifier = ""
-    else:
-        model_modifier = "_" + model_name
+    model_modifier = "" if model_name == "inception_v3" else "_" + model_name
     outf = os.path.join(stats_folder, f"{name}_{mode}{model_modifier}_{split}_{res}.npz".lower())
     if not os.path.exists(outf):
         msg = f"The stats file {name} does not exist."
@@ -651,7 +650,7 @@ def make_custom_stats(
     model_name: str = "inception_v3",
     num_workers: int = 0,
     batch_size: int = 64,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     verbose: bool = True,
 ) -> None:
     """
@@ -671,10 +670,7 @@ def make_custom_stats(
     stats_folder = os.path.join(os.path.dirname(cleanfid.__file__), "stats")
     os.makedirs(stats_folder, exist_ok=True)
     split, res = "custom", "na"
-    if model_name == "inception_v3":
-        model_modifier = ""
-    else:
-        model_modifier = "_" + model_name
+    model_modifier = "" if model_name == "inception_v3" else "_" + model_name
     outf = os.path.join(stats_folder, f"{name}_{mode}{model_modifier}_{split}_{res}.npz".lower())
     # if the custom stat file already exists
     if os.path.exists(outf):
@@ -686,7 +682,10 @@ def make_custom_stats(
         custom_fn_resize = None
         custom_image_tranform = None
     elif model_name == "clip_vit_b_32":
-        from cleanfid.clip_features import CLIP_fx, img_preprocess_clip
+        if TYPE_CHECKING:
+            from .clip_features import CLIP_fx, img_preprocess_clip
+        else:
+            from cleanfid.clip_features import CLIP_fx, img_preprocess_clip
 
         clip_fx = CLIP_fx("ViT-B/32")
         feat_model = clip_fx
@@ -728,7 +727,7 @@ def compute_kid(
     mode: str = "clean",
     num_workers: int = 12,
     batch_size: int = 32,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     dataset_name: str = "FFHQ",
     dataset_res: int = 1024,
     dataset_split: str = "train",
@@ -849,7 +848,7 @@ def compute_kid(
             batch_size=batch_size,
             device=device,
         )
-        score = kernel_distance(ref_feats, np_feats)
+        score = kernel_distance(ref_feats, cast(ndarray, np_feats))
         return score
 
     # compute fid for a generator, using reference statistics
@@ -876,7 +875,7 @@ def compute_kid(
             device=device,
             verbose=verbose,
         )
-        score = kernel_distance(ref_feats, np_feats)
+        score = kernel_distance(ref_feats, cast(ndarray, np_feats))
         return score
 
     else:
@@ -898,7 +897,7 @@ def compute_fid(
     model_name: str = "inception_v3",
     num_workers: int = 12,
     batch_size: int = 32,
-    device: torch.device = torch.device("cuda"),
+    device: torch.device = _DEFAULT_DEVICE,
     dataset_name: str = "FFHQ",
     dataset_res: int = 1024,
     dataset_split: str = "train",
@@ -943,13 +942,16 @@ def compute_fid(
     if custom_feat_extractor is None and model_name == "inception_v3":
         feat_model = build_feature_extractor(mode, device, use_dataparallel=use_dataparallel)
     elif custom_feat_extractor is None and model_name == "clip_vit_b_32":
-        from cleanfid.clip_features import CLIP_fx, img_preprocess_clip
+        if TYPE_CHECKING:
+            from .clip_features import CLIP_fx, img_preprocess_clip
+        else:
+            from cleanfid.clip_features import CLIP_fx, img_preprocess_clip
 
         clip_fx = CLIP_fx("ViT-B/32", device=device)
         feat_model = clip_fx
         custom_fn_resize = img_preprocess_clip
     else:
-        feat_model = custom_feat_extractor
+        feat_model = cast(_FeatureExtractor, custom_feat_extractor)
 
     # if both dirs are specified, compute FID between folders
     if fdir1 is not None and fdir2 is not None:

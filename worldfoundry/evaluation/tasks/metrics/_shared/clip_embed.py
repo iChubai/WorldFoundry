@@ -21,7 +21,7 @@ def open_clip_bundle(model: str = DEFAULT_CLIP_MODEL, device: str | None = None)
     ``"openai:ViT-B-32"``). Benchmark runtimes delegate here instead of keeping
     their own module-level CLIP singletons.
     """
-    import open_clip
+    open_clip = __import__("open_clip")
 
     if device is None:
         import torch

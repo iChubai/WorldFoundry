@@ -31,11 +31,11 @@ flags passed in.
 def make_resizer(library, quantize_after, filter, output_size):
     if library == "PIL" and quantize_after:
         name_to_filter = {
-            "bicubic": Image.BICUBIC,
-            "bilinear": Image.BILINEAR,
-            "nearest": Image.NEAREST,
-            "lanczos": Image.LANCZOS,
-            "box": Image.BOX,
+            "bicubic": Image.Resampling.BICUBIC,
+            "bilinear": Image.Resampling.BILINEAR,
+            "nearest": Image.Resampling.NEAREST,
+            "lanczos": Image.Resampling.LANCZOS,
+            "box": Image.Resampling.BOX,
         }
 
         def func(x):
@@ -45,11 +45,11 @@ def make_resizer(library, quantize_after, filter, output_size):
             return x
     elif library == "PIL" and not quantize_after:
         name_to_filter = {
-            "bicubic": Image.BICUBIC,
-            "bilinear": Image.BILINEAR,
-            "nearest": Image.NEAREST,
-            "lanczos": Image.LANCZOS,
-            "box": Image.BOX,
+            "bicubic": Image.Resampling.BICUBIC,
+            "bilinear": Image.Resampling.BILINEAR,
+            "nearest": Image.Resampling.NEAREST,
+            "lanczos": Image.Resampling.LANCZOS,
+            "box": Image.Resampling.BOX,
         }
         s1, s2 = output_size
 
@@ -80,7 +80,7 @@ def make_resizer(library, quantize_after, filter, output_size):
 
         # ignore the numpy warnings
         warnings.filterwarnings("ignore")
-        import tensorflow as tf
+        tf = __import__("tensorflow")
 
         def func(x):
             x = tf.constant(x)[tf.newaxis, ...]
@@ -107,7 +107,7 @@ def make_resizer(library, quantize_after, filter, output_size):
                 x = x.astype(np.uint8)
             return x
     else:
-        raise NotImplementedError("library [%s] is not include" % library)
+        raise NotImplementedError(f"library [{library}] is not include")
     return func
 
 
@@ -121,7 +121,8 @@ class FolderResizer(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.files)
 
-    def __getitem__(self, i):
+    # Dataset consumers use the existing i keyword.
+    def __getitem__(self, i):  # ty: ignore[invalid-method-override]
         path = str(self.files[i])
         img_np = np.asarray(Image.open(path))
         img_resize_np = self.fn_resize(img_np)

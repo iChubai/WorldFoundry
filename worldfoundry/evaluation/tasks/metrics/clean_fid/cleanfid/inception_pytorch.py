@@ -2,13 +2,17 @@
 File from: https://github.com/mseitzer/pytorch-fid
 """
 
+from typing import ClassVar
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
 try:
-    from torchvision.models.utils import load_state_dict_from_url
+    load_state_dict_from_url = __import__(
+        "torchvision.models.utils", fromlist=["load_state_dict_from_url"]
+    ).load_state_dict_from_url
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
@@ -27,7 +31,7 @@ class InceptionV3(nn.Module):
     DEFAULT_BLOCK_INDEX = 3
 
     # Maps feature dimensionality to their output blocks indices
-    BLOCK_INDEX_BY_DIM = {
+    BLOCK_INDEX_BY_DIM: ClassVar[dict[int, int]] = {
         64: 0,  # First max pooling features
         192: 1,  # Second max pooling featurs
         768: 2,  # Pre-aux classifier features
@@ -71,7 +75,7 @@ class InceptionV3(nn.Module):
             strongly advised to set this parameter to true to get comparable
             results.
         """
-        super(InceptionV3, self).__init__()
+        super().__init__()
 
         self.resize_input = resize_input
         self.normalize_input = normalize_input
@@ -82,10 +86,7 @@ class InceptionV3(nn.Module):
 
         self.blocks = nn.ModuleList()
 
-        if use_fid_inception:
-            inception = fid_inception_v3()
-        else:
-            inception = _inception_v3(pretrained=True)
+        inception = fid_inception_v3() if use_fid_inception else _inception_v3(pretrained=True)
 
         # Block 0: input to maxpool1
         block0 = [
@@ -204,7 +205,7 @@ class FIDInceptionA(torchvision.models.inception.InceptionA):
     """InceptionA block patched for FID computation"""
 
     def __init__(self, in_channels, pool_features):
-        super(FIDInceptionA, self).__init__(in_channels, pool_features)
+        super().__init__(in_channels, pool_features)
 
     def forward(self, x):
         branch1x1 = self.branch1x1(x)
@@ -229,7 +230,7 @@ class FIDInceptionC(torchvision.models.inception.InceptionC):
     """InceptionC block patched for FID computation"""
 
     def __init__(self, in_channels, channels_7x7):
-        super(FIDInceptionC, self).__init__(in_channels, channels_7x7)
+        super().__init__(in_channels, channels_7x7)
 
     def forward(self, x):
         branch1x1 = self.branch1x1(x)
@@ -257,7 +258,7 @@ class FIDInceptionE_1(torchvision.models.inception.InceptionE):
     """First InceptionE block patched for FID computation"""
 
     def __init__(self, in_channels):
-        super(FIDInceptionE_1, self).__init__(in_channels)
+        super().__init__(in_channels)
 
     def forward(self, x):
         branch1x1 = self.branch1x1(x)
@@ -290,7 +291,7 @@ class FIDInceptionE_2(torchvision.models.inception.InceptionE):
     """Second InceptionE block patched for FID computation"""
 
     def __init__(self, in_channels):
-        super(FIDInceptionE_2, self).__init__(in_channels)
+        super().__init__(in_channels)
 
     def forward(self, x):
         branch1x1 = self.branch1x1(x)

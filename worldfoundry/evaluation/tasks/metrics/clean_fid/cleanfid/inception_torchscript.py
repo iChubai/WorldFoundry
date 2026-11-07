@@ -1,9 +1,16 @@
 import contextlib
 import os
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn as nn
-from cleanfid.downloads_helper import *
+
+if TYPE_CHECKING:
+    from .downloads_helper import *  # noqa: F403 - Preserve upstream module exports.
+    from .downloads_helper import check_download_inception
+else:
+    from cleanfid.downloads_helper import *  # noqa: F403 - Preserve upstream module exports.
+    from cleanfid.downloads_helper import check_download_inception
 
 
 @contextlib.contextmanager
@@ -28,7 +35,7 @@ class InceptionV3W(nn.Module):
     """
 
     def __init__(self, path, download=True, resize_inside=False):
-        super(InceptionV3W, self).__init__()
+        super().__init__()
         # download the network if it is not present at the given directory
         # use the current directory by default
         if download:

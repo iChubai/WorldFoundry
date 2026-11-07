@@ -1,9 +1,17 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 import torch
-from cleanfid.features import build_feature_extractor
-from cleanfid.fid import fid_from_feats, get_batch_features
-from cleanfid.resize import build_resizer
 from PIL import Image
+
+if TYPE_CHECKING:
+    from .features import build_feature_extractor
+    from .fid import fid_from_feats, get_batch_features
+    from .resize import build_resizer
+else:
+    from cleanfid.features import build_feature_extractor
+    from cleanfid.fid import fid_from_feats, get_batch_features
+    from cleanfid.resize import build_resizer
 
 """
 A helper class that allowing adding the images one batch at a time.
@@ -20,7 +28,10 @@ class CleanFID:
             self.feat_model = build_feature_extractor(mode, device)
             self.fn_resize = build_resizer(mode)
         elif model_name == "clip_vit_b_32":
-            from cleanfid.clip_features import CLIP_fx, img_preprocess_clip
+            if TYPE_CHECKING:
+                from .clip_features import CLIP_fx, img_preprocess_clip
+            else:
+                from cleanfid.clip_features import CLIP_fx, img_preprocess_clip
 
             clip_fx = CLIP_fx("ViT-B/32")
             self.feat_model = clip_fx

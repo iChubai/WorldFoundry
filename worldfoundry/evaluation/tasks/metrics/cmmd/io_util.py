@@ -48,13 +48,13 @@ class CMMDDataset(Dataset):
 
     def _center_crop_and_resize(self, im, size):
         w, h = im.size
-        l = min(w, h)
-        top = (h - l) // 2
-        left = (w - l) // 2
-        box = (left, top, left + l, top + l)
+        side = min(w, h)
+        top = (h - side) // 2
+        left = (w - side) // 2
+        box = (left, top, left + side, top + side)
         im = im.crop(box)
         # Note that the following performs anti-aliasing as well.
-        return im.resize((size, size), resample=Image.BICUBIC)  # pytype: disable=module-attr
+        return im.resize((size, size), resample=Image.Resampling.BICUBIC)  # pytype: disable=module-attr
 
     def _read_image(self, path, size):
         im = Image.open(path)
@@ -62,7 +62,8 @@ class CMMDDataset(Dataset):
             im = self._center_crop_and_resize(im, size)
         return np.asarray(im).astype(np.float32)
 
-    def __getitem__(self, idx):
+    # Dataset consumers use the existing idx keyword.
+    def __getitem__(self, idx):  # ty: ignore[invalid-method-override]
         img_path = self.img_path_list[idx]
 
         x = self._read_image(img_path, self.reshape_to)

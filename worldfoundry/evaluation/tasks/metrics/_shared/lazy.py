@@ -8,7 +8,7 @@ from functools import cache
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
 
 @cache
@@ -19,7 +19,7 @@ def _load_module(module_path: str) -> ModuleType:
     module = import_module(module_path)
     # Importing compute.py must not replace the package's public compute() alias.
     if callable(export):
-        parent.compute = export
+        cast(Any, parent).compute = export
     return module
 
 

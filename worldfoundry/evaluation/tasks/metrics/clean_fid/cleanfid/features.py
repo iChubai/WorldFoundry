@@ -4,13 +4,23 @@ helpers for extracting features from image
 
 import os
 import platform
+from typing import TYPE_CHECKING
 
-import cleanfid
 import numpy as np
 import torch
-from cleanfid.downloads_helper import check_download_url
-from cleanfid.inception_pytorch import InceptionV3
-from cleanfid.inception_torchscript import InceptionV3W
+
+if TYPE_CHECKING:
+    from .. import cleanfid
+    from .downloads_helper import check_download_url
+    from .inception_pytorch import InceptionV3
+    from .inception_torchscript import InceptionV3W
+else:
+    import cleanfid
+    from cleanfid.downloads_helper import check_download_url
+    from cleanfid.inception_pytorch import InceptionV3
+    from cleanfid.inception_torchscript import InceptionV3W
+
+_DEFAULT_DEVICE = torch.device("cuda")
 
 """
 returns a functions that takes an image in range [0,255]
@@ -20,7 +30,7 @@ and outputs a feature embedding vector
 
 def feature_extractor(
     name: str = "torchscript_inception",
-    device=torch.device("cuda"),
+    device=_DEFAULT_DEVICE,
     resize_inside=False,
     use_dataparallel=True,
 ):
@@ -56,7 +66,7 @@ Build a feature extractor for each of the modes
 """
 
 
-def build_feature_extractor(mode, device=torch.device("cuda"), use_dataparallel=True):
+def build_feature_extractor(mode, device=_DEFAULT_DEVICE, use_dataparallel=True):
     if mode == "legacy_pytorch":
         feat_model = feature_extractor(
             name="pytorch_inception",
@@ -98,10 +108,7 @@ def get_reference_statistics(
     base_url = "https://www.cs.cmu.edu/~clean-fid/stats/"
     if split == "custom":
         res = "na"
-    if model_name == "inception_v3":
-        model_modifier = ""
-    else:
-        model_modifier = "_" + model_name
+    model_modifier = "" if model_name == "inception_v3" else "_" + model_name
     if metric == "FID":
         rel_path = (f"{name}_{mode}{model_modifier}_{split}_{res}.npz").lower()
         url = f"{base_url}/{rel_path}"

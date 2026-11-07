@@ -1,4 +1,4 @@
-import tensorflow as tf
+tf = __import__("tensorflow")
 
 
 def symmetric_matrix_square_root(mat, eps=1e-10):

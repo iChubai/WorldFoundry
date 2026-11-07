@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from worldfoundry.evaluation.tasks.metrics._shared.imports import prepend_import_path
 
@@ -18,7 +18,10 @@ def package_root() -> Path:
 @lru_cache(maxsize=1)
 def _compute_fid_fn() -> Any:
     prepend_import_path(PACKAGE_ROOT)
-    from cleanfid.fid import compute_fid
+    if TYPE_CHECKING:
+        from .cleanfid.fid import compute_fid
+    else:
+        from cleanfid.fid import compute_fid
 
     return compute_fid
 

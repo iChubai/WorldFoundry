@@ -1,10 +1,16 @@
 import zipfile
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
 import torchvision
-from cleanfid.resize import build_resizer
 from PIL import Image
+
+if TYPE_CHECKING:
+    from .resize import build_resizer
+else:
+    from cleanfid.resize import build_resizer
 
 
 class ResizeDataset(torch.utils.data.Dataset):
@@ -22,7 +28,7 @@ class ResizeDataset(torch.utils.data.Dataset):
         self.transforms = torchvision.transforms.ToTensor()
         self.size = size
         self.fn_resize = build_resizer(mode)
-        self.custom_image_tranform = lambda x: x
+        self.custom_image_tranform: Callable[[Any], Any] = lambda x: x
         self._zipfile = None
 
     def _get_zipfile(self):
@@ -34,7 +40,8 @@ class ResizeDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.files)
 
-    def __getitem__(self, i):
+    # Dataset consumers use the existing i keyword.
+    def __getitem__(self, i):  # ty: ignore[invalid-method-override]
         path = str(self.files[i])
         if self.fdir is not None and ".zip" in self.fdir:
             with self._get_zipfile().open(path, "r") as f:

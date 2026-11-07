@@ -13061,9 +13061,13 @@ def _class_inherits_any(
 
 def _class_string_constant(node: ast.ClassDef, name: str) -> str | None:
     for item in node.body:
-        if not isinstance(item, ast.Assign):
+        if isinstance(item, ast.Assign):
+            targets = item.targets
+        elif isinstance(item, ast.AnnAssign):
+            targets = [item.target]
+        else:
             continue
-        if not any(isinstance(target, ast.Name) and target.id == name for target in item.targets):
+        if not any(isinstance(target, ast.Name) and target.id == name for target in targets):
             continue
         if isinstance(item.value, ast.Constant) and isinstance(item.value.value, str):
             return item.value.value
@@ -13072,9 +13076,13 @@ def _class_string_constant(node: ast.ClassDef, name: str) -> str | None:
 
 def _class_bool_constant(node: ast.ClassDef, name: str) -> bool | None:
     for item in node.body:
-        if not isinstance(item, ast.Assign):
+        if isinstance(item, ast.Assign):
+            targets = item.targets
+        elif isinstance(item, ast.AnnAssign):
+            targets = [item.target]
+        else:
             continue
-        if not any(isinstance(target, ast.Name) and target.id == name for target in item.targets):
+        if not any(isinstance(target, ast.Name) and target.id == name for target in targets):
             continue
         if isinstance(item.value, ast.Constant) and isinstance(item.value.value, bool):
             return item.value.value

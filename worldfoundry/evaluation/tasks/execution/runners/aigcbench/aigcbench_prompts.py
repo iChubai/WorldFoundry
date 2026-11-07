@@ -12,7 +12,6 @@ from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import (
     bundled_benchmark_asset,
     bundled_benchmark_assets_root,
-    first_existing_dir,
     resolve_env_path,
 )
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
@@ -22,7 +21,6 @@ from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
 from worldfoundry.evaluation.utils import worldfoundry_hfd_dataset_root, write_jsonl
 
 BENCHMARK_ID = "aigcbench"
-IN_TREE_AIGCBENCH_ROOT = Path(__file__).resolve().parent / "runtime" / "aigcbench"
 WEBVID_LIST_REL = Path("webvid_eval_1000.txt")
 LAION_LIST_REL = Path("Laion-aesthetics_select_samples.txt")
 T2I_DIR_NAMES = ("t2i_625", "t2i_aspect_ratio_625", "AIGCBench/t2i_625")
@@ -33,15 +31,6 @@ LAION_PROMPT_COUNT = 925
 DEFAULT_OURS_PROMPT_COUNT = 2002
 CANONICAL_PROMPT_COUNT = WEBVID_PROMPT_COUNT + LAION_PROMPT_COUNT + DEFAULT_OURS_PROMPT_COUNT
 IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".webp"})
-
-
-def resolve_aigcbench_root(explicit: Path | None = None) -> Path | None:
-    return first_existing_dir(
-        explicit,
-        resolve_env_path("WORLDFOUNDRY_AIGCBENCH_ROOT"),
-        IN_TREE_AIGCBENCH_ROOT,
-        bundled_benchmark_assets_root(BENCHMARK_ID),
-    )
 
 
 def resolve_dataset_root(explicit: Path | None = None) -> Path | None:

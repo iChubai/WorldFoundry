@@ -93,11 +93,11 @@ class VideoDataset(Dataset):
         filenames = sorted(filenames.items(), key=lambda x: x[0])
         try:
             filenames = list(zip(*filenames, strict=False))[1]
-        except IndexError:
+        except IndexError as error:
             print(path)
             print(os.listdir(path))
             print(filenames)
-            print(aa)
+            raise ValueError(f"No video frames found in {path}") from error
         frames = []
         for filename in filenames:
             frames.append(_get_image(path, filename))

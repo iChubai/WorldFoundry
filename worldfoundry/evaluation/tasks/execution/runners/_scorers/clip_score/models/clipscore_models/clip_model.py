@@ -1,8 +1,9 @@
-import open_clip
 import torch
 
 from worldfoundry.base_models.perception_core.video_text.vqa_score.constants import HF_CACHE_DIR
 from worldfoundry.base_models.perception_core.video_text.vqa_score.models.model import ScoreModel
+
+open_clip = __import__("open_clip")
 
 CLIP_MODELS = [f"{pretrained}:{arch}" for arch, pretrained in open_clip.list_pretrained()]
 
@@ -29,10 +30,10 @@ class CLIPScoreModel(ScoreModel):
 
     def load_images(self, image: list[str]) -> torch.Tensor:
         """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
-        image = [self.image_loader(x) for x in image]
-        image = [self.preprocess(x) for x in image]
-        image = torch.stack(image, dim=0).to(self.device)
-        return image
+        loaded_images = [self.image_loader(x) for x in image]
+        processed_images = [self.preprocess(x) for x in loaded_images]
+        image_tensor = torch.stack(processed_images, dim=0).to(self.device)
+        return image_tensor
 
     @torch.no_grad()
     def forward(self, images: list[str], texts: list[str]) -> torch.Tensor:

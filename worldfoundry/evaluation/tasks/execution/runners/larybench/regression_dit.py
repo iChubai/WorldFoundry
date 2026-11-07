@@ -1,4 +1,5 @@
 import math
+from typing import cast
 
 import torch
 import torch.nn.functional as F
@@ -120,8 +121,8 @@ class DiT(nn.Module):
         nn.init.normal_(self.action_embedder.weight, std=0.02)
         nn.init.normal_(self.condition_embedder.unconditioned, std=0.02)
         nn.init.normal_(self.condition_embedder.linear.weight, std=0.02)
-        nn.init.normal_(self.timestep_embedder.mlp[0].weight, std=0.02)
-        nn.init.normal_(self.timestep_embedder.mlp[2].weight, std=0.02)
+        nn.init.normal_(cast(nn.Linear, self.timestep_embedder.mlp[0]).weight, std=0.02)
+        nn.init.normal_(cast(nn.Linear, self.timestep_embedder.mlp[2]).weight, std=0.02)
         nn.init.zeros_(self.final_projection.weight)
         nn.init.zeros_(self.final_projection.bias)
 

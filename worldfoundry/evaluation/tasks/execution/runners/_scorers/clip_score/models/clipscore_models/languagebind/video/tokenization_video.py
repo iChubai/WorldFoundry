@@ -1,5 +1,8 @@
-from transformers import CLIPTokenizer
+from typing import ClassVar
+
 from transformers.utils import logging
+
+CLIPTokenizer = __import__("transformers", fromlist=["CLIPTokenizer"]).CLIPTokenizer
 
 logger = logging.get_logger(__name__)
 
@@ -54,7 +57,7 @@ class LanguageBindVideoTokenizer(CLIPTokenizer):
     vocab_files_names = VOCAB_FILES_NAMES
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
     max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
-    model_input_names = ["input_ids", "attention_mask"]
+    model_input_names: ClassVar[list[str]] = ["input_ids", "attention_mask"]
 
     def __init__(
         self,
@@ -67,7 +70,7 @@ class LanguageBindVideoTokenizer(CLIPTokenizer):
         pad_token="<|endoftext|>",  # hack to enable padding
         **kwargs,
     ):
-        super(LanguageBindVideoTokenizer, self).__init__(
+        super().__init__(
             vocab_file,
             merges_file,
             errors,

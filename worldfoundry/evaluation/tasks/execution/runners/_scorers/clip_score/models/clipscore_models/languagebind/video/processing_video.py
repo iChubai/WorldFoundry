@@ -1,17 +1,25 @@
+from typing import Any, ClassVar
+
 import cv2
 import decord
 import numpy as np
 import torch
 from decord import VideoReader, cpu
-from pytorchvideo.data.encoded_video import EncodedVideo
-from pytorchvideo.transforms import ApplyTransformToKey, ShortSideScale, UniformTemporalSubsample
 from torchvision.transforms import Compose, Lambda
 from torchvision.transforms._transforms_video import (
     CenterCropVideo,
     NormalizeVideo,
     RandomHorizontalFlipVideo,
 )
-from transformers import ProcessorMixin
+
+EncodedVideo = __import__("pytorchvideo.data.encoded_video", fromlist=["EncodedVideo"]).EncodedVideo
+video_transforms = __import__(
+    "pytorchvideo.transforms", fromlist=["ApplyTransformToKey", "ShortSideScale", "UniformTemporalSubsample"]
+)
+ApplyTransformToKey = video_transforms.ApplyTransformToKey
+ShortSideScale = video_transforms.ShortSideScale
+UniformTemporalSubsample = video_transforms.UniformTemporalSubsample
+ProcessorMixin = __import__("transformers", fromlist=["ProcessorMixin"]).ProcessorMixin
 
 decord.bridge.set_bridge("torch")
 
@@ -104,10 +112,10 @@ def load_and_transform_video(
 
 
 class LanguageBindVideoProcessor(ProcessorMixin):
-    attributes = []
+    attributes: ClassVar[list[str]] = []
     tokenizer_class = "LanguageBindVideoTokenizer"
 
-    def __init__(self, config, tokenizer=None, **kwargs):
+    def __init__(self, config, tokenizer: Any = None, **kwargs):
         super().__init__(**kwargs)
         self.config = config
         self.transform = get_video_transform(config)

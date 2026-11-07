@@ -1,15 +1,15 @@
-import torch
+import torch as torch
 from torch import nn
-from transformers import AutoConfig
+from transformers import AutoConfig as AutoConfig
 
 from .image.configuration_image import LanguageBindImageConfig
 from .image.modeling_image import LanguageBindImage
 from .image.processing_image import LanguageBindImageProcessor
-from .image.tokenization_image import LanguageBindImageTokenizer
+from .image.tokenization_image import LanguageBindImageTokenizer as LanguageBindImageTokenizer
 from .video.configuration_video import LanguageBindVideoConfig
 from .video.modeling_video import LanguageBindVideo
 from .video.processing_video import LanguageBindVideoProcessor
-from .video.tokenization_video import LanguageBindVideoTokenizer
+from .video.tokenization_video import LanguageBindVideoTokenizer as LanguageBindVideoTokenizer
 
 # from .depth.configuration_depth import LanguageBindDepthConfig
 # from .depth.modeling_depth import LanguageBindDepth
@@ -52,7 +52,7 @@ transform_dict = {
 
 class LanguageBind(nn.Module):
     def __init__(self, clip_type, use_temp=True, cache_dir="./cache_dir"):
-        super(LanguageBind, self).__init__()
+        super().__init__()
         self.use_temp = use_temp
         self.modality_encoder = {}
         self.modality_proj = {}
@@ -77,9 +77,8 @@ class LanguageBind(nn.Module):
             value = self.modality_encoder[key](**value)[1]
             value = self.modality_proj[key](value)
             value = value / value.norm(p=2, dim=-1, keepdim=True)
-            if self.use_temp:
-                if key != "language":
-                    value = value * self.modality_scale[key].exp()
+            if self.use_temp and key != "language":
+                value = value * self.modality_scale[key].exp()
             outputs[key] = value
         return outputs
 

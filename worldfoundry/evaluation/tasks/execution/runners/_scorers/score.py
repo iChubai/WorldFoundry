@@ -11,11 +11,11 @@ from collections.abc import Mapping, Sequence
 from contextlib import ExitStack
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, cast
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from worldfoundry.base_models.perception_core.video_text.vqa_score.constants import HF_CACHE_DIR
 
@@ -106,7 +106,9 @@ class Score(nn.Module):
         num_texts = len(dataset[0]["texts"])
         scores = torch.zeros(len(dataset), num_visuals, num_texts, device=self.device)
         offset = 0
-        for batch in DataLoader(dataset, batch_size=batch_size, shuffle=False):
+        # DataLoader accepts sized indexable inputs without Dataset inheritance.
+        indexed_dataset = cast(Dataset[Mapping[str, Sequence[str]]], dataset)
+        for batch in DataLoader(indexed_dataset, batch_size=batch_size, shuffle=False):
             if len(batch[media_type]) != num_visuals or len(batch["texts"]) != num_texts:
                 raise ValueError("each sample must have the same number of visual and text options")
             count = len(batch[media_type][0])

@@ -2,14 +2,13 @@ import argparse
 import json
 import os
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-from accelerate import Accelerator
-from accelerate.utils import set_seed
-from diffusers import DDPMScheduler
 from diffusers.optimization import get_constant_schedule_with_warmup
+from numpy.typing import ArrayLike
 from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
@@ -17,6 +16,10 @@ from tqdm import tqdm
 
 from .paths import get_data_root, resolve_la_path
 from .regression_dit import DiT
+
+Accelerator = __import__("accelerate", fromlist=["Accelerator"]).Accelerator
+set_seed = __import__("accelerate.utils", fromlist=["set_seed"]).set_seed
+DDPMScheduler = __import__("diffusers", fromlist=["DDPMScheduler"]).DDPMScheduler
 
 DIM_LABELS = {
     "calvin": ["x", "y", "z", "roll", "pitch", "yaw", "gripper"],
@@ -263,7 +266,9 @@ class ActionExpertDataset(Dataset):
             )
         else:
             mean, std = self.action_mean, self.action_std
-        normalized = (action - np.tile(mean, self.action_steps)) / np.tile(std, self.action_steps)
+        normalized = (action - np.tile(cast(ArrayLike, mean), self.action_steps)) / np.tile(
+            cast(ArrayLike, std), self.action_steps
+        )
         return (
             torch.from_numpy(latent_action).float(),
             torch.from_numpy(normalized).float(),

@@ -1,4 +1,5 @@
 import math
+from typing import Any, cast
 
 import torch
 from torch import nn
@@ -48,8 +49,8 @@ class AttentivePooler(nn.Module):
         trunc_normal_(self.query_tokens, std=init_std)
         self.apply(self._init_weights)
         for layer_id, block in enumerate(self.blocks, start=1):
-            block.attn.proj.weight.data.div_(math.sqrt(2.0 * layer_id))
-            block.mlp.fc2.weight.data.div_(math.sqrt(2.0 * layer_id))
+            cast(Any, block).attn.proj.weight.data.div_(math.sqrt(2.0 * layer_id))
+            cast(Any, block).mlp.fc2.weight.data.div_(math.sqrt(2.0 * layer_id))
         self.cross_attention_block.mlp.fc2.weight.data.div_(math.sqrt(2.0 * max(1, len(self.blocks))))
 
     def _init_weights(self, module):
@@ -63,10 +64,7 @@ class AttentivePooler(nn.Module):
 
     def forward(self, value):
         for block in self.blocks:
-            if self.use_activation_checkpointing:
-                value = checkpoint(block, value, use_reentrant=False)
-            else:
-                value = block(value)
+            value = checkpoint(block, value, use_reentrant=False) if self.use_activation_checkpointing else block(value)
         query = self.query_tokens.expand(len(value), -1, -1)
         return self.cross_attention_block(query, value)
 

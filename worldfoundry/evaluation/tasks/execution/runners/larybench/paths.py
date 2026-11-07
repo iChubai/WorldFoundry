@@ -18,6 +18,7 @@ Required environment variable:
 """
 
 import os
+from typing import cast
 
 # ---------------------------------------------------------------------------
 # LA subdirectory layout per dataset.
@@ -105,10 +106,7 @@ def get_data_root(dataset: str, split: str = "train") -> str | None:
         entry = _DATASET_SUBPATH.get(dataset_lower)
         if entry:
             category, sub = entry
-            if sub:
-                base = os.path.join(data_dir, category, sub)
-            else:
-                base = os.path.join(data_dir, category)
+            base = os.path.join(data_dir, category, sub) if sub else os.path.join(data_dir, category)
 
             # For regression datasets with per-split sub-dirs
             split_subdir = _REGRESSION_SPLIT_DIR.get((dataset_lower, split.lower()))
@@ -213,7 +211,7 @@ def resolve_data_path(path, dataset=None, split=None):
     if not path or os.path.isabs(path):
         return path
 
-    data_root = get_data_root(dataset, split) if dataset else None
+    data_root = get_data_root(dataset, cast(str, split)) if dataset else None
     if data_root:
         return os.path.join(data_root, path)
     return path

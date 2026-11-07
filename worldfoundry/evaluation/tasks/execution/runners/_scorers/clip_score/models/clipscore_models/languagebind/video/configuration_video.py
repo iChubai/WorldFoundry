@@ -1,8 +1,9 @@
 import copy
 import os
 
-from transformers import PretrainedConfig
 from transformers.utils import logging
+
+PretrainedConfig = __import__("transformers", fromlist=["PretrainedConfig"]).PretrainedConfig
 
 logger = logging.get_logger(__name__)
 

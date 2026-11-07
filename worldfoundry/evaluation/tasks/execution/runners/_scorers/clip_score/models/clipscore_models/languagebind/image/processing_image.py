@@ -1,7 +1,10 @@
+from typing import Any, ClassVar
+
 import torch
 from PIL import Image
 from torchvision import transforms
-from transformers import ProcessorMixin
+
+ProcessorMixin = __import__("transformers", fromlist=["ProcessorMixin"]).ProcessorMixin
 
 OPENAI_DATASET_MEAN = (0.48145466, 0.4578275, 0.40821073)
 OPENAI_DATASET_STD = (0.26862954, 0.26130258, 0.27577711)
@@ -33,10 +36,10 @@ def load_and_transform_image(image_path, transform):
 
 
 class LanguageBindImageProcessor(ProcessorMixin):
-    attributes = []
+    attributes: ClassVar[list[str]] = []
     tokenizer_class = "LanguageBindImageTokenizer"
 
-    def __init__(self, config, tokenizer=None, **kwargs):
+    def __init__(self, config, tokenizer: Any = None, **kwargs):
         super().__init__(**kwargs)
         self.config = config
         self.transform = get_image_transform(config)

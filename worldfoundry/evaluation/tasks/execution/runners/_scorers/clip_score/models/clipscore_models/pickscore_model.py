@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 import torch
 from transformers import AutoModel, AutoProcessor
 
@@ -27,14 +29,15 @@ class PickScoreModel(ScoreModel):
         self.processor = AutoProcessor.from_pretrained(processor_name_or_path)
         self.model = AutoModel.from_pretrained(model_pretrained_name_or_path).eval().to(self.device)
 
-    def load_images(self, image: list[str]) -> torch.Tensor:
-        """Load the image(s), and return a tensor (no preprocessing!!) put on self.device"""
-        image = [self.image_loader(x) for x in image]
-        image = self.processor(images=image, padding=True, truncation=True, max_length=77, return_tensors="pt").to(
-            self.device
-        )
+    # Processor inputs are keyword mappings rather than the upstream base's tensor batch.
+    def load_images(self, image: list[str]) -> Mapping[str, torch.Tensor]:  # ty: ignore[invalid-method-override]
+        """Load processor inputs on self.device."""
+        loaded_images = [self.image_loader(x) for x in image]
+        inputs = self.processor(
+            images=loaded_images, padding=True, truncation=True, max_length=77, return_tensors="pt"
+        ).to(self.device)
         # image = torch.stack(image, dim=0).to(self.device)
-        return image
+        return inputs
 
     @torch.no_grad()
     def forward(self, images: list[str], texts: list[str]) -> torch.Tensor:

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import itertools
 import os
 from abc import ABC, abstractmethod
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -82,6 +84,8 @@ class LaryBaseModel(ABC):
 
 
 class LaqBaseModel(LaryBaseModel):
+    model: torch.nn.Module
+
     def prepare_model_for_extraction(self):
         freeze_backbone(self.model)
         self.model.to(_inference_device()).eval()
@@ -113,7 +117,7 @@ class LaqBaseModel(LaryBaseModel):
         frames = [
             cv2.resize(frame, (image_size, image_size), interpolation=cv2.INTER_CUBIC) / 255.0 for frame in frames
         ]
-        pairs = np.stack([np.stack([first, second]) for first, second in zip(frames, frames[1:], strict=False)])
+        pairs = np.stack([np.stack([first, second]) for first, second in itertools.pairwise(frames)])
         tensor = torch.tensor(pairs, dtype=torch.float32).permute(0, 4, 1, 2, 3)
         return global_index, tensor, relative_indices
 
@@ -220,7 +224,7 @@ class UnivlaLaryWrap(LaqBaseModel):
         self.prepare_model_for_extraction()
 
     def _get_latent_action(self, batch_input):
-        outputs = self.model.vq_encode(batch_input.permute(0, 2, 1, 3, 4))
+        outputs = cast(Any, self.model).vq_encode(batch_input.permute(0, 2, 1, 3, 4))
         return (
             outputs["z_q"].squeeze(1).cpu().numpy(),
             outputs["indices"].cpu().numpy(),
@@ -235,27 +239,27 @@ class VillaXLaryWrap(LaryBaseModel):
         )
 
         self.name = kwargs.pop("name", "villa-x")
-        self.model = IgorModel.from_pretrained(os.environ.get("VILLA_X_CKPT_PATH"), strict=False)
+        self.model = IgorModel.from_pretrained(cast(str, os.environ.get("VILLA_X_CKPT_PATH")), strict=False)
         self.prepare_model_for_extraction()
 
     def prepare_model_for_extraction(self):
         freeze_backbone(self.model)
         self.model.to(_inference_device()).eval()
 
-    def get_latent_action(self, batch_data, batch_rel_indices=None, config=None):
-        output = self.model.idm(batch_data.to(_inference_device()), return_dict=True)
+    def get_latent_action(self, batch_data, batch_rel_indices=None, config: Any = None):
+        output = cast(Any, self.model).idm(batch_data.to(_inference_device()), return_dict=True)
         tokens = output["vq_tokens"].cpu().numpy()
         if config.mode == "image":
-            tokens = tokens.reshape(tokens.shape[0], -1, self.model.config.action_latent_dim)
+            tokens = tokens.reshape(tokens.shape[0], -1, cast(Any, self.model.config).action_latent_dim)
         else:
-            tokens = tokens.reshape(tokens.shape[0], 8, -1, self.model.config.action_latent_dim)
+            tokens = tokens.reshape(tokens.shape[0], 8, -1, cast(Any, self.model.config).action_latent_dim)
         indices = output["indices"].cpu().numpy().reshape(tokens.shape[0], tokens.shape[1], -1)
         return tokens, indices
 
     @staticmethod
     def _load_image(path, image_size):
         image = Image.open(path).convert("RGB")
-        return np.asarray(image.resize((image_size, image_size), Image.LANCZOS))
+        return np.asarray(image.resize((image_size, image_size), Image.Resampling.LANCZOS))
 
     def process_image(self, src_img_path, tgt_img_path, image_size):
         return torch.tensor(
@@ -307,7 +311,7 @@ class Flux2LaryWrap(LaryBaseModel):
         image = Image.open(path).convert("RGB")
         return (
             np.asarray(
-                image.resize((image_size, image_size), Image.LANCZOS),
+                image.resize((image_size, image_size), Image.Resampling.LANCZOS),
                 dtype=np.float32,
             )
             / 255.0
@@ -367,7 +371,7 @@ class Wan2_2LaryWrap(LaryBaseModel):
     @staticmethod
     def _load_image(path, image_size):
         image = Image.open(path).convert("RGB")
-        image = image.resize((image_size, image_size), Image.LANCZOS)
+        image = image.resize((image_size, image_size), Image.Resampling.LANCZOS)
         return _image_to_tensor(image).sub_(0.5).div_(0.5)
 
     def process_image(self, src_img_path, tgt_img_path, image_size):
@@ -386,24 +390,27 @@ class Wan2_2LaryWrap(LaryBaseModel):
         global_index, frames, relative_indices = sample
         tensors = []
         for frame in frames:
-            image = Image.fromarray(frame).resize((image_size, image_size), Image.LANCZOS)
+            image = Image.fromarray(frame).resize((image_size, image_size), Image.Resampling.LANCZOS)
             tensors.append(_image_to_tensor(image).sub_(0.5).div_(0.5))
         return global_index, torch.stack(tensors, dim=1), relative_indices
 
 
 class VjepaBaseModel(LaryBaseModel):
+    model: torch.nn.Module
+    transform: Callable[[Any], list[torch.Tensor]]
+
     def prepare_model_for_extraction(self):
         freeze_backbone(self.model)
         self.model.to(_inference_device()).eval()
 
-    def get_latent_action(self, batch_data, batch_rel_indices=None, config=None):
+    def get_latent_action(self, batch_data, batch_rel_indices=None, config: Any = None):
         if config.mode == "video":
             transformed = [
                 torch.stack(self.transform(frames), dim=0).to(_inference_device(), non_blocking=True)
                 for frames in batch_data
             ]
             clips = [[torch.stack(transformed).squeeze(1)]]
-            clip_indices = batch_rel_indices.to(_inference_device())
+            clip_indices = cast(torch.Tensor, batch_rel_indices).to(_inference_device())
         else:
             clips = [
                 [

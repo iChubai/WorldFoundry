@@ -40,10 +40,11 @@ class UMTCLIPScoreModel(ScoreModel):
             self.transforms,
         ) = download_umt(model_name, pretrained_ckpt_name, self.cache_dir, device=self.device)
 
-    def load_images(self, image: list[str]) -> torch.Tensor:
-        """Load the image(s), and return a tensor (after preprocessing) put on self.device"""
+    # Direct-video backends return paths rather than the upstream base's tensor batch.
+    def load_images(self, image: list[str]) -> list[str]:  # ty: ignore[invalid-method-override]
+        """Validate and return the video paths."""
         # Simply verify if all are videos ending with video formats such as mp4
-        if not all([img.endswith((".mp4", ".avi")) for img in image]):
+        if not all(img.endswith((".mp4", ".avi")) for img in image):
             raise ValueError("All images must be video files")
         return image
 

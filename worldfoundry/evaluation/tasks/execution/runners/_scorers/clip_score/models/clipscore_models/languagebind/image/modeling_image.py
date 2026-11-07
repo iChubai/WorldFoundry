@@ -1,11 +1,11 @@
 import math
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import torch
 from einops import rearrange
-from peft import LoraConfig, get_peft_model
 from torch import nn
 from torch.nn import functional as F
-from transformers import PreTrainedModel, add_start_docstrings
+from transformers import add_start_docstrings
 from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling
 from transformers.models.clip.modeling_clip import (
     CLIPMLP,
@@ -21,6 +21,13 @@ from transformers.utils import add_start_docstrings_to_model_forward, replace_re
 
 from ..utils import _expand_mask
 from .configuration_image import CLIPTextConfig, CLIPVisionConfig, LanguageBindImageConfig
+
+if TYPE_CHECKING:
+    import torch.utils.checkpoint
+
+peft = __import__("peft", fromlist=["LoraConfig", "get_peft_model"])
+LoraConfig, get_peft_model = peft.LoraConfig, peft.get_peft_model
+PreTrainedModel = __import__("transformers", fromlist=["PreTrainedModel"]).PreTrainedModel
 
 
 class PatchDropout(nn.Module):
@@ -70,7 +77,7 @@ class PatchDropout(nn.Module):
 
 
 class CLIPEncoderLayer(nn.Module):
-    def __init__(self, config: LanguageBindImageConfig):
+    def __init__(self, config: CLIPTextConfig | CLIPVisionConfig):
         super().__init__()
         self.embed_dim = config.hidden_size
         self.self_attn = CLIPAttention(config)
@@ -96,7 +103,7 @@ class CLIPEncoderLayer(nn.Module):
         attention_mask: torch.Tensor,
         causal_attention_mask: torch.Tensor,
         output_attentions: bool | None = False,
-    ) -> tuple[torch.FloatTensor]:
+    ) -> tuple[torch.Tensor, ...]:
         """
         Args:
             hidden_states (`torch.FloatTensor`): input to the layer of shape `(batch, seq_len, embed_dim)`
@@ -173,7 +180,7 @@ class CLIPPreTrainedModel(PreTrainedModel):
     config_class = LanguageBindImageConfig
     base_model_prefix = "clip"
     supports_gradient_checkpointing = True
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_missing: ClassVar[list[str]] = [r"position_ids"]
 
     def _init_weights(self, module):
         """Initialize the weights"""
@@ -340,7 +347,9 @@ class CLIPEncoder(nn.Module):
         config: CLIPConfig
     """
 
-    def __init__(self, config: LanguageBindImageConfig):
+    is_gradient_checkpointing: bool
+
+    def __init__(self, config: CLIPTextConfig | CLIPVisionConfig):
         super().__init__()
         self.config = config
         self.layers = nn.ModuleList([CLIPEncoderLayer(config) for _ in range(config.num_hidden_layers)])
@@ -390,13 +399,13 @@ class CLIPEncoder(nn.Module):
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
-        encoder_states = () if output_hidden_states else None
-        all_attentions = () if output_attentions else None
+        encoder_states: tuple[torch.Tensor, ...] | None = () if output_hidden_states else None
+        all_attentions: tuple[torch.Tensor, ...] | None = () if output_attentions else None
 
         hidden_states = inputs_embeds
-        for idx, encoder_layer in enumerate(self.layers):
+        for _idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
-                encoder_states = encoder_states + (hidden_states,)
+                encoder_states = (*cast(tuple[torch.Tensor, ...], encoder_states), hidden_states)
             if self.gradient_checkpointing and self.training:
 
                 def create_custom_forward(module):
@@ -422,14 +431,16 @@ class CLIPEncoder(nn.Module):
             hidden_states = layer_outputs[0]
 
             if output_attentions:
-                all_attentions = all_attentions + (layer_outputs[1],)
+                all_attentions = (*cast(tuple[torch.Tensor, ...], all_attentions), layer_outputs[1])
 
         if output_hidden_states:
-            encoder_states = encoder_states + (hidden_states,)
+            encoder_states = (*cast(tuple[torch.Tensor, ...], encoder_states), hidden_states)
 
         if not return_dict:
             return tuple(v for v in [hidden_states, encoder_states, all_attentions] if v is not None)
-        return BaseModelOutput(last_hidden_state=hidden_states, hidden_states=encoder_states, attentions=all_attentions)
+        return cast(Any, BaseModelOutput)(
+            last_hidden_state=hidden_states, hidden_states=encoder_states, attentions=all_attentions
+        )
 
 
 # Copied from transformers.models.bart.modeling_bart._make_causal_mask
@@ -517,7 +528,7 @@ class CLIPTextTransformer(nn.Module):
         ]
 
         if not return_dict:
-            return (last_hidden_state, pooled_output) + encoder_outputs[1:]
+            return (last_hidden_state, pooled_output, *encoder_outputs[1:])
 
         return BaseModelOutputWithPooling(
             last_hidden_state=last_hidden_state,
@@ -534,7 +545,7 @@ class CLIPTextTransformer(nn.Module):
 class CLIPTextModel(CLIPPreTrainedModel):
     config_class = CLIPTextConfig
 
-    _no_split_modules = ["CLIPEncoderLayer"]
+    _no_split_modules: ClassVar[list[str]] = ["CLIPEncoderLayer"]
 
     def __init__(self, config: CLIPTextConfig):
         super().__init__(config)
@@ -604,7 +615,7 @@ class CLIPVisionTransformer(nn.Module):
     @replace_return_docstrings(output_type=BaseModelOutputWithPooling, config_class=CLIPVisionConfig)
     def forward(
         self,
-        pixel_values: torch.FloatTensor | None = None,
+        pixel_values: torch.Tensor | None = None,
         output_attentions: bool | None = None,
         output_hidden_states: bool | None = None,
         return_dict: bool | None = None,
@@ -657,7 +668,7 @@ class CLIPVisionTransformer(nn.Module):
         pooled_output = pooled_output.reshape(B, T, -1).mean(1)  ################################
 
         if not return_dict:
-            return (last_hidden_state, pooled_output) + encoder_outputs[1:]
+            return (last_hidden_state, pooled_output, *encoder_outputs[1:])
 
         return BaseModelOutputWithPooling(
             last_hidden_state=last_hidden_state,
@@ -830,10 +841,7 @@ class LanguageBindImage(CLIPPreTrainedModel):
             align_corners=False,
         )
         pos_emb_img = pos_emb_img.permute(0, 2, 3, 1).reshape(1, grid_size[0] * grid_size[1], -1)[0]
-        if pos_emb_tok is not None:
-            new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0)
-        else:
-            new_pos_embed = pos_emb_img
+        new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0) if pos_emb_tok is not None else pos_emb_img
         old_pos_embed_state_dict["weight"] = new_pos_embed.to(dtype)
         m.position_embedding = new_position_embedding
         m.position_embedding.load_state_dict(old_pos_embed_state_dict)
@@ -1017,9 +1025,9 @@ class LanguageBindImage(CLIPPreTrainedModel):
 
         if not return_dict:
             output = (logits_per_image, logits_per_text, text_embeds, image_embeds, text_outputs, vision_outputs)
-            return ((loss,) + output) if loss is not None else output
+            return ((loss, *output)) if loss is not None else output
 
-        return CLIPOutput(
+        return cast(Any, CLIPOutput)(
             loss=loss,
             logits_per_image=logits_per_image,
             logits_per_text=logits_per_text,

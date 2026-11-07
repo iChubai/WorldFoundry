@@ -1,4 +1,5 @@
 import csv
+from typing import cast
 
 import numpy as np
 import torch
@@ -66,7 +67,7 @@ class DistributedWeightedSampler(DistributedSampler):
     def __iter__(self):
         generator = torch.Generator().manual_seed(self.seed + self.epoch)
         indices = torch.multinomial(
-            self.dataset.sample_weights,
+            cast(LatentActionVideoDataset, self.dataset).sample_weights,
             self.total_size,
             replacement=True,
             generator=generator,

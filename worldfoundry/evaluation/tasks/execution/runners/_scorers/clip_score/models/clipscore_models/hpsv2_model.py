@@ -18,7 +18,7 @@ class HPSV2ScoreModel(ScoreModel):
 
     def load_model(self):
         """Load the model, tokenizer, image transform"""
-        import hpsv2
+        hpsv2 = __import__("hpsv2")
 
         self.hpsv2 = hpsv2
 

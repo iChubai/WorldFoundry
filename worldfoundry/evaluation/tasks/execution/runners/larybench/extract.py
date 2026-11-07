@@ -1,11 +1,11 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
@@ -15,6 +15,9 @@ from .config import get_config
 from .paths import resolve_data_path
 from .registry import MODEL
 
+if TYPE_CHECKING:
+    from .models import LaryBaseModel
+
 
 def setup_seed(seed=42):
     set_random_seed(seed)
@@ -23,7 +26,7 @@ def setup_seed(seed=42):
 
 
 class VideoActionDataset(Dataset):
-    def __init__(self, data, model: nn.Module, image_size=224, dataset=None, split=None):
+    def __init__(self, data, model: "LaryBaseModel", image_size=224, dataset=None, split=None):
         self.data = data.copy()
         self.model = model
         self.image_size = image_size
@@ -40,7 +43,7 @@ class VideoActionDataset(Dataset):
 
 
 class ImagePairDataset(Dataset):
-    def __init__(self, data, model: nn.Module, image_size=224, dataset=None, split=None):
+    def __init__(self, data, model: "LaryBaseModel", image_size=224, dataset=None, split=None):
         self.data = data.copy()
         self.model = model
         self.image_size = image_size

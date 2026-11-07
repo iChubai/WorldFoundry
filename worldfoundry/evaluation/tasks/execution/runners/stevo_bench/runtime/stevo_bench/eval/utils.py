@@ -39,7 +39,7 @@ def _is_url(s: str) -> bool:
         return False
 
 
-def _resolve_video_source(link: str, outputs_json_path: Path) -> Tuple[str, Path]:
+def _resolve_video_source(link: str, outputs_json_path: Path) -> tuple[str, Path]:
     """
     Returns ("url", dummy_path) or ("file", resolved_path).
     If file path is relative, resolve relative to outputs_json parent directory.

@@ -6,20 +6,21 @@ References:
     https://ieeexplore.ieee.org/abstract/document/1576816/
 """
 
-import torch
-from torch.nn.modules.loss import _Loss
-import torch.nn.functional as F
 from typing import Union
 
+import torch
+import torch.nn.functional as F
+from torch.nn.modules.loss import _Loss
+
 from piq.functional import gaussian_filter
-from piq.utils import _validate_input, _reduce
+from piq.utils import _reduce, _validate_input
 
 
 def vif_p(
     x: torch.Tensor,
     y: torch.Tensor,
     sigma_n_sq: float = 2.0,
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     reduction: str = "mean",
 ) -> torch.Tensor:
     r"""Compute Visiual Information Fidelity in **pixel** domain for a batch of images.
@@ -144,7 +145,7 @@ class VIFLoss(_Loss):
         DOI: 10.1109/TIP.2005.859378.
     """
 
-    def __init__(self, sigma_n_sq: float = 2.0, data_range: Union[int, float] = 1.0, reduction: str = "mean"):
+    def __init__(self, sigma_n_sq: float = 2.0, data_range: int | float = 1.0, reduction: str = "mean"):
         super().__init__()
         self.sigma_n_sq = sigma_n_sq
         self.data_range = data_range

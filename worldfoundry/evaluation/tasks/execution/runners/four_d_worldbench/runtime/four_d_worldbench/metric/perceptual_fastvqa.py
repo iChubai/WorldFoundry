@@ -1,9 +1,10 @@
+import json
 import os
 import sys
-import json
-import yaml
+
 import numpy as np
 import torch
+import yaml
 
 # Follow the benchmark's module style
 try:
@@ -41,9 +42,9 @@ mean_stds = {
 def _build_model_and_opts(model_name: str, device: str):
     """Create evaluator and return (evaluator, opt_dict)."""
     _ensure_fastvqa_importable()
-    from worldfoundry.base_models.perception_core.video_quality.fastvqa import checkpoint_path, options_dir
-
     from fastvqa.models import DiViDeAddEvaluator
+
+    from worldfoundry.base_models.perception_core.video_quality.fastvqa import checkpoint_path, options_dir
 
     opts = {
         "FasterVQA": options_dir() / "f3dvqa-b.yml",
@@ -53,7 +54,7 @@ def _build_model_and_opts(model_name: str, device: str):
         "FAST-VQA-M": options_dir() / "fast-m.yml",
     }
     opt_path = opts.get(model_name, opts["FAST-VQA"])
-    with open(opt_path, "r") as f:
+    with open(opt_path) as f:
         opt = yaml.safe_load(f)
     opt["test_load_path"] = checkpoint_path(model_name)
 
@@ -69,9 +70,9 @@ def _infer_video_score(evaluator, opt: dict, video_path: str, device: str, model
     _ensure_fastvqa_importable()
     import decord
     from fastvqa.datasets import (
-        get_spatial_fragments,
-        SampleFrames,
         FragmentSampleFrames,
+        SampleFrames,
+        get_spatial_fragments,
     )
 
     try:

@@ -7,11 +7,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import torch
+from evaluation import metrics_calculator
 from tqdm import tqdm
 
-from evaluation import metrics_calculator
 from worldfoundry.core.io import extract_video_frames_to_directory
-
 
 THREE_D_METRICS = frozenset(
     {
@@ -255,7 +254,7 @@ if calculate_fvd or calculate_fid:
 
 if calculate_fvd:
     try:
-        print(f"calculating metrics fvd kvd")
+        print("calculating metrics fvd kvd")
         from evaluation.fvd import EvaluateFVD
 
         mean_metrics_result_dict["fvd"], mean_metrics_result_dict["kvd"] = EvaluateFVD(
@@ -272,7 +271,7 @@ if calculate_fvd:
 
 if calculate_fid:
     try:
-        print(f"calculating metrics fid kid")
+        print("calculating metrics fid kid")
         from evaluation.fid import EvaluateFID
 
         mean_metrics_result_dict["fid"], mean_metrics_result_dict["kid"] = EvaluateFID(

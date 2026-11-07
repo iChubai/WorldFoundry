@@ -1,12 +1,13 @@
+import base64
+import json
 import os
 import re
-from pathlib import Path
-import json
-import cv2
 import time
-import base64
-import numpy as np
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+import cv2
+import numpy as np
 
 
 class Video_Dataset:
@@ -15,7 +16,7 @@ class Video_Dataset:
         self.annotations = self.load_annotations()
 
     def load_annotations(self):
-        with open(self.json_path, "r") as f:
+        with open(self.json_path) as f:
             return json.load(f)
 
     def extract_frames(self, video_path, extract_frames_persecond, resize_fx, resize_fy):
@@ -161,5 +162,5 @@ def load_json(path):
     Returns:
     - data (dict or list): The data loaded from the JSON file, which could be a dictionary or a list.
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)

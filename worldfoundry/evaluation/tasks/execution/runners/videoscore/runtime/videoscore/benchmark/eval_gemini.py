@@ -1,16 +1,16 @@
-import google.generativeai as genai
-import fire
-from datasets import load_dataset
-from typing import List
-from PIL import Image
-import re
-from tqdm import tqdm
-from datetime import datetime
-import os
-import time
 import logging
-from utils_tools import _add_to_res_file, _ans_formatted
+import os
+import re
+import time
+from datetime import datetime
+from typing import List
 
+import fire
+import google.generativeai as genai
+from datasets import load_dataset
+from PIL import Image
+from tqdm import tqdm
+from utils_tools import _add_to_res_file, _ans_formatted
 
 ROUND_DIGIT = 4
 NUM_ASPECT = 5
@@ -24,7 +24,7 @@ def eval_gemini(
     data_repo_name: str = "TIGER-Lab/VideoScore-Bench",
     bench_name: str = "video_feedback",
     frames_dir: str = "../data/video_feedback/test",
-    name_postfixs: List[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_gemini-1.5-pro.json",
     base_model: str = "gemini-1.5-pro-latest",
 ):
@@ -95,7 +95,7 @@ def eval_gemini(
                             "id": vid,
                             "text": video_prompt,
                             "ref": f"{ref_scores}",
-                            "ans": f"[-1, -1, -1, -1, -1]",
+                            "ans": "[-1, -1, -1, -1, -1]",
                         }
                         _add_to_res_file(result_file, curr_compare_dict)
                         break

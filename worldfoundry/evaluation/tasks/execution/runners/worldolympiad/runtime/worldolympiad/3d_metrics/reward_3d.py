@@ -7,21 +7,20 @@ from _bootstrap import setup_paths
 
 setup_paths()
 
-import torch
-import numpy as np
-from PIL import Image
-from io import BytesIO
+import base64
+import datetime
+import json
 import multiprocessing as mp
 import os
-import json
-import datetime
-import base64
 import re
 import uuid
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Optional
-from dotenv import load_dotenv
 
+import numpy as np
+import torch
+from dotenv import load_dotenv
 from model.vlm import (
     DEFAULT_VLM_BACKEND,
     chat_vlm_call,
@@ -31,6 +30,7 @@ from model.vlm import (
     resolve_model_name,
     resolve_vlm_backend,
 )
+from PIL import Image
 from reward_3d_backend import DEFAULT_RECONSTRUCTION_MODEL, Reward3DBackend
 
 load_dotenv()
@@ -411,7 +411,8 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                     extrinsics = as_homogeneous(np.asarray(prediction.extrinsics, dtype=np.float32))
                     poses_c2w = affine_inverse_np(extrinsics)
                     trajectory = {
-                        f"frame{frame_idx}": pose.tolist() for frame_idx, pose in zip(frame_indices, poses_c2w)
+                        f"frame{frame_idx}": pose.tolist()
+                        for frame_idx, pose in zip(frame_indices, poses_c2w, strict=False)
                     }
                     result_queue.put(("TRAJECTORY", request_id, trajectory))
                 except Exception as e:
@@ -721,7 +722,7 @@ class MultiGPUReward3DManager:
         # Prepare tasks
         tasks = []
         for batch_idx, (video_frames, prompt, camera_trajectory, video_dynamic_masks) in enumerate(
-            zip(batch_videos, batch_prompts, camera_trajectories, dynamic_masks)
+            zip(batch_videos, batch_prompts, camera_trajectories, dynamic_masks, strict=False)
         ):
             try:
                 # Convert frame bytes to PIL Images
@@ -877,7 +878,7 @@ class MultiGPUReward3DManager:
         self.num_gpus = 0
 
 
-def _sample_indices(total_frames: int, max_frames: Optional[int]) -> list[int]:
+def _sample_indices(total_frames: int, max_frames: int | None) -> list[int]:
     if total_frames <= 0:
         return []
     if max_frames is None or max_frames <= 0 or total_frames <= max_frames:
@@ -889,7 +890,7 @@ def _sample_indices(total_frames: int, max_frames: Optional[int]) -> list[int]:
 
 def load_video_frames_as_jpeg_with_indices(
     video_path: str | os.PathLike[str],
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
 ) -> tuple[list[bytes], list[int]]:
     """Read a video file and return sampled JPEG-encoded frames plus source indices."""
     import cv2
@@ -926,7 +927,7 @@ def load_video_frames_as_jpeg_with_indices(
 
 def load_video_frames_as_jpeg(
     video_path: str | os.PathLike[str],
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
 ) -> list[bytes]:
     """Read a video file and return sampled JPEG-encoded frames."""
     encoded_frames, _ = load_video_frames_as_jpeg_with_indices(video_path, max_frames=max_frames)
@@ -935,7 +936,7 @@ def load_video_frames_as_jpeg(
 
 def load_dynamic_masks(
     mask_video_path: str | os.PathLike[str],
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
     threshold: int = 16,
 ) -> list[np.ndarray]:
     """Read sampled binary dynamic masks from a video file."""
@@ -967,12 +968,12 @@ def load_dynamic_masks(
 
 
 def load_camera_trajectory(
-    camera_trajectory_path: Optional[str | os.PathLike[str]] = None,
-    camera_trajectory_json: Optional[str] = None,
+    camera_trajectory_path: str | os.PathLike[str] | None = None,
+    camera_trajectory_json: str | None = None,
 ) -> Any:
     """Load camera trajectory from a JSON file or a raw JSON string."""
     if camera_trajectory_path:
-        with open(camera_trajectory_path, "r", encoding="utf-8") as f:
+        with open(camera_trajectory_path, encoding="utf-8") as f:
             return json.load(f)
     if camera_trajectory_json:
         return json.loads(camera_trajectory_json)
@@ -988,7 +989,7 @@ def score_video_file(
     scoring_model_name: str | None = DEFAULT_SCORING_MODEL,
     use_lpips: bool = False,
     num_workers: int = 1,
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
     camera_trajectory: Any = None,
     dynamic_mask_video_path: str | os.PathLike[str] | None = None,
 ) -> dict[str, Any]:

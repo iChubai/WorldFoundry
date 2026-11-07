@@ -32,7 +32,7 @@ class VILA:
         )
         self.max_new_tokens = max_new_tokens
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         prompt_parts: list[object] = []
         for message in inputs:
             message_type = message.get("type")

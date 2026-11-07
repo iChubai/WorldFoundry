@@ -1,12 +1,13 @@
+import logging
 import os
 import re
-import torch
-import fire
-import logging
-from tqdm import tqdm
-from typing import List
-from datasets import load_dataset
 from datetime import datetime
+from typing import List
+
+import fire
+import torch
+from datasets import load_dataset
+from tqdm import tqdm
 from utils_tools import _add_to_res_file
 
 BENCH_NAMES = ["video_feedback", "eval_crafter", "vbench", "genaibench"]
@@ -17,13 +18,13 @@ def main(
     metric_name: str = "CLIP-Score",
     bench_name: str = "video_feedback",
     frames_dir: str = "../data/video_feedback/test",
-    name_postfixs: List[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_CLIP-Score.json",
 ):
     print("metric_name", metric_name)
 
     if metric_name in ["PIQE", "BRISQUE"]:
-        from feature_metric_tools.visual_eval import piqe_output, brisque_output
+        from feature_metric_tools.visual_eval import brisque_output, piqe_output
     elif metric_name in ["CLIP-sim", "DINO-sim", "SSIM-sim"]:
         from feature_metric_tools.temporal_eval import clip_inter_frame, dino_inter_frame, ssim_inter_frame
     elif metric_name in ["MSE-dyn", "SSIM-dyn"]:
@@ -47,15 +48,15 @@ def main(
     model, tokenizer, preprocess, processor = None, None, None, None
 
     if metric_name == "CLIP-sim" or "CLIP-Score":
-        from transformers import CLIPProcessor, CLIPModel
+        from transformers import CLIPModel, CLIPProcessor
 
         model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
         model.to(device)
         tokenizer = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
     if metric_name == "DINO-sim":
-        from torchvision.models import vit_b_16
         import torchvision.transforms as transforms
+        from torchvision.models import vit_b_16
 
         model = vit_b_16(pretrained=True)
         model.to(device)
@@ -70,7 +71,7 @@ def main(
         )
 
     if metric_name == "X-CLIP-Score":
-        from transformers import AutoTokenizer, AutoModel, AutoProcessor
+        from transformers import AutoModel, AutoProcessor, AutoTokenizer
 
         model = AutoModel.from_pretrained("microsoft/xclip-base-patch32")
         processor = AutoProcessor.from_pretrained("microsoft/xclip-base-patch32")

@@ -1,11 +1,13 @@
 import argparse
-import numpy as np
-import os
-import cv2
 import json
+import os
+import time
+
+import cv2
+import numpy as np
 import torch
 from tqdm import tqdm
-import time
+
 from worldfoundry.evaluation.tasks.execution.runners.chronomagic_bench.runtime.chronomagic_bench.MTScore.configs.config import (
     Config,
     eval_dict_leaf,
@@ -63,7 +65,7 @@ def calculate_video_score(video_path, text_to_index, text_candidates, intern_mod
     general_prob = 0.0
     metamorphic_prob = 0.0
 
-    for t, p in zip(texts, probs):
+    for t, p in zip(texts, probs, strict=False):
         text_index = text_to_index[t]
         if text_index in [0, 1, 2, 3, 4]:
             general_prob += p
@@ -83,7 +85,7 @@ def calculate_average_score(scores):
 
 
 def load_existing_scores(filepath):
-    with open(filepath, "r") as file:
+    with open(filepath) as file:
         scores = json.load(file)
     return scores
 

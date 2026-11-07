@@ -1,6 +1,8 @@
 import importlib
+import os
+
+import cv2
 import numpy as np
-import cv2, os
 import torch
 import torch.distributed as dist
 
@@ -25,10 +27,8 @@ def check_istarget(name, para_list):
 
 
 def instantiate_from_config(config):
-    if not "target" in config:
-        if config == "__is_first_stage__":
-            return None
-        elif config == "__is_unconditional__":
+    if "target" not in config:
+        if config == "__is_first_stage__" or config == "__is_unconditional__":
             return None
         raise KeyError("Expected key `target` to instantiate.")
 

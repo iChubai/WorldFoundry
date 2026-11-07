@@ -132,20 +132,20 @@ class SAM3RequestHandler(BaseHTTPRequestHandler):
                     video_prompt=payload.get("video_prompt") or payload.get("prompt"),
                     model_name=model_name,
                     backend=backend,
-                    sam3_model_path=getattr(self.server, "sam3_model_path"),
-                    device=getattr(self.server, "device"),
+                    sam3_model_path=self.server.sam3_model_path,
+                    device=self.server.device,
                     max_frames=max_frames,
-                    sam3_predictor=getattr(self.server, "predictor"),
-                    sam_conf=getattr(self.server, "conf"),
-                    sam_iou=getattr(self.server, "iou"),
+                    sam3_predictor=self.server.predictor,
+                    sam_conf=self.server.conf,
+                    sam_iou=self.server.iou,
                     min_mask_area_ratio=min_mask_area_ratio,
                     max_masks_per_frame=max_masks_per_frame,
                 )
 
             result["sam3_server"] = {
                 "url": f"http://{self.server.server_address[0]}:{self.server.server_address[1]}",
-                "model": getattr(self.server, "sam3_model_path"),
-                "device": getattr(self.server, "device"),
+                "model": self.server.sam3_model_path,
+                "device": self.server.device,
             }
             self._write_json(200, {"result": result})
         except Exception as exc:

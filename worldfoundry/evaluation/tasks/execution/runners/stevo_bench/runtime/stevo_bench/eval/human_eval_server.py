@@ -43,8 +43,10 @@ except ImportError:
 
 try:
     from eval.control_judge import (
-        _load_task_fields as _ctrl_load_task_fields,
         _compute_requested_fields,
+    )
+    from eval.control_judge import (
+        _load_task_fields as _ctrl_load_task_fields,
     )
 
     _HAS_CONTROL_JUDGE = True
@@ -83,7 +85,7 @@ TASKS_ROOT: Path = Path("benchmark/tasks")
 EXCLUDE_BASELINE: bool = False  # when True, tasks ending in _00 are hidden
 
 # Built once at startup: task_id -> yaml path
-_YAML_MAP: Dict[str, Path] = {}
+_YAML_MAP: dict[str, Path] = {}
 
 
 def _build_yaml_map() -> None:
@@ -122,13 +124,13 @@ def _dec(s: str) -> Path:
 # ---------------------------------------------------------------------------
 
 
-def _list_runs() -> List[str]:
+def _list_runs() -> list[str]:
     if not RUNS_DIR.exists():
         return []
     return sorted(d.name for d in RUNS_DIR.iterdir() if d.is_dir() and (d / "per_task").exists())
 
 
-def _list_task_ids(run_name: str) -> List[str]:
+def _list_task_ids(run_name: str) -> list[str]:
     pt = RUNS_DIR / run_name / "per_task"
     if not pt.exists():
         return []
@@ -141,11 +143,11 @@ def _list_task_ids(run_name: str) -> List[str]:
     )
 
 
-def _find_task_yaml(task_id: str) -> Optional[Path]:
+def _find_task_yaml(task_id: str) -> Path | None:
     return _YAML_MAP.get(task_id)
 
 
-def _list_annotators(run_name: str) -> List[str]:
+def _list_annotators(run_name: str) -> list[str]:
     """Return sorted list of annotator IDs who have annotated any task in this run."""
     pt = RUNS_DIR / run_name / "per_task"
     if not pt.exists():
@@ -161,7 +163,7 @@ def _list_annotators(run_name: str) -> List[str]:
     return sorted(annotators)
 
 
-def _load_annotator_report(pt_dir: Path, annotator: str) -> Dict[str, Any]:
+def _load_annotator_report(pt_dir: Path, annotator: str) -> dict[str, Any]:
     """Load human_<annotator>_report.json; returns {} if missing or unreadable."""
     p = pt_dir / f"human_{annotator}_report.json"
     if p.exists():
@@ -172,7 +174,7 @@ def _load_annotator_report(pt_dir: Path, annotator: str) -> Dict[str, Any]:
     return {}
 
 
-def _load_llm_report(pt_dir: Path, prefix: str) -> Dict[str, Any]:
+def _load_llm_report(pt_dir: Path, prefix: str) -> dict[str, Any]:
     """Load a per-task LLM judge report.
 
     Prefers judge-tagged files (``prefix__<judge>.json``, sorted — last = most
@@ -195,7 +197,7 @@ def _load_llm_report(pt_dir: Path, prefix: str) -> Dict[str, Any]:
     return {}
 
 
-def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None) -> Dict[str, Any]:
+def _load_task_data(run_name: str, task_id: str, annotator: str | None = None) -> dict[str, Any]:
     pt_dir = RUNS_DIR / run_name / "per_task" / task_id
 
     # LLM reports — prefer judge-tagged files, fall back to legacy/stub names.
@@ -209,7 +211,7 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
     camera_controlled = any(n in run_name.lower() for n in _CAMERA_CONTROLLED_NAMES)
 
     # YAML: task_level and init_frame
-    task_level: Optional[Any] = None
+    task_level: Any | None = None
     init_frame_path: str = ""
     yaml_path = _find_task_yaml(task_id)
     if yaml_path:
@@ -236,7 +238,7 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
         except Exception:
             pass
 
-    def furl(raw: str) -> Optional[str]:
+    def furl(raw: str) -> str | None:
         return f"/file?p={_enc(raw)}" if raw else None
 
     final_frame_path: str = ""
@@ -258,7 +260,7 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
         "physics_prompt": phys.get("prompt", ""),
     }
 
-    base: Dict[str, Any] = {
+    base: dict[str, Any] = {
         "task_id": task_id,
         "task_level": task_level,
         "run_name": run_name,
@@ -281,7 +283,7 @@ def _load_task_data(run_name: str, task_id: str, annotator: Optional[str] = None
         base["human_state_evol"] = rep.get("state_evol")  # None if not yet answered
     else:
         # Master mode: collect every annotator's answers from all human_*_report.json files.
-        annotations: Dict[str, Any] = {}
+        annotations: dict[str, Any] = {}
         for f in sorted(pt_dir.iterdir()):
             m = _ANNOTATOR_RE.match(f.name)
             if m:
@@ -394,7 +396,7 @@ def api_answer(run_name: str, task_id: str):
     # "MISSING" sentinel distinguishes absent key from explicitly null value.
     _se_raw = body.get("human_state_evol", "MISSING")
     has_se = _se_raw != "MISSING" and _se_raw is not None
-    state_evol: Optional[bool] = bool(_se_raw) if has_se else None
+    state_evol: bool | None = bool(_se_raw) if has_se else None
 
     ctrl = body.get("control", {})
 

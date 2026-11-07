@@ -59,7 +59,7 @@ model = dict(
             type="Pretrained",
             prefix="backbone.",
             checkpoint="https://download.openmmlab.com/mmpose/v1/projects/"
-            "rtmposev1/cspnext-m_udp-body7_210e-256x192-e0c9327b_20230504.pth",  # noqa
+            "rtmposev1/cspnext-m_udp-body7_210e-256x192-e0c9327b_20230504.pth",
         ),
     ),
     head=dict(

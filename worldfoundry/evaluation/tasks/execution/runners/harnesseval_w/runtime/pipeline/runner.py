@@ -5,11 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from ..aggregate import numeric
 from ..io import (
@@ -22,7 +23,6 @@ from ..io import (
 from ..protocols import SKILLS
 from .planner import load_cases
 from .registry import evaluate_skill, get_skill
-
 
 RUNNER_ID = "harnesseval.runner"
 BUNDLE_SCHEMA = "harnesseval.metric_bundle"
@@ -50,7 +50,7 @@ def shard_skill_tasks(tasks: Iterable[SkillTask], shard_count: int, shard_index:
         grouped_cases[(task.skill_id, task.probe_family)].add(task.case_id)
     owners = {}
     for group, case_ids in sorted(grouped_cases.items()):
-        seed = f"{group[0]}\0{group[1]}".encode("utf-8")
+        seed = f"{group[0]}\0{group[1]}".encode()
         offset = int.from_bytes(hashlib.sha256(seed).digest()[:8], "big") % shard_count
         for position, case_id in enumerate(sorted(case_ids)):
             owners[(*group, case_id)] = (offset + position) % shard_count
@@ -328,7 +328,7 @@ def _run_one(
             "skill_status": result.get("status"),
             "score": result.get("score"),
         }
-    except Exception as exc:  # noqa: BLE001 - every failed task belongs in the audit
+    except Exception as exc:  # every failed task belongs in the audit
         return {**view, "status": "failed", "error": repr(exc)}
 
 
@@ -500,7 +500,7 @@ def prepare_drift_stage_tasks(
                 stage,
             )
             return {**view, "status": "ok", **result}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {**view, "status": "failed", "error": repr(exc)}
 
     outcomes = []

@@ -1,6 +1,8 @@
+from typing import List
+
 import torch
 from mantis.models.mfuyu import MFuyuForCausalLM, MFuyuProcessor, chat_mfuyu
-from typing import List
+
 from .mllm_utils import load_images
 
 
@@ -26,7 +28,7 @@ class MFuyu:
         else:
             self.processor.image_processor.size = {"height": 1080, "width": 1920}
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             Only for sinlge turn!
@@ -54,7 +56,7 @@ class MFuyu:
         else:
             raise NotImplementedError
 
-    def prepare_prompt(self, image_links: List = [], text_prompt: str = ""):
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
         if type(image_links) == str:
             image_links = [image_links]
         images = load_images(image_links)

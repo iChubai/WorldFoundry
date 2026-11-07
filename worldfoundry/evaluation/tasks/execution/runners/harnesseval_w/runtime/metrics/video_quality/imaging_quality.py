@@ -1,13 +1,13 @@
 """Imaging quality metric — MUSIQ (via pyiqa)."""
 
+from contextlib import contextmanager
+
 import numpy as np
 import torch
 import torchvision.transforms as T
-from contextlib import contextmanager
 
 from ..base import BaseMetric
-from ..weight_utils import setup_torch_hub_dir, get_weights_dir
-
+from ..weight_utils import get_weights_dir, setup_torch_hub_dir
 
 _GPU_BATCH_SIZE = 16
 

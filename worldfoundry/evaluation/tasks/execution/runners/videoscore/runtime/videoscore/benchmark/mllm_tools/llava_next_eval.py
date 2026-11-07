@@ -1,14 +1,16 @@
 import os
 import tempfile
-import requests
-from PIL import Image
-import torch
 from io import BytesIO
-from .mllm_utils import merge_images
-from mantis.models.conversation import conv_llava_v1
 from typing import List
-from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration
+
+import requests
+import torch
+from mantis.models.conversation import conv_llava_v1
+from PIL import Image
+from transformers import LlavaNextForConditionalGeneration, LlavaNextProcessor
 from transformers.utils import is_flash_attn_2_available
+
+from .mllm_utils import merge_images
 
 
 class LlavaNext:
@@ -29,7 +31,7 @@ class LlavaNext:
         ).eval()
         self.processor = LlavaNextProcessor.from_pretrained(model_path)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [
@@ -56,11 +58,9 @@ class LlavaNext:
             merged_image = merge_images(image_links)
             text_prompt = "\n".join([x["content"] for x in inputs if x["type"] == "text"])
             if "mistral" in self.model_path:
-                text_prompt = "[INST] <image>\n{} [/INST]".format(text_prompt)
+                text_prompt = f"[INST] <image>\n{text_prompt} [/INST]"
             elif "vicuna" in self.model_path:
-                text_prompt = "A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n{} ASSISTANT:".format(
-                    text_prompt
-                )
+                text_prompt = f"A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <image>\n{text_prompt} ASSISTANT:"
             inputs = self.processor(text=text_prompt, images=merged_image, return_tensors="pt")
             inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
             # Generate

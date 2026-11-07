@@ -5,7 +5,6 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-
 DEFAULT_MODEL = "ViT-B/32"
 OFFICIAL_MODEL_FINGERPRINTS = {
     "ViT-B/32": "sha256:40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af",
@@ -21,8 +20,9 @@ class OpenAIClipBackend:
         device: str = "cuda",
         download_root: Path | None = None,
     ) -> None:
-        from worldfoundry.base_models.perception_core.general_perception.openai_clip_runtime import clip
         import torch
+
+        from worldfoundry.base_models.perception_core.general_perception.openai_clip_runtime import clip
 
         self.model_name = model_name
         self.model_fingerprint = OFFICIAL_MODEL_FINGERPRINTS.get(model_name, f"openai-clip:{model_name}")

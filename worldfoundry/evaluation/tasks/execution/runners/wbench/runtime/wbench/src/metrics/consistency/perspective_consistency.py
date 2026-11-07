@@ -18,7 +18,7 @@ Algorithm:
 """
 
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import cv2
 import numpy as np
@@ -28,7 +28,7 @@ D_CV_THRESH = 0.5
 MIN_MASK_AREA_PX = 10
 
 
-def compute_case(mask_dir: str, depth_path: str) -> Optional[Dict[str, Any]]:
+def compute_case(mask_dir: str, depth_path: str) -> dict[str, Any] | None:
     """Compute perspective_consistency for a single case.
 
     Args:

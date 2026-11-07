@@ -1,27 +1,27 @@
-import torch
-from torch import nn
+import csv
+import json
+import math
+import os
 import os.path as osp
-from tqdm import tqdm
-from matplotlib import colormaps
+
 import numpy as np
 import scipy
-import math
+import torch
+from matplotlib import colormaps
+from torch import nn
+from tqdm import tqdm
 
-
-# from worldfoundry.base_models.perception_core.tracking.dot.utils.options.demo_options import DemoOptions
-from worldfoundry.base_models.perception_core.tracking.dot.utils.options.compbench_demo_options import DemoOptions
 from worldfoundry.base_models.perception_core.tracking.dot.models import create_model
 from worldfoundry.base_models.perception_core.tracking.dot.utils.io import (
     create_folder,
-    write_video,
-    read_video,
     read_frame,
+    read_video,
+    write_video,
 )
-from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import to_device, get_grid
 
-import os
-import csv
-import json
+# from worldfoundry.base_models.perception_core.tracking.dot.utils.options.demo_options import DemoOptions
+from worldfoundry.base_models.perception_core.tracking.dot.utils.options.compbench_demo_options import DemoOptions
+from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import get_grid, to_device
 
 
 class Visualizer(nn.Module):
@@ -306,7 +306,7 @@ def project(pos, t, time_steps, heigh, width):
 def combine_fore_back(foreground, background, output_csv):
     back_x = []
     back_y = []
-    with open(background, "r") as file2:
+    with open(background) as file2:
         reader2 = csv.reader(file2)
         background_lines = list(reader2)
         for i in range(len(background_lines) - 1):
@@ -317,7 +317,7 @@ def combine_fore_back(foreground, background, output_csv):
         writer = csv.writer(output_file)
         writer.writerow(["id", "prompt", "object_1", "d_1", "object_2", "d_2", "obj_net_left", "obj_net_up"])
 
-        with open(foreground, "r") as file1:
+        with open(foreground) as file1:
             reader1 = csv.reader(file1)
             foreground_lines = list(reader1)
 
@@ -383,7 +383,7 @@ def cal_score(output_csv, score_csv):
         writer = csv.writer(score_file)
         writer.writerow(["id", "object_1", "d_1", "object_2", "d_2", "Score"])
 
-        with open(output_csv, "r") as file1:
+        with open(output_csv) as file1:
             reader1 = csv.reader(file1)
             lines = list(reader1)
             vid_num = (len(lines) - 1) // 2
@@ -455,7 +455,7 @@ def cal_score(output_csv, score_csv):
 
 def model_score(csv_path):
     new_csv = []
-    with open(csv_path, "r") as file:
+    with open(csv_path) as file:
         reader = csv.reader(file)
         lines = list(reader)
         score = 0  # neither detected: -1, detected: motion score 0~1, total scale: -1 ~ 1
@@ -508,7 +508,7 @@ def background(args):
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
 
-    with open(args.read_prompt_file, "r") as json_data:
+    with open(args.read_prompt_file) as json_data:
         prompts = json.load(json_data)
 
     model = create_model(args).cuda()
@@ -517,7 +517,7 @@ def background(args):
 
     csv_path = f"{output_path}/{args.t2v_model}_background.csv"
     if os.path.exists(csv_path):
-        with open(csv_path, "r", newline="") as csvreader:
+        with open(csv_path, newline="") as csvreader:
             reader = csv.reader(csvreader)
             lines = list(reader)  # Read all lines into a list
             line_count = len(lines)  # Count the number of lines
@@ -663,7 +663,7 @@ def foreground(args):
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
 
-    with open(args.read_prompt_file, "r") as json_data:
+    with open(args.read_prompt_file) as json_data:
         prompts = json.load(json_data)
 
     model = create_model(args).cuda()
@@ -672,7 +672,7 @@ def foreground(args):
 
     csv_path = f"{output_path}/{args.t2v_model}_foreground.csv"
     if os.path.exists(csv_path):
-        with open(csv_path, "r", newline="") as csvreader:
+        with open(csv_path, newline="") as csvreader:
             reader = csv.reader(csvreader)
             lines = list(reader)  # Read all lines into a list
             line_count = len(lines)  # Count the number of lines

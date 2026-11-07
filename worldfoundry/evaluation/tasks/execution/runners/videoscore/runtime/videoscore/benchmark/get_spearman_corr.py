@@ -1,9 +1,10 @@
 import ast
 import json
+import os
+
+import fire
 import numpy as np
 import scipy.stats as stats
-import os
-import fire
 
 ROUND_DIGIT = 4
 
@@ -16,7 +17,7 @@ def cal_spearman_correlation(
             continue
         # result_file example: eval_video_feedback_mantisscore.json
         model_name = result_file.split(".")[0].split("_")[-1]
-        all_res = json.load(open(f"{result_dir}/{result_file}", "r"))
+        all_res = json.load(open(f"{result_dir}/{result_file}"))
         all_ref_scores = [ast.literal_eval(item["ref"]) for item in all_res]
         all_ans_scores = [ast.literal_eval(item["ans"]) for item in all_res]
 
@@ -48,7 +49,7 @@ def cal_spearman_correlation(
         if not os.path.exists(spcc_file):
             all_spcc = []
         else:
-            all_spcc = json.load(open(spcc_file, "r"))
+            all_spcc = json.load(open(spcc_file))
         all_spcc.append(
             {
                 model_name: {

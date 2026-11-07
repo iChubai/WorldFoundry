@@ -519,8 +519,8 @@ class GroundingDinoClipObjectRedetector:
 
 
 __all__ = [
-    "ObjectRedetectorBackend",
     "GroundingDinoClipObjectRedetector",
+    "ObjectRedetectorBackend",
     "confirm_redetection_prompts",
     "object_query_crop",
     "reid_match_is_accepted",

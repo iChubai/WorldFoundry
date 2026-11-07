@@ -7,10 +7,10 @@ import torch.nn.functional as F
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
+from worldfoundry.core.distributed.collectives.evaluation import get_rank
 from worldfoundry.core.execution.device import get_current_torch_device
 from worldfoundry.core.utils import batched_image_features, mean_pairwise_cosine_distance
 
-from worldfoundry.core.distributed.collectives.evaluation import get_rank
 from .utils import clip_transform_nocrop, load_dimension_info, load_video
 
 

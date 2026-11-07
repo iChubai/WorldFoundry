@@ -2,7 +2,6 @@ from typing import List, Union
 
 import torch
 from PIL import Image
-
 from worldscore.benchmark.metrics.base_metrics import BaseMetric
 from worldscore.common.optional_dependencies import handle_module_not_found_error
 
@@ -27,7 +26,7 @@ class CLIPImageQualityAssessmentMetric(BaseMetric):
         super().__init__()
         self._metric = CLIPImageQualityAssessment(model_name_or_path="openai/clip-vit-base-patch16").to(self._device)
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         imgs = self._process_image(rendered_images)
 
         imgs = (imgs * 255).to(torch.uint8)

@@ -3,8 +3,8 @@ import torch
 
 from .helpers import get_kwarg, vprint
 from .utils import (
-    extract_featuresdict_from_input_id_cached,
     create_feature_extractor,
+    extract_featuresdict_from_input_id_cached,
     resolve_feature_extractor,
     resolve_feature_layer_for_metric,
 )

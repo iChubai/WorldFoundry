@@ -1,17 +1,21 @@
 """Dynamic degree — VBench-aligned RAFT optical flow with Farneback fallback."""
 
 import logging
+from types import SimpleNamespace
+
 import cv2
 import numpy as np
 import torch
-from types import SimpleNamespace
 
-from ..base import BaseMetric
 from worldfoundry.base_models.perception_core.optical_flow.raft import (
-    InputPadder,
     RAFT,
+    InputPadder,
+)
+from worldfoundry.base_models.perception_core.optical_flow.raft import (
     checkpoint_path as raft_checkpoint_path,
 )
+
+from ..base import BaseMetric
 
 
 def _load_raft(device):

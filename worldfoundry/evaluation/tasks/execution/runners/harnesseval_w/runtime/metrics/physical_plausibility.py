@@ -88,7 +88,7 @@ class PhysicalPlausibilityEvaluator:
         )
 
     @torch.no_grad()
-    def score_prepared(self, inputs) -> Dict[str, Any]:
+    def score_prepared(self, inputs) -> dict[str, Any]:
         """Run one already-prepared request through the resident GPU model."""
         inputs = inputs.to(self.model.device)
         outputs = self.model.generate(
@@ -108,7 +108,7 @@ class PhysicalPlausibilityEvaluator:
         }
 
     @torch.no_grad()
-    def score_video(self, video_path: str, fps: float = 2.0) -> Dict[str, Any]:
+    def score_video(self, video_path: str, fps: float = 2.0) -> dict[str, Any]:
         """Score a single video for physical plausibility."""
         try:
             return self.score_prepared(self.prepare_video(video_path, fps=fps))

@@ -4,32 +4,34 @@ Copyright (c) 2022-present NAVER Corp.
 Apache-2.0
 """
 
+import json
+import os
+import re
+from typing import *
+
 from PIL import Image
 from tqdm import tqdm
-from typing import *
+
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-import os
-import json
-import re
 
 try:
-    from statsmodels.stats.inter_rater import fleiss_kappa, aggregate_raters  # noqa: F401
+    from statsmodels.stats.inter_rater import aggregate_raters, fleiss_kappa
 except ImportError:
     fleiss_kappa = aggregate_raters = None
 
+import argparse
+import datetime
+import time
+
+import torch
+import torch.nn.functional as F
+import torchvision.transforms as T
+from metrics import *
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from torchmetrics.metric import Metric
-import torch
-import torch.nn.functional as F
-import torchvision.transforms as T
-
 from video_dataset import *
-from metrics import *
-import argparse
-import time
-import datetime
 
 
 def str2bool(v):
@@ -161,12 +163,13 @@ def populate_metrics(
 
 def blipscore(config_path, args):
     import ruamel.yaml as yaml
+
     from worldfoundry.base_models.perception_core.video_text.fetv_blip import utils
     from worldfoundry.base_models.perception_core.video_text.fetv_blip.models.blip_retrieval import (
         blip_retrieval,
     )
 
-    config = yaml.load(open(config_path, "r"), Loader=yaml.Loader)
+    config = yaml.load(open(config_path), Loader=yaml.Loader)
 
     #### Dataset ####
     print("Creating BLIP dataset")
@@ -269,12 +272,12 @@ def compute_blipscore(model, data_loader, tokenizer, device, config, utils, use_
 
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print("Evaluation time {}".format(total_time_str))
+        print(f"Evaluation time {total_time_str}")
 
     return dot_sims, itm_scores
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     # config
     parser = argparse.ArgumentParser()
     parser.add_argument("--eval_model", default=None, help="CLIP model checkpoint")

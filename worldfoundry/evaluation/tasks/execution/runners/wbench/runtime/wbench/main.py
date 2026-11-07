@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 WBench Evaluation Pipeline - 3 independent phases.
 
@@ -377,8 +376,8 @@ def _get_applicable_cases(metric, videos, cases_dir, model_dir):
 
 def _run_metric_on_gpu(gpu_id, metric, tasks, eval_dir, model_dir):
     """Single GPU worker for one metric: load model, process assigned cases, save."""
-    import torch
     import cv2
+    import torch
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     os.environ["OMP_NUM_THREADS"] = "4"
@@ -598,7 +597,7 @@ def _print_metric_summary(metric, eval_dir, cases_dir):
         if non_navi_scores:
             print(f"     └  Non-navi: {np.mean(non_navi_scores):.4f} (n={len(non_navi_scores)})")
             return
-    print(f"     └")
+    print("     └")
 
 
 def run_phase_gpu(model, video_dir, gpus, metrics=None):
@@ -626,11 +625,11 @@ def run_phase_gpu(model, video_dir, gpus, metrics=None):
         compute_units = DEFAULT_GPU_COMPUTE_UNITS
 
     if not compute_units:
-        print(f"  [SKIP] No GPU metrics to run.")
+        print("  [SKIP] No GPU metrics to run.")
         return
 
     print(f"\n{'=' * 60}")
-    print(f"  Phase 2: GPU Metrics (per-metric mode)")
+    print("  Phase 2: GPU Metrics (per-metric mode)")
     print(f"  Videos: {len(videos)} | GPUs: {gpus}")
     print(f"  Compute units: {compute_units}")
     print(f"{'=' * 60}")
@@ -658,7 +657,7 @@ def run_phase_gpu(model, video_dir, gpus, metrics=None):
         print(f"\n  ── {metric} ── ({len(tasks)} applicable, {len(tasks) - len(pending)} done, {len(pending)} pending)")
 
         if not pending:
-            print(f"     All done, skipping.")
+            print("     All done, skipping.")
             continue
 
         t0 = time.time()
@@ -704,7 +703,7 @@ def _vlm_eval_case(task):
     sys.path.insert(0, PROJECT_ROOT)
     warnings.filterwarnings("ignore")
 
-    from src.evaluate import evaluate_scene_adherence, evaluate_subject_adherence, evaluate_causal_fidelity
+    from src.evaluate import evaluate_causal_fidelity, evaluate_scene_adherence, evaluate_subject_adherence
 
     def _save_metric(metric_name, result_data):
         """Save per-metric result to evaluation/{metric_name}/case_{id}.json"""
@@ -752,8 +751,8 @@ def _vlm_eval_case(task):
 
     from src.metrics.interaction.vlm_interaction import (
         evaluate_event_edit,
-        evaluate_subject_action,
         evaluate_perspective_switch,
+        evaluate_subject_action,
     )
     from src.metrics.vlm.vlm_evaluator import VLMClient
 
@@ -814,7 +813,7 @@ def run_phase_vlm(model, video_dir, vlm_workers=8, metrics=None):
             print(f"  [ERROR] Unknown metrics: {unknown}")
         metrics = [m for m in metrics if m in VLM_METRICS]
         if not metrics:
-            print(f"  [SKIP] No VLM metrics to run.")
+            print("  [SKIP] No VLM metrics to run.")
             return
 
     videos = find_videos(video_dir)
@@ -857,7 +856,7 @@ def run_phase_vlm(model, video_dir, vlm_workers=8, metrics=None):
         tasks.append((cid, vp, cd, eval_dir, metrics))
 
     print(f"\n{'=' * 60}")
-    print(f"  Phase 3: VLM Metrics (API-based)")
+    print("  Phase 3: VLM Metrics (API-based)")
     print(f"  Cases: {len(tasks)} | Workers: {vlm_workers}")
     if metrics:
         print(f"  Metrics filter: {metrics}")
@@ -871,7 +870,7 @@ def run_phase_vlm(model, video_dir, vlm_workers=8, metrics=None):
             try:
                 cid, status = future.result()
                 done += 1
-            except Exception as e:
+            except Exception:
                 fail += 1
             if (done + fail) % 1 == 0:
                 print(f"  [VLM] Progress: {done + fail}/{len(tasks)}", flush=True)
@@ -1100,7 +1099,7 @@ def main():
     metrics_list = resolve_metrics(args.metrics.split(",") if args.metrics else None)
 
     print(f"\n{'=' * 60}")
-    print(f"  WBench Pipeline")
+    print("  WBench Pipeline")
     print(f"  Model:  {args.model}")
     print(f"  Videos: {len(videos)}")
     print(f"  GPUs:   {gpus}")

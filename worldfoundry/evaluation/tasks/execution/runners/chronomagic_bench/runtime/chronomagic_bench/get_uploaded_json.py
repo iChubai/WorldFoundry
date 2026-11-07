@@ -1,7 +1,7 @@
-import os
-import json
-import re
 import argparse
+import json
+import os
+import re
 from collections import defaultdict
 
 
@@ -18,12 +18,12 @@ def merge_scores(input_path, output_path, patterns, score_keys, result_keys, out
     results = defaultdict(lambda: defaultdict(list))
 
     for filename in os.listdir(input_path):
-        for pattern, score_key, result_key in zip(patterns, score_keys, result_keys):
+        for pattern, score_key, result_key in zip(patterns, score_keys, result_keys, strict=False):
             prefix_pattern = re.compile(pattern)
             match = prefix_pattern.match(filename)
             if match:
                 prefix = match.group(1)
-                with open(os.path.join(input_path, filename), "r") as file:
+                with open(os.path.join(input_path, filename)) as file:
                     data = json.load(file)
                     results[prefix][result_key].append(data[score_key])
 

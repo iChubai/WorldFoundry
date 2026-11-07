@@ -36,8 +36,9 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Tuple
 
 import cv2
 import numpy as np
@@ -68,7 +69,7 @@ PALETTE = [
 LOCAL_SAM3_PACKAGE_ROOT = REPO_ROOT / "sam3"
 
 
-def encode_video_to_data_url(video_path: str) -> Dict[str, Any]:
+def encode_video_to_data_url(video_path: str) -> dict[str, Any]:
     with open(video_path, "rb") as video_file:
         base64_video = base64.b64encode(video_file.read()).decode("utf-8")
     return {
@@ -83,7 +84,7 @@ def extract_dynamic_objects(
     model_name: str | None = None,
     backend: str | None = None,
     max_objects: int = 4,
-) -> List[str]:
+) -> list[str]:
     """
     Use a VLM to list a few moving/deforming objects in the video.
     """
@@ -146,7 +147,7 @@ def _bbox_path(video_path: str) -> Path:
     return path.with_name(f"{path.stem}_bbox.mp4")
 
 
-def _probe_video(video_path: str) -> Dict[str, Any]:
+def _probe_video(video_path: str) -> dict[str, Any]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {video_path}")
@@ -169,7 +170,7 @@ def _probe_video(video_path: str) -> Dict[str, Any]:
     }
 
 
-def _compute_sample_indices(total_frames: int, max_frames: int) -> List[int]:
+def _compute_sample_indices(total_frames: int, max_frames: int) -> list[int]:
     if total_frames <= 0:
         return []
     if max_frames <= 0 or total_frames <= max_frames:
@@ -198,7 +199,7 @@ def _build_sampled_video(
     video_path: str,
     work_dir: Path,
     max_frames: int,
-) -> tuple[str, Dict[str, Any]]:
+) -> tuple[str, dict[str, Any]]:
     """
     Create a temporally subsampled proxy video for VLM and SAM3 processing.
 
@@ -322,7 +323,7 @@ def _extract_base_overlay_frames(
     video_path: str,
     mask_frame_dir: Path,
     bbox_frame_dir: Path,
-) -> Tuple[int, int, int, List[Tuple[Path, Path]]]:
+) -> tuple[int, int, int, list[tuple[Path, Path]]]:
     """
     Decode the video once and materialize per-frame PNGs for mask/bbox overlays.
     """
@@ -334,7 +335,7 @@ def _extract_base_overlay_frames(
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    frame_paths: List[Tuple[Path, Path]] = []
+    frame_paths: list[tuple[Path, Path]] = []
     frame_idx = 0
     while True:
         ok, frame = cap.read()
@@ -397,7 +398,7 @@ def _normalize_boxes(raw_boxes: Any) -> np.ndarray:
     return boxes.astype(np.float32, copy=False)
 
 
-def _mask_to_xyxy(mask_bool: np.ndarray) -> Tuple[int, int, int, int] | None:
+def _mask_to_xyxy(mask_bool: np.ndarray) -> tuple[int, int, int, int] | None:
     if not mask_bool.any():
         return None
     coords = np.argwhere(mask_bool)
@@ -406,7 +407,7 @@ def _mask_to_xyxy(mask_bool: np.ndarray) -> Tuple[int, int, int, int] | None:
     return int(x1), int(y1), int(x2), int(y2)
 
 
-def _normalized_xywh_to_xyxy(box_xywh: Sequence[float], width: int, height: int) -> Tuple[int, int, int, int]:
+def _normalized_xywh_to_xyxy(box_xywh: Sequence[float], width: int, height: int) -> tuple[int, int, int, int]:
     x, y, w, h = [float(value) for value in box_xywh]
     x1 = int(round(x * width))
     y1 = int(round(y * height))
@@ -423,8 +424,8 @@ def _apply_outputs_to_overlay_frames(
     *,
     mask_frame_path: Path,
     bbox_frame_path: Path,
-    outputs: Dict[str, Any],
-    color: Tuple[int, int, int],
+    outputs: dict[str, Any],
+    color: tuple[int, int, int],
     width: int,
     height: int,
 ) -> None:
@@ -512,7 +513,7 @@ def _remux_h264(src: str, dst: str) -> None:
     )
 
 
-def _remove_non_h264_intermediates(video_paths: List[str]) -> None:
+def _remove_non_h264_intermediates(video_paths: list[str]) -> None:
     for video_path in video_paths:
         path = Path(video_path)
         try:
@@ -527,7 +528,7 @@ def _remove_non_h264_intermediates(video_paths: List[str]) -> None:
 
 def segment_with_sam3(
     video_path: str,
-    text_prompts: List[str],
+    text_prompts: list[str],
     sam3_model_path: str = "./weights/sam3/sam3.pt",
     device: str = "cuda:1",
     version: str = "sam3",
@@ -536,14 +537,14 @@ def segment_with_sam3(
     max_num_objects: int = 16,
     output_prob_thresh: float = 0.5,
     output_video_path: str | None = None,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Run native SAM3 video prompting/tracking and render mask/bbox videos.
     """
     gpu_index = _require_cuda_device(device)
     build_sam3_predictor = _load_build_sam3_predictor()
 
-    predictor_kwargs: Dict[str, Any] = {
+    predictor_kwargs: dict[str, Any] = {
         "checkpoint_path": sam3_model_path,
         "version": version,
         "compile": compile,
@@ -682,7 +683,7 @@ def run_sam_process(
     max_num_objects: int = 16,
     output_prob_thresh: float = 0.5,
     max_frames: int = 128,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     print("=" * 80)
     print("PHYSICAL SAM PROCESS (NATIVE SAM3)")
     print("=" * 80)

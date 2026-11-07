@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.errors import (
     DataInvalidError,
@@ -104,7 +105,7 @@ class LRHoldProtocol:
         value: Any,
         *,
         actual_output_frames: int,
-    ) -> "LRHoldProtocol":
+    ) -> LRHoldProtocol:
         if not isinstance(value, dict):
             raise DataInvalidError("metadata.lr_hold_protocol must be an object")
         trajectory_id = str(value.get("trajectory_id", ""))

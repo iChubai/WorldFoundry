@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Mapping
-
+from typing import Any
 
 SCHEMA_VERSION = "wrbench_latest_d1_d6_metrics_v3"
 MAIN_TABLE_HYPERPARAMETERS = {

@@ -26,7 +26,7 @@ def compute_case(
     fps: float = 3.0,
     device: str = "cuda",
     max_pts_per_frame: int = 5000,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Compute geometric + photometric consistency for a single video.
 
     Args:
@@ -95,7 +95,7 @@ def compute_case(
         return {"score": None, "error": f"{type(e).__name__}: {e}"}
 
 
-def _extract_frames_resized(video_path: str, depth_shape, fps: float) -> Optional[np.ndarray]:
+def _extract_frames_resized(video_path: str, depth_shape, fps: float) -> np.ndarray | None:
     """Extract frames and resize to match DA3 depth resolution."""
     N, H, W = depth_shape
     cap = cv2.VideoCapture(video_path)

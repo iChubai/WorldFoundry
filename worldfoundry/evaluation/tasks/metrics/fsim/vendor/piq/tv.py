@@ -4,7 +4,8 @@ remi.flamary.com/demos/proxtv.html and www.wikiwand.com/en/Total_variation_denoi
 
 import torch
 from torch.nn.modules.loss import _Loss
-from piq.utils import _validate_input, _reduce
+
+from piq.utils import _reduce, _validate_input
 
 
 def total_variation(x: torch.Tensor, reduction: str = "mean", norm_type: str = "l2") -> torch.Tensor:

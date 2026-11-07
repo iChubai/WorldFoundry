@@ -44,11 +44,11 @@ def _bootstrap_paths_and_aliases():
         pass
 
 
-def _candidate_dataset_roots(dataset_json: str, root: Dict[str, Any]) -> List[Path]:
+def _candidate_dataset_roots(dataset_json: str, root: dict[str, Any]) -> list[Path]:
     dataset_path = Path(dataset_json).resolve()
     dataset_dir = dataset_path.parent
     base_path = root.get("dataset_info", {}).get("base_path", "") if isinstance(root, dict) else ""
-    candidates: List[Path] = []
+    candidates: list[Path] = []
     for env_name in ("DATASET_BASE_DIR", "WORLDFOUNDRY_GENERATED_ARTIFACT_DIR"):
         env_value = os.environ.get(env_name)
         if env_value:
@@ -66,7 +66,7 @@ def _candidate_dataset_roots(dataset_json: str, root: Dict[str, Any]) -> List[Pa
     else:
         candidates.append(dataset_dir)
     candidates.append(dataset_dir)
-    deduped: List[Path] = []
+    deduped: list[Path] = []
     seen = set()
     for candidate in candidates:
         key = str(candidate)
@@ -76,10 +76,10 @@ def _candidate_dataset_roots(dataset_json: str, root: Dict[str, Any]) -> List[Pa
     return deduped
 
 
-def _resolve_dataset_video_paths(dataset_json: str, root: Dict[str, Any], videos: List[str]) -> List[str]:
+def _resolve_dataset_video_paths(dataset_json: str, root: dict[str, Any], videos: list[str]) -> list[str]:
     candidate_roots = _candidate_dataset_roots(dataset_json, root)
 
-    resolved: List[str] = []
+    resolved: list[str] = []
     for video_path in videos:
         candidate = Path(video_path)
         if candidate.is_absolute():
@@ -90,7 +90,7 @@ def _resolve_dataset_video_paths(dataset_json: str, root: Dict[str, Any], videos
     return resolved
 
 
-def read_dataset_json(path: str) -> List[Dict[str, Any]]:
+def read_dataset_json(path: str) -> list[dict[str, Any]]:
     """
     Parse dataset JSON schema like:
     {
@@ -105,10 +105,10 @@ def read_dataset_json(path: str) -> List[Dict[str, Any]]:
     }
     Return a flattened list of items with keys: model, dimension, video_list, prompt, auxiliary_info(optional)
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         root = json.load(f)
 
-    items: List[Dict[str, Any]] = []
+    items: list[dict[str, Any]] = []
     models = root.get("models", []) if isinstance(root, dict) else []
     for m in models:
         model_name = m.get("model_name")
@@ -196,7 +196,7 @@ def _dimension_filter_keys(requested_dimension: str) -> set[str]:
     }
 
 
-def _item_matches_dimension(item: Dict[str, Any], requested_dimension: str) -> bool:
+def _item_matches_dimension(item: dict[str, Any], requested_dimension: str) -> bool:
     item_dimension = _normalize_dim_name(item.get("dimension", ""))
     if not item_dimension:
         return False
@@ -204,8 +204,8 @@ def _item_matches_dimension(item: Dict[str, Any], requested_dimension: str) -> b
 
 
 def build_model_items(
-    items: List[Dict[str, Any]], model_name: str, dimension: str | None = None
-) -> List[Dict[str, Any]]:
+    items: list[dict[str, Any]], model_name: str, dimension: str | None = None
+) -> list[dict[str, Any]]:
     """
     Filter items by model name and, when possible, by the requested dimension.
 
@@ -221,7 +221,7 @@ def build_model_items(
     return dimension_items or model_items
 
 
-def create_single_video_item(model_name: str, video_path: str, prompt: str = "") -> Dict[str, Any]:
+def create_single_video_item(model_name: str, video_path: str, prompt: str = "") -> dict[str, Any]:
     """
     Create a single item for evaluating a specific video
     """
@@ -234,7 +234,7 @@ def create_single_video_item(model_name: str, video_path: str, prompt: str = "")
     }
 
 
-def validate_video_inputs(model_items: List[Dict[str, Any]]) -> None:
+def validate_video_inputs(model_items: list[dict[str, Any]]) -> None:
     """Fail closed when a declared benchmark video cannot yield one frame."""
     import cv2
 
@@ -296,7 +296,7 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
         if not os.path.exists(json_file_path):
             print(f"JSON file does not exist: {json_file_path}")
             return False
-        with open(json_file_path, "r", encoding="utf-8") as f:
+        with open(json_file_path, encoding="utf-8") as f:
             data = json.load(f)
     except Exception as e:
         print(f"Error during automatic question generation (failed to read file): {e}")
@@ -337,7 +337,7 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
         max_workers = 1
 
     # Worker: use temporary file to call existing process_json_file interface for single entry
-    def _process_one(index: int, item: Dict[str, Any]) -> tuple[int, List[Dict[str, Any]]]:
+    def _process_one(index: int, item: dict[str, Any]) -> tuple[int, list[dict[str, Any]]]:
         try:
             with tempfile.TemporaryDirectory(prefix="qa_gen_") as td:
                 tmp_path = os.path.join(td, "single_item.json")
@@ -350,7 +350,7 @@ def auto_generate_questions_if_needed(json_file_path: str, dimension: str) -> bo
                 if not ok:
                     return index, item.get("auxiliary_info", [])
                 # Read back result
-                with open(tmp_path, "r", encoding="utf-8") as rf:
+                with open(tmp_path, encoding="utf-8") as rf:
                     out_list = json.load(rf)
                 if isinstance(out_list, list) and out_list:
                     new_aux = out_list[0].get("auxiliary_info", [])
@@ -410,12 +410,12 @@ def dynamic_import_dimension(dimension_name: str):
 
 def run_dimension(
     dimension: str,
-    dim_items: List[Dict[str, Any]],
+    dim_items: list[dict[str, Any]],
     json_dir: str,
     device: str = "cuda:0",
     model: str = "",
     dataset_json: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     mod = dynamic_import_dimension(dimension)
     # dimension module should expose a compute_<dimension>(json_dir, device, submodules_dict, **kwargs)
     func_name = f"compute_{_normalize_dim_name(dimension)}"
@@ -428,10 +428,10 @@ def run_dimension(
     return {"dimension": dimension, "score": float(score), "details": details}
 
 
-def write_dimension_json(json_dir_root: str, dimension: str, model_items: List[Dict[str, Any]]) -> str:
+def write_dimension_json(json_dir_root: str, dimension: str, model_items: list[dict[str, Any]]) -> str:
     os.makedirs(json_dir_root, exist_ok=True)
     # Transform to VBench-style list of dicts with keys: dimension, video_list, prompt_en, auxiliary_info
-    out_items: List[Dict[str, Any]] = []
+    out_items: list[dict[str, Any]] = []
     for it in model_items:
         out_items.append(
             {

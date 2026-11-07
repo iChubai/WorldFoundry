@@ -6,12 +6,12 @@ Usage:
     CUDA_VISIBLE_DEVICES=0 python tools/run_visual_plausibility.py --model hunyuan --force
 """
 
-import sys
-import os
-import json
-import glob
-import time
 import argparse
+import glob
+import json
+import os
+import sys
+import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -56,6 +56,7 @@ def main():
         return
 
     from src.metrics.physical.visual_plausibility import PhysicalPlausibilityEvaluator
+
     from worldfoundry.base_models.llm_mllm_core.mllm.qwen.wbench_visual_plausibility import model_dir
 
     model_path = args.model_path or str(model_dir())

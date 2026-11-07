@@ -1,8 +1,9 @@
-from urllib.parse import urlparse
+import shutil
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
+
 import requests
-import shutil
 import yaml
 
 # ---------------------------------------------------------------------------
@@ -92,7 +93,7 @@ def _copy_or_symlink(src: Path, dst: Path, *, mode: str = "symlink") -> None:
 # -----------------------------
 
 
-def _path_to_rel(path: Path, base: Optional[Path] = None) -> str:
+def _path_to_rel(path: Path, base: Path | None = None) -> str:
     """
     Serialize a path for storage in JSON.
 
@@ -108,7 +109,7 @@ def _path_to_rel(path: Path, base: Optional[Path] = None) -> str:
         return path.resolve().as_posix()
 
 
-def _path_from_rel(s: str, base: Optional[Path] = None) -> Path:
+def _path_from_rel(s: str, base: Path | None = None) -> Path:
     """
     Deserialize a path stored by `_path_to_rel`.
 

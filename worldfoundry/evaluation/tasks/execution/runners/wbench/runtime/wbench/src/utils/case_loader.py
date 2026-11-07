@@ -11,7 +11,7 @@ import glob
 import json
 import logging
 from pathlib import Path
-from typing import List, Optional, Any, Dict
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class Case:
         self.eval_questions = eval_questions
 
 
-def _migrate_case(case_dict: Dict[str, Any]) -> Case:
+def _migrate_case(case_dict: dict[str, Any]) -> Case:
     """Parse a case dict into Case object."""
     settings_dict = case_dict.get("settings", {})
 
@@ -201,7 +201,7 @@ def _migrate_case(case_dict: Dict[str, Any]) -> Case:
     )
 
 
-def _collect_json_files(path: str) -> List[str]:
+def _collect_json_files(path: str) -> list[str]:
     """Collect case JSON file paths from a file or directory."""
     p = Path(path)
     if p.is_file():
@@ -218,12 +218,12 @@ def _collect_json_files(path: str) -> List[str]:
     raise FileNotFoundError(f"Path does not exist: {path}")
 
 
-def load_cases(json_path: str) -> List[Case]:
+def load_cases(json_path: str) -> list[Case]:
     """Load cases from a JSON file or directory of case files."""
     files = _collect_json_files(json_path)
     cases = []
     for f in files:
-        with open(f, "r", encoding="utf-8") as fp:
+        with open(f, encoding="utf-8") as fp:
             data = json.load(fp)
         if isinstance(data, dict):
             data = [data]
@@ -233,12 +233,12 @@ def load_cases(json_path: str) -> List[Case]:
     return cases
 
 
-def load_cases_raw(json_path: str) -> List[dict]:
+def load_cases_raw(json_path: str) -> list[dict]:
     """Load cases as raw dicts."""
     files = _collect_json_files(json_path)
     cases = []
     for f in files:
-        with open(f, "r", encoding="utf-8") as fp:
+        with open(f, encoding="utf-8") as fp:
             data = json.load(fp)
         if isinstance(data, list):
             cases.extend(data)

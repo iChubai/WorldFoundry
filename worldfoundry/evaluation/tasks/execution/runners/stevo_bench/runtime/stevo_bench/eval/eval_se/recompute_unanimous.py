@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict
 
 
-def recompute_with_unanimous(results_file: str, project_root: str) -> Dict:
+def recompute_with_unanimous(results_file: str, project_root: str) -> dict:
     """
     Recompute ensemble verdicts using unanimous voting.
 
@@ -25,7 +25,7 @@ def recompute_with_unanimous(results_file: str, project_root: str) -> Dict:
     if not results_path.is_absolute():
         results_path = Path(project_root) / "eval_se" / "results" / results_file
 
-    with open(results_path, "r") as f:
+    with open(results_path) as f:
         eval_results = json.load(f)
 
     # Check if this is ensemble results
@@ -167,7 +167,7 @@ def main():
 
     print(f"\n{'=' * 70}")
     print(f"Recomputed results saved to: {output_path}")
-    print(f"\nYou can now analyze this with:")
+    print("\nYou can now analyze this with:")
     print(f"  python eval_se/analyze_results.py {output_file}")
     print(f"  python eval_se/model_win_rates.py {output_file}")
     print(f"  python eval_se/pairwise_agreement.py {output_file}")

@@ -1,24 +1,28 @@
+import logging
 import os
+
 import cv2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-from tqdm import tqdm
-from PIL import Image
-from dreamsim import dreamsim
 from decord import VideoReader
-from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
+from dreamsim import dreamsim
+from PIL import Image
+from tqdm import tqdm
 from vbench.subject_consistency import compute_subject_consistency, subject_consistency
-from vbench.utils import load_video, load_dimension_info, dino_transform, dino_transform_Image
-from vbench2_beta_long.utils import reorganize_clips_results, create_video_from_first_frames, fuse_inclip_clip2clip
+from vbench.utils import dino_transform, dino_transform_Image, load_dimension_info, load_video
 from vbench2_beta_long.utils import (
-    dreamsim_transform,
-    dreamsim_transform_Image,
+    create_video_from_first_frames,
     dinov2_transform,
     dinov2_transform_Image,
+    dreamsim_transform,
+    dreamsim_transform_Image,
+    fuse_inclip_clip2clip,
+    reorganize_clips_results,
 )
-import logging
+
+from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

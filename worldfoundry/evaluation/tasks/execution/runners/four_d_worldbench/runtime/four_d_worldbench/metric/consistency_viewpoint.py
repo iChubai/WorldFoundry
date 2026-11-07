@@ -1,15 +1,16 @@
-from typing import List
-import os
-import cv2
-import torch
-import numpy as np
-import cv2
 import argparse
-from tqdm import tqdm
-from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid import Droid
-from ..paths import droid_checkpoint_path
-import cvxpy as cp
+import os
+from typing import List
 
+import cv2
+import cvxpy as cp
+import numpy as np
+import torch
+from tqdm import tqdm
+
+from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid import Droid
+
+from ..paths import droid_checkpoint_path
 from .base_metrics import BaseMetric
 
 try:
@@ -50,7 +51,7 @@ def image_stream(image_list, stride, calib):
         yield t, image[None], intrinsics
 
 
-def split_video_into_clips(image_list: List[str], frames_per_clip: int = 10, min_clip_size: int = 5) -> List[List[str]]:
+def split_video_into_clips(image_list: list[str], frames_per_clip: int = 10, min_clip_size: int = 5) -> list[list[str]]:
     total_frames = len(image_list)
     if total_frames < frames_per_clip:
         if total_frames >= min_clip_size:
@@ -87,7 +88,7 @@ def split_video_into_clips(image_list: List[str], frames_per_clip: int = 10, min
     return clips
 
 
-def compute_clip_reprojection_error(clip_frames: List[str], args) -> float:
+def compute_clip_reprojection_error(clip_frames: list[str], args) -> float:
     if len(clip_frames) < 2:
         print(f"Warning: Insufficient frames in clip ({len(clip_frames)}), skipping")
         return float("inf")
@@ -184,7 +185,7 @@ class ReprojectionErrorMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         if not rendered_images:
             return float("inf")
@@ -229,7 +230,7 @@ class ReprojectionErrorMetric(BaseMetric):
         # Calculate average error
         if valid_errors:
             final_score = np.mean(valid_errors)
-            print(f"\n=== Final Results ===")
+            print("\n=== Final Results ===")
             print(f"Valid clips: {len(valid_errors)}/{len(clips)}")
             print(f"Error per clip: {[f'{e:.4f}' for e in valid_errors]}")
             print(f"Average reprojection error: {final_score:.4f}")
@@ -253,7 +254,7 @@ class ReprojectionErrorMetric(BaseMetric):
             print("Warning: Minimum clip size must be greater than 0")
 
 
-def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 300) -> List[str]:
+def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 300) -> list[str]:
     os.makedirs(out_root, exist_ok=True)
 
     # Use full path with replaced separators to create unique directory
@@ -272,7 +273,7 @@ def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 300
         step = total / float(max_frames)
         indices = [int(i * step) for i in range(max_frames)]
 
-    saved: List[str] = []
+    saved: list[str] = []
     idx = 0
     next_set = set(indices)
     cur = 0
@@ -313,7 +314,7 @@ def compute_consistency_viewpoint(json_dir, device, submodules_dict, **kwargs):
 
     metric = ReprojectionErrorMetric()
     details = []
-    scores: List[float] = []
+    scores: list[float] = []
     out_root = os.path.join(os.path.dirname(json_dir), "frames_cache")
 
     for item in prompt_dict_ls:
@@ -353,6 +354,6 @@ def compute_consistency_viewpoint(json_dir, device, submodules_dict, **kwargs):
             json.dump(detailed_output, f, indent=2, ensure_ascii=False)
         print(f"\nDetailed results saved to: {output_file}")
     except Exception as e:
-        print(f"Error saving JSON file: {str(e)}")
+        print(f"Error saving JSON file: {e!s}")
 
     return final, details

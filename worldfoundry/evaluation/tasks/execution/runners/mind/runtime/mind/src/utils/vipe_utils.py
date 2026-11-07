@@ -1,10 +1,11 @@
+import hashlib
+import os
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-import hashlib
-import subprocess
+
 import numpy as np
-import os
 from tqdm import tqdm
 
 # -----------------------------
@@ -57,7 +58,7 @@ def rot_angle_deg(R: np.ndarray) -> float:
 # -----------------------------
 
 
-def umeyama_sim3(X: np.ndarray, Y: np.ndarray) -> Tuple[float, np.ndarray, np.ndarray]:
+def umeyama_sim3(X: np.ndarray, Y: np.ndarray) -> tuple[float, np.ndarray, np.ndarray]:
     """
     Estimate similarity transform (s, R, t) such that:
         Y ≈ s * R * X + t
@@ -100,7 +101,7 @@ def apply_sim3_to_poses(Ts: np.ndarray, s: float, R: np.ndarray, t: np.ndarray) 
 # -----------------------------
 
 
-def compute_rpe(gt_T: np.ndarray, est_T: np.ndarray, delta: int = 1) -> Tuple[np.ndarray, np.ndarray]:
+def compute_rpe(gt_T: np.ndarray, est_T: np.ndarray, delta: int = 1) -> tuple[np.ndarray, np.ndarray]:
     """
     Relative Pose Error per step:
       dQ = Q_i^{-1} Q_{i+Δ}
@@ -129,9 +130,7 @@ def _sha1(s: str) -> str:
     return hashlib.sha1(s.encode("utf-8")).hexdigest()[:12]
 
 
-def run_cmd(
-    cmd: List[str], cwd: Optional[Path] = None, quiet: bool = False, env: Optional[Dict[str, str]] = None
-) -> None:
+def run_cmd(cmd: list[str], cwd: Path | None = None, quiet: bool = False, env: dict[str, str] | None = None) -> None:
     """
     Run a shell command.
 
@@ -168,7 +167,7 @@ def run_cmd(
         raise RuntimeError(error_msg)
 
 
-def find_images_txt(root: Path) -> Optional[Path]:
+def find_images_txt(root: Path) -> Path | None:
     for dp, _, fns in os.walk(root):
         for fn in fns:
             if fn == "images.txt":
@@ -181,7 +180,7 @@ def vipe_to_colmap(out_dir: Path, vipe_repo: Path, gpu_id: int = 0) -> None:
     run_cmd(["python", str(script), str(out_dir)], cwd=vipe_repo, quiet=True, env={"CUDA_VISIBLE_DEVICES": str(gpu_id)})
 
 
-def parse_colmap_images_txt(images_txt: Path) -> Tuple[np.ndarray, int]:
+def parse_colmap_images_txt(images_txt: Path) -> tuple[np.ndarray, int]:
     """
     Parse COLMAP images.txt -> camera->world poses (T_wc) (N,4,4).
     COLMAP stores world->cam: qvec(w,x,y,z), tvec.
@@ -194,7 +193,7 @@ def parse_colmap_images_txt(images_txt: Path) -> Tuple[np.ndarray, int]:
         num_images: number of images parsed
     """
     lines = images_txt.read_text(encoding="utf-8", errors="ignore").splitlines()
-    entries: List[Tuple[str, np.ndarray]] = []
+    entries: list[tuple[str, np.ndarray]] = []
     i = 0
     while i < len(lines):
         line = lines[i].strip()

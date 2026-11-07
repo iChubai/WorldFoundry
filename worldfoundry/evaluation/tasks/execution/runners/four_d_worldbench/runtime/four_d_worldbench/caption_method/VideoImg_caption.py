@@ -1,11 +1,12 @@
+import datetime
+import json
 import os
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, AutoModel, AutoTokenizer
+
 import keye_vl_utils
 import qwen_vl_utils
 import torch
-import json
-import datetime
 import tqdm
+from transformers import AutoModel, AutoProcessor, AutoTokenizer, Qwen2_5_VLForConditionalGeneration
 
 try:
     from ..paths import keye_model_path
@@ -64,7 +65,9 @@ def Qwen_describe_image(image_path, device="cuda"):
 
     # Inference
     generated_ids = model.generate(**inputs, max_new_tokens=1024)
-    generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+    generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+    ]
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
@@ -105,7 +108,9 @@ def Keye_describe_image(image_path, device="cuda"):
 
     # Inference: Generation of the output
     generated_ids = model.generate(**inputs, max_new_tokens=768)
-    generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+    generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+    ]
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
@@ -156,7 +161,9 @@ def Qwen_describe_video(video_path, fps, device="cuda"):
 
     # Inference
     generated_ids = model.generate(**inputs, max_new_tokens=1024)
-    generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+    generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+    ]
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
@@ -201,7 +208,9 @@ def Keye_describe_video_fps(video_path, fps, device="cuda"):
 
     # Inference: Generation of the output
     generated_ids = model.generate(**inputs, max_new_tokens=768)
-    generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+    generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+    ]
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
@@ -252,7 +261,9 @@ def Keye_describe_video(video_path, device="cuda"):
 
     # Inference: Generation of the output
     generated_ids = model.generate(**inputs, max_new_tokens=768)
-    generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+    generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+    ]
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )
@@ -301,7 +312,9 @@ def Keye_answer_video(video_path, device="cuda"):
 
     # Inference: Generation of the output
     generated_ids = model.generate(**inputs, max_new_tokens=768)
-    generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+    generated_ids_trimmed = [
+        out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+    ]
     output_text = processor.batch_decode(
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )

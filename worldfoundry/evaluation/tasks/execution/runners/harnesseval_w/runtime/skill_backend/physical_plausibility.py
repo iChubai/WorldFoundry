@@ -13,7 +13,6 @@ from ..io import value_digest
 from ..skills.skill_physical_plausibility import BACKEND_OUTPUT_SCHEMA, SAMPLING
 from .common import _validate_video
 
-
 BACKEND_ID = "harnesseval.physical_plausibility.pavrm"
 BACKEND_VERSION = "harnesseval.pavrm_qwen3vl_a3b"
 CONFIG_DIGEST = value_digest(

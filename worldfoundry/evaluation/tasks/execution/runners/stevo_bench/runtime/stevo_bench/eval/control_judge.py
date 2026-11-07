@@ -20,10 +20,11 @@ Deps:
 
 import json
 import re
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from eval.utils import _path_to_rel
 
@@ -45,7 +46,6 @@ def _ensemble_decide(votes_true: int, n: int, mode: str) -> bool:
 
 
 import yaml
-
 from eval.judge_client import make_judge_client
 from eval.task_resolver import ResolvedTask
 
@@ -65,7 +65,7 @@ class ControlJudgeResult:
     raw_text: str
 
 
-def _load_task_fields(task_yaml_path: Path) -> Tuple[str, str, str]:
+def _load_task_fields(task_yaml_path: Path) -> tuple[str, str, str]:
     """Return (video_WM, camera_WM, camera_pose) from the task YAML. Empty string if absent."""
     data = yaml.safe_load(Path(task_yaml_path).read_text(encoding="utf-8")) or {}
     prompts = data.get("prompts", {}) or {}
@@ -134,7 +134,7 @@ def _compute_requested_fields(
     camera_wm: str,
     camera_pose: str,
     camera_controlled: bool = False,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Compute (requested_trigger, requested_occlusion) from task prompt fields.
 
     Args:
@@ -252,12 +252,12 @@ def _unwrap_full_fence(s: str) -> str:
     return m.group(1).strip() if m else s
 
 
-def _extract_first_object(s: str) -> Optional[str]:
+def _extract_first_object(s: str) -> str | None:
     m = re.search(r"\{.*\}", s or "", flags=re.DOTALL)
     return m.group(0).strip() if m else None
 
 
-def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
+def _try_load_json(s: str) -> dict[str, Any] | None:
     try:
         obj = json.loads(s)
         return obj if isinstance(obj, dict) else None
@@ -265,7 +265,7 @@ def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def parse_control_judge_output(raw_text: str) -> Dict[str, Any]:
+def parse_control_judge_output(raw_text: str) -> dict[str, Any]:
     raw = (raw_text or "").strip()
 
     # 1) pure JSON or fully fenced JSON
@@ -308,7 +308,7 @@ def evaluate_control_one_task(
     occlusion_prompt = build_occlusion_judge_prompt(requested_occlusion)
     trigger_prompt = build_trigger_judge_prompt(requested_trigger)
 
-    def _occ_query(_: int) -> Dict[str, Any]:
+    def _occ_query(_: int) -> dict[str, Any]:
         raw = occ_client.judge(prompt=occlusion_prompt, video_path=Path(task.wm_video))
         parsed = parse_control_judge_output(raw)
         return {
@@ -317,7 +317,7 @@ def evaluate_control_one_task(
             "raw_text": raw,
         }
 
-    def _trig_query(_: int) -> Dict[str, Any]:
+    def _trig_query(_: int) -> dict[str, Any]:
         raw = trig_client.judge(prompt=trigger_prompt, video_path=Path(task.wm_video))
         parsed = parse_control_judge_output(raw)
         return {
@@ -371,7 +371,7 @@ def evaluate_control_one_task(
         parts = [p for p in (occ_responses[0]["notes"], trig_responses[0]["notes"]) if p]
         notes = "; ".join(parts)
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "task_id": task.task_id,
         "provider": occ_client.provider,
         "model": model,
@@ -418,8 +418,8 @@ def evaluate_control_all_tasks(
     report_filename: str = "control_report.json",
     ensemble_size: int = 1,
     ensemble_mode: str = "majority",
-) -> List[ControlJudgeResult]:
-    out: List[ControlJudgeResult] = []
+) -> list[ControlJudgeResult]:
+    out: list[ControlJudgeResult] = []
     for t in tasks:
         out.append(
             evaluate_control_one_task(
@@ -435,7 +435,7 @@ def evaluate_control_all_tasks(
 
 
 def append_control_results_to_summary(
-    tasks: List[ResolvedTask],
+    tasks: list[ResolvedTask],
     *,
     judge_slug: str,
     report_filename: str,

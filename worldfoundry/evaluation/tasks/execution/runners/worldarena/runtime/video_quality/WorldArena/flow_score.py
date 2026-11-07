@@ -1,20 +1,22 @@
 import os
+
 import cv2
 import numpy as np
 import torch
-from tqdm import tqdm
 from easydict import EasyDict as edict
+from tqdm import tqdm
 
-from .utils import load_dimension_info
 from worldfoundry.base_models.perception_core.optical_flow.raft import RAFT
 from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder
-from worldfoundry.core.execution.device import get_current_torch_device
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
+from worldfoundry.core.execution.device import get_current_torch_device
+
+from .utils import load_dimension_info
 
 
 class FlowScore:
@@ -76,7 +78,7 @@ class FlowScore:
 
         pair_scores = []
         with torch.no_grad():
-            for first, second in zip(frames[:-1], frames[1:]):
+            for first, second in zip(frames[:-1], frames[1:], strict=False):
                 pair_scores.append(self._pairwise_flow_mean(first, second))
 
         return float(np.mean(pair_scores)) if len(pair_scores) > 0 else 0.0

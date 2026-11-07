@@ -1,10 +1,11 @@
-import os
 import json
+import os
+import random
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
-from dataclasses import dataclass
 import supervision as sv
-import random
 
 
 class CommonUtils:
@@ -63,7 +64,7 @@ class CommonUtils:
             all_object_ids = []
             all_class_names = []
             object_id_to_name = {}
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 json_data = json.load(file)
                 for obj_id, obj_item in json_data["labels"].items():
                     # box id
@@ -82,7 +83,7 @@ class CommonUtils:
                     object_id_to_name[instance_id] = class_name
 
             # Adjust object id and boxes to ascending order
-            paired_id_and_box = zip(all_object_ids, all_object_boxes)
+            paired_id_and_box = zip(all_object_ids, all_object_boxes, strict=False)
             sorted_pair = sorted(paired_id_and_box, key=lambda pair: pair[0])
 
             # Because we get the mask data as ascending order, so we also need to ascend box and ids
@@ -97,7 +98,8 @@ class CommonUtils:
 
             # custom label to show both id and class name
             labels = [
-                f"{instance_id}: {class_name}" for instance_id, class_name in zip(all_object_ids, all_class_names)
+                f"{instance_id}: {class_name}"
+                for instance_id, class_name in zip(all_object_ids, all_class_names, strict=False)
             ]
 
             box_annotator = sv.BoxAnnotator()
@@ -137,7 +139,7 @@ class CommonUtils:
             output_image = cv2.addWeighted(image, 1 - alpha, colored_mask, alpha, 0)
 
             file_path = os.path.join(json_path, "mask_" + raw_image_name.split(".")[0] + ".json")
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 json_data = json.load(file)
                 # Draw bounding boxes and labels
                 for obj_id, obj_item in json_data["labels"].items():

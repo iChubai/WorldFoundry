@@ -1,11 +1,11 @@
 from typing import List
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from PIL import Image
 import torchvision.transforms as transforms
-from torchvision.models import vgg19, VGG19_Weights
+from PIL import Image
+from torchvision.models import VGG19_Weights, vgg19
 
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
@@ -91,16 +91,16 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std, style
     for layer in cnn.children():
         if isinstance(layer, nn.Conv2d):
             i += 1
-            name = "conv_{}".format(i)
+            name = f"conv_{i}"
         elif isinstance(layer, nn.ReLU):
-            name = "relu_{}".format(i)
+            name = f"relu_{i}"
             layer = nn.ReLU(inplace=False)
         elif isinstance(layer, nn.MaxPool2d):
-            name = "pool_{}".format(i)
+            name = f"pool_{i}"
         elif isinstance(layer, nn.BatchNorm2d):
-            name = "bn_{}".format(i)
+            name = f"bn_{i}"
         else:
-            raise RuntimeError("Unrecognized layer: {}".format(layer.__class__.__name__))
+            raise RuntimeError(f"Unrecognized layer: {layer.__class__.__name__}")
 
         model.add_module(name, layer)
 
@@ -108,7 +108,7 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std, style
             # add style loss:
             target_feature = model(style_img).detach()
             style_loss = StyleLoss(target_feature)
-            model.add_module("style_loss_{}".format(i), style_loss)
+            model.add_module(f"style_loss_{i}", style_loss)
             style_losses.append(style_loss)
 
     # now we trim off the layers after the last style losses
@@ -136,7 +136,7 @@ class GramMatrixMetric(BaseMetric):
     def _compute_scores(
         self,
         reference_image: str,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         img1 = image_loader(reference_image, self._device)
         style_scores = []

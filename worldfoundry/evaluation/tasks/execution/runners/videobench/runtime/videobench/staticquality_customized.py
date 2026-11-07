@@ -1,11 +1,13 @@
-import os
-import re
-from openai import OpenAI
-import openai
-from .utils import Video_Dataset
 import json
 import logging
+import os
+import re
+
+import openai
+from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+from .utils import Video_Dataset
 
 
 def eval(config, prompt, dimension, cur_full_info_path, models):
@@ -26,7 +28,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
     results = {}
     model_scores = {}
 
-    l1 = list(range(0, len(dataset)))
+    l1 = list(range(len(dataset)))
     for i in l1:
         logger.info(f">>>>>>>>This is the {i} round>>>>>>>")
         data = dataset[i]
@@ -56,7 +58,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                                 item
                                 for examplemodel in examplemodels
                                 for item in [
-                                    "This example is from model {} \n".format(examplemodels.index(examplemodel) + 1),
+                                    f"This example is from model {examplemodels.index(examplemodel) + 1} \n",
                                     {
                                         "type": "image_url",
                                         "image_url": {
@@ -96,7 +98,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 model_scores[modelname]["count"] += 1
 
             except Exception as e:
-                logger.error(f"Error evaluating model {modelname}: {str(e)}")
+                logger.error(f"Error evaluating model {modelname}: {e!s}")
                 results[i][modelname] = "Error"
 
     average_scores = {

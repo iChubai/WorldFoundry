@@ -8,18 +8,19 @@ from pathlib import Path
 from typing import Any
 
 from ..protocols import SKILLS
-from ..skill_backend import appearance_consistency
-from ..skill_backend import drift_degradation
-from ..skill_backend import intentional_change_vlm
-from ..skill_backend import motion_quality
-from ..skill_backend import offscreen_evolution_vlm
-from ..skill_backend import physical_law
-from ..skill_backend import physical_plausibility
-from ..skill_backend import physical_response_vlm
-from ..skill_backend import render_quality
-from ..skill_backend import return_consistency
-from ..skill_backend import viewpoint_trajectory
-
+from ..skill_backend import (
+    appearance_consistency,
+    drift_degradation,
+    intentional_change_vlm,
+    motion_quality,
+    offscreen_evolution_vlm,
+    physical_law,
+    physical_plausibility,
+    physical_response_vlm,
+    render_quality,
+    return_consistency,
+    viewpoint_trajectory,
+)
 
 OBSERVATION_MODULES = {
     "render_quality_inspector": render_quality,

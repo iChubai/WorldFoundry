@@ -1,16 +1,16 @@
-import os
 import json
+import os
 import random
 from weakref import WeakKeyDictionary
 
 import numpy as np
-
 import torch
-from worldfoundry.base_models.perception_core.video_text.viclip import SimpleTokenizer, ViCLIP
+import torch.nn.functional as F
 from PIL import Image
 from torchvision import transforms
-import torch.nn.functional as F
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, ToPILImage
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+
+from worldfoundry.base_models.perception_core.video_text.viclip import SimpleTokenizer, ViCLIP
 
 try:
     from torchvision.transforms import InterpolationMode

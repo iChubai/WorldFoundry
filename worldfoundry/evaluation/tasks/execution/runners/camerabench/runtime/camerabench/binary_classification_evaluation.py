@@ -5,19 +5,20 @@ Takes standardized score files and computes evaluation metrics (mAP, etc.).
 This script works with any method that outputs scores in the expected format.
 """
 
-import json
 import argparse
+import json
+from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import average_precision_score, precision_recall_curve, roc_auc_score, roc_curve
-import matplotlib.pyplot as plt
-from datetime import datetime
-from collections import defaultdict
 
 
 def load_score_file(score_file):
     """Load scores from a standardized score file"""
-    with open(score_file, "r") as f:
+    with open(score_file) as f:
         data = json.load(f)
 
     return data
@@ -169,7 +170,7 @@ def evaluate_single_file(score_file, generate_plots_flag=False, output_dir=None,
 
     # Print results
     if not quiet:
-        print(f"Evaluation Results:")
+        print("Evaluation Results:")
         print(f"  Average Precision (mAP): {metrics['average_precision']:.4f}")
         print(f"  ROC AUC: {metrics['roc_auc']:.4f}")
         print(f"  Valid samples used: {metrics['num_samples']}")
@@ -261,7 +262,7 @@ def print_hierarchical_results(results):
         print(f"\n┏━━ MODEL: {model_name}")
         if checkpoint:
             print(f"┃   Checkpoint: {checkpoint}")
-        print(f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         # Print splits for this model
         splits = group_data["splits"]

@@ -48,7 +48,7 @@ class GeminiControlJudgeClient:
         if not api_key:
             raise RuntimeError("Missing GOOGLE_API_KEY environment variable.")
         self._client = genai.Client(api_key=api_key)
-        print(f"Using GOOGLE_API_KEY")
+        print("Using GOOGLE_API_KEY")
 
     def _sample_frames_bytes(self, video_path: Path) -> list[bytes]:
         """Sample self.n_frames uniformly from video; return raw JPEG bytes per frame."""
@@ -155,7 +155,7 @@ class OpenAIControlJudgeClient:
         if not api_key:
             raise RuntimeError("Missing OPENAI_API_KEY environment variable.")
         self._client = openai.OpenAI(api_key=api_key)
-        print(f"Using OPENAI_API_KEY")
+        print("Using OPENAI_API_KEY")
 
     def _encode_bytes(self, data: bytes) -> str:
         return base64.b64encode(data).decode("utf-8")
@@ -257,7 +257,7 @@ class AnthropicControlJudgeClient:
         if not api_key:
             raise RuntimeError("Missing ANTHROPIC_API_KEY environment variable.")
         self._client = anthropic.Anthropic(api_key=api_key)
-        print(f"Using ANTHROPIC_API_KEY")
+        print("Using ANTHROPIC_API_KEY")
 
     def _encode_bytes(self, data: bytes) -> str:
         return base64.b64encode(data).decode("utf-8")
@@ -370,8 +370,8 @@ _GEMINI_PREFIXES = ("gemini",)
 
 def make_judge_client(
     model: str,
-    provider: Optional[str] = None,
-    n_frames: Optional[int] = None,
+    provider: str | None = None,
+    n_frames: int | None = None,
 ) -> ControlJudgeClient:
     """
     Instantiate the right judge client for (provider, model).

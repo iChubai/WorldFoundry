@@ -3,41 +3,40 @@ from __future__ import annotations
 import json
 import os
 from collections import defaultdict
-from pathlib import Path
-from typing import Any, Mapping, Sequence
-import numpy as np
-from functools import partial
+from collections.abc import Mapping, Sequence
 from datetime import datetime
+from functools import partial
+from pathlib import Path
+from typing import Any
 
-import torch
-from tqdm import tqdm
+import numpy as np
 import structlog
 import submitit
+import torch
+from tqdm import tqdm
 
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics import (
+    CameraErrorMetric,
+    CLIPImageQualityAssessmentPlusMetric,
     CLIPScoreMetric,
     GramMatrixMetric,
     IQACLIPAestheticScoreMetric,
-    CameraErrorMetric,
-    OpticalFlowAverageEndPointErrorMetric,
-    ObjectDetectionMetric,
-    ReprojectionErrorMetric,
-    CLIPImageQualityAssessmentPlusMetric,
-    OpticalFlowMetric,
     MotionAccuracyMetric,
     MotionSmoothnessMetric,
+    ObjectDetectionMetric,
+    OpticalFlowAverageEndPointErrorMetric,
+    OpticalFlowMetric,
+    ReprojectionErrorMetric,
 )
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
     aspect_info,
+    empty_cache,
     get_model2type,
+    layout_info,
     type2model,
 )
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.utils import (
     print_banner,
-)
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
-    empty_cache,
-    layout_info,
 )
 
 logger = structlog.getLogger()
@@ -204,7 +203,7 @@ def renormalize_score(score_dict):
                 if metric in ["camera_error", "motion_smoothness"]:
                     normalized_scores = []
                     for score_i, empirical_max_i, empirical_min_i, higher_is_better_i in zip(
-                        score, empirical_max, empirical_min, higher_is_better
+                        score, empirical_max, empirical_min, higher_is_better, strict=False
                     ):
                         score_i = max(empirical_min_i, min(empirical_max_i, score_i))
                         normalized_score = (score_i - empirical_min_i) / (empirical_max_i - empirical_min_i)
@@ -249,6 +248,7 @@ def normalize_score(score, aspect_evaluator):
                 aspect_evaluator.metric_attribute["empirical_max"],
                 aspect_evaluator.metric_attribute["empirical_min"],
                 aspect_evaluator.metric_attribute["higher_is_better"],
+                strict=False,
             ):
                 score_i = max(empirical_min, min(empirical_max, score_i))
                 normalized_score = (score_i - empirical_min) / (empirical_max - empirical_min)
@@ -484,7 +484,7 @@ class Evaluator(BaseEvaluator):
         def get_scores():
             if aspect_evaluator.type == "prompt":
                 scores = []
-                for i in tqdm(range(0, num_scenes + 1)):
+                for i in tqdm(range(num_scenes + 1)):
                     rendered_images = get_rendered_images(rendered_images_all, i, anchor_frame_idx)
                     if aspect_evaluator.name == "object_detection":
                         score = aspect_evaluator.compute_scores(rendered_images, content_list[i])
@@ -578,7 +578,7 @@ class Evaluator(BaseEvaluator):
                 with open(result_path, mode="w", encoding="utf-8") as f:
                     json.dump(scene_scores, f, indent=4)
 
-        result_file_name = f"evaluation_mean.json"
+        result_file_name = "evaluation_mean.json"
         result_path = self.root_path / result_file_name
 
         with open(result_path, mode="w", encoding="utf-8") as f:
@@ -638,7 +638,7 @@ class Evaluator(BaseEvaluator):
                                             instance_result_dict
                                         )
                                         continue
-                                    except Exception as e:
+                                    except Exception:
                                         pass
 
                             instance_attributes.append([visual_style, scene_type, category, instance, instance_dir])
@@ -676,7 +676,7 @@ class Evaluator(BaseEvaluator):
                                         print(f"-- Renormalized score for {instance_dir}")
                                     self.metrics_results[visual_style][motion_type][instance] = instance_result_dict
                                     continue
-                                except Exception as e:
+                                except Exception:
                                     pass
 
                         instance_attributes.append([visual_style, motion_type, instance, instance_dir])
@@ -905,9 +905,9 @@ class Analysis(BaseEvaluator):
 
     def print_results(self, scores):
         print_banner("ANALYSIS RESULTS")
-        print(f"\nAnalysis Results:")
+        print("\nAnalysis Results:")
         print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
-        print(f"Overall Scores:")
+        print("Overall Scores:")
         for aspect, aspect_scores in scores.items():
             print(f"Aspect: {aspect}")
             for metric_name, metric_score in aspect_scores.items():

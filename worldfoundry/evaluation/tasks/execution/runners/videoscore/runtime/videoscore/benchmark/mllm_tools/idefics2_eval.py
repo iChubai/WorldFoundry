@@ -1,8 +1,9 @@
 import os
-import torch
 import time
 from typing import List
-from transformers import AutoProcessor, AutoModelForVision2Seq
+
+import torch
+from transformers import AutoModelForVision2Seq, AutoProcessor
 from transformers.image_utils import load_image
 from transformers.utils import is_flash_attn_2_available
 
@@ -24,7 +25,7 @@ class Idefics2:
         ).eval()
         self.processor = AutoProcessor.from_pretrained(model_path)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

@@ -1,8 +1,9 @@
-import json
-import numpy as np
-import pickle
-import os
 import argparse
+import json
+import os
+import pickle
+
+import numpy as np
 
 skip_scenes = []
 skip_scene_ids = [scene.split("-")[1] for scene in skip_scenes]

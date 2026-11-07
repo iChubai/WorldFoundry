@@ -6,8 +6,8 @@ can resolve intra-package imports reliably.
 """
 
 # Public re-exports for convenience
-# from .object_segmentation import process_mechanics_pipeline  # noqa: F401
-# from .integrated_pipeline import run_integrated_mechanics_pipeline  # noqa: F401
+# from .object_segmentation import process_mechanics_pipeline
+# from .integrated_pipeline import run_integrated_mechanics_pipeline
 
 """
 __all__ = [

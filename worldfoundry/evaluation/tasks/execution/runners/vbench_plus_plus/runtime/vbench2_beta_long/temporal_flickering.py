@@ -1,13 +1,13 @@
-import os
 import json
-from easydict import EasyDict as edict
-
+import os
 from collections import defaultdict
 
+from easydict import EasyDict as edict
 from vbench.temporal_flickering import compute_temporal_flickering
-from vbench.utils import CACHE_DIR, save_json, load_json, load_dimension_info
-from vbench2_beta_long.utils import reorganize_clips_results, build_filtered_info_json
+from vbench.utils import CACHE_DIR, load_dimension_info, load_json, save_json
 from vbench2_beta_long.static_filter import static_filter
+from vbench2_beta_long.utils import build_filtered_info_json, reorganize_clips_results
+
 from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
 
 

@@ -32,12 +32,13 @@ class MotionSmoothnessMetric(BaseMetric):
 
     def compute(self, frames, first_frame=None, prompt=None, batch_size=8, **kwargs):
         """VBench-aligned: predict odd frames from even frame pairs, compute MAE."""
+        from PIL import Image as _Image
+
         from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
             InputPadder,
             img2tensor,
             tensor2img,
         )
-        from PIL import Image as _Image
 
         if self.model is None:
             raise ValueError("AMT model not loaded")

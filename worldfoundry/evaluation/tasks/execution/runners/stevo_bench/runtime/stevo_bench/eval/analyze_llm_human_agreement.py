@@ -39,7 +39,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Supported metrics
 # ---------------------------------------------------------------------------
@@ -47,7 +46,7 @@ import numpy as np
 SUPPORTED_METRICS = ["occlusion_done", "trigger_applied", "physical_inaccuracy", "state_evol"]
 
 
-def _get_llm_value(task: dict, metric: str) -> Optional[bool]:
+def _get_llm_value(task: dict, metric: str) -> bool | None:
     """Return the LLM judge boolean for a task entry, or None if absent."""
     if metric == "state_evol":
         acc = task.get("accuracy")
@@ -56,7 +55,7 @@ def _get_llm_value(task: dict, metric: str) -> Optional[bool]:
     return bool(val) if val is not None else None
 
 
-def _get_human_value(task: dict, metric: str) -> Optional[bool]:
+def _get_human_value(task: dict, metric: str) -> bool | None:
     """Return the human judge boolean for a task entry, or None if absent."""
     key = "human_state_evol" if metric == "state_evol" else f"human_{metric}"
     val = task.get(key)
@@ -73,10 +72,10 @@ def _get_human_value(task: dict, metric: str) -> Optional[bool]:
 
 
 def compute_confusion(
-    tasks: List[dict],
+    tasks: list[dict],
     metric: str,
-    level: Optional[str] = None,
-) -> Tuple[np.ndarray, int]:
+    level: str | None = None,
+) -> tuple[np.ndarray, int]:
     """
     Returns:
         cm : 2×2 int ndarray  —  cm[human_idx, llm_idx]
@@ -137,8 +136,8 @@ def plot_confusion_matrix(
     metric: str,
     n: int,
     output_path: Path,
-    level: Optional[str] = None,
-    title: Optional[str] = None,
+    level: str | None = None,
+    title: str | None = None,
 ) -> None:
     agreement = (cm[0, 0] + cm[1, 1]) / n if n > 0 else float("nan")
     kappa = _cohen_kappa(cm)
@@ -214,7 +213,7 @@ def plot_confusion_matrix(
 # ---------------------------------------------------------------------------
 
 
-def _compare_pairwise(val_a: Optional[bool], val_b: Optional[bool]) -> str:
+def _compare_pairwise(val_a: bool | None, val_b: bool | None) -> str:
     """Return 'A_wins', 'B_wins', 'tie', or 'unknown'."""
     if val_a is None or val_b is None:
         return "unknown"
@@ -223,7 +222,7 @@ def _compare_pairwise(val_a: Optional[bool], val_b: Optional[bool]) -> str:
     return "A_wins" if val_a > val_b else "B_wins"  # True > False
 
 
-def _pairwise_agreement_score(gt_cmp: str, llm_cmp: str) -> Optional[float]:
+def _pairwise_agreement_score(gt_cmp: str, llm_cmp: str) -> float | None:
     """
     1.0 = full agreement, 0.5 = one is tie and the other is not, 0.0 = reversal.
     None if either comparison is unknown (missing human or LLM label).
@@ -238,10 +237,10 @@ def _pairwise_agreement_score(gt_cmp: str, llm_cmp: str) -> Optional[float]:
 
 
 def compute_pairwise_agreement(
-    tasks_per_dir: List[Tuple[Path, List[dict]]],
+    tasks_per_dir: list[tuple[Path, list[dict]]],
     metric: str,
-    level: Optional[str] = None,
-) -> Dict:
+    level: str | None = None,
+) -> dict:
     """
     For every pair of run dirs, compare LLM and human judge rankings across all
     shared tasks and compute weighted agreement scores.
@@ -251,7 +250,7 @@ def compute_pairwise_agreement(
         'by_pair'  : per-pair stats keyed by "<run_a> vs <run_b>"
     """
     # Build task_id -> run_name -> {llm, human}
-    task_map: Dict[str, Dict[str, Dict]] = defaultdict(dict)
+    task_map: dict[str, dict[str, dict]] = defaultdict(dict)
     for run_dir, tasks in tasks_per_dir:
         for t in tasks:
             if level is not None and str(t.get("task_level", "")) != level:
@@ -267,11 +266,11 @@ def compute_pairwise_agreement(
     run_names = [d.name for d, _ in tasks_per_dir]
     pairs = [(run_names[i], run_names[j]) for i in range(len(run_names)) for j in range(i + 1, len(run_names))]
 
-    overall: Dict = {"total_score": 0.0, "count": 0, "full": 0, "partial": 0, "reversal": 0, "unknown": 0}
-    by_pair: Dict[str, Dict] = {}
+    overall: dict = {"total_score": 0.0, "count": 0, "full": 0, "partial": 0, "reversal": 0, "unknown": 0}
+    by_pair: dict[str, dict] = {}
 
     for name_a, name_b in pairs:
-        stats: Dict = {
+        stats: dict = {
             "total_score": 0.0,
             "count": 0,
             "full": 0,
@@ -317,7 +316,7 @@ def compute_pairwise_agreement(
     return {"overall": overall, "by_pair": by_pair}
 
 
-def print_pairwise_agreement(analysis: Dict, metric: str, level: Optional[str] = None) -> None:
+def print_pairwise_agreement(analysis: dict, metric: str, level: str | None = None) -> None:
     level_str = f"  (level {level})" if level else ""
     print(f"\n{'=' * 70}")
     print(f"PAIRWISE MODEL-RANKING AGREEMENT: {metric}{level_str}")
@@ -405,8 +404,8 @@ def main() -> None:
 
     # Load tasks from all run directories.
     run_dirs = [Path(d).expanduser().resolve() for d in args.run_dir]
-    all_tasks: List[dict] = []
-    tasks_per_dir: List[Tuple[Path, List[dict]]] = []
+    all_tasks: list[dict] = []
+    tasks_per_dir: list[tuple[Path, list[dict]]] = []
     for run_dir in run_dirs:
         summary_path = run_dir / "summary.json"
         if not summary_path.exists():
@@ -455,7 +454,7 @@ def main() -> None:
     # -----------------------------------------------------------------------
     # Pairwise model-ranking agreement (only meaningful with >= 2 runs)
     # -----------------------------------------------------------------------
-    pw_overall_agreement: Optional[float] = None
+    pw_overall_agreement: float | None = None
     if len(tasks_per_dir) >= 2:
         pw = compute_pairwise_agreement(tasks_per_dir, args.metric, level=args.level)
         print_pairwise_agreement(pw, args.metric, level=args.level)

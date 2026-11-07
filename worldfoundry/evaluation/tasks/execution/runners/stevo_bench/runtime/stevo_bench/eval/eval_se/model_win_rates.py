@@ -5,9 +5,10 @@ Plots correlation between Gemini vs human assessments of model quality.
 
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
-from collections import defaultdict
+
 import numpy as np
 
 try:
@@ -26,16 +27,16 @@ class ModelWinRateAnalyzer:
         self.project_root = Path(project_root)
         self.runs_dir = self.project_root / "runs"
 
-    def load_evaluation_results(self, results_file: str) -> Dict:
+    def load_evaluation_results(self, results_file: str) -> dict:
         """Load the evaluation results JSON file."""
         results_path = Path(results_file)
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, "r") as f:
+        with open(results_path) as f:
             return json.load(f)
 
-    def load_summary_json(self, run_name: str) -> Dict:
+    def load_summary_json(self, run_name: str) -> dict:
         """Load summary.json for a specific run."""
         run_mapping = {
             "sora_pro_sora_pro_subset_run_3": "sora_pro_output_map_sora_pro_subset_run_3",
@@ -52,10 +53,10 @@ class ModelWinRateAnalyzer:
         if not summary_path.exists():
             return {}
 
-        with open(summary_path, "r") as f:
+        with open(summary_path) as f:
             return json.load(f)
 
-    def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
+    def get_ground_truth_label(self, summary: dict, task_id: str) -> bool:
         """Get ground truth label for a task from summary.json."""
         for task in summary.get("tasks", []):
             if task.get("task_id") == task_id:
@@ -81,7 +82,7 @@ class ModelWinRateAnalyzer:
             return "wan22"
         return run_name
 
-    def organize_by_task(self, results_file: str) -> Dict[str, Dict[str, Dict]]:
+    def organize_by_task(self, results_file: str) -> dict[str, dict[str, dict]]:
         """
         Organize evaluation results by task_id.
 
@@ -120,7 +121,7 @@ class ModelWinRateAnalyzer:
 
         return dict(task_data)
 
-    def calculate_win_rates(self, results_file: str) -> Dict:
+    def calculate_win_rates(self, results_file: str) -> dict:
         """
         Calculate win rates for each model against all others.
 
@@ -230,7 +231,7 @@ class ModelWinRateAnalyzer:
 
         return model_win_rates
 
-    def plot_and_analyze(self, model_win_rates: Dict, output_path: Path):
+    def plot_and_analyze(self, model_win_rates: dict, output_path: Path):
         """
         Plot model win rates and calculate correlation.
         """
@@ -319,7 +320,7 @@ class ModelWinRateAnalyzer:
             "intercept": reg.intercept_,
         }
 
-    def print_win_rates(self, model_win_rates: Dict):
+    def print_win_rates(self, model_win_rates: dict):
         """Pretty print win rates."""
         print(f"\n{'=' * 70}")
         print("MODEL WIN RATES")

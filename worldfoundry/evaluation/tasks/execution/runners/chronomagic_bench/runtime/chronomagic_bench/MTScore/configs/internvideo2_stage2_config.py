@@ -1,5 +1,6 @@
 from worldfoundry.evaluation.tasks.execution.runners.chronomagic_bench.runtime.chronomagic_bench.MTScore.configs.data import *
 from worldfoundry.evaluation.tasks.execution.runners.chronomagic_bench.runtime.chronomagic_bench.MTScore.configs.model import *
+
 # ========================= data ==========================
 # NOTE The train_file will not be used during the evaluation
 

@@ -1,14 +1,16 @@
 import os
 import tempfile
-import requests
-from PIL import Image
-import torch
 from io import BytesIO
-from .mllm_utils import merge_images
-from mantis.models.conversation import conv_llava_v1
 from typing import List
+
+import requests
+import torch
+from mantis.models.conversation import conv_llava_v1
+from PIL import Image
 from transformers import AutoProcessor, LlavaForConditionalGeneration
 from transformers.utils import is_flash_attn_2_available
+
+from .mllm_utils import merge_images
 
 
 class Llava:
@@ -28,7 +30,7 @@ class Llava:
         ).eval()
         self.processor = AutoProcessor.from_pretrained(model_path)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

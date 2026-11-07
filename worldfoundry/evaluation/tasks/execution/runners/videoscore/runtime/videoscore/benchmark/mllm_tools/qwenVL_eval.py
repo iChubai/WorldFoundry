@@ -1,8 +1,9 @@
-import tempfile
 import os
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from PIL import Image
+import tempfile
 from typing import List
+
+from PIL import Image
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class QwenVL:
@@ -20,7 +21,7 @@ class QwenVL:
             model_id, device_map="auto", trust_remote_code=True, bf16=True
         ).eval()
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [
@@ -50,7 +51,7 @@ class QwenVL:
             finally:
                 self.close()
 
-    def prepare_prompt(self, image_links: List = [], text_prompt: str = ""):
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
         if type(image_links) == str:
             image_links = [image_links]
         true_image_links = []

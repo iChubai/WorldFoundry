@@ -1,8 +1,9 @@
-import numpy as np
-import torch
-import requests
 import os
+
 import cv2
+import numpy as np
+import requests
+import torch
 from PIL import Image
 
 from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (

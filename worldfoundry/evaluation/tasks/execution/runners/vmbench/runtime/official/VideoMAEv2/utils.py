@@ -26,7 +26,7 @@ from torch import inf
 from torch.utils.data._utils.collate import default_collate
 
 
-class SmoothedValue(object):
+class SmoothedValue:
     """Track a series of values and provide access to smoothed values over a
     window or the global series average.
     """
@@ -89,7 +89,7 @@ class SmoothedValue(object):
         )
 
 
-class MetricLogger(object):
+class MetricLogger:
     def __init__(self, delimiter="\t"):
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
@@ -108,12 +108,12 @@ class MetricLogger(object):
             return self.meters[attr]
         if attr in self.__dict__:
             return self.__dict__[attr]
-        raise AttributeError("'{}' object has no attribute '{}'".format(type(self).__name__, attr))
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
 
     def __str__(self):
         loss_str = []
         for name, meter in self.meters.items():
-            loss_str.append("{}: {}".format(name, str(meter)))
+            loss_str.append(f"{name}: {meter!s}")
         return self.delimiter.join(loss_str)
 
     def synchronize_between_processes(self):
@@ -166,10 +166,10 @@ class MetricLogger(object):
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print("{} Total time: {} ({:.4f} s / it)".format(header, total_time_str, total_time / len(iterable)))
+        print(f"{header} Total time: {total_time_str} ({total_time / len(iterable):.4f} s / it)")
 
 
-class TensorboardLogger(object):
+class TensorboardLogger:
     def __init__(self, log_dir):
         self.writer = SummaryWriter(logdir=log_dir)
         self.step = 0
@@ -289,7 +289,7 @@ def init_distributed_mode(args):
 
     torch.cuda.set_device(args.gpu)
     args.dist_backend = "nccl"
-    print("| distributed init (rank {}): {}, gpu {}".format(args.rank, args.dist_url, args.gpu), flush=True)
+    print(f"| distributed init (rank {args.rank}): {args.dist_url}, gpu {args.gpu}", flush=True)
     torch.distributed.init_process_group(
         backend=args.dist_backend, init_method=args.dist_url, world_size=args.world_size, rank=args.rank
     )
@@ -336,14 +336,12 @@ def load_state_dict(model, state_dict, prefix="", ignore_missing="relative_posit
     missing_keys = warn_missing_keys
 
     if len(missing_keys) > 0:
-        print("Weights of {} not initialized from pretrained model: {}".format(model.__class__.__name__, missing_keys))
+        print(f"Weights of {model.__class__.__name__} not initialized from pretrained model: {missing_keys}")
     if len(unexpected_keys) > 0:
-        print("Weights from pretrained model not used in {}: {}".format(model.__class__.__name__, unexpected_keys))
+        print(f"Weights from pretrained model not used in {model.__class__.__name__}: {unexpected_keys}")
     if len(ignore_missing_keys) > 0:
         print(
-            "Ignored weights of {} not initialized from pretrained model: {}".format(
-                model.__class__.__name__, ignore_missing_keys
-            )
+            f"Ignored weights of {model.__class__.__name__} not initialized from pretrained model: {ignore_missing_keys}"
         )
     if len(error_msgs) > 0:
         print("\n".join(error_msgs))
@@ -530,7 +528,7 @@ def multiple_samples_collate(batch, fold=False):
     Returns:
         (tuple): collated data batch.
     """
-    inputs, labels, video_idx, extra_data = zip(*batch)
+    inputs, labels, video_idx, extra_data = zip(*batch, strict=False)
     inputs = [item for sublist in inputs for item in sublist]
     labels = [item for sublist in labels for item in sublist]
     video_idx = [item for sublist in video_idx for item in sublist]
@@ -555,7 +553,7 @@ def multiple_pretrain_samples_collate(batch, fold=False):
     Returns:
         (tuple): collated data batch.
     """
-    process_data, encoder_mask, decoder_mask = zip(*batch)
+    process_data, encoder_mask, decoder_mask = zip(*batch, strict=False)
 
     process_data = [item for sublist in process_data for item in sublist]
     encoder_mask = [item for sublist in encoder_mask for item in sublist]

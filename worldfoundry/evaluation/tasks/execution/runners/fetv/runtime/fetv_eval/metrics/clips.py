@@ -4,12 +4,11 @@ Copyright (c) 2022-present NAVER Corp.
 Apache-2.0
 """
 
-from typing import *
 import random
+from typing import *
 
 import torch
 from torch import Tensor
-
 from torchmetrics.metric import Metric
 from torchmetrics.utilities import rank_zero_info
 
@@ -71,9 +70,9 @@ class ClipScore(Metric):
                 `mode` is "shuffle", deliberately break the alignmnet with
                 the condition by randomly-shuffling their counterparts.
         """
-        if "real" == mode:
+        if mode == "real":
             self.x0_feat = self.x_feat  # real text instead of fake text
-        elif "shuffle" == mode:
+        elif mode == "shuffle":
             random.shuffle(self.x0_feat)
         return self
 
@@ -90,7 +89,7 @@ class ClipScore(Metric):
             return (x * y).sum(dim=-1)
 
         excess = Z.shape[0] - self.limit
-        if 0 < excess:
+        if excess > 0:
             Y, Z = [x[:-excess] for x in [Y, Z]]
 
         scores = dot(Z, Y)

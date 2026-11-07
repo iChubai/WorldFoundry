@@ -17,7 +17,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 try:
     from .runtime_common import scoring_video_path
 except ImportError:
@@ -868,7 +867,7 @@ def attach_outer_request_metadata(manifest: list[dict[str, Any]]) -> list[dict[s
         video_id = str(item_copy.get("video_id") or "")
         item_copy["row_index"] = int(item_copy.get("row_index", row_index))
         if not item_copy.get("request_id") and video_id:
-            digest = hashlib.sha256(f"{row_index}:{video_id}".encode("utf-8")).hexdigest()[:16]
+            digest = hashlib.sha256(f"{row_index}:{video_id}".encode()).hexdigest()[:16]
             item_copy["request_id"] = f"qwen3vl-{row_index:06d}-{digest}"
         annotated.append(item_copy)
     return annotated
@@ -3294,7 +3293,8 @@ class LocalQwen3VLVideoEvidenceRunner:
                             *[
                                 fetch_videos_with_backend(x, sample_indices_fn=sample_indices_fn)
                                 for x in video_url_or_urls
-                            ]
+                            ],
+                            strict=False,
                         )
                     )
                 return load_video(

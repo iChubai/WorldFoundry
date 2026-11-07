@@ -15,7 +15,6 @@ from .common import (
     skill_cache_path,
 )
 
-
 SKILL_ID = "motion_quality_inspector"
 DEFINITION_VERSION = "harnesseval.motion_quality"
 CACHE_SCHEMA = "harnesseval.motion_quality.cache"
@@ -44,15 +43,15 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
+    "SKILL_ID",
     "MotionQualityBackend",
     "cache_path_for_video",
-    "import_metrics",
     "evaluate",
+    "import_metrics",
 ]
 
 

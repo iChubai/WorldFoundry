@@ -1,9 +1,11 @@
+from typing import List
+
+import regex as re
 import requests
 import torch
-import regex as re
 from PIL import Image
-from transformers import AutoProcessor, AutoModelForVision2Seq, BatchFeature
-from typing import List
+from transformers import AutoModelForVision2Seq, AutoProcessor, BatchFeature
+
 from .mllm_utils import load_images, merge_images
 
 
@@ -79,7 +81,7 @@ class Kosmos2:
 
         return outputs
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

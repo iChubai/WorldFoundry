@@ -1,11 +1,11 @@
+import argparse
 import os
 import pdb
-import torch
+
 import numpy as np
 import pandas as pd
-import argparse
+import torch
 from prettytable import PrettyTable
-
 from tools.evaluate_dynamic_ddp_metrics import cal_dynamics_metircs
 
 
@@ -218,7 +218,7 @@ def calculate_dynamics_based_quality(args):
 
 
 def format_value(value):
-    return "{:.2f}".format(float(value) * 100)
+    return f"{float(value) * 100:.2f}"
 
 
 def print_results(metrics):

@@ -1,8 +1,9 @@
+import argparse
+import json
 import os
 import time
-import json
-import argparse
-from multiprocessing import Pool, Manager
+from multiprocessing import Manager, Pool
+
 import google.generativeai as genai
 import tqdm
 from openpyxl import Workbook
@@ -28,7 +29,7 @@ def reality_mapping(reality):
 def read_json_files(file_list):
     combined_dict = {}
     for file_path in file_list:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             data = json.load(file)
             for key, value in data.items():
                 if key not in combined_dict:  # 只保留第一次出现的键值对
@@ -38,7 +39,7 @@ def read_json_files(file_list):
 
 def parse_txt_file(txt_file_path):
     key_to_video_path = {}
-    with open(txt_file_path, "r") as file:
+    with open(txt_file_path) as file:
         for line in file:
             key, video_path = line.strip().split(". ")
             key_to_video_path[key] = os.path.basename(video_path)  # 获取文件名
@@ -77,7 +78,7 @@ def read_paths_and_indices(file_path):
     list of tuples: A list of tuples where each tuple contains an index and a path.
     """
     paths_with_indices = []
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         for line in f:
             index, path = line.split(". ", 1)
             paths_with_indices.append((int(index), path.strip()))
@@ -94,7 +95,7 @@ def judge_reality(index, video_file_path, api_key=None):
     if getattr(uploaded_file, "state", None) and uploaded_file.state.name == "FAILED":
         raise RuntimeError(f"Gemini upload failed for {video_file_path}")
 
-    content_head = f"""
+    content_head = """
     **Task:** Analyze the video for anomalies and normal behaviors, then classify its realism based on the criteria below:
 
     1. **Completely Fantastical**: Displays complete detachment from reality throughout, with elements of fantasy or surrealism.

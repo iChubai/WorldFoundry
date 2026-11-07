@@ -7,10 +7,10 @@ import torch
 
 from .helpers import get_kwarg, vprint
 from .utils import (
-    get_cacheable_input_name,
     cache_lookup_one_recompute_on_miss,
-    extract_featuresdict_from_input_id_cached,
     create_feature_extractor,
+    extract_featuresdict_from_input_id_cached,
+    get_cacheable_input_name,
     resolve_feature_extractor,
     resolve_feature_layer_for_metric,
 )
@@ -91,10 +91,10 @@ def fid_inputs_to_metric(feat_extractor, **kwargs):
     feat_layer_name = resolve_feature_layer_for_metric("fid", **kwargs)
     verbose = get_kwarg("verbose", kwargs)
 
-    vprint(verbose, f"Extracting statistics from input 1")
+    vprint(verbose, "Extracting statistics from input 1")
     stats_1 = fid_input_id_to_statistics_cached(1, feat_extractor, feat_layer_name, **kwargs)
 
-    vprint(verbose, f"Extracting statistics from input 2")
+    vprint(verbose, "Extracting statistics from input 2")
     stats_2 = fid_input_id_to_statistics_cached(2, feat_extractor, feat_layer_name, **kwargs)
 
     metric = fid_statistics_to_metric(stats_1, stats_2, get_kwarg("verbose", kwargs))

@@ -6,13 +6,13 @@
 # https://github.com/facebookresearch/dino
 # --------------------------------------------------------'
 
-import sys
 import argparse
+import csv
 import datetime
 import json
-import csv
 import os
 import random
+import sys
 import time
 from collections import OrderedDict
 from functools import partial
@@ -32,6 +32,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "VideoMAEv2"))
 # NOTE: Do not comment `import models`, it is used to register models
 import models  # noqa: F401
 import utils
+from bench_utils.cas_utils import final_merge, final_test
 from dataset import build_dataset
 from engine_for_finetuning import final_test, merge, train_one_epoch, validation_one_epoch
 from optim_factory import (
@@ -41,8 +42,6 @@ from optim_factory import (
 )
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import multiple_samples_collate
-
-from bench_utils.cas_utils import final_merge, final_test
 
 
 def get_args():
@@ -299,7 +298,7 @@ def main(args, ds_init):
     cudnn.benchmark = True
 
     # build csv from meta data
-    with open(args.meta_info_path, "r") as f:
+    with open(args.meta_info_path) as f:
         data = json.load(f)
 
     with open(f"{args.data_path}/test.csv", "w", newline="") as f:

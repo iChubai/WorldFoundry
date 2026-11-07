@@ -1,7 +1,8 @@
 from typing import List
-import torch
+
 import cv2
 import numpy as np
+import torch
 
 from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus import (
     build_flowformer,
@@ -10,7 +11,6 @@ from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus im
 )
 from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils import frame_utils
 from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils.utils import InputPadder
-
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
@@ -34,7 +34,7 @@ def compute_adaptive_image_size(image_size):
 
 
 def prepare_image(fn1, fn2, keep_size):
-    print(f"preparing image...")
+    print("preparing image...")
     print(f"fn = {fn1}")
 
     image1 = frame_utils.read_gen(fn1)
@@ -52,7 +52,7 @@ def prepare_image(fn1, fn2, keep_size):
 
 
 def build_model():
-    print(f"building  model...")
+    print("building  model...")
     cfg = get_cfg()
     cfg.model = str(checkpoint_path())
     model = torch.nn.DataParallel(build_flowformer(cfg))
@@ -96,7 +96,7 @@ class OpticalFlowMetric(BaseMetric):
         self._model = model.to(self._device)
 
     def _compute_flow(self, image1, image2):
-        print(f"computing flow...")
+        print("computing flow...")
         image1, image2 = image1[None].to(self._device), image2[None].to(self._device)
 
         padder = InputPadder(image1.shape)
@@ -112,7 +112,7 @@ class OpticalFlowMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         img_pairs = generate_pairs(rendered_images)
         scores = []
@@ -123,7 +123,7 @@ class OpticalFlowMetric(BaseMetric):
                 print(f"processing {fn1}, {fn2}...")
                 image1, image2 = prepare_image(fn1, fn2, keep_size=True)
                 flow = self._compute_flow(image1, image2)
-                flow_magnitude = np.sqrt((flow[..., 0] ** 2 + flow[..., 1] ** 2))
+                flow_magnitude = np.sqrt(flow[..., 0] ** 2 + flow[..., 1] ** 2)
                 median_flow = float(torch.from_numpy(flow_magnitude).median().item())
                 scores.append(median_flow)
 

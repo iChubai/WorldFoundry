@@ -5,8 +5,8 @@ Extracts GPT verdicts and compares against ground truth.
 
 import json
 import sys
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 try:
     from sklearn.metrics import roc_auc_score
@@ -178,10 +178,10 @@ class GPTAccuracyAnalyzer:
 
     def _calculate_metrics(self, verdicts, ground_truth, scores):
         """Calculate confusion matrix and metrics."""
-        tp = sum(1 for v, gt in zip(verdicts, ground_truth) if v and gt)
-        fp = sum(1 for v, gt in zip(verdicts, ground_truth) if v and not gt)
-        tn = sum(1 for v, gt in zip(verdicts, ground_truth) if not v and not gt)
-        fn = sum(1 for v, gt in zip(verdicts, ground_truth) if not v and gt)
+        tp = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if v and gt)
+        fp = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if v and not gt)
+        tn = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if not v and not gt)
+        fn = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if not v and gt)
 
         total = tp + fp + tn + fn
 
@@ -249,13 +249,13 @@ class GPTAccuracyAnalyzer:
             print("\nNOTE: All ground truth labels are negative (fail).")
             print("      Precision/Recall/F1 are not meaningful in this case.")
 
-        print(f"\nGPT Predictions:")
+        print("\nGPT Predictions:")
         gpt_positive = cm["tp"] + cm["fp"]
         gpt_negative = cm["tn"] + cm["fn"]
         print(f"  Predicted Pass: {gpt_positive} ({gpt_positive / analysis['num_tasks'] * 100:.1f}%)")
         print(f"  Predicted Fail: {gpt_negative} ({gpt_negative / analysis['num_tasks'] * 100:.1f}%)")
 
-        print(f"\nOverall Performance:")
+        print("\nOverall Performance:")
         print(f"  Accuracy:  {overall['accuracy']:.1%}")
 
         if not all_negative:
@@ -270,14 +270,14 @@ class GPTAccuracyAnalyzer:
         if overall.get("roc_auc") is not None:
             print(f"  ROC AUC:   {overall['roc_auc']:.3f}")
 
-        print(f"\nConfusion Matrix:")
+        print("\nConfusion Matrix:")
         print(f"  True Negatives:  {cm['tn']} (correctly identified as fail)")
         print(f"  False Positives: {cm['fp']} (incorrectly said pass)")
         if not all_negative:
             print(f"  True Positives:  {cm['tp']} (correctly identified as pass)")
             print(f"  False Negatives: {cm['fn']} (incorrectly said fail)")
 
-        print(f"\nPer-Model Performance:")
+        print("\nPer-Model Performance:")
         by_model = analysis["by_model"]
 
         # Sort by accuracy

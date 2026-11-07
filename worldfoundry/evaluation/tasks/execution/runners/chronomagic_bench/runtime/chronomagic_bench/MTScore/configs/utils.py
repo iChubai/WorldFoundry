@@ -1,15 +1,17 @@
-import numpy as np
-import cv2
 import os
+
+import cv2
+import numpy as np
 import torch
+
 from worldfoundry.base_models.llm_mllm_core.mllm.internvideo2.multi_modality.models import (
     InternVideo2_Stage2,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.umt.models.backbones.bert.tokenization_bert import (
-    BertTokenizer,
-)
 from worldfoundry.base_models.llm_mllm_core.mllm.internvideo2.multi_modality.models.backbones.internvideo2.pos_embed import (
     interpolate_pos_embed_internvideo2_new,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.umt.models.backbones.bert.tokenization_bert import (
+    BertTokenizer,
 )
 
 
@@ -88,7 +90,9 @@ def setup_internvideo2(config: dict):
     model = model.to(torch.device(config.device))
     model_without_ddp = model
 
-    if config.pretrained_path.strip() and (os.path.isfile(config.pretrained_path)) or "s3://" in config.pretrained_path:
+    if (
+        config.pretrained_path.strip() and (os.path.isfile(config.pretrained_path))
+    ) or "s3://" in config.pretrained_path:
         checkpoint = torch.load(config.pretrained_path, map_location="cpu")
         try:
             if "model" in checkpoint.keys():
@@ -98,7 +102,7 @@ def setup_internvideo2(config: dict):
         except:
             state_dict = checkpoint
 
-        if config.get("origin_num_frames", None) is not None:
+        if config.get("origin_num_frames") is not None:
             a = len(state_dict)
             interpolate_pos_embed_internvideo2_new(
                 state_dict, model_without_ddp.vision_encoder, orig_t_size=config.origin_num_frames

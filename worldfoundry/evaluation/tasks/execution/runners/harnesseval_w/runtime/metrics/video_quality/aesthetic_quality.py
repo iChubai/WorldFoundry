@@ -2,14 +2,15 @@
 
 from contextlib import contextmanager
 
-from worldfoundry.base_models.perception_core.general_perception.openai_clip_runtime import clip
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..base import BaseMetric
-from ..weight_utils import get_weights_dir, get_weight_file
 
+from worldfoundry.base_models.perception_core.general_perception.openai_clip_runtime import clip
+
+from ..base import BaseMetric
+from ..weight_utils import get_weight_file, get_weights_dir
 
 _GPU_BATCH_SIZE = 16
 

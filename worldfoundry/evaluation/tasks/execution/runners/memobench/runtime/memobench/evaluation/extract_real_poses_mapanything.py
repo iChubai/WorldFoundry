@@ -1,10 +1,11 @@
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
 import tempfile
-import numpy as np
+
 import cv2
+import numpy as np
 from tqdm import tqdm
 
 GT_REAL_DIR = "data/Real_Raw"

@@ -15,15 +15,15 @@ import torch
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce
-from piq.functional import similarity_map, rgb2yiq, haar_filter
+from piq.functional import haar_filter, rgb2yiq, similarity_map
+from piq.utils import _reduce, _validate_input
 
 
 def haarpsi(
     x: torch.Tensor,
     y: torch.Tensor,
     reduction: str = "mean",
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     scales: int = 3,
     subsample: bool = True,
     c: float = 30.0,
@@ -175,8 +175,8 @@ class HaarPSILoss(_Loss):
 
     def __init__(
         self,
-        reduction: Optional[str] = "mean",
-        data_range: Union[int, float] = 1.0,
+        reduction: str | None = "mean",
+        data_range: int | float = 1.0,
         scales: int = 3,
         subsample: bool = True,
         c: float = 30.0,

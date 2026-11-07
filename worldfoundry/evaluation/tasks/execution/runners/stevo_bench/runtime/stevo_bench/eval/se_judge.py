@@ -21,16 +21,16 @@ Returns:
 """
 
 import json
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
-from eval.control_judge import _load_task_fields, _ensemble_decide
+from eval.control_judge import _ensemble_decide, _load_task_fields
 from eval.judge_client import make_judge_client
 from eval.task_resolver import ResolvedTask
 from eval.utils import _path_to_rel
-
 
 # ---------------------------------------------------------------------------
 # Result dataclass
@@ -82,7 +82,7 @@ def _parse_verdict(response_text: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def build_se_predict_prompt(action_prompt: Optional[str]) -> str:
+def build_se_predict_prompt(action_prompt: str | None) -> str:
     """Prompt for step 1: init image (+ optional trigger) → expected physical process."""
     if action_prompt:
         return (
@@ -180,7 +180,7 @@ def evaluate_se_one_task(
     # For image_implied tasks camera_WM is empty → action_prompt=None (image-only prediction).
     # For simple_trigger tasks camera_WM holds the kick-off action.
     _, camera_wm, _ = _load_task_fields(Path(task.task_yaml))
-    action_prompt: Optional[str] = camera_wm.strip() or None
+    action_prompt: str | None = camera_wm.strip() or None
 
     n = max(1, ensemble_size)
 
@@ -213,7 +213,7 @@ def evaluate_se_one_task(
     # Step 2: verify process in video (ensemble over this step)
     verify_prompt = build_se_verify_prompt(concise_process, camera_controlled=camera_controlled)
 
-    def _single_verify(_: int) -> Dict[str, Any]:
+    def _single_verify(_: int) -> dict[str, Any]:
         raw = client.judge(prompt=verify_prompt, video_path=Path(task.wm_video))
         return {
             "state_evol": _parse_verdict(raw),
@@ -236,7 +236,7 @@ def evaluate_se_one_task(
     else:
         notes = ""
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "task_id": task.task_id,
         "provider": client.provider,
         "model": model,
@@ -276,7 +276,7 @@ def evaluate_se_one_task(
 
 
 def append_se_results_to_summary(
-    tasks: List[ResolvedTask],
+    tasks: list[ResolvedTask],
     *,
     judge_slug: str,
     report_filename: str,

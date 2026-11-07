@@ -1,20 +1,20 @@
 import base64
-import os
-import time
-import fire
 import json
-import re
 import logging
-from typing import List
-from string import Template
-from tqdm import tqdm
+import os
+import re
+import time
 from datetime import datetime
+from string import Template
+from typing import List
+
+import fire
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from datasets import Dataset, load_dataset
 from openai import AzureOpenAI
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from utils_tools import _add_to_res_file, _ans_formatted, label_query_template
+from tqdm import tqdm
 from utils_gpt4o import GPT4o
-
+from utils_tools import _add_to_res_file, _ans_formatted, label_query_template
 
 ROUND_DIGIT = 3
 NUM_ASPECT = 5
@@ -36,7 +36,7 @@ def _azure_gpt_4o_output(img_name_list, video_prompt, aws_s3_prefix):
     template = Template(QUERY_TEMPLATE)
     input_text_prompt = template.substitute(source=video_prompt, num_aspect=NUM_ASPECT)
     img_url_list = [f"{aws_s3_prefix}/{img_name}" for img_name in img_name_list]
-    print(f"before resampling, num of imgs:", len(img_name_list))
+    print("before resampling, num of imgs:", len(img_name_list))
 
     if len(img_url_list) > MAX_NUM_FRAMES:
         step = len(img_url_list) / MAX_NUM_FRAMES
@@ -56,7 +56,7 @@ def _azure_gpt_4o_output(img_name_list, video_prompt, aws_s3_prefix):
 def query_one_video(logger, item, aws_s3_prefix):
     vid = item["id"]
     img_name_list = [f"{vid}/{img_file}" for img_file in item["images"]]
-    print(f"len of img_name_list", len(img_name_list))
+    print("len of img_name_list", len(img_name_list))
     human_text = item["conversations"][0]["value"]
     bot_text = item["conversations"][1]["value"]
 
@@ -76,7 +76,7 @@ def query_one_video(logger, item, aws_s3_prefix):
 def eval_gpt4(
     data_repo_name: str = "TIGER-Lab/VideoScore-Bench",
     bench_name: str = "video_feedback",
-    name_postfixs: List[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_gpt4o.json",
 ):
     logging.basicConfig(level=logging.INFO)
@@ -91,9 +91,9 @@ def eval_gpt4(
 
     aws_s3_prefix = "https://video-bench-800.s3.ap-southeast-2.amazonaws.com/frames"
     if bench_name == "eval_crafter":
-        aws_s3_prefix = f"https://eval-crafter-frames.s3.ap-southeast-2.amazonaws.com/frames"
+        aws_s3_prefix = "https://eval-crafter-frames.s3.ap-southeast-2.amazonaws.com/frames"
     if bench_name == "vbench":
-        aws_s3_prefix = f"https://vbench-frames.s3.ap-southeast-2.amazonaws.com/frames"
+        aws_s3_prefix = "https://vbench-frames.s3.ap-southeast-2.amazonaws.com/frames"
     if bench_name == "genaibench":
         aws_s3_prefix = "https://genaibench-frames.s3.ap-southeast-2.amazonaws.com/frames"
 

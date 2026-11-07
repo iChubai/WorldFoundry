@@ -1,17 +1,15 @@
-import os
-
-from .utils import init_submodules, save_json
 import importlib
-from itertools import chain
-from pathlib import Path
 import importlib.util
 import json
+import os
+import re
+from collections import defaultdict
+from itertools import chain
+from pathlib import Path
 
 from worldfoundry.core.distributed.collectives.evaluation import get_rank, print0
 
-import re
-from collections import defaultdict
-
+from .utils import init_submodules, save_json
 
 # Empirical bounds for normalization (higher is better unless noted)
 _EMPIRICAL_BOUNDS = {
@@ -115,7 +113,7 @@ def _to_standard_results(metric: str, results, data_base: str):
     return [avg_val, video_entries]
 
 
-class WorldArenaBenchmark(object):
+class WorldArenaBenchmark:
     def __init__(self, device, output_path):
         self.device = device  # cuda or cpu
         self.output_path = output_path
@@ -276,7 +274,7 @@ class WorldArenaBenchmark(object):
                         **kwargs,
                     )
                     caption_json = os.path.join(self.output_path, f"{data_name}_caption_responses.json")
-                    with open(caption_json, "r") as f:
+                    with open(caption_json) as f:
                         data = json.load(f)
 
                     result = {}
@@ -287,7 +285,7 @@ class WorldArenaBenchmark(object):
                             print(f"Warning: No 'Overall_Constraints' found in {sample_id}")
                     results_dict["logics"] = result
 
-                    gt_caption_json = os.path.join(self.output_path, f"gt_caption_responses.json")
+                    gt_caption_json = os.path.join(self.output_path, "gt_caption_responses.json")
                     if not os.path.isfile(gt_caption_json):
                         gt_full_info_path = self.build_full_gt_info_json(gt_path, "gt", **kwargs)
                         gt_caption = caption_reference(
@@ -388,5 +386,5 @@ class WorldArenaBenchmark(object):
                 json.dump(results_dict, f, indent=2)
 
         else:
-            with open(json_path, "r") as f:
+            with open(json_path) as f:
                 results_dict = json.load(f)

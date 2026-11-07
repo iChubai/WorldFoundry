@@ -1,4 +1,4 @@
-from utils.dino_utils import load_dinov3_model, extract_dinov3_features
+from utils.dino_utils import extract_dinov3_features, load_dinov3_model
 
 
 def dino_mse_metric(pred_frames, gt_frames, dino_model=None, dino_processor=None, device="cuda:0", batch_size=8):

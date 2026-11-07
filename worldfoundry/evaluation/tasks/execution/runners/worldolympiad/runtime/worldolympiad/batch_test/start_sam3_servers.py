@@ -116,7 +116,7 @@ def main() -> None:
             ) from exc
 
     processes: list[subprocess.Popen] = []
-    for index, (gpu, port) in enumerate(zip(gpus, ports)):
+    for index, (gpu, port) in enumerate(zip(gpus, ports, strict=False)):
         visible_gpu = resolve_visible_gpu(gpu, use_uuid=use_gpu_uuid, uuid_by_index=uuid_by_index)
         env = os.environ.copy()
         env["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"

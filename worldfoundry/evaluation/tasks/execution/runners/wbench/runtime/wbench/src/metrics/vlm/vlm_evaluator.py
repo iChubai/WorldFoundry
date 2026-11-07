@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 VLM Evaluator - API client for video evaluation (video direct mode).
 
@@ -19,19 +18,19 @@ import re
 import tempfile
 import threading
 import time
-from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Any, Optional
+from dataclasses import dataclass, field
 from io import BytesIO
-from PIL import Image
+from typing import Any, Dict, List, Optional
 
 import cv2
 import requests
+from PIL import Image
 
 # Global request counter and concurrency limiter (thread-safe)
 _request_counter = 0
 _request_lock = threading.Lock()
-_request_semaphore: Optional[threading.Semaphore] = None
+_request_semaphore: threading.Semaphore | None = None
 
 logger = logging.getLogger(__name__)
 
@@ -156,9 +155,9 @@ class VLMTask:
 
     dimension: str
     question: str
-    images: List[Image.Image] = field(default_factory=list)
+    images: list[Image.Image] = field(default_factory=list)
     expected: str = "yes"
-    metadata: Dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
     answer: bool = None
     video_url: str = None
 
@@ -219,7 +218,7 @@ class VLMClient:
         max_tokens: int,
         system_prompt: str = None,
         video_url: str = None,
-        images: List[Image.Image] = None,
+        images: list[Image.Image] = None,
     ) -> str:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -266,7 +265,7 @@ class VLMClient:
                                 text = part["text"].strip()
                                 return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
                 return ""
-            except Exception as e:
+            except Exception:
                 attempt += 1
                 if attempt < max_retries:
                     wait = self.RETRY_BACKOFF[min(attempt - 1, len(self.RETRY_BACKOFF) - 1)]
@@ -283,7 +282,7 @@ class VLMClient:
         max_tokens: int,
         system_prompt: str = None,
         video_url: str = None,
-        images: List[Image.Image] = None,
+        images: list[Image.Image] = None,
     ) -> str:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -323,7 +322,7 @@ class VLMClient:
                 _increment_request_count()
                 text = resp.json()["choices"][0]["message"]["content"].strip()
                 return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-            except Exception as e:
+            except Exception:
                 attempt += 1
                 if attempt < max_retries:
                     wait = self.RETRY_BACKOFF[min(attempt - 1, len(self.RETRY_BACKOFF) - 1)]
@@ -340,7 +339,7 @@ class VLMClient:
     def ask(
         self,
         prompt: str,
-        images: List[Image.Image] = None,
+        images: list[Image.Image] = None,
         max_retries: int = 6,
         max_tokens: int = 300,
         system_prompt: str = None,
@@ -378,7 +377,7 @@ class VLMClient:
                 _request_semaphore.release()
 
     def ask_binary(
-        self, question: str, images: List[Image.Image] = None, max_retries: int = 3, video_url: str = None
+        self, question: str, images: list[Image.Image] = None, max_retries: int = 3, video_url: str = None
     ) -> bool:
         """Ask a binary (yes/no) question."""
         answer_text = self.ask(
@@ -390,7 +389,7 @@ class VLMClient:
         )
         return "yes" in answer_text.lower()
 
-    def evaluate_tasks(self, tasks: List[VLMTask], nproc: int = 4) -> List[VLMTask]:
+    def evaluate_tasks(self, tasks: list[VLMTask], nproc: int = 4) -> list[VLMTask]:
         """Evaluate multiple VLM tasks concurrently."""
 
         def _run_task(task):

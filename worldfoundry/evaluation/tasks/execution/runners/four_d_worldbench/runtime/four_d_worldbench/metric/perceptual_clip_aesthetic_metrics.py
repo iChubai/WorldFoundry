@@ -1,8 +1,8 @@
-from typing import List, Union
-import os
-import cv2
 import json
+import os
+from typing import List, Union
 
+import cv2
 from PIL import Image
 
 from .base_metrics import BaseMetric, IQAPytorchMetric
@@ -20,7 +20,7 @@ class CLIPAestheticScoreMetric(IQAPytorchMetric):
     def __init__(self) -> None:
         super().__init__(metric_name="laion_aes")
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         imgs = self._process_image(rendered_images)
 
         scores = []
@@ -32,7 +32,7 @@ class CLIPAestheticScoreMetric(IQAPytorchMetric):
         return score
 
 
-def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64) -> List[str]:
+def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64) -> list[str]:
     """Extract frames from video to directory."""
     os.makedirs(out_root, exist_ok=True)
     base = os.path.splitext(os.path.basename(video_path))[0]
@@ -50,7 +50,7 @@ def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64)
         step = total / float(max_frames)
         indices = [int(i * step) for i in range(max_frames)]
 
-    saved: List[str] = []
+    saved: list[str] = []
     idx = 0
     next_set = set(indices)
     cur = 0
@@ -86,7 +86,7 @@ def compute_perceptual_clip_aesthetic_metrics(json_dir, device, submodules_dict,
 
     metric = CLIPAestheticScoreMetric()
     details = []
-    scores: List[float] = []
+    scores: list[float] = []
     out_root = os.path.join(os.path.dirname(json_dir), "frames_cache")
 
     for item in prompt_dict_ls:
@@ -128,6 +128,6 @@ def compute_perceptual_clip_aesthetic_metrics(json_dir, device, submodules_dict,
             json.dump(detailed_output, f, indent=2, ensure_ascii=False)
         print(f"\nDetailed results saved to: {output_file}")
     except Exception as e:
-        print(f"Error saving JSON file: {str(e)}")
+        print(f"Error saving JSON file: {e!s}")
 
     return final, details

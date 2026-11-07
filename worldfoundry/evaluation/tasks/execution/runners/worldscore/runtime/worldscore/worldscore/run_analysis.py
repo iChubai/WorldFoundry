@@ -4,17 +4,17 @@
 
 import os
 from argparse import ArgumentParser, Namespace
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.utils import (
-    print_banner,
-)
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
     check_model,
     get_model2type,
     type2model,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.utils import (
+    print_banner,
 )
 
 
@@ -70,8 +70,10 @@ def get_parser() -> ArgumentParser:
 
 
 def run_check_data(args: Namespace) -> None:
-    from omegaconf import OmegaConf
     import os
+
+    from omegaconf import OmegaConf
+
     from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.evaluator import (
         Evaluator,
     )
@@ -156,8 +158,9 @@ def run_check_data(args: Namespace) -> None:
 
 
 def run_check_score(args: Namespace) -> None:
-    from omegaconf import OmegaConf
     import os
+
+    from omegaconf import OmegaConf
 
     print("-- Model name: ", args.model_name)
     print("-- Checking score completeness...")
@@ -240,13 +243,15 @@ def run_check_score(args: Namespace) -> None:
 
 
 def run_analysis(args: Namespace) -> None:
-    from omegaconf import OmegaConf
     import os
-    from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.evaluator import (
-        Analysis,
-    )
+
+    from omegaconf import OmegaConf
+
     from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers import (
         GetDataloader,
+    )
+    from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.evaluator import (
+        Analysis,
     )
 
     config = OmegaConf.load(config_path("base_config.yaml"))
@@ -264,7 +269,7 @@ def run_analysis(args: Namespace) -> None:
     analysis.analyze()
 
 
-def main(argv: Optional[list] = None) -> None:
+def main(argv: list | None = None) -> None:
     import sys
 
     parser = get_parser()

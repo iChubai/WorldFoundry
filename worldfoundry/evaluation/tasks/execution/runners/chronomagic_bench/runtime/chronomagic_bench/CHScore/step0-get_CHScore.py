@@ -1,9 +1,10 @@
-import os
+import argparse
 import json
-import torch
+import os
+
 import imageio
 import numpy as np
-import argparse
+import torch
 from PIL import Image
 from tqdm import tqdm
 
@@ -174,7 +175,7 @@ def main(args):
                     os.makedirs(args.output_folder)
 
                 if os.path.exists(output_file_path):
-                    with open(output_file_path, "r") as existing_file:
+                    with open(output_file_path) as existing_file:
                         all_scores_data = json.load(existing_file).get("all_scores", [])
                 else:
                     all_scores_data = []
@@ -219,7 +220,7 @@ def main(args):
                 os.makedirs(args.output_folder)
 
             if os.path.exists(output_file_path):
-                with open(output_file_path, "r") as existing_file:
+                with open(output_file_path) as existing_file:
                     all_scores_data = json.load(existing_file).get("all_scores", [])
             else:
                 all_scores_data = []

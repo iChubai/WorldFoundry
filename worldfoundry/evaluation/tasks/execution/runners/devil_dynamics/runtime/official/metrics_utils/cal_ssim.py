@@ -1,18 +1,19 @@
+import math
 import os
 import pdb
-import cv2
-import math
 import shutil
-import pandas as pd
-from skimage.metrics import structural_similarity as ssim
 import subprocess
-from tqdm import tqdm
-import numpy as np
+
+import cv2
 import imagehash
+import numpy as np
+import pandas as pd
+import torch
 from PIL import Image
 from pytorch_msssim import ms_ssim
 from pytorch_msssim import ssim as torch_ssim
-import torch
+from skimage.metrics import structural_similarity as ssim
+from tqdm import tqdm
 
 
 def count_png_files(directory):
@@ -358,7 +359,7 @@ def cal_ssim_dist(video_data, org_videos, video_names, topk=None):
     device = video_data[0].device
     ssims = []
     phashs = []
-    for i, (video, org_video) in enumerate(zip(video_data, org_videos)):
+    for i, (video, org_video) in enumerate(zip(video_data, org_videos, strict=False)):
         if topk is None:
             phash = stat_phash(org_video.cpu().numpy())
             ssim = torch_ssim(
@@ -386,7 +387,7 @@ def cal_ssim_dist_chunk(video_data, org_videos, video_names, max_frames=200):
     msssims = []
     psnrs = []
     phashs = []
-    for i, (video, org_video) in enumerate(zip(video_data, org_videos)):
+    for i, (video, org_video) in enumerate(zip(video_data, org_videos, strict=False)):
         # print(f'calculating ssims for {video_names[i]}')
         num_frames = video.shape[0]
         frame_start = 0

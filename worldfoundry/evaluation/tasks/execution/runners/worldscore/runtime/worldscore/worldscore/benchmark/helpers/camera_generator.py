@@ -29,7 +29,7 @@ def convert_extrinsics_blender(camera):
     return c2w_extrinsics
 
 
-class CameraExtrinsics(object):
+class CameraExtrinsics:
     def __init__(self, R=None, T=None):
         """
         - R (torch.Tensor): Rotation matrix of shape (3, 3)
@@ -78,7 +78,7 @@ class CameraExtrinsics(object):
         return self
 
 
-class CameraGen(object):
+class CameraGen:
     def __init__(self, config):
         super(CameraGen, self).__init__()
         self.device = get_torch_device()
@@ -333,7 +333,7 @@ class CameraGen(object):
 
     def generate_interp_cameras(self):
         self.cameras_interp.append(copy.deepcopy(self.cameras[0]))
-        for kf1_camera, kf2_camera in zip(self.cameras[:-1], self.cameras[1:]):
+        for kf1_camera, kf2_camera in zip(self.cameras[:-1], self.cameras[1:], strict=False):
             cameras = self.interp_cameras(kf1_camera, kf2_camera)
             self.cameras_interp.extend(cameras)
             self.cameras_interp.append(copy.deepcopy(kf2_camera))

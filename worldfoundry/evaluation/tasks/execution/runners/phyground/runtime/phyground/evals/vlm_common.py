@@ -434,7 +434,7 @@ def _extract_video_frames_b64(
 
     frames = vr.get_batch(indices).asnumpy()
     sampled: list[tuple[float, str]] = []
-    for idx, frame in zip(indices, frames):
+    for idx, frame in zip(indices, frames, strict=False):
         timestamp = float(idx) / source_fps if source_fps > 0 else 0.0
         img = Image.fromarray(frame)
         if img.height > max_height:

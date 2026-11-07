@@ -1,8 +1,9 @@
-import time
+import csv
 import json
 import os
+import time
+
 from google import genai
-import csv
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -171,7 +172,7 @@ def evaluate_video_with_hint(video_path, questions, hint):
 
 if __name__ == "__main__":
     inputs = []
-    with open("failure-cases.csv", mode="r", newline="", encoding="utf-8") as csv_file:
+    with open("failure-cases.csv", newline="", encoding="utf-8") as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             inputs.append(row)
@@ -229,7 +230,9 @@ if __name__ == "__main__":
 
             evaluation_revised = [
                 eval_failure
-                for eval_failure, eval_failure_revised in zip(evaluation_failure_json, evaluation_failure_revised_json)
+                for eval_failure, eval_failure_revised in zip(
+                    evaluation_failure_json, evaluation_failure_revised_json, strict=False
+                )
                 if eval_failure["Verdict"] == eval_failure_revised["Verdict"]
             ]
             final_questions = [

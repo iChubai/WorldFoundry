@@ -19,7 +19,7 @@ from .transforms import (
 )
 
 
-class DataAugmentationForVideoMAEv2(object):
+class DataAugmentationForVideoMAEv2:
     def __init__(self, args):
         self.input_mean = [0.485, 0.456, 0.406]
         self.input_std = [0.229, 0.224, 0.225]
@@ -222,7 +222,7 @@ class HybridVideoMAE(torch.utils.data.Dataset):
                     images.append(img)
 
         except Exception as e:
-            print("Failed to load video from {} with error {}".format(video_name, e))
+            print(f"Failed to load video from {video_name} with error {e}")
             index = random.randint(0, len(self.clips) - 1)
             return self.__getitem__(index)
 
@@ -422,7 +422,7 @@ class VideoMAE(torch.utils.data.Dataset):
                     images.append(img)
 
         except Exception as e:
-            print("Failed to load video from {} with error {}".format(video_name, e))
+            print(f"Failed to load video from {video_name} with error {e}")
             index = random.randint(0, len(self.clips) - 1)
             return self.__getitem__(index)
 

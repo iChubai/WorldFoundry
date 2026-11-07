@@ -1,16 +1,21 @@
 import argparse
+import json
 import os
 import sys
 
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
-import json
 import torch
 from PIL import Image
+from tqdm import tqdm
 
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
@@ -20,10 +25,6 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.util
 )
 from worldfoundry.base_models.perception_core.segment.sam_v1 import SamPredictor, sam_model_registry
 from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_v1_checkpoint_path
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.asset_paths import asset_path
 from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.grounded_sam_metrics.video_io import (
     write_video,
@@ -195,7 +196,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     pred_phrases = []
 
     logits_list = []
-    for logit, box in zip(logits_filt, boxes_filt):
+    for logit, box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -237,7 +238,7 @@ def save_mask_data(output_dir, mask_list, box_list, label_list):
     plt.savefig(os.path.join(output_dir, "mask_background.jpg"), bbox_inches="tight", dpi=300, pad_inches=0.0)
 
     json_data = [{"value": value, "label": "background"}]
-    for label, box in zip(label_list, box_list):
+    for label, box in zip(label_list, box_list, strict=False):
         value += 1
         name, logit = label.split("(")
         logit = logit[:-1]  # the last is ')'
@@ -309,7 +310,7 @@ def foreground_background_mask(args):
     videos = os.listdir(frame_folder)
     videos.sort()
 
-    with open(args.read_prompt_file, "r") as json_data:
+    with open(args.read_prompt_file) as json_data:
         prompts = json.load(json_data)
 
     for k in range(len(videos)):
@@ -375,7 +376,7 @@ def foreground_background_mask(args):
             for mask in masks:
                 # show_mask(mask.cpu().numpy(), plt.gca(), random_color=True)
                 show_mask(mask.cpu().numpy(), plt.gca(), random_color=False)
-            for box, label in zip(boxes_filt, pred_phrases):
+            for box, label in zip(boxes_filt, pred_phrases, strict=False):
                 show_box(box.numpy(), plt.gca(), label)
 
             plt.axis("off")
@@ -423,7 +424,7 @@ def foreground_background_mask(args):
         for mask in masks:
             # show_mask(mask.cpu().numpy(), plt.gca(), random_color=True)
             show_mask(mask.cpu().numpy(), plt.gca(), random_color=False)
-        for box, label in zip(boxes_filt, pred_phrases):
+        for box, label in zip(boxes_filt, pred_phrases, strict=False):
             show_box(box.numpy(), plt.gca(), label)
 
         plt.axis("off")

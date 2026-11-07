@@ -1,31 +1,25 @@
-from typing import List
+# Grounding DINO
+import argparse
 import os
+import re
+from typing import List
 
 import cv2
 import numpy as np
+
+# Load spaCy's small English model
+# make sure to run: python -m spacy download en_core_web_sm
+import spacy
 import torch
 from PIL import Image
-from worldfoundry.base_models.perception_core.segment.sam2 import (
-    checkpoint_path as sam2_checkpoint_path,
-    config_name as sam2_config_name,
-)
-from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
-import re
+from torchvision.transforms import ToPILImage
 
-from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus import (
-    build_flowformer,
-    checkpoint_path,
-    get_cfg,
-)
-from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils import frame_utils
-from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils.utils import InputPadder
-
-# Grounding DINO
-import argparse
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
@@ -33,19 +27,27 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.util
     clean_state_dict,
     get_phrases_from_posmap,
 )
+from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus import (
+    build_flowformer,
+    checkpoint_path,
+    get_cfg,
+)
+from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils import frame_utils
+from worldfoundry.base_models.perception_core.optical_flow.flowformerplusplus.core.utils.utils import InputPadder
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    checkpoint_path as sam2_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    config_name as sam2_config_name,
+)
+from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
 
 # segment anything
 from worldfoundry.base_models.perception_core.segment.sam_v1 import (
-    sam_model_registry,
     SamPredictor,
+    sam_model_registry,
 )
 from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_v1_checkpoint_path
-
-from torchvision.transforms import ToPILImage
-
-# Load spaCy's small English model
-# make sure to run: python -m spacy download en_core_web_sm
-import spacy
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -122,7 +124,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt):
+    for logit, box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -182,7 +184,7 @@ def get_match_point(result, prompt_list):
 
 
 def prepare_image(fn1, fn2, keep_size):
-    print(f"preparing image...")
+    print("preparing image...")
     print(f"fn = {fn1}")
 
     image1 = frame_utils.read_gen(fn1)
@@ -200,7 +202,7 @@ def prepare_image(fn1, fn2, keep_size):
 
 
 def build_optical_flow_model():
-    print(f"building  model...")
+    print("building  model...")
     cfg = get_cfg()
     cfg.model = str(checkpoint_path())
     model = torch.nn.DataParallel(build_flowformer(cfg))
@@ -438,7 +440,7 @@ class MotionAlignmentMetric(BaseMetric):
             self._grounding_dino_args = args
 
     def _compute_flow(self, image1, image2):
-        print(f"computing flow...")
+        print("computing flow...")
         image1, image2 = image1[None].to(self._device), image2[None].to(self._device)
 
         padder = InputPadder(image1.shape)
@@ -454,9 +456,9 @@ class MotionAlignmentMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
-        masked_images: List[str],
-        objects_list: List[str],
+        rendered_images: list[str],
+        masked_images: list[str],
+        objects_list: list[str],
     ) -> float:
         video_dir = os.path.dirname(rendered_images[0])
         if self._generate_type == "t2v":
@@ -563,12 +565,12 @@ class MotionAlignmentMetric(BaseMetric):
         scores = []
 
         with torch.no_grad():
-            for img_pair, mask in zip(img_pairs, masks[:-1]):
+            for img_pair, mask in zip(img_pairs, masks[:-1], strict=False):
                 fn1, fn2 = img_pair
                 print(f"processing {fn1}, {fn2}...")
                 image1, image2 = prepare_image(fn1, fn2, keep_size=True)
                 flow = self._compute_flow(image1, image2)
-                flow_magnitude = np.sqrt((flow[..., 0] ** 2 + flow[..., 1] ** 2))
+                flow_magnitude = np.sqrt(flow[..., 0] ** 2 + flow[..., 1] ** 2)
                 object_flow_magnitude = flow_magnitude[mask]
                 background_flow_magnitude = flow_magnitude[~mask]
                 motion_alignment = (

@@ -133,14 +133,14 @@ def _total_rotation_deg(poses: np.ndarray) -> float:
     return total
 
 
-def _compute_ate(gt: np.ndarray, pred: np.ndarray) -> Tuple[float, float]:
+def _compute_ate(gt: np.ndarray, pred: np.ndarray) -> tuple[float, float]:
     n = min(len(gt), len(pred))
     trans_err = np.linalg.norm(gt[:n, :3, 3] - pred[:n, :3, 3], axis=1)
     rot_err = np.array([_rot_angle_deg(gt[i, :3, :3].T @ pred[i, :3, :3]) for i in range(n)])
     return float(trans_err.mean()), float(rot_err.mean())
 
 
-def _compute_rpe(gt: np.ndarray, pred: np.ndarray, delta: int = 1) -> Tuple[np.ndarray, np.ndarray]:
+def _compute_rpe(gt: np.ndarray, pred: np.ndarray, delta: int = 1) -> tuple[np.ndarray, np.ndarray]:
     n = min(len(gt), len(pred))
     gt, pred = gt[:n], pred[:n]
     m = n - delta
@@ -177,7 +177,8 @@ def _get_symmetry_key(action: str) -> str:
 
 def _resample_by_arc(poses: np.ndarray, n_samples: int) -> np.ndarray:
     """Resample poses uniformly along arc-length."""
-    from scipy.spatial.transform import Rotation as ScipyR, Slerp
+    from scipy.spatial.transform import Rotation as ScipyR
+    from scipy.spatial.transform import Slerp
 
     n = len(poses)
     if n <= 2 or n_samples <= 2:
@@ -212,7 +213,7 @@ def _resample_by_arc(poses: np.ndarray, n_samples: int) -> np.ndarray:
     return out
 
 
-def _compute_ate_arc(gt: np.ndarray, pred: np.ndarray, n_samples: int = ARC_SAMPLES_PER_TURN) -> Tuple[float, float]:
+def _compute_ate_arc(gt: np.ndarray, pred: np.ndarray, n_samples: int = ARC_SAMPLES_PER_TURN) -> tuple[float, float]:
     gt_s = _resample_by_arc(gt, n_samples)
     pred_s = _resample_by_arc(pred, n_samples)
     return _compute_ate(gt_s, pred_s)
@@ -228,7 +229,7 @@ def _build_gt_trajectory(
     rotation_angle_deg: float = 60.0,
     step_size: float = 2.0,
     subject_depth: float = 2.0,
-) -> Optional[np.ndarray]:
+) -> np.ndarray | None:
     """Generate GT trajectory based on action and perspective."""
     from scipy.spatial.transform import Rotation as ScipyR
 
@@ -328,7 +329,7 @@ def _build_gt_trajectory(
     return np.array(poses, dtype=np.float64)
 
 
-def _estimate_orbit_radius(pred_turn: np.ndarray) -> Optional[float]:
+def _estimate_orbit_radius(pred_turn: np.ndarray) -> float | None:
     chord = np.linalg.norm(pred_turn[-1, :3, 3] - pred_turn[0, :3, 3])
     theta = np.deg2rad(_total_rotation_deg(pred_turn))
     if theta < np.deg2rad(5) or np.sin(theta / 2) < 1e-6:
@@ -407,7 +408,7 @@ def _build_gt_rotation(pred_turn: np.ndarray, action: str, perspective: str) -> 
 # ── Consistency (trajectory shape similarity between same-group turns) ────────
 
 
-def _need_mirror(act1: str, act2: str) -> Optional[str]:
+def _need_mirror(act1: str, act2: str) -> str | None:
     a1, a2 = normalize_action(act1), normalize_action(act2)
     if a1 == a2:
         return None
@@ -454,8 +455,8 @@ def _resample_poses(poses: np.ndarray, n: int) -> np.ndarray:
 
 
 def _compute_turn_pair_error(
-    poses1: np.ndarray, poses2: np.ndarray, mirror_type: Optional[str] = None
-) -> Dict[str, float]:
+    poses1: np.ndarray, poses2: np.ndarray, mirror_type: str | None = None
+) -> dict[str, float]:
     """Compute normalized ATE between two turns (for consistency)."""
     n1 = _normalize_turn(poses1)
     n2 = _normalize_turn(poses2)
@@ -487,15 +488,15 @@ def _compute_turn_pair_error(
 
 def _compute_consistency_trajectory(
     poses: np.ndarray,
-    turn_bounds: List[Tuple[int, int]],
-    actions: List[str],
-) -> Dict[str, float]:
+    turn_bounds: list[tuple[int, int]],
+    actions: list[str],
+) -> dict[str, float]:
     """Trajectory shape consistency: cnATE across same-group turn pairs."""
     turn_data = []
-    for (s, e), act in zip(turn_bounds, actions):
+    for (s, e), act in zip(turn_bounds, actions, strict=False):
         turn_data.append((poses[s:e], act, _get_symmetry_key(act)))
 
-    all_errs: List[Dict[str, float]] = []
+    all_errs: list[dict[str, float]] = []
     for i, j in combinations(range(len(turn_data)), 2):
         p1, a1, k1 = turn_data[i]
         p2, a2, k2 = turn_data[j]
@@ -519,10 +520,10 @@ def _compute_consistency_trajectory(
 
 def evaluate_navigation(
     poses: np.ndarray,
-    turn_bounds: List[Tuple[int, int]],
-    actions: List[str],
+    turn_bounds: list[tuple[int, int]],
+    actions: list[str],
     perspective: str = "first_person",
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Evaluate navigation trajectory quality using nATE-based NavScore.
 
@@ -541,7 +542,7 @@ def evaluate_navigation(
     gt_segments = []
     current_pos = poses[turn_bounds[0][0], :3, 3].copy()
 
-    for (s, e), act in zip(turn_bounds, actions):
+    for (s, e), act in zip(turn_bounds, actions, strict=False):
         pred_turn = poses[s:e]
 
         if _is_pure_translation(act):
@@ -561,7 +562,7 @@ def evaluate_navigation(
 
     # Per-turn arc-length sampled ATE (equal weight per turn)
     gt_sampled_parts, pred_sampled_parts = [], []
-    for (s, e), gt_seg in zip(turn_bounds, gt_segments):
+    for (s, e), gt_seg in zip(turn_bounds, gt_segments, strict=False):
         pred_turn = poses[s:e]
         nt = min(len(gt_seg), len(pred_turn))
         gt_sampled_parts.append(_resample_by_arc(gt_seg[:nt], ARC_SAMPLES_PER_TURN))

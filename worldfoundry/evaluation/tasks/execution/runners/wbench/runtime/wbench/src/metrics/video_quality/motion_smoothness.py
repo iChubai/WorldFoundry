@@ -6,13 +6,15 @@ import torch
 
 from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     checkpoint_path as amt_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     config_path as amt_config_path,
 )
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
+    InputPadder,
     img2tensor,
     tensor2img,
-    InputPadder,
 )
 
 from ..base import BaseMetric

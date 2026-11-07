@@ -1,33 +1,33 @@
 import io
-import os
-import re
-import yaml
-import cv2
 import json
-import random
-import numpy as np
 import logging
-
-from PIL import Image, ImageSequence
-from tqdm import tqdm
-from pathlib import Path
+import os
+import random
+import re
 from bisect import bisect_left
+from collections import defaultdict
+from pathlib import Path
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
+import yaml
 from decord import VideoReader, cpu
+from PIL import Image, ImageSequence
+from scenedetect import SceneManager, open_video, split_video_ffmpeg
+from scenedetect.detectors import ContentDetector
 from torchvision import transforms
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, ToPILImage
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+from tqdm import tqdm
+
+from worldfoundry.base_models.capabilities import vbench_asset_path
 from worldfoundry.base_models.perception_core.detection.yolo_world import config_path as yolo_world_config_path
 from worldfoundry.base_models.perception_core.human_anatomy.vit_detector import config_path as vit_detector_config_path
-from worldfoundry.base_models.perception_core.tracking.cotracker import checkpoint_path as cotracker_checkpoint_path
 from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
-from worldfoundry.base_models.capabilities import vbench_asset_path
-from collections import defaultdict
-from scenedetect import open_video, SceneManager, split_video_ffmpeg
-from scenedetect.detectors import ContentDetector
+from worldfoundry.base_models.perception_core.tracking.cotracker import checkpoint_path as cotracker_checkpoint_path
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -42,8 +42,8 @@ CACHE_DIR = os.environ.get("VBENCH2_CACHE_DIR")
 if CACHE_DIR is None:
     CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "vbench2")
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_rank,
     barrier,
+    get_rank,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -344,7 +344,7 @@ def load_json(path):
     Returns:
     - data (dict or list): The data loaded from the JSON file, which could be a dictionary or a list.
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 

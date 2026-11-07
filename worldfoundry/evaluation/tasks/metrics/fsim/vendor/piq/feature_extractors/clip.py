@@ -1,18 +1,16 @@
 import hashlib
 import os
 import warnings
+from collections import OrderedDict
+from typing import Optional, Tuple, Union
+from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
 
 import torch
 import torch.nn.functional as F
-
 from torch import nn
-from typing import Tuple, Union, Optional
-from collections import OrderedDict
-from urllib.request import urlopen
-from urllib.error import URLError, HTTPError
 
 from piq.utils.common import is_sha256_hash
-
 
 # We use the same model as OpenAI but store our own snapshot of it for reproducibility perposes.
 PIQ_CLIP_MODEL_PATH = "https://github.com/photosynthesis-team/piq/releases/download/v0.7.1/RN50.pt"
@@ -149,7 +147,7 @@ class Bottleneck(nn.Module):
 
 
 class AttentionPool2d(nn.Module):
-    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: Optional[int] = None):
+    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int | None = None):
         super().__init__()
         self.positional_embedding = nn.Parameter(torch.randn(spacial_dim**2 + 1, embed_dim) / embed_dim**0.5)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
@@ -398,7 +396,7 @@ class CLIP(nn.Module):
         embed_dim: int,
         # vision
         image_resolution: int,
-        vision_layers: Union[Tuple[int, ...], int],
+        vision_layers: tuple[int, ...] | int,
         vision_width: int,
         vision_patch_size: int,
         # text
@@ -568,12 +566,10 @@ def build_model(state_dict: dict):
     """
     vit = "visual.proj" in state_dict
 
-    vision_layers: Union[Tuple[int, ...], int]
+    vision_layers: tuple[int, ...] | int
     if vit:
         vision_width = state_dict["visual.conv1.weight"].shape[0]
-        vision_layers = len(
-            [k for k in state_dict.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")]
-        )
+        vision_layers = len([k for k in state_dict if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")])
         vision_patch_size = state_dict["visual.conv1.weight"].shape[-1]
         grid_size = round((state_dict["visual.positional_embedding"].shape[0] - 1) ** 0.5)
         image_resolution = vision_patch_size * grid_size
@@ -608,8 +604,7 @@ def build_model(state_dict: dict):
     )
 
     for key in ["input_resolution", "context_length", "vocab_size"]:
-        if key in state_dict:
-            del state_dict[key]
+        state_dict.pop(key, None)
 
     convert_weights(model)
     model.load_state_dict(state_dict)

@@ -28,7 +28,7 @@ class WorldFoundryPipelineBackend:
             from worldfoundry.evaluation.models.catalog.zoo_registry import load_model_zoo_registry
 
             load_model_zoo_registry()
-        except Exception as exc:  # noqa: BLE001 - availability must return diagnostics.
+        except Exception as exc:  # availability must return diagnostics.
             return False, f"WorldFoundry model catalog is unavailable: {type(exc).__name__}: {exc}"
         return True, "WorldFoundry in-tree model catalog is available"
 
@@ -43,7 +43,7 @@ class WorldFoundryPipelineBackend:
                 f"WRBench model {model!r} does not resolve to an in-tree WorldFoundry "
                 f"model catalog entry ({model_id!r})"
             )
-        except Exception as exc:  # noqa: BLE001 - availability must return diagnostics.
+        except Exception as exc:  # availability must return diagnostics.
             return False, f"WorldFoundry model catalog lookup failed: {type(exc).__name__}: {exc}"
         if not entry.runner_target:
             return False, f"WorldFoundry model {entry.model_id!r} has no runnable in-tree runner"
@@ -182,7 +182,7 @@ class WorldFoundryPipelineBackend:
                 message=f"generated through WorldFoundry model {resolved.model_id!r}",
                 artifacts={name: artifact.uri for name, artifact in result.artifacts.items()},
             )
-        except Exception as exc:  # noqa: BLE001 - backend returns structured failure.
+        except Exception as exc:  # backend returns structured failure.
             return GenerationResult(
                 success=False,
                 message=f"WorldFoundry generation failed: {type(exc).__name__}: {exc}",

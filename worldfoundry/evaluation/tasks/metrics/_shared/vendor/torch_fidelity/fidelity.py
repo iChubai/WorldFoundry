@@ -10,11 +10,11 @@ from .defaults import DEFAULTS
 from .helpers import process_deprecations
 from .metrics import calculate_metrics
 from .registry import (
-    FEATURE_EXTRACTORS_REGISTRY,
     DATASETS_REGISTRY,
-    SAMPLE_SIMILARITY_REGISTRY,
+    FEATURE_EXTRACTORS_REGISTRY,
     INTERPOLATION_REGISTRY,
     NOISE_SOURCE_REGISTRY,
+    SAMPLE_SIMILARITY_REGISTRY,
 )
 
 
@@ -202,19 +202,19 @@ def main():
         "--samples-find-ext",
         default=DEFAULTS["samples_find_ext"],
         type=str,
-        help=f"List of extensions to look for when traversing input path",
+        help="List of extensions to look for when traversing input path",
     )
     parser.add_argument(
         "--samples-ext-lossy",
         default=DEFAULTS["samples_ext_lossy"],
         type=str,
-        help=f"List of extensions to warn about lossy compression",
+        help="List of extensions to warn about lossy compression",
     )
     parser.add_argument(
         "--samples-resize-and-crop",
         default=DEFAULTS["samples_resize_and_crop"],
         type=int,
-        help=f"Transform all images found in the directory to a given size and square shape",
+        help="Transform all images found in the directory to a given size and square shape",
     )
     parser.add_argument(
         "--datasets-root",
@@ -312,18 +312,18 @@ def main():
 
     if type(unknown) is list and len(unknown) > 0:
         print(f"Ignoring unrecognized command line options: {unknown}", file=sys.stderr)
-        print(f"This may be due the command line options change in the most recent version", file=sys.stderr)
-        print(f"Use 'fidelity --help' to see the up-to-date command line options", file=sys.stderr)
-        print(f"See https://github.com/toshas/torch-fidelity/blob/master/CHANGELOG.md", file=sys.stderr)
+        print("This may be due the command line options change in the most recent version", file=sys.stderr)
+        print("Use 'fidelity --help' to see the up-to-date command line options", file=sys.stderr)
+        print("See https://github.com/toshas/torch-fidelity/blob/master/CHANGELOG.md", file=sys.stderr)
 
     if not (args["isc"] or args["fid"] or args["kid"] or args["ppl"] or args["prc"] or args["mind"]):
-        print(f"No metrics to compute, exiting", file=sys.stderr)
-        print(f"Use 'fidelity --help' to see the command line options", file=sys.stderr)
+        print("No metrics to compute, exiting", file=sys.stderr)
+        print("Use 'fidelity --help' to see the command line options", file=sys.stderr)
         exit(1)
 
     if args["input1"] is None and args["input2"] is None:
-        print(f"No inputs are given, exiting", file=sys.stderr)
-        print(f"Use 'fidelity --help' to see the command line options", file=sys.stderr)
+        print("No inputs are given, exiting", file=sys.stderr)
+        print("Use 'fidelity --help' to see the command line options", file=sys.stderr)
         exit(1)
 
     process_deprecations(args)

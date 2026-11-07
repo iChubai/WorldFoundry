@@ -1,20 +1,22 @@
-from keye_vl_utils import process_vision_info
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, AutoModel, AutoTokenizer
-
-import torch
+import argparse
+import json
+import os
 import sys
 import warnings
-from decord import VideoReader, cpu
+
 import numpy as np
-import json
-import argparse
-import os
+import torch
+from decord import VideoReader, cpu
+from keye_vl_utils import process_vision_info
 from PIL import Image
-from .utils import load_dimension_info
-from ..paths import keye_model_path
+from tqdm import tqdm
+from transformers import AutoModel, AutoProcessor, AutoTokenizer, Qwen2_5_VLForConditionalGeneration
+
 from worldfoundry.core.attention import resolve_transformers_attention_implementation
 from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
-from tqdm import tqdm
+
+from ..paths import keye_model_path
+from .utils import load_dimension_info
 
 warnings.filterwarnings("ignore")
 
@@ -106,7 +108,7 @@ def Keye2_5VL_Video(prompt_dict_ls, model, processor, fps, device):
 
                 # Extract generated tokens (excluding input tokens)
                 generated_ids_trimmed = [
-                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
                 ]
 
                 output_text = processor.batch_decode(
@@ -121,7 +123,7 @@ def Keye2_5VL_Video(prompt_dict_ls, model, processor, fps, device):
                 question_detail["is_yes"] = answer == "yes"
                 if question_detail["is_yes"]:
                     score += 1
-                    print(f"Answer is yes")
+                    print("Answer is yes")
 
                 video_detail["question_details"].append(question_detail)
 

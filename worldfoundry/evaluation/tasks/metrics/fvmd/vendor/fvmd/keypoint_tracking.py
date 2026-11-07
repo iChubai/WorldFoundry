@@ -1,20 +1,21 @@
 import os
-import time
-import numpy as np
-import fvmd.utils.saverloader as saverloader
-from fvmd.nets.pips2 import Pips
-import fvmd.utils.improc
-import fvmd.utils.misc
 import random
-from fvmd.utils.basic import print_, print_stats
+import time
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+
+import numpy as np
 import torch
-from tensorboardX import SummaryWriter
 import torch.nn.functional as F
 from fire import Fire
-from torch.utils.data import Dataset, DataLoader
 from loguru import logger
+from tensorboardX import SummaryWriter
+from torch.utils.data import DataLoader, Dataset
 
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+import fvmd.utils.improc
+import fvmd.utils.misc
+import fvmd.utils.saverloader as saverloader
+from fvmd.nets.pips2 import Pips
+from fvmd.utils.basic import print_, print_stats
 
 try:
     from torchvision.models.utils import load_state_dict_from_url
@@ -204,10 +205,10 @@ def track_keypoints(
         iter_rtime = time.time() - iter_start_time
         with torch.no_grad():
             trajs_gen, velo_gen, acc_gen = tracking_fullseq(
-                model, sample_gen, sw_x, N=N, iters=iters, S_max=S, name="{:04d}_sample_gen".format(global_step)
+                model, sample_gen, sw_x, N=N, iters=iters, S_max=S, name=f"{global_step:04d}_sample_gen"
             )
             trajs_gt, velo_gt, acc_gt = tracking_fullseq(
-                model, sample_gt, sw_x, N=N, iters=iters, S_max=S, name="{:04d}_sample_gt".format(global_step)
+                model, sample_gt, sw_x, N=N, iters=iters, S_max=S, name=f"{global_step:04d}_sample_gt"
             )
 
             all_traj_gen.extend(trajs_gen)
@@ -238,7 +239,7 @@ def track_keypoints(
     all_acc_gt = torch.concatenate(all_acc_gt, dim=0).cpu().numpy()
     np.save(os.path.join(log_dir, "acceleration_gt.npy"), all_acc_gt)
 
-    logger.info("velo_gen shape: {}".format(str(all_velo_gen.shape)))
+    logger.info(f"velo_gen shape: {all_velo_gen.shape!s}")
 
     return all_velo_gen, all_velo_gt, all_acc_gen, all_acc_gt
 

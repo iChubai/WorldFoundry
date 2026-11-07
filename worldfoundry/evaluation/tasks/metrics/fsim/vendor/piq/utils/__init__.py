@@ -1,3 +1,3 @@
-from piq.utils.common import _validate_input, _reduce, _parse_version
+from piq.utils.common import _parse_version, _reduce, _validate_input
 
-__all__ = ["_validate_input", "_reduce", "_parse_version"]
+__all__ = ["_parse_version", "_reduce", "_validate_input"]

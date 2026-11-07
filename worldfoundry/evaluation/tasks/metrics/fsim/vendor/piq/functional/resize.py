@@ -129,19 +129,19 @@ def reflect_padding(x: torch.Tensor, dim: int, pad_pre: int, pad_post: int) -> t
 
 
 def padding(
-    x: torch.Tensor, dim: int, pad_pre: int, pad_post: int, padding_type: typing.Optional[str] = "reflect"
+    x: torch.Tensor, dim: int, pad_pre: int, pad_post: int, padding_type: str | None = "reflect"
 ) -> torch.Tensor:
     if padding_type is None:
         return x
     elif padding_type == "reflect":
         x_pad = reflect_padding(x, dim, pad_pre, pad_post)
     else:
-        raise ValueError("{} padding is not supported!".format(padding_type))
+        raise ValueError(f"{padding_type} padding is not supported!")
 
     return x_pad
 
 
-def get_padding(base: torch.Tensor, kernel_size: int, x_size: int) -> typing.Tuple[int, int, torch.Tensor]:
+def get_padding(base: torch.Tensor, kernel_size: int, x_size: int) -> tuple[int, int, torch.Tensor]:
     base = base.long()
     r_min = base.min()
     r_max = base.max() + kernel_size - 1
@@ -176,7 +176,7 @@ def get_weight(
     elif kernel == "gaussian":
         weight = gaussian_contribution(buffer_pos, sigma=sigma)
     else:
-        raise ValueError("{} kernel is not supported!".format(kernel))
+        raise ValueError(f"{kernel} kernel is not supported!")
 
     weight /= weight.sum(dim=0, keepdim=True)
     return weight
@@ -199,7 +199,7 @@ def reshape_tensor(x: torch.Tensor, dim: int, kernel_size: int) -> torch.Tensor:
     return unfold
 
 
-def reshape_input(x: torch.Tensor) -> typing.Tuple[torch.Tensor, _I, _I, int, int]:
+def reshape_input(x: torch.Tensor) -> tuple[torch.Tensor, _I, _I, int, int]:
     if x.dim() == 4:
         b, c, h, w = x.size()
     elif x.dim() == 3:
@@ -209,7 +209,7 @@ def reshape_input(x: torch.Tensor) -> typing.Tuple[torch.Tensor, _I, _I, int, in
         h, w = x.size()
         b = c = None
     else:
-        raise ValueError("{}-dim Tensor is not supported!".format(x.dim()))
+        raise ValueError(f"{x.dim()}-dim Tensor is not supported!")
 
     x = x.view(-1, 1, h, w)
     return x, b, c, h, w
@@ -230,7 +230,7 @@ def reshape_output(x: torch.Tensor, b: _I, c: _I) -> torch.Tensor:
     return x
 
 
-def cast_input(x: torch.Tensor) -> typing.Tuple[torch.Tensor, _D]:
+def cast_input(x: torch.Tensor) -> tuple[torch.Tensor, _D]:
     if x.dtype != torch.float32 or x.dtype != torch.float64:
         dtype = x.dtype
         x = x.float()
@@ -351,9 +351,9 @@ def downsampling_2d(x: torch.Tensor, k: torch.Tensor, scale: int, padding_type: 
 
 def imresize(
     x: torch.Tensor,
-    scale: typing.Optional[float] = None,
-    sizes: typing.Optional[typing.Tuple[int, int]] = None,
-    kernel: typing.Union[str, torch.Tensor] = "cubic",
+    scale: float | None = None,
+    sizes: tuple[int, int] | None = None,
+    kernel: str | torch.Tensor = "cubic",
     sigma: float = 2,
     rotation_degree: float = 0,
     padding_type: str = "reflect",

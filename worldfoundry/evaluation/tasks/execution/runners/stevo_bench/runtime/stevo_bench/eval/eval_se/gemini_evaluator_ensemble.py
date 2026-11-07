@@ -5,15 +5,16 @@ Runs 3 different prompt variations and uses majority vote for final verdict.
 
 import os
 import time
+from collections import Counter
 from pathlib import Path
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, List, Optional, Tuple
+
 import google.generativeai as genai
 from PIL import Image
-from collections import Counter
 
 
 class GeminiEnsembleEvaluator:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """Initialize Gemini ensemble evaluator with API key."""
         if api_key is None:
             api_key = os.environ.get("GOOGLE_API_KEY")
@@ -22,9 +23,9 @@ class GeminiEnsembleEvaluator:
 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-3-pro-preview")
-        print(f"Using model: gemini-3-pro-preview (ensemble mode)")
+        print("Using model: gemini-3-pro-preview (ensemble mode)")
 
-    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: str | None = None) -> tuple[str, str]:
         """
         First Gemini call: Given initial image and optional action prompt,
         predict what process should happen.
@@ -72,7 +73,7 @@ After your full explanation, provide a one-sentence summary on the last line in 
 Process: [concise one-sentence description of the expected evolution]"""
 
         # Make API call
-        print(f"    Calling Gemini API for process prediction...")
+        print("    Calling Gemini API for process prediction...")
         try:
             response = self.model.generate_content([prompt, image])
             elapsed = time.time() - start_time
@@ -105,7 +106,7 @@ Process: [concise one-sentence description of the expected evolution]"""
         print("    Warning: Could not find 'Process:' line, using full response")
         return response_text
 
-    def _get_verification_prompts(self, expected_process: str, model_type: str) -> List[str]:
+    def _get_verification_prompts(self, expected_process: str, model_type: str) -> list[str]:
         """
         Generate 3 different prompt variations for ensemble voting.
 
@@ -201,7 +202,7 @@ EXPLANATION: [Your analysis]"""
 
     def verify_process_in_video_ensemble(
         self, video_path: str, expected_process: str, model_type: str = "unknown"
-    ) -> Tuple[Dict, bool]:
+    ) -> tuple[dict, bool]:
         """
         Ensemble verification: Run 3 different prompts and use majority voting.
 
@@ -215,13 +216,13 @@ EXPLANATION: [Your analysis]"""
         """
         # Upload video file
         upload_start = time.time()
-        print(f"    Uploading video...")
+        print("    Uploading video...")
         video_file = genai.upload_file(path=video_path)
         upload_time = time.time() - upload_start
         print(f"    Upload took {upload_time:.1f}s")
 
         # Wait for video processing
-        print(f"    Waiting for video processing...")
+        print("    Waiting for video processing...")
         process_start = time.time()
         wait_count = 0
         while video_file.state.name == "PROCESSING":
@@ -268,7 +269,7 @@ EXPLANATION: [Your analysis]"""
                 results.append(
                     {
                         "prompt_id": i,
-                        "response": f"ERROR: {str(e)}",
+                        "response": f"ERROR: {e!s}",
                         "verdict": None,
                         "time": time.time() - verify_start,
                     }
@@ -344,7 +345,7 @@ EXPLANATION: [Your analysis]"""
         else:
             return "unknown"
 
-    def evaluate_task(self, task_data: Dict) -> Dict:
+    def evaluate_task(self, task_data: dict) -> dict:
         """
         Evaluate a single task with ensemble evaluation.
 

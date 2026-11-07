@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .aggregate import numeric
 from .io import read_json
@@ -31,7 +32,7 @@ def validate_run(
         manifest = read_json(manifest_path)
         for case in manifest.get("cases") or ():
             case_id = str(case.get("case_id") or "")
-            family = str(((case.get("taxonomy") or {}).get("probe_family") or ""))
+            family = str((case.get("taxonomy") or {}).get("probe_family") or "")
             if not case_id or family not in FAMILIES:
                 violations.append(
                     {
@@ -67,11 +68,11 @@ def validate_run(
     for path in score_paths:
         try:
             score = read_json(path)
-        except Exception as exc:  # noqa: BLE001 - the audit must report every invalid JSON file
+        except Exception as exc:  # the audit must report every invalid JSON file
             parse_failures.append({"path": str(path), "error": str(exc)})
             continue
         model = str(score.get("model_id") or "")
-        family = str(((score.get("taxonomy") or {}).get("probe_family") or ""))
+        family = str((score.get("taxonomy") or {}).get("probe_family") or "")
         case_id = str(score.get("case_id") or "")
         key = (model, family, case_id)
         scores.append(score)
@@ -198,7 +199,7 @@ def validate_run(
             json_scan["file_count"] += 1
             try:
                 read_json(path)
-            except Exception as exc:  # noqa: BLE001 - malformed evidence must be reported
+            except Exception as exc:  # malformed evidence must be reported
                 json_scan["failure_count"] += 1
                 if len(json_scan["failures"]) < 50:
                     json_scan["failures"].append({"path": str(path), "error": str(exc)})

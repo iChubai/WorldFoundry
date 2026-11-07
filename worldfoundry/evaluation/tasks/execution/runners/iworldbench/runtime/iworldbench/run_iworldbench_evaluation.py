@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import argparse
 import os
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from worldfoundry.evaluation.tasks.execution.runners.vbench.vbench_official_impl import (
     IN_TREE_VBENCH_ROOT,
     VBENCH_FULL_INFO_ASSET,
 )
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
 SUPPORTED_VIDEO_EXTS = (".mp4", ".avi", ".mov", ".mkv", ".ts", ".flv", ".webm")
 METRICS_REQUIRING_REFERENCE_NPZ = {
@@ -196,25 +195,25 @@ def main() -> int:
     print(f"  vbench_gpu: {args.vbench_gpu}")
 
     from unified_video_metrics import (
+        calculate_action_control,
         calculate_all,
-        calculate_all_video_quality,
         calculate_all_trajectory,
         calculate_all_vbench,
-        calculate_generation_quality,
-        calculate_trajectory_following,
-        calculate_memory_ability,
-        calculate_action_control,
-        calculate_camera_following,
+        calculate_all_video_quality,
         calculate_brightness_consistency,
+        calculate_camera_following,
         calculate_color_temperature,
-        calculate_video_noise,
-        calculate_sharpness_retention,
+        calculate_generation_quality,
+        calculate_imaging_quality,
+        calculate_memory_ability,
         calculate_memory_symmetry,
+        calculate_motion_smoothness,
+        calculate_sharpness_retention,
         calculate_trajectory_accuracy,
         calculate_trajectory_alignment,
+        calculate_trajectory_following,
         calculate_trajectory_tolerance,
-        calculate_imaging_quality,
-        calculate_motion_smoothness,
+        calculate_video_noise,
     )
 
     dispatch = {

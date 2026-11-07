@@ -33,7 +33,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-
 ROTATION_KINDS = {"yaw", "pitch", "roll"}
 TRANSLATION_KINDS = {"pan", "dolly", "crane"}
 ACTION_KINDS = ROTATION_KINDS | TRANSLATION_KINDS | {"static"}
@@ -93,7 +92,7 @@ class FrameAction:
         if self.frames is not None:
             object.__setattr__(self, "frames", int(self.frames))
 
-    def with_frames(self, frames: int) -> "FrameAction":
+    def with_frames(self, frames: int) -> FrameAction:
         return replace(self, frames=int(frames))
 
 
@@ -142,32 +141,32 @@ class CameraScript:
             total += int(action.frames)
         return total
 
-    def extend(self, action: FrameAction) -> "CameraScript":
+    def extend(self, action: FrameAction) -> CameraScript:
         self.actions.append(action)
         return self
 
-    def static(self, frames: int | None = None) -> "CameraScript":
+    def static(self, frames: int | None = None) -> CameraScript:
         return self.extend(FrameAction("static", frames=frames))
 
-    def yaw(self, direction: str, *, degrees: float, frames: int | None = None) -> "CameraScript":
+    def yaw(self, direction: str, *, degrees: float, frames: int | None = None) -> CameraScript:
         return self.extend(FrameAction("yaw", direction, frames=frames, degrees=float(degrees)))
 
-    def pitch(self, direction: str, *, degrees: float, frames: int | None = None) -> "CameraScript":
+    def pitch(self, direction: str, *, degrees: float, frames: int | None = None) -> CameraScript:
         return self.extend(FrameAction("pitch", direction, frames=frames, degrees=float(degrees)))
 
-    def roll(self, direction: str, *, degrees: float, frames: int | None = None) -> "CameraScript":
+    def roll(self, direction: str, *, degrees: float, frames: int | None = None) -> CameraScript:
         return self.extend(FrameAction("roll", direction, frames=frames, degrees=float(degrees)))
 
-    def pan(self, direction: str, *, amount: float, frames: int | None = None) -> "CameraScript":
+    def pan(self, direction: str, *, amount: float, frames: int | None = None) -> CameraScript:
         return self.extend(FrameAction("pan", direction, frames=frames, amount=float(amount)))
 
-    def dolly(self, direction: str, *, amount: float, frames: int | None = None) -> "CameraScript":
+    def dolly(self, direction: str, *, amount: float, frames: int | None = None) -> CameraScript:
         return self.extend(FrameAction("dolly", direction, frames=frames, amount=float(amount)))
 
-    def crane(self, direction: str, *, amount: float, frames: int | None = None) -> "CameraScript":
+    def crane(self, direction: str, *, amount: float, frames: int | None = None) -> CameraScript:
         return self.extend(FrameAction("crane", direction, frames=frames, amount=float(amount)))
 
-    def segment(self, frames: int, /, **kwargs: float) -> "CameraScript":
+    def segment(self, frames: int, /, **kwargs: float) -> CameraScript:
         """Add one or more simultaneous motions over a single time window.
 
         Each keyword argument has the form ``kind_direction=value``::

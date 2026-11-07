@@ -6,7 +6,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-
 CURRENT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = CURRENT_DIR.parent
 DEPTH_ANYTHING_3_SRC = REPO_ROOT / "Depth-Anything-3" / "src"

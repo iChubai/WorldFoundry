@@ -1,23 +1,19 @@
-from PIL import Image
-
-import torch.nn as nn
-import torch
-
-from typing import List
-
-from q_align.model.builder import load_pretrained_model
-
-from q_align.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
-from q_align.mm_utils import process_images, tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
-
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-from decord import VideoReader
-import pandas as pd
-from scipy.signal import find_peaks
 import glob
 import json
+import os
+from typing import List
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+from decord import VideoReader
+from PIL import Image
+from q_align.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
+from q_align.mm_utils import KeywordsStoppingCriteria, get_model_name_from_path, process_images, tokenizer_image_token
+from q_align.model.builder import load_pretrained_model
+from scipy.signal import find_peaks
 from tqdm import tqdm
 
 
@@ -56,7 +52,7 @@ class QAlignVideoScorer(nn.Module):
             result.paste(pil_img, ((height - width) // 2, 0))
             return result
 
-    def forward(self, video: List[List[Image.Image]]):
+    def forward(self, video: list[list[Image.Image]]):
         video = [
             [self.expand2square(frame, tuple(int(x * 255) for x in self.image_processor.image_mean)) for frame in vid]
             for vid in video
@@ -156,7 +152,7 @@ if __name__ == "__main__":
     scorer = QAlignVideoScorer(pretrained=args.model_path, device=args.device)
 
     # Read video information from JSON file
-    with open(args.meta_info_path, "r") as f:
+    with open(args.meta_info_path) as f:
         meta_infos = json.load(f)
 
     # Iterate over videos for Q-Align scoring

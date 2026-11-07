@@ -1,18 +1,19 @@
+import hashlib
+import json
 import os
+import subprocess
+from pathlib import Path
+
+import cv2
+import numpy as np
 import torch
 from PIL import Image, ImageSequence
 
 # from decord import VideoReader, cpu
 from torchvision import transforms
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
 from torchvision.transforms import functional as F
-import json
 from tqdm import tqdm
-import numpy as np
-import cv2
-import subprocess
-from pathlib import Path
-import hashlib
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, ToPILImage
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -154,8 +155,8 @@ def expand_to_batch_dim(tensor, batch_size):
 
 
 # legacy code, preserve
-from torchvision.io import read_video
 import av
+from torchvision.io import read_video
 
 
 def load_sample_video(video_path, mark_time, total_time, max_time=None) -> torch.Tensor:
@@ -244,13 +245,13 @@ class VideoStreamReader:
 
 
 def load_time_from_json(json_path):
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         item = json.load(f)
     return item["mark_time"], item["total_time"]
 
 
 def extract_actions_from_json(json_path, mark_time=None, video_max_time=97):
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         action_data = json.load(f)
 
     if mark_time is None:

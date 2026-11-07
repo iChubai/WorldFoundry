@@ -1,19 +1,20 @@
+import logging
+import os
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Union
-import logging
-import os
+
+import numpy as np
+from mmengine import dump, load
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 
 # from rich.progress import track
 # from rich import print as rprint
-from rich.progress import Progress, BarColumn, TimeRemainingColumn
-import numpy as np
-from mmengine import load, dump
-from collections import defaultdict
+from rich.progress import BarColumn, Progress, TimeRemainingColumn
+from rich.table import Table
 from tqdm import tqdm
 
 from worldfoundry.base_models.llm_mllm_core.mllm.vila import Video, load_vila_model
@@ -26,7 +27,7 @@ class EvaluationType(Enum):
     COMMON_SENSE = "common_sense"
 
 
-def get_default_prompt_templates() -> Dict[str, str]:
+def get_default_prompt_templates() -> dict[str, str]:
     """Factory function for default prompt templates."""
     return {
         EvaluationType.INSTRUCTION.value: """
@@ -51,7 +52,7 @@ def get_default_prompt_templates() -> Dict[str, str]:
     }
 
 
-def get_default_question_pool() -> Dict[str, Optional[List[str]]]:
+def get_default_question_pool() -> dict[str, list[str] | None]:
     """Factory function for default question pool."""
     return {
         EvaluationType.INSTRUCTION.value: None,
@@ -73,8 +74,8 @@ def get_default_question_pool() -> Dict[str, Optional[List[str]]]:
 class EvaluationConfig:
     """Configuration for evaluation prompts and scoring criteria."""
 
-    PROMPT_TEMPLATES: Dict[str, str] = field(default_factory=get_default_prompt_templates)
-    QUESTION_POOL: Dict[str, Optional[List[str]]] = field(default_factory=get_default_question_pool)
+    PROMPT_TEMPLATES: dict[str, str] = field(default_factory=get_default_prompt_templates)
+    QUESTION_POOL: dict[str, list[str] | None] = field(default_factory=get_default_question_pool)
 
 
 class ResultsPrinter:
@@ -92,7 +93,7 @@ class ResultsPrinter:
         indent_str = " " * indent
         self.console.print(f"{indent_str}[cyan]{category}:[/cyan] [yellow]{score:.2f}[/yellow]")
 
-    def create_results_table(self, category: str, scores: Dict[str, float]) -> Table:
+    def create_results_table(self, category: str, scores: dict[str, float]) -> Table:
         """Create a rich table for displaying results."""
         table = Table(title=f"{category} Results", show_header=True, header_style="bold magenta")
         table.add_column("Metric", style="cyan")
@@ -134,7 +135,7 @@ class WorldModelEvaluator:
             attn_implementation=os.environ.get("WORLDFOUNDRY_WORLDMODELBENCH_ATTN_IMPL", "flash_attention_2"),
         )
 
-    def _load_video(self, video_name: str) -> Optional[Video]:
+    def _load_video(self, video_name: str) -> Video | None:
         """Load a video file for evaluation."""
         video_path = self.video_dir / f"{video_name}.mp4"
         if not video_path.exists():
@@ -150,7 +151,7 @@ class WorldModelEvaluator:
             )
         return self.judge.generate_content([video, prompt])
 
-    def process_results(self, preds: Dict, accs: defaultdict) -> float:
+    def process_results(self, preds: dict, accs: defaultdict) -> float:
         """Process and print evaluation results with rich formatting."""
         num_insts = len(preds)
         total_score = 0
@@ -185,7 +186,7 @@ class WorldModelEvaluator:
         return total_score
 
 
-def save_results(results: Dict, save_path: str):
+def save_results(results: dict, save_path: str):
     """Save evaluation results to a file."""
     dump(results, save_path, indent=4)
     Console().print(f"[green]Results saved to: {save_path}[/green]")

@@ -14,7 +14,7 @@ Frames: 3fps full video, original resolution (no resize).
 import logging
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from PIL import Image
 
@@ -169,7 +169,7 @@ TRACK2_SYSTEM_PROMPT = (
 )
 
 
-def _parse_score(response: str, max_score: int = 3) -> Tuple[Optional[int], str]:
+def _parse_score(response: str, max_score: int = 3) -> tuple[int | None, str]:
     """Extract score from 'Reason: ...\nScore: N' format."""
     reason = ""
     # Try to extract Reason:
@@ -191,10 +191,10 @@ def _parse_score(response: str, max_score: int = 3) -> Tuple[Optional[int], str]
 
 def evaluate_case(
     client: VLMClient,
-    frames: List[Image.Image],
-    case_data: Dict,
+    frames: list[Image.Image],
+    case_data: dict,
     nproc: int = 1,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Dual-track physics evaluation on full video frames (3fps, original resolution).
 
@@ -301,8 +301,8 @@ def evaluate_case(
 
 
 def _ask_score(
-    client: VLMClient, question: str, frames: List[Image.Image], system_prompt: str
-) -> Tuple[Optional[int], str]:
+    client: VLMClient, question: str, frames: list[Image.Image], system_prompt: str
+) -> tuple[int | None, str]:
     """Ask VLM to score 0-3. System prompt as separate role, question + format in user."""
     full_question = f"{question}\n\n{REASON_FORMAT}{SCORE_SUFFIX}"
     response = client.ask(full_question, frames, max_tokens=300, system_prompt=system_prompt)

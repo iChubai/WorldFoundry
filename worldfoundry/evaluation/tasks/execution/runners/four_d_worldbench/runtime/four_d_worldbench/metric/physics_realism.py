@@ -9,13 +9,13 @@ import json
 import os
 import sys
 import warnings
-from tqdm import tqdm
-from time import sleep
-from typing import List, Dict, Any, Tuple
-from openai import OpenAI
-from caption_method.VideoImg_caption import Keye_describe_video
-import json
 from concurrent.futures import ThreadPoolExecutor, as_completed  # Added: concurrent execution
+from time import sleep
+from typing import Any, Dict, List, Tuple
+
+from caption_method.VideoImg_caption import Keye_describe_video
+from openai import OpenAI
+from tqdm import tqdm
 
 try:
     from metric.utils import load_dimension_info
@@ -127,7 +127,7 @@ class PhysicsReasoningEvaluator:
         # Added: control concurrency level
         self.max_workers = int(os.environ.get("PR_MAX_WORKERS", "10"))
 
-    def generate_physics_questions(self, description: str) -> List[Dict[str, Any]]:
+    def generate_physics_questions(self, description: str) -> list[dict[str, Any]]:
         """
         Generate physics reasoning questions (keeping original logic)
 
@@ -228,8 +228,8 @@ class PhysicsReasoningEvaluator:
             return "null"
 
     # Added: extract pure question list from generated results
-    def _extract_questions_from_generated(self, physics_questions_raw: List[Dict[str, Any]]) -> List[str]:
-        questions: List[str] = []
+    def _extract_questions_from_generated(self, physics_questions_raw: list[dict[str, Any]]) -> list[str]:
+        questions: list[str] = []
         for q_group in physics_questions_raw or []:
             if isinstance(q_group, dict) and "auxiliary_info" in q_group:
                 questions.extend(q_group["auxiliary_info"])
@@ -245,7 +245,7 @@ class PhysicsReasoningEvaluator:
         return cleaned
 
     # Added: ensure 10 questions, generate more if insufficient, truncate if excess
-    def _ensure_ten_questions(self, prompt_text: str, base_questions: List[str]) -> List[str]:
+    def _ensure_ten_questions(self, prompt_text: str, base_questions: list[str]) -> list[str]:
         target = 10
         # Initial cleaning and deduplication
         uniq = []
@@ -273,7 +273,7 @@ class PhysicsReasoningEvaluator:
             uniq = uniq[:target]
         return uniq
 
-    def evaluate_physics_reasoning(self, prompt_dict_ls: List[Dict[str, Any]]) -> Tuple[float, List[Dict[str, Any]]]:
+    def evaluate_physics_reasoning(self, prompt_dict_ls: list[dict[str, Any]]) -> tuple[float, list[dict[str, Any]]]:
         """
         Evaluate physics reasoning ability
 
@@ -372,7 +372,7 @@ class PhysicsReasoningEvaluator:
                     total_score += video_score
                     valid_items += 1
 
-                    print(f"\nVideo evaluation completed:")
+                    print("\nVideo evaluation completed:")
                     print(f"  - Correct answers: {correct_answers}/{total_questions}")
                     print(f"  - Score: {video_score:.4f}")
                 else:
@@ -385,17 +385,17 @@ class PhysicsReasoningEvaluator:
         # Calculate average score
         average_score = total_score / valid_items if valid_items > 0 else 0.0
 
-        print(f"\n===== Physics Reasoning Evaluation Summary =====")
+        print("\n===== Physics Reasoning Evaluation Summary =====")
         print(f"Total videos: {valid_items}")
         print(f"Average score: {average_score:.4f}")
-        print(f"================================================")
+        print("================================================")
 
         return average_score, detailed_results
 
 
 def compute_physics_realism(
-    json_dir: str, device: str, submodules_dict: Dict[str, Any], **kwargs
-) -> Tuple[float, List[Dict[str, Any]]]:
+    json_dir: str, device: str, submodules_dict: dict[str, Any], **kwargs
+) -> tuple[float, list[dict[str, Any]]]:
     """
     Calculate physics reasoning score
 
@@ -467,7 +467,7 @@ def compute_physics_realism(
         print(f"\nDetailed results saved to: {output_file}")
 
     except Exception as e:
-        print(f"Error saving JSON file: {str(e)}")
+        print(f"Error saving JSON file: {e!s}")
 
     return average_score, detailed_results
 

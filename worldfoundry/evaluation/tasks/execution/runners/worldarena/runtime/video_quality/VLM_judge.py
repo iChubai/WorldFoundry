@@ -2,22 +2,23 @@ import argparse
 import json
 import os
 import shutil
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 import cv2
 import torch
 import yaml
-
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from PIL import Image
 from tqdm import tqdm
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
+
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
 DEFAULT_MODEL_PATH = "your absolute path"
 
 
 def load_instruction_json(json_path):
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, encoding="utf-8") as f:
         data = json.load(f)
 
     instruction_map = {}
@@ -302,7 +303,7 @@ def main():
     model_path = None
     if args.config_path and os.path.exists(args.config_path):
         try:
-            with open(args.config_path, "r", encoding="utf-8") as f:
+            with open(args.config_path, encoding="utf-8") as f:
                 cfg = yaml.safe_load(f) or {}
             model_path = cfg.get("ckpt", {}).get("vlm_model", None)
         except Exception:

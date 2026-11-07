@@ -1,12 +1,13 @@
-import os
-import sys
-import re
+import argparse
 import csv
 import glob
-import argparse
+import os
+import re
+import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
 
@@ -274,8 +275,8 @@ def find_gen_mp4_real(search_dirs, clip_id):
 
 
 def init_sam3():
-    from sam3.model_builder import build_sam3_image_model
     from sam3.model.sam3_image_processor import Sam3Processor
+    from sam3.model_builder import build_sam3_image_model
 
     model = build_sam3_image_model()
     processor = Sam3Processor(model)

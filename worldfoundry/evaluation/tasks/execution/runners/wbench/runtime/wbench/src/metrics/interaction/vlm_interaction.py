@@ -13,7 +13,7 @@ Score = correct / total per turn, averaged across turns.
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -53,7 +53,7 @@ REASON_FORMAT = (
 # ════════════════════════════════════════════════════════════════
 
 
-def generate_event_edit_questions(action: str) -> List[Dict[str, str]]:
+def generate_event_edit_questions(action: str) -> list[dict[str, str]]:
     """5 progressive questions for event_edit turns. Score = correct/5."""
     return [
         {
@@ -117,7 +117,7 @@ def generate_event_edit_questions(action: str) -> List[Dict[str, str]]:
     ]
 
 
-def generate_subject_action_questions(action: str) -> List[Dict[str, str]]:
+def generate_subject_action_questions(action: str) -> list[dict[str, str]]:
     """5 progressive questions for subject_action turns. Score = correct/5."""
     return [
         {
@@ -205,7 +205,7 @@ PERSPECTIVE_TYPE_SHORT = {
 }
 
 
-def _parse_ps_action(action: str) -> Tuple[str, str]:
+def _parse_ps_action(action: str) -> tuple[str, str]:
     """Parse perspective_switch action string → (before_type, after_type)."""
     action_lower = action.lower().strip()
     if ":" in action_lower:
@@ -228,7 +228,7 @@ def _parse_ps_action(action: str) -> Tuple[str, str]:
     return "fp", "tp"
 
 
-def generate_perspective_switch_questions(action: str) -> List[Dict[str, str]]:
+def generate_perspective_switch_questions(action: str) -> list[dict[str, str]]:
     """4 questions for perspective_switch turns. Strict: Q1∧Q3∧Q4 all pass."""
     before_type, after_type = _parse_ps_action(action)
     before_short = PERSPECTIVE_TYPE_SHORT.get(before_type, before_type)
@@ -267,62 +267,62 @@ def generate_perspective_switch_questions(action: str) -> List[Dict[str, str]]:
 
     if after_type == "tp":
         q4 = (
-            f"You are shown 3 frames from the END of this segment where "
-            f"the view should be third-person. Evaluate whether this is "
-            f"a STANDARD third-person camera setup. ALL of these must "
-            f"be true:\n"
-            f"  1. The character is roughly CENTERED in the frame\n"
-            f"  2. The camera is positioned BEHIND the character "
-            f"(over-the-shoulder or directly behind, NOT from the side "
-            f"or front)\n"
-            f"  3. The camera is at an appropriate DISTANCE — the "
-            f"character's upper body or full body is visible, not an "
-            f"extreme close-up or a far-away wide shot\n"
-            f"(Answer Yes only if all three criteria are met.)"
+            "You are shown 3 frames from the END of this segment where "
+            "the view should be third-person. Evaluate whether this is "
+            "a STANDARD third-person camera setup. ALL of these must "
+            "be true:\n"
+            "  1. The character is roughly CENTERED in the frame\n"
+            "  2. The camera is positioned BEHIND the character "
+            "(over-the-shoulder or directly behind, NOT from the side "
+            "or front)\n"
+            "  3. The camera is at an appropriate DISTANCE — the "
+            "character's upper body or full body is visible, not an "
+            "extreme close-up or a far-away wide shot\n"
+            "(Answer Yes only if all three criteria are met.)"
         )
     elif after_type == "fp":
         q4 = (
-            f"You are shown 3 frames from the END of this segment where "
-            f"the view should be first-person. Check whether the view "
-            f"is a VALID first-person perspective with NO impossible "
-            f"self-view artifacts.\n"
-            f"A valid first-person view must NOT show any of:\n"
-            f"  - The character's own FACE (front of head, facial "
-            f"features)\n"
-            f"  - The character's own BACK, rear of head, or shoulders "
-            f"from behind\n"
-            f"  - The character's own full body seen from outside\n"
-            f"Acceptable: hands, held weapon/tool, feet when looking "
-            f"down — these are normal in first-person.\n"
-            f"(Answer Yes if the view is a clean first-person perspective "
-            f"with none of the above violations. Answer No if the "
-            f"character's face, back, or full body is visible.)"
+            "You are shown 3 frames from the END of this segment where "
+            "the view should be first-person. Check whether the view "
+            "is a VALID first-person perspective with NO impossible "
+            "self-view artifacts.\n"
+            "A valid first-person view must NOT show any of:\n"
+            "  - The character's own FACE (front of head, facial "
+            "features)\n"
+            "  - The character's own BACK, rear of head, or shoulders "
+            "from behind\n"
+            "  - The character's own full body seen from outside\n"
+            "Acceptable: hands, held weapon/tool, feet when looking "
+            "down — these are normal in first-person.\n"
+            "(Answer Yes if the view is a clean first-person perspective "
+            "with none of the above violations. Answer No if the "
+            "character's face, back, or full body is visible.)"
         )
     else:  # scope
         q4 = (
-            f"You are shown 3 frames from the END of this segment where "
-            f"the view should be through a scope or optic. Check whether "
-            f"the scoped view is VALID.\n"
-            f"A valid scope view should show at least one of:\n"
-            f"  - Circular vignette or scope ring border\n"
-            f"  - Crosshair, reticle, or aiming markers\n"
-            f"  - Visible magnification (objects appear closer than "
-            f"normal)\n"
-            f"  - HUD overlay, distance readout, or targeting display\n"
-            f"(Answer Yes if any scope/optic visual element is present. "
-            f"Answer No if the view looks like a normal unscoped "
-            f"perspective.)"
+            "You are shown 3 frames from the END of this segment where "
+            "the view should be through a scope or optic. Check whether "
+            "the scoped view is VALID.\n"
+            "A valid scope view should show at least one of:\n"
+            "  - Circular vignette or scope ring border\n"
+            "  - Crosshair, reticle, or aiming markers\n"
+            "  - Visible magnification (objects appear closer than "
+            "normal)\n"
+            "  - HUD overlay, distance readout, or targeting display\n"
+            "(Answer Yes if any scope/optic visual element is present. "
+            "Answer No if the view looks like a normal unscoped "
+            "perspective.)"
         )
 
     q_cam = (
-        f"You are shown frames sampled evenly across the ENTIRE segment. "
-        f"A perspective switch should be achieved by CAMERA movement "
-        f"(pulls back, pushes in, pans, or cuts to a new angle) or by "
-        f"a CINEMATIC CUT.\n"
-        f"It should NOT be achieved by CHARACTER movement alone.\n"
-        f"Is the viewpoint change achieved through camera motion or "
-        f"a cinematic cut (rather than just character movement)?\n"
-        f"(Answer Yes if the camera clearly moves, zooms, or cuts.)"
+        "You are shown frames sampled evenly across the ENTIRE segment. "
+        "A perspective switch should be achieved by CAMERA movement "
+        "(pulls back, pushes in, pans, or cuts to a new angle) or by "
+        "a CINEMATIC CUT.\n"
+        "It should NOT be achieved by CHARACTER movement alone.\n"
+        "Is the viewpoint change achieved through camera motion or "
+        "a cinematic cut (rather than just character movement)?\n"
+        "(Answer Yes if the camera clearly moves, zooms, or cuts.)"
     )
 
     return [
@@ -419,7 +419,7 @@ def _sample_early_late(
 # ════════════════════════════════════════════════════════════════
 
 
-def evaluate_event_edit(client: VLMClient, video_path: str, case_data: Dict, nproc: int = 1) -> Dict[str, Any]:
+def evaluate_event_edit(client: VLMClient, video_path: str, case_data: dict, nproc: int = 1) -> dict[str, Any]:
     """Evaluate event_edit adherence: 5 binary Q&A per event_edit turn."""
     interactions = case_data.get("interactions", [])
     n_turns = len(interactions)
@@ -441,7 +441,7 @@ def evaluate_event_edit(client: VLMClient, video_path: str, case_data: Dict, npr
     return _execute_binary_tasks(client, tasks, ee_turns, nproc, "event_edit_adherence")
 
 
-def evaluate_subject_action(client: VLMClient, video_path: str, case_data: Dict, nproc: int = 1) -> Dict[str, Any]:
+def evaluate_subject_action(client: VLMClient, video_path: str, case_data: dict, nproc: int = 1) -> dict[str, Any]:
     """Evaluate subject_action adherence: 5 binary Q&A per subject_action turn."""
     interactions = case_data.get("interactions", [])
     n_turns = len(interactions)
@@ -492,7 +492,7 @@ PS_REASON_FORMAT = (
 )
 
 
-def evaluate_perspective_switch(client: VLMClient, video_path: str, case_data: Dict, nproc: int = 1) -> Dict[str, Any]:
+def evaluate_perspective_switch(client: VLMClient, video_path: str, case_data: dict, nproc: int = 1) -> dict[str, Any]:
     """Evaluate perspective_switch: Q1+Q3+Q4+Q_cam with separate frame sets.
 
     Scoring: strict = Q1∧Q3∧Q4 all pass → 1, else 0.
@@ -608,8 +608,8 @@ def evaluate_perspective_switch(client: VLMClient, video_path: str, case_data: D
 
 
 def _execute_binary_tasks(
-    client: VLMClient, tasks: List[Tuple], turns: List[Tuple], nproc: int, metric_name: str
-) -> Dict[str, Any]:
+    client: VLMClient, tasks: list[tuple], turns: list[tuple], nproc: int, metric_name: str
+) -> dict[str, Any]:
     """Execute binary Q&A tasks — each question as independent VLM call with reason."""
     import re
 

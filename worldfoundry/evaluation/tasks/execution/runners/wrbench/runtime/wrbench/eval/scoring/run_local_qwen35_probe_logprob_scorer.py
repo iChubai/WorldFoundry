@@ -16,19 +16,19 @@ import os
 import sys
 import time
 from collections import Counter
+from collections.abc import Iterable, Sequence
 from copy import deepcopy
 from pathlib import Path
 from statistics import median
-from typing import Any, Iterable, Sequence
-
+from typing import Any
 
 try:
     from .prompts_v2_probe import (
         CAMERA_MOTION_CONTEXT_KEY,
         DEFAULT_PROMPT_MODE,
-        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
-        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
         PROBE_CATALOG_VERSION,
+        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
+        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
         RUNTIME_V2_PROBE_CATALOG,
         SUPPORTED_PROMPT_MODES,
         RuntimeV2Probe,
@@ -42,9 +42,9 @@ except ImportError:
     from wrbench.eval.scoring.prompts_v2_probe import (
         CAMERA_MOTION_CONTEXT_KEY,
         DEFAULT_PROMPT_MODE,
-        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
-        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
         PROBE_CATALOG_VERSION,
+        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
+        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
         RUNTIME_V2_PROBE_CATALOG,
         SUPPORTED_PROMPT_MODES,
         RuntimeV2Probe,
@@ -574,7 +574,7 @@ def dry_run_probe_results(
 ) -> dict[str, dict[str, Any]]:
     results: dict[str, dict[str, Any]] = {}
     for probe in active_probe_catalog(prompt_mode):
-        digest = hashlib.sha256(f"{video_id}|{probe.probe_id}".encode("utf-8")).digest()
+        digest = hashlib.sha256(f"{video_id}|{probe.probe_id}".encode()).digest()
         p_yes = round(0.05 + (digest[0] / 255.0) * 0.9, 6)
         results[probe.probe_id] = _probe_meta(probe, p_yes, "dry_run", prompt_mode=prompt_mode)
     return results
@@ -916,7 +916,8 @@ class LocalQwen35ProbeLogprobScorer:
                             *[
                                 fetch_videos_with_backend(x, sample_indices_fn=sample_indices_fn)
                                 for x in video_url_or_urls
-                            ]
+                            ],
+                            strict=False,
                         )
                     )
                 return load_video(

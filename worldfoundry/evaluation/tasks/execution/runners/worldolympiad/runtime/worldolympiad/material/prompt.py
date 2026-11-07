@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 from typing import Dict, List, Tuple
 
-
 ACTIVE_ENTRYPOINTS = [
     "physical/vlm_judge.py",
     "physical/vlm_judge_prompt_engineering.py",
@@ -26,7 +25,7 @@ EXCLUDED_LOCAL_PROMPT_SOURCES = [
     "material/vlm_judge.py:build_prompts",
 ]
 
-MATERIAL_QUESTION_CONTEXTS: List[Dict[str, str]] = [
+MATERIAL_QUESTION_CONTEXTS: list[dict[str, str]] = [
     {
         "question_id": "color_mixing",
         "question": "When different colored liquids or paints mix, do they produce the correct resulting color?",
@@ -108,7 +107,7 @@ Success condition: {success_condition}
 {hardness_specific_note}Return only the JSON described by the system prompt."""
 
 
-def get_prompt_engineering_record() -> Dict[str, object]:
+def get_prompt_engineering_record() -> dict[str, object]:
     return {
         "active_entrypoint": ACTIVE_ENTRYPOINT,
         "active_entrypoints": ACTIVE_ENTRYPOINTS,
@@ -127,14 +126,14 @@ def get_prompt_engineering_record() -> Dict[str, object]:
     }
 
 
-def get_question_context(question_id: str) -> Dict[str, str]:
+def get_question_context(question_id: str) -> dict[str, str]:
     for context in MATERIAL_QUESTION_CONTEXTS:
         if context["question_id"] == question_id:
             return context
     raise ValueError(f"Unknown material question id: {question_id}")
 
 
-def build_relevance_prompt(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def build_relevance_prompt(question_id: str, video_prompt: str) -> tuple[str, str]:
     context = get_question_context(question_id)
     user_prompt = RELEVANCE_USER_PROMPT_TEMPLATE.format(
         video_prompt=video_prompt,
@@ -145,7 +144,7 @@ def build_relevance_prompt(question_id: str, video_prompt: str) -> Tuple[str, st
     return RELEVANCE_SYSTEM_PROMPT_TEMPLATE, user_prompt
 
 
-def build_compliance_prompt(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def build_compliance_prompt(question_id: str, video_prompt: str) -> tuple[str, str]:
     context = get_question_context(question_id)
     user_prompt = COMPLIANCE_USER_PROMPT_TEMPLATE.format(
         video_prompt=video_prompt,

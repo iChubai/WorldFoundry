@@ -1,9 +1,9 @@
-from typing import Union, List
-import torch.nn as nn
+from typing import List, Union
+
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as T
-
 from PIL import Image
 
 from worldfoundry.base_models.perception_core.general_perception.dino_embeddings import load_dinov2_base_feature_model
@@ -40,7 +40,7 @@ class DINOConsistencyMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[Union[str, Image.Image]],
+        rendered_images: list[str | Image.Image],
     ) -> float:
         def compute_similarity(image1, image2):
             # Load and preprocess images

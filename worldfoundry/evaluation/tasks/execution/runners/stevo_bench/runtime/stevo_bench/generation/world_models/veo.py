@@ -26,7 +26,7 @@ class VeoRunner(WorldModelRunner):
         api_key_env = config.get("api_key_env", "GOOGLE_API_KEY")
         self.api_key = os.environ.get(api_key_env)
         if not self.api_key:
-            raise EnvironmentError(f"[{name}] Missing required environment variable: {api_key_env}")
+            raise OSError(f"[{name}] Missing required environment variable: {api_key_env}")
         self.model_id: str = config.get("model_id", "veo-3.1-fast-generate-preview")
         self.poll_interval: int = int(config.get("poll_interval", 10))
         self.timeout: int = int(config.get("timeout", 600))
@@ -36,9 +36,9 @@ class VeoRunner(WorldModelRunner):
         self,
         task_id: str,
         prompt: str,
-        init_frame: Optional[Path],
+        init_frame: Path | None,
         output_path: Path,
-        camera_control: Optional[str] = None,
+        camera_control: str | None = None,
     ) -> bool:
         try:
             from google import genai

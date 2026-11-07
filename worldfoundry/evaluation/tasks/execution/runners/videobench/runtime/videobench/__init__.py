@@ -1,11 +1,12 @@
-import os
 import importlib
-from pathlib import Path
+import os
 from itertools import chain
-from .utils import save_json, load_json, get_prompt_from_filename
+from pathlib import Path
+
+from .utils import get_prompt_from_filename, load_json, save_json
 
 
-class VideoBench(object):
+class VideoBench:
     def __init__(self, full_info_dir, output_path, config_path):
         """
         Initialize VBench evaluator

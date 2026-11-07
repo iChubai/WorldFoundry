@@ -11,7 +11,6 @@ from ..skills.skill_render_quality import (
 )
 from .common import LocalMetricBackend
 
-
 BACKEND_ID = "harnesseval.render_quality"
 BACKEND_VERSION = "harnesseval.render_quality.four_metrics"
 CONFIG_DIGEST = value_digest(

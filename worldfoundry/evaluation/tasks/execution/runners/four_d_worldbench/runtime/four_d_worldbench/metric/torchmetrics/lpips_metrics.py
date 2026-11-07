@@ -1,8 +1,8 @@
 import numpy as np
 
-from ..base_metrics import BaseMetric
-
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
+
+from ..base_metrics import BaseMetric
 
 
 class LearnedPerceptualImagePatchSimilarityMetric(BaseMetric):

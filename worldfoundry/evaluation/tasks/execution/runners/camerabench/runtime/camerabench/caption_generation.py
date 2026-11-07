@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-import t2v_metrics
+import argparse
 import json
 import os
-import argparse
 import time
 from datetime import datetime
+from typing import Any, Dict, List, Tuple
+
+import t2v_metrics
 from tqdm import tqdm
-from typing import List, Dict, Any, Tuple
 
 
 def parse_model_spec(model_spec):
@@ -26,10 +27,10 @@ def parse_model_spec(model_spec):
         return model_spec.strip(), None
 
 
-def load_caption_data(data_path: str) -> List[Dict[str, Any]]:
+def load_caption_data(data_path: str) -> list[dict[str, Any]]:
     """Load caption data from JSON file."""
     try:
-        with open(data_path, "r", encoding="utf-8") as f:
+        with open(data_path, encoding="utf-8") as f:
             data = json.load(f)
         return data
     except Exception as e:
@@ -38,8 +39,8 @@ def load_caption_data(data_path: str) -> List[Dict[str, Any]]:
 
 
 def generate_captions_for_model(
-    model_name: str, checkpoint: str, data: List[Dict[str, Any]], video_dir: str, sample_size: int = None
-) -> Dict[str, Any]:
+    model_name: str, checkpoint: str, data: list[dict[str, Any]], video_dir: str, sample_size: int = None
+) -> dict[str, Any]:
     """
     Generate captions using a single model.
 
@@ -68,9 +69,7 @@ def generate_captions_for_model(
 
     try:
         # Initialize the model
-        if "gemini" in model_name:
-            score_model = t2v_metrics.get_score_model(model=model_name, api_key="api_key")
-        elif "gpt" in model_name:
+        if "gemini" in model_name or "gpt" in model_name:
             score_model = t2v_metrics.get_score_model(model=model_name, api_key="api_key")
         else:
             # For other models, pass checkpoint parameter if provided
@@ -110,7 +109,7 @@ def generate_captions_for_model(
                 )
 
             except Exception as e:
-                error_msg = f"Error processing sample {i}: {str(e)}"
+                error_msg = f"Error processing sample {i}: {e!s}"
                 print(error_msg)
 
                 captions.append(
@@ -138,7 +137,7 @@ def generate_captions_for_model(
         return {"metadata": metadata, "captions": captions}
 
     except Exception as e:
-        print(f"Fatal error with model {model_name}: {str(e)}")
+        print(f"Fatal error with model {model_name}: {e!s}")
 
         # Return error structure
         error_captions = []
@@ -155,7 +154,7 @@ def generate_captions_for_model(
                     "reference_answer": item.get("answer", item.get("reference", "")),
                     "method": model_name,
                     "generated_caption": "",
-                    "error": f"Model loading error: {str(e)}",
+                    "error": f"Model loading error: {e!s}",
                 }
             )
 

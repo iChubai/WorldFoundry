@@ -1,18 +1,17 @@
-import os
-import cv2
+import asyncio
 import csv
-import numpy as np
+import os
 import threading
 import time
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 
+import cv2
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-
 import torch
 from piq import brisque
 
@@ -138,7 +137,7 @@ class ColorMetric(ABC):
     def get_processed_files(self):
         if not os.path.exists(self.log_file):
             return set()
-        with open(self.log_file, "r", encoding="utf-8") as f:
+        with open(self.log_file, encoding="utf-8") as f:
             return set(line.strip() for line in f)
 
     def mark_as_done(self, file_name):
@@ -393,7 +392,7 @@ class AtomicProcessor:
         all_data = {}
         if os.path.exists(v_csv):
             try:
-                with open(v_csv, "r", encoding="utf-8") as f:
+                with open(v_csv, encoding="utf-8") as f:
                     reader = csv.reader(f)
                     next(reader)
                     for row in reader:

@@ -1,31 +1,32 @@
 import argparse
-import torch
 import csv
 import json
 import os
-import requests
-from PIL import Image
+import random
 from io import BytesIO
+
 import cv2
 import numpy as np
+import requests
+import torch
+from PIL import Image
 from torchvision.io import write_video
+
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    IMAGE_TOKEN_INDEX,
-    DEFAULT_IMAGE_TOKEN,
-    DEFAULT_IM_START_TOKEN,
     DEFAULT_IM_END_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_TOKEN,
     IMAGE_PLACEHOLDER,
+    IMAGE_TOKEN_INDEX,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates, SeparatorStyle
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import disable_torch_init
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
+    get_model_name_from_path,
     process_images,
     tokenizer_image_token,
-    get_model_name_from_path,
 )
-import random
-import os
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import disable_torch_init
 
 
 class Video_preprocess:
@@ -429,7 +430,7 @@ def sort_files_by_json_number(file_list, prompts_data):
     # Sort files based on the number field
     sorted_files = sorted(file_list, key=get_sort_key)
 
-    print(f"Files sorted by JSON number field:")
+    print("Files sorted by JSON number field:")
     for i, filename in enumerate(sorted_files[:5]):  # Show first 5 files
         file_id = os.path.splitext(filename)[0]
         sort_key = get_sort_key(filename)
@@ -463,7 +464,7 @@ def eval_model(args):
     tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name)
 
     try:
-        with open(args.read_prompt_file, "r") as json_data_file:
+        with open(args.read_prompt_file) as json_data_file:
             prompts_data = json.load(json_data_file)
     except FileNotFoundError:
         print(f"Error: Prompt file {args.read_prompt_file} not found.")
@@ -480,7 +481,7 @@ def eval_model(args):
 
     line_count = 0
     if os.path.exists(csv_path):
-        with open(csv_path, "r", newline="") as csvreader_file:
+        with open(csv_path, newline="") as csvreader_file:
             reader = csv.reader(csvreader_file)
             lines = list(reader)
             line_count = len(lines)
@@ -911,7 +912,7 @@ You are an AI video quality evaluator. Analyze this 3×3 grid showing 9 CONSECUT
     quality_prompt = (
         DEFAULT_IMAGE_TOKEN
         + create_base_prompt()
-        + f"""
+        + """
 **YOUR TASK**: Evaluate the TECHNICAL QUALITY of these consecutive frames.
 
 **Quality (1-5): Technical Excellence**
@@ -967,7 +968,7 @@ Relevance: 4
     consistency_prompt = (
         DEFAULT_IMAGE_TOKEN
         + create_base_prompt()
-        + f"""
+        + """
 **YOUR TASK**: Evaluate the TEMPORAL CONSISTENCY between consecutive frames.
 
 **Consistency (1-5): Temporal Coherence Between Consecutive Frames**
@@ -995,7 +996,7 @@ Consistency: 4
     realism_prompt = (
         DEFAULT_IMAGE_TOKEN
         + create_base_prompt()
-        + f"""
+        + """
 **YOUR TASK**: Evaluate the REALISM and believability of the content.
 
 **Realism (1-5): Physical Plausibility**
@@ -1084,7 +1085,7 @@ def model_score(csv_path):
         return
 
     try:
-        with open(csv_path, "r", newline="") as file:
+        with open(csv_path, newline="") as file:
             reader = csv.reader(file)
             lines = list(reader)
             if len(lines) <= 1:  # Only header or empty

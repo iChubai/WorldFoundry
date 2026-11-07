@@ -1,15 +1,17 @@
+import pickle
+
 import numpy as np
 import torch
-import pickle
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-from torchvision import transforms
 import torch.nn.functional as F
-from tqdm import tqdm
-from PIL import Image
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
+from PIL import Image
+from torchvision import transforms
+from tqdm import tqdm
 
-from .utils import load_video, load_dimension_info
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from worldfoundry.base_models.perception_core.safety.nudenet import NudeDetector
+
+from .utils import load_dimension_info, load_video
 
 
 class SimClassifier(torch.nn.Module):

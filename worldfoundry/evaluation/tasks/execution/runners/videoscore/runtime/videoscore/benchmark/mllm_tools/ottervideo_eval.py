@@ -1,8 +1,9 @@
 import os
 from typing import List
 
-from .mllm_utils import load_images
 from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterVideo as OtterVideoModel
+
+from .mllm_utils import load_images
 
 
 class MyOtterVideoModel(OtterVideoModel):
@@ -26,7 +27,7 @@ class OtterVideo:
         """
         self.model = MyOtterVideoModel(model_path=model_path)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

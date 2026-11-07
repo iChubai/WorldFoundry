@@ -1,24 +1,22 @@
 import argparse
-import os
-import cv2
 import glob
+import os
+
+import cv2
 import numpy as np
 import torch
-from tqdm import tqdm
 from easydict import EasyDict as edict
-
+from tqdm import tqdm
 from vbench.utils import load_dimension_info
 
-from worldfoundry.base_models.perception_core.optical_flow.raft import InputPadder, RAFT
-
-
+from worldfoundry.base_models.perception_core.optical_flow.raft import RAFT, InputPadder
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
     all_gather,
     barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
 
 
@@ -66,7 +64,7 @@ class DynamicDegree:
                 raise NotImplementedError
             self.set_params(frame=frames[0], count=len(frames))
             static_score = []
-            for image1, image2 in zip(frames[:-1], frames[1:]):
+            for image1, image2 in zip(frames[:-1], frames[1:], strict=False):
                 padder = InputPadder(image1.shape)
                 image1, image2 = padder.pad(image1, image2)
                 _, flow_up = self.model(image1, image2, iters=20, test_mode=True)

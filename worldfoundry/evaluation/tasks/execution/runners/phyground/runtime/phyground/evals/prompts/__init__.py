@@ -17,8 +17,8 @@ from typing import Any
 
 import yaml
 
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from evals.physics_criteria import SUB_QUESTIONS, SubQuestion
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
 _PROMPTS_DIR = bundled_benchmark_asset("phyground", "evals", "prompts")
 

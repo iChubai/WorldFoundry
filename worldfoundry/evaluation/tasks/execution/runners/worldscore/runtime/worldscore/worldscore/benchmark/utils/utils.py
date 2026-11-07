@@ -1,8 +1,9 @@
-import os
-import torch
-import json
-from PIL import Image
 import gc
+import json
+import os
+
+import torch
+from PIL import Image
 
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.modeltype import (
     type2model,
@@ -169,8 +170,8 @@ def save_cameras(cameras_interp, focal_length=500, save_dir=None, camera_type=No
 def save_video(video, path, fps=10, save_gif=False):
     success = False
     try:
-        from torchvision.transforms import ToTensor
         from torchvision.io import write_video
+        from torchvision.transforms import ToTensor
 
         frames_tensor = []
         for frame in video:

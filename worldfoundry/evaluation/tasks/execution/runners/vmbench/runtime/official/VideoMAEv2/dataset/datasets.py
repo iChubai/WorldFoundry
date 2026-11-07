@@ -108,7 +108,7 @@ class VideoClsDataset(Dataset):
             buffer = self.load_video(sample, sample_rate_scale=scale_t)
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn("video {} not correctly loaded during training".format(sample))
+                    warnings.warn(f"video {sample} not correctly loaded during training")
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     buffer = self.load_video(sample, sample_rate_scale=scale_t)
@@ -134,7 +134,7 @@ class VideoClsDataset(Dataset):
             buffer = self.load_video(sample)
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn("video {} not correctly loaded during validation".format(sample))
+                    warnings.warn(f"video {sample} not correctly loaded during validation")
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     buffer = self.load_video(sample)
@@ -148,9 +148,7 @@ class VideoClsDataset(Dataset):
 
             while len(buffer) == 0:
                 warnings.warn(
-                    "video {}, temporal {}, spatial {} not found during testing".format(
-                        str(self.test_dataset[index]), chunk_nb, split_nb
-                    )
+                    f"video {self.test_dataset[index]!s}, temporal {chunk_nb}, spatial {split_nb} not found during testing"
                 )
                 index = np.random.randint(self.__len__())
                 sample = self.test_dataset[index]
@@ -208,7 +206,7 @@ class VideoClsDataset(Dataset):
             #     "/")[-1].split(".")[0], chunk_nb, split_nb
             return buffer, self.test_label_array[index], sample, chunk_nb, split_nb
         else:
-            raise NameError("mode {} unkown".format(self.mode))
+            raise NameError(f"mode {self.mode} unkown")
 
     def _aug_frame(self, buffer, args):
         aug_transform = video_transforms.create_random_augment(
@@ -421,7 +419,7 @@ class RawFrameClsDataset(Dataset):
             buffer = self.load_frame(sample, total_frame, sample_rate_scale=scale_t)  # T H W C
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn("video {} not correctly loaded during training".format(sample))
+                    warnings.warn(f"video {sample} not correctly loaded during training")
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     total_frame = self.total_frames[index]
@@ -449,7 +447,7 @@ class RawFrameClsDataset(Dataset):
             buffer = self.load_frame(sample, total_frame)
             if len(buffer) == 0:
                 while len(buffer) == 0:
-                    warnings.warn("video {} not correctly loaded during validation".format(sample))
+                    warnings.warn(f"video {sample} not correctly loaded during validation")
                     index = np.random.randint(self.__len__())
                     sample = self.dataset_samples[index]
                     buffer = self.load_frame(sample, total_frame)
@@ -464,9 +462,7 @@ class RawFrameClsDataset(Dataset):
 
             while len(buffer) == 0:
                 warnings.warn(
-                    "video {}, temporal {}, spatial {} not found during testing".format(
-                        str(self.test_dataset[index]), chunk_nb, split_nb
-                    )
+                    f"video {self.test_dataset[index]!s}, temporal {chunk_nb}, spatial {split_nb} not found during testing"
                 )
                 index = np.random.randint(self.__len__())
                 sample = self.test_dataset[index]
@@ -495,7 +491,7 @@ class RawFrameClsDataset(Dataset):
             buffer = self.data_transform(buffer)
             return buffer, self.test_label_array[index], sample.split("/")[-1].split(".")[0], chunk_nb, split_nb
         else:
-            raise NameError("mode {} unkown".format(self.mode))
+            raise NameError(f"mode {self.mode} unkown")
 
     def _aug_frame(self, buffer, args):
         aug_transform = video_transforms.create_random_augment(

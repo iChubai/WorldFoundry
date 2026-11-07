@@ -1,16 +1,16 @@
 import base64
-import requests
-from io import BytesIO
-from typing import Union, Optional, Tuple, List
-from PIL import Image, ImageOps
 import os
+from io import BytesIO
+from typing import List, Optional, Tuple, Union
 
+import requests
+from PIL import Image, ImageOps
 from sqlalchemy import null
 
 
 def get_api_key(file_path):
     # Read the API key from the first line of the file
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         return file.readline().strip()
 
 
@@ -44,7 +44,7 @@ def encode_pil_image(pil_image):
     return base64_image
 
 
-def load_image(image: Union[str, Image.Image], format: str = "RGB", size: Optional[Tuple] = None) -> Image.Image:
+def load_image(image: str | Image.Image, format: str = "RGB", size: tuple | None = None) -> Image.Image:
     """
     Load an image from a given path or URL and convert it to a PIL Image.
 
@@ -108,7 +108,7 @@ class GPT4v:
         self.model_name = model_name
         self.use_encode = are_images_encoded
 
-    def prepare_prompt(self, image_links: List = [], text_prompt: str = ""):
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
         prompt_content = []
         text_dict = {"type": "text", "text": text_prompt}
         prompt_content.append(text_dict)

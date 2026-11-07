@@ -6,7 +6,8 @@ Collects task data from summary.json files and organizes resources.
 import json
 import os
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
 import yaml
 
 
@@ -17,7 +18,7 @@ class TaskDataCollector:
         self.outputs_dir = self.project_root / "outputs"
         self.benchmark_dir = self.project_root / task_dir
 
-    def get_run_configs(self) -> List[Dict[str, str]]:
+    def get_run_configs(self) -> list[dict[str, str]]:
         """Define the runs to evaluate."""
         return [
             {
@@ -40,13 +41,13 @@ class TaskDataCollector:
             {"run_name": "wan22_wan_run_1", "summary_path": "wan22_wan_run_1", "output_path": "wan22_wan_run_1"},
         ]
 
-    def load_summary(self, run_config: Dict[str, str]) -> Dict:
+    def load_summary(self, run_config: dict[str, str]) -> dict:
         """Load summary.json for a run."""
         summary_path = self.runs_dir / run_config["summary_path"] / "summary.json"
-        with open(summary_path, "r") as f:
+        with open(summary_path) as f:
             return json.load(f)
 
-    def filter_tasks(self, summary: Dict) -> List[Dict]:
+    def filter_tasks(self, summary: dict) -> list[dict]:
         """Filter tasks that don't end with _00 (all levels)."""
         filtered_tasks = []
         for task in summary.get("tasks", []):
@@ -58,7 +59,7 @@ class TaskDataCollector:
 
         return filtered_tasks
 
-    def find_task_yaml(self, task_id: str) -> Optional[Path]:
+    def find_task_yaml(self, task_id: str) -> Path | None:
         """Find the YAML file for a task in either image_implied or simple_kickoff."""
         for subdir in ["image_implied", "simple_kickoff"]:
             yaml_path = self.benchmark_dir / subdir / task_id / f"{task_id}.yaml"
@@ -66,7 +67,7 @@ class TaskDataCollector:
                 return yaml_path
         return None
 
-    def find_init_image(self, task_id: str) -> Optional[Path]:
+    def find_init_image(self, task_id: str) -> Path | None:
         """Find the initial image for a task."""
         for subdir in ["image_implied", "simple_kickoff"]:
             # Try different possible image names
@@ -76,19 +77,19 @@ class TaskDataCollector:
                     return img_path
         return None
 
-    def find_video(self, run_config: Dict[str, str], task_id: str) -> Optional[Path]:
+    def find_video(self, run_config: dict[str, str], task_id: str) -> Path | None:
         """Find the generated video for a task."""
         video_path = self.outputs_dir / run_config["output_path"] / f"{task_id}.mp4"
         if video_path.exists():
             return video_path
         return None
 
-    def load_task_yaml(self, yaml_path: Path) -> Dict:
+    def load_task_yaml(self, yaml_path: Path) -> dict:
         """Load and parse task YAML file."""
-        with open(yaml_path, "r") as f:
+        with open(yaml_path) as f:
             return yaml.safe_load(f)
 
-    def collect_task_data(self, run_config: Dict[str, str], task_info: Dict) -> Optional[Dict]:
+    def collect_task_data(self, run_config: dict[str, str], task_info: dict) -> dict | None:
         """Collect all data for a single task."""
         task_id = task_info.get("task_id")
 
@@ -123,7 +124,7 @@ class TaskDataCollector:
             "yaml_data": yaml_data,
         }
 
-    def collect_all_tasks(self) -> List[Dict]:
+    def collect_all_tasks(self) -> list[dict]:
         """Collect data for all level 4 tasks across all runs."""
         all_tasks = []
 

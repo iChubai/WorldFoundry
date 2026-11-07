@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 from typing import Dict, List, Tuple
 
-
 ACTIVE_ENTRYPOINTS = [
     "physical/vlm_judge.py",
     "physical/vlm_judge_prompt_engineering.py",
@@ -27,7 +26,7 @@ EXCLUDED_LOCAL_PROMPT_SOURCES = [
     "mechanics/vlm_judge.py:predict_sub_expectations",
 ]
 
-MECHANICS_RULE_CONTEXTS: List[Dict[str, str]] = [
+MECHANICS_RULE_CONTEXTS: list[dict[str, str]] = [
     {
         "question_id": "gravity",
         "rule": "Do free-moving objects downward consistently with gravity?",
@@ -88,7 +87,7 @@ Video description: {video_prompt}
 Decide if the generated video follows the mechanics rule and aligns with the reference."""
 
 
-def get_prompt_engineering_record() -> Dict[str, object]:
+def get_prompt_engineering_record() -> dict[str, object]:
     return {
         "active_entrypoint": ACTIVE_ENTRYPOINT,
         "active_entrypoints": ACTIVE_ENTRYPOINTS,
@@ -106,14 +105,14 @@ def get_prompt_engineering_record() -> Dict[str, object]:
     }
 
 
-def get_rule_context(question_id: str) -> Dict[str, str]:
+def get_rule_context(question_id: str) -> dict[str, str]:
     for context in MECHANICS_RULE_CONTEXTS:
         if context["question_id"] == question_id:
             return context
     raise ValueError(f"Unknown mechanics question id: {question_id}")
 
 
-def build_relevance_prompt(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def build_relevance_prompt(question_id: str, video_prompt: str) -> tuple[str, str]:
     context = get_rule_context(question_id)
     user_prompt = RELEVANCE_USER_PROMPT_TEMPLATE.format(
         video_prompt=video_prompt,
@@ -123,7 +122,7 @@ def build_relevance_prompt(question_id: str, video_prompt: str) -> Tuple[str, st
     return RELEVANCE_SYSTEM_PROMPT_TEMPLATE, user_prompt
 
 
-def build_compliance_prompt(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def build_compliance_prompt(question_id: str, video_prompt: str) -> tuple[str, str]:
     context = get_rule_context(question_id)
     system_prompt = COMPLIANCE_SYSTEM_PROMPT_TEMPLATE.format(
         rule=context["rule"],

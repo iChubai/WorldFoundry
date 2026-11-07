@@ -1,7 +1,12 @@
-from cleanfid import fid
-import argparse, shutil, json, os, random
-from tqdm import tqdm
+import argparse
+import json
+import os
+import random
+import shutil
 import time
+
+from cleanfid import fid
+from tqdm import tqdm
 
 categories = {
     "spatial": [
@@ -21,7 +26,7 @@ categories = {
 
 def read_data(data_path):
     datas = []
-    with open(data_path, "r") as f:
+    with open(data_path) as f:
         lines = f.readlines()
     for line in lines:
         datas.append(json.loads(line))
@@ -46,7 +51,7 @@ def save_json_file(file_path, json_dict):
         json.dump(json_dict, f)
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample_num", default=300, type=int, help="The number of videos per category")
     parser.add_argument("--fg_fid", action="store_true", help="Whether to compute fine-grained FID over categories")
@@ -88,7 +93,7 @@ if "__main__" == __name__:
                         f"Aspect={aspect}, Category={category}, Real Video Num={len(data_ids_real)}, Gen Video Num={len(data_ids_gen)}"
                     )
                     now = time.time()
-                    for data_ids, video_type in zip([data_ids_gen, data_ids_real], ["gen", "real"]):
+                    for data_ids, video_type in zip([data_ids_gen, data_ids_real], ["gen", "real"], strict=False):
                         for id in tqdm(data_ids):
                             if video_type == "gen":
                                 folder_name = f"video{id}_frames"
@@ -120,7 +125,7 @@ if "__main__" == __name__:
                 )  # sample a subset of the folders of generated videos
                 real_fs = random.sample([fn for fn in os.listdir(args.real_path) if fn.endswith("_frames")], sample_num)
                 now = time.time()
-                for gen_f, real_f in zip(gen_fs, real_fs):
+                for gen_f, real_f in zip(gen_fs, real_fs, strict=False):
                     shutil.copytree(os.path.join(gen_path, gen_f), f"tmp_gen_videos_{now}/{gen_f}")
                     shutil.copytree(os.path.join(args.real_path, real_f), f"tmp_real_videos_{now}/{real_f}")
                 fid_score = fid.compute_fid(

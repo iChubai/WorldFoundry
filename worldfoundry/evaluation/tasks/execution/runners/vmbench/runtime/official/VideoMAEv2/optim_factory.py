@@ -29,9 +29,7 @@ except ImportError:
 
 
 def get_num_layer_for_vit(var_name, num_max_layer):
-    if var_name in ("cls_token", "mask_token", "pos_embed"):
-        return 0
-    elif var_name.startswith("patch_embed"):
+    if var_name in ("cls_token", "mask_token", "pos_embed") or var_name.startswith("patch_embed"):
         return 0
     elif var_name.startswith("rel_pos_bias"):
         return num_max_layer - 1
@@ -42,7 +40,7 @@ def get_num_layer_for_vit(var_name, num_max_layer):
         return num_max_layer - 1
 
 
-class LayerDecayValueAssigner(object):
+class LayerDecayValueAssigner:
     def __init__(self, values):
         self.values = values
 

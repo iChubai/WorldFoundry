@@ -1,8 +1,9 @@
+from typing import List, Tuple
+
 import cv2
+import lpips as lpips_lib
 import numpy as np
 import torch
-import lpips as lpips_lib
-from typing import Tuple, List
 
 _lpips_model = None
 
@@ -48,7 +49,7 @@ def _ssim_gray(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.mean(num / (den + 1e-8)))
 
 
-def reference_frame_fidelity(gt_image: np.ndarray, gen_frame0: np.ndarray) -> Tuple[float, float]:
+def reference_frame_fidelity(gt_image: np.ndarray, gen_frame0: np.ndarray) -> tuple[float, float]:
     """
     Compare generated frame 0 against the GT reference image.
     GT image is resized to match the generated frame resolution.
@@ -68,11 +69,11 @@ def reference_frame_fidelity(gt_image: np.ndarray, gen_frame0: np.ndarray) -> Tu
 
 
 def gt_phase_pixel_fidelity(
-    gt_frames: List[np.ndarray],
-    gen_frames: List[np.ndarray],
+    gt_frames: list[np.ndarray],
+    gen_frames: list[np.ndarray],
     device: str = None,
     lpips_batch_size: int = 16,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """
     Compute average PSNR / SSIM / LPIPS between paired GT and generated frames.
     GT frames are resized to match each generated frame's resolution.
@@ -93,7 +94,7 @@ def gt_phase_pixel_fidelity(
     psnrs, ssims = [], []
     gt_tensors, gen_tensors = [], []
 
-    for gt_f, gen_f in zip(gt_frames, gen_frames):
+    for gt_f, gen_f in zip(gt_frames, gen_frames, strict=False):
         h, w = gen_f.shape[:2]
         gt_r = cv2.resize(gt_f, (w, h), interpolation=cv2.INTER_AREA)
 

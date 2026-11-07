@@ -55,7 +55,7 @@ SYMMETRIC_PAIRS = {
 }
 
 
-def find_loop_cases(cases_dir: str) -> List[Tuple[str, dict]]:
+def find_loop_cases(cases_dir: str) -> list[tuple[str, dict]]:
     """Return loop-style navigation cases (symmetric action sequences)."""
     files = sorted(Path(cases_dir).glob("*.json"))
     loop_cases = []
@@ -78,7 +78,7 @@ def rot_angle_deg(rotation: np.ndarray) -> float:
     return float(np.degrees(np.arccos(cos_val)))
 
 
-def compute_score(ret_sim: float, min_sim: float, tau: float = TAU) -> Tuple[float, float]:
+def compute_score(ret_sim: float, min_sim: float, tau: float = TAU) -> tuple[float, float]:
     """Compute gated spatial consistency score.
 
     gate = min(1, (1 - min_sim) / tau)  -- penalizes nearly-static videos
@@ -95,7 +95,7 @@ def evaluate_case(
     dreamsim_model,
     dreamsim_preprocess,
     device: str = "cuda",
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Evaluate spatial consistency for a single loop case.
 
     Args:
@@ -185,7 +185,7 @@ def evaluate_case(
     }
 
 
-def summarize_model_results(case_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarize_model_results(case_records: list[dict[str, Any]]) -> dict[str, Any]:
     valid = [r for r in case_records if r.get("score") is not None]
     if not valid:
         return {"score": 0.0, "ret_sim": 0.0, "min_sim": 0.0, "n_cases": 0}

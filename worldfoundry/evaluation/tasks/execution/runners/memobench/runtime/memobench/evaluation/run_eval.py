@@ -1,12 +1,13 @@
+import argparse
+import logging
 import os
 import re
-import logging
-import argparse
+from datetime import datetime
+
 import cv2
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from datetime import datetime
 
 # Do not mutate the process-wide root logger. Quiet only the noisy
 # third-party loggers this script actually triggers.
@@ -16,28 +17,28 @@ logging.getLogger(__name__).setLevel(logging.WARNING)
 
 from automated.io.frames import FrameReader, VideoReader
 from automated.io.metadata import (
-    load_intrinsics,
-    load_gt_frame_count_synthetic,
-    load_intrinsics_json,
-    load_gt_frame_count_real,
     extract_gt_frame_at,
     extract_gt_frames_batch,
+    load_gt_frame_count_real,
+    load_gt_frame_count_synthetic,
+    load_intrinsics,
+    load_intrinsics_json,
 )
-from automated.metrics.reference_fidelity import gt_phase_pixel_fidelity
-from automated.metrics.temporal import temporal_flow_score
-from automated.metrics.visual_quality import aesthetic_score, image_quality_score, image_reward_score
+from automated.metrics.camera_controllability import (
+    camera_controllability_score,
+    load_gt_poses_real,
+    load_gt_poses_synthetic,
+    load_intrinsics_real,
+    load_intrinsics_synthetic,
+)
+from automated.metrics.clip_metrics import clip_frame_similarity
 from automated.metrics.geometry import (
     geometry_3d_consistency,
     object_centric_identity_consistency,
 )
-from automated.metrics.camera_controllability import (
-    load_gt_poses_synthetic,
-    load_gt_poses_real,
-    load_intrinsics_synthetic,
-    load_intrinsics_real,
-    camera_controllability_score,
-)
-from automated.metrics.clip_metrics import clip_frame_similarity
+from automated.metrics.reference_fidelity import gt_phase_pixel_fidelity
+from automated.metrics.temporal import temporal_flow_score
+from automated.metrics.visual_quality import aesthetic_score, image_quality_score, image_reward_score
 
 GT_ROOT_SYNTHETIC = "data/Synthetic_processed"
 GEN_ROOT_SYNTHETIC = "output/Synthetic"  # default; override with --gen_root
@@ -694,7 +695,7 @@ def _eval_clip(clip: dict, max_side: int, sample_step: int, device: str, camera_
             gt_r_idx3 = [int(r_gt + k * (n_gt_last - r_gt) / 2) for k in range(3)]
             gen_r_idx3 = [int(r_start + k * (N - 1 - r_start) / 2) for k in range(3)]
             sims = []
-            for gt_idx, gen_idx in zip(gt_r_idx3, gen_r_idx3):
+            for gt_idx, gen_idx in zip(gt_r_idx3, gen_r_idx3, strict=False):
                 gt_frame = extract_gt_frame_at(gt_video_path, gt_idx)
                 gen_frame = gen.get(gen_idx)
                 sims.append(clip_frame_similarity(gt_frame, gen_frame, device=device))

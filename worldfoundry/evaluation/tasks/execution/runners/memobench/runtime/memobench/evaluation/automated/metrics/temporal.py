@@ -1,9 +1,9 @@
+import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-import cv2
-from PIL import Image
 import torchvision.transforms.functional as TVF
+from PIL import Image
 
 _raft = None
 _raft_device = None
@@ -18,7 +18,7 @@ def _load_raft(device: str = None):
         device = "cuda" if torch.cuda.is_available() else "cpu"
     _raft_device = device
 
-    from torchvision.models.optical_flow import raft_large, Raft_Large_Weights
+    from torchvision.models.optical_flow import Raft_Large_Weights, raft_large
 
     _raft = raft_large(weights=Raft_Large_Weights.DEFAULT).to(device).eval()
     return _raft, _raft_device

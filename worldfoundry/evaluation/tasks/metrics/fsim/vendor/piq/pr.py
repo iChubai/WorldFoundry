@@ -11,7 +11,7 @@ from piq.base import BaseFeatureMetric
 from piq.utils import _validate_input
 
 
-def _compute_pairwise_distance(data_x: torch.Tensor, data_y: Optional[torch.Tensor] = None) -> torch.Tensor:
+def _compute_pairwise_distance(data_x: torch.Tensor, data_y: torch.Tensor | None = None) -> torch.Tensor:
     r"""Compute Euclidean distance between :math:`x` and :math:`y`.
 
     Args:
@@ -86,7 +86,7 @@ class PR(BaseFeatureMetric):
 
     def compute_metric(
         self, real_features: torch.Tensor, fake_features: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         r"""Creates non-parametric representations of the manifolds of real and generated data and computes
         the precision and recall between them.
 

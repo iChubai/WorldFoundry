@@ -1,16 +1,16 @@
 import argparse
 from typing import List
-import torch
+
 import numpy as np
+import torch
 from PIL import Image
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.optical_flow.raft import (
-    InputPadder,
     RAFT,
+    InputPadder,
     checkpoint_path,
 )
-
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
@@ -64,7 +64,7 @@ class OpticalFlowMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         scores = []
 
@@ -72,13 +72,13 @@ class OpticalFlowMetric(BaseMetric):
             images = rendered_images
 
             for i, (imfile1, imfile2) in tqdm(
-                enumerate(zip(images[:-1], images[1:])), total=len(images) - 1, desc="Computing flow..."
+                enumerate(zip(images[:-1], images[1:], strict=False)), total=len(images) - 1, desc="Computing flow..."
             ):
                 image1 = self.load_image(imfile1)
                 image2 = self.load_image(imfile2)
 
                 flow = self._compute_flow(image1, image2)
-                flow_magnitude = np.sqrt((flow[..., 0] ** 2 + flow[..., 1] ** 2))
+                flow_magnitude = np.sqrt(flow[..., 0] ** 2 + flow[..., 1] ** 2)
                 median_flow = float(torch.from_numpy(flow_magnitude).median().item())
                 scores.append(median_flow)
 

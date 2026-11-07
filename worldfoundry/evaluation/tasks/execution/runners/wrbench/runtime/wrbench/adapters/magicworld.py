@@ -131,7 +131,7 @@ class MagicWorldAdapter:
                     {"action": str(action), "frames": int(frames)} for action, frames in action_segments
                 ],
                 "total_angle_deg": total_angle_deg,
-                "native_trajectory_rows": int(len(native_rows)),
+                "native_trajectory_rows": len(native_rows),
             },
             control_sample_kind="action_matrix_or_pose",
             control_sample_count=len(action_segments),
@@ -145,7 +145,7 @@ class MagicWorldAdapter:
                     {"action": str(action), "frames": int(frames)} for action, frames in action_segments
                 ],
                 "total_angle_deg": total_angle_deg,
-                "native_trajectory_rows": int(len(native_rows)),
+                "native_trajectory_rows": len(native_rows),
             },
         )
         return CameraPayload(

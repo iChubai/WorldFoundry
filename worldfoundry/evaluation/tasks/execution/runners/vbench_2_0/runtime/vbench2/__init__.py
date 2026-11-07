@@ -3,13 +3,14 @@ import sys
 
 sys.modules.setdefault("vbench2", sys.modules[__name__])
 
-from .utils import get_prompt_from_filename, init_submodules, save_json, load_json
 import importlib
 from itertools import chain
 from pathlib import Path
 
+from .utils import get_prompt_from_filename, init_submodules, load_json, save_json
 
-class VBench2(object):
+
+class VBench2:
     def __init__(self, device, full_info_dir, output_path):
         self.device = device  # cuda or cpu
         self.full_info_dir = full_info_dir  # full json file that VBench originally provides
@@ -78,7 +79,7 @@ class VBench2(object):
         if mode == "custom_input":
             self.check_dimension_requires_extra_info(dimension_list)
             video_names = os.listdir(videos_path)
-            assert len(video_names) > 0, f"ERROR : The video files is empty"
+            assert len(video_names) > 0, "ERROR : The video files is empty"
             cur_full_info_list = []
             prompt_check_list = []
             for filename in video_names:
@@ -93,7 +94,7 @@ class VBench2(object):
                     item = {"prompt_en": prompt_en, "dimension": dimension_list, "video_list": []}
                     for ite in range(20):
                         item["video_list"].append(
-                            os.path.join(videos_path, f"{prompt_en}{special_str}-{str(ite)}{postfix}")
+                            os.path.join(videos_path, f"{prompt_en}{special_str}-{ite!s}{postfix}")
                         )
                     cur_full_info_list.append(item)
                 else:
@@ -120,7 +121,7 @@ class VBench2(object):
                     else:
                         num = 3
                     for i in range(num):  # video index for the same prompt
-                        intended_video_name = f"{prompt[:180]}{special_str}-{str(i)}{postfix}"
+                        intended_video_name = f"{prompt[:180]}{special_str}-{i!s}{postfix}"
                         if intended_video_name in video_names:  # if the video exists
                             intended_video_path = os.path.join(videos_path, intended_video_name)
                             prompt_dict["video_list"].append(intended_video_path)

@@ -1,15 +1,17 @@
 import cv2
+import decord
 import numpy as np
 import torch
-import decord
 
 decord.bridge.set_bridge("torch")
-from math import ceil
-from tqdm import tqdm
-from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
 import json
 import os
+from math import ceil
+
+from tqdm import tqdm
 from vbench2.utils import load_dimension_info, split_video_into_scenes
+
+from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
 
 
 def transform(vector):
@@ -112,11 +114,11 @@ class CameraPredict:
 
     def get_edge_direction_360(self, tracks):
         alls = []
-        for track1, track2 in zip(tracks[:-1], tracks[1:]):
+        for track1, track2 in zip(tracks[:-1], tracks[1:], strict=False):
             edge_points1 = self.get_edge_point_360(track1)
             edge_points2 = self.get_edge_point_360(track2)
             vector_results = []
-            for points1, points2 in zip(edge_points1, edge_points2):
+            for points1, points2 in zip(edge_points1, edge_points2, strict=False):
                 if self.check_valid(points1) and self.check_valid(points2):
                     vector_results.append([points2[0] - points1[0], points2[1] - points1[1], points1[1]])
             if len(vector_results) == 0:
@@ -139,8 +141,10 @@ class CameraPredict:
         edge_points1 = self.get_edge_point(track1)
         edge_points2 = self.get_edge_point(track2)
         vector_results = []
-        for points1, points2 in zip(edge_points1, edge_points2):
-            vectors = [[end[0] - start[0], end[1] - start[1], start[1]] for start, end in zip(points1, points2)]
+        for points1, points2 in zip(edge_points1, edge_points2, strict=False):
+            vectors = [
+                [end[0] - start[0], end[1] - start[1], start[1]] for start, end in zip(points1, points2, strict=False)
+            ]
             vector_results.append(vectors)
         vector_results_pan = list(map(transform, vector_results))
         class_results = [transform_class(vector, min_reso=self.scale) for vector in vector_results_pan]

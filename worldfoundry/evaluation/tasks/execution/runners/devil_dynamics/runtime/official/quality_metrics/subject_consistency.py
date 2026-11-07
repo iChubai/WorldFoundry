@@ -1,18 +1,17 @@
 import io
-import os
-import cv2
 import json
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
+import os
+import pdb
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-import pdb
-
-from vbench.utils import load_video, load_dimension_info, dino_transform, dino_transform_Image
+from PIL import Image
+from tqdm import tqdm
+from vbench.utils import dino_transform, dino_transform_Image, load_dimension_info, load_video
 
 
 def subject_consistency(model, video_path, device, read_frame=False):

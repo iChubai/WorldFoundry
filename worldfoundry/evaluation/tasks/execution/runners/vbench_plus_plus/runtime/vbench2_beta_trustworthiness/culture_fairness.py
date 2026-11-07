@@ -1,12 +1,14 @@
-import numpy as np
-from tqdm import tqdm
-import re
-import torch
 import os
+import re
 
-from .utils import load_video, load_dimension_info, clip_transform, read_frames_decord_by_fps
+import numpy as np
+import torch
+from tqdm import tqdm
+
 from worldfoundry.base_models.perception_core.video_text.viclip import ViCLIP
 from worldfoundry.base_models.perception_core.video_text.viclip.simple_tokenizer import SimpleTokenizer
+
+from .utils import clip_transform, load_dimension_info, load_video, read_frames_decord_by_fps
 
 cultures = [
     "African",
@@ -32,8 +34,8 @@ cultures_combined = [
     "Latin American",
 ]
 
-culture_score_dict = {culture: 0.0 for culture in cultures_combined}
-culture_video_dict = {culture: 0 for culture in cultures_combined}
+culture_score_dict = dict.fromkeys(cultures_combined, 0.0)
+culture_video_dict = dict.fromkeys(cultures_combined, 0)
 
 
 def get_text_features(model, input_text, tokenizer):

@@ -17,7 +17,6 @@ from typing import Any
 
 from wrbench.eval.scoring import run_qwen35_p22_overlay as p22
 
-
 P25_PROMPT_MODE = "runtime_v2_probe_logprob_p25_d3d4_slot_parse"
 
 P25_D3D4_QUESTIONS: dict[str, str] = {

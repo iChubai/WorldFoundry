@@ -5,18 +5,19 @@ Takes standardized score files and computes evaluation metrics for both VQA and 
 This script works with any method that outputs scores in the expected format.
 """
 
-import json
 import argparse
-from pathlib import Path
-import numpy as np
+import json
 from collections import defaultdict
-import matplotlib.pyplot as plt
 from datetime import datetime
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def load_score_file(score_file):
     """Load scores from a standardized score file"""
-    with open(score_file, "r") as f:
+    with open(score_file) as f:
         data = json.load(f)
 
     return data
@@ -77,7 +78,7 @@ def evaluate_vqa_metrics(yes_scores, no_scores):
     total_binary = 0
     total_questions = 0
 
-    for yes_result, no_result in zip(yes_scores, no_scores):
+    for yes_result, no_result in zip(yes_scores, no_scores, strict=False):
         # Convert to dictionary format for easier parsing
         yes_dict = {
             "pos_text_pos_image": yes_result[0],
@@ -232,7 +233,7 @@ def evaluate_single_file(score_file, mode="both", quiet=False):
         results["vqa"] = vqa_metrics
 
         if not quiet:
-            print(f"VQA Results:")
+            print("VQA Results:")
             print(f"  Binary Accuracy: {vqa_metrics['binary_acc']:.4f}")
             print(f"  Question Accuracy: {vqa_metrics['question_acc']:.4f}")
             print(f"  Valid samples used: {vqa_metrics['num_samples']}")
@@ -244,7 +245,7 @@ def evaluate_single_file(score_file, mode="both", quiet=False):
         results["retrieval"] = retrieval_metrics
 
         if not quiet:
-            print(f"Retrieval Results:")
+            print("Retrieval Results:")
             print(f"  Text: {retrieval_metrics['text']:.4f}")
             print(f"  Image: {retrieval_metrics['image']:.4f}")
             print(f"  Group: {retrieval_metrics['group']:.4f}")
@@ -286,7 +287,7 @@ def print_hierarchical_results(results, mode):
         print(f"\n┏━━ MODEL: {model_name}")
         if checkpoint:
             print(f"┃   Checkpoint: {checkpoint}")
-        print(f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         # Print splits for this model
         splits = group_data["splits"]

@@ -29,11 +29,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-
 from benchmark.runners.utils import load_yaml, resolve_task_paths
 from eval.utils import (
-    _resolve_video_source,
     _download,
+    _resolve_video_source,
     occlusion_base,
 )
 
@@ -57,7 +56,7 @@ class ResolvedTask:
     task_dir: Path
     task_yaml: Path
     init_frame: Path
-    gt_final_frame: Optional[Path]  # None if not yet generated
+    gt_final_frame: Path | None  # None if not yet generated
 
     # Model output (normalized into run directory)
     wm_video: Path
@@ -66,8 +65,8 @@ class ResolvedTask:
     final_frame: Path
 
     # Eval spec
-    questions: List[Question]
-    spec_prompt: Optional[str] = None  # evaluation.init2final_edit_prompt (optional)
+    questions: list[Question]
+    spec_prompt: str | None = None  # evaluation.init2final_edit_prompt (optional)
 
 
 # -----------------------------
@@ -75,7 +74,7 @@ class ResolvedTask:
 # -----------------------------
 
 
-def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]:
+def discover_tasks(tasks_root: Path) -> dict[str, tuple[Path, Path, Path, Path]]:
     """
     Scan for task folders under tasks_root.
 
@@ -88,7 +87,7 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
     if not tasks_root.exists():
         raise FileNotFoundError(tasks_root)
 
-    mapping: Dict[str, Tuple[Path, Path, Path]] = {}
+    mapping: dict[str, tuple[Path, Path, Path]] = {}
 
     for d in tasks_root.rglob("*"):
         if not d.is_dir():
@@ -120,7 +119,7 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
     # Add base-name aliases so camera-controlled runs (whose output JSON keys
     # use the base name, e.g. "ice_on_burner") can resolve to the correct task
     # yaml and init frame.  sorted() ensures _cardboard wins over _curtain/_lightoff.
-    base_aliases: Dict[str, Tuple[Path, Path, Path, Path]] = {}
+    base_aliases: dict[str, tuple[Path, Path, Path, Path]] = {}
     for task_id in sorted(mapping):
         base = occlusion_base(task_id)
         if base != task_id and base not in mapping and base not in base_aliases:
@@ -130,12 +129,12 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
     return mapping
 
 
-def _load_task_level(task_yaml: Path) -> Optional[int]:
+def _load_task_level(task_yaml: Path) -> int | None:
     task = load_yaml(task_yaml)
     return task.get("level")
 
 
-def _load_questions(task_yaml: Path) -> Tuple[List[Question], Optional[str]]:
+def _load_questions(task_yaml: Path) -> tuple[list[Question], str | None]:
     task = load_yaml(task_yaml)
     eval_block = task.get("evaluation", {}) or {}
 
@@ -146,7 +145,7 @@ def _load_questions(task_yaml: Path) -> Tuple[List[Question], Optional[str]]:
         spec_prompt = None
 
     q_raw = eval_block.get("questions", []) or []
-    questions: List[Question] = []
+    questions: list[Question] = []
     for i, q in enumerate(q_raw, start=1):
         qid = str(q.get("id") or f"q{i:02d}").strip()
         questions.append(
@@ -166,7 +165,7 @@ def _load_questions(task_yaml: Path) -> Tuple[List[Question], Optional[str]]:
 # -----------------------------
 
 
-def extract_final_frame(video_path: Path, out_png: Path) -> Dict[str, Any]:
+def extract_final_frame(video_path: Path, out_png: Path) -> dict[str, Any]:
     """
     Extract the last frame of a video and save to out_png.
     Uses OpenCV if available; falls back to imageio.
@@ -326,9 +325,9 @@ def resolve_tasks_from_outputs_json(
     outputs_json: Path,
     run_dir: Path,
     download_urls: bool = True,
-    pattern: Optional[str] = None,
+    pattern: str | None = None,
     exclude_baseline: bool = False,
-) -> List[ResolvedTask]:
+) -> list[ResolvedTask]:
     """
     Loop over (task_id -> video_link) pairs in outputs_json and resolve each task.
 
@@ -360,7 +359,7 @@ def resolve_tasks_from_outputs_json(
     if exclude_baseline:
         outputs_data = {k: v for k, v in outputs_data.items() if not str(k).endswith("_00")}
 
-    resolved: List[ResolvedTask] = []
+    resolved: list[ResolvedTask] = []
     failed = 0
     for task_id, video_link in outputs_data.items():
         try:

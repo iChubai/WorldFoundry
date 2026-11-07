@@ -1,6 +1,7 @@
 import os
-import numpy as np
 from os.path import isfile
+
+import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -34,7 +35,7 @@ def strnum(x):
 
 
 def assert_same_shape(t1, t2):
-    for x, y in zip(list(t1.shape), list(t2.shape)):
+    for x, y in zip(list(t1.shape), list(t2.shape), strict=False):
         assert x == y
 
 
@@ -133,7 +134,7 @@ def reduce_masked_mean(x, mask, dim=None, keepdim=False):
     # x and mask are the same shape, or at least broadcastably so < actually it's safer if you disallow broadcasting
     # returns shape-1
     # axis can be a list of axes
-    for a, b in zip(x.size(), mask.size()):
+    for a, b in zip(x.size(), mask.size(), strict=False):
         # if not b==1:
         assert a == b  # some shape mismatch!
     # assert(x.size() == mask.size())

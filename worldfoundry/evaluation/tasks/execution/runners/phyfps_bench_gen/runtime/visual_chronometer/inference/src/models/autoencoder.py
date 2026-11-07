@@ -1,8 +1,8 @@
 import torch
 from einops import rearrange
 
-from src.modules.ae_modules import Encoder, Decoder
 from src.distributions import DiagonalGaussianDistribution
+from src.modules.ae_modules import Decoder, Encoder
 
 
 class AutoencoderKL(torch.nn.Module):

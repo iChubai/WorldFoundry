@@ -4,10 +4,11 @@ Adaptive question generator
 Automatically generate evaluation questions based on different dimensions and input content
 """
 
+import argparse
 import json
 import os
-import argparse
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from openai import OpenAI
 
 # Import question cache manager
@@ -169,7 +170,7 @@ Requirements:
 """,
         }
 
-    def generate_questions_for_dimension(self, content: str, dimension: str) -> List[str]:
+    def generate_questions_for_dimension(self, content: str, dimension: str) -> list[str]:
         """Generate questions for specific dimension (with caching support)"""
         # First check cache
         if self.cache_manager:
@@ -186,7 +187,7 @@ Requirements:
 
         return questions
 
-    def _generate_new_questions(self, content: str, dimension: str) -> List[str]:
+    def _generate_new_questions(self, content: str, dimension: str) -> list[str]:
         """Generate new questions (without using cache)"""
         print(f"Generating new questions: Calling API to generate questions for dimension '{dimension}'...")
 
@@ -235,7 +236,7 @@ Requirements:
     def process_json_file(self, json_file_path: str, dimension: str) -> bool:
         """Process JSON file, check and generate missing questions"""
         try:
-            with open(json_file_path, "r", encoding="utf-8") as f:
+            with open(json_file_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             modified = False
@@ -251,7 +252,7 @@ Requirements:
                             modified = True
                             print(f"Generated {len(questions)} questions for video")
                         else:
-                            print(f"Question generation failed, skipping this item")
+                            print("Question generation failed, skipping this item")
                             return False
             elif isinstance(data, dict):
                 # Other JSON object formats
@@ -263,7 +264,7 @@ Requirements:
                             modified = True
                             print(f"Generated {len(questions)} questions for {key}")
                         else:
-                            print(f"Question generation failed, skipping this item")
+                            print("Question generation failed, skipping this item")
                             return False
 
             # Save file if modified
@@ -280,12 +281,12 @@ Requirements:
             print(f"Error processing JSON file: {e}")
             return False
 
-    def _needs_questions(self, item: Dict[str, Any]) -> bool:
+    def _needs_questions(self, item: dict[str, Any]) -> bool:
         """Check if item needs question generation"""
         auxiliary_info = item.get("auxiliary_info", [])
         return not auxiliary_info or len(auxiliary_info) == 0
 
-    def _generate_questions_for_item(self, item: Dict[str, Any], dimension: str) -> List[str]:
+    def _generate_questions_for_item(self, item: dict[str, Any], dimension: str) -> list[str]:
         """Generate questions for a single item"""
         # Try to extract content from item for question generation
         content = ""

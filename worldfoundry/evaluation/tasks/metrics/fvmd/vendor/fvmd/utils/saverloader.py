@@ -1,6 +1,8 @@
-import torch
-import os, pathlib
+import os
+import pathlib
+
 import numpy as np
+import torch
 
 
 def save(ckpt_dir, optimizer, model, global_step, scheduler=None, keep_latest=5, model_name="model"):
@@ -47,7 +49,7 @@ def load(ckpt_dir, model, optimizer=None, scheduler=None, step=0, model_name="mo
                 # 1. filter out ignored keys
                 pretrained_dict = {k: v for k, v in checkpoint.items()}
                 for ign in ignore_load:
-                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if not ign in k}
+                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if ign not in k}
 
                 # 2. overwrite entries in the existing state dict
                 model_dict.update(pretrained_dict)

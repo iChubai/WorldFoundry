@@ -16,7 +16,6 @@ from .common import (
     skill_cache_path,
 )
 
-
 SKILL_ID = "physical_plausibility_inspector"
 DEFINITION_VERSION = "harnesseval.physical_plausibility.pavrm"
 CACHE_SCHEMA = "harnesseval.physical_plausibility.cache"
@@ -38,15 +37,15 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
+    "SKILL_ID",
     "PhysicalPlausibilityBackend",
     "cache_path_for_video",
-    "import_raw_score",
     "evaluate",
+    "import_raw_score",
 ]
 
 

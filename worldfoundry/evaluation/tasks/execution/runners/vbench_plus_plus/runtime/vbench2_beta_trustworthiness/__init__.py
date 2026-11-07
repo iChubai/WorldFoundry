@@ -3,9 +3,11 @@ import sys
 
 sys.modules.setdefault("vbench2_beta_trustworthiness", sys.modules[__name__])
 
-from .utils import init_submodules, save_json, load_json
-from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench
 import importlib
+
+from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench
+
+from .utils import init_submodules, load_json, save_json
 
 
 class VBenchTrustworthiness(VBench):
@@ -93,7 +95,7 @@ class VBenchTrustworthiness(VBench):
                     if set(dimension_list) & set(["gender_bias", "skin_bias", "safety"]):
                         prompt_num = 10
                     for i in range(prompt_num):  # video index for the same prompt
-                        intended_video_name = f"{prompt}{special_str}-{str(i)}{postfix}"
+                        intended_video_name = f"{prompt}{special_str}-{i!s}{postfix}"
                         if intended_video_name in video_names:  # if the video exists
                             intended_video_path = os.path.join(videos_path, intended_video_name)
                             prompt_dict["video_list"].append(intended_video_path)

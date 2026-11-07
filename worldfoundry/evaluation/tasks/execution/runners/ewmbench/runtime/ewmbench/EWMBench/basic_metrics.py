@@ -1,9 +1,10 @@
 import glob
 import os
-import numpy as np
-from skimage.metrics import peak_signal_noise_ratio, structural_similarity
+
 import cv2
+import numpy as np
 from PIL import Image
+from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 from tqdm import tqdm
 
 
@@ -50,7 +51,7 @@ def compute_basic_metrics(gt_path, pd_path, metric_names=["psnr", "ssim"]):
                 except:
                     print(len(pd_image_list), n_frames)
                 cur_metrics = dict()
-                for pd_img, gt_img in zip(pd_image_list, gt_image_list):
+                for pd_img, gt_img in zip(pd_image_list, gt_image_list, strict=False):
                     pd_img = np.asanyarray(Image.open(pd_img))
                     gt_img = np.asanyarray(Image.open(gt_img))
                     if pd_img.shape != gt_img.shape:

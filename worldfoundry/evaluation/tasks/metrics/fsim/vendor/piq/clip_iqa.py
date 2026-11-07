@@ -11,14 +11,13 @@ Ref url: https://github.com/IceClear/CLIP-IQA
 """
 
 import os
-import torch
-
-from torch.nn.modules.loss import _Loss
 from typing import Union
 
-from piq.feature_extractors import clip
-from piq.utils.common import download_tensor, _validate_input
+import torch
+from torch.nn.modules.loss import _Loss
 
+from piq.feature_extractors import clip
+from piq.utils.common import _validate_input, download_tensor
 
 OPENAI_CLIP_MEAN = (0.48145466, 0.4578275, 0.40821073)
 OPENAI_CLIP_STD = (0.26862954, 0.26130258, 0.27577711)
@@ -75,7 +74,7 @@ class CLIPIQA(_Loss):
         Journal of Computer Vision 130.9 (2022): 2337-2348.
     """
 
-    def __init__(self, data_range: Union[float, int] = 1.0) -> None:
+    def __init__(self, data_range: float | int = 1.0) -> None:
         super().__init__()
 
         self.feature_extractor = clip.load().eval()

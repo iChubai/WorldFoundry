@@ -1,7 +1,7 @@
-from typing import Union, List
+from typing import List, Union
+
 import torch
 import torch.nn.functional as F
-
 from PIL import Image
 from transformers import AutoModelForCausalLM
 
@@ -25,7 +25,7 @@ class QAlignVideoMetric(BaseMetric):
         )
         self.task = task
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         images = []
         for image in rendered_images:
             if isinstance(image, str):

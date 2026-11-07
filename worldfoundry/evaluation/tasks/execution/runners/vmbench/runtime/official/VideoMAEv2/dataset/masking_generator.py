@@ -38,7 +38,7 @@ class RandomMaskingGenerator:
         self.num_mask = int(mask_ratio * self.num_patches)
 
     def __repr__(self):
-        repr_str = "Mask: total patches {}, mask patches {}".format(self.num_patches, self.num_mask)
+        repr_str = f"Mask: total patches {self.num_patches}, mask patches {self.num_mask}"
         return repr_str
 
     def __call__(self):
@@ -61,7 +61,7 @@ class TubeMaskingGenerator:
         self.total_masks = self.frames * self.num_masks_per_frame
 
     def __repr__(self):
-        repr_str = "Tube Masking: total patches {}, mask patches {}".format(self.total_patches, self.total_masks)
+        repr_str = f"Tube Masking: total patches {self.total_patches}, mask patches {self.total_masks}"
         return repr_str
 
     def __call__(self):

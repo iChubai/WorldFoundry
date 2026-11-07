@@ -11,7 +11,6 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-
 PROBE_CATALOG_VERSION = "runtime_v2_probe_catalog_v1"
 DEFAULT_PROMPT_MODE = "runtime_v2_probe_logprob"
 PROMPT_MODE_V3_MINIMAL_WORLD_STATE = "runtime_v2_probe_logprob_v3_minimal_world_state"

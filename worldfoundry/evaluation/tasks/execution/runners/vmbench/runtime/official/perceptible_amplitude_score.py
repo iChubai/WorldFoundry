@@ -1,36 +1,35 @@
 import argparse
+import json
+import math
 import os
 import sys
-import math
-from tqdm import tqdm
 
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
-import json
 import torch
 from PIL import Image
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
-
-# Grounding DINO
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util import transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
+
+# Grounding DINO
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util import transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
     clean_state_dict,
     get_phrases_from_posmap,
 )
-
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
 
 # segment anything
-from worldfoundry.base_models.perception_core.segment.sam_v1 import sam_model_registry, SamPredictor
+from worldfoundry.base_models.perception_core.segment.sam_v1 import SamPredictor, sam_model_registry
 from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_checkpoint_path
-
 
 # Co-Tracker
 from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
@@ -113,7 +112,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt):
+    for logit, box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -207,7 +206,7 @@ if __name__ == "__main__":
     ).to(device)
 
     # load meta info json
-    with open(args.meta_info_path, "r") as f:
+    with open(args.meta_info_path) as f:
         meta_infos = json.load(f)
 
     for meta_info in tqdm(meta_infos, desc="Motion Degree: Grounded SAM Segmentation"):

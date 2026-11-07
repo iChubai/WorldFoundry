@@ -1,9 +1,10 @@
+import argparse
 from typing import List
+
+import cv2
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
-import argparse
-import cv2
 
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
     RAFT,
@@ -12,7 +13,6 @@ from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
     load_ckpt,
     parse_args,
 )
-
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
@@ -114,7 +114,7 @@ class OpticalFlowAverageEndPointErrorMetric(BaseMetric):
         return flow_final, info_final
 
     def _compute_flow(self, image1, image2):
-        print(f"computing flow...")
+        print("computing flow...")
 
         img1 = F.interpolate(image1, scale_factor=2**self._args.scale, mode="bilinear", align_corners=False)
         img2 = F.interpolate(image2, scale_factor=2**self._args.scale, mode="bilinear", align_corners=False)
@@ -130,13 +130,13 @@ class OpticalFlowAverageEndPointErrorMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         scores = []
         with torch.no_grad():
             images = rendered_images
 
-            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:])):
+            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:], strict=False)):
                 image1 = self.load_image(imfile1)
                 image2 = self.load_image(imfile2)
 

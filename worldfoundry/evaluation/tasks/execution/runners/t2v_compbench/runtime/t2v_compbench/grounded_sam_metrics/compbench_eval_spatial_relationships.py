@@ -1,15 +1,21 @@
 import argparse
+import csv
+import json
 import os
 
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
-import json
 import torch
 from PIL import Image, ImageDraw, ImageFont
+from tqdm import tqdm
 
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
@@ -17,19 +23,12 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.util
     clean_state_dict,
     get_phrases_from_posmap,
 )
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import csv
-
-from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.asset_paths import asset_path
 from worldfoundry.base_models.perception_core.segment.sam_v1 import (
     SamPredictor,
     sam_model_registry,
 )
 from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_v1_checkpoint_path
-
+from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.asset_paths import asset_path
 from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.grounded_sam_metrics.compbench_run_depth import (
     run_depth,
 )
@@ -89,7 +88,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     pred_phrases = []
 
     prob = []
-    for logit, box in zip(logits_filt, boxes_filt):
+    for logit, box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -114,7 +113,7 @@ def plot_boxes_to_image(image_pil, tgt, prompt_objs, color1, color2):
     mask_draw = ImageDraw.Draw(mask)
 
     # draw boxes and masks
-    for box, label, obj in zip(boxes, labels, objs):
+    for box, label, obj in zip(boxes, labels, objs, strict=False):
         print(obj)
         print(prompt_objs)
         if obj == prompt_objs[0]:  # obj1
@@ -246,11 +245,11 @@ def spatial_judge(box0, box1, spatial):
     else:
         actual_spatial = ""
 
-    if actual_spatial == spatial:
-        correct_spatial = 1
-    elif spatial == "on" and actual_spatial == "above":
-        correct_spatial = 1
-    elif spatial == "below" and actual_spatial == "under":
+    if (
+        actual_spatial == spatial
+        or (spatial == "on" and actual_spatial == "above")
+        or (spatial == "below" and actual_spatial == "under")
+    ):
         correct_spatial = 1
     else:
         correct_spatial = 0
@@ -304,7 +303,7 @@ def pick_max_3d(total_score_1_list, record_all_good_spatial):
 
 
 def combine_frame(input_csv, output_csv):
-    with open(input_csv, "r") as file:
+    with open(input_csv) as file:
         reader = csv.reader(file)
         lines = list(reader)
         batch_size = 16
@@ -356,10 +355,10 @@ def combine_frame(input_csv, output_csv):
 
 
 def combine_csv_and_cal_model_score(csv_2d, csv_3d, output_file):
-    with open(csv_2d, "r") as file:
+    with open(csv_2d) as file:
         reader = csv.reader(file)
         lines_2d = list(reader)
-    with open(csv_3d, "r") as file2:
+    with open(csv_3d) as file2:
         reader2 = csv.reader(file2)
         lines_3d = list(reader2)
 
@@ -392,7 +391,7 @@ def spatial_2d(args):
     # load model
     model = load_model(config_file, checkpoint_path, device=device)
 
-    with open(args.read_prompt_file, "r") as json_data:
+    with open(args.read_prompt_file) as json_data:
         prompts = json.load(json_data)
 
     # make dir
@@ -579,7 +578,7 @@ def spatial_3d(args):
         )
     predictor = SamPredictor(sam_model_registry[sam_version](checkpoint=sam_checkpoint).to(device))
 
-    with open(args.read_prompt_file, "r") as json_data:
+    with open(args.read_prompt_file) as json_data:
         prompts = json.load(json_data)
 
     # make dir
@@ -709,9 +708,9 @@ def spatial_3d(args):
                     if m0 != 0 and m1 != 0:
                         plt.figure(figsize=(10, 10))
                         plt.imshow(image)
-                        for box, label in zip(boxes_filt_0, clean_label_0):
+                        for box, label in zip(boxes_filt_0, clean_label_0, strict=False):
                             show_box(box.numpy(), plt.gca(), label)
-                        for box, label in zip(boxes_filt_1, clean_label_1):
+                        for box, label in zip(boxes_filt_1, clean_label_1, strict=False):
                             show_box(box.numpy(), plt.gca(), label)
 
                         for ii in range(len(clean_boxes_0)):
@@ -811,7 +810,7 @@ def spatial_3d(args):
                     plt.axis("off")
                     os.makedirs(os.path.join(output_dir, videos[i], image_name.split(".")[0]), exist_ok=True)
                     plt.savefig(
-                        os.path.join(output_dir, videos[i], image_name.split(".")[0], f"grounded_sam_output.jpg"),
+                        os.path.join(output_dir, videos[i], image_name.split(".")[0], "grounded_sam_output.jpg"),
                         bbox_inches="tight",
                         dpi=300,
                         pad_inches=0.0,

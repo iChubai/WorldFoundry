@@ -1,12 +1,15 @@
-import torch
 import os
 import sys
 
+import torch
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from vbench2_beta_long import VBenchLong
-from datetime import datetime
 import argparse
 import json
+from datetime import datetime
+
+from vbench2_beta_long import VBenchLong
+
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
 
@@ -224,7 +227,7 @@ def main():
     device = torch.device("cuda")
     my_VBench = VBenchLong(device, args.full_json_dir, args.output_path)
 
-    print(f"start evaluation")
+    print("start evaluation")
 
     current_time = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
 
@@ -240,7 +243,7 @@ def main():
         raise Exception("must set --mode=custom_input for using external prompt")
 
     if args.prompt_file:
-        with open(args.prompt_file, "r") as f:
+        with open(args.prompt_file) as f:
             prompt = json.load(f)
         assert type(prompt) == dict, 'Invalid prompt file format. The correct format is {"video_path": prompt, ... }'
     elif args.prompt != "":

@@ -1,7 +1,8 @@
-from typing import List
 from io import BytesIO
-from PIL import Image
+from typing import List
+
 import requests
+from PIL import Image
 
 
 def load_image(image_file):
@@ -26,7 +27,7 @@ def load_images(image_files):
     return out
 
 
-def merge_images(image_links: List = []):
+def merge_images(image_links: list = []):
     """Merge multiple images into one image
 
     Args:
@@ -40,12 +41,12 @@ def merge_images(image_links: List = []):
     images = load_images(image_links)
     if len(images) == 1:
         return images[0]
-    widths, heights = zip(*(i.size for i in images))
+    widths, heights = zip(*(i.size for i in images), strict=False)
     average_height = sum(heights) // len(heights)
     for i, im in enumerate(images):
         # scale in proportion
         images[i] = im.resize((int(im.size[0] * average_height / im.size[1]), average_height))
-    widths, heights = zip(*(i.size for i in images))
+    widths, heights = zip(*(i.size for i in images), strict=False)
     total_width = sum(widths)
     max_height = max(heights)
     new_im = Image.new("RGB", (total_width + 10 * (len(images) - 1), max_height))

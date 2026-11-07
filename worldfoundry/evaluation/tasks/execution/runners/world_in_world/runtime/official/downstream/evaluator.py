@@ -2,16 +2,17 @@ import argparse
 import json
 import os
 import os.path as osp
+from collections import defaultdict
 from functools import partial, wraps
 
-from openeqa.evaluation.llm_match import get_llm_match_score
-from tqdm import tqdm
-from downstream.downstream_datasets import AEQADataset, ARDataset, IGDataset
-from downstream.utils.saver import Saver
-from collections import defaultdict
 import numpy as np
-from tabulate import tabulate
+from downstream.downstream_datasets import AEQADataset, ARDataset, IGDataset
 from downstream.process_IGnav_dataset.pickle_dataset import load_igdataset_from_zip
+from downstream.utils.saver import Saver
+from openeqa.evaluation.llm_match import get_llm_match_score
+from tabulate import tabulate
+from tqdm import tqdm
+
 # from openeqa.data import results
 
 
@@ -27,7 +28,11 @@ def compute_aeqa_eval_metrics(scores, traj_lens, demo_lens):
     mean_score = np.mean([(sigma - 1) * 25 for sigma in scores])
     mean_traj_len = np.mean([p for p in traj_lens if p is not None])
     mean_efficiency = np.mean(
-        [(sigma - 1) * 25 * l / max(p, l) for sigma, p, l in zip(scores, traj_lens, demo_lens) if p is not None]
+        [
+            (sigma - 1) * 25 * l / max(p, l)
+            for sigma, p, l in zip(scores, traj_lens, demo_lens, strict=False)
+            if p is not None
+        ]
     )
 
     return mean_score, mean_traj_len, mean_efficiency
@@ -47,7 +52,7 @@ def compute_vln_eval_metrics(s, p, l):
 
 
 def load_aeqa_demo_trajlens(full_demo_lens_path="downstream/others/gt_path_length.json"):
-    with open(full_demo_lens_path, "r") as f:
+    with open(full_demo_lens_path) as f:
         full_demo_lens = json.load(f)
     return full_demo_lens
 
@@ -57,7 +62,7 @@ def rerun(func, result_path):
 
         @wraps(func)
         def load_result(*args, **kwargs):
-            with open(result_path, "r", encoding="utf-8") as f:
+            with open(result_path, encoding="utf-8") as f:
                 return json.load(f)
 
         return load_result
@@ -115,7 +120,7 @@ class Evaluator:
 
         # if blind_result_path is not empty, we use blind LLMs to get score_with_blind
         if blind_result_path and saver_args["task"] == "AEQA":
-            self.blind_result = json.load(open(blind_result_path, "r", encoding="utf-8"))
+            self.blind_result = json.load(open(blind_result_path, encoding="utf-8"))
         else:
             self.blind_result = None
         self.eval_blind = eval_blind
@@ -192,7 +197,7 @@ class Evaluator:
         if only_check_exist:
             return
 
-        with open(one_metric_path, "r") as f:
+        with open(one_metric_path) as f:
             content = json.load(f)
 
         if self.task in ["AEQA", "AR"]:
@@ -329,7 +334,7 @@ class Evaluator:
 
         result_var["summary"] = dict(
             total_size=len(gts),
-            correct=sum(int(g == p) for g, p in zip(gts, preds)),
+            correct=sum(int(g == p) for g, p in zip(gts, preds, strict=False)),
             accuracy=acc,
             mean_traj_len=mean_traj_len,
         )

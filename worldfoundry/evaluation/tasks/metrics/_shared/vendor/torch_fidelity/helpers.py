@@ -25,7 +25,7 @@ def get_kwarg(name, kwargs):
 def json_decode_string(s):
     try:
         out = json.loads(s)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         print(f"Failed to decode JSON string: {s}", file=sys.stderr)
         raise
     return out

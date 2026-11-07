@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
+import argparse
+import glob
 import json
 import os
-import argparse
-import numpy as np
-from collections import Counter
 import string
-from datetime import datetime
-import openai
 import time
-import glob
-from typing import List, Dict, Any, Tuple
-from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-from rouge_score import rouge_scorer
+from collections import Counter
+from datetime import datetime
+from typing import Any, Dict, List, Tuple
+
 import nltk
+import numpy as np
+import openai
+from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
+from rouge_score import rouge_scorer
 
 
-def load_json_file(file_path: str) -> Dict[str, Any]:
+def load_json_file(file_path: str) -> dict[str, Any]:
     """Load data from a JSON file."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             data = json.load(f)
         return data
     except Exception as e:
@@ -26,7 +27,7 @@ def load_json_file(file_path: str) -> Dict[str, Any]:
         return {}
 
 
-def find_caption_files(score_dir: str) -> List[str]:
+def find_caption_files(score_dir: str) -> list[str]:
     """
     Auto-discover caption result files in the specified directory.
 
@@ -49,7 +50,7 @@ def find_caption_files(score_dir: str) -> List[str]:
         for f in sorted(files):
             print(f"  {os.path.basename(f)}")
     else:
-        print(f"No caption result files found with pattern: caption_results_*.json")
+        print("No caption result files found with pattern: caption_results_*.json")
 
     return sorted(files)
 
@@ -222,8 +223,8 @@ def calculate_meteor_score(reference, candidate):
         ref_unigrams = set(ref_tokens)
         cand_unigrams = set(cand_tokens)
 
-        ref_bigrams = set(zip(ref_tokens[:-1], ref_tokens[1:])) if len(ref_tokens) > 1 else set()
-        cand_bigrams = set(zip(cand_tokens[:-1], cand_tokens[1:])) if len(cand_tokens) > 1 else set()
+        ref_bigrams = set(zip(ref_tokens[:-1], ref_tokens[1:], strict=False)) if len(ref_tokens) > 1 else set()
+        cand_bigrams = set(zip(cand_tokens[:-1], cand_tokens[1:], strict=False)) if len(cand_tokens) > 1 else set()
 
         # Calculate precision and recall for unigrams
         unigram_matches = len(ref_unigrams.intersection(cand_unigrams))
@@ -331,7 +332,7 @@ def calculate_generative_match(reference, candidate, api_key=None, retries=3, de
             return 0.1
 
         except Exception as e:
-            print(f"Error calling OpenAI API (attempt {attempt + 1}/{retries}): {str(e)}")
+            print(f"Error calling OpenAI API (attempt {attempt + 1}/{retries}): {e!s}")
             if attempt < retries - 1:
                 print(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
@@ -342,7 +343,7 @@ def calculate_generative_match(reference, candidate, api_key=None, retries=3, de
     return 0.5  # Should never reach here but just in case
 
 
-def evaluate_caption_file(file_path: str, api_key: str = None) -> Dict[str, Any]:
+def evaluate_caption_file(file_path: str, api_key: str = None) -> dict[str, Any]:
     """
     Evaluate captions from a single result file.
 

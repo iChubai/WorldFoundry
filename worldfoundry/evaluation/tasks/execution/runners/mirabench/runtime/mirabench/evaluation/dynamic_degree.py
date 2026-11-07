@@ -3,7 +3,7 @@ import os
 import cv2
 import torch
 
-from worldfoundry.base_models.perception_core.optical_flow.raft import InputPadder, RAFT
+from worldfoundry.base_models.perception_core.optical_flow.raft import RAFT, InputPadder
 from worldfoundry.core.io import list_numbered_frame_paths
 
 
@@ -50,7 +50,7 @@ class DynamicDegree:
             frame_batch = frame_batch.to(self.device, non_blocking=True)
             # self.set_params(frame=frames[0], count=len(frames))
             static_score = []
-            for image1, image2 in zip(frame_batch[:-1], frame_batch[1:]):
+            for image1, image2 in zip(frame_batch[:-1], frame_batch[1:], strict=False):
                 image1 = image1.unsqueeze(0)
                 image2 = image2.unsqueeze(0)
                 padder = InputPadder(image1.shape)

@@ -1,17 +1,18 @@
-import os
 import json
-import numpy as np
 import logging
-import torch
-import re
+import os
 import random
-import cv2
+import re
 from pathlib import Path
-from PIL import Image, ImageSequence
-from decord import VideoReader, cpu
-from torchvision import transforms
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, ToPILImage
+
+import cv2
+import numpy as np
+import torch
 import torchvision.transforms.functional as F
+from decord import VideoReader, cpu
+from PIL import Image, ImageSequence
+from torchvision import transforms
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -29,8 +30,8 @@ if CACHE_DIR is None:
 
 
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_rank,
     barrier,
+    get_rank,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -319,12 +320,7 @@ def init_submodules(dimension_list, local=False, **kwargs):
                 "read_frame": read_frame,
             }
 
-        elif dimension == "dynamic_degree":
-            submodules_dict[dimension] = {
-                "model": kwargs.get(f"{dimension}_raft_ckpt"),
-            }
-
-        elif dimension == "flow_score":
+        elif dimension == "dynamic_degree" or dimension == "flow_score":
             submodules_dict[dimension] = {
                 "model": kwargs.get(f"{dimension}_raft_ckpt"),
             }
@@ -392,5 +388,5 @@ def load_json(path):
     Returns:
     - data (dict or list): The data loaded from the JSON file, which could be a dictionary or a list.
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)

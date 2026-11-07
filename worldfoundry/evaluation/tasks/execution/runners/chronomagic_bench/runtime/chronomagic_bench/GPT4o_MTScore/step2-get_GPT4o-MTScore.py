@@ -1,6 +1,7 @@
+import argparse
 import json
 import os
-import argparse
+
 from tqdm import tqdm
 
 
@@ -35,7 +36,7 @@ def main(input_dir, output_dir, model_name):
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
 
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 data = json.load(file)
 
             formatted_data = {}
@@ -50,7 +51,7 @@ def main(input_dir, output_dir, model_name):
                     if score:
                         total_score += int(score)
                         entry_count += 1
-                except Exception as e:
+                except Exception:
                     keys_to_delete.append(key)
 
             for key in keys_to_delete:
@@ -72,7 +73,7 @@ def main(input_dir, output_dir, model_name):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             data = json.load(file)
 
         formatted_data = {}
@@ -87,7 +88,7 @@ def main(input_dir, output_dir, model_name):
                 if score:
                     total_score += int(score)
                     entry_count += 1
-            except Exception as e:
+            except Exception:
                 keys_to_delete.append(key)
 
         for key in keys_to_delete:

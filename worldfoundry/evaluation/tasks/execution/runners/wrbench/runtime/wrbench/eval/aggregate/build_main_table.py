@@ -12,6 +12,5 @@ if str(REPO_ROOT) not in sys.path:
 
 from wrbench.eval.aggregate.build_wrbench_vnext_main_table import main
 
-
 if __name__ == "__main__":
     raise SystemExit(main())

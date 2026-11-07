@@ -6,6 +6,7 @@ from datetime import datetime
 
 import torch
 from vbench import VBench
+
 from worldfoundry.core.distributed.collectives.evaluation import dist_init, print0
 
 
@@ -45,7 +46,7 @@ def main() -> None:
     if (args.prompt_file is not None or args.prompt != "None") and args.mode != "custom_input":
         raise ValueError("must set --mode=custom_input for using external prompt")
     if args.prompt_file:
-        with open(args.prompt_file, "r", encoding="utf-8") as handle:
+        with open(args.prompt_file, encoding="utf-8") as handle:
             prompt = json.load(handle)
         if not isinstance(prompt, dict):
             raise ValueError('invalid prompt file format; expected {"video_path": "prompt", ...}')

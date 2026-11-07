@@ -189,7 +189,7 @@ def _assign_components(
 
     assignments: dict[int, int] = {}
     last_component = 0
-    for boundary_index, (boundary, window) in enumerate(zip(boundaries, windows)):
+    for boundary_index, (boundary, window) in enumerate(zip(boundaries, windows, strict=False)):
         candidates = []
         for component_index in range(last_component, len(components)):
             component = components[component_index]
@@ -220,7 +220,7 @@ def _assign_components(
     for component_indices in combinations(unmatched_post, pair_count):
         for boundary_indices in combinations(free_boundaries, pair_count):
             proposed = dict(assignments)
-            proposed.update(zip(boundary_indices, component_indices))
+            proposed.update(zip(boundary_indices, component_indices, strict=False))
             if not _is_monotonic_assignment(proposed):
                 continue
             distances = tuple(
@@ -231,6 +231,7 @@ def _assign_components(
                 for boundary_index, component_index in zip(
                     boundary_indices,
                     component_indices,
+                    strict=False,
                 )
             )
             total_length = sum(components[index][1] - components[index][0] + 1 for index in component_indices)
@@ -335,7 +336,7 @@ def phase_from_revisit_runs(
         if component_index == 0:
             start = max(1, start)
         segments = _balanced_ranges(start, end + 1, len(assigned_boundaries))
-        for local_index, (boundary_index, segment) in enumerate(zip(assigned_boundaries, segments)):
+        for local_index, (boundary_index, segment) in enumerate(zip(assigned_boundaries, segments, strict=False)):
             revisits[boundary_index] = segment
             if component_index == 0:
                 sources[boundary_index] = (

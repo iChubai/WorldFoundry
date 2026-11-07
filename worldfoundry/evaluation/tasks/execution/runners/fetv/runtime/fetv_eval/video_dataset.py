@@ -4,20 +4,20 @@ Copyright (c) 2022-present NAVER Corp.
 Apache-2.0
 """
 
-from typing import *
-
-from PIL import Image
 import copy
-import json, re
-import numpy as np
+import json
 import os
 import pickle
 import random
+import re
+from typing import *
 
+import numpy as np
+import torch
+from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import CocoCaptions
-import torch
 
 
 class VideoDataset(Dataset):
@@ -63,7 +63,7 @@ class VideoDataset(Dataset):
 
     def load_captions(self):
         self.captions, self.video_ids, self.sent_ids = {}, [], []
-        with open(self.prompt_file, "r") as fp:
+        with open(self.prompt_file) as fp:
             lines = fp.readlines()
         for sent_id, line in enumerate(lines):
             data = json.loads(line)
@@ -92,7 +92,7 @@ class VideoDataset(Dataset):
         filenames = {int(re.findall("\d+", fn)[0]): fn for fn in filenames}
         filenames = sorted(filenames.items(), key=lambda x: x[0])
         try:
-            filenames = list(zip(*filenames))[1]
+            filenames = list(zip(*filenames, strict=False))[1]
         except IndexError:
             print(path)
             print(os.listdir(path))

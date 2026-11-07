@@ -1,17 +1,20 @@
 import os
+
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
 from tqdm import tqdm
 from transformers import AutoImageProcessor, AutoModelForDepthEstimation
-from .utils import load_video, load_dimension_info
+
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_rank,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
     get_world_size,
 )
 from worldfoundry.core.execution.device import get_current_torch_device
+
+from .utils import load_dimension_info, load_video
 
 
 class DepthEstimator:
@@ -59,7 +62,7 @@ def depth_accuracy(depth_model, video_list, gt_root, device):
 
     def uniform_sample_tensor(img_tensor, n):
         T = img_tensor.shape[0]
-        if T <= n:
+        if n >= T:
             return img_tensor
         # 均匀生成索引：0, ..., T-1
         indices = torch.linspace(0, T - 1, n).long()
@@ -123,7 +126,7 @@ def depth_accuracy(depth_model, video_list, gt_root, device):
 
 def compute_depth_accuracy(json_dir, submodules_list, **kwargs):
     device = get_current_torch_device()
-    gt_path = kwargs.get("gt_path", None)
+    gt_path = kwargs.get("gt_path")
     if not gt_path:
         raise ValueError("depth_accuracy 需要 gt_path 参数")
 

@@ -1,9 +1,10 @@
+import argparse
 import json
 import os
-import cv2
 import shutil
-import argparse
 from pathlib import Path
+
+import cv2
 from tqdm import tqdm
 
 
@@ -114,7 +115,7 @@ def main():
         print(f"Error: summary.json not found at {args.summary_json}")
         return
 
-    with open(args.summary_json, "r", encoding="utf-8") as f:
+    with open(args.summary_json, encoding="utf-8") as f:
         data = json.load(f)
 
     print(f">>> Starting preprocessing for {len(data)} items...")

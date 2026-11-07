@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-
 FAMILIES = (
     "exploratory_transition",
     "intentional_transition",

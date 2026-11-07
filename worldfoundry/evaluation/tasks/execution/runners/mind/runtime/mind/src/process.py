@@ -448,7 +448,7 @@ if __name__ == "__main__":
             tqdm.write(f"{len(video_results['data'])} videos are processed")
             tqdm.write(f"checking output path {output_path}:")
             if os.path.exists(output_path):
-                with open(output_path, "r") as f:
+                with open(output_path) as f:
                     saved_results = json.load(f)
                     tqdm.write(f"{len(saved_results['data'])} videos are saved")
         else:

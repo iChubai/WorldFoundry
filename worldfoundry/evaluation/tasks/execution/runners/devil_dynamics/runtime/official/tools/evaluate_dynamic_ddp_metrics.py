@@ -1,41 +1,39 @@
-import os
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-import pdb
+import argparse
 import json
 import math
+import os
+import pdb
 import shutil
+import warnings
 from pathlib import Path
 
-import torch
-import torch.nn.functional as F
-import torch.distributed as dist
-from torchvision.transforms import Compose, Resize, ToTensor, Normalize, CenterCrop
-
-
 import numpy as np
-import argparse
+import torch
+import torch.distributed as dist
 import torch.nn as nn
+import torch.nn.functional as F
 from easydict import EasyDict as edict
-import warnings
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
+
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
 warnings.filterwarnings("ignore")
-import timm
+import random
+import subprocess
 import time
-import tqdm
+
 import pandas as pd
+import timm
+import tqdm
 from metrics_utils.cal_ssim import cal_ssim_dist, cal_ssim_dist_chunk
 from metrics_utils.standard_video_dataset import StandardVidoDataset, standard_collate_fn
-from worldfoundry.base_models.perception_core.optical_flow.raft.raft import RAFT
-from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder
-from viclip import get_viclip, retrieve_text, _frame_from_video, frames2tensor, get_vid_feat
 from PIL import Image
-import subprocess
 from sklearn.linear_model import LinearRegression
-
-import random
+from viclip import _frame_from_video, frames2tensor, get_viclip, get_vid_feat, retrieve_text
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
-
+from worldfoundry.base_models.perception_core.optical_flow.raft.raft import RAFT
+from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder
 
 RUNTIME_ROOT = Path(__file__).resolve().parents[1]
 
@@ -190,7 +188,7 @@ def cal_info_variance(model, video_data, video_lengths):
     # features_normed = features - features_mean
     distances = [
         (1 - F.cosine_similarity(feat_mean[:, None], feat[None], dim=-1)).mean(1).item()
-        for feat, feat_mean in zip(features, features_mean)
+        for feat, feat_mean in zip(features, features_mean, strict=False)
     ]
 
     return distances, features
@@ -254,7 +252,7 @@ def cal_flow_strength(model, video_data, video_lengths, video_names):
     results = []
     for i, frames in enumerate(video_data):
         static_score = []
-        for image1, image2 in zip(frames[:-1], frames[1:]):
+        for image1, image2 in zip(frames[:-1], frames[1:], strict=False):
             padder = InputPadder(image1[None].shape)
             image1, image2 = padder.pad(image1[None], image2[None])
             _, flow_up = model(image1, image2, iters=50, test_mode=True)
@@ -654,7 +652,7 @@ def get_prompt_dynamic_grades(Video_names, col_name="video_name"):
         3,
     ]
     for i, name in enumerate(Video_names[col_name]):
-        for keyword, value in zip(keywords, values):
+        for keyword, value in zip(keywords, values, strict=False):
             if keyword in name.lower():
                 results[i] = value
                 break
@@ -673,7 +671,7 @@ def cal_controllability_winning_rate(prompt_dynamics, video_dynamics):
         y_degree_other.update({y: prompt_dynamics[~idx]})
 
     winning_rates = []
-    for x, y in zip(video_dynamics, prompt_dynamics):
+    for x, y in zip(video_dynamics, prompt_dynamics, strict=False):
         x_other = x_degree_other[y]
         y_other = y_degree_other[y]
         win_rate = ((x - x_other) * (y - y_other) > 0).mean()

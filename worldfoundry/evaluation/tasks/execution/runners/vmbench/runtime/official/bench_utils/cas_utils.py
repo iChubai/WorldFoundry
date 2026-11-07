@@ -8,9 +8,10 @@ import subprocess
 import sys
 import time
 from collections import defaultdict, deque
+from collections.abc import Iterable
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Optional
 
 import numpy as np
 import torch
@@ -58,14 +59,7 @@ def final_test(data_loader, model, device, file, meta_info=None):
         probabilities = torch.nn.functional.softmax(logits, dim=1)
 
         for i in range(output.size(0)):
-            string = "{} {} {} {} {} {}\n".format(
-                ids[i],
-                str(output.data[i].cpu().numpy().tolist()),
-                str(probabilities.data[i].cpu().numpy().tolist()),
-                str(int(target[i].cpu().numpy())),
-                str(int(chunk_nb[i].cpu().numpy())),
-                str(int(split_nb[i].cpu().numpy())),
-            )
+            string = f"{ids[i]} {output.data[i].cpu().numpy().tolist()!s} {probabilities.data[i].cpu().numpy().tolist()!s} {int(target[i].cpu().numpy())!s} {int(chunk_nb[i].cpu().numpy())!s} {int(split_nb[i].cpu().numpy())!s}\n"
             final_result.append(string)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
@@ -79,15 +73,13 @@ def final_test(data_loader, model, device, file, meta_info=None):
         if not os.path.exists(file):
             os.mknod(file)
         with open(file, "w") as f:
-            f.write("{}, {}\n".format(acc1, acc5))
+            f.write(f"{acc1}, {acc5}\n")
             for line in final_result:
                 f.write(line)
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print(
-        "* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}".format(
-            top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss
-        )
+        f"* Acc@1 {metric_logger.acc1.global_avg:.3f} Acc@5 {metric_logger.acc5.global_avg:.3f} loss {metric_logger.loss.global_avg:.3f}"
     )
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
@@ -102,7 +94,7 @@ def final_merge(eval_path, num_tasks, meta_info_path, method="prob"):
 
     for x in range(num_tasks):
         file = os.path.join(eval_path, str(x) + ".txt")
-        lines = open(file, "r").readlines()[1:]
+        lines = open(file).readlines()[1:]
         for line in lines:
             line = line.strip()
             name = line.split("[")[0]
@@ -130,7 +122,7 @@ def final_merge(eval_path, num_tasks, meta_info_path, method="prob"):
     p = Pool(64)
     ans = p.map(compute_video, input_lst)
 
-    with open(meta_info_path, "r") as f:
+    with open(meta_info_path) as f:
         meta_info = json.load(f)
 
     # Iterate over the results in ans to update the corresponding meta_info entries

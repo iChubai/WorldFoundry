@@ -1,14 +1,12 @@
 #  hack_registry.py
 import logging
+from typing import List, Optional, Type, Union
 
-from mmengine.registry import Registry
 from mmengine.logging import print_log
-from typing import Type, Optional, Union, List
+from mmengine.registry import Registry
 
 
-def _register_module(
-    self, module: Type, module_name: Optional[Union[str, List[str]]] = None, force: bool = False
-) -> None:
+def _register_module(self, module: type, module_name: str | list[str] | None = None, force: bool = False) -> None:
     """Register a module.
 
     Args:

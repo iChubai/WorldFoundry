@@ -1,10 +1,12 @@
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-from PIL import Image
 import numpy as np
 from einops import rearrange
 from metrics.clip_score import calculate_clip_score
-from utils import load_video, load_image
-from skimage.metrics import mean_squared_error, structural_similarity as ssim
+from PIL import Image
+from skimage.metrics import mean_squared_error
+from skimage.metrics import structural_similarity as ssim
+from utils import load_image, load_video
+
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
 model, preprocess = clip.load("path_to_dir/ViT-L-14.pt", device="cuda")
 

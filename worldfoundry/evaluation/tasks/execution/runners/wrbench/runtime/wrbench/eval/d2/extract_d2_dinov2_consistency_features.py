@@ -12,14 +12,14 @@ from __future__ import annotations
 import argparse
 import json
 import math
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
-
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -144,7 +144,7 @@ def _sample_frames(
             "source_fps": source_fps if source_fps > 0 else None,
             "source_frame_count": int(total),
             "sampled_frame_indices": idx,
-            "sampled_frame_count": int(len(idx)),
+            "sampled_frame_count": len(idx),
             "sample_policy": sample_policy,
         }
     except Exception as exc:
@@ -175,9 +175,9 @@ def _sample_frames(
             "decode_error": "",
             "source_fps": source_fps if source_fps > 0 else None,
             "source_frame_count": int(reported_total or len(frames)),
-            "decoded_frame_count": int(len(frames)),
+            "decoded_frame_count": len(frames),
             "sampled_frame_indices": idx,
-            "sampled_frame_count": int(len(idx)),
+            "sampled_frame_count": len(idx),
             "sample_policy": sample_policy,
         }
 
@@ -321,7 +321,7 @@ def _extract_one(
     }
     if frames is None:
         return out
-    out["dinov2_frame_count"] = int(len(frames))
+    out["dinov2_frame_count"] = len(frames)
     if "global" in crop_modes:
         global_feats = _feature_tensor([frame for frame in frames], processor, model, device, batch_size)
         out.update(_stats("dinov2_global", global_feats))

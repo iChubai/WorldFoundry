@@ -6,22 +6,22 @@ References:
     https://arxiv.org/pdf/1608.07433.pdf
 """
 
-import warnings
 import functools
+import warnings
 from typing import Union
 
 import torch
+from torch.nn.functional import avg_pool2d, pad
 from torch.nn.modules.loss import _Loss
-from torch.nn.functional import pad, avg_pool2d
 
-from piq.functional import rgb2lhm, gradient_map, similarity_map, prewitt_filter, pow_for_complex
-from piq.utils import _validate_input, _reduce
+from piq.functional import gradient_map, pow_for_complex, prewitt_filter, rgb2lhm, similarity_map
+from piq.utils import _reduce, _validate_input
 
 
 def mdsi(
     x: torch.Tensor,
     y: torch.Tensor,
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     reduction: str = "mean",
     c1: float = 140.0,
     c2: float = 55.0,
@@ -176,7 +176,7 @@ class MDSILoss(_Loss):
 
     def __init__(
         self,
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
         reduction: str = "mean",
         c1: float = 140.0,
         c2: float = 55.0,

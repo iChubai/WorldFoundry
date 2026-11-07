@@ -6,11 +6,10 @@ and downloads.  ``compute_metrics`` is the complete public metric seam.
 
 from __future__ import annotations
 
+import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
-import math
 from typing import Any
-
 
 EXPECTED_ROLLOUTS = 50
 EXPECTED_SCENES_PER_TRACK = 25

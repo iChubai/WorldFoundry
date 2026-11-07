@@ -1,8 +1,9 @@
-from brisque import BRISQUE
-from pypiqe import piqe
-from PIL import Image
-import numpy as np
 from typing import List
+
+import numpy as np
+from brisque import BRISQUE
+from PIL import Image
+from pypiqe import piqe
 
 ROUND_DIGIT = 3
 NUM_ASPECT = 5
@@ -17,7 +18,7 @@ BRISQUE_POINT_HIGH = 50
 
 
 def piqe_output(
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     piqe_list = []
     for frame_path in frame_path_list:
@@ -38,7 +39,7 @@ def piqe_output(
 
 
 def brisque_output(
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     brisque_list = []
     for frame_path in frame_path_list:

@@ -51,7 +51,7 @@ class FrameQualityMetric(Metric):
                 scores={"score": max(0.0, min(1.0, raw / self.normalizer)), self.raw_key: raw},
                 metadata={"frame_idx": frame.frame_idx, "video_path": path},
             )
-            for frame, raw in zip(decoded, raw_scores)
+            for frame, raw in zip(decoded, raw_scores, strict=False)
         ]
 
     def aggregate_item(self, sample: dict, units: list[UnitResult]) -> ItemResult:

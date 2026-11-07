@@ -17,16 +17,12 @@ from functools import partial
 from pathlib import Path
 
 import deepspeed
-import numpy as np
-import torch
-import torch.backends.cudnn as cudnn
-from timm.data.mixup import Mixup
-from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
-from timm.models import create_model
-from timm.utils import ModelEma
 
 # NOTE: Do not comment `import models`, it is used to register models
 import models  # noqa: F401
+import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
 import utils
 from dataset import build_dataset
 from engine_for_finetuning import (
@@ -40,6 +36,10 @@ from optim_factory import (
     create_optimizer,
     get_parameter_groups,
 )
+from timm.data.mixup import Mixup
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.models import create_model
+from timm.utils import ModelEma
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import multiple_samples_collate
 
@@ -764,7 +764,7 @@ def main(args, ds_init):
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    print("Training time {}".format(total_time_str))
+    print(f"Training time {total_time_str}")
 
 
 if __name__ == "__main__":

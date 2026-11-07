@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Dict, List
+
 import numpy as np
 
 try:
@@ -23,16 +24,16 @@ class ResultsAnalyzer:
         self.project_root = Path(project_root)
         self.runs_dir = self.project_root / "runs"
 
-    def load_evaluation_results(self, results_file: str) -> Dict:
+    def load_evaluation_results(self, results_file: str) -> dict:
         """Load the evaluation results JSON file."""
         results_path = Path(results_file)
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, "r") as f:
+        with open(results_path) as f:
             return json.load(f)
 
-    def load_summary_json(self, run_name: str) -> Dict:
+    def load_summary_json(self, run_name: str) -> dict:
         """Load summary.json for a specific run."""
         # Map run names to summary paths
         run_mapping = {
@@ -51,10 +52,10 @@ class ResultsAnalyzer:
             print(f"Warning: Could not find summary.json at {summary_path}")
             return {}
 
-        with open(summary_path, "r") as f:
+        with open(summary_path) as f:
             return json.load(f)
 
-    def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
+    def get_ground_truth_label(self, summary: dict, task_id: str) -> bool:
         """
         Get ground truth label for a task from summary.json.
         Checks for se_success field, falls back to human_state_evol.
@@ -72,7 +73,7 @@ class ResultsAnalyzer:
 
         return None
 
-    def create_confusion_matrix(self, results_file: str) -> Dict:
+    def create_confusion_matrix(self, results_file: str) -> dict:
         """
         Create confusion matrix comparing Gemini verdicts vs ground truth.
         Also calculates ROC AUC if scores are available.
@@ -243,7 +244,7 @@ class ResultsAnalyzer:
 
         return result
 
-    def print_confusion_matrix(self, analysis: Dict):
+    def print_confusion_matrix(self, analysis: dict):
         """Pretty print the confusion matrix and metrics."""
         cm = analysis["confusion_matrix"]
         metrics = analysis["metrics"]
@@ -279,9 +280,9 @@ class ResultsAnalyzer:
         if "roc_auc" in metrics:
             print(f"  ROC AUC:   {metrics['roc_auc']:.3f}")
         elif analysis.get("is_ensemble") or analysis.get("is_cross_model"):
-            print(f"  ROC AUC:   Not available (sklearn not installed)")
+            print("  ROC AUC:   Not available (sklearn not installed)")
         else:
-            print(f"  ROC AUC:   Not applicable (binary predictions only)")
+            print("  ROC AUC:   Not applicable (binary predictions only)")
         print()
 
         # Print breakdown by outcome

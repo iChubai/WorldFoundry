@@ -1,12 +1,12 @@
+import importlib
 import os
 import sys
 
-import importlib
-
 sys.modules.setdefault("vbench2_beta_i2v", sys.modules[__name__])
 
-from .utils import init_submodules, save_json, load_json
 from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench
+
+from .utils import init_submodules, load_json, save_json
 
 
 class VBenchI2V(VBench):

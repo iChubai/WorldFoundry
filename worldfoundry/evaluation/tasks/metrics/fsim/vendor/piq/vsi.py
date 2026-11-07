@@ -6,23 +6,23 @@ References:
     https://ieeexplore.ieee.org/document/6873260
 """
 
-import warnings
 import functools
+import warnings
 from typing import Union
 
 import torch
-from torch.nn.modules.loss import _Loss
 from torch.nn.functional import avg_pool2d, interpolate, pad
+from torch.nn.modules.loss import _Loss
 
-from piq.functional import ifftshift, gradient_map, scharr_filter, rgb2lmn, rgb2lab, similarity_map, get_meshgrid
-from piq.utils import _validate_input, _reduce, _parse_version
+from piq.functional import get_meshgrid, gradient_map, ifftshift, rgb2lab, rgb2lmn, scharr_filter, similarity_map
+from piq.utils import _parse_version, _reduce, _validate_input
 
 
 def vsi(
     x: torch.Tensor,
     y: torch.Tensor,
     reduction: str = "mean",
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     c1: float = 1.27,
     c2: float = 386.0,
     c3: float = 130.0,
@@ -179,7 +179,7 @@ class VSILoss(_Loss):
         c3: float = 130.0,
         alpha: float = 0.4,
         beta: float = 0.02,
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
         omega_0: float = 0.021,
         sigma_f: float = 1.34,
         sigma_d: float = 145.0,
@@ -225,7 +225,7 @@ class VSILoss(_Loss):
 
 def sdsp(
     x: torch.Tensor,
-    data_range: Union[int, float] = 255,
+    data_range: int | float = 255,
     omega_0: float = 0.021,
     sigma_f: float = 1.34,
     sigma_d: float = 145.0,

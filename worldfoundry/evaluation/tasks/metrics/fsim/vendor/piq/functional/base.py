@@ -1,7 +1,9 @@
 r"""General purpose functions"""
 
-from typing import Tuple, Union, Optional
+from typing import Optional, Tuple, Union
+
 import torch
+
 from piq.utils import _parse_version
 
 
@@ -11,7 +13,7 @@ def ifftshift(x: torch.Tensor) -> torch.Tensor:
     return torch.roll(x, shift, tuple(range(len(shift))))
 
 
-def get_meshgrid(size: Tuple[int, int], device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+def get_meshgrid(size: tuple[int, int], device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Return coordinate grid matrices centered at zero point.
     Args:
         size: Shape of meshgrid to create
@@ -70,7 +72,7 @@ def gradient_map(x: torch.Tensor, kernels: torch.Tensor) -> torch.Tensor:
     return torch.sqrt(torch.sum(grads**2, dim=-3, keepdim=True))
 
 
-def pow_for_complex(base: torch.Tensor, exp: Union[int, float]) -> torch.Tensor:
+def pow_for_complex(base: torch.Tensor, exp: int | float) -> torch.Tensor:
     r"""Takes the power of each element in a 4D tensor with negative values or 5D tensor with complex values.
     Complex numbers are represented by modulus and argument: r * \exp(i * \phi).
 

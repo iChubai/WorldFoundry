@@ -1,5 +1,6 @@
-import cv2
 import base64
+
+import cv2
 
 
 def ext_frame(video_path, num_frames=5, scale_percent=20):
@@ -34,7 +35,7 @@ def ext_img(file_path):
 
 
 def load_prompts(prompt_path):
-    with open(prompt_path, "r", encoding="utf-8", errors="replace") as f:
+    with open(prompt_path, encoding="utf-8", errors="replace") as f:
         prompts = [line.strip() for line in f.readlines()]
     return prompts
 
@@ -103,9 +104,10 @@ def merge_args(cfg, args, training=False):
     return cfg
 
 
-import cv2
 import base64
 import io
+
+import cv2
 from PIL import Image
 
 
@@ -117,12 +119,12 @@ class ImageProcessor:
             if img.width > img.height:
                 new_width = 400
                 concat = float(new_width / float(img.width))
-                size = int((float(img.height) * float(concat)))
+                size = int(float(img.height) * float(concat))
                 img = img.resize((new_width, size), Image.LANCZOS)
             else:
                 new_height = 400
                 concat = float(new_height / float(img.height))
-                size = int((float(img.width) * float(concat)))
+                size = int(float(img.width) * float(concat))
                 img = img.resize((size, new_height), Image.LANCZOS)
         img.save(buffer, format="JPEG")
         img_data = base64.b64encode(buffer.getvalue())

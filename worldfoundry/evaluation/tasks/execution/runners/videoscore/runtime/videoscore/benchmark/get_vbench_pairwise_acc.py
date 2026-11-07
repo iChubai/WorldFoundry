@@ -1,12 +1,13 @@
 import ast
-import os
 import json
-import fire
+import os
 import random
+from pathlib import Path
+
+import fire
 import numpy as np
 import prettytable as pt
 import regex as re
-from pathlib import Path
 from datasets import load_dataset
 
 aspects = ["visual quality", "temporal consistency", "dynamic degree", "text-to-video alignment", "factual consistency"]
@@ -109,7 +110,7 @@ def main(
         random_acc = round(random_acc / total_pairs, 4)
         all_model_acc["Random"] = {
             "acc": random_acc,
-            "aspect_accs": {aspect: random_acc for aspect in aspects},
+            "aspect_accs": dict.fromkeys(aspects, random_acc),
             "total_examples": total_pairs,
         }
 
@@ -118,7 +119,7 @@ def main(
                 continue
             print(f"Processing {res_file}")
             file_model_name = res_file.split(".")[0].split("_")[-1]
-            data = json.load(open(f"{result_dir}/{res_file}", "r"))
+            data = json.load(open(f"{result_dir}/{res_file}"))
 
             data_map = {}
             last_idx = -1
@@ -149,7 +150,7 @@ def main(
 
             # add preference of existing models
             print("Total pairs: ", total_pairs)
-            for idx in data_map.keys():
+            for idx in data_map:
                 model_with_scores = list(data_map[idx]["model_scores"].keys())
                 data_map[idx]["preference"] = {
                     left_model_name: {
@@ -167,8 +168,8 @@ def main(
                 print(f"Missing pairs: {total_pairs - cur_total_pairs}")
 
             acc = 0
-            aspect_accs = {aspect: 0 for aspect in aspects}
-            for idx in data_map.keys():
+            aspect_accs = dict.fromkeys(aspects, 0)
+            for idx in data_map:
                 for left_model_name in data_map[idx]["preference"]:
                     for right_model_name in data_map[idx]["preference"][left_model_name]:
                         left_score = np.mean(list(data_map[idx]["model_scores"][left_model_name].values()))

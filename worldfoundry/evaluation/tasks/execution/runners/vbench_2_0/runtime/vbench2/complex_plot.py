@@ -1,33 +1,35 @@
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
+import argparse
+import copy
+import json
+import os
+import re
+import sys
+import warnings
+
+import requests
+import torch
+from PIL import Image
+from tqdm import tqdm
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from vbench2.utils import load_dimension_info
+
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
+    DEFAULT_IM_END_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_TOKEN,
+    IGNORE_INDEX,
+    IMAGE_TOKEN_INDEX,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
     get_model_name_from_path,
     process_images,
     tokenizer_image_token,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    IMAGE_TOKEN_INDEX,
-    DEFAULT_IMAGE_TOKEN,
-    DEFAULT_IM_START_TOKEN,
-    DEFAULT_IM_END_TOKEN,
-    IGNORE_INDEX,
-)
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates, SeparatorStyle
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from PIL import Image
-from tqdm import tqdm
-from worldfoundry.core.io import sample_video_frames
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
 from worldfoundry.core.execution.device import resolve_inference_dtype
+from worldfoundry.core.io import sample_video_frames
 from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
-import requests
-import copy
-import torch
-import sys
-import warnings
-import re
-import json
-import os
-import argparse
-from vbench2.utils import load_dimension_info
 
 warnings.filterwarnings("ignore")
 
@@ -51,7 +53,8 @@ def judge(prompt, sysp, tokenizer, model):
     model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
     generated_ids = model.generate(**model_inputs, do_sample=False, temperature=0, max_new_tokens=512)
     generated_ids = [
-        output_ids[len(input_ids) :] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        output_ids[len(input_ids) :]
+        for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids, strict=False)
     ]
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
     return response
@@ -158,7 +161,7 @@ def LLaVA_Video(prompt_dict_ls, llava_model, llava_tokenizer, image_processor, q
                         """
                     response = judge(prompt, sys_prompt_sum, qwen_tokenizer, qwen_model)
                     prompt_list = split_by_numbered_list(response)
-                for item, prompt1 in zip(prompt_list, ground_truth_text):
+                for item, prompt1 in zip(prompt_list, ground_truth_text, strict=False):
                     prompt2 = item.strip()
                     prompt = f"""
                         prompt1: {prompt1}

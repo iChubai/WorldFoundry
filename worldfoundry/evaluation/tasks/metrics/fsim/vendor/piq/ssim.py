@@ -7,14 +7,14 @@ and implementation of one of pull requests to the PyTorch by Kangfu Mei (@MKFMIK
 https://github.com/pytorch/pytorch/pull/22289/files
 """
 
-from typing import Tuple, Union, List
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce
 from piq.functional import gaussian_filter
+from piq.utils import _reduce, _validate_input
 
 
 def ssim(
@@ -22,13 +22,13 @@ def ssim(
     y: torch.Tensor,
     kernel_size: int = 11,
     kernel_sigma: float = 1.5,
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     reduction: str = "mean",
     full: bool = False,
     downsample: bool = True,
     k1: float = 0.01,
     k2: float = 0.03,
-) -> List[torch.Tensor]:
+) -> list[torch.Tensor]:
     r"""Interface of Structural Similarity (SSIM) index.
     Inputs supposed to be in range ``[0, data_range]``.
     To match performance with skimage and tensorflow set ``'downsample' = True``.
@@ -151,7 +151,7 @@ class SSIMLoss(_Loss):
         k2: float = 0.03,
         downsample: bool = True,
         reduction: str = "mean",
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
     ) -> None:
         super().__init__()
 
@@ -201,10 +201,10 @@ def _ssim_per_channel(
     x: torch.Tensor,
     y: torch.Tensor,
     kernel: torch.Tensor,
-    data_range: Union[float, int] = 1.0,
+    data_range: float | int = 1.0,
     k1: float = 0.01,
     k2: float = 0.03,
-) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     r"""Calculate Structural Similarity (SSIM) index for X and Y per channel.
 
     Args:
@@ -253,10 +253,10 @@ def _ssim_per_channel_complex(
     x: torch.Tensor,
     y: torch.Tensor,
     kernel: torch.Tensor,
-    data_range: Union[float, int] = 1.0,
+    data_range: float | int = 1.0,
     k1: float = 0.01,
     k2: float = 0.03,
-) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     r"""Calculate Structural Similarity (SSIM) index for Complex X and Y per channel.
 
     Args:

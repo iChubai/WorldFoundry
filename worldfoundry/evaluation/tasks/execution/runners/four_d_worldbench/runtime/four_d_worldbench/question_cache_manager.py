@@ -4,11 +4,11 @@ Question cache manager
 Implement question caching and reuse based on content hashing, ensuring same questions for same content
 """
 
+import hashlib
 import json
 import os
-import hashlib
-from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class QuestionCacheManager:
@@ -50,7 +50,7 @@ class QuestionCacheManager:
         """
         return self.cache_dir / f"{dimension}_cache.json"
 
-    def _load_cache(self, dimension: str) -> Dict[str, Any]:
+    def _load_cache(self, dimension: str) -> dict[str, Any]:
         """
         Load cache data for dimension
 
@@ -63,14 +63,14 @@ class QuestionCacheManager:
         cache_file = self._get_cache_file_path(dimension)
         if cache_file.exists():
             try:
-                with open(cache_file, "r", encoding="utf-8") as f:
+                with open(cache_file, encoding="utf-8") as f:
                     return json.load(f)
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 print(f"Warning: Unable to load cache file {cache_file}: {e}")
                 return {}
         return {}
 
-    def _save_cache(self, dimension: str, cache_data: Dict[str, Any]) -> None:
+    def _save_cache(self, dimension: str, cache_data: dict[str, Any]) -> None:
         """
         Save cache data for dimension
 
@@ -82,10 +82,10 @@ class QuestionCacheManager:
         try:
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(cache_data, f, indent=2, ensure_ascii=False)
-        except IOError as e:
+        except OSError as e:
             print(f"Warning: Unable to save cache file {cache_file}: {e}")
 
-    def get_questions(self, content: str, dimension: str) -> Optional[List[str]]:
+    def get_questions(self, content: str, dimension: str) -> list[str] | None:
         """
         Get cached questions
 
@@ -106,7 +106,7 @@ class QuestionCacheManager:
 
         return None
 
-    def cache_questions(self, content: str, dimension: str, questions: List[str]) -> None:
+    def cache_questions(self, content: str, dimension: str, questions: list[str]) -> None:
         """
         Cache questions
 
@@ -131,7 +131,7 @@ class QuestionCacheManager:
             f"Cache saved: Cached {len(questions)} questions for dimension '{dimension}' (hash: {content_hash[:8]}...)"
         )
 
-    def get_cache_stats(self, dimension: str) -> Dict[str, Any]:
+    def get_cache_stats(self, dimension: str) -> dict[str, Any]:
         """
         Get cache statistics
 
@@ -153,7 +153,7 @@ class QuestionCacheManager:
             "cache_file": str(self._get_cache_file_path(dimension)),
         }
 
-    def list_all_cache_stats(self) -> List[Dict[str, Any]]:
+    def list_all_cache_stats(self) -> list[dict[str, Any]]:
         """
         List cache statistics for all dimensions
 
@@ -201,7 +201,7 @@ class QuestionCacheManager:
         migrated_count = 0
 
         try:
-            with open(json_file_path, "r", encoding="utf-8") as f:
+            with open(json_file_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             if isinstance(data, list):
@@ -217,12 +217,12 @@ class QuestionCacheManager:
 
             print(f"Migration complete: Migrated {migrated_count} questions to cache for dimension '{dimension}'")
 
-        except (FileNotFoundError, json.JSONDecodeError, IOError) as e:
+        except (OSError, FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Migration failed: {e}")
 
         return migrated_count
 
-    def _extract_content_from_item(self, item: Dict[str, Any]) -> str:
+    def _extract_content_from_item(self, item: dict[str, Any]) -> str:
         """
         Extract content text from item
 
@@ -234,7 +234,7 @@ class QuestionCacheManager:
         """
         # Try different content fields
         for field in ["prompt_en", "prompt", "caption", "description"]:
-            if field in item and item[field]:
+            if item.get(field):
                 return str(item[field])
 
         # If no text content, use video path

@@ -1,6 +1,7 @@
 import torch
-import fvmd.utils.basic
 import torch.nn.functional as F
+
+import fvmd.utils.basic
 
 
 def bilinear_sample2d(im, x, y, return_inbounds=False):

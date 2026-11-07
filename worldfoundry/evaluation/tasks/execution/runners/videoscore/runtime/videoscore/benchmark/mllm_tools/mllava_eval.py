@@ -1,9 +1,11 @@
 import os
-import torch
-from .mllm_utils import merge_images, load_images
-from mantis.models.mllava import MLlavaProcessor, LlavaForConditionalGeneration, chat_mllava
 from typing import List
+
+import torch
+from mantis.models.mllava import LlavaForConditionalGeneration, MLlavaProcessor, chat_mllava
 from transformers.utils import is_flash_attn_2_available
+
+from .mllm_utils import load_images, merge_images
 
 
 class MLlava:
@@ -20,7 +22,7 @@ class MLlava:
         attn_implementation = None
         print(f"Using {attn_implementation} for attention implementation")
         if "llava_next" in model_path:
-            from mantis.models.mllava_next import MLlavaNextProcessor, LlavaNextForConditionalGeneration
+            from mantis.models.mllava_next import LlavaNextForConditionalGeneration, MLlavaNextProcessor
 
             self.model = LlavaNextForConditionalGeneration.from_pretrained(
                 model_path, device_map="cuda", torch_dtype=torch.float16, attn_implementation=attn_implementation
@@ -32,7 +34,7 @@ class MLlava:
             ).eval()
             self.processor = MLlavaProcessor.from_pretrained(model_path)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [
@@ -63,7 +65,7 @@ class MLlava:
                 if message["type"] == "text":
                     text_prompt += message["content"]
                 elif message["type"] == "image":
-                    text_prompt += f"<image> "
+                    text_prompt += "<image> "
             images = load_images(image_links)
             return chat_mllava(
                 text=text_prompt, images=images, model=self.model, processor=self.processor, **generation_kwargs

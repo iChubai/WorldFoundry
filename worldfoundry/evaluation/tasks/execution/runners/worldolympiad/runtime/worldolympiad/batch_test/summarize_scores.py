@@ -10,7 +10,6 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any
 
-
 SCORE_FIELDS = {
     "three_d": ("three_d", "final_score_normalized"),
     "interaction": ("interaction", "score"),

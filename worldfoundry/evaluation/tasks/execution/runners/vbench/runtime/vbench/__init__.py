@@ -3,15 +3,16 @@ import sys
 
 sys.modules.setdefault("vbench", sys.modules[__name__])
 
-from .utils import get_prompt_from_filename, init_submodules, save_json, load_json
 import importlib
 from itertools import chain
 from pathlib import Path
 
 from worldfoundry.core.distributed.collectives.evaluation import get_rank, print0
 
+from .utils import get_prompt_from_filename, init_submodules, load_json, save_json
 
-class VBench(object):
+
+class VBench:
     def __init__(self, device, full_info_dir, output_path):
         self.device = device  # cuda or cpu
         self.full_info_dir = full_info_dir  # full json file that VBench originally provides
@@ -193,7 +194,7 @@ class VBench(object):
                 raise ValueError(f"No supported videos found in {videos_path}")
             postfix = Path(video_files[0]).suffix
 
-            with open(category_dir / f"{category}.txt", "r") as f:
+            with open(category_dir / f"{category}.txt") as f:
                 video_prompts = [line.strip() for line in f.readlines()]
 
             for prompt in video_prompts:
@@ -226,7 +227,7 @@ class VBench(object):
                     prompt = prompt_dict["prompt_en"]
                     prompt_dict["video_list"] = []
                     for i in range(5):  # video index for the same prompt
-                        intended_video_name = f"{prompt}{special_str}-{str(i)}{postfix}"
+                        intended_video_name = f"{prompt}{special_str}-{i!s}{postfix}"
                         if intended_video_name in video_names:  # if the video exists
                             intended_video_path = os.path.join(videos_path, intended_video_name)
                             prompt_dict["video_list"].append(intended_video_path)

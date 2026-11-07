@@ -1,11 +1,13 @@
-import numpy as np
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 import math
-from tqdm import tqdm
-from PIL import Image
 
-from .utils import load_video, load_dimension_info
+import numpy as np
+from PIL import Image
+from tqdm import tqdm
+
 from worldfoundry.base_models.perception_core.face.retinaface import load_retinaface_state_dict
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
+
+from .utils import load_dimension_info, load_video
 
 
 def calculate_dist_skin_tone(prompt_clip_results):
@@ -25,7 +27,7 @@ def calculate_dist_skin_tone(prompt_clip_results):
     # print("vec1", vec1)
 
     vec2 = [1 / 3, 1 / 3, 1 / 3]
-    dist = math.sqrt(sum((a - b) ** 2 for a, b in zip(vec1, vec2)))
+    dist = math.sqrt(sum((a - b) ** 2 for a, b in zip(vec1, vec2, strict=False)))
 
     # print("dist", dist)
 

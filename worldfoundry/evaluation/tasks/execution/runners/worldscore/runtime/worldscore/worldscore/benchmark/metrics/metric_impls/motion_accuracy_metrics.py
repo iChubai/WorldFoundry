@@ -1,34 +1,25 @@
-from typing import List
-import os
+# Grounding DINO
 import argparse
+import os
+import re
+from typing import List
 
 import cv2
 import numpy as np
+
+# Load spaCy's small English model
+# make sure to run: python -m spacy download en_core_web_sm
+import spacy
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from worldfoundry.base_models.perception_core.segment.sam2 import (
-    checkpoint_path as sam2_checkpoint_path,
-    config_name as sam2_config_name,
-)
-from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
-from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_v1_checkpoint_path
-import re
 
-from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
-    RAFT,
-    checkpoint_path as sea_raft_checkpoint_path,
-    config_path as sea_raft_config_path,
-    load_ckpt,
-    parse_args,
-)
-
-# Grounding DINO
-import argparse
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
@@ -36,10 +27,25 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.util
     clean_state_dict,
     get_phrases_from_posmap,
 )
-
-# Load spaCy's small English model
-# make sure to run: python -m spacy download en_core_web_sm
-import spacy
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
+    RAFT,
+    load_ckpt,
+    parse_args,
+)
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
+    checkpoint_path as sea_raft_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
+    config_path as sea_raft_config_path,
+)
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    checkpoint_path as sam2_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    config_name as sam2_config_name,
+)
+from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
+from worldfoundry.base_models.perception_core.segment.sam_v1.paths import checkpoint_path as sam_v1_checkpoint_path
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -111,7 +117,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt):
+    for logit, box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -413,7 +419,7 @@ class MotionAccuracyMetric(BaseMetric):
         return flow_final, info_final
 
     def _compute_flow(self, image1, image2):
-        print(f"computing flow...")
+        print("computing flow...")
 
         img1 = F.interpolate(
             image1, scale_factor=2**self._optical_flow_args.scale, mode="bilinear", align_corners=False
@@ -433,9 +439,9 @@ class MotionAccuracyMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
-        masked_images: List[str],
-        objects_list: List[str],
+        rendered_images: list[str],
+        masked_images: list[str],
+        objects_list: list[str],
     ) -> float:
         video_dir = os.path.dirname(rendered_images[0])
         mask_dir = os.path.dirname(masked_images[0])
@@ -452,13 +458,13 @@ class MotionAccuracyMetric(BaseMetric):
 
         with torch.no_grad():
             images = rendered_images
-            for i, (imfile1, imfile2, mask) in enumerate(zip(images[:-1], images[1:], masks[:-1])):
+            for i, (imfile1, imfile2, mask) in enumerate(zip(images[:-1], images[1:], masks[:-1], strict=False)):
                 print(f"processing {imfile1}, {imfile2}...")
                 image1, image2 = self.load_image(imfile1), self.load_image(imfile2)
                 if mask.shape != image1.shape[2:]:
                     mask = mask_resize(mask, image1.shape[2:])
                 flow = self._compute_flow(image1, image2)
-                flow_magnitude = np.sqrt((flow[..., 0] ** 2 + flow[..., 1] ** 2))
+                flow_magnitude = np.sqrt(flow[..., 0] ** 2 + flow[..., 1] ** 2)
                 object_flow_magnitude = flow_magnitude[mask]
                 background_flow_magnitude = flow_magnitude[~mask]
                 motion_alignment = (

@@ -1,11 +1,13 @@
-import os
-import re
-from openai import OpenAI
-import openai
-from .utils import Video_Dataset
 import json
 import logging
+import os
+import re
+
+import openai
+from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+from .utils import Video_Dataset
 
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
@@ -43,7 +45,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
     usrmessages = {"temporal_consistency": "temporal consistency", "motion_effects": "motion effects"}
     dim = usrmessages[dimension]
 
-    l1 = list(range(0, len(dataset)))
+    l1 = list(range(len(dataset)))
     for i in l1:
         logger.info(f"Processing video {i}...")
         data = dataset[i]
@@ -74,9 +76,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                                 },
                                 frames[modelname],
                             ),
-                            "Find the issues of the video in {} and then evaluate the {} of the video.\n".format(
-                                dim, dim
-                            ),
+                            f"Find the issues of the video in {dim} and then evaluate the {dim} of the video.\n",
                             "Assuming there are a video scoring 'x',provide your analysis and explanation in the output format as follows:\n"
                             "- video: x ,because ...",
                         ],
@@ -98,7 +98,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 model_scores[modelname]["count"] += 1
 
             except Exception as e:
-                logger.error(f"Error evaluating model {modelname}: {str(e)}")
+                logger.error(f"Error evaluating model {modelname}: {e!s}")
                 results[i][modelname] = "Error"
 
     average_scores = {

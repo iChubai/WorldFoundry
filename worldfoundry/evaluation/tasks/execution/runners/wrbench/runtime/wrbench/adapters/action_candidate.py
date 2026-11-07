@@ -21,7 +21,6 @@ from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key
 from wrbench.trajectory import CameraTrajectory
 
-
 _CAMERA_KEYS = {"static", "yaw_LR", "yaw_RL", "pan_LR", "pan_RL"}
 
 

@@ -5,16 +5,15 @@ See paper for details:
 https://arxiv.org/pdf/1802.02664.pdf
 """
 
-import torch
-
-import numpy as np
-
-from typing import Optional, Tuple, Union
 from multiprocessing import Pool
+from typing import Optional, Tuple, Union
 from warnings import warn
 
+import numpy as np
+import torch
+
 from piq.base import BaseFeatureMetric
-from piq.utils import _validate_input, _parse_version
+from piq.utils import _parse_version, _validate_input
 
 
 def relative(intervals: np.ndarray, alpha_max: float, i_max: int = 100) -> np.ndarray:
@@ -65,7 +64,7 @@ def relative(intervals: np.ndarray, alpha_max: float, i_max: int = 100) -> np.nd
     return rlt / alpha_max
 
 
-def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     r"""Construct an input for the gudhi.WitnessComplex function.
     Args:
         witnesses: Array with shape (w, d), containing witnesses.
@@ -103,9 +102,7 @@ def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> Tuple[np.ndarray
     return distances, max_dist
 
 
-def witness(
-    features: np.ndarray, sample_size: int = 64, gamma: Optional[float] = None
-) -> Tuple[np.ndarray, np.ndarray]:
+def witness(features: np.ndarray, sample_size: int = 64, gamma: float | None = None) -> tuple[np.ndarray, np.ndarray]:
     """Compute the persistence intervals for the dataset of features using the witness complex.
 
     Args:
@@ -190,7 +187,7 @@ class GS(BaseFeatureMetric):
         self,
         sample_size: int = 64,
         num_iters: int = 1000,
-        gamma: Optional[float] = None,
+        gamma: float | None = None,
         i_max: int = 100,
         num_workers: int = 4,
     ) -> None:
@@ -225,7 +222,7 @@ class GS(BaseFeatureMetric):
 
         return torch.tensor(score, device=x_features.device) * 1000
 
-    def _relative_living_times(self, idx: int) -> Union[np.ndarray, np.ndarray, np.ndarray]:
+    def _relative_living_times(self, idx: int) -> np.ndarray | np.ndarray | np.ndarray:
         r"""Implements Algorithm 1 for two samples of landmarks.
 
         Args:

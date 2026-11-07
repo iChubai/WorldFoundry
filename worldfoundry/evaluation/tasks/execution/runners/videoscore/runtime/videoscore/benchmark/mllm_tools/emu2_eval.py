@@ -1,10 +1,11 @@
 import os
+from typing import Dict, List, Optional, Union
+
 import torch
-from typing import List, Union, Optional, Dict
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers.image_utils import load_image
 from accelerate import infer_auto_device_map, load_checkpoint_and_dispatch
 from accelerate.big_modeling import dispatch_model, get_balanced_memory
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers.image_utils import load_image
 
 
 class Emu2:
@@ -30,7 +31,7 @@ class Emu2:
         #     self.model,
         #     device_map=device_map).eval()
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [
@@ -58,7 +59,7 @@ class Emu2:
             query = ""
             for _input in inputs:
                 if _input["type"] == "image":
-                    query += f"[<IMG_PLH>]"
+                    query += "[<IMG_PLH>]"
                 elif _input["type"] == "text":
                     query += "\n" + _input["content"]
 

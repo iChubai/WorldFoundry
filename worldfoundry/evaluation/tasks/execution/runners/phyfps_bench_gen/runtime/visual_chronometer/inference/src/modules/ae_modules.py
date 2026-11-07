@@ -1,7 +1,8 @@
 # pytorch_diffusion + derived encoder decoder
 import math
-import torch
+
 import numpy as np
+import torch
 import torch.nn as nn
 from einops import rearrange
 from utils.common_utils import instantiate_from_config
@@ -943,7 +944,7 @@ class FirstStagePostProcessor(nn.Module):
         z = self.proj(z)
         z = nonlinearity(z)
 
-        for submodel, downmodel in zip(self.model, self.downsampler):
+        for submodel, downmodel in zip(self.model, self.downsampler, strict=False):
             z = submodel(z, temb=None)
             z = downmodel(z)
 

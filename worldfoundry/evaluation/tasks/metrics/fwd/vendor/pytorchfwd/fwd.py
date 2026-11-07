@@ -21,7 +21,7 @@ NUM_PROCESSES = None
 
 def compute_packet_statistics(
     dataloader: th.utils.data.DataLoader, wavelet: str, max_level: int, log_scale: bool
-) -> Tuple[np.ndarray, ...]:
+) -> tuple[np.ndarray, ...]:
     """Compute wavelet packet transform across batches.
 
     Args:
@@ -60,8 +60,8 @@ def calculate_path_statistics(
     max_level: int,
     log_scale: bool,
     batch_size: int,
-    resize: Union[int, None],
-) -> Tuple[np.ndarray, ...]:
+    resize: int | None,
+) -> tuple[np.ndarray, ...]:
     """Compute mean and sigma for given path.
 
     Args:
@@ -125,12 +125,12 @@ def _compute_avg_frechet_distance(mu1, mu2, sigma1, sigma2):
 
 
 def compute_fwd(
-    paths: List[str],
+    paths: list[str],
     wavelet: str,
     max_level: int,
     log_scale: bool,
     batch_size: int,
-    resize: Union[int, None],
+    resize: int | None,
 ) -> float:
     """Compute Frechet Wavelet Distance.
 
@@ -162,12 +162,12 @@ def compute_fwd(
 
 
 def _save_packets(
-    paths: List[str],
+    paths: list[str],
     wavelet: str,
     max_level: int,
     log_scale: bool,
     batch_size: int,
-    resize: Union[int, None],
+    resize: int | None,
 ) -> None:
     """Save packets.
 

@@ -1,23 +1,21 @@
-from typing import List
+import json
 import os
-import cv2
-import torch
+from typing import List
+
 import cv2
 import numpy as np
-
-from .base_metrics import BaseMetric
-from .utils import load_dimension_info
+import torch
 
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba import config as cfg
-from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.inference import Model
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.benchmark.utils.padder import InputPadder
+from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.inference import Model
 
+from .base_metrics import BaseMetric
 from .torchmetrics.lpips_metrics import LearnedPerceptualImagePatchSimilarityMetric
 
 # from .torchmetrics.psnr_metrics import PeakSignalNoiseRatioMetric
 from .torchmetrics.ssim_metrics import StructuralSimilarityIndexMeasureMetric
-
-import json
+from .utils import load_dimension_info
 
 """==========Model setting=========="""
 TTA = True
@@ -43,7 +41,7 @@ class MotionSmoothnessMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         scores_ssim = []
         scores_lpips = []
@@ -51,8 +49,10 @@ class MotionSmoothnessMetric(BaseMetric):
         even_images = rendered_images[::2]  # 0,2,4,6.........
         odd_images = rendered_images[1::2]  # 1,3,5,7........
 
-        print(f"=========================Start Interpolating=========================")
-        for i, (image1, image2) in enumerate(zip(even_images[:-1], even_images[1:])):  # (0,2),(2,4),(4,6).....
+        print("=========================Start Interpolating=========================")
+        for i, (image1, image2) in enumerate(
+            zip(even_images[:-1], even_images[1:], strict=False)
+        ):  # (0,2),(2,4),(4,6).....
             odd_image = odd_images[i]  # 1,3,5,7.........
             mid_pred = cv2.imread(odd_image)  # 1,3,5,7.........
             I0 = cv2.imread(image1)  # 0,2,4,6.........   (H, W, C)
@@ -81,7 +81,7 @@ class MotionSmoothnessMetric(BaseMetric):
             scores_ssim.append(ssim_score)
             scores_lpips.append(lpips_score)
             scores_mse.append(mse_score)
-        print(f"=========================Done=========================")
+        print("=========================Done=========================")
 
         score_ssim = sum(scores_ssim) / len(scores_ssim)
         score_lpips = sum(scores_lpips) / len(scores_lpips)
@@ -90,7 +90,7 @@ class MotionSmoothnessMetric(BaseMetric):
         return (score_ssim, score_lpips)  # Higher SSIM is better, lower LPIPS is better
 
 
-def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 120) -> List[str]:
+def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 120) -> list[str]:
     os.makedirs(out_root, exist_ok=True)
     base = os.path.splitext(os.path.basename(video_path))[0]
     out_dir = os.path.join(out_root, base)
@@ -107,7 +107,7 @@ def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 120
         step = total / float(max_frames)
         indices = [int(i * step) for i in range(max_frames)]
 
-    saved: List[str] = []
+    saved: list[str] = []
     idx = 0
     next_set = set(indices)
     cur = 0
@@ -131,8 +131,8 @@ def compute_consistency_motion_smoothness(json_dir, device, submodules_dict, **k
 
     metric = MotionSmoothnessMetric()
     details = []
-    ssim_list: List[float] = []
-    lpips_list: List[float] = []
+    ssim_list: list[float] = []
+    lpips_list: list[float] = []
     out_root = os.path.join(os.path.dirname(json_dir), "frames_cache")
 
     for item in prompt_dict_ls:
@@ -185,6 +185,6 @@ def compute_consistency_motion_smoothness(json_dir, device, submodules_dict, **k
             json.dump(detailed_output, f, indent=2, ensure_ascii=False)
         print(f"\nDetailed results saved to: {output_file}")
     except Exception as e:
-        print(f"Error saving JSON file: {str(e)}")
+        print(f"Error saving JSON file: {e!s}")
 
     return final, details

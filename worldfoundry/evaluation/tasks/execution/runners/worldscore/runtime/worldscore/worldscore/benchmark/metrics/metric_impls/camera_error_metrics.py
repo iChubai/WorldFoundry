@@ -1,14 +1,15 @@
-from typing import List
-import torch
-import numpy as np
-import cv2
 import argparse
+from typing import List
+
+import cv2
+import cvxpy as cp
+import numpy as np
+import torch
 from lietorch import SE3
 from tqdm import tqdm
-import cvxpy as cp
+
 from worldfoundry.base_models.three_dimensions.slam.droid_slam import checkpoint_path as droid_checkpoint_path
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid import Droid
-
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
@@ -70,7 +71,7 @@ def get_cameras_accuracy(pred_Rs, gt_Rs, pred_ts, gt_ts):
         prob.solve()
         t_fixed = c_opt.value * pred_ts.numpy()
     except Exception as e:
-        print(f"Optimization failed, using fallback method: {str(e)}")
+        print(f"Optimization failed, using fallback method: {e!s}")
         # Fallback: Use simple scaling based on mean distances
         gt_distances = np.linalg.norm(gt_ts.numpy(), axis=1).mean()
         pred_distances = np.linalg.norm(pred_ts.numpy(), axis=1).mean()
@@ -134,7 +135,7 @@ class CameraErrorMetric(BaseMetric):
         except Exception as e:
             print(f"Error setting start method: {e}")
 
-    def _compute_scores(self, rendered_images: List[str], cameras_gt: torch.Tensor, scale: float = 1.0) -> float:
+    def _compute_scores(self, rendered_images: list[str], cameras_gt: torch.Tensor, scale: float = 1.0) -> float:
         for t, image, intrinsics in tqdm(image_stream(rendered_images, self._args.stride, self._args.calib)):
             if t < self._args.t0:
                 continue

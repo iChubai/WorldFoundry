@@ -1,20 +1,20 @@
-import os
 import json
-import numpy as np
+import os
 
+import numpy as np
 import torch
 from tqdm import tqdm
-from vbench.utils import load_video, load_dimension_info, clip_transform, read_frames_decord_by_fps
+from vbench.utils import clip_transform, load_dimension_info, load_video, read_frames_decord_by_fps
+
 from worldfoundry.base_models.perception_core.video_text.viclip.simple_tokenizer import SimpleTokenizer
 from worldfoundry.base_models.perception_core.video_text.viclip.viclip import ViCLIP
-
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
     all_gather,
     barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
 
 

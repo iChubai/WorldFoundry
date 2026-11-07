@@ -12,17 +12,16 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import copy
+import os
+import sys
+import tempfile
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
-
-import copy
-import os
-import sys
-import tempfile
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, dir_path)
@@ -33,14 +32,14 @@ from transformers import (
     AutoTokenizer,
     CLIPImageProcessor,
     LlamaConfig,
-    LlamaModel,
     LlamaForCausalLM,
+    LlamaModel,
 )
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from .configuration_mplug_owl2 import MPLUGOwl2Config, MplugOwlVisionConfig, MplugOwlVisualAbstractorConfig
-from .visual_encoder import MplugOwlVisionModel, MplugOwlVisualAbstractorModel
 from .modeling_llama2 import replace_llama_modality_adaptive
+from .visual_encoder import MplugOwlVisionModel, MplugOwlVisualAbstractorModel
 
 IGNORE_INDEX = -100
 IMAGE_TOKEN_INDEX = -200
@@ -54,7 +53,7 @@ def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX
     ]
 
     def insert_separator(X, sep):
-        return [ele for sublist in zip(X, [sep] * len(X)) for ele in sublist][:-1]
+        return [ele for sublist in zip(X, [sep] * len(X), strict=False) for ele in sublist][:-1]
 
     input_ids = []
     offset = 0
@@ -268,7 +267,7 @@ class MPLUGOwl2MetaForCausalLM(ABC):
             if attention_mask is not None:
                 new_attention_mask = []
                 for cur_attention_mask, cur_new_labels, cur_new_labels_align in zip(
-                    attention_mask, _new_labels, new_labels
+                    attention_mask, _new_labels, new_labels, strict=False
                 ):
                     new_attn_mask_pad_left = torch.full(
                         (cur_new_labels.shape[0] - labels.shape[1],),
@@ -342,9 +341,7 @@ class MPLUGOwl2LlamaForCausalLM(LlamaForCausalLM, MPLUGOwl2MetaForCausalLM):
     ):
         if not hasattr(self, "weight_tensor"):
             self.weight_tensor = torch.Tensor([5.0, 4.0, 3.0, 2.0, 1.0]).half().to(self.device)
-        prompt = "USER: How would you rate the {} of this {}?\n<|image|>\nASSISTANT: The {} of the {} is".format(
-            task_, input_, input_, task_
-        )
+        prompt = f"USER: How would you rate the {task_} of this {input_}?\n<|image|>\nASSISTANT: The {input_} of the {task_} is"
         if input_ == "image":
             images = [
                 expand2square(img, tuple(int(x * 255) for x in self.image_processor.image_mean)) for img in images
@@ -388,16 +385,16 @@ class MPLUGOwl2LlamaForCausalLM(LlamaForCausalLM, MPLUGOwl2MetaForCausalLM):
         self,
         input_ids: torch.LongTensor = None,
         # modality_indicators: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        images: Optional[torch.FloatTensor] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        attention_mask: torch.Tensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        images: torch.FloatTensor | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | CausalLMOutputWithPast:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -465,7 +462,7 @@ class MPLUGOwl2LlamaForCausalLM(LlamaForCausalLM, MPLUGOwl2MetaForCausalLM):
                 "past_key_values": past_key_values,
                 "use_cache": kwargs.get("use_cache"),
                 "attention_mask": attention_mask,
-                "images": kwargs.get("images", None),
+                "images": kwargs.get("images"),
             }
         )
         return model_inputs

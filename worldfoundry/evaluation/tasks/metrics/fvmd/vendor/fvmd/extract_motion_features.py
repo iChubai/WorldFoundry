@@ -1,10 +1,11 @@
+import json
 import os
 import pathlib
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-import json
-from loguru import logger
 
 import numpy as np
+from loguru import logger
+
 from fvmd.frechet_distance import calculate_activation_statistics, calculate_frechet_distance
 
 
@@ -120,19 +121,19 @@ def calculate_fvmd_given_paths(gen_path, gt_path):
     m2, s2 = calculate_activation_statistics(hist_v_gt)
     fvmd_value = calculate_frechet_distance(m1, s1, m2, s2)
     results["velocity_fvmd"] = fvmd_value
-    logger.info("velocity FVMD: {}".format(fvmd_value))
+    logger.info(f"velocity FVMD: {fvmd_value}")
 
     m1, s1 = calculate_activation_statistics(hist_a_gen)
     m2, s2 = calculate_activation_statistics(hist_a_gt)
     fvmd_value = calculate_frechet_distance(m1, s1, m2, s2)
     results["acceleration_fvmd"] = fvmd_value
-    logger.info("acceleration FVMD: {}".format(fvmd_value))
+    logger.info(f"acceleration FVMD: {fvmd_value}")
 
     m1, s1 = calculate_activation_statistics(hist_va_gen)
     m2, s2 = calculate_activation_statistics(hist_va_gt)
     fvmd_value = calculate_frechet_distance(m1, s1, m2, s2)
     results["combine_fvmd"] = fvmd_value
-    logger.info("combine FVMD: {}".format(fvmd_value))
+    logger.info(f"combine FVMD: {fvmd_value}")
 
     return results
 

@@ -1,7 +1,8 @@
 """Simple dashboard to view prompt YAML files."""
 
-import yaml
 from pathlib import Path
+
+import yaml
 from flask import Flask, render_template_string
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset

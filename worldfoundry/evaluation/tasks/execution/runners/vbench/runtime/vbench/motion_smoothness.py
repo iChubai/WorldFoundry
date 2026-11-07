@@ -8,7 +8,6 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt.motion_smo
     FrameProcess,
     MotionSmoothness,
 )
-
 from worldfoundry.core.distributed.collectives.evaluation import (
     distribute_list_to_rank,
     gather_list_of_dict,

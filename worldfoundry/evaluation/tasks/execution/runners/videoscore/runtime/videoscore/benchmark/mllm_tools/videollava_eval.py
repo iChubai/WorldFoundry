@@ -1,11 +1,13 @@
 import os
-import torch
-import numpy as np
-from typing import List
-from .mllm_utils import load_images
-from mantis.models.conversation import conv_videollava as default_conv
 import re
-from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration, AutoConfig
+from typing import List
+
+import numpy as np
+import torch
+from mantis.models.conversation import conv_videollava as default_conv
+from transformers import AutoConfig, VideoLlavaForConditionalGeneration, VideoLlavaProcessor
+
+from .mllm_utils import load_images
 
 
 class VideoLlava:
@@ -28,7 +30,7 @@ class VideoLlava:
         self.input_type = input_type
         self.conv_template = default_conv
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

@@ -15,7 +15,6 @@ from .common import (
     skill_cache_path,
 )
 
-
 SKILL_ID = "appearance_consistency_inspector"
 DEFINITION_VERSION = "harnesseval.appearance_consistency"
 CACHE_SCHEMA = "harnesseval.appearance_consistency.cache"
@@ -38,15 +37,15 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
+    "SKILL_ID",
     "AppearanceConsistencyBackend",
     "cache_path_for_video",
-    "import_metrics",
     "evaluate",
+    "import_metrics",
 ]
 
 

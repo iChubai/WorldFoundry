@@ -1,10 +1,11 @@
 import json
-import cv2
-import numpy as np
 from typing import Dict
 
+import cv2
+import numpy as np
 
-def load_intrinsics(path: str) -> Dict[str, float]:
+
+def load_intrinsics(path: str) -> dict[str, float]:
     """
     Loads intrinsics.npy with shape (N, 4) where each row is [fx, fy, cx, cy].
     Returns a dict with keys fx, fy, cx, cy from the first row.
@@ -75,7 +76,7 @@ def extract_gt_frames_batch(gt_video_path: str, indices: list) -> list:
     return frames
 
 
-def load_intrinsics_json(path: str) -> Dict[str, float]:
+def load_intrinsics_json(path: str) -> dict[str, float]:
     """
     Loads intrinsics from a Real GT JSON file.
     Expected format: {"camera": {"fx": ..., "fy": ..., "cx": ..., "cy": ..., ...}}

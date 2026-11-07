@@ -1,7 +1,7 @@
-import os
-import json
-import re
 import argparse
+import json
+import os
+import re
 from collections import defaultdict
 
 
@@ -22,7 +22,7 @@ def main(folder_path, output_path):
         match = prefix_pattern.match(filename)
         if match:
             prefix = match.group(1)
-            with open(os.path.join(folder_path, filename), "r") as file:
+            with open(os.path.join(folder_path, filename)) as file:
                 data = json.load(file)
                 results[prefix].append(data["Average Score"])
 

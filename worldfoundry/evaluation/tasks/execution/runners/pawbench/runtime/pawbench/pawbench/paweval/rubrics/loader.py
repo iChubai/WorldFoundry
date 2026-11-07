@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-from pathlib import Path
 import re
+from functools import cache, lru_cache
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -28,7 +28,7 @@ def load_rubric(axis: str, scene_id: str) -> dict[str, Any]:
     return _load_rubric_cached(axis, scene_id)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_rubric_cached(axis: str, scene_id: str) -> dict[str, Any]:
     path = rubric_path(axis, scene_id)
     if not path.is_file():

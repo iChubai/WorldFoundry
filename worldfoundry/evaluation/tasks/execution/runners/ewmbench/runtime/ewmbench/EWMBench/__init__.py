@@ -4,10 +4,11 @@ import os
 from collections import defaultdict
 
 from worldfoundry.core.distributed.collectives.evaluation import print0
+
 from .utils import init_submodules, save_json
 
 
-class EmbodiedWorldModelBenchmark(object):
+class EmbodiedWorldModelBenchmark:
     def __init__(self, device, output_path):
         self.device = device
         self.output_path = output_path
@@ -192,7 +193,7 @@ class EmbodiedWorldModelBenchmark(object):
 
         non_empty_fields = list(field_list)
 
-        mean_row = {f: "" for f in non_empty_fields}
+        mean_row = dict.fromkeys(non_empty_fields, "")
         mean_row["task_id"] = "MEAN"
         for f in non_empty_fields:
             if f in metrics:
@@ -260,7 +261,7 @@ class EmbodiedWorldModelBenchmark(object):
                         **kwargs,
                     )
                     caption_json = os.path.join(self.output_path, f"{data_name}_caption_responses.json")
-                    with open(caption_json, "r") as f:
+                    with open(caption_json) as f:
                         data = json.load(f)
 
                     result = {}
@@ -325,7 +326,7 @@ class EmbodiedWorldModelBenchmark(object):
                 json.dump(results_dict, f, indent=2)
 
         else:
-            with open(json_path, "r") as f:
+            with open(json_path) as f:
                 results_dict = json.load(f)
 
         csv_save_path = os.path.join(self.output_path, "ewmbm_final_table.csv")

@@ -53,12 +53,12 @@ def load_json(path: str | Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def encode_image_to_data_url(image_path: str | Path) -> Dict[str, Dict[str, str] | str]:
+def encode_image_to_data_url(image_path: str | Path) -> dict[str, dict[str, str] | str]:
     encoded = base64.b64encode(Path(image_path).read_bytes()).decode("ascii")
     return {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded}"}}
 
 
-def parse_interval_seconds(interval: str) -> Tuple[Optional[float], Optional[float]]:
+def parse_interval_seconds(interval: str) -> tuple[float | None, float | None]:
     cleaned = interval.strip().strip("[]()")
     if "," in cleaned:
         left, right = cleaned.split(",", 1)
@@ -69,7 +69,7 @@ def parse_interval_seconds(interval: str) -> Tuple[Optional[float], Optional[flo
     return parse_timestamp(left), parse_timestamp(right)
 
 
-def parse_timestamp(value: str) -> Optional[float]:
+def parse_timestamp(value: str) -> float | None:
     text = value.strip()
     if not text:
         return None
@@ -86,7 +86,7 @@ def parse_timestamp(value: str) -> Optional[float]:
     return None
 
 
-def normalize_prompts(prompt_data: Any) -> List[Dict[str, Any]]:
+def normalize_prompts(prompt_data: Any) -> list[dict[str, Any]]:
     if isinstance(prompt_data, dict):
         if "chunks" in prompt_data:
             raw_items = prompt_data["chunks"]
@@ -99,7 +99,7 @@ def normalize_prompts(prompt_data: Any) -> List[Dict[str, Any]]:
     else:
         raise ValueError("prompt-json must be a JSON list or object.")
 
-    prompts: List[Dict[str, Any]] = []
+    prompts: list[dict[str, Any]] = []
     for index, item in enumerate(raw_items):
         if isinstance(item, str):
             prompts.append({"chunk_index": index, "caption": item, "action": None, "interval": None})
@@ -119,13 +119,13 @@ def normalize_prompts(prompt_data: Any) -> List[Dict[str, Any]]:
     return prompts
 
 
-def normalize_chunks(chunk_data: Any, prompts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def normalize_chunks(chunk_data: Any, prompts: list[dict[str, Any]]) -> list[dict[str, Any]]:
     raw_chunks = chunk_data.get("chunks", chunk_data) if isinstance(chunk_data, dict) else chunk_data
     if not isinstance(raw_chunks, list):
         raise ValueError("chunk-json must contain a list or a top-level 'chunks' list.")
 
     prompt_by_index = {int(item["chunk_index"]): item for item in prompts}
-    normalized: List[Dict[str, Any]] = []
+    normalized: list[dict[str, Any]] = []
     for fallback_index, chunk in enumerate(raw_chunks):
         if not isinstance(chunk, dict):
             raise ValueError("Each chunk entry must be a JSON object.")
@@ -166,7 +166,7 @@ def sample_video_frames(
     count: int,
     output_dir: str | Path,
     prefix: str,
-) -> List[Path]:
+) -> list[Path]:
     if count <= 0:
         return []
 
@@ -189,7 +189,7 @@ def sample_video_frames(
     else:
         sample_times = [start_sec + (end_sec - start_sec) * idx / float(count - 1) for idx in range(count)]
 
-    output_paths: List[Path] = []
+    output_paths: list[Path] = []
     output_root = Path(output_dir)
     for idx, sample_time in enumerate(sample_times):
         if fps > 0:
@@ -223,13 +223,13 @@ def video_duration(video_path: str | Path) -> float:
     return (total_frames / fps) if fps > 0 and total_frames > 0 else 0.0
 
 
-def content_from_frames(label: str, frames: List[Path]) -> List[Dict[str, Any]]:
-    content: List[Dict[str, Any]] = [{"type": "text", "text": label}]
+def content_from_frames(label: str, frames: list[Path]) -> list[dict[str, Any]]:
+    content: list[dict[str, Any]] = [{"type": "text", "text": label}]
     content.extend(encode_image_to_data_url(frame_path) for frame_path in frames)
     return content
 
 
-def extract_json_response(response: Dict[str, Any]) -> Dict[str, Any]:
+def extract_json_response(response: dict[str, Any]) -> dict[str, Any]:
     try:
         parsed = parse_json_content(response)
     except Exception as exc:
@@ -248,7 +248,7 @@ def clip_score(value: Any) -> float:
     return min(5.0, max(0.0, score))
 
 
-def build_chunk_prompt(chunk: Dict[str, Any]) -> str:
+def build_chunk_prompt(chunk: dict[str, Any]) -> str:
     return f"""Evaluate one generated video chunk.
 
 Chunk metadata:
@@ -275,7 +275,7 @@ Return strict JSON:
 }}"""
 
 
-def build_transition_prompt(left: Dict[str, Any], right: Dict[str, Any]) -> str:
+def build_transition_prompt(left: dict[str, Any], right: dict[str, Any]) -> str:
     return f"""Evaluate the transition between two adjacent generated video chunks.
 
 Previous chunk:
@@ -305,7 +305,7 @@ Return strict JSON:
 }}"""
 
 
-def build_global_prompt(chunks: List[Dict[str, Any]]) -> str:
+def build_global_prompt(chunks: list[dict[str, Any]]) -> str:
     prompt_summary = [
         {
             "chunk_index": chunk["chunk_index"],
@@ -336,11 +336,11 @@ Return strict JSON:
 
 def call_vlm_with_frames(
     user_prompt: str,
-    frame_groups: List[Tuple[str, List[Path]]],
+    frame_groups: list[tuple[str, list[Path]]],
     model_name: str,
     backend: str,
-) -> Dict[str, Any]:
-    content: List[Dict[str, Any]] = [{"type": "text", "text": user_prompt}]
+) -> dict[str, Any]:
+    content: list[dict[str, Any]] = [{"type": "text", "text": user_prompt}]
     for label, frames in frame_groups:
         content.extend(content_from_frames(label, frames))
 
@@ -371,7 +371,7 @@ def evaluate_interaction(
     skip_chunk: bool = False,
     skip_transition: bool = False,
     skip_global: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     vlm_backend = resolve_vlm_backend(backend)
     resolved_model_name = resolve_model_name(model_name, vlm_backend)
     prompts = normalize_prompts(load_json(prompt_json))
@@ -388,7 +388,7 @@ def evaluate_interaction(
             "reference_context",
         )
 
-        chunk_results: List[Dict[str, Any]] = []
+        chunk_results: list[dict[str, Any]] = []
         if not skip_chunk:
             for chunk in chunks:
                 print(f"Evaluating chunk {chunk['chunk_index']}...")
@@ -417,9 +417,9 @@ def evaluate_interaction(
                 result["overall"] = clip_score(overall)
                 chunk_results.append(result)
 
-        transition_results: List[Dict[str, Any]] = []
+        transition_results: list[dict[str, Any]] = []
         if not skip_transition:
-            for left, right in zip(chunks, chunks[1:]):
+            for left, right in zip(chunks, chunks[1:], strict=False):
                 print(f"Evaluating transition {left['chunk_index']} -> {right['chunk_index']}...")
                 left_frames = sample_video_frames(
                     gen_video,
@@ -454,7 +454,7 @@ def evaluate_interaction(
                 result["overall"] = clip_score(overall)
                 transition_results.append(result)
 
-        global_result: Optional[Dict[str, Any]] = None
+        global_result: dict[str, Any] | None = None
         if not skip_global:
             print("Evaluating global long-range consistency...")
             gen_duration = video_duration(gen_video)
@@ -482,7 +482,7 @@ def evaluate_interaction(
                 overall = (global_result["long_range_consistency"] + global_result["global_text_alignment"]) / 2.0
             global_result["overall"] = clip_score(overall)
 
-    scored_parts: List[float] = []
+    scored_parts: list[float] = []
     scored_parts.extend(result["overall"] for result in chunk_results)
     scored_parts.extend(result["overall"] for result in transition_results)
     if global_result is not None:
@@ -509,7 +509,7 @@ def evaluate_interaction(
     }
 
 
-def mean(values: List[float]) -> Optional[float]:
+def mean(values: list[float]) -> float | None:
     if not values:
         return None
     return sum(values) / len(values)

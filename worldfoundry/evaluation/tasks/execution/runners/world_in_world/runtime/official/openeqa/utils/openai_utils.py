@@ -12,7 +12,7 @@ import openai
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 
-def set_openai_key(key: Optional[str] = None):
+def set_openai_key(key: str | None = None):
     if key is None:
         assert "OPENAI_API_KEY" in os.environ
         key = os.environ["OPENAI_API_KEY"]
@@ -24,10 +24,10 @@ def prepare_openai_messages(content: str):
 
 
 def prepare_openai_vision_messages(
-    prefix: Optional[str] = None,
-    suffix: Optional[str] = None,
-    image_paths: Optional[List[str]] = None,
-    image_size: Optional[int] = 512,
+    prefix: str | None = None,
+    suffix: str | None = None,
+    image_paths: list[str] | None = None,
+    image_size: int | None = 512,
 ):
     if image_paths is None:
         image_paths = []
@@ -61,11 +61,11 @@ def prepare_openai_vision_messages(
 def call_openai_api(
     messages: list,
     model: str = "gpt-4",
-    seed: Optional[int] = None,
+    seed: int | None = None,
     max_tokens: int = 32,
     temperature: float = 0.2,
     verbose: bool = False,
-    base_url: Optional[str] = None,
+    base_url: str | None = None,
 ):
     if base_url is None:
         client = openai.OpenAI(api_key=openai.api_key)
@@ -79,7 +79,7 @@ def call_openai_api(
         temperature=temperature,
     )
     if verbose:
-        print("openai api response: {}".format(completion))
+        print(f"openai api response: {completion}")
     assert len(completion.choices) == 1
     return completion.choices[0].message.content
 
@@ -92,4 +92,4 @@ if __name__ == "__main__":
 
     model = "gpt-4-vision-preview"
     output = call_openai_api(messages, model=model, max_tokens=512, temperature=1.0)
-    print("output: {}".format(output))
+    print(f"output: {output}")

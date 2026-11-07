@@ -13,14 +13,14 @@ import argparse
 import json
 import math
 import sys
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
-
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -102,7 +102,7 @@ def compute_local_global_candidate(global_features: np.ndarray, patch_features: 
         raise ValueError(f"expected patch feature shape [frames, patches, dim], got {patches.shape}")
     if len(globals_) != len(patches):
         raise ValueError("global and patch feature frame counts differ")
-    frame_count = int(len(globals_))
+    frame_count = len(globals_)
     if frame_count < 2:
         empty = {
             CANDIDATE_FIELD: None,

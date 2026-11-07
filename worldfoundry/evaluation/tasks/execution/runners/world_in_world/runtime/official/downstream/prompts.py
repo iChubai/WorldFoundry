@@ -1,22 +1,23 @@
 import os
 import os.path as osp
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, Dict, List, Union
 
-# from openeqa.utils.prompt_utils import load_prompt
-from PIL import Image
-from typing import Any, Dict, List, Sequence, Union
 from downstream.downstream_datasets import ARDataset
+from downstream.utils.query_utils import VIDEO_EXTS, encode_img_to_base64
 from downstream.vlm import (
     CHOICE_FORMATS,
     CHOICES,
     COMMERCIAL_MODELS,
     LOCAL_MODELS,
-    LMClassifier,
     VIEW_ORDER,
+    LMClassifier,
 )
-from utils.util import is_empty
-from downstream.utils.query_utils import encode_img_to_base64, VIDEO_EXTS
 
+# from openeqa.utils.prompt_utils import load_prompt
+from PIL import Image
+from utils.util import is_empty
 
 UNIT_DISTANCE = 0.20
 # unit_distance = 2.6
@@ -39,6 +40,7 @@ def choice_text(choice_format, choice_texts):
         for choice_mark, choice_text in zip(
             CHOICES[choice_format],
             choice_texts,
+            strict=False,
         )
     )
 
@@ -171,7 +173,7 @@ class PromptMixin:
     # ------------------------------------------------------------------ #
     # Message-building helpers (public because users may call them)
     # ------------------------------------------------------------------ #
-    def _build_user_message(self, prompt: str, image_paths: Union[str, Sequence[str]]) -> Dict[str, Any]:
+    def _build_user_message(self, prompt: str, image_paths: str | Sequence[str]) -> dict[str, Any]:
         """
         Create a single 'user'-role OpenAI message with one prompt followed by N media items.
         Emits `image_url` for images and `video_url` for videos as expected by vLLM.
@@ -209,7 +211,7 @@ class PromptMixin:
 
         return {"role": "user", "content": content}
 
-    def _build_assistant_message(self, action: str) -> Dict[str, str]:
+    def _build_assistant_message(self, action: str) -> dict[str, str]:
         """Single-token assistant response (e.g. ‘A.’ or ‘stop.’)."""
         if len(action) != 1:
             raise ValueError(f"Expected single-character action, got: {action}")
@@ -258,7 +260,7 @@ class PromptMixin:
 
         # ---------- 2. (optional) history ---------- #
         if enable_history:
-            for state, action in zip(state_traj[:-1], action_traj):
+            for state, action in zip(state_traj[:-1], action_traj, strict=False):
                 if not enable_system_prompt:
                     task_prompt = self._get_task_prompt(query_task, tobe_filled)
                     messages.append(self._build_user_message(task_prompt, state))
@@ -280,7 +282,7 @@ class PromptMixin:
             messages.append(self._build_user_message(aux_prompt, []))
 
             if imagine_action_traj:
-                for plan, obs in zip(imagine_action_traj[-1], imagine_traj[-1]):
+                for plan, obs in zip(imagine_action_traj[-1], imagine_traj[-1], strict=False):
                     messages.append(self._build_user_message(plan, obs))
             else:
                 for obs in imagine_traj[-1]:
@@ -410,7 +412,7 @@ class VLM(LMClassifier, PromptMixin):
         return response
 
     # ------- Task-specific prompt generation (Main method 2) ------ #
-    def _get_task_prompt(self, task: str, tobe_filled: Dict[str, Any]) -> str:
+    def _get_task_prompt(self, task: str, tobe_filled: dict[str, Any]) -> str:
         """
         A thin wrapper around the template functions / dictionaries that live
         elsewhere, plus variable substitution.

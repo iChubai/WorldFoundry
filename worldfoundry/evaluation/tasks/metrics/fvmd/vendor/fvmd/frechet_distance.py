@@ -34,8 +34,9 @@ limitations under the License.
 
 import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from loguru import logger
+
 import numpy as np
+from loguru import logger
 from scipy import linalg
 
 try:
@@ -92,7 +93,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-5):
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            raise ValueError("Imaginary component {}".format(m))
+            raise ValueError(f"Imaginary component {m}")
         covmean = covmean.real
 
     tr_covmean = np.trace(covmean)

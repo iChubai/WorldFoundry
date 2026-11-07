@@ -1,15 +1,15 @@
+import cv2
 import numpy as np
 from tqdm import tqdm
-import cv2
 from vbench.utils import load_dimension_info
 
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
     all_gather,
     barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
 
 

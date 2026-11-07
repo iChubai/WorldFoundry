@@ -1,11 +1,13 @@
 """pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu118"""
 
-import torch
-import requests
-from PIL import Image
-from transformers import AutoModelForCausalLM, LlamaTokenizer
 from io import BytesIO
 from typing import List
+
+import requests
+import torch
+from PIL import Image
+from transformers import AutoModelForCausalLM, LlamaTokenizer
+
 from .mllm_utils import merge_images
 
 
@@ -27,7 +29,7 @@ class CogVLM:
             .eval()
         )
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [
@@ -54,7 +56,7 @@ class CogVLM:
             inputs = self.prepare_prompt(image_links, text_prompt)
             return self.get_parsed_output(inputs)
 
-    def prepare_prompt(self, image_links: List = [], text_prompt: str = ""):
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
         if type(image_links) == str:
             image_links = [image_links]
         merged_image = merge_images(image_links)

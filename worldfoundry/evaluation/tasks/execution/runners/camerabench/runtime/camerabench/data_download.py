@@ -53,7 +53,7 @@ def main():
             print(f"Videos downloaded successfully to ./{output_dir}/")
             print("\nNext steps:")
             print("1. Go to data/cam_motion directory")
-            print(f"2. Update video paths to point to ./videos/")
+            print("2. Update video paths to point to ./videos/")
             return  # Success, exit the function
 
         except Exception as e:

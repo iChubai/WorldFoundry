@@ -1,9 +1,11 @@
+from io import BytesIO
+from typing import List
+
 import requests
 import torch
-from transformers import FuyuProcessor, FuyuForCausalLM, AutoTokenizer
 from PIL import Image
-from typing import List
-from io import BytesIO
+from transformers import AutoTokenizer, FuyuForCausalLM, FuyuProcessor
+
 from .mllm_utils import merge_images
 
 
@@ -23,7 +25,7 @@ class Fuyu:
             self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else self.tokenizer.eos_token_id
         )
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [
@@ -50,7 +52,7 @@ class Fuyu:
             inputs = self.prepare_prompt(image_links, text_prompt)
             return self.get_parsed_output(inputs)
 
-    def prepare_prompt(self, image_links: List = [], text_prompt: str = ""):
+    def prepare_prompt(self, image_links: list = [], text_prompt: str = ""):
         if type(image_links) == str:
             image_links = [image_links]
         image = merge_images(image_links)

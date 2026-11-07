@@ -1,9 +1,10 @@
 # caption_metric.py
-import os
 import json
+import os
+
 import numpy as np
-from tqdm import tqdm
 import torch
+from tqdm import tqdm
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -50,7 +51,7 @@ def run_clip_text_similarity(model, tokenizer, gen_text: str, gt_text: str) -> f
 
 
 def get_strings(json_path, key):
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)  # dict
     all_idxs = []
     all_strings = []
@@ -84,7 +85,9 @@ def compute_metric_scores(semantics_model, metric_type, list_gen_strings, list_g
 
     scores = [
         run_clip_text_similarity(clip_model, clip_tokenizer, gen_strings, gt_strings)
-        for gen_strings, gt_strings in tqdm(list(zip(list_gen_strings, list_gt_strings)), desc="Compute metric scores")
+        for gen_strings, gt_strings in tqdm(
+            list(zip(list_gen_strings, list_gt_strings, strict=False)), desc="Compute metric scores"
+        )
     ]
     return scores
 
@@ -100,7 +103,7 @@ def evaluate_run(semantics_model, eval_config, dt_json, gt_json):
     expanded_gt_strings = []
     expanded_gt_idxs = []
 
-    for gen_id, gen_string in zip(gen_idxs, gen_strings):
+    for gen_id, gen_string in zip(gen_idxs, gen_strings, strict=False):
         # Robustly parse generated id. We expect keys like:
         #  - generated_dataset_367_649524_1
         #  - generated_dataset_egodex_dataset_assemble_disassemble_jigsaw_puzzle_1

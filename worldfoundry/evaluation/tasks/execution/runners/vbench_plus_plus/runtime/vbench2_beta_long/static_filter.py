@@ -1,28 +1,30 @@
-import os
-import cv2
+import argparse
 import glob
+import json
+import logging
+import os
+import shutil
+from pathlib import Path
+
+import cv2
 import numpy as np
 import torch
 from tqdm import tqdm
-import argparse
-from pathlib import Path
-import json
-import shutil
-
-import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 from vbench.utils import CACHE_DIR, load_json
+from vbench2_beta_long.utils import get_prompt_from_filename
+
 from worldfoundry.base_models.perception_core.optical_flow.raft import (
-    InputPadder,
     RAFT,
+    InputPadder,
+)
+from worldfoundry.base_models.perception_core.optical_flow.raft import (
     checkpoint_path as raft_checkpoint_path,
 )
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
-from vbench2_beta_long.utils import get_prompt_from_filename
-
 
 CUR_PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEVICE = "cuda"
@@ -91,7 +93,9 @@ class StaticFilter:
             frames = self.get_frames(path)
             self.set_params(frame=frames[0], count=len(frames))
             static_score = []
-            for image1, image2 in zip(frames[:-1] + [frames[0], frames[-1]], frames[1:] + [frames[-1], frames[0]]):
+            for image1, image2 in zip(
+                frames[:-1] + [frames[0], frames[-1]], frames[1:] + [frames[-1], frames[0]], strict=False
+            ):
                 padder = InputPadder(image1.shape)
                 image1, image2 = padder.pad(image1, image2)
                 _, flow_up = self.model(image1, image2, iters=20, test_mode=True)
@@ -158,7 +162,7 @@ def static_filter(args):
             prompt_list.append(prompt)
 
     else:
-        assert os.path.isfile(args.filter_scope) and Path(args.filter_scope).suffix.lower() == ".json", f"""
+        assert os.path.isfile(args.filter_scope) and Path(args.filter_scope).suffix.lower() == ".json", """
         --filter_scope flag is not correctly set, set to 'all' to filter all videos in the --videos_path directory, 
         or provide the correct path to the JSON file
         """
@@ -195,7 +199,7 @@ def parse_args():
     parser.add_argument(
         "--filter_scope",
         default="temporal_flickering",
-        help=f"""For specifying the scope for filtering videos
+        help="""For specifying the scope for filtering videos
         1. 'temporal_flickering' (default): filter videos based on matches with temporal_flickering dimension of VBench.
         2. 'all': filter all video in the current directory.
         3. '$filename': if a filepath to a JSON file is provided, only the filename exists in JSON file will be filtered.

@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from wrbench.datasets import (
-    PROMPT_PROFILE_TI2V_ACTIVE,
     PROMPT_PROFILE_T2V_LAYOUT_ANCHOR,
+    PROMPT_PROFILE_TI2V_ACTIVE,
     load_jsonl,
     load_natural25_t2v_event_tails,
     load_natural25_t2v_layout_anchors,

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import copy
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .aggregate import clean_float, mean_valid, numeric, skill_result
 from .io import (

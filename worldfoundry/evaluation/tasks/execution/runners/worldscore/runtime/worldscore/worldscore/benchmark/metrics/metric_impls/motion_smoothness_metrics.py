@@ -1,15 +1,14 @@
 from typing import List
-import torch
+
 import cv2
 import numpy as np
-
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
-    BaseMetric,
-)
+import torch
 
 import worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.config as cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba import InputPadder, Model
-
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    BaseMetric,
+)
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.torchmetrics.lpips_metrics import (
     LearnedPerceptualImagePatchSimilarityMetric,
 )
@@ -43,7 +42,7 @@ class MotionSmoothnessMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         scores_ssim = []
         scores_lpips = []
@@ -51,8 +50,8 @@ class MotionSmoothnessMetric(BaseMetric):
         even_images = rendered_images[::2]
         odd_images = rendered_images[1::2]
 
-        print(f"=========================Start Interpolating=========================")
-        for i, (image1, image2) in enumerate(zip(even_images[:-1], even_images[1:])):
+        print("=========================Start Interpolating=========================")
+        for i, (image1, image2) in enumerate(zip(even_images[:-1], even_images[1:], strict=False)):
             odd_image = odd_images[i]
             mid_pred = cv2.imread(odd_image)
             I0 = cv2.imread(image1)
@@ -81,7 +80,7 @@ class MotionSmoothnessMetric(BaseMetric):
             scores_ssim.append(ssim_score)
             scores_lpips.append(lpips_score)
             scores_mse.append(mse_score)
-        print(f"=========================Done=========================")
+        print("=========================Done=========================")
 
         score_ssim = sum(scores_ssim) / len(scores_ssim)
         score_lpips = sum(scores_lpips) / len(scores_lpips)

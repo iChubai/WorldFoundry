@@ -26,7 +26,7 @@ import torchvision.transforms as TF
 from PIL import Image
 from scipy import linalg
 from torch.nn.functional import adaptive_avg_pool2d
-from torchvision.transforms import Compose, Resize, Normalize, ToTensor
+from torchvision.transforms import Compose, Normalize, Resize, ToTensor
 
 try:
     from tqdm import tqdm
@@ -92,7 +92,7 @@ def get_activations(files, model, batch_size=50, dims=2048, device="cpu"):
     model.eval()
 
     if batch_size > len(files):
-        print(("Warning: batch size is bigger than the data size. Setting batch size to data size"))
+        print("Warning: batch size is bigger than the data size. Setting batch size to data size")
         batch_size = len(files)
 
     dataset = ImagePathDataset(
@@ -165,7 +165,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            raise ValueError("Imaginary component {}".format(m))
+            raise ValueError(f"Imaginary component {m}")
         covmean = covmean.real
 
     tr_covmean = np.trace(covmean)
@@ -205,16 +205,16 @@ def compute_statistics_of_path(path, model, batch_size, max_size, dims, device):
     else:
         if isinstance(path, str):
             path = pathlib.Path(path)
-            files = sorted([file for ext in IMAGE_EXTENSIONS for file in path.glob("*.{}".format(ext))])
+            files = sorted([file for ext in IMAGE_EXTENSIONS for file in path.glob(f"*.{ext}")])
         else:
             files = list(path)
         if max_size.isdigit():
             files = files[: int(max_size)]
-            print("Using {} images from {}".format(max_size, path))
+            print(f"Using {max_size} images from {path}")
         elif max_size.lower() == "all":
-            print("Using all images from {}".format(path))
+            print(f"Using all images from {path}")
         else:
-            raise RuntimeError("Invalid max size {}".format(max_size))
+            raise RuntimeError(f"Invalid max size {max_size}")
 
         m, s = calculate_activation_statistics(files, model, batch_size, dims, device)
 

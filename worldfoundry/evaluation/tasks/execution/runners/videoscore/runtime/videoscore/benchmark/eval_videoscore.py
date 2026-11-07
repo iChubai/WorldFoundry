@@ -1,19 +1,19 @@
+import logging
 import os
 import re
-import torch
-import fire
-import logging
-import numpy as np
-from tqdm import tqdm
-from PIL import Image
-from typing import List
-from transformers import AutoProcessor
-from mantis.models.idefics2 import Idefics2ForSequenceClassification
-from datasets import load_dataset
 from datetime import datetime
-from utils_tools import _add_to_res_file, regression_query_template
-from utils_conv import conv_templates
+from typing import List
 
+import fire
+import numpy as np
+import torch
+from datasets import load_dataset
+from mantis.models.idefics2 import Idefics2ForSequenceClassification
+from PIL import Image
+from tqdm import tqdm
+from transformers import AutoProcessor
+from utils_conv import conv_templates
+from utils_tools import _add_to_res_file, regression_query_template
 
 CONV_TEMPLATE = conv_templates["idefics_2"]
 NUM_ASPECT = 5
@@ -24,7 +24,7 @@ REGRESSION_QUERY_TEMPLATE = regression_query_template()
 
 
 def _read_video_frames(
-    frame_paths: List[str],
+    frame_paths: list[str],
     max_frames: int,
 ):
     total_frames = len(frame_paths)
@@ -37,7 +37,7 @@ def _model_output(
     model: Idefics2ForSequenceClassification,
     processor: AutoProcessor,
     video_prompt: str,
-    frames_path_list: List[str],
+    frames_path_list: list[str],
 ):
     video_frames = _read_video_frames(frames_path_list, MAX_NUM_FRAMES)
     frames = [Image.fromarray(x) for x in video_frames]
@@ -78,7 +78,7 @@ def main(
     model_repo_name: str = "TIGER-Lab/VideoScore",
     data_repo_name: str = "TIGER-Lab/VideoScore-Bench",
     frames_dir: str = "../data/video_feedback/test",
-    name_postfixs: List[str] = ["video_feedback"],
+    name_postfixs: list[str] = ["video_feedback"],
     result_file: str = "./eval_results/video_feedback/eval_video_feedback_videoscore.json",
     bench_name: str = "video_feedback",
 ):

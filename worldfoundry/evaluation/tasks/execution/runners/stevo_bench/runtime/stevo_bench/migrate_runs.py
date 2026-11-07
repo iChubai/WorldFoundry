@@ -43,7 +43,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 # Key fields that distinguish a real LLM result from an init stub (null = stub)
-_KEY_FIELDS: Dict[str, tuple] = {
+_KEY_FIELDS: dict[str, tuple] = {
     "control_report": ("occlusion_done", "trigger_applied"),
     "artifact_report": ("artifact",),
     "coherence_report": ("coherence",),
@@ -71,7 +71,7 @@ def _make_slug(provider: str, model: str) -> str:
     return f"{provider}__{model.replace('.', '-')}"
 
 
-def _slug_from_file(report_path: Path) -> Optional[str]:
+def _slug_from_file(report_path: Path) -> str | None:
     """Read provider/model from a report file and return the judge slug."""
     try:
         data = json.loads(report_path.read_text(encoding="utf-8"))
@@ -98,7 +98,7 @@ def _is_real_result(report_path: Path, report_type: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def migrate_report_file(task_dir: Path, report_type: str, dry_run: bool) -> Optional[str]:
+def migrate_report_file(task_dir: Path, report_type: str, dry_run: bool) -> str | None:
     """
     Copy <report_type>.json -> <report_type>__<slug>.json if it has real results.
     Returns slug on success, None if skipped.
@@ -153,7 +153,7 @@ def migrate_summary(run_dir: Path, dry_run: bool) -> None:
         task_dir = per_task_root / task_id
 
         # Determine which slug each flat metric belongs to by reading its source report.
-        slug_for: Dict[str, str] = {}
+        slug_for: dict[str, str] = {}
         for field, report_type in _METRIC_SOURCE.items():
             if task.get(field) is None:
                 continue
@@ -165,7 +165,7 @@ def migrate_summary(run_dir: Path, dry_run: bool) -> None:
             continue
 
         # Group metric values by slug.
-        llm_evals: Dict[str, dict] = {}
+        llm_evals: dict[str, dict] = {}
         for field, slug in slug_for.items():
             llm_evals.setdefault(slug, {})[field] = task[field]
 
@@ -210,7 +210,7 @@ def migrate_run(run_dir: Path, dry_run: bool) -> None:
         return
 
     task_dirs = sorted(d for d in per_task.iterdir() if d.is_dir())
-    file_counts: Dict[str, int] = {rt: 0 for rt in _KEY_FIELDS}
+    file_counts: dict[str, int] = dict.fromkeys(_KEY_FIELDS, 0)
 
     for task_dir in task_dirs:
         for report_type in _KEY_FIELDS:

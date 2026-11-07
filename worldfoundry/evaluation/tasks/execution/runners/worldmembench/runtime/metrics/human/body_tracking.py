@@ -323,6 +323,7 @@ class YoloSamBodyTracker:
         for (anchor_start, anchor_end), (segment_start, segment_end) in zip(
             viable_runs,
             bounds,
+            strict=False,
         ):
             global_prompts = _sparse_prompts(
                 direct_assignments,

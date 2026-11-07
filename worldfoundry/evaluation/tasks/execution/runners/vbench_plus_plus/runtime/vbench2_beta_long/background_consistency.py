@@ -1,22 +1,24 @@
+import logging
 import os
+
 import cv2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-from PIL import Image
 from dreamsim import dreamsim
+from PIL import Image
 from tqdm import tqdm
-from vbench.background_consistency import compute_background_consistency, background_consistency
-from vbench.utils import load_video, load_dimension_info, dino_transform, dino_transform_Image, clip_transform
+from vbench.background_consistency import background_consistency, compute_background_consistency
+from vbench.utils import clip_transform, dino_transform, dino_transform_Image, load_dimension_info, load_video
 from vbench2_beta_long.utils import (
+    create_video_from_first_frames,
+    dreamsim_transform,
+    fuse_inclip_clip2clip,
     reorganize_clips_results,
     save_segment,
-    create_video_from_first_frames,
-    fuse_inclip_clip2clip,
-    dreamsim_transform,
 )
-import logging
+
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

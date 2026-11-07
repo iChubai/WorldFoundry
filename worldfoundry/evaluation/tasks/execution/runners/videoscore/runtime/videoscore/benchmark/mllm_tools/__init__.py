@@ -152,10 +152,7 @@ def MLLM_Models(model_name: str):
 
         return VILA
     elif "videollava" in model_name.lower():
-        if model_name == "videollava":
-            model_id = "LanguageBind/Video-LLaVA-7B-hf"
-            input_type = "image"
-        elif model_name == "videollava-image":
+        if model_name == "videollava" or model_name == "videollava-image":
             model_id = "LanguageBind/Video-LLaVA-7B-hf"
             input_type = "image"
         elif model_name == "videollava-video":

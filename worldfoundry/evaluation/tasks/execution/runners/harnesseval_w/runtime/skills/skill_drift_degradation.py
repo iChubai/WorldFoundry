@@ -18,21 +18,28 @@ from .common import (
 )
 from .skill_appearance_consistency import (
     DEFINITION_VERSION as APPEARANCE_DEFINITION,
+)
+from .skill_appearance_consistency import (
     score_components as appearance_score,
 )
 from .skill_motion_quality import (
     DEFINITION_VERSION as MOTION_DEFINITION,
+)
+from .skill_motion_quality import (
     score_components as motion_score,
 )
 from .skill_physical_plausibility import (
     DEFINITION_VERSION as PHYSICAL_DEFINITION,
+)
+from .skill_physical_plausibility import (
     score_components as physical_score,
 )
 from .skill_render_quality import (
     DEFINITION_VERSION as RENDER_DEFINITION,
+)
+from .skill_render_quality import (
     score_components as render_score,
 )
-
 
 SKILL_ID = "drift_degradation_analyzer"
 DEFINITION_VERSION = "harnesseval.drift_degradation"
@@ -84,19 +91,19 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
     "REQUIRED_COMPONENTS",
     "SAMPLING",
+    "SKILL_ID",
     "DriftDegradationBackend",
     "cache_path_for_video",
+    "evaluate",
+    "import_evidence",
     "resolve_chunks",
     "result_from_chunks",
-    "import_evidence",
-    "evaluate",
 ]
 
 
@@ -196,7 +203,7 @@ def resolve_chunks(
     explicit = _explicit_segments(metadata, len(chunks), video_path)
     frame_count = None if explicit else _video_stats(video_path)[0]
     output = []
-    for position, (chunk_id, chunk) in enumerate(zip(chunk_ids, chunks)):
+    for position, (chunk_id, chunk) in enumerate(zip(chunk_ids, chunks, strict=False)):
         if explicit:
             chunk_video = explicit[position]
             chunk_frames, _ = _video_stats(chunk_video)
@@ -241,7 +248,7 @@ def _normalized_embedding(value: Any) -> list[float] | None:
 def _cosine(left: list[float], right: list[float]) -> float:
     if len(left) != len(right) or not left:
         raise ValueError("CLIP embeddings must have the same non-zero dimension")
-    return sum(a * b for a, b in zip(left, right))
+    return sum(a * b for a, b in zip(left, right, strict=False))
 
 
 def _linear_slope(values: list[float]) -> float:
@@ -249,7 +256,7 @@ def _linear_slope(values: list[float]) -> float:
     x_mean = statistics.mean(xs)
     y_mean = statistics.mean(values)
     denominator = sum((value - x_mean) ** 2 for value in xs)
-    return sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, values)) / denominator
+    return sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, values, strict=False)) / denominator
 
 
 def _invalid(message: str, **diagnostics: Any) -> dict[str, Any]:
@@ -481,7 +488,7 @@ def _normalize_backend_evidence(
     if not isinstance(raw_chunks, list) or len(raw_chunks) != len(boundaries):
         raise RuntimeError("Drift backend returned the wrong chunk count")
     output = []
-    for index, (raw, expected) in enumerate(zip(raw_chunks, boundaries)):
+    for index, (raw, expected) in enumerate(zip(raw_chunks, boundaries, strict=False)):
         if not isinstance(raw, Mapping) or not _same_boundary(raw, expected):
             raise RuntimeError(f"Drift backend chunk boundary mismatch at index {index}")
         metrics = raw.get("metrics")

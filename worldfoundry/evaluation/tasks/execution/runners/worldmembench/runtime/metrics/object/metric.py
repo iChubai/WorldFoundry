@@ -122,9 +122,9 @@ class _ObjectMetric(Metric):
                 revisit["area_ratio_drift"] = (
                     result.revisit_area_ratio_drifts[index] if index < len(result.revisit_area_ratio_drifts) else 0.0
                 )
-        phase_roles = {index: "V" for index in phase.visible_indices}
+        phase_roles = dict.fromkeys(phase.visible_indices, "V")
         for index, indices in enumerate(phase.revisit_indices, 1):
-            phase_roles.update({frame: f"R{index}" for frame in indices})
+            phase_roles.update(dict.fromkeys(indices, f"R{index}"))
         events = []
         for prompt in track.redetection_prompts:
             outcome = "rejected_or_unstable"

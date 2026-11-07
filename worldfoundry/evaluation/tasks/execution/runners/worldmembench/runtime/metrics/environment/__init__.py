@@ -5,4 +5,4 @@
 
 from .metric import EnvironmentDepthFidelityMetric, EnvironmentSceneReconstructionMetric, EnvironmentVisibleMemoryMetric
 
-__all__ = ["EnvironmentVisibleMemoryMetric", "EnvironmentDepthFidelityMetric", "EnvironmentSceneReconstructionMetric"]
+__all__ = ["EnvironmentDepthFidelityMetric", "EnvironmentSceneReconstructionMetric", "EnvironmentVisibleMemoryMetric"]

@@ -119,7 +119,6 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PHYSICAL_DIR = REPO_ROOT / "physical"
 THREE_D_DIR = REPO_ROOT / "3d_metrics"
@@ -131,7 +130,6 @@ for path in (REPO_ROOT, PHYSICAL_DIR, THREE_D_DIR, INTERACTION_DIR):
         sys.path.insert(0, path_str)
 
 from model.vlm import parse_json_content, resolve_model_name, resolve_vlm_backend, text_vlm_call
-
 
 DEFAULT_VLM_MODEL: str | None = None
 DEFAULT_3D_MODEL_NAME = "worldeval/weights/da3"

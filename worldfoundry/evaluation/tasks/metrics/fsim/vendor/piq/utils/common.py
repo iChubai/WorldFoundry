@@ -1,10 +1,10 @@
-import torch
-import re
 import os
+import re
 import warnings
-
-from typing import Tuple, List, Optional, Union, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.request import urlopen
+
+import torch
 
 SEMVER_VERSION_PATTERN = re.compile(
     r"""
@@ -61,10 +61,10 @@ PEP_440_VERSION_PATTERN = r"""
 
 
 def _validate_input(
-    tensors: List[torch.Tensor],
-    dim_range: Tuple[int, int] = (0, -1),
-    data_range: Tuple[float, float] = (0.0, -1.0),
-    size_range: Optional[Tuple[int, int]] = None,
+    tensors: list[torch.Tensor],
+    dim_range: tuple[int, int] = (0, -1),
+    data_range: tuple[float, float] = (0.0, -1.0),
+    size_range: tuple[int, int] | None = None,
     check_for_channels_first: bool = False,
 ) -> None:
     r"""Check that input(-s)  satisfies the requirements
@@ -128,7 +128,7 @@ def _reduce(x: torch.Tensor, reduction: str = "mean") -> torch.Tensor:
         raise ValueError("Unknown reduction. Expected one of {'none', 'mean', 'sum'}")
 
 
-def _parse_version(version: Union[str, bytes]) -> Tuple[int, ...]:
+def _parse_version(version: str | bytes) -> tuple[int, ...]:
     """Parses valid Python versions according to Semver and PEP 440 specifications.
     For more on Semver check: https://semver.org/
     For more on PEP 440 check: https://www.python.org/dev/peps/pep-0440/.
@@ -151,7 +151,7 @@ def _parse_version(version: Union[str, bytes]) -> Tuple[int, ...]:
     # Semver processing
     match = SEMVER_VERSION_PATTERN.match(version)
     if match:
-        matched_version_parts: Dict[str, Any] = match.groupdict()
+        matched_version_parts: dict[str, Any] = match.groupdict()
         release = tuple([int(matched_version_parts[k]) for k in ["major", "minor", "patch"]])
         return release
 
@@ -194,7 +194,7 @@ def download_tensor(url: str, root: str, map_location: str = "cpu") -> torch.Ten
     return torch.load(download_target, map_location=map_location)
 
 
-def is_sha256_hash(string: str) -> Optional[re.Match]:
+def is_sha256_hash(string: str) -> re.Match | None:
     """Checks whether the provided sting is a valid SHA256 hash."""
     pattern = re.compile("^[a-fA-F0-9]{64}$")
     return pattern.match(string)

@@ -1,6 +1,7 @@
 r"""Colour space conversion functions"""
 
-from typing import Union, Dict
+from typing import Dict, Union
+
 import torch
 
 
@@ -57,7 +58,7 @@ def xyz2lab(x: torch.Tensor, illuminant: str = "D50", observer: str = "2") -> to
     """
     epsilon = 0.008856
     kappa = 903.3
-    illuminants: Dict[str, Dict] = {
+    illuminants: dict[str, dict] = {
         "A": {"2": (1.098466069456375, 1, 0.3558228003436005), "10": (1.111420406956693, 1, 0.3519978321919493)},
         "D50": {"2": (0.9642119944211994, 1, 0.8251882845188288), "10": (0.9672062750333777, 1, 0.8142801513128616)},
         "D55": {"2": (0.956797052643698, 1, 0.9214805860173273), "10": (0.9579665682254781, 1, 0.9092525159847462)},
@@ -88,7 +89,7 @@ def xyz2lab(x: torch.Tensor, illuminant: str = "D50", observer: str = "2") -> to
     return x_lab
 
 
-def rgb2lab(x: torch.Tensor, data_range: Union[int, float] = 255) -> torch.Tensor:
+def rgb2lab(x: torch.Tensor, data_range: int | float = 255) -> torch.Tensor:
     r"""Convert a batch of RGB images to a batch of LAB images
 
     Args:

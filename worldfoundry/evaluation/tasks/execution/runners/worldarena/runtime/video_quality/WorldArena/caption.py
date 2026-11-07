@@ -1,20 +1,19 @@
-import torch
-import sys
-
-import os
-from tqdm import tqdm
 import hashlib
-import requests
-
-from IPython.display import Markdown, display
-import numpy as np
-from PIL import Image
-import decord
-from decord import VideoReader, cpu
-from .utils import load_dimension_info
-
-import time
 import json
+import os
+import sys
+import time
+
+import decord
+import numpy as np
+import requests
+import torch
+from decord import VideoReader, cpu
+from IPython.display import Markdown, display
+from PIL import Image
+from tqdm import tqdm
+
+from .utils import load_dimension_info
 
 try:
     import json_repair
@@ -68,11 +67,13 @@ def inference(
         with torch.inference_mode():
             outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
 
-        generated_ids = [output_ids[len(input_ids) :] for input_ids, output_ids in zip(inputs.input_ids, outputs)]
+        generated_ids = [
+            output_ids[len(input_ids) :] for input_ids, output_ids in zip(inputs.input_ids, outputs, strict=False)
+        ]
         output_text = processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")
         output_text = ["Error: " + str(e)]
 
     end_time = time.time()
@@ -114,7 +115,7 @@ def prepare_prompt(video_path):
 
 def caption_reference(model_name, model_path, video_folder_root, save_path, **kwargs):
     # Delay heavy imports so other dimensions can run without Qwen dependencies
-    from transformers import AutoProcessor, AutoModelForCausalLM
+    from transformers import AutoModelForCausalLM, AutoProcessor
 
     try:
         from transformers import Qwen2_5_VLForConditionalGeneration as QwenVLClass
@@ -152,7 +153,7 @@ def caption_reference(model_name, model_path, video_folder_root, save_path, **kw
             try:
                 response = _loads_jsonish(inference(model, processor, mp4_file, prompt))
             except Exception as e:
-                print(f"Error: {str(e)}")
+                print(f"Error: {e!s}")
                 response = "Error: " + str(e)
 
             parts = mp4_file.split("/")

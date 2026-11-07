@@ -1,21 +1,22 @@
+import importlib
 import os
 import re
-import importlib
 import sys
 from itertools import chain
 from pathlib import Path
+
 from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench
 
 sys.modules.setdefault("vbench2_beta_long", sys.modules[__name__])
 
-from vbench.utils import get_prompt_from_filename, init_submodules, save_json, load_json
-from vbench2_beta_long.utils import (
-    split_video_into_scenes,
-    split_video_into_clips,
-    load_clip_lengths,
-    get_duration_from_json,
-)
+from vbench.utils import get_prompt_from_filename, init_submodules, load_json, save_json
 from vbench2_beta_long.temporal_flickering import filter_static_clips
+from vbench2_beta_long.utils import (
+    get_duration_from_json,
+    load_clip_lengths,
+    split_video_into_clips,
+    split_video_into_scenes,
+)
 
 
 class VBenchLong(VBench):
@@ -230,7 +231,7 @@ class VBenchLong(VBench):
             self.check_dimension_requires_extra_info(dimension_list)
             CUR_DIR = os.path.dirname(os.path.abspath(__file__))
             category_supported = [
-                Path(category).stem for category in os.listdir(f"prompts/prompts_per_category")
+                Path(category).stem for category in os.listdir("prompts/prompts_per_category")
             ]  # TODO: probably need refactoring again
             if "category" not in kwargs:
                 category = category_supported
@@ -245,7 +246,7 @@ class VBenchLong(VBench):
             video_names = os.listdir(videos_path)
             postfix = Path(video_names[0]).suffix
 
-            with open(f"{CUR_DIR}/prompts_per_category/{category}.txt", "r") as f:
+            with open(f"{CUR_DIR}/prompts_per_category/{category}.txt") as f:
                 video_prompts = [line.strip() for line in f.readlines()]
 
             for prompt in video_prompts:
@@ -273,8 +274,8 @@ class VBenchLong(VBench):
                     prompt = prompt_dict["prompt_en"]
                     prompt_dict["video_list"] = []
                     for i in range(kwargs["num_of_samples_per_prompt"]):  # video index for the same prompt
-                        intended_video_name = f"{prompt}{special_str}-{str(i)}{postfix}"
-                        intended_video_name_floder = f"{prompt}{special_str}-{str(i)}"
+                        intended_video_name = f"{prompt}{special_str}-{i!s}{postfix}"
+                        intended_video_name_floder = f"{prompt}{special_str}-{i!s}"
                         intended_video_clips_name_floder = os.path.join(
                             videos_path, "split_clip", intended_video_name_floder
                         )
@@ -328,7 +329,7 @@ class VBenchLong(VBench):
                     prompt = prompt_dict["prompt_en"]
                     prompt_dict["video_list"] = []
                     for i in range(5):  # video index for the same prompt
-                        intended_video_name = f"{prompt}{special_str}-{str(i)}{postfix}"
+                        intended_video_name = f"{prompt}{special_str}-{i!s}{postfix}"
                         if intended_video_name in video_names:  # if the video exists
                             intended_video_path = os.path.join(videos_path, intended_video_name)
                             prompt_dict["video_list"].append(intended_video_path)

@@ -1,20 +1,20 @@
 import ast
-import openai
-from openai import OpenAI
+import base64
+import io
 import json
+import os
 import time
 from pathlib import Path
-import io
-import base64
+
+import openai
 import requests
-import os
+from dotenv import load_dotenv
+from openai import OpenAI
 from tqdm import tqdm
 
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
     get_scene_num,
 )
-
-from dotenv import load_dotenv
 
 # Load the .secrets file
 try:
@@ -28,7 +28,7 @@ client = OpenAI(
 )
 
 
-class TextPromptGen(object):
+class TextPromptGen:
     def __init__(self):
         super(TextPromptGen, self).__init__()
         self.model = "gpt-4o"
@@ -123,7 +123,7 @@ class TextPromptGen(object):
         return output
 
 
-class PromptGen(object):
+class PromptGen:
     def __init__(self, config):
         super(PromptGen, self).__init__()
         self.config = config
@@ -167,7 +167,7 @@ class PromptGen(object):
         try:
             with open(save_dir / f"{name}.json", "w") as json_file:
                 json.dump(output, json_file, indent=4)
-        except Exception as e:
+        except Exception:
             pass
         return
 

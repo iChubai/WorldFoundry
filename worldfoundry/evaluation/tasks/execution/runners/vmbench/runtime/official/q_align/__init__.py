@@ -1,3 +1,3 @@
-from .model import MPLUGOwl2LlamaForCausalLM
-from .evaluate import QAlignScorer, QAlignAestheticScorer, QAlignVideoScorer
+from .evaluate import QAlignAestheticScorer, QAlignScorer, QAlignVideoScorer
 from .load_video import load_video
+from .model import MPLUGOwl2LlamaForCausalLM

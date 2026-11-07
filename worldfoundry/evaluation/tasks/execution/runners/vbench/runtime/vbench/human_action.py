@@ -1,47 +1,47 @@
-import os
 import json
+import os
+
 import numpy as np
-from PIL import Image
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from vbench.utils import load_video, load_dimension_info
+from PIL import Image
+from timm.models import create_model
+from tqdm import tqdm
+from vbench.utils import load_dimension_info, load_video
+
 from worldfoundry.base_models.perception_core.action_recognition.umt import kinetics_categories_path
 from worldfoundry.base_models.perception_core.action_recognition.umt.datasets.video_transforms import (
-    Compose,
-    Resize,
     CenterCrop,
+    Compose,
     Normalize,
+    Resize,
     create_random_augment,
-    random_short_side_scale_jitter,
-    random_crop,
-    random_resized_crop_with_shift,
-    random_resized_crop,
     horizontal_flip,
+    random_crop,
+    random_resized_crop,
+    random_resized_crop_with_shift,
     random_short_side_scale_jitter,
     uniform_crop,
 )
 from worldfoundry.base_models.perception_core.action_recognition.umt.datasets.volume_transforms import ClipToTensor
-from timm.models import create_model
 from worldfoundry.base_models.perception_core.action_recognition.umt.models.modeling_finetune import (
     vit_large_patch16_224,
 )
-from tqdm import tqdm
-
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
     all_gather,
     barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
 
 
 def build_dict():
     path = kinetics_categories_path()
     results = {}
-    with open(path, "r") as f:
+    with open(path) as f:
         cat_list = f.readlines()
         cat_list = [c.strip() for c in cat_list]
         for line in cat_list:

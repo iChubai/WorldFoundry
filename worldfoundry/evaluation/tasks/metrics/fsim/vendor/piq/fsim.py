@@ -5,22 +5,22 @@ References:
     https://www4.comp.polyu.edu.hk/~cslzhang/IQA/TIP_IQA_FSIM.pdf
 """
 
-import math
 import functools
+import math
 from typing import Union
 
 import torch
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce, _parse_version
-from piq.functional import ifftshift, get_meshgrid, similarity_map, gradient_map, scharr_filter, rgb2yiq
+from piq.functional import get_meshgrid, gradient_map, ifftshift, rgb2yiq, scharr_filter, similarity_map
+from piq.utils import _parse_version, _reduce, _validate_input
 
 
 def fsim(
     x: torch.Tensor,
     y: torch.Tensor,
     reduction: str = "mean",
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     chromatic: bool = True,
     scales: int = 4,
     orientations: int = 4,
@@ -391,7 +391,7 @@ class FSIMLoss(_Loss):
     def __init__(
         self,
         reduction: str = "mean",
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
         chromatic: bool = True,
         scales: int = 4,
         orientations: int = 4,

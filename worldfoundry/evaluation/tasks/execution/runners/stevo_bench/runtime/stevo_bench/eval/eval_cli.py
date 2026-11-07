@@ -1,29 +1,29 @@
 import argparse
 import json
-import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from eval.task_resolver import resolve_tasks_from_outputs_json, ResolvedTask
-from eval.utils import _path_to_rel
+import yaml
 from eval.control_judge import (
-    evaluate_control_one_task,
-    append_control_results_to_summary,
-    _load_task_fields,
+    ControlJudgeResult,
     _compute_requested_fields,
+    _load_task_fields,
+    append_control_results_to_summary,
+    evaluate_control_one_task,
 )
 from eval.physics_judge import (
-    evaluate_physics_one_task,
-    append_physics_results_to_summary,
     PhysicsJudgeResult,
+    append_physics_results_to_summary,
+    evaluate_physics_one_task,
 )
-from eval.control_judge import ControlJudgeResult
 from eval.se_judge import (
-    evaluate_se_one_task,
-    append_se_results_to_summary,
     SEJudgeResult,
+    append_se_results_to_summary,
+    evaluate_se_one_task,
 )
+from eval.task_resolver import ResolvedTask, resolve_tasks_from_outputs_json
+from eval.utils import _path_to_rel
 
 
 def _make_judge_slug(provider: str, model: str) -> str:
@@ -36,7 +36,7 @@ def _report_filename(report_type: str, judge_slug: str) -> str:
     return f"{report_type}_report__{judge_slug}.json"
 
 
-def _init_summary_json(resolved_tasks: List[ResolvedTask], run_root: Path) -> None:
+def _init_summary_json(resolved_tasks: list[ResolvedTask], run_root: Path) -> None:
     """
     Ensure summary.json exists with a skeleton entry for every resolved task.
 
@@ -67,7 +67,7 @@ def _init_summary_json(resolved_tasks: List[ResolvedTask], run_root: Path) -> No
 
 
 def _write_init_stubs(
-    resolved_tasks: List[ResolvedTask],
+    resolved_tasks: list[ResolvedTask],
     per_task_root: Path,
     camera_controlled: bool = False,
 ) -> None:
@@ -154,7 +154,7 @@ def _eval_one_task(
     camera_controlled: bool = False,
     ensemble_size: int = 1,
     ensemble_mode: str = "majority",
-) -> Tuple[None, Optional[ControlJudgeResult], Optional[PhysicsJudgeResult], Optional[SEJudgeResult]]:
+) -> tuple[None, ControlJudgeResult | None, PhysicsJudgeResult | None, SEJudgeResult | None]:
     judge_result = None  # binary judge questions (judge_report.json) are obsolete
     control_result = (
         evaluate_control_one_task(
@@ -368,7 +368,7 @@ def main() -> None:
     # ---------------------------------------------------------------------------
     # Task resolution — sequential (final frame extraction happens here)
     # ---------------------------------------------------------------------------
-    resolved_tasks: List[ResolvedTask] = resolve_tasks_from_outputs_json(
+    resolved_tasks: list[ResolvedTask] = resolve_tasks_from_outputs_json(
         tasks_root=task_root,
         outputs_json=output_json,
         run_dir=run_root,
@@ -391,9 +391,9 @@ def main() -> None:
         _write_init_stubs(resolved_tasks, per_task_root, camera_controlled=camera_controlled)
         print(f"[DONE] Initialized {len(resolved_tasks)} task(s) in: {run_root}")
         print(
-            f"summary.json, judge_report.json, control_report.json, physics_report.json and se_report.json stubs written."
+            "summary.json, judge_report.json, control_report.json, physics_report.json and se_report.json stubs written."
         )
-        print(f"Start human_eval_server.py to begin human evaluation.")
+        print("Start human_eval_server.py to begin human evaluation.")
         return
 
     # Keep the full list for the summary-append step at the end.
@@ -444,9 +444,9 @@ def main() -> None:
                 response_keys=("responses",),
             )
             already_done = (
-                (run_control and control_done or not run_control)
-                and (run_physics and physics_done or not run_physics)
-                and (run_state and se_done or not run_state)
+                ((run_control and control_done) or not run_control)
+                and ((run_physics and physics_done) or not run_physics)
+                and ((run_state and se_done) or not run_state)
             )
             if already_done:
                 skipped += 1
@@ -460,9 +460,9 @@ def main() -> None:
     # Per-task eval — parallel (judge + control judge run together per task)
     # ---------------------------------------------------------------------------
     # judge_results: List[JudgeResult] = []  # OBSOLETE: binary judge questions
-    control_results: List[ControlJudgeResult] = []
-    physics_results: List[PhysicsJudgeResult] = []
-    se_results: List[SEJudgeResult] = []
+    control_results: list[ControlJudgeResult] = []
+    physics_results: list[PhysicsJudgeResult] = []
+    se_results: list[SEJudgeResult] = []
     failed = 0
 
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
@@ -511,17 +511,17 @@ def main() -> None:
         append_control_results_to_summary(
             tasks=all_resolved_tasks, judge_slug=control_slug, report_filename=control_report_fn
         )
-        print(f"[DONE] Controllability evaluation done")
+        print("[DONE] Controllability evaluation done")
 
     if run_physics:
         append_physics_results_to_summary(
             tasks=all_resolved_tasks, judge_slug=physics_slug, report_filename=physics_report_fn
         )
-        print(f"[DONE] Physics evaluation done")
+        print("[DONE] Physics evaluation done")
 
     if run_state:
         append_se_results_to_summary(tasks=all_resolved_tasks, judge_slug=se_slug, report_filename=se_report_fn)
-        print(f"[DONE] State evolution evaluation done")
+        print("[DONE] State evolution evaluation done")
 
     return
 

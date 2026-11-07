@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from wrbench.actions import CameraScript, parse_camera_script
-from wrbench.adapters import compile_camera_payload  # noqa: F401 ensures adapters register
+from wrbench.adapters import compile_camera_payload  # ensures adapters register
 from wrbench.adapters._utils import unified_sidecar_extra
 from wrbench.builder import build_camera_trajectory
 from wrbench.registry import canonical_model_key, input_kind, model_record

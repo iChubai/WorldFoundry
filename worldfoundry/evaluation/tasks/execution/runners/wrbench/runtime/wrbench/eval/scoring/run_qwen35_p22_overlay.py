@@ -15,7 +15,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 P22_PROMPT_MODE = "runtime_v2_probe_logprob_p22_native_d5d6_score_only"
 BASE_PROMPT_MODE_NAME = "runtime_v2_probe_logprob_p9_d4_p8_d5_p6_combined"
 

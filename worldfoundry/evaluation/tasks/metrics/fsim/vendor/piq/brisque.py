@@ -7,21 +7,23 @@ Credits:
     https://live.ece.utexas.edu/research/Quality/index_algorithms.htm BRISQUE
 """
 
-from typing import Union, Tuple
 import warnings
+from typing import Tuple, Union
+
 import torch
+import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss
 from torch.utils.model_zoo import load_url
-import torch.nn.functional as F
-from piq.utils import _validate_input, _reduce
-from piq.functional import rgb2yiq, gaussian_filter, imresize
+
+from piq.functional import gaussian_filter, imresize, rgb2yiq
+from piq.utils import _reduce, _validate_input
 
 
 def brisque(
     x: torch.Tensor,
     kernel_size: int = 7,
     kernel_sigma: float = 7 / 6,
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     reduction: str = "mean",
 ) -> torch.Tensor:
     r"""Interface of BRISQUE index.
@@ -112,7 +114,7 @@ class BRISQUELoss(_Loss):
         self,
         kernel_size: int = 7,
         kernel_sigma: float = 7 / 6,
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
         reduction: str = "mean",
         interpolation: str = "nearest",
     ) -> None:
@@ -145,7 +147,7 @@ class BRISQUELoss(_Loss):
         )
 
 
-def _ggd_parameters(x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+def _ggd_parameters(x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     gamma = torch.arange(0.2, 10 + 0.001, 0.001, dtype=x.dtype, device=x.device)
     r_table = (torch.lgamma(1.0 / gamma) + torch.lgamma(3.0 / gamma) - 2 * torch.lgamma(2.0 / gamma)).exp()
     r_table = r_table.repeat(x.size(0), 1)
@@ -165,7 +167,7 @@ def _ggd_parameters(x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     return solution, sigma
 
 
-def _aggd_parameters(x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def _aggd_parameters(x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     gamma = torch.arange(start=0.2, end=10.001, step=0.001, dtype=x.dtype, device=x.device)
     r_table = torch.exp(2 * torch.lgamma(2.0 / gamma) - torch.lgamma(1.0 / gamma) - torch.lgamma(3.0 / gamma))
     r_table = r_table.repeat(x.size(0), 1)

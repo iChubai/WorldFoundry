@@ -15,10 +15,9 @@ simultaneous rotation and translation in a single segment using
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from wrbench.actions import CameraScript
-
 
 DEFAULT_FRAMES = 81
 DEFAULT_YAW_PEAK_DEG = 60.0

@@ -1,25 +1,28 @@
+import json
+import math
 import os
 import sys
-import math
 
+import cv2
 import numpy as np
-import json
 import torch
 from PIL import Image
-import cv2
 
-# Grounding DINO
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util import transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
+
+# Grounding DINO
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util import transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
     clean_state_dict,
     get_phrases_from_posmap,
 )
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
 
 
 def transform_pil(image_pil):
@@ -72,7 +75,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     tokenized = tokenlizer(caption)
     # build pred
     pred_phrases = []
-    for logit, box in zip(logits_filt, boxes_filt):
+    for logit, box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")

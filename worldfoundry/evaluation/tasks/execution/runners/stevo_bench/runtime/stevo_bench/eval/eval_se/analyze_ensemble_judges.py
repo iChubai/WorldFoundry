@@ -5,9 +5,9 @@ Calculate confusion matrix for each of the 3 judges separately.
 
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
-from collections import defaultdict
 
 
 class EnsembleJudgeAnalyzer:
@@ -15,16 +15,16 @@ class EnsembleJudgeAnalyzer:
         self.project_root = Path(project_root)
         self.runs_dir = self.project_root / "runs"
 
-    def load_evaluation_results(self, results_file: str) -> Dict:
+    def load_evaluation_results(self, results_file: str) -> dict:
         """Load the evaluation results JSON file."""
         results_path = Path(results_file)
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, "r") as f:
+        with open(results_path) as f:
             return json.load(f)
 
-    def load_summary_json(self, run_name: str) -> Dict:
+    def load_summary_json(self, run_name: str) -> dict:
         """Load summary.json for a specific run."""
         run_mapping = {
             "sora_pro_sora_pro_subset_run_3": "sora_pro_output_map_sora_pro_subset_run_3",
@@ -42,10 +42,10 @@ class EnsembleJudgeAnalyzer:
             print(f"Warning: Could not find summary.json at {summary_path}")
             return {}
 
-        with open(summary_path, "r") as f:
+        with open(summary_path) as f:
             return json.load(f)
 
-    def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
+    def get_ground_truth_label(self, summary: dict, task_id: str) -> bool:
         """Get ground truth label for a task from summary.json."""
         for task in summary.get("tasks", []):
             if task.get("task_id") == task_id:
@@ -57,7 +57,7 @@ class EnsembleJudgeAnalyzer:
                     return None
         return None
 
-    def analyze_judges(self, results_file: str) -> Dict:
+    def analyze_judges(self, results_file: str) -> dict:
         """
         Analyze performance of each judge separately.
 
@@ -191,7 +191,7 @@ class EnsembleJudgeAnalyzer:
 
         return results
 
-    def print_judge_comparison(self, analysis: Dict):
+    def print_judge_comparison(self, analysis: dict):
         """Pretty print comparison of judges."""
         print(f"\n{'=' * 70}")
         print("ENSEMBLE JUDGE COMPARISON")
@@ -240,12 +240,12 @@ class EnsembleJudgeAnalyzer:
 
             print(f"\n{judge_names.get(judge_key, judge_key)}:")
             print(f"  Total evaluated: {judge_data['total']}")
-            print(f"  Confusion Matrix:")
-            print(f"                     Predicted")
-            print(f"                  Negative  Positive")
+            print("  Confusion Matrix:")
+            print("                     Predicted")
+            print("                  Negative  Positive")
             print(f"  Actual Negative  {cm['TN']:^8}  {cm['FP']:^8}")
             print(f"  Actual Positive  {cm['FN']:^8}  {cm['TP']:^8}")
-            print(f"  Metrics:")
+            print("  Metrics:")
             print(f"    Accuracy:  {metrics['accuracy']:.3f} ({metrics['accuracy'] * 100:.1f}%)")
             print(f"    Precision: {metrics['precision']:.3f}")
             print(f"    Recall:    {metrics['recall']:.3f}")

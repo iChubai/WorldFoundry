@@ -1,12 +1,12 @@
 import ast
-import os
 import json
-import fire
+import os
 import random
+
+import fire
 import numpy as np
 import prettytable as pt
 from datasets import load_dataset
-
 
 aspects = ["visual quality", "temporal consistency", "dynamic degree", "text-to-video alignment", "factual consistency"]
 
@@ -59,7 +59,7 @@ def main(
     random_acc = round(random_acc / len(ref_data_map), 4)
     all_model_acc["Random"] = {
         "acc": random_acc,
-        "aspecct_accs": {aspect: random_acc for aspect in aspects},
+        "aspecct_accs": dict.fromkeys(aspects, random_acc),
         "total_examples": len(ref_data_map),
     }
 
@@ -68,7 +68,7 @@ def main(
             continue
         print(f"Processing {res_file}")
         model_name = res_file.split(".")[0].split("_")[-1]
-        with open(f"{result_dir}/{res_file}", "r") as f:
+        with open(f"{result_dir}/{res_file}") as f:
             data = json.load(f)
         data_map = {}
         for item in data:
@@ -87,7 +87,7 @@ def main(
         # assert all have "left" and "right"
         print("Total examples: ", len(data_map))
         to_remove_idx = []
-        for idx in data_map.keys():
+        for idx in data_map:
             if "left" not in data_map[idx] or "right" not in data_map[idx]:
                 to_remove_idx.append(idx)
         for idx in to_remove_idx:
@@ -96,8 +96,8 @@ def main(
 
         random_acc = 0
         acc = 0
-        aspecct_accs = {aspect: 0 for aspect in aspects}
-        for idx in data_map.keys():
+        aspecct_accs = dict.fromkeys(aspects, 0)
+        for idx in data_map:
             left = data_map[idx]["left"]
             right = data_map[idx]["right"]
             left_preference = data_map[idx]["left_preference"]

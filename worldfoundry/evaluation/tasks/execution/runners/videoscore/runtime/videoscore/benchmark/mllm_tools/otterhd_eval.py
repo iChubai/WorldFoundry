@@ -1,7 +1,9 @@
 import os
 from typing import List
-from .mllm_utils import merge_images
+
 from worldfoundry.base_models.llm_mllm_core.mllm.otter import OtterHD as OtterHDModel
+
+from .mllm_utils import merge_images
 
 
 class OtterHD:
@@ -16,7 +18,7 @@ class OtterHD:
         """
         self.model = OtterHDModel(model_path=model_path)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

@@ -3,11 +3,10 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from pathlib import Path
-from datetime import datetime, timezone
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, Tuple
-
 from urllib.parse import urlparse
 
 try:
@@ -47,11 +46,11 @@ REPORT_MD = """# VLM Judge Report
 
 
 # ---------- Parsing helpers ----------
-def _try_json_loads(blob: str) -> Dict[str, Any]:
+def _try_json_loads(blob: str) -> dict[str, Any]:
     return json.loads(blob)
 
 
-def _extract_json_from_text(text: str) -> Dict[str, Any]:
+def _extract_json_from_text(text: str) -> dict[str, Any]:
     """
     Try, in order:
       1) direct JSON
@@ -108,7 +107,7 @@ def _normalize_1to4(v: Any) -> float:
     return _clamp(f, 1.0, 4.0)
 
 
-def _compute_overall_1to4(r: Dict[str, Any], w: Dict[str, float]) -> float:
+def _compute_overall_1to4(r: dict[str, Any], w: dict[str, float]) -> float:
     return (
         w["prompt_consistency"] * _normalize_1to4(r.get("prompt_consistency"))
         + w["expected_phenomenon"] * _normalize_1to4(r.get("expected_phenomenon"))
@@ -118,7 +117,7 @@ def _compute_overall_1to4(r: Dict[str, Any], w: Dict[str, float]) -> float:
     )
 
 
-def _parse_output_text(output_text: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def _parse_output_text(output_text: str) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Returns (rubric_scores_1to4, explanations).
     rubric_scores_1to4 keys (all 1–4):
@@ -189,7 +188,7 @@ def _is_remote_or_missing(p: str | None) -> bool:
     return not Path(p).exists()
 
 
-def _load_checklist(path: str | None) -> Dict[str, Any]:
+def _load_checklist(path: str | None) -> dict[str, Any]:
     """
     Load a checklist JSON file if provided.
 
@@ -216,7 +215,7 @@ def _load_checklist(path: str | None) -> Dict[str, Any]:
     return {}
 
 
-def _load_cv_metrics(path: str | None) -> Dict[str, Any]:
+def _load_cv_metrics(path: str | None) -> dict[str, Any]:
     """
     Load CV-based metrics JSON produced by cv_metrics.py (optional).
     """
@@ -274,7 +273,7 @@ def main():
     cv_metrics = _load_cv_metrics(args.cv_json)
 
     # Build extra payload
-    extra: Dict[str, Any] = {}
+    extra: dict[str, Any] = {}
     if checklist:
         extra["checklist"] = checklist
     if cv_metrics:

@@ -1,14 +1,14 @@
-import time
-import json
-import csv
-import os
-import glob
 import argparse
+import csv
+import glob
+import json
+import os
 import tempfile
+import time
 
 import cv2
-from tqdm import tqdm
 from google import genai
+from tqdm import tqdm
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
@@ -168,7 +168,7 @@ def upload_and_wait(file_path, kind="file"):
     while True:
         f = client.files.get(name=f.name)
         if f.state == "ACTIVE":
-            print(f"  Ready.\n")
+            print("  Ready.\n")
             return f
         if f.state == "FAILED":
             raise RuntimeError(f"Gemini {kind} processing failed for {file_path}")

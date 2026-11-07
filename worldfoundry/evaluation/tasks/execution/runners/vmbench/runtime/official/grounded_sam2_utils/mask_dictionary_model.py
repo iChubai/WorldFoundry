@@ -1,10 +1,11 @@
-import numpy as np
-import json
-import torch
 import copy
+import json
 import os
-import cv2
 from dataclasses import dataclass, field
+
+import cv2
+import numpy as np
+import torch
 
 
 @dataclass
@@ -18,7 +19,7 @@ class MaskDictionaryModel:
     def add_new_frame_annotation(self, mask_list, box_list, label_list, background_value=0):
         mask_img = torch.zeros(mask_list.shape[-2:])
         anno_2d = {}
-        for idx, (mask, box, label) in enumerate(zip(mask_list, box_list, label_list)):
+        for idx, (mask, box, label) in enumerate(zip(mask_list, box_list, label_list, strict=False)):
             final_index = background_value + idx + 1
 
             if mask.shape[0] != mask_img.shape[0] or mask.shape[1] != mask_img.shape[1]:
@@ -118,7 +119,7 @@ class MaskDictionaryModel:
             json.dump(self.to_dict(), f, indent=4)
 
     def from_json(self, json_file):
-        with open(json_file, "r") as f:
+        with open(json_file) as f:
             data = json.load(f)
             self.mask_name = data["mask_name"]
             self.mask_height = data["mask_height"]

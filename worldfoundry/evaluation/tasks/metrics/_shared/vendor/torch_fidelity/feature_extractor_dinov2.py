@@ -7,10 +7,8 @@ import torch
 import torchvision
 
 from .feature_extractor_base import FeatureExtractorBase
-from .helpers import vassert, text_to_dtype, CleanStderr
-
+from .helpers import CleanStderr, text_to_dtype, vassert
 from .interpolate_compat_tensorflow import interpolate_bilinear_2d_like_tensorflow1x
-
 
 MODEL_METADATA = {
     "dinov2-vit-s-14": "dinov2_vits14",  # dim=384

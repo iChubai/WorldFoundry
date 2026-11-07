@@ -11,7 +11,6 @@ from ..skills.skill_motion_quality import (
 )
 from .common import LocalMetricBackend
 
-
 BACKEND_ID = "harnesseval.motion_quality"
 BACKEND_VERSION = "harnesseval.motion_quality.two_metrics"
 CONFIG_DIGEST = value_digest(

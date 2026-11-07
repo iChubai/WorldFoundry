@@ -9,11 +9,11 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize
 
-from worldfoundry.core.media.codecs.video import list_numbered_frame_paths
 from worldfoundry.core.execution.inference_runtime import (
     adaptive_batched_inference,
     resolve_inference_batch_size,
 )
+from worldfoundry.core.media.codecs.video import list_numbered_frame_paths
 from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (
     load_laion_aesthetic_linear_head,
 )

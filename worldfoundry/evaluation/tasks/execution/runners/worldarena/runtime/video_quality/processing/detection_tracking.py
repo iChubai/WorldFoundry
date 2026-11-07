@@ -1,17 +1,18 @@
-from collections import defaultdict
-import numpy as np
+import math
 import os
+from collections import defaultdict
+
 import av
 import cv2
-import yaml
+import numpy as np
 import torch
-from tqdm import tqdm
+import yaml
 from PIL import Image
-import math
+from sam3.model.sam3_image_processor import Sam3Processor
 
 # ===== 1. SAM3 imports =====
 from sam3.model_builder import build_sam3_image_model
-from sam3.model.sam3_image_processor import Sam3Processor
+from tqdm import tqdm
 
 
 def nms_boxes(boxes, scores, iou_threshold=0.5):
@@ -388,7 +389,7 @@ def process_video_with_tracking(
         right_detections = []  # right gripper candidates
 
         # Process each detection
-        for i, (box, score) in enumerate(zip(boxes, scores)):
+        for i, (box, score) in enumerate(zip(boxes, scores, strict=False)):
             if score < 0.3:  # confidence threshold
                 continue
 
@@ -562,7 +563,7 @@ def process_video_with_tracking(
 
 def load_config(config_path):
     """Load YAML config file."""
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
     return config
 

@@ -1,8 +1,8 @@
 import numpy as np
 
-from ..base_metrics import BaseMetric
-
 from torchmetrics.image import PeakSignalNoiseRatio
+
+from ..base_metrics import BaseMetric
 
 
 class PeakSignalNoiseRatioMetric(BaseMetric):

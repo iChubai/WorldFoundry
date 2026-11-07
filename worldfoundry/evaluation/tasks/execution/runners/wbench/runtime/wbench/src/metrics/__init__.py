@@ -18,11 +18,11 @@ def get_vlm_evaluator():
 
 
 __all__ = [
-    "get_vlm_evaluator",
-    "video_quality",
-    "setting_adherence",
-    "interaction",
     "consistency",
+    "get_vlm_evaluator",
+    "interaction",
     "physical",
+    "setting_adherence",
+    "video_quality",
     "vlm",
 ]

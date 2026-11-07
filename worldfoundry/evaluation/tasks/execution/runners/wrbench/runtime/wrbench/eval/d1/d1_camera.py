@@ -9,21 +9,21 @@ import json
 import math
 import sys
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import numpy as np
 
 from wrbench.eval.d1.d1_sidecar_contract import validate_camera_control_target
 from wrbench.eval.d1.geometry import safe_video_id
 from wrbench.eval.d1.pose import (
-    PRIMARY_TARGET_POSE_PATH_FIELDS,
     POSE_INLINE_FIELDS,
+    PRIMARY_TARGET_POSE_PATH_FIELDS,
     _expand_poses,
     _normalize_predicted_poses,
     score_trajectory_pose,
 )
-
 
 ELIGIBLE_CAMERAS = frozenset({"static", "yaw_LR", "yaw_RL", "pan_LR", "pan_RL"})
 CERTIFIED_TARGET_STATUS = "certified"

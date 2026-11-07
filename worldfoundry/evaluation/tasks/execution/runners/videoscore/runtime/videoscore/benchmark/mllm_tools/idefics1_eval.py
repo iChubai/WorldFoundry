@@ -1,8 +1,9 @@
 import os
-import torch
 import time
 from typing import List
-from transformers import IdeficsForVisionText2Text, AutoProcessor
+
+import torch
+from transformers import AutoProcessor, IdeficsForVisionText2Text
 
 
 class Idefics1:
@@ -20,7 +21,7 @@ class Idefics1:
         ).eval()
         self.processor = AutoProcessor.from_pretrained(model_path)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

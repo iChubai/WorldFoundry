@@ -1,6 +1,6 @@
+import os
 from typing import List, Union
 
-import os
 import torch
 from PIL import Image
 
@@ -38,7 +38,7 @@ class CLIPScoreMetric(BaseMetric):
         )
         self._metric = CLIPScore(model_name_or_path=model_name_or_path).to(self._device)
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]], text_prompt: str) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image], text_prompt: str) -> float:
         imgs = self._process_image(rendered_images)
 
         imgs = (imgs * 255).to(torch.uint8)

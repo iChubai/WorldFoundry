@@ -1,26 +1,26 @@
-import os
 import json
-import numpy as np
-from tqdm import tqdm
+import os
 
+import numpy as np
 import torch
 from PIL import Image
+from tqdm import tqdm
 from vbench.utils import (
-    load_video,
-    load_dimension_info,
     clip_transform,
-    read_frames_decord_by_fps,
     clip_transform_Image,
+    load_dimension_info,
+    load_video,
+    read_frames_decord_by_fps,
 )
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
     all_gather,
     barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
 
 

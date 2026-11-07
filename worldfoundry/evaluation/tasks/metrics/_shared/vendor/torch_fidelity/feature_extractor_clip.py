@@ -16,7 +16,7 @@ from torch import nn
 from torch.hub import load_state_dict_from_url
 
 from .feature_extractor_base import FeatureExtractorBase
-from .helpers import vassert, vprint, text_to_dtype, get_kwarg
+from .helpers import get_kwarg, text_to_dtype, vassert, vprint
 from .interpolate_compat_tensorflow import interpolate_bilinear_2d_like_tensorflow1x
 
 MODEL_BASE_URL = "https://openaipublic.azureedge.net/clip/models"
@@ -325,7 +325,7 @@ class CLIPVisual(nn.Module):
         self,
         embed_dim: int,
         image_resolution: int,
-        vision_layers: Union[Tuple[int, int, int, int], int],
+        vision_layers: tuple[int, int, int, int] | int,
         vision_width: int,
         vision_patch_size: int,
     ):

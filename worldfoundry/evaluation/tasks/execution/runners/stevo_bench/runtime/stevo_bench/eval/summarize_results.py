@@ -34,11 +34,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-def _avg(values: List[float]) -> float | None:
+def _avg(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
-def _get_task_fields(t: Dict[str, Any], judge: Optional[str]) -> Dict[str, Any]:
+def _get_task_fields(t: dict[str, Any], judge: str | None) -> dict[str, Any]:
     """
     Return the metric dict for task t under the given judge.
 
@@ -52,7 +52,7 @@ def _get_task_fields(t: Dict[str, Any], judge: Optional[str]) -> Dict[str, Any]:
     return t
 
 
-def _annotate_task(t: Dict[str, Any], judge: Optional[str]) -> None:
+def _annotate_task(t: dict[str, Any], judge: str | None) -> None:
     """Write control_success and task_success into the judge's eval dict
     and into each task["annotations"][name] dict (per annotator)."""
 
@@ -86,7 +86,7 @@ def _annotate_task(t: Dict[str, Any], judge: Optional[str]) -> None:
             ann["task_success"] = bool(a_se) and not bool(a_pi)
 
 
-def _empty_buckets() -> Dict[str, List]:
+def _empty_buckets() -> dict[str, list]:
     return {
         "occlusion_done": [],
         "trigger_applied": [],
@@ -97,7 +97,7 @@ def _empty_buckets() -> Dict[str, List]:
     }
 
 
-def _fill_bucket(bucket: Dict[str, List], t: Dict[str, Any], judge: Optional[str]) -> None:
+def _fill_bucket(bucket: dict[str, list], t: dict[str, Any], judge: str | None) -> None:
     """Accumulate one task entry into a bucket dict (LLM metrics only)."""
     ev = _get_task_fields(t, judge)
 
@@ -122,7 +122,7 @@ def _fill_bucket(bucket: Dict[str, List], t: Dict[str, Any], judge: Optional[str
         bucket["task_success"].append(1.0 if task_success else 0.0)
 
 
-def _bucket_to_stats(bucket: Dict[str, List], num_tasks: int) -> Dict[str, Any]:
+def _bucket_to_stats(bucket: dict[str, list], num_tasks: int) -> dict[str, Any]:
     return {
         "num_tasks": num_tasks,
         "avg_occlusion_done": _avg(bucket["occlusion_done"]),
@@ -134,7 +134,7 @@ def _bucket_to_stats(bucket: Dict[str, List], num_tasks: int) -> Dict[str, Any]:
     }
 
 
-def _stats_for_tasks(tasks: List[Dict[str, Any]], judge: Optional[str]) -> Dict[str, Any]:
+def _stats_for_tasks(tasks: list[dict[str, Any]], judge: str | None) -> dict[str, Any]:
     """Compute aggregate stats for an arbitrary list of task entries."""
     bucket = _empty_buckets()
     for t in tasks:
@@ -142,7 +142,7 @@ def _stats_for_tasks(tasks: List[Dict[str, Any]], judge: Optional[str]) -> Dict[
     return _bucket_to_stats(bucket, len(tasks))
 
 
-def _majority_vote(values: List) -> Optional[bool]:
+def _majority_vote(values: list) -> bool | None:
     """Strict majority vote over boolean-ish values. Returns None on tie or empty."""
     if not values:
         return None
@@ -153,7 +153,7 @@ def _majority_vote(values: List) -> Optional[bool]:
     return s * 2 > n
 
 
-def _fill_bucket_human(bucket: Dict[str, List], t: Dict[str, Any]) -> None:
+def _fill_bucket_human(bucket: dict[str, list], t: dict[str, Any]) -> None:
     """Accumulate one task into bucket via majority vote across human annotators."""
     anns = list(t.get("annotations", {}).values())
     if not anns:
@@ -174,7 +174,7 @@ def _fill_bucket_human(bucket: Dict[str, List], t: Dict[str, Any]) -> None:
             bucket[bucket_key].append(1.0 if vote else 0.0)
 
 
-def _stats_for_tasks_human(tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _stats_for_tasks_human(tasks: list[dict[str, Any]]) -> dict[str, Any]:
     """Compute aggregate stats using majority-voted human annotations."""
     bucket = _empty_buckets()
     for t in tasks:
@@ -183,9 +183,9 @@ def _stats_for_tasks_human(tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def compute_level_stats(
-    tasks: List[Dict[str, Any]],
-    judge: Optional[str],
-) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Any]]:
+    tasks: list[dict[str, Any]],
+    judge: str | None,
+) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     """
     Compute per-level and overall breakdown stats.
 
@@ -194,8 +194,8 @@ def compute_level_stats(
       level_stats   — dict keyed by level string
       overall_stats — same metrics aggregated across all levels
     """
-    level_buckets: Dict[str, Dict[str, List]] = defaultdict(_empty_buckets)
-    level_counts: Dict[str, int] = defaultdict(int)
+    level_buckets: dict[str, dict[str, list]] = defaultdict(_empty_buckets)
+    level_counts: dict[str, int] = defaultdict(int)
     overall_bucket = _empty_buckets()
     overall_count = 0
 
@@ -214,7 +214,7 @@ def compute_level_stats(
     return level_stats, overall_stats
 
 
-def _detect_judge(tasks: List[Dict[str, Any]]) -> Optional[str]:
+def _detect_judge(tasks: list[dict[str, Any]]) -> str | None:
     """Auto-detect the judge slug when exactly one judge appears in llm_evals."""
     judges: set = set()
     for t in tasks:
@@ -286,7 +286,7 @@ def main() -> None:
 
     # Write stats nested under the judge slug so multiple judges coexist in
     # summary.json. Falls back to flat keys for legacy (judge=None) runs.
-    def _set_stats(section: dict, key: Optional[str], stats: dict) -> None:
+    def _set_stats(section: dict, key: str | None, stats: dict) -> None:
         if key:
             section[key] = stats
         else:
@@ -339,7 +339,7 @@ def main() -> None:
         all_stats = _stats_for_tasks(tasks, judge)
         baseline_stats = _stats_for_tasks(baseline_tasks, judge)
         occluded_stats = _stats_for_tasks(occluded_tasks, judge)
-        title = f"LLM Judge" + (f" ({judge})" if judge else "")
+        title = "LLM Judge" + (f" ({judge})" if judge else "")
         _print_table(
             title,
             [("all", all_stats), ("baseline", baseline_stats), ("occluded", occluded_stats)],

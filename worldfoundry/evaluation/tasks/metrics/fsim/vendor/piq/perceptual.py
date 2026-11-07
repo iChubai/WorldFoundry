@@ -11,16 +11,16 @@ References:
     https://arxiv.org/abs/1801.03924
 """
 
-from typing import List, Union, Collection
+from collections.abc import Collection
+from typing import List, Union
 
 import torch
 import torch.nn as nn
 from torch.nn.modules.loss import _Loss
 from torchvision.models import vgg16, vgg19
 
-from piq.utils import _validate_input, _reduce
-from piq.functional import similarity_map, L2Pool2d
-
+from piq.functional import L2Pool2d, similarity_map
+from piq.utils import _reduce, _validate_input
 
 # Map VGG names to corresponding number in torchvision layer
 VGG16_LAYERS = {
@@ -145,14 +145,14 @@ class ContentLoss(_Loss):
 
     def __init__(
         self,
-        feature_extractor: Union[str, torch.nn.Module] = "vgg16",
+        feature_extractor: str | torch.nn.Module = "vgg16",
         layers: Collection[str] = ("relu3_3",),
-        weights: List[Union[float, torch.Tensor]] = [1.0],
+        weights: list[float | torch.Tensor] = [1.0],
         replace_pooling: bool = False,
         distance: str = "mse",
         reduction: str = "mean",
-        mean: List[float] = IMAGENET_MEAN,
-        std: List[float] = IMAGENET_STD,
+        mean: list[float] = IMAGENET_MEAN,
+        std: list[float] = IMAGENET_STD,
         normalize_features: bool = False,
         allow_layers_weights_mismatch: bool = False,
     ) -> None:
@@ -218,11 +218,13 @@ class ContentLoss(_Loss):
         distances = self.compute_distance(x_features, y_features)
 
         # Scale distances, then average in spatial dimensions, then stack and sum in channels dimension
-        loss = torch.cat([(d * w.to(d)).mean(dim=[2, 3]) for d, w in zip(distances, self.weights)], dim=1).sum(dim=1)
+        loss = torch.cat(
+            [(d * w.to(d)).mean(dim=[2, 3]) for d, w in zip(distances, self.weights, strict=False)], dim=1
+        ).sum(dim=1)
 
         return _reduce(loss, self.reduction)
 
-    def compute_distance(self, x_features: List[torch.Tensor], y_features: List[torch.Tensor]) -> List[torch.Tensor]:
+    def compute_distance(self, x_features: list[torch.Tensor], y_features: list[torch.Tensor]) -> list[torch.Tensor]:
         r"""Take L2 or L1 distance between feature maps depending on ``distance``.
 
         Args:
@@ -232,9 +234,9 @@ class ContentLoss(_Loss):
         Returns:
             Distance between feature maps
         """
-        return [self.distance(x, y) for x, y in zip(x_features, y_features)]
+        return [self.distance(x, y) for x, y in zip(x_features, y_features, strict=False)]
 
-    def get_features(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def get_features(self, x: torch.Tensor) -> list[torch.Tensor]:
         r"""
         Args:
             x: Tensor. Shape :math:`(N, C, H, W)`.
@@ -339,7 +341,7 @@ class StyleLoss(ContentLoss):
         """
         x_gram = [self.gram_matrix(x) for x in x_features]
         y_gram = [self.gram_matrix(x) for x in y_features]
-        return [self.distance(x, y) for x, y in zip(x_gram, y_gram)]
+        return [self.distance(x, y) for x, y in zip(x_gram, y_gram, strict=False)]
 
     @staticmethod
     def gram_matrix(x: torch.Tensor) -> torch.Tensor:
@@ -407,8 +409,8 @@ class LPIPS(ContentLoss):
         replace_pooling: bool = False,
         distance: str = "mse",
         reduction: str = "mean",
-        mean: List[float] = IMAGENET_MEAN,
-        std: List[float] = IMAGENET_STD,
+        mean: list[float] = IMAGENET_MEAN,
+        std: list[float] = IMAGENET_STD,
     ) -> None:
         lpips_layers = ["relu1_2", "relu2_2", "relu3_3", "relu4_3", "relu5_3"]
         lpips_weights = torch.hub.load_state_dict_from_url(self._weights_url, progress=False)
@@ -456,7 +458,7 @@ class DISTS(ContentLoss):
     _weights_url = "https://github.com/photosynthesis-team/piq/releases/download/v0.4.1/dists_weights.pt"
 
     def __init__(
-        self, reduction: str = "mean", mean: List[float] = IMAGENET_MEAN, std: List[float] = IMAGENET_STD
+        self, reduction: str = "mean", mean: list[float] = IMAGENET_MEAN, std: list[float] = IMAGENET_STD
     ) -> None:
         dists_layers = ["relu1_2", "relu2_2", "relu3_3", "relu4_3", "relu5_3"]
         channels = [3, 64, 128, 256, 512, 512]
@@ -500,7 +502,7 @@ class DISTS(ContentLoss):
         loss = super().forward(x, y)
         return 1 - loss
 
-    def compute_distance(self, x_features: torch.Tensor, y_features: torch.Tensor) -> List[torch.Tensor]:
+    def compute_distance(self, x_features: torch.Tensor, y_features: torch.Tensor) -> list[torch.Tensor]:
         r"""Compute structure similarity between feature maps
 
         Args:
@@ -514,7 +516,7 @@ class DISTS(ContentLoss):
         # Small constant for numerical stability
         EPS = 1e-6
 
-        for x, y in zip(x_features, y_features):
+        for x, y in zip(x_features, y_features, strict=False):
             x_mean = x.mean([2, 3], keepdim=True)
             y_mean = y.mean([2, 3], keepdim=True)
             structure_distance.append(similarity_map(x_mean, y_mean, constant=EPS))
@@ -526,7 +528,7 @@ class DISTS(ContentLoss):
 
         return structure_distance + texture_distance
 
-    def get_features(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def get_features(self, x: torch.Tensor) -> list[torch.Tensor]:
         r"""
 
         Args:

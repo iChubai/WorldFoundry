@@ -7,7 +7,7 @@ from piq.utils import _validate_input
 
 
 def _polynomial_kernel(
-    X: torch.Tensor, Y: torch.Tensor = None, degree: int = 3, gamma: Optional[float] = None, coef0: float = 1.0
+    X: torch.Tensor, Y: torch.Tensor = None, degree: int = 3, gamma: float | None = None, coef0: float = 1.0
 ) -> torch.Tensor:
     """
     Compute the polynomial kernel between x and y
@@ -46,9 +46,9 @@ def _mmd2_and_variance(
     K_YY: torch.Tensor,
     unit_diagonal: bool = False,
     mmd_est: str = "unbiased",
-    var_at_m: Optional[int] = None,
+    var_at_m: int | None = None,
     ret_var: bool = False,
-) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
     # based on
     # https://github.com/dougalsutherland/opt-mmd/blob/master/two_sample/mmd.py
     # but changed to not compute the full kernel matrix at once
@@ -162,12 +162,12 @@ class KID(BaseFeatureMetric):
     def __init__(
         self,
         degree: int = 3,
-        gamma: Optional[float] = None,
+        gamma: float | None = None,
         coef0: int = 1,
-        var_at_m: Optional[int] = None,
+        var_at_m: int | None = None,
         average: bool = False,
         n_subsets: int = 50,
-        subset_size: Optional[int] = 1000,
+        subset_size: int | None = 1000,
         ret_var: bool = False,
     ) -> None:
         super().__init__()
@@ -185,7 +185,7 @@ class KID(BaseFeatureMetric):
 
     def compute_metric(
         self, x_features: torch.Tensor, y_features: torch.Tensor
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """Computes KID (polynomial MMD) for given sets of features, obtained from Inception net
         or any other feature extractor.
         Samples must be in range [0, 1].

@@ -1,11 +1,11 @@
-import json
-import csv
-from statistics import mean
 import argparse
+import csv
+import json
+from statistics import mean
 
 
 def calculate_averages(json_file, output_csv):
-    with open(json_file, "r") as f:
+    with open(json_file) as f:
         data = json.load(f)
 
     scores = {
@@ -17,7 +17,7 @@ def calculate_averages(json_file, output_csv):
     }
 
     for item in data:
-        for key in scores.keys():
+        for key in scores:
             if key in item:
                 scores[key].append(item[key])
 

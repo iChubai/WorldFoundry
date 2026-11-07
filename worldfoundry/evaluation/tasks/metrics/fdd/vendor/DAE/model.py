@@ -1,11 +1,11 @@
-from typing import Optional, Sequence
-import torch
+from collections.abc import Sequence
 from dataclasses import dataclass
-from torch import nn, Tensor
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from torch import Tensor, nn
 
 ##########################################################################################
 ################################# Configuration ##########################################
@@ -60,7 +60,7 @@ class AutoEncoderConfig:
 
 
 class AutoEncoder(nn.Module):
-    def __init__(self, config: AutoEncoderConfig, ckpt: Optional[str] = None):
+    def __init__(self, config: AutoEncoderConfig, ckpt: str | None = None):
         super(AutoEncoder, self).__init__()
         self.config = config
 
@@ -140,9 +140,7 @@ class AutoEncoder(nn.Module):
         latent = self.fc_enc(latent.reshape(latent.size(0), -1))
         return latent
 
-    def forward(
-        self, input_ids: Tensor, position_ids: Optional[Tensor] = None, labels: Optional[Tensor] = None
-    ) -> Tensor:
+    def forward(self, input_ids: Tensor, position_ids: Tensor | None = None, labels: Tensor | None = None) -> Tensor:
         labels = labels if labels != None else input_ids
 
         # Encoding

@@ -19,7 +19,7 @@ class FeatureExtractorBase(nn.Module):
         vassert(type(name) is str, "Feature extractor name must be a string")
         vassert(type(features_list) in (list, tuple), "Wrong features list type")
         vassert(
-            all((a in self.get_provided_features_list() for a in features_list)),
+            all(a in self.get_provided_features_list() for a in features_list),
             f"Requested features {tuple(features_list)} are not on the list provided by the selected feature extractor "
             f"{self.get_provided_features_list()}",
         )
@@ -69,7 +69,7 @@ class FeatureExtractorBase(nn.Module):
             type(features) is tuple and len(features) == len(self.features_list),
             "Features must be the output of forward function",
         )
-        return dict(((name, feature) for name, feature in zip(self.features_list, features)))
+        return dict(((name, feature) for name, feature in zip(self.features_list, features, strict=False)))
 
     def forward(self, input):
         """

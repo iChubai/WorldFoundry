@@ -1,9 +1,10 @@
+from typing import List
+
+import cv2
 import numpy as np
 from PIL import Image
-import cv2
-from typing import List
+from skimage import color, io
 from skimage.metrics import structural_similarity as ssim
-from skimage import io, color
 
 ROUND_DIGIT = 3
 DYN_SAMPLE_STEP = 4
@@ -19,7 +20,7 @@ MSE_POINT_LOW = 100
 
 
 def dynamic_ssim(
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     ssim_list = []
     sampled_list = frame_path_list[::DYN_SAMPLE_STEP]
@@ -46,7 +47,7 @@ def dynamic_ssim(
 
 
 def dynamic_mse(
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     mse_list = []
     sampled_list = frame_path_list[::DYN_SAMPLE_STEP]

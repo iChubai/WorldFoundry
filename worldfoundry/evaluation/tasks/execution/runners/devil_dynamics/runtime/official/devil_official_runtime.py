@@ -8,8 +8,8 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -17,6 +17,8 @@ import pandas as pd
 from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
 from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     checkpoint_path as amt_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     config_path as amt_config_path,
 )
 from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
@@ -92,7 +94,7 @@ def _prompt_dynamic_grades(video_names: pd.Series) -> np.ndarray:
     grades = np.zeros(len(video_names), dtype=int)
     for index, name in enumerate(video_names):
         normalized = str(name).lower()
-        for keyword, value in zip(keywords, values):
+        for keyword, value in zip(keywords, values, strict=False):
             if keyword in normalized:
                 grades[index] = value
                 break
@@ -108,7 +110,7 @@ def _controllability_winning_rate(prompt_dynamics: np.ndarray, video_dynamics: n
         y_degree_other[int(degree)] = prompt_dynamics[~mask]
 
     winning_rates = []
-    for video_score, prompt_score in zip(video_dynamics, prompt_dynamics):
+    for video_score, prompt_score in zip(video_dynamics, prompt_dynamics, strict=False):
         x_other = x_degree_other[int(prompt_score)]
         y_other = y_degree_other[int(prompt_score)]
         if len(x_other) == 0:

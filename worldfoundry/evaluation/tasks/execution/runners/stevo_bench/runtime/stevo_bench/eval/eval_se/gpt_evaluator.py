@@ -6,19 +6,20 @@ Two-step evaluation:
 2. Verify if predicted process happened in the video (using multiple frames)
 """
 
-import os
-import time
 import base64
+import os
 import tempfile
+import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, List, Optional, Tuple
+
 import cv2
 from openai import OpenAI
 from PIL import Image
 
 
 class GPTEvaluator:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """Initialize GPT evaluator with API key."""
         if api_key is None:
             api_key = os.environ.get("OPENAI_API_KEY")
@@ -34,7 +35,7 @@ class GPTEvaluator:
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode("utf-8")
 
-    def _extract_frames(self, video_path: str, frame_interval: int = 5) -> List[str]:
+    def _extract_frames(self, video_path: str, frame_interval: int = 5) -> list[str]:
         """
         Extract frames from video at regular intervals.
 
@@ -74,7 +75,7 @@ class GPTEvaluator:
         print(f"    Extracted {extracted_count} frames from {frame_count} total frames")
         return frame_paths
 
-    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: str | None = None) -> tuple[str, str]:
         """
         First GPT call: Given initial image and optional action prompt,
         predict what process should happen.
@@ -122,7 +123,7 @@ Process: [concise one-sentence description of the expected evolution]"""
         base64_image = self._encode_image(image_path)
 
         # Make API call
-        print(f"    Calling GPT API for process prediction...")
+        print("    Calling GPT API for process prediction...")
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -169,7 +170,7 @@ Process: [concise one-sentence description of the expected evolution]"""
 
     def verify_process_in_video(
         self, video_path: str, expected_process: str, model_type: str = "unknown"
-    ) -> Tuple[str, bool]:
+    ) -> tuple[str, bool]:
         """
         Second GPT call: Given video frames and expected process,
         verify if the process actually happened.
@@ -184,7 +185,7 @@ Process: [concise one-sentence description of the expected evolution]"""
         """
         # Extract frames
         extract_start = time.time()
-        print(f"    Extracting frames from video...")
+        print("    Extracting frames from video...")
         frame_paths = self._extract_frames(video_path, frame_interval=5)
         extract_time = time.time() - extract_start
         print(f"    Frame extraction took {extract_time:.1f}s")
@@ -312,7 +313,7 @@ EXPLANATION: [Your detailed explanation]"""
         else:
             return "unknown"
 
-    def evaluate_task(self, task_data: Dict) -> Dict:
+    def evaluate_task(self, task_data: dict) -> dict:
         """
         Evaluate a single task with two-step GPT evaluation.
 

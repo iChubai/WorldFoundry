@@ -1,18 +1,22 @@
-import os
 import json
-import numpy as np
 import logging
+import os
+
+import numpy as np
 import torch
+from decord import VideoReader, cpu
+from PIL import Image, ImageSequence
+from torchvision import transforms
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+
+from worldfoundry.base_models.capabilities import vbench_asset_path, vbench_dino_hub_config
 from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     checkpoint_path as amt_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     config_path as amt_config_path,
 )
 from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
-from PIL import Image, ImageSequence
-from decord import VideoReader, cpu
-from torchvision import transforms
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, ToPILImage
-from worldfoundry.base_models.capabilities import vbench_asset_path, vbench_dino_hub_config
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -332,5 +336,5 @@ def load_json(path):
     Returns:
     - data (dict or list): The data loaded from the JSON file, which could be a dictionary or a list.
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)

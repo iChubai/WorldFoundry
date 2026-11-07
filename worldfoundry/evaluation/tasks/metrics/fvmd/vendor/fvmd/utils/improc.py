@@ -1,28 +1,29 @@
-import torch
-import numpy as np
-import fvmd.utils.basic
-from sklearn.decomposition import PCA
-from matplotlib import cm
-import matplotlib.pyplot as plt
 import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
 import torch.nn.functional as F
 import torchvision
+from matplotlib import cm
+from sklearn.decomposition import PCA
+
+import fvmd.utils.basic
 
 EPS = 1e-6
 
 from skimage.color import (
-    rgb2lab,
-    rgb2yuv,
-    rgb2ycbcr,
-    lab2rgb,
-    yuv2rgb,
-    ycbcr2rgb,
-    rgb2hsv,
-    hsv2rgb,
-    rgb2xyz,
-    xyz2rgb,
-    rgb2hed,
     hed2rgb,
+    hsv2rgb,
+    lab2rgb,
+    rgb2hed,
+    rgb2hsv,
+    rgb2lab,
+    rgb2xyz,
+    rgb2ycbcr,
+    rgb2yuv,
+    xyz2rgb,
+    ycbcr2rgb,
+    yuv2rgb,
 )
 
 
@@ -79,7 +80,7 @@ def pca_embed(emb, keep, valid=None):
     emb = emb.permute(0, 2, 3, 1).cpu().detach().numpy()  # this is B x H x W x C
 
     if valid:
-        valid = valid.cpu().detach().numpy().reshape((H * W))
+        valid = valid.cpu().detach().numpy().reshape(H * W)
 
     emb_reduced = list()
 
@@ -496,7 +497,7 @@ def get_n_colors(N, sequential=False):
     return label_colors
 
 
-class Summ_writer(object):
+class Summ_writer:
     def __init__(self, writer, global_step, log_freq=10, fps=8, scalar_freq=100, just_gif=False):
         self.writer = writer
         self.global_step = global_step
@@ -787,7 +788,7 @@ class Summ_writer(object):
                 for s in range(S):
                     vis[:, s] = draw_frame_id_on_vis(vis[:, s], frame_ids[s])
 
-            if W > self.maxwidth:
+            if self.maxwidth < W:
                 vis = vis[..., : self.maxwidth]
 
             if only_return:
@@ -838,7 +839,7 @@ class Summ_writer(object):
                 norm = False
 
             vis = oned2inferno(im, norm=norm)
-            if W > self.maxwidth:
+            if self.maxwidth < W:
                 vis = vis[..., : self.maxwidth]
             return self.summ_rgb(name, vis, blacken_zeros=False, frame_id=frame_id, only_return=only_return)
 
@@ -923,9 +924,7 @@ class Summ_writer(object):
         ):
             value = value.detach().cpu().numpy()
         if not np.isnan(value):
-            if self.log_freq == 1:
-                self.writer.add_scalar(name, value, global_step=self.global_step)
-            elif self.save_this or np.mod(self.global_step, self.scalar_freq) == 0:
+            if self.log_freq == 1 or self.save_this or np.mod(self.global_step, self.scalar_freq) == 0:
                 self.writer.add_scalar(name, value, global_step=self.global_step)
 
     def summ_seg(self, name, seg, only_return=False, frame_id=None, colormap="tab20", label_colors=None):
@@ -965,7 +964,7 @@ class Summ_writer(object):
         g = torch.zeros_like(seg, dtype=torch.uint8)
         b = torch.zeros_like(seg, dtype=torch.uint8)
 
-        for label in range(0, len(label_colors)):
+        for label in range(len(label_colors)):
             if not custom_label_colors:  # and (N > 20):
                 label_ = label % 20
             else:

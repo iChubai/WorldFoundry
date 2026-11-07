@@ -14,7 +14,6 @@ from typing import Any
 from ..io import value_digest
 from ..skills.skill_intentional_change_vlm import BACKEND_OUTPUT_SCHEMA
 
-
 BACKEND_ID = "openai_compatible.intentional_change_vlm"
 
 __all__ = ["BACKEND_ID", "OpenAICompatibleBackend"]

@@ -1,13 +1,14 @@
-import os
-import base64
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
-import re
-import json
-from openai import OpenAI
-from tenacity import retry, wait_exponential, stop_after_attempt
-from threading import Lock
 import argparse
+import base64
+import json
+import os
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+
+from openai import OpenAI
+from tenacity import retry, stop_after_attempt, wait_exponential
+from tqdm import tqdm
 
 
 def parse_args():
@@ -103,7 +104,7 @@ def create_prompts(grouped_images, image_directory, txt_prompt):
 def has_been_processed(video_id, output_file):
     with file_lock:
         if os.path.exists(output_file):
-            with open(output_file, "r", encoding="utf-8") as f:
+            with open(output_file, encoding="utf-8") as f:
                 data = json.load(f)
                 if video_id in data:
                     print(f"Video ID {video_id} has already been processed.")
@@ -117,7 +118,7 @@ def extract_frame_number(filename):
 
 def load_existing_results(file_path):
     if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             print(f"Loading existing results from {file_path}")
             return json.load(file)
     else:

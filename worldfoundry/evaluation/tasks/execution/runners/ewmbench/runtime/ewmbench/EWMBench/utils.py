@@ -2,10 +2,10 @@ import json
 import logging
 import os
 import random
+from pathlib import Path
 
 import numpy as np
 import torch
-from pathlib import Path
 from PIL import Image
 from torchvision import transforms
 from torchvision.transforms import Compose, Normalize, Resize
@@ -173,5 +173,5 @@ def save_json(data, path, indent=4):
 
 
 def load_json(path):
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)

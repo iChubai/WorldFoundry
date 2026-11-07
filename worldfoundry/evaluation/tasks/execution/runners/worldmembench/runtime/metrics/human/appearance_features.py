@@ -97,6 +97,7 @@ class YoloSamDinoAppearanceBackend:
         for (tracked_target_id, frame_index), embedding in zip(
             sample_keys,
             embeddings,
+            strict=False,
         ):
             if embedding is not None:
                 features.setdefault(tracked_target_id, {})[frame_index] = normalized_embedding(embedding)

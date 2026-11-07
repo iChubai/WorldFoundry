@@ -1,29 +1,33 @@
-from typing import List
+import argparse
 from pathlib import Path
+from typing import List
 
+import cv2
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
-import argparse
-import cv2
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
     RAFT,
-    checkpoint_path as sea_raft_checkpoint_path,
-    config_path as sea_raft_config_path,
     load_ckpt,
     parse_args,
+)
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
+    checkpoint_path as sea_raft_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
+    config_path as sea_raft_config_path,
+)
+from worldfoundry.core.distributed.collectives.evaluation import (
+    distribute_list_to_rank,
+    gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
 from worldfoundry.core.execution.device import get_current_torch_device
 
 from .utils import load_dimension_info, read_video_frames_cv2
-from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
-    distribute_list_to_rank,
-    gather_list_of_dict,
-)
 
 
 def compute_epe(flow1, flow2, crop=30, k=1.0, error_threshold=5.0):
@@ -163,7 +167,7 @@ class OpticalFlowAverageEndPointErrorMetric:
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         scores = []
         dynamic_raw_scores = []  # ← NEW
@@ -171,7 +175,7 @@ class OpticalFlowAverageEndPointErrorMetric:
         with torch.no_grad():
             images = rendered_images
 
-            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:])):
+            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:], strict=False)):
                 image1 = self.load_image(imfile1)
                 image2 = self.load_image(imfile2)
                 if image1 is None or image2 is None:
@@ -204,7 +208,7 @@ class OpticalFlowAverageEndPointErrorMetric:
 
         return float(score)
 
-    def compute_video(self, frames: List[np.ndarray]) -> float:
+    def compute_video(self, frames: list[np.ndarray]) -> float:
         if len(frames) < 2:
             return 0.0
         return self._compute_scores(frames)

@@ -1,9 +1,10 @@
-import torch
-from mantis.models.openflamingo import create_model_and_transforms, OpenFlamingoProcessor
-from mantis.models.conversation import conv_openflamingo
 from typing import List
-from mantis.mllm_tools.mllm_utils import merge_images, load_images
+
+import torch
 from huggingface_hub import hf_hub_download
+from mantis.mllm_tools.mllm_utils import load_images, merge_images
+from mantis.models.conversation import conv_openflamingo
+from mantis.models.openflamingo import OpenFlamingoProcessor, create_model_and_transforms
 
 
 class OpenFlamingo:
@@ -58,7 +59,7 @@ class OpenFlamingo:
         self.image_token = "<image>"
         self.processor = OpenFlamingoProcessor(self.image_processor, self.tokenizer)
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [
@@ -137,7 +138,7 @@ class OpenFlamingo:
         else:
             raise NotImplementedError
 
-    def prepare_prompt(self, image_links: List[List[str]], text_prompt: List[str]):
+    def prepare_prompt(self, image_links: list[list[str]], text_prompt: list[str]):
         if type(image_links) == str:
             image_links = [[image_links]]
         if isinstance(text_prompt, str):

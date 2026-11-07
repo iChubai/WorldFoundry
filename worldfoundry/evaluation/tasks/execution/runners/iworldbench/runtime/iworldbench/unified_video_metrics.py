@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # ruff: noqa: E402, I001
 """
 Unified video evaluation metrics.
@@ -93,14 +92,14 @@ _VBENCH_SHORT_NAMES = {
 }
 
 
-def _parse_gpu_devices(value: str, variable: str) -> List[str]:
+def _parse_gpu_devices(value: str, variable: str) -> list[str]:
     devices = [device.strip() for device in value.split(",") if device.strip()]
     if not devices or any(device.lower() in {"-1", "none", "void"} for device in devices):
         raise RuntimeError(f"{variable} does not expose a CUDA device for ViPE: {value!r}")
     return list(dict.fromkeys(devices))
 
 
-def _available_vipe_gpus() -> List[str]:
+def _available_vipe_gpus() -> list[str]:
     """Resolve worker devices from an explicit override or the visible CUDA set."""
     override = os.environ.get("WORLDFOUNDRY_IWORLD_BENCH_VIPE_GPUS")
     if override is not None:
@@ -172,7 +171,7 @@ def _write_vbench_report_csv(
 
     scores = {}
     if os.path.exists(results_file):
-        with open(results_file, "r", encoding="utf-8") as f:
+        with open(results_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -207,7 +206,7 @@ def _run_vbench_metric(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Internal helper that runs one VBench metric and exports the unified CSV."""
     _ensure_vbench_path()
@@ -263,7 +262,7 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
         )
     os.makedirs(vipe_output_dir, exist_ok=True)
 
-    video_paths: List[str] = []
+    video_paths: list[str] = []
     for ext in SUPPORTED_FORMATS:
         video_paths.extend(str(p) for p in Path(video_dir).rglob(f"*{ext}") if not p.name.startswith("."))
 
@@ -281,12 +280,12 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
     if already_done < len(video_paths):
         gpus = _available_vipe_gpus()
         # Distribute videos round-robin across GPUs
-        chunks: List[List[str]] = [[] for _ in gpus]
+        chunks: list[list[str]] = [[] for _ in gpus]
         for i, v in enumerate(video_paths):
             chunks[i % len(gpus)].append(v)
 
-        tmp_files: List[str] = []
-        processes: List[tuple[subprocess.Popen, str]] = []
+        tmp_files: list[str] = []
+        processes: list[tuple[subprocess.Popen, str]] = []
 
         for idx, rank in enumerate(gpus):
             chunk = chunks[idx]
@@ -372,7 +371,7 @@ def calculate_trajectory_accuracy(
     video_dir: str,
     save_dir: str,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
 ):
     """
     Trajectory accuracy: compares generated camera trajectory against
@@ -400,7 +399,7 @@ def calculate_trajectory_alignment(video_dir: str, save_dir: str, max_workers: i
 def calculate_trajectory_tolerance(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
 ):
     """
@@ -425,7 +424,7 @@ def calculate_imaging_quality(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """VBench imaging quality (MUSIQ). Input: video files. Requires GPU."""
     return _run_vbench_metric(
@@ -445,7 +444,7 @@ def calculate_motion_smoothness(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """VBench motion smoothness (AMT). Input: video files. Requires GPU."""
     return _run_vbench_metric(
@@ -469,7 +468,7 @@ def calculate_generation_quality(
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run the paper's Generation Quality metrics: image quality, brightness, color temperature, sharpness."""
     calculate_imaging_quality(
@@ -488,13 +487,13 @@ def calculate_generation_quality(
 def calculate_trajectory_following(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run the paper's Trajectory Following metrics: motion smoothness, trajectory accuracy, trajectory tolerance."""
     calculate_motion_smoothness(
@@ -530,13 +529,13 @@ def calculate_memory_ability(video_dir: str, save_dir: str, max_workers: int = 4
 def calculate_action_control(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run the recommended metrics for action/Diff tasks: Generation Quality + Trajectory Following."""
     calculate_generation_quality(
@@ -564,12 +563,12 @@ def calculate_action_control(
 def calculate_camera_following(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run metrics for camera-trajectory-input models: Generation Quality + Motion Smoothness + Trajectory Tolerance."""
     reference_npz_dir = source_npz_dir or _DEFAULT_SOURCE_REFERENCE_NPZ_DIR
@@ -611,9 +610,9 @@ def calculate_all_video_quality(video_dir: str, save_dir: str, max_workers: int 
 def calculate_all_trajectory(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
 ):
     """
     Run all 3 trajectory metrics with a single VIPe pass.
@@ -642,7 +641,7 @@ def calculate_all_vbench(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run both VBench metrics (imaging quality and motion smoothness). Requires GPU."""
     summaries = {}
@@ -668,13 +667,13 @@ def calculate_all_vbench(
 def calculate_all(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
-    camera_txt_dir: Optional[str] = None,
+    limit: int | None = None,
+    camera_txt_dir: str | None = None,
 ):
     """
     Run the paper's 9 metrics with a single VIPe pass.

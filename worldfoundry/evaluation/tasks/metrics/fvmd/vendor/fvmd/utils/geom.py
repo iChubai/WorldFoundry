@@ -1,7 +1,8 @@
-import torch
-import fvmd.utils.geom
 import numpy as np
+import torch
 import torchvision.ops as ops
+
+import fvmd.utils.geom
 from fvmd.utils.basic import print_
 
 

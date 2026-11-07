@@ -1,9 +1,10 @@
 import math
+
 import torch
 import torch.nn as nn
+from einops import rearrange, reduce, repeat
 
 from src.modules.attention_temporal_videoae import *
-from einops import rearrange, reduce, repeat
 
 try:
     import xformers
@@ -55,7 +56,7 @@ class SamePadConv3d(nn.Module):
             stride = (stride,) * 3
 
         # assumes that the input shape is divisible by stride
-        total_pad = tuple([k - s for k, s in zip(kernel_size, stride)])
+        total_pad = tuple([k - s for k, s in zip(kernel_size, stride, strict=False)])
         pad_input = []
         for p in total_pad[::-1]:  # reverse since F.pad starts from last dim
             pad_input.append((p // 2 + p % 2, p // 2))
@@ -86,7 +87,7 @@ class SamePadConvTranspose3d(nn.Module):
         if isinstance(stride, int):
             stride = (stride,) * 3
 
-        total_pad = tuple([k - s for k, s in zip(kernel_size, stride)])
+        total_pad = tuple([k - s for k, s in zip(kernel_size, stride, strict=False)])
         pad_input = []
         for p in total_pad[::-1]:  # reverse since F.pad starts from last dim
             pad_input.append((p // 2 + p % 2, p // 2))

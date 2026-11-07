@@ -9,21 +9,21 @@ Reference:
 
 """
 
-import torch
 from typing import Optional, Union
 
+import torch
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce
-from piq.functional import similarity_map, gradient_map, prewitt_filter, rgb2yiq
+from piq.functional import gradient_map, prewitt_filter, rgb2yiq, similarity_map
+from piq.utils import _reduce, _validate_input
 
 
 def gmsd(
     x: torch.Tensor,
     y: torch.Tensor,
     reduction: str = "mean",
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     t: float = 170 / (255.0**2),
 ) -> torch.Tensor:
     r"""Compute Gradient Magnitude Similarity Deviation.
@@ -123,9 +123,7 @@ class GMSDLoss(_Loss):
 
     """
 
-    def __init__(
-        self, reduction: str = "mean", data_range: Union[int, float] = 1.0, t: float = 170 / (255.0**2)
-    ) -> None:
+    def __init__(self, reduction: str = "mean", data_range: int | float = 1.0, t: float = 170 / (255.0**2)) -> None:
         super().__init__()
 
         # Generic loss parameters.
@@ -152,9 +150,9 @@ class GMSDLoss(_Loss):
 def multi_scale_gmsd(
     x: torch.Tensor,
     y: torch.Tensor,
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     reduction: str = "mean",
-    scale_weights: Optional[torch.Tensor] = None,
+    scale_weights: torch.Tensor | None = None,
     chromatic: bool = False,
     alpha: float = 0.5,
     beta1: float = 0.01,
@@ -285,8 +283,8 @@ class MultiScaleGMSDLoss(_Loss):
     def __init__(
         self,
         reduction: str = "mean",
-        data_range: Union[int, float] = 1.0,
-        scale_weights: Optional[torch.Tensor] = None,
+        data_range: int | float = 1.0,
+        scale_weights: torch.Tensor | None = None,
         chromatic: bool = False,
         alpha: float = 0.5,
         beta1: float = 0.01,

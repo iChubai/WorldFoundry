@@ -19,6 +19,7 @@ import torchvision.transforms as T
 from PIL import Image
 
 from worldfoundry.base_models.perception_core.general_perception.dino_embeddings import load_dinov2_base_feature_model
+
 from ..base import BaseMetric
 from ..weight_utils import clip_vit_b16_model_dir
 
@@ -60,7 +61,7 @@ class SubjectConsistencyMetric(BaseMetric):
         return self._clip_model, self._clip_processor
 
     @torch.no_grad()
-    def _extract_dinov2_features(self, images: List[Image.Image]) -> torch.Tensor:
+    def _extract_dinov2_features(self, images: list[Image.Image]) -> torch.Tensor:
         model = self._load_dinov2()
         all_feats = []
         for i in range(0, len(images), self.batch_size):
@@ -72,7 +73,7 @@ class SubjectConsistencyMetric(BaseMetric):
         return torch.cat(all_feats, dim=0)
 
     @torch.no_grad()
-    def _extract_clip_features(self, images: List[Image.Image]) -> torch.Tensor:
+    def _extract_clip_features(self, images: list[Image.Image]) -> torch.Tensor:
         model, processor = self._load_clip()
         all_feats = []
         for i in range(0, len(images), self.batch_size):
@@ -103,7 +104,7 @@ class SubjectConsistencyMetric(BaseMetric):
         x1, x2 = max(0, xs.min() - padding), min(frame_np.shape[1], xs.max() + padding)
         return Image.fromarray(result[y1:y2, x1:x2])
 
-    def compute(self, frames: List[Image.Image], **kwargs) -> Dict[str, Any]:
+    def compute(self, frames: list[Image.Image], **kwargs) -> dict[str, Any]:
         """Compute subject consistency score from masked frame crops."""
         if len(frames) < 2:
             return {f"{self.name}_score": 1.0, "skipped": True}
@@ -113,7 +114,7 @@ class SubjectConsistencyMetric(BaseMetric):
 
         if masks is not None and frame_indices is not None:
             masked_frames = []
-            for frame, fid in zip(frames, frame_indices):
+            for frame, fid in zip(frames, frame_indices, strict=False):
                 if fid in masks and masks[fid].sum() >= 10:
                     masked_frames.append(self.masked_crop(frame, masks[fid]))
                 else:

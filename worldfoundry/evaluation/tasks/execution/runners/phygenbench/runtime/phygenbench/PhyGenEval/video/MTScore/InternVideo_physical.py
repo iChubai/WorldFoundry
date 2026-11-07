@@ -80,7 +80,7 @@ def main():
 
     output_folder = Path(args.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
-    with open(args.question_path, "r", encoding="utf-8") as f:
+    with open(args.question_path, encoding="utf-8") as f:
         questions = json.load(f)
 
     _, model, tokenizer, _, transforms = download_internvideo2(

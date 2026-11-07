@@ -44,9 +44,9 @@ def get_hpsv3_quality_metric():
 
 __all__ = [
     "get_aesthetic_quality_metric",
-    "get_imaging_quality_metric",
-    "get_temporal_flickering_metric",
     "get_dynamic_degree_metric",
-    "get_motion_smoothness_metric",
     "get_hpsv3_quality_metric",
+    "get_imaging_quality_metric",
+    "get_motion_smoothness_metric",
+    "get_temporal_flickering_metric",
 ]

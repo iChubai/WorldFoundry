@@ -228,7 +228,7 @@ class IQTable:
         out = pd.DataFrame()
         metric_score_keys = [metric_key + "_score" for metric_key in self.metric_keys]
 
-        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys):
+        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys, strict=False):
             out[metric_score_key] = self.compute_metric_scores_scenario(metric_key)
         self.compute_means_by_row_inplace(out, metric_score_keys)
         return out
@@ -251,7 +251,7 @@ class IQTable:
         """Compute the metric scores for all metric keys by view, returning a DataFrame of shape (n_scenarios * n_views, n_metrics)."""
         out = pd.DataFrame()
         metric_score_keys = [metric_key + "_score" for metric_key in self.metric_keys]
-        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys):
+        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys, strict=False):
             out[metric_score_key] = self.compute_metric_scores_scenario_by_view(metric_key).flatten()
         self.compute_means_by_row_inplace(out, metric_score_keys)
         return out

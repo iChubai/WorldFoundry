@@ -9,7 +9,6 @@ from .aggregate import mean_valid, numeric
 from .model_order import MODEL_REGISTRY
 from .protocols import FAMILIES, get_protocol
 
-
 OBSERVATION_SKILLS = get_protocol("harnesseval").observation_skills
 QUALITY_OBSERVATION_SKILLS = (
     "render_quality_inspector",

@@ -20,7 +20,7 @@ import glob
 import json
 import os
 import statistics
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from tabulate import tabulate  # pip install tabulate
 
@@ -28,15 +28,15 @@ from tabulate import tabulate  # pip install tabulate
 # --------------------------------------------------------------------------- #
 # IO helpers
 # --------------------------------------------------------------------------- #
-def load_summaries(root: str) -> List[dict]:
+def load_summaries(root: str) -> list[dict]:
     """Return a list of dicts, one for every summary.json under *root*."""
     pattern = os.path.join(root, "**", "summary.json")
     files = glob.glob(pattern, recursive=True)
     if not files:
         raise FileNotFoundError(f"No summary.json found under: {root}")
-    summaries: List[dict] = []
+    summaries: list[dict] = []
     for path in sorted(files):
-        with open(path, "r", encoding="utf-8") as fh:
+        with open(path, encoding="utf-8") as fh:
             summaries.append(json.load(fh))
     return summaries
 
@@ -44,11 +44,11 @@ def load_summaries(root: str) -> List[dict]:
 # --------------------------------------------------------------------------- #
 # Aggregation
 # --------------------------------------------------------------------------- #
-def aggregate(summaries: List[dict]) -> Dict[str, Any]:
+def aggregate(summaries: list[dict]) -> dict[str, Any]:
     """Merge details, concat missing lists, and compute overall statistics."""
     # ----- merge episode-level information ----------------------------------
-    merged_details: Dict[str, Any] = {}
-    merged_missing: List[str] = []
+    merged_details: dict[str, Any] = {}
+    merged_missing: list[str] = []
 
     for run in summaries:
         merged_missing.extend(run.get("missing_ep_paths", []))
@@ -95,7 +95,7 @@ def aggregate(summaries: List[dict]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # Pretty printing
 # --------------------------------------------------------------------------- #
-def print_report(overall: Dict[str, Any]) -> None:
+def print_report(overall: dict[str, Any]) -> None:
     summary = overall["summary"]
     missing = overall["missing_ep_paths"]
 
@@ -121,7 +121,7 @@ def print_report(overall: Dict[str, Any]) -> None:
 
     # ------------- list missing episodes -----------------------------------
     if missing:
-        print("\nMissing episode paths ({}):".format(len(missing)))
+        print(f"\nMissing episode paths ({len(missing)}):")
         for path in missing:
             print(path)
 

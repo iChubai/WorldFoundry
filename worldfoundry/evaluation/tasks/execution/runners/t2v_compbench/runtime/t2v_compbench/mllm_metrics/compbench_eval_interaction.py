@@ -1,31 +1,32 @@
 import argparse
-import torch
 import csv
 import json
 import os
-import requests
-from PIL import Image
+import random
 from io import BytesIO
+
 import cv2
 import numpy as np
+import requests
+import torch
+from PIL import Image
 from torchvision.io import write_video
+
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    IMAGE_TOKEN_INDEX,
-    DEFAULT_IMAGE_TOKEN,
-    DEFAULT_IM_START_TOKEN,
     DEFAULT_IM_END_TOKEN,
+    DEFAULT_IM_START_TOKEN,
+    DEFAULT_IMAGE_TOKEN,
     IMAGE_PLACEHOLDER,
+    IMAGE_TOKEN_INDEX,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates, SeparatorStyle
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import disable_torch_init
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
+    get_model_name_from_path,
     process_images,
     tokenizer_image_token,
-    get_model_name_from_path,
 )
-import random
-
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import disable_torch_init
 from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.asset_paths import asset_path
 
 
@@ -201,7 +202,7 @@ def eval_model(args):
 
     model_name = get_model_name_from_path(args.model_path)
     tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, model_name)
-    with open(args.read_prompt_file, "r") as json_data:
+    with open(args.read_prompt_file) as json_data:
         prompts = json.load(json_data)
 
     output_path = args.output_path
@@ -210,7 +211,7 @@ def eval_model(args):
     csv_path = os.path.join(output_path, f"{args.t2v_model}_object_interactions_score.csv")
 
     if os.path.exists(csv_path):
-        with open(csv_path, "r", newline="") as csvreader:
+        with open(csv_path, newline="") as csvreader:
             reader = csv.reader(csvreader)
             lines = list(reader)  # Read all lines into a list
             line_count = len(lines)  # Count the number of lines
@@ -495,7 +496,7 @@ Provide your answer in a JSON format with the following keys: option (e.g., A), 
 
 
 def model_score(csv_path):
-    with open(csv_path, "r") as file:
+    with open(csv_path) as file:
         reader = csv.reader(file)
         lines = list(reader)
         score = 0

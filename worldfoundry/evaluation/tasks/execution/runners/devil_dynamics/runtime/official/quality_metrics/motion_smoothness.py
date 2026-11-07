@@ -1,20 +1,20 @@
-import os
-import cv2
 import glob
-import torch
-import numpy as np
-from tqdm import tqdm
-from omegaconf import OmegaConf
+import os
 
+import cv2
+import numpy as np
+import torch
+from omegaconf import OmegaConf
+from tqdm import tqdm
 from vbench.utils import load_dimension_info
 
+from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
+    InputPadder,
+    check_dim_and_resize,
     img2tensor,
     tensor2img,
-    check_dim_and_resize,
 )
-from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
-from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import InputPadder
 
 
 class FrameProcess:
@@ -81,7 +81,7 @@ class MotionSmoothness:
         self.anchor_memory = 1500 * 1024**2
         self.anchor_memory_bias = 2500 * 1024**2
         self.vram_avail = torch.cuda.get_device_properties(self.device).total_memory
-        print("VRAM available: {:.1f} MB".format(self.vram_avail / 1024**2))
+        print(f"VRAM available: {self.vram_avail / 1024**2:.1f} MB")
         # else:
         #     # Do not resize in cpu mode
         #     self.anchor_resolution = 8192*8192
@@ -123,7 +123,7 @@ class MotionSmoothness:
         for i in range(iters):
             # print(f'Iter {i+1}. input_frames={len(inputs)} output_frames={2*len(inputs)-1}')
             outputs = [inputs[0]]
-            for in_0, in_1 in zip(inputs[:-1], inputs[1:]):
+            for in_0, in_1 in zip(inputs[:-1], inputs[1:], strict=False):
                 in_0 = in_0.to(self.device)
                 in_1 = in_1.to(self.device)
                 with torch.no_grad():

@@ -15,19 +15,21 @@ References:
   [2] https://ece.uwaterloo.ca/~z70wang/research/iwssim/
 """
 
-import torch
-from torch.nn.modules.loss import _Loss
-import torch.nn.functional as F
-from piq.utils import _validate_input, _reduce
-from piq.functional import gaussian_filter, binomial_filter1d, average_filter2d, rgb2yiq
-from typing import Union, Optional, Tuple
 import math
+from typing import Optional, Tuple, Union
+
+import torch
+import torch.nn.functional as F
+from torch.nn.modules.loss import _Loss
+
+from piq.functional import average_filter2d, binomial_filter1d, gaussian_filter, rgb2yiq
+from piq.utils import _reduce, _validate_input
 
 
 def information_weighted_ssim(
     x: torch.Tensor,
     y: torch.Tensor,
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     kernel_size: int = 11,
     kernel_sigma: float = 1.5,
     k1: float = 0.01,
@@ -35,7 +37,7 @@ def information_weighted_ssim(
     parent: bool = True,
     blk_size: int = 3,
     sigma_nsq: float = 0.4,
-    scale_weights: Optional[torch.Tensor] = None,
+    scale_weights: torch.Tensor | None = None,
     reduction: str = "mean",
 ) -> torch.Tensor:
     r"""Interface of Information Content Weighted Structural Similarity (IW-SSIM) index.
@@ -198,7 +200,7 @@ class InformationWeightedSSIMLoss(_Loss):
 
     def __init__(
         self,
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
         kernel_size: int = 11,
         kernel_sigma: float = 1.5,
         k1: float = 0.01,
@@ -206,7 +208,7 @@ class InformationWeightedSSIMLoss(_Loss):
         parent: bool = True,
         blk_size: int = 3,
         sigma_nsq: float = 0.4,
-        scale_weights: Optional[torch.Tensor] = None,
+        scale_weights: torch.Tensor | None = None,
         reduction: str = "mean",
     ):
         super().__init__()
@@ -249,7 +251,7 @@ class InformationWeightedSSIMLoss(_Loss):
         return torch.ones_like(score) - score
 
 
-def _pyr_step(x: torch.Tensor, kernel: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+def _pyr_step(x: torch.Tensor, kernel: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     r"""Computes one step of Laplacian pyramid generation.
 
     Args:
@@ -295,10 +297,10 @@ def _ssim_per_channel(
     x: torch.Tensor,
     y: torch.Tensor,
     kernel: torch.Tensor,
-    data_range: Union[float, int] = 1.0,
+    data_range: float | int = 1.0,
     k1: float = 0.01,
     k2: float = 0.03,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     r"""Computes Structural Similarity (SSIM) index for X and Y per channel.
 
     Args:

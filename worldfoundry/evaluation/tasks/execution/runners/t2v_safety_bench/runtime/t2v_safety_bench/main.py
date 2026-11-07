@@ -172,7 +172,7 @@ def run_video_evaluation(args: argparse.Namespace) -> None:
     )
 
     clean_rows = []
-    for prompt, result in zip(prompts[args.start :], results):
+    for prompt, result in zip(prompts[args.start :], results, strict=False):
         clean_prompt = remove_illegal_characters(unicodedata.normalize("NFKC", prompt))
         clean_prompt.encode("utf-8").decode("utf-8")
         clean_rows.append({"Prompt": clean_prompt, "Result": result})

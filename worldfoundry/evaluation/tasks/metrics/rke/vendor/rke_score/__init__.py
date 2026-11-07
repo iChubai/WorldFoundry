@@ -1,2 +1,1 @@
-from .rke import RKE
-from .rke import gaussian_kernel
+from .rke import RKE, gaussian_kernel

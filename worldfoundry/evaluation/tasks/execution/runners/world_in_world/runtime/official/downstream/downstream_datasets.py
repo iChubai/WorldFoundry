@@ -3,17 +3,15 @@ import json
 import os
 import os.path as osp
 import pickle
+import random
+from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from torch.utils.data import Dataset, Subset
 from torch.utils.data._utils.collate import default_collate
-from collections import defaultdict
-import random
-from typing import List, Dict, Any, Optional
-from pathlib import Path
-import os
-
 
 BACKGROUND_CLASS = ["wall", "floor", "ceiling", "carpet", "door", "rug", "bath mat"]
 
@@ -21,7 +19,7 @@ BACKGROUND_CLASS = ["wall", "floor", "ceiling", "carpet", "door", "rug", "bath m
 def get_indoor_classes(type):
     if type == "scannet200":
         classes_file_path = Path("downstream/others/scannet200_classes.txt")
-        with open(classes_file_path, "r") as f:
+        with open(classes_file_path) as f:
             all_lines = [cls.strip() for cls in f.readlines()]
             all_classes = list(set(all_lines))
             all_classes = [cls for cls in all_classes if cls != "unknown"]
@@ -156,9 +154,9 @@ class IGDataset(TaskDataset):
         debug_len=None,
         inputs_json: str = "downstream/process_IGnav_dataset/inputs.json",
         hm3d_root: str = "data/scene_datasets/hm3d/val",
-        exclude_ep_path: Optional[List[str]] = "downstream/others/IGNav_exclude_unique.txt",
-        min_step_to_goal: Optional[int] = None,
-        max_step_to_goal: Optional[int] = None,
+        exclude_ep_path: list[str] | None = "downstream/others/IGNav_exclude_unique.txt",
+        min_step_to_goal: int | None = None,
+        max_step_to_goal: int | None = None,
     ) -> None:
         # This method should not be called directly. See the child class implementation
         # in downstream/process_IGnav_dataset/pickle_dataset.py for the actual initialization logic.
@@ -166,7 +164,7 @@ class IGDataset(TaskDataset):
             "IGDataset should not be initialized directly. Use IGDatasetPortable or other subclasses."
         )
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, idx: int) -> dict[str, Any]:
         return self.data[idx]
 
 
@@ -201,7 +199,7 @@ class AEQADataset(TaskDataset):
 
         # * load qa data
         self.qa_data_path = osp.join(data_dir, f"open-eqa-{subset_size}.json")
-        with open(self.qa_data_path, "r") as f:
+        with open(self.qa_data_path) as f:
             self.qa_data = json.load(f)
         assert len(self.qa_data) == subset_size
         # self.qa_data = [

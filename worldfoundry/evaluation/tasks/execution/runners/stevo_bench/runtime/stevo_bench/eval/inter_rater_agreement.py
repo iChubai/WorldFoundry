@@ -60,7 +60,6 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-
 # METRICS = ["state_evol", "physical_inaccuracy", "task_success",
 #            "occlusion_done", "trigger_applied", "control_success"]
 
@@ -73,7 +72,7 @@ METRICS = [
 # ---------------------------------------------------------------------------
 
 
-def _get_rater_value(task: dict, rater: str, metric: str) -> Optional[int]:
+def _get_rater_value(task: dict, rater: str, metric: str) -> int | None:
     """Return 0, 1, or None for one rater × one metric on one task."""
     if rater == "human_aggregate":
         votes = [int(bool(ann[metric])) for ann in task.get("annotations", {}).values() if metric in ann]
@@ -112,8 +111,8 @@ def load_data(summary_path: Path, raters: list) -> tuple:
     """
     tasks = json.loads(summary_path.read_text(encoding="utf-8"))["tasks"]
     data = {m: {r: [] for r in raters} for m in METRICS}
-    task_counts = {m: 0 for m in METRICS}
-    tie_counts = {m: 0 for m in METRICS}
+    task_counts = dict.fromkeys(METRICS, 0)
+    tie_counts = dict.fromkeys(METRICS, 0)
     task_ids = {m: [] for m in METRICS}
     has_aggregate = "human_aggregate" in raters
 
@@ -289,7 +288,7 @@ def main() -> None:
             return str(int(val))
         return f"{val:.3f}" if isinstance(val, float) and not np.isnan(val) else str(val)
 
-    print(df.to_string(formatters={m: _fmt for m in df.columns}))
+    print(df.to_string(formatters=dict.fromkeys(df.columns, _fmt)))
     print()
     print("percent = fraction of tasks where both raters gave the same label, averaged over pairs.")
 

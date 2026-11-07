@@ -32,7 +32,7 @@ class SoraRunner(WorldModelRunner):
         api_key_env = config.get("api_key_env", "SORA_API_KEY")
         self.api_key = os.environ.get(api_key_env)
         if not self.api_key:
-            raise EnvironmentError(f"[{name}] Missing required environment variable: {api_key_env}")
+            raise OSError(f"[{name}] Missing required environment variable: {api_key_env}")
         self.model_id: str = config.get("model_id", "sora-2")
         self.size: str = config.get("size", "1280x720")
         self.seconds: int = int(config.get("seconds", 8))
@@ -47,9 +47,9 @@ class SoraRunner(WorldModelRunner):
         self,
         task_id: str,
         prompt: str,
-        init_frame: Optional[Path],
+        init_frame: Path | None,
         output_path: Path,
-        camera_control: Optional[str] = None,
+        camera_control: str | None = None,
     ) -> bool:
         try:
             from openai import OpenAI

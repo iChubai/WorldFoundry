@@ -6,10 +6,10 @@ import math
 import os
 import tempfile
 import threading
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, Protocol
+from typing import Any, Protocol
 
 from ..io import atomic_write_json, exclusive_lock, file_fingerprint, read_json, value_digest
 from ..skills.skill_drift_degradation import BACKEND_OUTPUT_SCHEMA, SAMPLING
@@ -24,7 +24,6 @@ from ..skills.skill_render_quality import (
 )
 from .common import _validate_video
 
-
 BACKEND_ID = "harnesseval.drift.observation_stack"
 BACKEND_VERSION = "harnesseval.drift.observation_stack"
 STAGE_CACHE_SCHEMA = "harnesseval.drift_stage_cache"
@@ -33,8 +32,8 @@ STAGES = ("physical", "render", "motion", "clip")
 __all__ = [
     "BACKEND_ID",
     "BACKEND_VERSION",
-    "LocalClipEmbedder",
     "LocalBackend",
+    "LocalClipEmbedder",
     "LocalStagedBackend",
 ]
 
@@ -95,7 +94,7 @@ class LocalClipEmbedder:
         self.ensure_ready()
         with self._inference_lock:
             vectors = self._backend.embed([content for _, content in images])
-        return {image_id: vector for (image_id, _), vector in zip(images, vectors)}
+        return {image_id: vector for (image_id, _), vector in zip(images, vectors, strict=False)}
 
 
 def _normalized(values: list[float]) -> list[float]:
@@ -108,7 +107,7 @@ def _normalized(values: list[float]) -> list[float]:
 def _cosine(left: list[float], right: list[float]) -> float:
     if len(left) != len(right) or not left:
         raise RuntimeError("CLIP embeddings have inconsistent dimensions")
-    return sum(a * b for a, b in zip(left, right))
+    return sum(a * b for a, b in zip(left, right, strict=False))
 
 
 def _background_score(embeddings: list[list[float]]) -> float:

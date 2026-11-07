@@ -3,9 +3,10 @@ from __future__ import annotations
 import os
 import re
 import tempfile
+
+import cv2
 import numpy as np
 import pandas as pd
-import cv2
 
 GT_SYN_PROCESSED = "data/Synthetic_processed"
 GT_SYN_RAW = "data/Synthetic_Raw"
@@ -50,7 +51,7 @@ def _csv_to_c2w(csv_path: str) -> np.ndarray:
 def _resample(poses: np.ndarray, n_gen: int) -> np.ndarray:
     """Uniformly resample (N, 4, 4) pose array to n_gen frames."""
     N = len(poses)
-    if N == n_gen:
+    if n_gen == N:
         return poses
     indices = [round(i * (N - 1) / (n_gen - 1)) for i in range(n_gen)]
     return poses[indices]
@@ -295,7 +296,7 @@ def camera_controllability_score(
 
     gt_rels = _relative_rotations(gt_sampled[:n])
     est_rels = _relative_rotations(np.array(R_est))
-    frame_errors = [_geodesic_deg(a, b) for a, b in zip(gt_rels, est_rels)]
+    frame_errors = [_geodesic_deg(a, b) for a, b in zip(gt_rels, est_rels, strict=False)]
     mean_err = float(np.mean(frame_errors))
 
     return {

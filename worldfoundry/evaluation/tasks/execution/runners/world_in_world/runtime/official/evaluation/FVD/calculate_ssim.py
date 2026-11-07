@@ -1,7 +1,7 @@
+import cv2
 import numpy as np
 import torch
 from tqdm import tqdm
-import cv2
 
 
 def ssim(img1, img2):

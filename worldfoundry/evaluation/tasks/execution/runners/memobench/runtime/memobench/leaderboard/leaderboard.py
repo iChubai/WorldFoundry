@@ -8,7 +8,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 # Automated metrics (0-100 composite scores from run_eval.py)
 AUTOMATED_METRICS = [
     "VisualQuality",

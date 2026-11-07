@@ -1,35 +1,34 @@
 import io
-import os
-import re
-import yaml
-import cv2
 import json
+import logging
+import os
 import random
-import numpy as np
-
-from PIL import Image
-from tqdm import tqdm
-from pathlib import Path
+import re
 from bisect import bisect_left
+from collections import defaultdict
+from pathlib import Path
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
+import yaml
 from decord import VideoReader
-from worldfoundry.core.media.codecs.video import write_video_torchvision as write_video
+from PIL import Image
+from tqdm import tqdm
+from vbench.utils import CACHE_DIR, dino_transform, dino_transform_Image, load_dimension_info, load_video, save_json
 
-from collections import defaultdict
-from vbench.utils import CACHE_DIR, load_video, save_json, load_dimension_info, dino_transform, dino_transform_Image
-import logging
+from worldfoundry.core.media.codecs.video import write_video_torchvision as write_video
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-from scenedetect import open_video, SceneManager, split_video_ffmpeg
+from moviepy.editor import VideoFileClip
+from scenedetect import SceneManager, open_video, split_video_ffmpeg
 from scenedetect.detectors import ContentDetector
 from scenedetect.video_splitter import split_video_ffmpeg
-from moviepy.editor import VideoFileClip
 from scipy.stats import rankdata
 
 ###################################################################################################
@@ -191,7 +190,7 @@ def reorganize_clips_results(detailed_results, dimension=None):
     prompt_scores = defaultdict(list)
     for video_result in detailed_results:
         # Extracting the prompt name (long video name) from the path
-        prompt_name = os.path.basename((video_result["video_path"])).split("_")[0]
+        prompt_name = os.path.basename(video_result["video_path"]).split("_")[0]
 
         long_video_path = video_result["video_path"].split("filtered_clips")[0]
         prompt_name = os.path.join(long_video_path, prompt_name) + ".mp4"
@@ -341,7 +340,7 @@ def fuse_inclip_clip2clip(inclip_avg_results, clip2clip_avg_results, inclip_dict
     elif dimension == "background_consistency":
         postfix = "bg"
 
-    with open(kwargs["slow_fast_eval_config"], "r") as f:
+    with open(kwargs["slow_fast_eval_config"]) as f:
         params = yaml.safe_load(f)
 
     kwargs["inclip_mean"] = params.get(f"inclip_mean_{postfix}")
@@ -360,7 +359,7 @@ def fuse_inclip_clip2clip(inclip_avg_results, clip2clip_avg_results, inclip_dict
     clip2clip_std = kwargs["clip2clip_std"]
 
     # Load the mapping table from the YAML file
-    with open(kwargs[f"{postfix}_mapping_file_path"], "r") as f:
+    with open(kwargs[f"{postfix}_mapping_file_path"]) as f:
         mapping_table = yaml.safe_load(f)
 
     # Find the interval in the mapping table for clip2clip_score
@@ -426,13 +425,13 @@ def get_duration_from_json(video_path, full_info_list, clip_lengths):
             # Retrieve the clip lengths for each dimension and find the maximum length
             length_values = [clip_lengths[dim] for dim in unique_dimensions if dim in clip_lengths]
             max_length = max(length_values) if length_values else None
-            assert max_length is not None, f"clip duration get a wrong value, check your video path and prompt info"
+            assert max_length is not None, "clip duration get a wrong value, check your video path and prompt info"
 
             return max_length
 
 
 def load_clip_lengths(yaml_file):
-    with open(yaml_file, "r") as file:
+    with open(yaml_file) as file:
         clip_lengths = yaml.safe_load(file)
     return clip_lengths
 

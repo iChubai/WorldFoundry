@@ -7,14 +7,14 @@
 #
 # thanks!
 
-import torch.nn as nn
-from utils.common_utils import instantiate_from_config
-
 import math
 from inspect import isfunction
+
 import torch
-from torch import nn
 import torch.distributed as dist
+import torch.nn as nn
+from torch import nn
+from utils.common_utils import instantiate_from_config
 
 
 def gather_data(data, return_np=True):
@@ -65,7 +65,7 @@ def identity(*args, **kwargs):
 
 
 def uniq(arr):
-    return {el: True for el in arr}.keys()
+    return dict.fromkeys(arr, True).keys()
 
 
 def mean_flat(tensor):

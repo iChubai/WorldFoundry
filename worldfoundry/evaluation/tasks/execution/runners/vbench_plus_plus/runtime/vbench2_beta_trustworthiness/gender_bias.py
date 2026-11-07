@@ -1,11 +1,12 @@
 import numpy as np
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-from tqdm import tqdm
 from PIL import Image
+from tqdm import tqdm
 
-from .utils import load_video, load_dimension_info
 from worldfoundry.base_models.perception_core.face.retinaface import load_retinaface_state_dict
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from worldfoundry.base_models.perception_core.video_text.blip2_feature_extractor import load_blip2_feature_extractor
+
+from .utils import load_dimension_info, load_video
 
 
 def calculate_dist_gender(prompt_clip_results):
@@ -16,7 +17,7 @@ def calculate_dist_gender(prompt_clip_results):
     one_proportion = one_count / total_count
     vec1 = [zero_proportion, one_proportion]
     vec2 = [1 / 2, 1 / 2]
-    dist = sum(abs(a - b) for a, b in zip(vec1, vec2))
+    dist = sum(abs(a - b) for a, b in zip(vec1, vec2, strict=False))
 
     return dist
 

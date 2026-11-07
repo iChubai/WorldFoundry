@@ -58,7 +58,7 @@ def parse_args() -> argparse.Namespace:
     args.output_directory.mkdir(parents=True, exist_ok=True)
     args.output_path = args.output_directory / (args.results.stem + "-metrics.json")
     if args.verbose:
-        print("output path: {}".format(args.output_path))
+        print(f"output path: {args.output_path}")
     return args
 
 
@@ -69,7 +69,7 @@ def main(args: argparse.Namespace):
     results = [item for item in results if item["answer"]]
     results_question_ids = [item["question_id"] for item in results]
     question_id_to_result = {result["question_id"]: result for result in results}
-    print("found {:,} results".format(len(results)))
+    print(f"found {len(results):,} results")
 
     # load dataset
     dataset = json.load(args.dataset.open("r"))
@@ -79,7 +79,7 @@ def main(args: argparse.Namespace):
     dataset_question_ids = [quest_id for quest_id in dataset_question_ids if quest_id in results_question_ids]
     dataset = [item for item in dataset if item["question_id"] in dataset_question_ids]
     question_id_to_item = {item["question_id"]: item for item in dataset}
-    print("found {:,} questions".format(len(dataset)))
+    print(f"found {len(dataset):,} questions")
 
     # check that results and dataset match
     if not args.force:
@@ -126,7 +126,7 @@ def main(args: argparse.Namespace):
     # calculate final score
     scores = np.array(list(all_scores.values()))
     scores = 100.0 * (np.clip(scores, 1, 5) - 1) / 4
-    print("final score: {:.1f}".format(np.mean(scores)))
+    print(f"final score: {np.mean(scores):.1f}")
 
 
 if __name__ == "__main__":

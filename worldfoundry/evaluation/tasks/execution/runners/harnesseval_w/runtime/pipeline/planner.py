@@ -1,7 +1,9 @@
 """Official manifest readers; automatic plan generation is intentionally excluded."""
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
+
 from ..io import read_json
 from ..protocols import FAMILIES
 

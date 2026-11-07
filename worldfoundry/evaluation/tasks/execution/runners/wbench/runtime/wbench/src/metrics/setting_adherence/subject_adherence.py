@@ -55,13 +55,13 @@ Answer in JSON format ONLY. Each reason must be within 20 words.
 
 
 def evaluate_case(
-    frames: List[Image.Image] = None,
+    frames: list[Image.Image] = None,
     appearance_part: str = "",
     action_part: str = "",
-    vlm_client: Optional[VLMClient] = None,
+    vlm_client: VLMClient | None = None,
     video_url: str = None,
     **vlm_kwargs,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Evaluate subject adherence for a single case.
 
     Args:
@@ -112,7 +112,7 @@ def evaluate_case(
     return {"score": None, "details": None, "params": {"method": "vlm"}, "error": str(last_error)}
 
 
-def _parse_json_response(raw: str) -> Dict:
+def _parse_json_response(raw: str) -> dict:
     """Parse JSON from VLM response, handling markdown code blocks, extra text, and trailing commas."""
     import re
 
@@ -147,10 +147,10 @@ def _parse_json_response(raw: str) -> Dict:
 def build_case_record(
     case_id: str,
     video_path: str,
-    maintenance_score: Optional[float] = None,
-    action_score: Optional[float] = None,
-    error: Optional[str] = None,
-) -> Dict[str, Any]:
+    maintenance_score: float | None = None,
+    action_score: float | None = None,
+    error: str | None = None,
+) -> dict[str, Any]:
     if error is None and maintenance_score is not None and action_score is not None:
         score = round((maintenance_score / 5.0 + action_score) / 2.0, 4)
     else:
@@ -168,7 +168,7 @@ def build_case_record(
     }
 
 
-def summarize_model_results(case_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarize_model_results(case_records: list[dict[str, Any]]) -> dict[str, Any]:
     valid = [r for r in case_records if r.get("score") is not None]
     if not valid:
         return {"score": 0.0, "n_cases": 0}

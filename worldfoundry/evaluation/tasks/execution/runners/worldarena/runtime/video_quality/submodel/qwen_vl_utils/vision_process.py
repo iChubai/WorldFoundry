@@ -9,7 +9,9 @@ import time
 import warnings
 from functools import lru_cache
 from io import BytesIO
+from typing import Optional
 
+import numpy as np
 import requests
 import torch
 import torchvision
@@ -17,9 +19,6 @@ from packaging import version
 from PIL import Image
 from torchvision import io, transforms
 from torchvision.transforms import InterpolationMode
-from typing import Optional
-import numpy as np
-
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +175,7 @@ def smart_nframes(
             logger.warning(f"smart_nframes: nframes[{nframes}] > total_frames[{total_frames}]")
         nframes = min(min(max(nframes, min_frames), max_frames), total_frames)
         nframes = floor_by_factor(nframes, FRAME_FACTOR)
-    if not (FRAME_FACTOR <= nframes and nframes <= total_frames):
+    if not (nframes >= FRAME_FACTOR and nframes <= total_frames):
         raise ValueError(f"nframes should in interval [{FRAME_FACTOR}, {total_frames}], but got {nframes}.")
     return nframes
 
@@ -205,7 +204,7 @@ def _read_video_torchvision(
     video, audio, info = io.read_video(
         video_path,
         start_pts=ele.get("video_start", 0.0),
-        end_pts=ele.get("video_end", None),
+        end_pts=ele.get("video_end"),
         pts_unit="sec",
         output_format="TCHW",
     )
@@ -388,7 +387,7 @@ def extract_vision_info(conversations: list[dict] | list[list[dict]]) -> list[di
 def process_vision_info(
     conversations: list[dict] | list[list[dict]],
     return_video_kwargs: bool = False,
-) -> tuple[list[Image.Image] | None, list[torch.Tensor | list[Image.Image]] | None, Optional[dict]]:
+) -> tuple[list[Image.Image] | None, list[torch.Tensor | list[Image.Image]] | None, dict | None]:
     vision_infos = extract_vision_info(conversations)
     ## Read images or videos
     image_inputs = []

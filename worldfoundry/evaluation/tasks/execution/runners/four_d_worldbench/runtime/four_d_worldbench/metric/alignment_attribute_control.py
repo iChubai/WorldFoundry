@@ -1,20 +1,22 @@
-from keye_vl_utils import process_vision_info
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, AutoModel, AutoTokenizer
-
-import torch
+import argparse
+import json
+import os
 import sys
 import warnings
-from decord import VideoReader, cpu
+
 import numpy as np
-import json
-import argparse
-import os
+import torch
+from decord import VideoReader, cpu
+from keye_vl_utils import process_vision_info
 from PIL import Image
-from .utils import load_dimension_info
-from ..paths import keye_model_path
+from tqdm import tqdm
+from transformers import AutoModel, AutoProcessor, AutoTokenizer, Qwen2_5_VLForConditionalGeneration
+
 from worldfoundry.core.attention import resolve_transformers_attention_implementation
 from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
-from tqdm import tqdm
+
+from ..paths import keye_model_path
+from .utils import load_dimension_info
 
 # 导入兼容性工具
 try:
@@ -106,7 +108,7 @@ Answer: [Yes/No]"""
 
                 # 提取生成的token（排除输入token）
                 generated_ids_trimmed = [
-                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+                    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
                 ]
 
                 output_text = processor.batch_decode(

@@ -1,21 +1,19 @@
-import json
-import os.path as osp
-from typing import List
-
-import numpy as np
-import re
-from torchvision.utils import save_image
-import torch
-import os, warnings
-
-import json
 import datetime as _dt
-from pathlib import Path
-from typing import Any, List, Dict, Union, Tuple, Optional
-import imageio
-from PIL import Image
-from typing import Iterable, Sequence
+import json
+import os
+import os.path as osp
+import re
 import shutil
+import warnings
+from collections.abc import Iterable, Sequence
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import imageio
+import numpy as np
+import torch
+from PIL import Image
+from torchvision.utils import save_image
 
 
 #######saving method usied in saver.py#######
@@ -85,25 +83,25 @@ class Saver:
     def get_highlevel_planner_output_path(self, datum, ith_action) -> str:
         return osp.join(
             self.get_action_path_pref(datum, ith_action),
-            f"planner_highlevel.json",
+            "planner_highlevel.json",
         )
 
     def get_highlevel_planner_imagine_output_path(self, datum, ith_action) -> str:
         return osp.join(
             self.get_action_path_pref(datum, ith_action),
-            f"planner_highlevel_imagine.json",
+            "planner_highlevel_imagine.json",
         )
 
     def get_visual_prompt_path(self, datum, ith_action) -> str:
         return osp.join(
             self.get_action_path_pref(datum, ith_action),
-            f"visual_prompt.png",
+            "visual_prompt.png",
         )
 
     def get_visual_prompt_waypoint_path(self, datum, ith_action) -> str:
         return osp.join(
             self.get_action_path_pref(datum, ith_action),
-            f"visual_prompt_waypoint.png",
+            "visual_prompt_waypoint.png",
         )
 
     def get_answerer_output_path(self, datum, ith_action) -> str:
@@ -154,10 +152,10 @@ def _strip_base64(obj: Any) -> Any:
 
 
 def format_chat_dialog(
-    messages: List[Dict[str, Any]],
-    assistant_reply: Union[str, Dict[str, Any]],
+    messages: list[dict[str, Any]],
+    assistant_reply: str | dict[str, Any],
     remove_base64: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Save a chat transcript in a clear, readable JSON file and return it.
 
@@ -176,7 +174,7 @@ def format_chat_dialog(
         If ``True`` (default) replace any in-line Base-64 image data with the
         placeholder string ``"<base64 data removed>"``.
     """
-    transcript: Dict[str, Any] = {
+    transcript: dict[str, Any] = {
         "created": _dt.datetime.now().isoformat(timespec="seconds"),
         "dialog": messages
         + (
@@ -261,7 +259,7 @@ def save_video_frames(
     """
     assert len(videos) == len(out_dirs), "videos and out_dirs length mismatch"
 
-    for clip, folder in zip(videos, out_dirs):
+    for clip, folder in zip(videos, out_dirs, strict=False):
         save_images(clip, Path(folder), model_type=model_type)
 
 
@@ -341,7 +339,7 @@ def _fix_gray(thwc: np.ndarray) -> np.ndarray:
     return thwc
 
 
-def _stack_and_fix_channels(arrs: List[np.ndarray]) -> np.ndarray:
+def _stack_and_fix_channels(arrs: list[np.ndarray]) -> np.ndarray:
     """
     Stack list of PIL->np arrays to (T,H,W,C). If grayscale (H,W), add C=1.
     """
@@ -358,9 +356,9 @@ def _stack_and_fix_channels(arrs: List[np.ndarray]) -> np.ndarray:
 
 
 def _to_uint8_numpy(
-    frames: Union[List[Image.Image], torch.Tensor, np.ndarray],
-    resize_to: Optional[Tuple[int, int]] = None,  # (width, height)
-) -> List[np.ndarray]:
+    frames: list[Image.Image] | torch.Tensor | np.ndarray,
+    resize_to: tuple[int, int] | None = None,  # (width, height)
+) -> list[np.ndarray]:
     """
     Convert input frames to a list of uint8 numpy arrays in H×W×C (RGB).
     Handles:
@@ -401,10 +399,10 @@ def _to_uint8_numpy(
 
 
 def save_video(
-    frames: Union[List[Image.Image], torch.Tensor, np.ndarray],
+    frames: list[Image.Image] | torch.Tensor | np.ndarray,
     save_path: str,
     fps: int = 3,
-    resize_to: Tuple[int, int] = None,  # (width, height)
+    resize_to: tuple[int, int] = None,  # (width, height)
 ) -> None:
     """
     Write *frames* to *save_path* (mp4). Accepts:
@@ -473,9 +471,9 @@ def prepare_saved_imgs_nwm(batch_rgbs, save_dirs):
     rgb_paths = []
     assert len(batch_rgbs) == len(save_dirs)
 
-    for img, dir in zip(batch_rgbs, save_dirs):
+    for img, dir in zip(batch_rgbs, save_dirs, strict=False):
         # save the img into the save_dirs
-        rgb_path = osp.join(dir, f"cond_rgb.png")
+        rgb_path = osp.join(dir, "cond_rgb.png")
         save_img(img, rgb_path)
 
         rgb_paths.append(rgb_path)
@@ -492,10 +490,10 @@ def prepare_saved_imgs(batch_rgbs, batch_depths, save_dirs):
     rgb_paths, depth_paths = [], []
     assert len(batch_rgbs) == len(batch_depths) == len(save_dirs)
 
-    for img, depth_img, dir in zip(batch_rgbs, batch_depths, save_dirs):
+    for img, depth_img, dir in zip(batch_rgbs, batch_depths, save_dirs, strict=False):
         # save the img into the save_dirs
-        rgb_path = osp.join(dir, f"cond_pano_rgb.png")
-        depth_path = osp.join(dir, f"cond_pano_depth.png")
+        rgb_path = osp.join(dir, "cond_pano_rgb.png")
+        depth_path = osp.join(dir, "cond_pano_depth.png")
         save_img(img, rgb_path)
 
         # normalize depth into [0,1] by depth_scale,
@@ -515,7 +513,7 @@ def prepare_saved_imgs(batch_rgbs, batch_depths, save_dirs):
     return rgb_paths, depth_paths
 
 
-def prepare_saved_imgs_from_fpaths(batch_rgbs, batch_depths, save_dirs) -> Tuple[List[str], List[str]]:
+def prepare_saved_imgs_from_fpaths(batch_rgbs, batch_depths, save_dirs) -> tuple[list[str], list[str]]:
     """
     Copy each (rgb, depth) image pair to its corresponding directory in `save_dirs`,
     saving them as fixed filenames:
@@ -531,9 +529,9 @@ def prepare_saved_imgs_from_fpaths(batch_rgbs, batch_depths, save_dirs) -> Tuple
             f"len(batch_depths)={len(batch_depths)}, len(save_dirs)={len(save_dirs)}"
         )
 
-    rgb_paths: List[str] = []
-    depth_paths: List[str] = []
-    for rgb_fp, depth_fp, dst_dir in zip(batch_rgbs, batch_depths, save_dirs):
+    rgb_paths: list[str] = []
+    depth_paths: list[str] = []
+    for rgb_fp, depth_fp, dst_dir in zip(batch_rgbs, batch_depths, save_dirs, strict=False):
         rgb_src = Path(rgb_fp)
         depth_src = Path(depth_fp)
         dst_dir = Path(dst_dir)

@@ -1,10 +1,12 @@
-import torch
 import os
-import numpy as np
-from tqdm import tqdm
 from math import ceil
+
+import numpy as np
+import torch
+from tqdm import tqdm
+from vbench2_beta_i2v.utils import load_dimension_info, load_video
+
 from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
-from vbench2_beta_i2v.utils import load_video, load_dimension_info
 
 
 def transform(vector):
@@ -73,8 +75,8 @@ class CameraPredict:
         edge_points2 = self.get_edge_point(track2)
 
         vector_results = []
-        for points1, points2 in zip(edge_points1, edge_points2):
-            vectors = [[end[0] - start[0], end[1] - start[1]] for start, end in zip(points1, points2)]
+        for points1, points2 in zip(edge_points1, edge_points2, strict=False):
+            vectors = [[end[0] - start[0], end[1] - start[1]] for start, end in zip(points1, points2, strict=False)]
             vector_results.append(vectors)
         vector_results = list(map(transform, vector_results))
         class_results = [transform_class(vector, min_reso=self.scale) for vector in vector_results]

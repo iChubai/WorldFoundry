@@ -17,7 +17,7 @@ def crop_clip(clip, min_h, min_w, h, w):
     elif isinstance(clip[0], PIL.Image.Image):
         cropped = [img.crop((min_w, min_h, min_w + w, min_h + h)) for img in clip]
     else:
-        raise TypeError("Expected numpy.ndarray or PIL.Image" + "but got list of {0}".format(type(clip[0])))
+        raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")
     return cropped
 
 
@@ -53,7 +53,7 @@ def resize_clip(clip, size, interpolation="bilinear"):
             pil_inter = PIL.Image.NEAREST
         scaled = [img.resize(size, pil_inter) for img in clip]
     else:
-        raise TypeError("Expected numpy.ndarray or PIL.Image" + "but got list of {0}".format(type(clip[0])))
+        raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")
     return scaled
 
 

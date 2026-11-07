@@ -4,12 +4,11 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import shlex
 from pathlib import Path
-from typing import List, Dict, Optional
-
-import os
+from typing import Dict, List, Optional
 
 # ----- exact column names
 REQUIRED_COLUMNS = [
@@ -44,7 +43,7 @@ def uid_to_folder(uid: str, prefix: str = "vid_", pad: int = 3) -> str:
     return f"{prefix}{slugify(uid)}"
 
 
-def vid_int_from_any(s: str) -> Optional[int]:
+def vid_int_from_any(s: str) -> int | None:
     """Return integer ID from 'vid_50', 'vid_050', '50', etc."""
     if not s:
         return None
@@ -57,7 +56,7 @@ def vid_int_from_any(s: str) -> Optional[int]:
     return None
 
 
-def read_rows(csv_path: Path) -> List[Dict[str, str]]:
+def read_rows(csv_path: Path) -> list[dict[str, str]]:
     with csv_path.open(newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
@@ -66,7 +65,7 @@ def read_rows(csv_path: Path) -> List[Dict[str, str]]:
         return [dict(r) for r in reader]
 
 
-def infer_ref_path_for_vid(ref_dir: Optional[Path], vid_num: int) -> Optional[str]:
+def infer_ref_path_for_vid(ref_dir: Path | None, vid_num: int) -> str | None:
     """Try both non-padded and padded reference names under ref_dir."""
     if not ref_dir:
         return None
@@ -165,13 +164,13 @@ def main():
     if args.mode == "ready":
         rows = [r for r in rows if (r.get("finalized?") or "").strip().lower() == "done"]
 
-    authors_filter: List[str] = []
+    authors_filter: list[str] = []
     if args.author.strip():
         authors_filter = [a.strip() for a in args.author.split(",") if a.strip()]
         rows = [r for r in rows if (r.get("Author") or "").strip() in authors_filter]
 
     # Map from normalized vid integer -> CSV row
-    selected_by_vid_int: Dict[int, Dict[str, str]] = {}
+    selected_by_vid_int: dict[int, dict[str, str]] = {}
     for r in rows:
         uid_raw = (r.get("Unique ID") or "").strip()
         vid_num = vid_int_from_any(uid_raw)
@@ -197,7 +196,7 @@ def main():
     ref_dir = Path(args.reference_dir).resolve() if args.reference_dir else None
 
     # Checklist dir: CLI > env > None
-    checklist_dir: Optional[Path] = None
+    checklist_dir: Path | None = None
     if args.checklist_dir:
         checklist_dir = Path(args.checklist_dir).resolve()
     else:
@@ -207,7 +206,7 @@ def main():
 
     # CV metrics script path (if enabled)
     cv_metrics_enabled = bool(args.enable_cv)
-    cv_metrics_script_path: Optional[Path] = None
+    cv_metrics_script_path: Path | None = None
     if cv_metrics_enabled:
         cv_metrics_script_path = Path(args.cv_metrics_script).resolve()
         if not cv_metrics_script_path.exists():
@@ -219,7 +218,7 @@ def main():
         raise SystemExit(f"--source-dir target not found: {source_root}")
 
     # -------- build run script --------
-    run_lines: List[str] = []
+    run_lines: list[str] = []
     run_lines.append("#!/usr/bin/env bash")
     run_lines.append("set -euo pipefail")
     run_lines.append("")
@@ -305,18 +304,13 @@ def main():
             cv_ref_arg = f" --ref_video {shlex.quote(ref_path)}" if ref_path else ""
 
             cv_prefix = (
-                "python3 ${{CV_METRICS_SCRIPT}} "
-                "--video {video} "
-                "--text_prompt {desc}"
-                "{cv_ref} "
-                '--modules "${{CV_MODULES:-grounding,bytetrack,raft,clip4clip,lpips}}" '
+                "python3 ${CV_METRICS_SCRIPT} "
+                f"--video {shlex.quote(str(p))} "
+                f"--text_prompt {shlex.quote(description)}"
+                f"{cv_ref_arg} "
+                '--modules "${CV_MODULES:-grounding,bytetrack,raft,clip4clip,lpips}" '
                 "--max_frames 128 "
-                "--output_json {cv_json} && "
-            ).format(
-                video=shlex.quote(str(p)),
-                desc=shlex.quote(description),
-                cv_ref=cv_ref_arg,
-                cv_json=cv_json_quoted,
+                f"--output_json {cv_json_quoted} && "
             )
 
             cv_arg = f" --cv_json {cv_json_quoted}"

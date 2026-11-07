@@ -1,7 +1,7 @@
-import torch
 import lpips
-from tqdm import tqdm
+import torch
 from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
+from tqdm import tqdm
 
 
 def load_models(device):

@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -138,7 +139,7 @@ def _hungarian_pairs(scores: np.ndarray) -> list[tuple[int, int]]:
     from scipy.optimize import linear_sum_assignment
 
     rows, columns = linear_sum_assignment(scores, maximize=True)
-    return [(int(row), int(column)) for row, column in zip(rows, columns)]
+    return [(int(row), int(column)) for row, column in zip(rows, columns, strict=False)]
 
 
 def source_anchors(
@@ -328,7 +329,9 @@ def prepare_samples(
                     width=width,
                     height=height,
                 )
-                target_audit = [{**source, **generated} for source, generated in zip(source_audit, generated_audit)]
+                target_audit = [
+                    {**source, **generated} for source, generated in zip(source_audit, generated_audit, strict=False)
+                ]
             except ManifestBuildError as error:
                 # The reference gives the whole model/case/trajectory zero,
                 # retaining the canonical target count and explicit reason.

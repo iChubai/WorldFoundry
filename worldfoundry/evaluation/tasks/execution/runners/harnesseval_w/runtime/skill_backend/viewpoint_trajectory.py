@@ -14,7 +14,6 @@ from ..io import value_digest
 from ..skills.skill_viewpoint_trajectory import BACKEND_OUTPUT_SCHEMA, SAMPLING
 from .common import _validate_video
 
-
 BACKEND_ID = "harnesseval.viewpoint_trajectory.megasam"
 BACKEND_VERSION = "harnesseval.megasam_cam_c2w"
 CONFIG_DIGEST = value_digest(

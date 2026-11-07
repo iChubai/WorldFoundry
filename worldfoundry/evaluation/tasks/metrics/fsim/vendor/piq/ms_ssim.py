@@ -13,9 +13,9 @@ import torch
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce
 from piq.functional import gaussian_filter
 from piq.ssim import _ssim_per_channel, _ssim_per_channel_complex
+from piq.utils import _reduce, _validate_input
 
 
 def multi_scale_ssim(
@@ -23,9 +23,9 @@ def multi_scale_ssim(
     y: torch.Tensor,
     kernel_size: int = 11,
     kernel_sigma: float = 1.5,
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     reduction: str = "mean",
-    scale_weights: Optional[torch.Tensor] = None,
+    scale_weights: torch.Tensor | None = None,
     k1: float = 0.01,
     k2: float = 0.03,
 ) -> torch.Tensor:
@@ -158,9 +158,9 @@ class MultiScaleSSIMLoss(_Loss):
         kernel_sigma: float = 1.5,
         k1: float = 0.01,
         k2: float = 0.03,
-        scale_weights: Optional[torch.Tensor] = None,
+        scale_weights: torch.Tensor | None = None,
         reduction: str = "mean",
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
     ) -> None:
         super().__init__()
 
@@ -214,7 +214,7 @@ class MultiScaleSSIMLoss(_Loss):
 def _multi_scale_ssim(
     x: torch.Tensor,
     y: torch.Tensor,
-    data_range: Union[int, float],
+    data_range: int | float,
     kernel: torch.Tensor,
     scale_weights: torch.Tensor,
     k1: float,
@@ -263,7 +263,7 @@ def _multi_scale_ssim(
 def _multi_scale_ssim_complex(
     x: torch.Tensor,
     y: torch.Tensor,
-    data_range: Union[int, float],
+    data_range: int | float,
     kernel: torch.Tensor,
     scale_weights: torch.Tensor,
     k1: float,

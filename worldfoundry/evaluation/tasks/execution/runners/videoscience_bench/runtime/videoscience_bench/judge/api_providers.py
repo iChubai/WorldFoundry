@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import os
+import base64
 import io
 import json
-import base64
+import os
 import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 try:
     import cv2
@@ -46,16 +46,14 @@ def _require_pillow():
         raise RuntimeError("Pillow is required. Install via `pip install Pillow`.")
 
 
-def _image_to_b64(img: "Image.Image", jpeg_quality: int = 80) -> str:
+def _image_to_b64(img: Image.Image, jpeg_quality: int = 80) -> str:
     _require_pillow()
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=jpeg_quality)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
 
-def _extract_frames_cv2(
-    path: str, max_frames: int = 24, fps: Optional[float] = None
-) -> List[Tuple[float, "Image.Image"]]:
+def _extract_frames_cv2(path: str, max_frames: int = 24, fps: float | None = None) -> list[tuple[float, Image.Image]]:
     if not path:
         return []
     if cv2 is None:
@@ -74,7 +72,7 @@ def _extract_frames_cv2(
         max_frames = max(1, int(max_frames))
         times = [i * duration / max_frames for i in range(max_frames)]
 
-    frames: List[Tuple[float, "Image.Image"]] = []
+    frames: list[tuple[float, Image.Image]] = []
     for t_s in times:
         cap.set(cv2.CAP_PROP_POS_MSEC, t_s * 1000.0)
         ok, fr = cap.read()
@@ -90,7 +88,7 @@ def _extract_frames_cv2(
     return frames
 
 
-def _extract_frames_ffmpeg(path: str, max_frames: int = 24) -> List[Tuple[float, "Image.Image"]]:
+def _extract_frames_ffmpeg(path: str, max_frames: int = 24) -> list[tuple[float, Image.Image]]:
     if not path:
         return []
     if Image is None:
@@ -118,7 +116,7 @@ def _extract_frames_ffmpeg(path: str, max_frames: int = 24) -> List[Tuple[float,
     max_frames = max(1, int(max_frames))
     times = [i * duration / max_frames for i in range(max_frames)]
 
-    out_frames: List[Tuple[float, "Image.Image"]] = []
+    out_frames: list[tuple[float, Image.Image]] = []
     for t_s in times:
         out = subprocess.run(
             ["ffmpeg", "-ss", str(t_s), "-i", path, "-frames:v", "1", "-f", "image2pipe", "-vcodec", "mjpeg", "-"],
@@ -131,7 +129,7 @@ def _extract_frames_ffmpeg(path: str, max_frames: int = 24) -> List[Tuple[float,
     return out_frames
 
 
-def extract_frames(path: str, max_frames: int = 24, fps: Optional[float] = None) -> List[Tuple[float, "Image.Image"]]:
+def extract_frames(path: str, max_frames: int = 24, fps: float | None = None) -> list[tuple[float, Image.Image]]:
     if not path:
         return []
 
@@ -200,9 +198,9 @@ class OpenAIVLMAPI(_BaseVLM):
         model: str,
         video_path: str,
         phenomenon: str,
-        ref_video_path: Optional[str],
+        ref_video_path: str | None,
         max_frames: int,
-        fps: Optional[float],
+        fps: float | None,
         timeout_s: int,
         extra: dict,
     ) -> dict:
@@ -285,9 +283,9 @@ class GeminiVLMAPI(_BaseVLM):
         model: str,
         video_path: str,
         phenomenon: str,
-        ref_video_path: Optional[str],
+        ref_video_path: str | None,
         max_frames: int,
-        fps: Optional[float],
+        fps: float | None,
         timeout_s: int,
         extra: dict,
     ) -> dict:
@@ -345,9 +343,9 @@ class AnthropicVLMAPI(_BaseVLM):
         model: str,
         video_path: str,
         phenomenon: str,
-        ref_video_path: Optional[str],
+        ref_video_path: str | None,
         max_frames: int,
-        fps: Optional[float],
+        fps: float | None,
         timeout_s: int,
         extra: dict,
     ) -> dict:
@@ -355,7 +353,7 @@ class AnthropicVLMAPI(_BaseVLM):
         cand = extract_frames(video_path, max_frames=max_frames, fps=fps)
         ref = extract_frames(ref_video_path, max_frames=max_frames // 2, fps=fps) if ref_video_path else []
 
-        def _image_part(img: "Image.Image") -> dict:
+        def _image_part(img: Image.Image) -> dict:
             b64 = _image_to_b64(img)
             return {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": b64}}
 

@@ -1,13 +1,14 @@
-import os
 import json
 import logging
+import os
+
 import numpy as np
-from PIL import Image
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from vbench.utils import load_video, load_dimension_info, clip_transform
+from PIL import Image
 from tqdm import tqdm
+from vbench.utils import clip_transform, load_dimension_info, load_video
 
 
 def background_consistency(clip_model, preprocess, video_path, device, read_frame=False):

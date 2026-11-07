@@ -1,15 +1,15 @@
-from typing import List
-import torch
-import numpy as np
 import argparse
+from typing import List
+
+import numpy as np
+import torch
 from PIL import Image
 
 from worldfoundry.base_models.perception_core.optical_flow.raft import (
-    InputPadder,
     RAFT,
+    InputPadder,
     checkpoint_path,
 )
-
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
@@ -104,7 +104,7 @@ class OpticalFlowAverageEndPointErrorMetric(BaseMetric):
         return img[None].to(self._device)
 
     def _compute_flow(self, image1, image2):
-        print(f"computing flow...")
+        print("computing flow...")
         padder = InputPadder(image1.shape)
         image1, image2 = padder.pad(image1, image2)
 
@@ -117,14 +117,14 @@ class OpticalFlowAverageEndPointErrorMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         scores = []
 
         with torch.no_grad():
             images = rendered_images
 
-            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:])):
+            for i, (imfile1, imfile2) in enumerate(zip(images[:-1], images[1:], strict=False)):
                 image1 = self.load_image(imfile1)
                 image2 = self.load_image(imfile2)
 

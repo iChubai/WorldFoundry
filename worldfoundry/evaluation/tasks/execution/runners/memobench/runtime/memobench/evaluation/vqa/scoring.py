@@ -1,10 +1,10 @@
-import time
-import json
 import csv
+import json
+import time
 
 if __name__ == "__main__":
     inputs = []
-    with open("failure-cases.csv", mode="r", newline="", encoding="utf-8") as csv_file:
+    with open("failure-cases.csv", newline="", encoding="utf-8") as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             inputs.append(row)
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         video_id = input_config["video_id"]
 
         score = []
-        with open(f"score/Lingbot/{scene}-{video_id}.csv", mode="r", newline="", encoding="utf-8") as csv_file:
+        with open(f"score/Lingbot/{scene}-{video_id}.csv", newline="", encoding="utf-8") as csv_file:
             reader = csv.DictReader(csv_file)
             for row in reader:
                 score.append(row)
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         outputs.append(output)
 
     fieldnames = output.keys()
-    with open(f"score/Lingbot/overall.csv", "w", newline="", encoding="utf-8") as output_file:
+    with open("score/Lingbot/overall.csv", "w", newline="", encoding="utf-8") as output_file:
         dict_writer = csv.DictWriter(output_file, fieldnames=fieldnames)
         dict_writer.writeheader()
         dict_writer.writerows(outputs)

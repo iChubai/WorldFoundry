@@ -1,22 +1,24 @@
 import cv2
+import decord
 import numpy as np
 import torch
-import decord
 
 decord.bridge.set_bridge("torch")
-import torchvision
+import json
+import os
+from collections import Counter
+
 import imageio
+import torchvision
 from einops import rearrange
+from PIL import Image
 from scipy.spatial.distance import cosine
-from worldfoundry.base_models.perception_core.tracking.cotracker import Visualizer
+from tqdm import tqdm
+from vbench2.utils import load_dimension_info
+
 from worldfoundry.base_models.perception_core.face.arcface import resnet_face18
 from worldfoundry.base_models.perception_core.face.retinaface import load_retinaface_state_dict
-from PIL import Image
-import os
-import json
-from collections import Counter
-from vbench2.utils import load_dimension_info
-from tqdm import tqdm
+from worldfoundry.base_models.perception_core.tracking.cotracker import Visualizer
 
 
 def most_frequent_number(numbers):

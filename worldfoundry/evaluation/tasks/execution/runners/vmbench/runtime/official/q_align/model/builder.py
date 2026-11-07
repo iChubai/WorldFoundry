@@ -14,14 +14,14 @@
 
 
 import os
-import warnings
 import shutil
+import warnings
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig
-from transformers.models.clip.image_processing_clip import CLIPImageProcessor
 import torch
-from q_align.model import *
 from icecream import ic
+from q_align.model import *
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers.models.clip.image_processing_clip import CLIPImageProcessor
 
 
 def load_pretrained_model(
@@ -118,7 +118,7 @@ def load_pretrained_model(
             model = AutoModelForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, **kwargs)
             print(f"Loading LoRA weights from {model_path}")
             model = PeftModel.from_pretrained(model, model_path)
-            print(f"Merging weights")
+            print("Merging weights")
             model = model.merge_and_unload()
             print("Convert to FP16...")
             model.to(torch.float16)

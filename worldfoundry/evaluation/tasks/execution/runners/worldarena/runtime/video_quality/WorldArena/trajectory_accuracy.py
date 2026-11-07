@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-from scipy.spatial.distance import directed_hausdorff
-from scipy.spatial.distance import euclidean
+from scipy.spatial.distance import directed_hausdorff, euclidean
 
 try:
     from fastdtw import fastdtw
 except ImportError:
     fastdtw = None
-import os
 import argparse
 import json
 import math
+import os
+
 from scipy.stats import norm
 from tqdm import tqdm
 

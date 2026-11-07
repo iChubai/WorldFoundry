@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 
 from wrbench.adapters._utils import adapter_taxonomy_metadata, ensure_work_dir, model_target_trajectory, write_json
-from wrbench.adapters.minwm_camera_patch import apply_launcher_to_command, write_rotation_step_patch
 from wrbench.adapters.base import register
+from wrbench.adapters.minwm_camera_patch import apply_launcher_to_command, write_rotation_step_patch
 from wrbench.contracts import (
     build_command_template,
     require_execution_contract,
@@ -17,7 +17,6 @@ from wrbench.contracts import (
 from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key
 from wrbench.trajectory import CameraTrajectory
-
 
 _MINWM_YAW_DEG_PER_TOKEN = 3.0
 

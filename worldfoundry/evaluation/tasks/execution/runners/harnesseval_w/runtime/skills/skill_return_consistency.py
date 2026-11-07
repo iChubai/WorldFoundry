@@ -12,7 +12,6 @@ from ..aggregate import clip01, numeric, skill_result, soft_threshold
 from ..io import atomic_write_json, file_fingerprint, read_json, value_digest
 from .common import MetricCacheContract, SkillBackendIdentity, skill_cache_path
 
-
 SKILL_ID = "return_consistency_verifier"
 DEFINITION_VERSION = "harnesseval.return_consistency"
 CACHE_SCHEMA = "harnesseval.return_consistency.cache"
@@ -50,23 +49,23 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
     "FRAME_COMPONENTS",
-    "SAMPLING",
-    "PAIR_WEIGHTS",
     "MULTI_PAIR_WEIGHTS",
+    "PAIR_WEIGHTS",
+    "SAMPLING",
+    "SKILL_ID",
     "ReturnConsistencyBackend",
     "cache_path_for_video",
+    "evaluate",
     "frame_similarity",
+    "import_evidence",
     "resolve_sample_plan",
     "result_from_evidence",
     "validate_evidence",
-    "import_evidence",
-    "evaluate",
 ]
 
 
@@ -378,7 +377,7 @@ def _normalize_backend_evidence(raw: Mapping[str, Any], plan: Mapping[str, Any])
     if not isinstance(raw_pairs, list) or len(raw_pairs) != len(expected_pairs):
         raise RuntimeError("Return backend returned the wrong pair count")
     pairs = []
-    for expected, returned in zip(expected_pairs, raw_pairs):
+    for expected, returned in zip(expected_pairs, raw_pairs, strict=False):
         if not isinstance(returned, Mapping):
             raise RuntimeError("Return backend pair must be an object")
         if (

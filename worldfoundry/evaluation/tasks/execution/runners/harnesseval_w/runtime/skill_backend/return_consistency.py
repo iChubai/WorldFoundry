@@ -13,16 +13,15 @@ from ..io import value_digest
 from ..skills.skill_return_consistency import BACKEND_OUTPUT_SCHEMA, SAMPLING
 from .common import _validate_video
 
-
 BACKEND_ID = "harnesseval.return_consistency.clip_b32"
 BACKEND_VERSION = "harnesseval.return_consistency"
 
 __all__ = [
     "BACKEND_ID",
     "BACKEND_VERSION",
-    "backend_config_digest",
-    "LocalClipEmbedder",
     "LocalBackend",
+    "LocalClipEmbedder",
+    "backend_config_digest",
 ]
 
 
@@ -80,7 +79,7 @@ class LocalClipEmbedder:
         self.ensure_ready()
         with self._inference_lock:
             vectors = self._backend.embed([content for _, content in images])
-        return {image_id: vector for (image_id, _), vector in zip(images, vectors)}
+        return {image_id: vector for (image_id, _), vector in zip(images, vectors, strict=False)}
 
 
 def _normalized(values: list[float]) -> list[float]:
@@ -93,7 +92,7 @@ def _normalized(values: list[float]) -> list[float]:
 def _cosine(left: list[float], right: list[float]) -> float:
     if len(left) != len(right) or not left:
         raise RuntimeError("CLIP embeddings have inconsistent dimensions")
-    return sum(a * b for a, b in zip(left, right))
+    return sum(a * b for a, b in zip(left, right, strict=False))
 
 
 def _encode_png(rgb: Any) -> bytes:
@@ -236,7 +235,7 @@ class _Backend:
             )
         diffs = [
             float(np.mean(np.abs(right["gray"].astype(np.float32) - left["gray"].astype(np.float32))) / 255.0)
-            for left, right in zip(samples[:-1], samples[1:])
+            for left, right in zip(samples[:-1], samples[1:], strict=False)
         ]
         if not diffs:
             raise RuntimeError("Return requires consecutive sampled frames")

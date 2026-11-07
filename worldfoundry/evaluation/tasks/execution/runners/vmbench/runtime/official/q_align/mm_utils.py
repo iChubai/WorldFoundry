@@ -1,11 +1,11 @@
-from PIL import Image
-from io import BytesIO
 import base64
+from io import BytesIO
 
 import torch
-from transformers import StoppingCriteria
-from q_align.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
 from icecream import ic
+from PIL import Image
+from q_align.constants import DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX
+from transformers import StoppingCriteria
 
 
 def load_image_from_base64(image):
@@ -56,7 +56,7 @@ def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX
     ]
 
     def insert_separator(X, sep):
-        return [ele for sublist in zip(X, [sep] * len(X)) for ele in sublist][:-1]
+        return [ele for sublist in zip(X, [sep] * len(X), strict=False) for ele in sublist][:-1]
 
     input_ids = []
     offset = 0

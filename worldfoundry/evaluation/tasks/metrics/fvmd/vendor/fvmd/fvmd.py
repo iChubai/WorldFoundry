@@ -1,12 +1,14 @@
-import os
 import json
+import os
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+
 import numpy as np
 from loguru import logger
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+
 from fvmd.datasets.video_datasets import VideoDataset, VideoDatasetNP
-from fvmd.keypoint_tracking import track_keypoints
 from fvmd.extract_motion_features import calc_hist
 from fvmd.frechet_distance import calculate_fd_given_vectors
+from fvmd.keypoint_tracking import track_keypoints
 
 
 def parse_args():
@@ -65,7 +67,7 @@ def fvmd(log_dir: str, gen_path: str, gt_path: str):
 def main():
     args = parse_args()
     logger.add(os.path.join(args.log_dir, "log.txt"))
-    logger.info("Computing FVMD between {} and {}".format(args.path[0], args.path[1]))
+    logger.info(f"Computing FVMD between {args.path[0]} and {args.path[1]}")
 
     fvmd_value = fvmd(log_dir=args.log_dir, gen_path=args.path[0], gt_path=args.path[1])
 

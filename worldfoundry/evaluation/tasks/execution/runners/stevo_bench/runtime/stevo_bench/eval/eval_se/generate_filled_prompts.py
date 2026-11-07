@@ -61,7 +61,7 @@ def main():
     results_path = Path("eval_se/results/evaluation_results_20260226_170228_unanimous.json")
 
     print(f"Loading evaluation results from {results_path}...")
-    with open(results_path, "r") as f:
+    with open(results_path) as f:
         eval_data = json.load(f)
 
     # Get prompt1 template
@@ -111,11 +111,11 @@ def main():
         json.dump(output_data, f, indent=2)
 
     print(f"Done! Generated {len(filled_prompts)} filled prompts.")
-    print(f"\nExample (first task):")
+    print("\nExample (first task):")
     print(f"Task ID: {filled_prompts[0]['task_id']}")
     print(f"Model Type: {filled_prompts[0]['model_type']}")
     print(f"Occlusion Focus: {filled_prompts[0]['occlusion_focus']}")
-    print(f"\nFilled Prompt (truncated):")
+    print("\nFilled Prompt (truncated):")
     print(filled_prompts[0]["filled_prompt1"][:300] + "...")
 
 

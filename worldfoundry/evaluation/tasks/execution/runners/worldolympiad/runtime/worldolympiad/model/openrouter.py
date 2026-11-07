@@ -1,10 +1,10 @@
-from typing import Any, Dict, List
-import os
 import base64
-import requests
-import time
 import json
+import os
+import time
+from typing import Any, Dict, List
 
+import requests
 
 OPENROUTER_API_KEY_ENV_NAMES = (
     "WORLDFOUNDRY_OPENROUTER_API_KEY",
@@ -19,7 +19,7 @@ def get_openrouter_api_key() -> str | None:
     return next((value for name in OPENROUTER_API_KEY_ENV_NAMES if (value := os.getenv(name))), None)
 
 
-def _openrouter_headers() -> Dict[str, str]:
+def _openrouter_headers() -> dict[str, str]:
     api_key = get_openrouter_api_key()
     if not api_key:
         names = ", ".join(OPENROUTER_API_KEY_ENV_NAMES[:-1])
@@ -41,7 +41,7 @@ def clean_json_content(content: str) -> str:
     return content.strip()
 
 
-def parse_json_content(resp: Dict) -> Any:
+def parse_json_content(resp: dict) -> Any:
     """
     Parse the first choice message content as JSON after stripping fences.
     """
@@ -54,11 +54,11 @@ def parse_json_content(resp: Dict) -> Any:
 
 def _post_with_retry(
     url: str,
-    headers: Dict[str, str],
-    payload: Dict,
+    headers: dict[str, str],
+    payload: dict,
     timeout: int = 180,
     max_retries: int = 3,
-) -> Dict:
+) -> dict:
     """
     Call OpenRouter with simple retry on network / bad JSON / missing choices.
     """
@@ -86,7 +86,7 @@ def _post_with_retry(
             raise RuntimeError(f"OpenRouter request failed after {max_retries} attempts: {exc}") from exc
 
 
-def text_openrouter_call(system_prompt: str, user_content: str, model_name: str) -> Dict:
+def text_openrouter_call(system_prompt: str, user_content: str, model_name: str) -> dict:
     """Text-only OpenRouter helper (no video)."""
     payload = {
         "model": model_name,
@@ -102,7 +102,7 @@ def text_openrouter_call(system_prompt: str, user_content: str, model_name: str)
 
 def video_openrouter_call(
     data_url, system_prompt: str, user_content: str, model_name: str = "google/gemini-2.5-flash"
-) -> Dict:
+) -> dict:
     """Helper function to encode video and call OpenRouter API."""
     if type(data_url) is not list:
         messages = [
@@ -150,11 +150,11 @@ def video_openrouter_call(
 
 
 def chat_openrouter_call(
-    messages: List[Dict],
+    messages: list[dict],
     model_name: str,
     timeout: int = 240,
     max_retries: int = 3,
-) -> Dict:
+) -> dict:
     """
     Generic chat call with retry (used for two-video compliance calls).
     """

@@ -1,19 +1,18 @@
 import math
 from typing import Any, Optional, Tuple, Union
 
-from transformers.modeling_outputs import (
-    BaseModelOutput,
-    BaseModelOutputWithPooling,
-    BaseModelOutputWithPastAndCrossAttentions,
-)
-from transformers.modeling_utils import PreTrainedModel
-from transformers.pytorch_utils import find_pruneable_heads_and_indices, prune_linear_layer
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint
 from icecream import ic
+from transformers.modeling_outputs import (
+    BaseModelOutput,
+    BaseModelOutputWithPastAndCrossAttentions,
+    BaseModelOutputWithPooling,
+)
+from transformers.modeling_utils import PreTrainedModel
+from transformers.pytorch_utils import find_pruneable_heads_and_indices, prune_linear_layer
 
 
 def get_abs_pos(abs_pos, tgt_size):
@@ -153,9 +152,9 @@ class MplugOwlVisionAttention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        head_mask: Optional[torch.Tensor] = None,
-        output_attentions: Optional[bool] = False,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+        head_mask: torch.Tensor | None = None,
+        output_attentions: bool | None = False,
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         """Input shape: Batch x Time x Channel"""
 
         bsz, seq_len, embed_dim = hidden_states.size()
@@ -263,8 +262,8 @@ class MplugOwlVisionEncoderLayer(nn.Module):
         self,
         hidden_states: torch.Tensor,
         attention_mask: torch.Tensor,
-        output_attentions: Optional[bool] = False,
-    ) -> Tuple[torch.FloatTensor]:
+        output_attentions: bool | None = False,
+    ) -> tuple[torch.FloatTensor]:
         """
         Args:
             hidden_states (`torch.FloatTensor`): input to the layer of shape `(batch, seq_len, embed_dim)`
@@ -317,11 +316,11 @@ class MplugOwlVisionEncoder(nn.Module):
     def forward(
         self,
         inputs_embeds,
-        attention_mask: Optional[torch.Tensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, BaseModelOutput]:
+        attention_mask: torch.Tensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | BaseModelOutput:
         r"""
         Args:
             inputs_embeds (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`):
@@ -405,11 +404,11 @@ class MplugOwlVisionModel(PreTrainedModel):
 
     def forward(
         self,
-        pixel_values: Optional[torch.FloatTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, BaseModelOutputWithPooling]:
+        pixel_values: torch.FloatTensor | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | BaseModelOutputWithPooling:
         r"""
         Returns:
 
@@ -635,13 +634,13 @@ class MplugOwlVisualAbstractorAttention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        encoder_hidden_states: Optional[torch.FloatTensor] = None,
-        encoder_attention_mask: Optional[torch.FloatTensor] = None,
-        past_key_value: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
-        output_attentions: Optional[bool] = False,
-    ) -> Tuple[torch.Tensor]:
+        attention_mask: torch.FloatTensor | None = None,
+        head_mask: torch.FloatTensor | None = None,
+        encoder_hidden_states: torch.FloatTensor | None = None,
+        encoder_attention_mask: torch.FloatTensor | None = None,
+        past_key_value: tuple[tuple[torch.FloatTensor]] | None = None,
+        output_attentions: bool | None = False,
+    ) -> tuple[torch.Tensor]:
         # HACK we apply norm on q and k
         hidden_states = self.norm1(hidden_states)
         encoder_hidden_states = self.normk(encoder_hidden_states)
@@ -787,7 +786,7 @@ class MplugOwlVisualAbstractorModel(PreTrainedModel):
     def get_extended_attention_mask(
         self,
         attention_mask: torch.Tensor,
-        input_shape: Tuple[int],
+        input_shape: tuple[int],
         device: torch.device,
     ) -> torch.Tensor:
         """
@@ -814,9 +813,7 @@ class MplugOwlVisualAbstractorModel(PreTrainedModel):
             extended_attention_mask = attention_mask[:, None, None, :]
         else:
             raise ValueError(
-                "Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(
-                    input_shape, attention_mask.shape
-                )
+                f"Wrong shape for input_ids (shape {input_shape}) or attention_mask (shape {attention_mask.shape})"
             )
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for

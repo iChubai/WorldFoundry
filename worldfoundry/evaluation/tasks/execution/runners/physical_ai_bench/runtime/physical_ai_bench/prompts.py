@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache, lru_cache
 from typing import Any
 
 import yaml
@@ -10,7 +10,7 @@ import yaml
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
 
-@lru_cache(maxsize=None)
+@cache
 def prompt_config(name: str) -> dict[str, Any]:
     path = bundled_benchmark_asset("physical-ai-bench", "prompts", f"{name}.yaml")
     if not path.is_file():

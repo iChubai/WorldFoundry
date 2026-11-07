@@ -1,18 +1,19 @@
 import torch
-from tqdm import tqdm
-from torchvision import transforms
 from pyiqa.archs.musiq_arch import MUSIQ
-from .utils import load_video, load_dimension_info
-from worldfoundry.core.execution.device import get_current_torch_device
+from torchvision import transforms
+from tqdm import tqdm
 
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
     all_gather,
     barrier,
     distribute_list_to_rank,
     gather_list_of_dict,
+    get_rank,
+    get_world_size,
 )
+from worldfoundry.core.execution.device import get_current_torch_device
+
+from .utils import load_dimension_info, load_video
 
 
 def transform(images, preprocess_mode="shorter"):

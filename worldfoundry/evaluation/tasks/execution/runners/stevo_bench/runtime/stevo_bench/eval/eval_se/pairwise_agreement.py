@@ -5,9 +5,9 @@ Compares pairwise model rankings based on ground truth vs Gemini verdicts.
 
 import json
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple, Set
 from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Set, Tuple
 
 
 class PairwiseAgreementAnalyzer:
@@ -15,16 +15,16 @@ class PairwiseAgreementAnalyzer:
         self.project_root = Path(project_root)
         self.runs_dir = self.project_root / "runs"
 
-    def load_evaluation_results(self, results_file: str) -> Dict:
+    def load_evaluation_results(self, results_file: str) -> dict:
         """Load the evaluation results JSON file."""
         results_path = Path(results_file)
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, "r") as f:
+        with open(results_path) as f:
             return json.load(f)
 
-    def load_summary_json(self, run_name: str) -> Dict:
+    def load_summary_json(self, run_name: str) -> dict:
         """Load summary.json for a specific run."""
         run_mapping = {
             "sora_pro_sora_pro_subset_run_3": "sora_pro_output_map_sora_pro_subset_run_3",
@@ -42,10 +42,10 @@ class PairwiseAgreementAnalyzer:
             print(f"Warning: Could not find summary.json at {summary_path}")
             return {}
 
-        with open(summary_path, "r") as f:
+        with open(summary_path) as f:
             return json.load(f)
 
-    def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
+    def get_ground_truth_label(self, summary: dict, task_id: str) -> bool:
         """Get ground truth label for a task from summary.json."""
         for task in summary.get("tasks", []):
             if task.get("task_id") == task_id:
@@ -59,7 +59,7 @@ class PairwiseAgreementAnalyzer:
                     return None
         return None
 
-    def organize_by_task(self, results_file: str) -> Dict[str, Dict[str, Dict]]:
+    def organize_by_task(self, results_file: str) -> dict[str, dict[str, dict]]:
         """
         Organize evaluation results by task_id.
 
@@ -144,7 +144,7 @@ class PairwiseAgreementAnalyzer:
         # Reversal: complete disagreement (A_wins vs B_wins)
         return 0.0
 
-    def get_model_pairs(self, run_names: List[str]) -> List[Tuple[str, str]]:
+    def get_model_pairs(self, run_names: list[str]) -> list[tuple[str, str]]:
         """Generate all unique pairs of models."""
         pairs = []
         for i in range(len(run_names)):
@@ -168,7 +168,7 @@ class PairwiseAgreementAnalyzer:
             return "wan22"
         return run_name
 
-    def analyze_pairwise_agreement(self, results_file: str) -> Dict:
+    def analyze_pairwise_agreement(self, results_file: str) -> dict:
         """
         Analyze pairwise agreement between ground truth and Gemini rankings.
 
@@ -292,7 +292,7 @@ class PairwiseAgreementAnalyzer:
             "agreement_rates": pairwise_agreement_rates,
         }
 
-    def print_pairwise_analysis(self, analysis: Dict):
+    def print_pairwise_analysis(self, analysis: dict):
         """Pretty print the pairwise analysis."""
         print(f"\n{'=' * 70}")
         print("PAIRWISE AGREEMENT ANALYSIS (WEIGHTED)")
@@ -300,7 +300,7 @@ class PairwiseAgreementAnalyzer:
         print("Scoring: Full agreement=1.0, Partial (tie vs non-tie)=0.5, Reversal=0.0")
 
         overall = analysis["overall"]
-        print(f"\nOverall Statistics:")
+        print("\nOverall Statistics:")
         print(f"  Total pairwise comparisons: {overall['count']}")
         print(
             f"  Weighted agreement rate: {overall['weighted_agreement_rate']:.3f} ({overall['weighted_agreement_rate'] * 100:.1f}%)"
@@ -328,7 +328,7 @@ class PairwiseAgreementAnalyzer:
 
             # Show reversal examples
             if stats["details"]:
-                print(f"  Reversals (wrong winner):")
+                print("  Reversals (wrong winner):")
                 for detail in stats["details"][:3]:  # Show first 3
                     print(f"    - {detail['task_id']}: GT={detail['ground_truth']}, Gemini={detail['gemini']}")
 

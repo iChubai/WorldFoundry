@@ -1,4 +1,5 @@
 import math
+
 import torch
 import torch.nn as nn
 
@@ -11,7 +12,7 @@ try:
 except ImportError:
     T5Embedder = None
 from src.distributions import DiagonalGaussianDistribution
-from src.models.autoencoder_temporal import EncoderTemporal1DCNN, DecoderTemporal1DCNN
+from src.models.autoencoder_temporal import DecoderTemporal1DCNN, EncoderTemporal1DCNN
 
 try:
     import xformers

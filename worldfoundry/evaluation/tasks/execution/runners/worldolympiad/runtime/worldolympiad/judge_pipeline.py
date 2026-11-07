@@ -16,18 +16,18 @@ python ./judge_pipeline.py path/to/video.mp4
 
 from __future__ import annotations
 
+import base64
 import json
 from dataclasses import dataclass
 from typing import Dict, List, Optional
-import base64
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from model.openrouter import video_openrouter_call
 from problem.problem_set import (
     ALL_QUESTIONS,
+    MATERIAL_QUESTIONS,
     MECHANICS_QUESTIONS,
     THERMOTICS_QUESTIONS,
-    MATERIAL_QUESTIONS,
     PhysicsQuestion,
 )
 
@@ -111,7 +111,7 @@ class JudgeResult:
     confidence: float
     explanation: str
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "qid": self.qid,
             "dimension": self.dimension,
@@ -126,12 +126,12 @@ class JudgeResult:
 class VideoJudgeResult:
     """Complete video evaluation result"""
 
-    answers: List[JudgeResult]
+    answers: list[JudgeResult]
     overall_physics_score: float
     overall_assessment: str
-    raw_response: Dict
+    raw_response: dict
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "answers": [a.to_dict() for a in self.answers],
             "overall_physics_score": self.overall_physics_score,
@@ -139,7 +139,7 @@ class VideoJudgeResult:
             "raw_response": self.raw_response,
         }
 
-    def get_dimension_score(self, dimension: str) -> Optional[float]:
+    def get_dimension_score(self, dimension: str) -> float | None:
         """Calculate average score for a specific dimension"""
         relevant = [a for a in self.answers if a.dimension == dimension]
         if not relevant:
@@ -158,7 +158,7 @@ class VideoJudgeResult:
         return sum(scores) / len(scores) if scores else None
 
 
-def format_single_question(question: PhysicsQuestion) -> Dict[str, str]:
+def format_single_question(question: PhysicsQuestion) -> dict[str, str]:
     """Format a single question for the prompt"""
     return {
         "question": question.question,
@@ -166,7 +166,7 @@ def format_single_question(question: PhysicsQuestion) -> Dict[str, str]:
     }
 
 
-def parse_llm_response(response_text: str) -> Dict:
+def parse_llm_response(response_text: str) -> dict:
     """
     Parse LLM response with robust error handling
     Based on PhyGenBench's JSON cleaning strategy
@@ -191,7 +191,7 @@ def parse_llm_response(response_text: str) -> Dict:
 def judge_single_question(
     video_url: str,
     question: PhysicsQuestion,
-    system_prompt: Optional[str] = None,
+    system_prompt: str | None = None,
 ) -> JudgeResult:
     """
     Single API call to judge one physics question about a video
@@ -254,8 +254,8 @@ def judge_single_question(
 
 def judge_video_physics(
     video_url: str,
-    questions: Optional[List[PhysicsQuestion]] = None,
-    system_prompt: Optional[str] = None,
+    questions: list[PhysicsQuestion] | None = None,
+    system_prompt: str | None = None,
 ) -> VideoJudgeResult:
     """
     Judge multiple physics questions about a video (one API call per question)
@@ -375,7 +375,7 @@ def save_judge_result(result: VideoJudgeResult, output_path: str):
 # ============================================================================
 
 
-def get_frames_from_video(video_path: str, num_frames: int = 8) -> List[str]:
+def get_frames_from_video(video_path: str, num_frames: int = 8) -> list[str]:
     """
     Placeholder function to extract frames from video.
     In a real implementation, this would extract frames and return their URLs or base64 data.
@@ -388,7 +388,7 @@ def get_frames_from_video(video_path: str, num_frames: int = 8) -> List[str]:
 
     total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT)) or num_frames
     stride = max(total_frames // num_frames, 1)
-    encoded_frames: List[str] = []
+    encoded_frames: list[str] = []
 
     frame_id = 0
     collected = 0

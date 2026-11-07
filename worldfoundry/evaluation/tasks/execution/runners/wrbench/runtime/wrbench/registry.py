@@ -20,7 +20,6 @@ from typing import Any
 
 from wrbench.datasets import model_configs_dir
 
-
 MODELS_DIR = model_configs_dir()
 
 VALID_INPUT_KINDS = {"image", "none", "source_video"}

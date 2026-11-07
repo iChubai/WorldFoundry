@@ -177,18 +177,18 @@ class RandomResizedCropAndInterpolationWithTwoPic:
             interpolate_str = " ".join([_pil_interpolation_to_str[x] for x in self.interpolation])
         else:
             interpolate_str = _pil_interpolation_to_str[self.interpolation]
-        format_string = self.__class__.__name__ + "(size={0}".format(self.size)
-        format_string += ", scale={0}".format(tuple(round(s, 4) for s in self.scale))
-        format_string += ", ratio={0}".format(tuple(round(r, 4) for r in self.ratio))
-        format_string += ", interpolation={0}".format(interpolate_str)
+        format_string = self.__class__.__name__ + f"(size={self.size}"
+        format_string += f", scale={tuple(round(s, 4) for s in self.scale)}"
+        format_string += f", ratio={tuple(round(r, 4) for r in self.ratio)}"
+        format_string += f", interpolation={interpolate_str}"
         if self.second_size is not None:
-            format_string += ", second_size={0}".format(self.second_size)
-            format_string += ", second_interpolation={0}".format(_pil_interpolation_to_str[self.second_interpolation])
+            format_string += f", second_size={self.second_size}"
+            format_string += f", second_interpolation={_pil_interpolation_to_str[self.second_interpolation]}"
         format_string += ")"
         return format_string
 
 
-class GroupRandomCrop(object):
+class GroupRandomCrop:
     def __init__(self, size):
         if isinstance(size, numbers.Number):
             self.size = (int(size), int(size))
@@ -216,7 +216,7 @@ class GroupRandomCrop(object):
         return (out_images, label)
 
 
-class GroupCenterCrop(object):
+class GroupCenterCrop:
     def __init__(self, size):
         self.worker = torchvision.transforms.CenterCrop(size)
 
@@ -225,7 +225,7 @@ class GroupCenterCrop(object):
         return ([self.worker(img) for img in img_group], label)
 
 
-class GroupRandomHorizontalFlip(object):
+class GroupRandomHorizontalFlip:
     """Randomly horizontally flips the given PIL.Image with a probability of 0.5"""
 
     def __init__(self, selective_flip=True, is_flow=False):
@@ -245,7 +245,7 @@ class GroupRandomHorizontalFlip(object):
             return img_tuple
 
 
-class GroupNormalize(object):
+class GroupNormalize:
     def __init__(self, mean, std):
         self.mean = mean
         self.std = std
@@ -256,13 +256,13 @@ class GroupNormalize(object):
         rep_std = self.std * (tensor.size()[0] // len(self.std))
 
         # TODO: make efficient
-        for t, m, s in zip(tensor, rep_mean, rep_std):
+        for t, m, s in zip(tensor, rep_mean, rep_std, strict=False):
             t.sub_(m).div_(s)
 
         return (tensor, label)
 
 
-class GroupGrayScale(object):
+class GroupGrayScale:
     def __init__(self, size):
         self.worker = torchvision.transforms.Grayscale(size)
 
@@ -271,7 +271,7 @@ class GroupGrayScale(object):
         return ([self.worker(img) for img in img_group], label)
 
 
-class GroupScale(object):
+class GroupScale:
     """Rescales the input PIL.Image to the given 'size'.
     'size' will be the size of the smaller edge.
     For example, if height > width, then image will be
@@ -288,7 +288,7 @@ class GroupScale(object):
         return ([self.worker(img) for img in img_group], label)
 
 
-class GroupOverSample(object):
+class GroupOverSample:
     def __init__(self, crop_size, scale_size=None):
         self.crop_size = crop_size if not isinstance(crop_size, int) else (crop_size, crop_size)
 
@@ -326,7 +326,7 @@ class GroupOverSample(object):
         return (oversample_group, label)
 
 
-class GroupFullResSample(object):
+class GroupFullResSample:
     def __init__(self, crop_size, scale_size=None, flip=True):
         self.crop_size = crop_size if not isinstance(crop_size, int) else (crop_size, crop_size)
 
@@ -372,7 +372,7 @@ class GroupFullResSample(object):
         return (oversample_group, label)
 
 
-class GroupMultiScaleCrop(object):
+class GroupMultiScaleCrop:
     def __init__(self, input_size, scales=None, max_distort=1, fix_crop=True, more_fix_crop=True):
         self.scales = scales if scales is not None else [1, 0.875, 0.75, 0.66]
         self.max_distort = max_distort
@@ -447,7 +447,7 @@ class GroupMultiScaleCrop(object):
         return ret
 
 
-class GroupRandomSizedCrop(object):
+class GroupRandomSizedCrop:
     """Random crop the given PIL.Image to a random size of (0.08 to 1.0) of the original size
     and and a random aspect ratio of 3/4 to 4/3 of the original aspect ratio
     This is popularly used to train the Inception networks
@@ -497,7 +497,7 @@ class GroupRandomSizedCrop(object):
             return crop(scale(img_group))
 
 
-class Stack(object):
+class Stack:
     def __init__(self, roll=False):
         self.roll = roll
 
@@ -513,7 +513,7 @@ class Stack(object):
                 return (np.concatenate(img_group, axis=2), label)
 
 
-class ToTorchFormatTensor(object):
+class ToTorchFormatTensor:
     """Converts a PIL.Image (RGB) or numpy.ndarray (H x W x C) in the range [0, 255]
     to a torch.FloatTensor of shape (C x H x W) in the range [0.0, 1.0]"""
 
@@ -536,6 +536,6 @@ class ToTorchFormatTensor(object):
         return (img.float().div(255.0) if self.div else img.float(), label)
 
 
-class IdentityTransform(object):
+class IdentityTransform:
     def __call__(self, data):
         return data

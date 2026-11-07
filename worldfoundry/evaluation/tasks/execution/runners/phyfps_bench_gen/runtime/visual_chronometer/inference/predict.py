@@ -11,12 +11,13 @@ Usage:
 """
 
 import argparse
+import csv
 import os
 import sys
-import csv
+
 import cv2
-import torch
 import numpy as np
+import torch
 from omegaconf import OmegaConf
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

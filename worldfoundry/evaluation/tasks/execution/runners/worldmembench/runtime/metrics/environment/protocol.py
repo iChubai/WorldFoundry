@@ -88,7 +88,7 @@ def protocol_for_sample(sample: dict, *, total_frames: int) -> EnvironmentProtoc
     source_last = sum(transitions) + tail
     phases = []
     cursor = 0
-    for index, (action, count) in enumerate(zip(actions, transitions)):
+    for index, (action, count) in enumerate(zip(actions, transitions, strict=False)):
         start = int(round(cursor * (total_frames - 1) / source_last))
         cursor += count
         end = int(round(cursor * (total_frames - 1) / source_last))

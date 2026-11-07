@@ -1,14 +1,15 @@
-from typing import List
-import torch
-import numpy as np
-import cv2
 import argparse
+from typing import List
+
+import cv2
+import cvxpy as cp
+import numpy as np
+import torch
 from lietorch import SE3
 from tqdm import tqdm
-import cvxpy as cp
+
 from worldfoundry.base_models.three_dimensions.slam.droid_slam import checkpoint_path as droid_checkpoint_path
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid import Droid
-
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
@@ -86,7 +87,7 @@ class ReprojectionErrorMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         for t, image, intrinsics in tqdm(image_stream(rendered_images, self._args.stride, self._args.calib)):
             if t < self._args.t0:

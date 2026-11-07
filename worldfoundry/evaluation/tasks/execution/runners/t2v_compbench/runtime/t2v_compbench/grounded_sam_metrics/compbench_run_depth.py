@@ -1,7 +1,9 @@
 import argparse
+import json
+import os
+
 import cv2
 import numpy as np
-import os
 import torch
 import torch.nn.functional as F
 from torchvision.transforms import Compose
@@ -13,9 +15,6 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
     PrepareForNet,
     Resize,
 )
-
-import json
-import cv2
 from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.grounded_sam_metrics.video_io import (
     write_video,
 )
@@ -142,10 +141,10 @@ def run_depth(video_path, t2v_model, output_dir, meta_file, encoder="vitl", pred
 
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-    depth_anything = DepthAnything.from_pretrained("LiheYoung/depth_anything_{}14".format(encoder)).to(DEVICE).eval()
+    depth_anything = DepthAnything.from_pretrained(f"LiheYoung/depth_anything_{encoder}14").to(DEVICE).eval()
 
     total_params = sum(param.numel() for param in depth_anything.parameters())
-    print("Total parameters: {:.2f}M".format(total_params / 1e6))
+    print(f"Total parameters: {total_params / 1e6:.2f}M")
 
     transform = Compose(
         [
@@ -164,7 +163,7 @@ def run_depth(video_path, t2v_model, output_dir, meta_file, encoder="vitl", pred
     )
 
     vid_process = Video_preprocess()
-    with open(meta_file, "r") as json_data:
+    with open(meta_file) as json_data:
         prompts = json.load(json_data)
 
     frame_folder = vid_process.convert_video_to_frames(video_path)

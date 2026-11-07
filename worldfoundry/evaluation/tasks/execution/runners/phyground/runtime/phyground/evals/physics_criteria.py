@@ -46,9 +46,9 @@ CRITERIA_ZH: dict[str, str] = {
 CRITERIA = CRITERIA_EN
 
 # Re-export sub-question definitions (defined in evals/sub_questions.py)
-from evals.sub_questions import SUB_QUESTIONS, SubQuestion  # noqa: F401
-
 from dataclasses import dataclass, field
+
+from evals.sub_questions import SUB_QUESTIONS, SubQuestion  # noqa: F401
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Human-eval Rating Instrument — structured criteria for human annotators

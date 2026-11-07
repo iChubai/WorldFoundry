@@ -12,7 +12,6 @@ from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key
 from wrbench.trajectory import CameraTrajectory
 
-
 _GAMECRAFT_INPUT_POSE_HEADER = "# gamecraft_camera_ctrl_v1"
 _WORLDPLAY_OFFICIAL_FX_NORM = 969.6969696969696 / (960.0 * 2.0)
 _WORLDPLAY_OFFICIAL_FY_NORM = 969.6969696969696 / (540.0 * 2.0)
@@ -56,7 +55,7 @@ def _write_gamecraft_input_pose_txt(path: str | Path, trajectory: CameraTrajecto
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
     rows = [_GAMECRAFT_INPUT_POSE_HEADER]
-    for i, (w2c, intr) in enumerate(zip(trajectory.to_w2c(), trajectory.intrinsics)):
+    for i, (w2c, intr) in enumerate(zip(trajectory.to_w2c(), trajectory.intrinsics, strict=False)):
         row = [
             float(i),
             float(intr[0, 0]),
@@ -173,7 +172,7 @@ class HunyuanAdapter:
             payload={
                 "poses": {
                     str(i): {"extrinsic": c.tolist(), "K": k.tolist()}
-                    for i, (c, k) in enumerate(zip(target.to_c2w(), target.intrinsics))
+                    for i, (c, k) in enumerate(zip(target.to_c2w(), target.intrinsics, strict=False))
                 }
             },
             target_trajectory=target,

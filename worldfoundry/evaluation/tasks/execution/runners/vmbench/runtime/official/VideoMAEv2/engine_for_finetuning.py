@@ -8,16 +8,16 @@
 import math
 import os
 import sys
+from collections.abc import Iterable
 from multiprocessing import Pool
-from typing import Iterable, Optional
+from typing import Optional
 
 import numpy as np
 import torch
+import utils
 from scipy.special import softmax
 from timm.data import Mixup
 from timm.utils import ModelEma, accuracy
-
-import utils
 
 
 def train_class_batch(model, samples, target, criterion):
@@ -40,8 +40,8 @@ def train_one_epoch(
     epoch: int,
     loss_scaler,
     max_norm: float = 0,
-    model_ema: Optional[ModelEma] = None,
-    mixup_fn: Optional[Mixup] = None,
+    model_ema: ModelEma | None = None,
+    mixup_fn: Mixup | None = None,
     log_writer=None,
     start_steps=None,
     lr_schedule_values=None,
@@ -53,7 +53,7 @@ def train_one_epoch(
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value:.6f}"))
     metric_logger.add_meter("min_lr", utils.SmoothedValue(window_size=1, fmt="{value:.6f}"))
-    header = "Epoch: [{}]".format(epoch)
+    header = f"Epoch: [{epoch}]"
     print_freq = 20
 
     if loss_scaler is None:
@@ -68,7 +68,7 @@ def train_one_epoch(
             continue
         it = start_steps + step  # global training iteration
         # Update LR & WD for the first acc
-        if lr_schedule_values is not None or wd_schedule_values is not None and data_iter_step % update_freq == 0:
+        if lr_schedule_values is not None or (wd_schedule_values is not None and data_iter_step % update_freq == 0):
             for i, param_group in enumerate(optimizer.param_groups):
                 if lr_schedule_values is not None:
                     param_group["lr"] = lr_schedule_values[it] * param_group["lr_scale"]
@@ -95,7 +95,7 @@ def train_one_epoch(
         loss_value = loss.item()
 
         if not math.isfinite(loss_value):
-            print("Loss is {}, stopping training".format(loss_value))
+            print(f"Loss is {loss_value}, stopping training")
             sys.exit(1)
 
         if loss_scaler is None:
@@ -199,9 +199,7 @@ def validation_one_epoch(data_loader, model, device):
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print(
-        "* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}".format(
-            top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss
-        )
+        f"* Acc@1 {metric_logger.acc1.global_avg:.3f} Acc@5 {metric_logger.acc5.global_avg:.3f} loss {metric_logger.loss.global_avg:.3f}"
     )
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
@@ -233,13 +231,7 @@ def final_test(data_loader, model, device, file):
             loss = criterion(output, target)
 
         for i in range(output.size(0)):
-            string = "{} {} {} {} {}\n".format(
-                ids[i],
-                str(output.data[i].cpu().numpy().tolist()),
-                str(int(target[i].cpu().numpy())),
-                str(int(chunk_nb[i].cpu().numpy())),
-                str(int(split_nb[i].cpu().numpy())),
-            )
+            string = f"{ids[i]} {output.data[i].cpu().numpy().tolist()!s} {int(target[i].cpu().numpy())!s} {int(chunk_nb[i].cpu().numpy())!s} {int(split_nb[i].cpu().numpy())!s}\n"
             final_result.append(string)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
@@ -252,15 +244,13 @@ def final_test(data_loader, model, device, file):
     if not os.path.exists(file):
         os.mknod(file)
     with open(file, "w") as f:
-        f.write("{}, {}\n".format(acc1, acc5))
+        f.write(f"{acc1}, {acc5}\n")
         for line in final_result:
             f.write(line)
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print(
-        "* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}".format(
-            top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss
-        )
+        f"* Acc@1 {metric_logger.acc1.global_avg:.3f} Acc@5 {metric_logger.acc5.global_avg:.3f} loss {metric_logger.loss.global_avg:.3f}"
     )
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
@@ -275,7 +265,7 @@ def merge(eval_path, num_tasks, method="prob"):
 
     for x in range(num_tasks):
         file = os.path.join(eval_path, str(x) + ".txt")
-        lines = open(file, "r").readlines()[1:]
+        lines = open(file).readlines()[1:]
         for line in lines:
             line = line.strip()
             name = line.split("[")[0]

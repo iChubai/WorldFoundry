@@ -12,7 +12,6 @@ from ..aggregate import mean_valid, numeric, skill_result
 from ..io import atomic_write_json, file_fingerprint, read_json, value_digest
 from .common import MetricCacheContract, SkillBackendIdentity, skill_cache_path
 
-
 SKILL_ID = "physical_law_validator"
 DEFINITION_VERSION = "harnesseval.physical_law"
 SIGNAL_CACHE_SCHEMA = "harnesseval.physical_law.signals"
@@ -54,19 +53,19 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "SIGNAL_CACHE_SCHEMA",
-    "RESULT_CACHE_SCHEMA",
     "BACKEND_OUTPUT_SCHEMA",
-    "ENGINE_MODEL_BY_SCENE",
     "CACHE_CONTRACT",
+    "DEFINITION_VERSION",
+    "ENGINE_MODEL_BY_SCENE",
+    "RESULT_CACHE_SCHEMA",
+    "SIGNAL_CACHE_SCHEMA",
+    "SKILL_ID",
     "PhysicalLawBackend",
-    "engine_spec",
-    "selected_law_names",
-    "score_signals",
     "cache_paths",
+    "engine_spec",
     "evaluate",
+    "score_signals",
+    "selected_law_names",
 ]
 
 
@@ -350,7 +349,7 @@ def score_signals(
         try:
             score, detail = check(signals, gt or {})
             value = round(float(np.clip(score, 0, 1)), 4)
-        except Exception as exc:  # noqa: BLE001 - retain per-law failure evidence
+        except Exception as exc:  # retain per-law failure evidence
             value, detail = None, f"error: {exc!r}"
         laws.append({"law": name, "score": value, "detail": detail})
     mean_score = mean_valid(item["score"] for item in laws)

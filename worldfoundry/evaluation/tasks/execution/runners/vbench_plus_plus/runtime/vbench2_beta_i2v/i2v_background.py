@@ -1,19 +1,18 @@
 import io
-import os
-import cv2
 import json
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
+import logging
+import os
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-
 from dreamsim import dreamsim
-from vbench2_beta_i2v.utils import load_video, load_i2v_dimension_info, dreamsim_transform, dreamsim_transform_Image
-import logging
+from PIL import Image
+from tqdm import tqdm
+from vbench2_beta_i2v.utils import dreamsim_transform, dreamsim_transform_Image, load_i2v_dimension_info, load_video
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

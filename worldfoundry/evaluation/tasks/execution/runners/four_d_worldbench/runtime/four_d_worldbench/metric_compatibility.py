@@ -6,10 +6,10 @@ Metric脚本兼容性工具
 
 import json
 import os
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 
-def ensure_auxiliary_info_compatibility(prompt_dict_ls: List[Dict[str, Any]], dimension: str) -> List[Dict[str, Any]]:
+def ensure_auxiliary_info_compatibility(prompt_dict_ls: list[dict[str, Any]], dimension: str) -> list[dict[str, Any]]:
     """
     检查prompt_dict_ls中的每个项目是否都有auxiliary_info
     如果没有，则报错并要求用户先生成问题
@@ -36,7 +36,7 @@ def ensure_auxiliary_info_compatibility(prompt_dict_ls: List[Dict[str, Any]], di
     return prompt_dict_ls
 
 
-def get_default_questions_for_dimension(dimension: str) -> List[str]:
+def get_default_questions_for_dimension(dimension: str) -> list[str]:
     """
     获取维度的默认问题 (已弃用)
 
@@ -160,7 +160,6 @@ def patch_metric_script_for_compatibility(dimension: str):
     这个函数可以在metric脚本导入时调用，确保向后兼容性
     """
     # 这里可以添加特定维度的兼容性修补逻辑
-    pass
 
 
 # 导出常用的默认问题字典，方便其他脚本使用

@@ -8,11 +8,11 @@ from PIL import Image
 from pyiqa.archs.musiq_arch import MUSIQ
 from torchvision import transforms
 
-from worldfoundry.core.media.codecs.video import list_numbered_frame_paths
 from worldfoundry.core.execution.inference_runtime import (
     adaptive_batched_inference,
     resolve_inference_batch_size,
 )
+from worldfoundry.core.media.codecs.video import list_numbered_frame_paths
 
 
 def transform(images, preprocess_mode="shorter"):
@@ -68,4 +68,4 @@ def EvaluateImagingQuality(imaging_quality_model, store_image_folder, device, ba
     return float(scores.reshape(-1).mean().item())
 
 
-__all__ = ["EvaluateImagingQuality", "MUSIQ", "transform"]
+__all__ = ["MUSIQ", "EvaluateImagingQuality", "transform"]

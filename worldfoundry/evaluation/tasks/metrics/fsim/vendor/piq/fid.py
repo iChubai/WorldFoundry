@@ -9,6 +9,7 @@ Credits:
 """
 
 from typing import Tuple
+
 import torch
 
 from piq.base import BaseFeatureMetric
@@ -22,7 +23,7 @@ def _approximation_error(matrix: torch.Tensor, s_matrix: torch.Tensor) -> torch.
     return error
 
 
-def _sqrtm_newton_schulz(matrix: torch.Tensor, num_iters: int = 100) -> Tuple[torch.Tensor, torch.Tensor]:
+def _sqrtm_newton_schulz(matrix: torch.Tensor, num_iters: int = 100) -> tuple[torch.Tensor, torch.Tensor]:
     r"""
     Square root of matrix using Newton-Schulz Iterative method
     Source: https://github.com/msubhransu/matrix-sqrt/blob/master/matrix_sqrt.py
@@ -118,7 +119,7 @@ def _cov(m: torch.Tensor, rowvar: bool = True) -> torch.Tensor:
     return fact * m.matmul(mt).squeeze()
 
 
-def _compute_statistics(samples: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+def _compute_statistics(samples: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     r"""Calculates the statistics used by FID
     Args:
         samples:  Low-dimension representation of image set.

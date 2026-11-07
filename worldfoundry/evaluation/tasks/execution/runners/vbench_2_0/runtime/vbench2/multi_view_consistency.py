@@ -1,20 +1,24 @@
 import argparse
-import os
-import cv2
+import csv
 import glob
+import os
+
+import cv2
+import decord
 import numpy as np
 import torch
-from tqdm import tqdm
 from easydict import EasyDict as edict
-import csv
-import decord
+from tqdm import tqdm
 
 decord.bridge.set_bridge("torch")
-from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
-from .dense_match.patch_auto_evaluate import PatchAutoEvaluate
-from worldfoundry.base_models.perception_core.optical_flow.raft import InputPadder, RAFT
 import json
+
 from vbench2.utils import load_dimension_info, split_video_into_scenes
+
+from worldfoundry.base_models.perception_core.optical_flow.raft import RAFT, InputPadder
+from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
+
+from .dense_match.patch_auto_evaluate import PatchAutoEvaluate
 
 
 def transform_class360(vector, min_reso, factor=0.008):  # 768*0.05
@@ -84,11 +88,11 @@ class CameraPredict:
 
     def get_edge_direction_360(self, tracks):
         alls = []
-        for track1, track2 in zip(tracks[:-1], tracks[1:]):
+        for track1, track2 in zip(tracks[:-1], tracks[1:], strict=False):
             edge_points1 = self.get_edge_point_360(track1)
             edge_points2 = self.get_edge_point_360(track2)
             vector_results = []
-            for points1, points2 in zip(edge_points1, edge_points2):
+            for points1, points2 in zip(edge_points1, edge_points2, strict=False):
                 if self.check_valid(points1) and self.check_valid(points2):
                     vector_results.append([points2[0] - points1[0], points2[1] - points1[1], points1[1]])
             if len(vector_results) == 0:
@@ -175,7 +179,7 @@ class DynamicDegree:
                 return -1, fps
             self.set_params(frame=frames[0], count=len(frames))
             static_score = []
-            for image1, image2 in zip(frames[:-1], frames[1:]):
+            for image1, image2 in zip(frames[:-1], frames[1:], strict=False):
                 padder = InputPadder(image1.shape)
                 image1, image2 = padder.pad(image1, image2)
                 _, flow_up = self.model(image1, image2, iters=20, test_mode=True)

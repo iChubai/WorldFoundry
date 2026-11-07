@@ -1,13 +1,20 @@
 import argparse
+import csv
+import json
 import os
+
+import cv2
 import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
+from tqdm import tqdm
 
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util import box_ops
@@ -19,15 +26,10 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.util
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.vl_utils import (
     create_positive_map_from_span,
 )
-
-from tqdm import tqdm
-import json
-import csv
-import cv2
+from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.asset_paths import asset_path
 from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.grounded_sam_metrics.video_io import (
     write_video,
 )
-from worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.asset_paths import asset_path
 
 
 class Video_preprocess:
@@ -161,7 +163,7 @@ def plot_boxes_to_image(image_pil, tgt, prompt_objs):
     mask_draw = ImageDraw.Draw(mask)
 
     # draw boxes and masks
-    for box, label, obj in zip(boxes, labels, objs):
+    for box, label, obj in zip(boxes, labels, objs, strict=False):
         if obj == prompt_objs[0]:  # obj1
             color = color1
             # print("color1")
@@ -264,7 +266,7 @@ def get_grounding_output(
         pred_phrases = []
         # sky
         prob = []
-        for logit, box in zip(logits_filt, boxes_filt):
+        for logit, box in zip(logits_filt, boxes_filt, strict=False):
             pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
             if with_logits:
                 pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -283,7 +285,7 @@ def get_grounding_output(
         all_logits = []
         all_phrases = []
         all_boxes = []
-        for token_span, logit_phr in zip(token_spans, logits_for_phrases):
+        for token_span, logit_phr in zip(token_spans, logits_for_phrases, strict=False):
             # get phrase
             phrase = " ".join([caption[_s:_e] for (_s, _e) in token_span])
             # get mask
@@ -357,7 +359,7 @@ def filter_box(boxes, phrases, probs, iou_threshold):
 def combine_frame(input_csv, output_csv):
     score_total = 0
     cnt = 0
-    with open(input_csv, "r") as file:
+    with open(input_csv) as file:
         reader = csv.reader(file)
         lines = list(reader)
 
@@ -497,7 +499,7 @@ if __name__ == "__main__":
     # load model
     model = load_model(config_file, checkpoint_path, cpu_only=args.cpu_only)
 
-    with open(args.read_prompt_file, "r") as json_data:
+    with open(args.read_prompt_file) as json_data:
         prompts = json.load(json_data)
 
     # make dir
@@ -515,7 +517,7 @@ if __name__ == "__main__":
 
     csv_path = f"{output_path}/{args.t2v_model}_numeracy_frame.csv"
     if os.path.exists(csv_path):
-        with open(csv_path, "r", newline="") as csvreader:
+        with open(csv_path, newline="") as csvreader:
             reader = csv.reader(csvreader)
             lines = list(reader)  # Read all lines into a list
             line_count = len(lines)  # Count the number of lines

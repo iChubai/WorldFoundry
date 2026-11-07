@@ -30,8 +30,11 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
+
 from worldfoundry.base_models.perception_core.segment.sam2 import (
     checkpoint_path as sam2_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.segment.sam2 import (
     config_name as sam2_config_name,
 )
 from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor

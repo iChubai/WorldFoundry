@@ -1,10 +1,10 @@
-from typing import Union, List
+from typing import List, Union
+
 import torch
 import torch.nn.functional as F
-
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from PIL import Image
 
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
     BaseMetric,
 )
@@ -27,7 +27,7 @@ class CLIPConsistencyMetric(BaseMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[Union[str, Image.Image]],
+        rendered_images: list[str | Image.Image],
     ) -> float:
         def compute_similarity(image1, image2):
             # Load and preprocess images

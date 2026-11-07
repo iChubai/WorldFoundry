@@ -20,7 +20,7 @@ def parse_score(output: str, tag: str = "Your mark:") -> str:
         return int(output)
     start_idx = output.find(tag)
     if start_idx == -1:
-        raise ValueError("Invalid output string: {}".format(output))
+        raise ValueError(f"Invalid output string: {output}")
     end_idx = output.find("\n", start_idx)
     if end_idx == -1:
         return int(output[start_idx:].replace(tag, "").strip())
@@ -31,13 +31,13 @@ def get_llm_match_score(
     question: str,
     answer: str,
     prediction: str,
-    extra_answers: Optional[list] = None,
-    openai_key: Optional[str] = None,
+    extra_answers: list | None = None,
+    openai_key: str | None = None,
     openai_model: str = "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
     openai_seed: int = 1234,
     openai_max_tokens: int = 32,
     openai_temperature: float = 0.2,
-    openai_base_url: Optional[str] = None,
+    openai_base_url: str | None = None,
     verbose: bool = False,
     diff_retry_setting: bool = True,
 ):
@@ -96,8 +96,8 @@ if __name__ == "__main__":
     prediction = "brown with pink and blue"
     score = get_llm_match_score(question, answer, prediction)
     print("*" * 40)
-    print("example question:    {}".format(question))
-    print("ground-truth answer: {}".format(answer))
-    print("predicted answer:    {}".format(prediction))
-    print("llm-match score:     {}".format(score))
+    print(f"example question:    {question}")
+    print(f"ground-truth answer: {answer}")
+    print(f"predicted answer:    {prediction}")
+    print(f"llm-match score:     {score}")
     print("*" * 40)

@@ -1,10 +1,11 @@
 import os
-import torch
 import time
+from typing import Dict, List, Optional, Union
+
+import torch
 import torch.nn as nn
-from typing import List, Union, Optional, Dict
-from transformers.image_utils import load_image
 from easy_openai import openai_completions
+from transformers.image_utils import load_image
 
 
 class GPT4V:
@@ -19,7 +20,7 @@ class GPT4V:
         """
         self.model_path = model_path
 
-    def __call__(self, inputs: List[dict]) -> str:
+    def __call__(self, inputs: list[dict]) -> str:
         """
         Args:
             inputs (List[dict]): [

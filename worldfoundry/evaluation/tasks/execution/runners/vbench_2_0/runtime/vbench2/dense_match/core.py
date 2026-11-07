@@ -5,8 +5,8 @@
 # email: xuanyili.edu@gmail.com
 # github: https://github.com/meteorshowers/SoraGeoEvaluate
 #############################################################################
-import numpy as np
 import cv2
+import numpy as np
 
 
 def EvaluateErrBetweenTwoImage(left_img, right_img, ransac_th):

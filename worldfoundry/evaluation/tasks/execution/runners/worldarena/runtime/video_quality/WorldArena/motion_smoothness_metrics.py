@@ -1,23 +1,23 @@
-from typing import List
 from pathlib import Path
+from typing import List
 
-import torch
 import cv2
 import numpy as np
+import torch
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba import config as cfg
-from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.inference import Model, convert
 from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.benchmark.utils.padder import InputPadder
+from worldfoundry.base_models.perception_core.frame_interpolation.vfimamba.inference import Model, convert
+from worldfoundry.core.distributed.collectives.evaluation import (
+    distribute_list_to_rank,
+    gather_list_of_dict,
+    get_rank,
+    get_world_size,
+)
 from worldfoundry.core.execution.device import get_current_torch_device
 
 from .utils import load_dimension_info, read_video_frames_cv2
-from worldfoundry.core.distributed.collectives.evaluation import (
-    get_world_size,
-    get_rank,
-    distribute_list_to_rank,
-    gather_list_of_dict,
-)
 
 """==========Model setting=========="""
 TTA = True
@@ -53,13 +53,13 @@ class MotionSmoothnessMetric:
         self._ssim_metric = StructuralSimilarityIndexMeasure().to(self._device)
         # self._psnr_metric = PeakSignalNoiseRatioMetric()
 
-    def _compute_scores(self, rendered_images: List[np.ndarray]) -> float:
+    def _compute_scores(self, rendered_images: list[np.ndarray]) -> float:
         even_images = rendered_images[::2]
         odd_images = rendered_images[1::2]
 
         scores_final = []
 
-        for i, (image1, image2) in enumerate(zip(even_images[:-1], even_images[1:])):
+        for i, (image1, image2) in enumerate(zip(even_images[:-1], even_images[1:], strict=False)):
             if i >= len(odd_images):
                 break
 

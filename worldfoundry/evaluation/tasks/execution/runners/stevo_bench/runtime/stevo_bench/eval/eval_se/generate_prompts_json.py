@@ -5,8 +5,8 @@ Extracts expected_process_concise from evaluation results and generates full pro
 
 import json
 import sys
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 
 def get_occlusion_text(model_type: str) -> str:

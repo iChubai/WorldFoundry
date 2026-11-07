@@ -39,7 +39,7 @@ class CLIPImageQualityAssessmentMetric(IQAPytorchMetric):
     def __init__(self, metric_name: str = "clipiqa") -> None:
         super().__init__(metric_name=metric_name)
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         imgs = self._process_image(rendered_images)
 
         scores = []

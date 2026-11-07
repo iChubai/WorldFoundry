@@ -23,7 +23,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -380,7 +379,7 @@ def _doctor_check_model(key: str) -> tuple[bool, list[str]]:
 
     # Deferred models: that is a pass for doctor
     if record.is_deferred:
-        lines.append(f"  pass  deferred: model is deferred/not-dispatchable (expected)")
+        lines.append("  pass  deferred: model is deferred/not-dispatchable (expected)")
         lines.append(f"  PASS  {key}  [deferred]")
         return True, lines
 
@@ -742,8 +741,8 @@ def _cmd_eval(args: argparse.Namespace) -> int:
     from wrbench.eval.runtime import (
         build_table,
         contract_path,
-        d1_score,
         d1_camalign_score,
+        d1_score,
         d1_vggt_batch,
         d2_extract,
         d3d6_score,

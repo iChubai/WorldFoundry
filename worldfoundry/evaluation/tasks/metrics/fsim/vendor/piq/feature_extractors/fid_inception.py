@@ -5,13 +5,12 @@ Implementation of classes and functions from this module are inspired by @mseitz
 https://github.com/mseitzer/pytorch-fid
 """
 
-import torch
+from typing import List
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torchvision import models
-from typing import List
 
 try:
     from torchvision.models.utils import load_state_dict_from_url
@@ -42,7 +41,7 @@ class InceptionV3(nn.Module):
 
     def __init__(
         self,
-        output_blocks: List[int] = [DEFAULT_BLOCK_INDEX],
+        output_blocks: list[int] = [DEFAULT_BLOCK_INDEX],
         resize_input: bool = True,
         normalize_input: bool = True,
         requires_grad: bool = False,
@@ -129,7 +128,7 @@ class InceptionV3(nn.Module):
         for param in self.parameters():
             param.requires_grad = requires_grad
 
-    def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         r"""Get Inception feature maps
 
         Args:

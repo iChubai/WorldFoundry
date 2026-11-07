@@ -1,6 +1,6 @@
 import numpy as np
-from tqdm import tqdm
 from scipy.stats import gaussian_kde
+from tqdm import tqdm
 
 
 def kde_1d(attr1, attr2):

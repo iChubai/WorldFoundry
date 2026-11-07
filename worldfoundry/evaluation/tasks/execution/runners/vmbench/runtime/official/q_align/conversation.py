@@ -1,6 +1,7 @@
 import dataclasses
-from enum import auto, Enum
+from enum import Enum, auto
 from typing import List, Tuple
+
 from q_align.constants import DEFAULT_IMAGE_TOKEN
 
 
@@ -20,8 +21,8 @@ class Conversation:
     """A class that keeps all conversation history."""
 
     system: str
-    roles: List[str]
-    messages: List[List[str]]
+    roles: list[str]
+    messages: list[list[str]]
     offset: int
     sep_style: SeparatorStyle = SeparatorStyle.SINGLE
     sep: str = "###"
@@ -130,6 +131,7 @@ class Conversation:
                 if type(msg) is tuple:
                     import base64
                     from io import BytesIO
+
                     from PIL import Image
 
                     msg, image, image_process_mode = msg

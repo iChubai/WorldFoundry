@@ -1,37 +1,33 @@
-import os
-from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
-import pdb
+import argparse
 import json
 import math
+import os
+import pdb
+import random
 import shutil
+import sys
 from pathlib import Path
 
-import torch
-import torch.nn.functional as F
-import torch.distributed as dist
-
 import numpy as np
-import argparse
-import torch.nn as nn
-
-import timm
-import tqdm
 import pandas as pd
-import sys
-from transformers import ViTModel
-
+import timm
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+import torch.nn.functional as F
+import tqdm
 from metrics_utils.standard_video_dataset import StandardVidoDataset, standard_collate_fn
 from quality_metrics import (
-    background_consistency,
-    subject_consistency,
-    motion_smoothness,
     MotionSmoothness,
+    background_consistency,
     calculate_naturalness_score,
+    motion_smoothness,
+    subject_consistency,
 )
-
-import random
+from transformers import ViTModel
 
 from worldfoundry.base_models.capabilities import vbench_asset_path
+from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
 
 def _first_env(*names):

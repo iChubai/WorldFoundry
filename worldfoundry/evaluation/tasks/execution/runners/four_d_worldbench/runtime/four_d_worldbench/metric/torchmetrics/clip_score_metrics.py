@@ -3,9 +3,9 @@ from typing import List, Union
 import torch
 from PIL import Image
 
-from ..base_metrics import BaseMetric
-
 from torchmetrics.multimodal.clip_score import CLIPScore
+
+from ..base_metrics import BaseMetric
 
 
 class CLIPScoreMetric(BaseMetric):
@@ -25,7 +25,7 @@ class CLIPScoreMetric(BaseMetric):
         super().__init__()
         self._metric = CLIPScore(model_name_or_path="openai/clip-vit-base-patch16").to(self._device)
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]], text_prompt: str) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image], text_prompt: str) -> float:
         imgs = self._process_image(rendered_images)
 
         imgs = (imgs * 255).to(torch.uint8)

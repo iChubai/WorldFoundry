@@ -1,14 +1,17 @@
-import torch
 import os
+
+import torch
+
 from worldfoundry.core.distributed.collectives.evaluation import dist_init, print0
 
 try:
     from .WorldArena import WorldArenaBenchmark
 except ImportError:
     from WorldArena import WorldArenaBenchmark
-from datetime import datetime
 import argparse
 import json
+from datetime import datetime
+
 import yaml
 
 
@@ -39,7 +42,7 @@ def parse_args():
 
 
 def load_config(config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
     return config
 
@@ -97,11 +100,7 @@ def main():
             kwargs[f"{dim}_raft_ckpt"] = config.get("ckpt", {}).get(dim, {}).get("raft", None)
             print(f"{dim}: clip = {kwargs[f'{dim}_clip_ckpt']}, raft = {kwargs[f'{dim}_raft_ckpt']}")
 
-        elif dim == "dynamic_degree":
-            kwargs[f"{dim}_raft_ckpt"] = config.get("ckpt", {}).get(dim, {}).get("raft", None)
-            print(f"{dim}: raft = {kwargs[f'{dim}_raft_ckpt']}")
-
-        elif dim == "flow_score":
+        elif dim == "dynamic_degree" or dim == "flow_score":
             kwargs[f"{dim}_raft_ckpt"] = config.get("ckpt", {}).get(dim, {}).get("raft", None)
             print(f"{dim}: raft = {kwargs[f'{dim}_raft_ckpt']}")
 
@@ -138,7 +137,7 @@ def main():
             key_model_ckpt = f"{dim}_model_ckpt"
             print(f"{dim}: ckpt = {kwargs[key_model_ckpt]}")
 
-    print0(f"start evaluation")
+    print0("start evaluation")
     my_benchmark = WorldArenaBenchmark(device, save_path)
 
     my_benchmark.evaluate(

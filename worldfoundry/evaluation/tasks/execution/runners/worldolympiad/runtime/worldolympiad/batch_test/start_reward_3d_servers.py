@@ -66,7 +66,7 @@ def main() -> None:
         raise ValueError("--gpus and --ports must have the same number of entries.")
 
     processes: list[subprocess.Popen] = []
-    for index, (gpu, port) in enumerate(zip(gpus, ports)):
+    for index, (gpu, port) in enumerate(zip(gpus, ports, strict=False)):
         env = os.environ.copy()
         env["CUDA_VISIBLE_DEVICES"] = gpu
         if qwen_urls:

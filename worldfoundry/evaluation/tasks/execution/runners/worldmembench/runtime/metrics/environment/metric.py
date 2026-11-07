@@ -127,7 +127,7 @@ class EnvironmentVisibleMemoryMetric(_EnvironmentMetric):
         features = backend.embed([frame.rgb for frame in frames])
         if len(features) != len(required):
             raise EvaluationError("DINO returned the wrong number of feature rows")
-        by_index = dict(zip(required, features))
+        by_index = dict(zip(required, features, strict=False))
         reference = np.asarray(by_index[0], dtype=np.float64)
 
         def similarity(index):
@@ -240,7 +240,7 @@ class EnvironmentSceneReconstructionMetric(_EnvironmentMetric):
                 index: cv2.resize(
                     np.asarray(mask, dtype=np.uint8), (width, height), interpolation=cv2.INTER_NEAREST
                 ).astype(bool)
-                for index, mask in zip(indices, predicted)
+                for index, mask in zip(indices, predicted, strict=False)
             }
         settings = dict(
             semantic_masks=masks,

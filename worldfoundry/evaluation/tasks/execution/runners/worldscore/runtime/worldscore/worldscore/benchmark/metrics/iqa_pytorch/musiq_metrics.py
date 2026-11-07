@@ -29,7 +29,7 @@ class MultiScaleImageQualityMetric(IQAPytorchMetric):
     def __init__(self) -> None:
         super().__init__(metric_name="musiq-paq2piq")
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         imgs = self._process_image(rendered_images)
 
         scores = []

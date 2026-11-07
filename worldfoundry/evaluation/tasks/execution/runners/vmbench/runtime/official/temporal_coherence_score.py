@@ -1,49 +1,52 @@
-import os
-import math
-import cv2
-import torch
-import numpy as np
-import supervision as sv
-from PIL import Image
-import json
 import copy
+import json
+import math
+import os
 import sys
 
-from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor, build_sam2
-from worldfoundry.base_models.perception_core.segment.sam2.sam2_image_predictor import SAM2ImagePredictor
-from worldfoundry.base_models.perception_core.segment.sam2 import (
-    checkpoint_path as sam2_checkpoint_path,
-    config_name as sam2_config_name,
+import cv2
+import numpy as np
+import supervision as sv
+import torch
+from bench_utils.tcs_utils import (
+    get_appear_objects,
+    get_disappear_objects,
+    get_grounding_output,
+    is_edge_emerge,
+    is_edge_vanish,
+    is_emerge_detect_error,
+    is_small_emerge,
+    is_small_vanish,
+    is_vanish_detect_error,
+    load_model,
+    transform_pil,
 )
-from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
-    checkpoint_path as grounding_dino_checkpoint_path,
-    config_path as grounding_dino_config_path,
-)
-from grounded_sam2_utils.track_utils import sample_points_from_masks
-from grounded_sam2_utils.video_utils import create_video_from_images
 from grounded_sam2_utils.common_utils import CommonUtils
 from grounded_sam2_utils.mask_dictionary_model import MaskDictionaryModel, ObjectInfo
+from grounded_sam2_utils.track_utils import sample_points_from_masks
+from grounded_sam2_utils.video_utils import create_video_from_images
+from PIL import Image
+from tqdm import tqdm
 
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
+    checkpoint_path as grounding_dino_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
+    config_path as grounding_dino_config_path,
+)
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    checkpoint_path as sam2_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.segment.sam2 import (
+    config_name as sam2_config_name,
+)
+from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2, build_sam2_video_predictor
+from worldfoundry.base_models.perception_core.segment.sam2.sam2_image_predictor import SAM2ImagePredictor
 from worldfoundry.base_models.perception_core.tracking.cotracker import CoTrackerPredictor, Visualizer
 from worldfoundry.base_models.perception_core.tracking.cotracker.paths import (
     checkpoint_path as cotracker_checkpoint_path,
 )
 from worldfoundry.base_models.perception_core.tracking.cotracker.visualizer import read_video_from_path
-
-from tqdm import tqdm
-from bench_utils.tcs_utils import (
-    get_appear_objects,
-    is_edge_emerge,
-    is_small_emerge,
-    is_emerge_detect_error,
-    get_disappear_objects,
-    is_edge_vanish,
-    is_small_vanish,
-    is_vanish_detect_error,
-    load_model,
-    get_grounding_output,
-    transform_pil,
-)
 
 
 # Read the video frames and encode them as JPEG images
@@ -173,7 +176,7 @@ if __name__ == "__main__":
     print("Loading Co-Tracker model successfully")
 
     # open meta info json
-    with open(args.meta_info_path, "r") as f:
+    with open(args.meta_info_path) as f:
         meta_infos = json.load(f)
 
     for meta_info in tqdm(meta_infos):
@@ -293,15 +296,11 @@ if __name__ == "__main__":
                     tracking_annotation_dict=sam2_masks, iou_threshold=0.75, objects_count=objects_count
                 )
             else:
-                print(
-                    "No object detected in the frame, skip merge the frame merge {}".format(
-                        frame_names[start_frame_idx]
-                    )
-                )
+                print(f"No object detected in the frame, skip merge the frame merge {frame_names[start_frame_idx]}")
                 mask_dict = sam2_masks
 
             if len(mask_dict.labels) == 0:
-                print("No object detected in the frame, skip the frame {}".format(start_frame_idx))
+                print(f"No object detected in the frame, skip the frame {start_frame_idx}")
                 video_object_data.extend([{} for _ in range(step + 1)])
                 continue
             else:
@@ -373,7 +372,7 @@ if __name__ == "__main__":
                 query_frame.append(frame)
 
             disappear_objects_count = 0
-            for disappear_mask, query_frame in zip(disappear_mask_list, query_frame):
+            for disappear_mask, query_frame in zip(disappear_mask_list, query_frame, strict=False):
                 # load the mask from PIL image
                 disappear_mask = torch.from_numpy(np.array(disappear_mask))[None, None]
 
@@ -423,7 +422,7 @@ if __name__ == "__main__":
                 query_frame.append(frame)
 
             appear_objects_count = 0
-            for appear_mask, query_frame in zip(appear_mask_list, query_frame):
+            for appear_mask, query_frame in zip(appear_mask_list, query_frame, strict=False):
                 # load the mask from PIL image
                 appear_mask = torch.from_numpy(np.array(appear_mask))[None, None]
 

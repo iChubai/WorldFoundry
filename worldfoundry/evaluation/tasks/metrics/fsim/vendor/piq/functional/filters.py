@@ -1,11 +1,12 @@
 r"""Filters for gradient computation, bluring, etc."""
 
-import torch
-import numpy as np
 from typing import Optional
 
+import numpy as np
+import torch
 
-def haar_filter(kernel_size: int, device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+
+def haar_filter(kernel_size: int, device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Creates Haar kernel
 
     Args:
@@ -20,7 +21,7 @@ def haar_filter(kernel_size: int, device: Optional[str] = None, dtype: Optional[
     return kernel.unsqueeze(0)
 
 
-def hann_filter(kernel_size: int, device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+def hann_filter(kernel_size: int, device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Creates  Hann kernel
     Args:
         kernel_size: size of the kernel
@@ -37,7 +38,7 @@ def hann_filter(kernel_size: int, device: Optional[str] = None, dtype: Optional[
 
 
 def gaussian_filter(
-    kernel_size: int, sigma: float, device: Optional[str] = None, dtype: Optional[type] = None
+    kernel_size: int, sigma: float, device: str | None = None, dtype: type | None = None
 ) -> torch.Tensor:
     r"""Returns 2D Gaussian kernel N(0,`sigma`^2)
     Args:
@@ -59,7 +60,7 @@ def gaussian_filter(
 
 
 # Gradient operator kernels
-def scharr_filter(device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+def scharr_filter(device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Utility function that returns a normalized 3x3 Scharr kernel in X direction
 
     Args:
@@ -71,7 +72,7 @@ def scharr_filter(device: Optional[str] = None, dtype: Optional[type] = None) ->
     return torch.tensor([[[-3.0, 0.0, 3.0], [-10.0, 0.0, 10.0], [-3.0, 0.0, 3.0]]], device=device, dtype=dtype) / 16
 
 
-def prewitt_filter(device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+def prewitt_filter(device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Utility function that returns a normalized 3x3 Prewitt kernel in X direction
 
     Args:
@@ -82,7 +83,7 @@ def prewitt_filter(device: Optional[str] = None, dtype: Optional[type] = None) -
     return torch.tensor([[[-1.0, 0.0, 1.0], [-1.0, 0.0, 1.0], [-1.0, 0.0, 1.0]]], device=device, dtype=dtype) / 3
 
 
-def binomial_filter1d(kernel_size: int, device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+def binomial_filter1d(kernel_size: int, device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Creates 1D normalized binomial filter
 
     Args:
@@ -97,7 +98,7 @@ def binomial_filter1d(kernel_size: int, device: Optional[str] = None, dtype: Opt
     return torch.tensor(kernel.c, dtype=dtype, device=device).view(1, 1, kernel_size)
 
 
-def average_filter2d(kernel_size: int, device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+def average_filter2d(kernel_size: int, device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Creates 2D normalized average filter
 
     Args:

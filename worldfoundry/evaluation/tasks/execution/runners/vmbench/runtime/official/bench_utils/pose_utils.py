@@ -1,7 +1,8 @@
 import json
+
 import numpy as np
-from scipy.spatial import distance
 from scipy.signal import medfilt
+from scipy.spatial import distance
 from scipy.stats import ttest_ind
 
 
@@ -47,7 +48,7 @@ def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, co
     valid_measurements = {part[0]: [] for part in body_parts}
 
     # Calculate lengths for each frame, considering confidence scores
-    for frame_keypoints, frame_scores in zip(video_keypoints, video_keypoint_scores):
+    for frame_keypoints, frame_scores in zip(video_keypoints, video_keypoint_scores, strict=False):
         for part_name, start_idx, end_idx in body_parts:
             start_point = np.array(frame_keypoints[start_idx])
             end_point = np.array(frame_keypoints[end_idx])
@@ -70,7 +71,7 @@ def analyze_lengths_over_time(instance_info, threshold=0.45, min_length=1e-6, co
     for part_name in lengths:
         valid_lengths = [
             l
-            for l, v in zip(lengths[part_name], valid_measurements[part_name])
+            for l, v in zip(lengths[part_name], valid_measurements[part_name], strict=False)
             if v and l is not None and l > min_length
         ]
 
@@ -144,7 +145,7 @@ def analyze_joint_angles(instance_info, threshold=30, confidence_threshold=0.3, 
     valid_measurements = {angle[0]: [] for angle in joint_angles}
 
     # Calculate angles for each frame, considering confidence scores
-    for frame_keypoints, frame_scores in zip(video_keypoints, video_keypoint_scores):
+    for frame_keypoints, frame_scores in zip(video_keypoints, video_keypoint_scores, strict=False):
         for angle_name, p1, p2, p3 in joint_angles:
             if all(frame_scores[i] > confidence_threshold for i in [p1, p2, p3]):
                 angle = calculate_angle(frame_keypoints[p1], frame_keypoints[p2], frame_keypoints[p3])
@@ -160,7 +161,9 @@ def analyze_joint_angles(instance_info, threshold=30, confidence_threshold=0.3, 
     total_joints = len(joint_angles)
 
     for angle_name in angles:
-        valid_angles = [a for a, v in zip(angles[angle_name], valid_measurements[angle_name]) if v and a is not None]
+        valid_angles = [
+            a for a, v in zip(angles[angle_name], valid_measurements[angle_name], strict=False) if v and a is not None
+        ]
 
         if len(valid_angles) < num_frames // 3:
             # If there are not enough valid measurements, consider the joint to be normal

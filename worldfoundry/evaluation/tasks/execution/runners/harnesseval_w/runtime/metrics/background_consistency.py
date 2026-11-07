@@ -1,13 +1,14 @@
 """Background consistency — VBench-aligned CLIP feature similarity."""
 
-from worldfoundry.base_models.perception_core.general_perception.openai_clip_runtime import clip
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
 
+from worldfoundry.base_models.perception_core.general_perception.openai_clip_runtime import clip
+
 from .base import BaseMetric
-from .weight_utils import get_weights_dir, get_weight_file
+from .weight_utils import get_weight_file, get_weights_dir
 
 
 class BackgroundConsistencyMetric(BaseMetric):

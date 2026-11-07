@@ -1,17 +1,17 @@
-from typing import List
+import json
 import os
+from typing import List
+
 import cv2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from PIL import Image
 import torchvision.transforms as transforms
-from torchvision.models import vgg19, VGG19_Weights
+from PIL import Image
+from torchvision.models import VGG19_Weights, vgg19
 
 from .base_metrics import BaseMetric
 from .utils import load_dimension_info
-import json
 
 # desired size of the output image
 imsize = 512 if torch.cuda.is_available() else 128  # use small size if no GPU
@@ -93,16 +93,16 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std, style
     for layer in cnn.children():
         if isinstance(layer, nn.Conv2d):
             i += 1
-            name = "conv_{}".format(i)
+            name = f"conv_{i}"
         elif isinstance(layer, nn.ReLU):
-            name = "relu_{}".format(i)
+            name = f"relu_{i}"
             layer = nn.ReLU(inplace=False)
         elif isinstance(layer, nn.MaxPool2d):
-            name = "pool_{}".format(i)
+            name = f"pool_{i}"
         elif isinstance(layer, nn.BatchNorm2d):
-            name = "bn_{}".format(i)
+            name = f"bn_{i}"
         else:
-            raise RuntimeError("Unrecognized layer: {}".format(layer.__class__.__name__))
+            raise RuntimeError(f"Unrecognized layer: {layer.__class__.__name__}")
 
         model.add_module(name, layer)
 
@@ -110,7 +110,7 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std, style
             # add style loss:
             target_feature = model(style_img).detach()
             style_loss = StyleLoss(target_feature)
-            model.add_module("style_loss_{}".format(i), style_loss)
+            model.add_module(f"style_loss_{i}", style_loss)
             style_losses.append(style_loss)
 
     # now we trim off the layers after the last style losses
@@ -138,7 +138,7 @@ class GramMatrixMetric(BaseMetric):
     def _compute_scores(
         self,
         reference_image: str,
-        rendered_images: List[str],
+        rendered_images: list[str],
     ) -> float:
         img1 = image_loader(reference_image, self._device)
         style_scores = []
@@ -158,7 +158,7 @@ class GramMatrixMetric(BaseMetric):
         return sum(style_scores) / len(style_scores)
 
 
-def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64) -> List[str]:
+def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64) -> list[str]:
     os.makedirs(out_root, exist_ok=True)
 
     # Use full path with replaced separators to create unique directory
@@ -177,7 +177,7 @@ def _extract_frames_to_dir(video_path: str, out_root: str, max_frames: int = 64)
         step = total / float(max_frames)
         indices = [int(i * step) for i in range(max_frames)]
 
-    saved: List[str] = []
+    saved: list[str] = []
     idx = 0
     next_set = set(indices)
     cur = 0
@@ -218,7 +218,7 @@ def compute_consistency_style(json_dir, device, submodules_dict, **kwargs):
 
     metric = GramMatrixMetric()
     details = []
-    scores: List[float] = []
+    scores: list[float] = []
     out_root = os.path.join(os.path.dirname(json_dir), "frames_cache")
 
     for item in prompt_dict_ls:
@@ -227,7 +227,7 @@ def compute_consistency_style(json_dir, device, submodules_dict, **kwargs):
             if len(frames) < 2:
                 continue
 
-            segment_scores: List[float] = []
+            segment_scores: list[float] = []
             segment_details = []
             segment_size = 10
             segment_stride = 5
@@ -295,6 +295,6 @@ def compute_consistency_style(json_dir, device, submodules_dict, **kwargs):
             json.dump(detailed_output, f, indent=2, ensure_ascii=False)
         print(f"\nDetailed results saved to: {output_file}")
     except Exception as e:
-        print(f"Error saving JSON file: {str(e)}")
+        print(f"Error saving JSON file: {e!s}")
 
     return final, details

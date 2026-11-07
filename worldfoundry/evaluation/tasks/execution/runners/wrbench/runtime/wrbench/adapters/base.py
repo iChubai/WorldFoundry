@@ -9,8 +9,9 @@ import so the registry is fully populated.
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Protocol
+from typing import Protocol
 
 from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key, is_deferred_model

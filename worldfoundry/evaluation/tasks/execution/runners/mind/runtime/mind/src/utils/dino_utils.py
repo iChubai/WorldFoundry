@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModel, AutoImageProcessor
+from transformers import AutoImageProcessor, AutoModel
 
 
 # 全局变量保存模型和processor

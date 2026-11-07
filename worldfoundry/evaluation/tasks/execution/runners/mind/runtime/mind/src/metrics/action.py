@@ -1,10 +1,11 @@
-from utils.utils import crop_video_frames, CACHE_DIR
-from utils.vipe_utils import extract_traj
+from pathlib import Path
+
+import numpy as np
+import torch.nn.functional as F
 import utils.vipe_utils as vipe_utils
 from tqdm import tqdm
-import torch.nn.functional as F
-import numpy as np
-from pathlib import Path
+from utils.utils import CACHE_DIR, crop_video_frames
+from utils.vipe_utils import extract_traj
 
 
 def action_accuracy_metric(
@@ -91,7 +92,7 @@ def action_accuracy_metric(
 
     te = te[valid]
     re = re[valid]
-    actions_valid = [a for (a, ok) in zip(actions, valid.tolist()) if ok]
+    actions_valid = [a for (a, ok) in zip(actions, valid.tolist(), strict=False) if ok]
 
     if te.size < min_valid_steps:
         tqdm.write(

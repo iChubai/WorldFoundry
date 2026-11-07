@@ -10,7 +10,6 @@ import numpy as np
 from ..io import value_digest
 from ..skills.skill_physical_law import BACKEND_OUTPUT_SCHEMA
 
-
 ANALYSIS_WIDTH = 320
 ANALYSIS_HEIGHT = 180
 SPATIAL_CELLS = 12

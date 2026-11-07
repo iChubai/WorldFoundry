@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import fvmd.utils.geom
 
 
-class Vox_util(object):
+class Vox_util:
     def __init__(self, Z, Y, X, scene_centroid, bounds, pad=None, assert_cube=False):
         self.XMIN, self.XMAX, self.YMIN, self.YMAX, self.ZMIN, self.ZMAX = bounds
         B, D = list(scene_centroid.shape)

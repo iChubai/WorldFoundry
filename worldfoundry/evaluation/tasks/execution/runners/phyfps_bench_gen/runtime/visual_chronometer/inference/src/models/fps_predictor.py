@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from einops import rearrange, repeat
+
 from src.models.autoencoder2plus1d_1dcnn import AutoencoderKL2plus1D_1dcnn
 from src.modules.attention_temporal_videoae import CrossAttention
 

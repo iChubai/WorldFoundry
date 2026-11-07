@@ -16,9 +16,9 @@ import signal
 import socket
 import sys
 import threading
+from collections.abc import Mapping, Sequence
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Mapping, Sequence
 from urllib.parse import urlsplit
 
 from model.vlm import resolve_model_name, resolve_vlm_backend
@@ -273,7 +273,7 @@ class Reward3DHandler(BaseHTTPRequestHandler):
             if reward_3d_manager is None:
                 raise RuntimeError("3D reward backend is not initialized")
 
-            input_roots = getattr(self.server, "input_roots")
+            input_roots = self.server.input_roots
             resolved_video_path = _resolve_input_file(
                 data.get("video_path") or data.get("video"), input_roots, field="video_path"
             )
@@ -337,13 +337,13 @@ class Reward3DHandler(BaseHTTPRequestHandler):
 
             resolved_video_path = _resolve_input_file(
                 data.get("video_path") or data.get("video"),
-                getattr(self.server, "input_roots"),
+                self.server.input_roots,
                 field="video_path",
             )
             output_path = _resolve_output_file(
                 data.get("output_path"),
                 default=(resolved_video_path.parent / f"{resolved_video_path.stem}_da3_camera_trajectory.json"),
-                output_root=getattr(self.server, "output_root"),
+                output_root=self.server.output_root,
             )
 
             from reward_3d import load_video_frames_as_jpeg_with_indices

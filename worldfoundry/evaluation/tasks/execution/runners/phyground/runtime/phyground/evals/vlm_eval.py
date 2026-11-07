@@ -39,11 +39,11 @@ from evals.physics_criteria import CRITERIA
 from evals.prompts import PromptConfig
 from evals.vlm_common import (
     _BACKEND_CHOICES,
+    VLMBackend,
     create_backend,
     parse_single_general_score,
     print_summary,
     save_eval_json,
-    VLMBackend,
 )
 
 logger = logging.getLogger(__name__)
@@ -581,7 +581,7 @@ def main():
         "fps": actual_fps,
     }
     if hasattr(backend, "max_images"):
-        visual_config["max_images"] = getattr(backend, "max_images")
+        visual_config["max_images"] = backend.max_images
 
     inference_config = {
         "max_tokens": getattr(backend, "max_tokens", getattr(args, "max_tokens", None)),

@@ -4,9 +4,10 @@ Automatically selects appropriate frame sampling strategy per metric (VBench-ali
 """
 
 import time
+from typing import Any, Dict, List, Optional
+
 import torch
 import torchvision.transforms as T
-from typing import Dict, List, Any, Optional
 from PIL import Image
 
 from src.utils.video_utils import load_video_frames
@@ -34,11 +35,11 @@ def _shared_preprocess_gpu(frames, device="cuda"):
 
 from . import (
     get_aesthetic_quality_metric,
-    get_imaging_quality_metric,
-    get_temporal_flickering_metric,
     get_dynamic_degree_metric,
-    get_motion_smoothness_metric,
     get_hpsv3_quality_metric,
+    get_imaging_quality_metric,
+    get_motion_smoothness_metric,
+    get_temporal_flickering_metric,
 )
 
 FRAME_SAMPLING_CONFIG = {
@@ -65,7 +66,7 @@ DEFAULT_METRICS = list(METRIC_GETTERS)
 class VideoQualityEvaluator:
     """Unified video quality evaluator."""
 
-    def __init__(self, device: str = "cuda", metrics: Optional[List[str]] = None):
+    def __init__(self, device: str = "cuda", metrics: list[str] | None = None):
         self.device = device
         self.metrics = metrics or list(DEFAULT_METRICS)
         self._metric_instances = {}
@@ -97,7 +98,7 @@ class VideoQualityEvaluator:
         cap.release()
         self._all_frames = frames
 
-    def _load_frames(self, video_path: str, sampling_cfg) -> List[Image.Image]:
+    def _load_frames(self, video_path: str, sampling_cfg) -> list[Image.Image]:
         self._decode_all_frames(video_path)
         all_frames = self._all_frames
         vlen = len(all_frames)
@@ -122,7 +123,7 @@ class VideoQualityEvaluator:
         self._sampled_cache[cache_key] = sampled
         return sampled
 
-    def evaluate(self, video_path: str, metrics: Optional[List[str]] = None, verbose: bool = True) -> Dict[str, Any]:
+    def evaluate(self, video_path: str, metrics: list[str] | None = None, verbose: bool = True) -> dict[str, Any]:
         """Evaluate video quality across all configured metrics."""
         metrics_to_eval = metrics or self.metrics
         results = {"video_path": video_path, "metrics": {}, "summary": {}}

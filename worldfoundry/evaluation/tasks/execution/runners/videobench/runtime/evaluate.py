@@ -1,8 +1,10 @@
-import os
-from videobench import VideoBench
-from datetime import datetime
 import argparse
 import json
+import os
+from datetime import datetime
+
+from videobench import VideoBench
+
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
 
@@ -92,7 +94,7 @@ def main():
     prompt_list = {}
     if args.prompt_file and os.path.exists(args.prompt_file):
         # 从文件加载提示词映射
-        with open(args.prompt_file, "r") as f:
+        with open(args.prompt_file) as f:
             prompt_list = json.load(f)
             if not isinstance(prompt_list, dict):
                 raise ValueError("Prompt file must contain a dictionary mapping extracted prompts to actual prompts")

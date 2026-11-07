@@ -5,11 +5,11 @@ from tqdm import tqdm
 from .generative_model_base import GenerativeModelBase
 from .helpers import get_kwarg, vassert, vprint
 from .utils import (
-    sample_random,
     batch_interp,
     create_sample_similarity,
     prepare_input_descriptor_from_input_id,
     prepare_input_from_descriptor,
+    sample_random,
 )
 
 KEY_METRIC_PPL_RAW = "perceptual_path_length_raw"

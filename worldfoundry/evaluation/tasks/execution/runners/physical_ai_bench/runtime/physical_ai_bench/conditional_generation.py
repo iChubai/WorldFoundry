@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import pickle
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -191,7 +192,7 @@ def _load_segmentation(path: Path, *, allow_pickle: bool) -> list[dict[str, Any]
                 f"refusing to load pickle {path}; pass --allow-trusted-pickle only for the trusted official dataset"
             )
         with path.open("rb") as handle:
-            return _normalize_segmentation_records(pickle.load(handle))  # noqa: S301 - explicit trusted opt-in
+            return _normalize_segmentation_records(pickle.load(handle))  # explicit trusted opt-in
     raise ValueError(f"unsupported segmentation sidecar: {path}")
 
 

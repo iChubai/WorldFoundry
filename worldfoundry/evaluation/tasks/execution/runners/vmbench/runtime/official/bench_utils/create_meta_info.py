@@ -1,6 +1,6 @@
+import argparse
 import json
 import os
-import argparse
 
 
 def create_new_json(json_data, video_folder):
@@ -27,7 +27,7 @@ def main():
     video_folder = os.path.abspath(args.video_folder)
 
     # Read the input JSON file
-    with open(args.input_json, "r") as f:
+    with open(args.input_json) as f:
         json_data = json.load(f)
 
     # Create new JSON data for existing videos

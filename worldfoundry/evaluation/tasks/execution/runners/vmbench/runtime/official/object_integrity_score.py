@@ -1,8 +1,8 @@
+import json
 import logging
 import mimetypes
 import os
 import time
-import json
 from argparse import ArgumentParser
 
 import cv2
@@ -27,7 +27,6 @@ mmengine.registry.Registry.register_module = safe_register
 
 import numpy as np
 from mmengine.logging import print_log
-
 from mmpose.apis import inference_topdown
 from mmpose.apis import init_model as init_pose_estimator
 from mmpose.evaluation.functional import nms
@@ -42,8 +41,7 @@ try:
 except (ImportError, ModuleNotFoundError):
     has_mmdet = False
 
-from bench_utils.pose_utils import analyze_lengths_over_time, analyze_joint_angles
-
+from bench_utils.pose_utils import analyze_joint_angles, analyze_lengths_over_time
 from tqdm import tqdm
 
 RUNTIME_ROOT = os.path.dirname(__file__)
@@ -176,7 +174,7 @@ def main():
     # then pass to the model in init_pose_estimator
     visualizer.set_dataset_meta(pose_estimator.dataset_meta, skeleton_style=args.skeleton_style)
 
-    with open(args.meta_info_path, "r") as f:
+    with open(args.meta_info_path) as f:
         meta_infos = json.load(f)
 
     for meta_info in tqdm(meta_infos):

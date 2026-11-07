@@ -100,7 +100,7 @@ def HAUSDORFF(traj_pred, traj_gt, invaild_pred_trajs, invalid_gt_trajs):
     gt_max_distance_list = []
     for i in range(n_traj):
         if invalid_gt_trajs[i]:
-            print("Invalid gt trajectory encountered at index {}".format(i))
+            print(f"Invalid gt trajectory encountered at index {i}")
             continue
         gt_max_distance = farthest_distance(traj_gt[:, i])
         gt_max_distance_list.append(gt_max_distance)

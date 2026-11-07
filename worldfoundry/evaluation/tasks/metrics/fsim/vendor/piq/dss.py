@@ -7,24 +7,23 @@ References:
     sites/6/2016/09/paper15-Image-Quality-Assessment-Based-on-DCT-Subband-Similarity.pdf
 """
 
-import math
 import functools
+import math
+from typing import Optional, Union
+
 import torch
-
 import torch.nn.functional as F
-
-from typing import Union, Optional
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce
 from piq.functional import gaussian_filter, rgb2yiq
+from piq.utils import _reduce, _validate_input
 
 
 def dss(
     x: torch.Tensor,
     y: torch.Tensor,
     reduction: str = "mean",
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     dct_size: int = 8,
     sigma_weight: float = 1.55,
     kernel_size: int = 3,
@@ -180,7 +179,7 @@ def _subband_similarity(
     return similarity
 
 
-def _dct_matrix(size: int, device: Optional[str] = None, dtype: Optional[type] = None) -> torch.Tensor:
+def _dct_matrix(size: int, device: str | None = None, dtype: type | None = None) -> torch.Tensor:
     r"""Computes the matrix coefficients for DCT transform using the following formula:
     https://fr.mathworks.com/help/images/discrete-cosine-transform.html
 
@@ -270,7 +269,7 @@ class DSSLoss(_Loss):
     def __init__(
         self,
         reduction: str = "mean",
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
         dct_size: int = 8,
         sigma_weight: float = 1.55,
         kernel_size: int = 3,

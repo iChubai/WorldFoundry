@@ -10,18 +10,17 @@ from typing import Union
 
 import torch
 import torch.nn.functional as F
-
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _parse_version, _reduce
-from piq.functional import similarity_map, gradient_map, scharr_filter, gaussian_filter, rgb2yiq, imresize
+from piq.functional import gaussian_filter, gradient_map, imresize, rgb2yiq, scharr_filter, similarity_map
+from piq.utils import _parse_version, _reduce, _validate_input
 
 
 def srsim(
     x: torch.Tensor,
     y: torch.Tensor,
     reduction: str = "mean",
-    data_range: Union[int, float] = 1.0,
+    data_range: int | float = 1.0,
     chromatic: bool = False,
     scale: float = 0.25,
     kernel_size: int = 3,
@@ -258,7 +257,7 @@ class SRSIMLoss(_Loss):
     def __init__(
         self,
         reduction: str = "mean",
-        data_range: Union[int, float] = 1.0,
+        data_range: int | float = 1.0,
         chromatic: bool = False,
         scale: float = 0.25,
         kernel_size: int = 3,

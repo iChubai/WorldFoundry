@@ -4,25 +4,26 @@ Docstring for problem.problem_filter
 这个文件提供一个接口，让VLM来提出具体的物理现象相关的问题，具体到物体和内容
 """
 
-from problem.problem_set import MECHANICS_QUESTIONS, THERMOTICS_QUESTIONS, MATERIAL_QUESTIONS, get_question_by_id
-
-from model.openrouter import video_openrouter_call
 import base64
 from typing import Dict
 
+from model.openrouter import video_openrouter_call
 
-def enrich_problems(video, model_name, video_prompt, related_problem: Dict) -> str:
-    prompt = f"""
+from problem.problem_set import MATERIAL_QUESTIONS, MECHANICS_QUESTIONS, THERMOTICS_QUESTIONS, get_question_by_id
+
+
+def enrich_problems(video, model_name, video_prompt, related_problem: dict) -> str:
+    prompt = """
     You are a physics-aware problem enricher. Given a Video Prompt, Video and the Problem Set, generate detailed physics problems related to the physical phenomena depicted in the video.
 
     output a JSON object with three keys: "mechanics", "thermotics", and "material". Each key maps to a list of enriched physics problems based on the Problem Set.
 
     like
-    {{
+    {
         "mechanics": ["Problem 1 details...", "Problem 2 details..."],
         "thermotics": [],
         "material": []
-    }}
+    }
     
     """
 
@@ -31,7 +32,7 @@ def enrich_problems(video, model_name, video_prompt, related_problem: Dict) -> s
             for pid in problem_ids:
                 question = get_question_by_id(pid)
                 if question:
-                    prompt += f"\nRelated {key} Problems Details: {str(question)}"
+                    prompt += f"\nRelated {key} Problems Details: {question!s}"
 
     print(prompt)
 

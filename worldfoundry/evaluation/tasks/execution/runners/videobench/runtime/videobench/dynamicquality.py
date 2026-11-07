@@ -1,11 +1,13 @@
-import os
-import re
-from openai import OpenAI
-import openai
-from .utils import Video_Dataset
 import json
 import logging
+import os
+import re
+
+import openai
+from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+from .utils import Video_Dataset
 
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
@@ -57,7 +59,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
     results = {}
     dataset = Video_Dataset(cur_full_info_path)
 
-    l1 = list(range(0, len(dataset)))
+    l1 = list(range(len(dataset)))
     model_scores = {model: {"total_score": 0, "count": 0} for model in models}
 
     for i in l1:
@@ -103,7 +105,7 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
             scores = extract_scores_from_result(response)
 
             # Step 4: 将数字与 model_name 对应
-            model_scores_dict = dict(zip(model_names, scores))
+            model_scores_dict = dict(zip(model_names, scores, strict=False))
             filtered_scores = {name: model_scores_dict[name] for name in models if name in model_scores_dict}
             results[i].update(filtered_scores)
 
@@ -113,8 +115,8 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 model_scores[model_name]["count"] += 1
 
         except Exception as e:
-            logger.error(f"Error processing video {i}: {str(e)}")
-            results[str(i)] = f"Error: {str(e)}"
+            logger.error(f"Error processing video {i}: {e!s}")
+            results[str(i)] = f"Error: {e!s}"
 
     average_scores = {
         model: model_scores[model]["total_score"] / model_scores[model]["count"]

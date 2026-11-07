@@ -1,15 +1,15 @@
+import json
+import os
+from collections import OrderedDict
+
+import cv2
+import numpy as np
 import torch
-from torchvision.models import vgg19
 from torch import nn
 from torchvision import transforms
-from collections import OrderedDict
-import cv2
-from vbench2.utils import get_frames
-import numpy as np
-import os
-import json
-from vbench2.utils import load_dimension_info
+from torchvision.models import vgg19
 from tqdm import tqdm
+from vbench2.utils import get_frames, load_dimension_info
 
 
 class VGG(nn.Module):

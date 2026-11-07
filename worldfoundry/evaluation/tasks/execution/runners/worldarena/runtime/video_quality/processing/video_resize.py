@@ -1,4 +1,5 @@
 import os
+
 import cv2
 import decord
 import numpy as np
@@ -35,7 +36,7 @@ def process_video_or_images(input_base):
 
 
 def load_config(config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
     return config
 

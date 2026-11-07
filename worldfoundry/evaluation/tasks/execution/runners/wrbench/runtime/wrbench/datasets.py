@@ -5,9 +5,10 @@ from __future__ import annotations
 import csv
 import json
 import os
+from collections.abc import Iterator
 from importlib import resources
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 PROMPT_PROFILE_TI2V_ACTIVE = "ti2v_active"
 PROMPT_PROFILE_T2V_LAYOUT_ANCHOR = "t2v_layout_anchor"

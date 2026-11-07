@@ -1,4 +1,7 @@
+import copy
 import math
+import os
+import sys
 import warnings
 from functools import partial
 from typing import List, Optional, Tuple, Union
@@ -7,11 +10,6 @@ import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch import nn
-
-
-import copy
-import os
-import sys
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, dir_path)
@@ -33,11 +31,11 @@ def _get_unpad_data(attention_mask):
 
 
 from transformers.configuration_utils import PretrainedConfig
+from transformers.modeling_attn_mask_utils import _prepare_4d_causal_attention_mask_for_sdpa
 from transformers.utils import logging
 
-from .modeling_attn_mask_utils import _prepare_4d_causal_attention_mask
-from transformers.modeling_attn_mask_utils import _prepare_4d_causal_attention_mask_for_sdpa
 from .configuration_mplug_owl2 import LlamaConfig
+from .modeling_attn_mask_utils import _prepare_4d_causal_attention_mask
 
 
 class MultiwayNetwork(nn.Module):
@@ -68,7 +66,7 @@ class MultiwayNetwork(nn.Module):
 class LlamaAttention(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
 
-    def __init__(self, config: LlamaConfig, layer_idx: Optional[int] = None):
+    def __init__(self, config: LlamaConfig, layer_idx: int | None = None):
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
@@ -148,13 +146,13 @@ class LlamaAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         modality_indicators: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
-        padding_mask: Optional[torch.LongTensor] = None,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+        padding_mask: torch.LongTensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(
@@ -239,13 +237,13 @@ class LlamaFlashAttention2(LlamaAttention):
         self,
         hidden_states: torch.Tensor,
         modality_indicators: torch.Tensor,
-        attention_mask: Optional[torch.LongTensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Cache] = None,
+        attention_mask: torch.LongTensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: Cache | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
         **kwargs,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         # LlamaFlashAttention2 attention does not support output_attentions
         if "padding_mask" in kwargs:
             warnings.warn(
@@ -436,12 +434,12 @@ class LlamaSdpaAttention(LlamaAttention):
         self,
         hidden_states: torch.Tensor,
         modality_indicators: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Cache] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: Cache | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         if output_attentions:
             # TODO: Improve this warning with e.g. `model.config.attn_implementation = "manual"` once this is implemented.
             logger.warning_once(
@@ -538,12 +536,12 @@ class LlamaDecoderLayer(nn.Module):
         self,
         hidden_states: torch.Tensor,
         modality_indicators: torch.Tensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
-        output_attentions: Optional[bool] = False,
-        use_cache: Optional[bool] = False,
-    ) -> Tuple[torch.FloatTensor, Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]]:
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
+        output_attentions: bool | None = False,
+        use_cache: bool | None = False,
+    ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         """
         Args:
             hidden_states (`torch.FloatTensor`): input to the layer of shape `(batch, seq_len, embed_dim)`
@@ -595,15 +593,15 @@ def model_forward(
     self,
     input_ids: torch.LongTensor = None,
     modality_indicators: torch.Tensor = None,
-    attention_mask: Optional[torch.Tensor] = None,
-    position_ids: Optional[torch.LongTensor] = None,
-    past_key_values: Optional[List[torch.FloatTensor]] = None,
-    inputs_embeds: Optional[torch.FloatTensor] = None,
-    use_cache: Optional[bool] = None,
-    output_attentions: Optional[bool] = None,
-    output_hidden_states: Optional[bool] = None,
-    return_dict: Optional[bool] = None,
-) -> Union[Tuple, BaseModelOutputWithPast]:
+    attention_mask: torch.Tensor | None = None,
+    position_ids: torch.LongTensor | None = None,
+    past_key_values: list[torch.FloatTensor] | None = None,
+    inputs_embeds: torch.FloatTensor | None = None,
+    use_cache: bool | None = None,
+    output_attentions: bool | None = None,
+    output_hidden_states: bool | None = None,
+    return_dict: bool | None = None,
+) -> tuple | BaseModelOutputWithPast:
     output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
     output_hidden_states = (
         output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -738,16 +736,16 @@ def causal_model_forward(
     self,
     input_ids: torch.LongTensor = None,
     modality_indicators: torch.Tensor = None,
-    attention_mask: Optional[torch.Tensor] = None,
-    position_ids: Optional[torch.LongTensor] = None,
-    past_key_values: Optional[List[torch.FloatTensor]] = None,
-    inputs_embeds: Optional[torch.FloatTensor] = None,
-    labels: Optional[torch.LongTensor] = None,
-    use_cache: Optional[bool] = None,
-    output_attentions: Optional[bool] = None,
-    output_hidden_states: Optional[bool] = None,
-    return_dict: Optional[bool] = None,
-) -> Union[Tuple, CausalLMOutputWithPast]:
+    attention_mask: torch.Tensor | None = None,
+    position_ids: torch.LongTensor | None = None,
+    past_key_values: list[torch.FloatTensor] | None = None,
+    inputs_embeds: torch.FloatTensor | None = None,
+    labels: torch.LongTensor | None = None,
+    use_cache: bool | None = None,
+    output_attentions: bool | None = None,
+    output_hidden_states: bool | None = None,
+    return_dict: bool | None = None,
+) -> tuple | CausalLMOutputWithPast:
     r"""
     Args:
         labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):

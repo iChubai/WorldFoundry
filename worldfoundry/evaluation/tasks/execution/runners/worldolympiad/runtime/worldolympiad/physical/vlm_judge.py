@@ -32,6 +32,18 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from material.prompt import (
+    build_compliance_prompt as build_material_compliance_prompt,
+)
+from material.prompt import (
+    build_relevance_prompt as build_material_relevance_prompt,
+)
+from mechanics.prompt import (
+    build_compliance_prompt as build_mechanics_compliance_prompt,
+)
+from mechanics.prompt import (
+    build_relevance_prompt as build_mechanics_relevance_prompt,
+)
 from model.vlm import (
     chat_vlm_call,
     parse_json_content,
@@ -39,30 +51,24 @@ from model.vlm import (
     resolve_vlm_backend,
     video_vlm_call,
 )
-from material.prompt import (
-    build_compliance_prompt as build_material_compliance_prompt,
-    build_relevance_prompt as build_material_relevance_prompt,
-)
-from mechanics.prompt import (
-    build_compliance_prompt as build_mechanics_compliance_prompt,
-    build_relevance_prompt as build_mechanics_relevance_prompt,
-)
 from problem.problem_set import ALL_QUESTIONS, get_question_by_id
 from thermotics.prompt import (
     build_compliance_prompt as build_thermotics_compliance_prompt,
+)
+from thermotics.prompt import (
     build_relevance_prompt as build_thermotics_relevance_prompt,
 )
 
 load_dotenv()
 
 
-def encode_video_to_data_url(video_path: str) -> Dict:
+def encode_video_to_data_url(video_path: str) -> dict:
     with open(video_path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode("utf-8")
     return {"type": "video_url", "video_url": {"url": f"data:video/mp4;base64,{b64}"}}
 
 
-def relevance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def relevance_prompts(question_id: str, video_prompt: str) -> tuple[str, str]:
     q = get_question_by_id(question_id)
     if q is None:
         raise ValueError(f"Unknown question id: {question_id}")
@@ -74,7 +80,7 @@ def relevance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
     return build_mechanics_relevance_prompt(question_id, video_prompt)
 
 
-def compliance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def compliance_prompts(question_id: str, video_prompt: str) -> tuple[str, str]:
     q = get_question_by_id(question_id)
     if q is None:
         raise ValueError(f"Unknown question id: {question_id}")
@@ -92,7 +98,7 @@ def call_relevance_vlm(
     user_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     data_url = encode_video_to_data_url(video_path)
     resp = video_vlm_call(
         data_url=data_url,
@@ -112,7 +118,7 @@ def call_compliance_vlm(
     user_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     gen_data = encode_video_to_data_url(gen_video)
     gt_data = encode_video_to_data_url(gt_video)
     messages = [
@@ -144,9 +150,9 @@ def evaluate_video(
     video_prompt: str,
     model_name: str | None = None,
     backend: str | None = None,
-    question_ids: Optional[List[str]] = None,
-) -> List[Dict]:
-    results: List[Dict] = []
+    question_ids: list[str] | None = None,
+) -> list[dict]:
+    results: list[dict] = []
     if question_ids:
         selected_questions = []
         for qid in question_ids:

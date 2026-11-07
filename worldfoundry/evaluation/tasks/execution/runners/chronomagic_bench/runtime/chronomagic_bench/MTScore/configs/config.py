@@ -144,7 +144,7 @@ class EasyDict(dict):
             setattr(self, k, v)
         # Class attributes
         for k in self.__class__.__dict__.keys():
-            if not (k.startswith("__") and k.endswith("__")) and not k in ("update", "pop"):
+            if not (k.startswith("__") and k.endswith("__")) and k not in ("update", "pop"):
                 setattr(self, k, getattr(self, k))
 
     def __setattr__(self, name, value):
@@ -169,7 +169,7 @@ class EasyDict(dict):
         return super(EasyDict, self).pop(k, d)
 
 
-class Config(object):
+class Config:
     """config"""
 
     @classmethod
@@ -187,7 +187,7 @@ class Config(object):
             if isinstance(v, dict):
                 v = cls.pretty_text(v, indent + 4)
             spaces = " " * indent
-            msg += spaces + "{}: {}".format(k, v)
+            msg += spaces + f"{k}: {v}"
             if i == len(cfg) - 1:
                 msg += " }"
             else:
@@ -259,7 +259,7 @@ class Config(object):
         """
         filepath = osp.abspath(osp.expanduser(filepath))
         if not osp.isfile(filepath):
-            raise IOError(f"File does not exist: {filepath}")
+            raise OSError(f"File does not exist: {filepath}")
         if filepath.endswith(".py"):
             module_name = f"_worldfoundry_config_{abs(hash(filepath))}"
             spec = importlib.util.spec_from_file_location(module_name, filepath)
@@ -270,14 +270,14 @@ class Config(object):
             cfg_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
 
         elif filepath.endswith((".yml", ".yaml")):
-            cfg_dict = yaml.load(open(filepath, "r"), Loader=yaml.Loader)
+            cfg_dict = yaml.load(open(filepath), Loader=yaml.Loader)
         elif filepath.endswith(".json"):
-            cfg_dict = json.load(open(filepath, "r"))
+            cfg_dict = json.load(open(filepath))
         else:
-            raise IOError("Only py/yml/yaml/json type are supported now!")
+            raise OSError("Only py/yml/yaml/json type are supported now!")
 
         cfg_text = filepath + "\n"
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             cfg_text += f.read()
 
         if BASE_KEY in cfg_dict:  # load configs in `BASE_KEY`

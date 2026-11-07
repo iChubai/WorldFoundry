@@ -1,10 +1,9 @@
+import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
 from PIL import Image
-import cv2
-
 
 _dino = None
 _dino_device = None

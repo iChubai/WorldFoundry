@@ -5,15 +5,15 @@ from __future__ import annotations
 import json
 import subprocess
 from collections import Counter
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from ..io import atomic_write_json, atomic_write_text, file_fingerprint, read_json
 from ..protocols import FAMILIES
 from .planner import initial_observation_path
-
 
 INVENTORY_SCHEMA = "harnesseval.inventory"
 VideoProbe = Callable[[Path, bool], dict[str, Any]]

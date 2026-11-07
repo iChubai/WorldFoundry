@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 （ index_ta + index_td + index_npz_sim）
 -  index_ta（Trajectory_Acc） index_td（Trajectory_Diff）
@@ -7,21 +6,22 @@
 - / index_revise
 """
 
-import os
 import csv
-import numpy as np
+import os
+import re
 import threading
 import time
-import re
-from concurrent.futures import ThreadPoolExecutor
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger("npz_renamer")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -500,7 +500,7 @@ class TrajectoryMetric(ABC):
     def get_processed_files(self):
         if not os.path.exists(self.log_file):
             return set()
-        with open(self.log_file, "r", encoding="utf-8") as f:
+        with open(self.log_file, encoding="utf-8") as f:
             return set(line.strip() for line in f)
 
     def mark_as_done(self, file_name):
@@ -818,7 +818,7 @@ class AtomicProcessor:
         all_level_data = {}
         if os.path.exists(v_csv):
             try:
-                with open(v_csv, "r", encoding="utf-8") as f:
+                with open(v_csv, encoding="utf-8") as f:
                     reader = csv.reader(f)
                     header = next(reader)
                     for row in reader:
@@ -875,7 +875,7 @@ class AtomicProcessor:
                     [level, data["success_rate"], data["total_files"], data["success_files"], data["failure_files"]]
                 )
 
-        print(f"\n[] ：")
+        print("\n[] ：")
         print(f"  - : {v_csv}")
         print(f"  - （）: {s_csv}")
         print(f"  - : {level_csv}")
@@ -888,7 +888,7 @@ class AtomicProcessor:
         all_data = {}
         if os.path.exists(v_csv):
             try:
-                with open(v_csv, "r", encoding="utf-8") as f:
+                with open(v_csv, encoding="utf-8") as f:
                     reader = csv.reader(f)
                     next(reader)
                     for row in reader:

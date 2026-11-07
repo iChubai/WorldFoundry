@@ -4,20 +4,21 @@ Method-specific script to generate VQA scores using VQAScore models.
 This script is specific to VQAScore/LMM evaluation and outputs scores in a standardized format.
 """
 
+import argparse
 import json
 import os
-import argparse
+from datetime import datetime
 from pathlib import Path
+
 import numpy as np
 import t2v_metrics
 from tqdm import tqdm
-from datetime import datetime
 
 
 def load_jsonl_data(file_path):
     """Load JSONL data from file"""
     data = []
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         for line in f:
             data.append(json.loads(line.strip()))
     return data

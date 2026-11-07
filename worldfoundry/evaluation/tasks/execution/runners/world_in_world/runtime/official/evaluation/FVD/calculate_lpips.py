@@ -1,13 +1,13 @@
-import numpy as np
-import torch
-from tqdm import tqdm
 import math
-
-import torch
-from .lpips import lpips
 
 # ignore torchvision UserWarning of 'weights'
 import warnings
+
+import numpy as np
+import torch
+from tqdm import tqdm
+
+from .lpips import lpips
 
 warnings.filterwarnings("ignore")
 

@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torch.hub import load_state_dict_from_url
 
-from .helpers import vassert, text_to_dtype
+from .helpers import text_to_dtype, vassert
 from .sample_similarity_base import SampleSimilarityBase
 from .utils_torchvision import torchvision_load_pretrained_vgg16
 

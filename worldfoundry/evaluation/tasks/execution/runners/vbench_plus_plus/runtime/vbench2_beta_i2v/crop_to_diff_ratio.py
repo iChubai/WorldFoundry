@@ -1,12 +1,12 @@
-import os
-from PIL import Image
+import argparse
 import json
+import logging
+import os
 import os.path as osp
 import random
-import argparse
-from tqdm import tqdm
 
-import logging
+from PIL import Image
+from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def transfer_bbox_to_origin_img(first_crop_info, old_bbox):
 
 
 def get_target_crop(args):
-    data = json.load(open(args.crop_info_path, "r"))
+    data = json.load(open(args.crop_info_path))
     target_results = []
     os.makedirs(args.result_path, exist_ok=True)
 

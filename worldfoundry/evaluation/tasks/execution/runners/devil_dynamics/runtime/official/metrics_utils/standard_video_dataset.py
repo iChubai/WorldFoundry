@@ -1,12 +1,13 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision.transforms import Compose, Resize, ToTensor
+import glob
 import json
 import os
 import pdb
-import glob
-from torchvision.io import read_video
+
+import torch
 import torch.nn.functional as F
+from torch.utils.data import DataLoader, Dataset
+from torchvision.io import read_video
+from torchvision.transforms import Compose, Resize, ToTensor
 
 
 def change_fps(video_tensor, fps, target_fps):

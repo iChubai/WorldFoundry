@@ -7,10 +7,11 @@ import argparse
 import csv
 import json
 from collections import defaultdict
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
-from typing import Any, Mapping
+from typing import Any
 
 from . import latest_d1_d6_metrics as metric_contract
 
@@ -211,9 +212,7 @@ def build_table(
                         continue
                     eligible += 1
                     d2_row = d2_by_id.get(video_id)
-                    if d2_row is None:
-                        value = None
-                    elif "d2_status" in d2_row and d2_row.get("d2_status") != "ok":
+                    if d2_row is None or ("d2_status" in d2_row and d2_row.get("d2_status") != "ok"):
                         value = None
                     else:
                         value = metric_contract.require_metric_value(

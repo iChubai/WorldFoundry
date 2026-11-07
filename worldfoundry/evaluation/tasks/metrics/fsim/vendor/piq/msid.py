@@ -2,15 +2,14 @@ r"""Implementation of Multi-scale Evaluation metric, based on paper
 https://arxiv.org/abs/1905.11141 and author's repository https://github.com/xgfs/msid
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 from warnings import warn
 
-import torch
 import numpy as np
+import torch
 
 from piq.base import BaseFeatureMetric
-from piq.utils import _validate_input, _parse_version
-
+from piq.utils import _parse_version, _validate_input
 
 EPSILON = 1e-6
 NORMALIZATION = 1e6
@@ -53,8 +52,8 @@ def _laplacian_sparse(matrix: np.ndarray, normalized: bool = True) -> np.ndarray
 
 
 def _lanczos_m(
-    A: np.ndarray, m: int, nv: int, rademacher: bool, starting_vectors: Optional[np.ndarray] = None
-) -> Tuple[np.ndarray, np.ndarray]:
+    A: np.ndarray, m: int, nv: int, rademacher: bool, starting_vectors: np.ndarray | None = None
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Lanczos algorithm computes symmetric m x m tridiagonal matrix T and matrix V with orthogonal rows
         constituting the basis of the Krylov subspace K_m(A, x),
         where x is an arbitrary starting unit vector.
@@ -183,7 +182,7 @@ def _slq_ts(A: np.ndarray, m: int, niters: int, ts: np.ndarray, rademacher: bool
     return traces
 
 
-def _slq_ts_fs(A: np.ndarray, m: int, niters: int, ts: np.ndarray, rademacher: bool, fs: List) -> np.ndarray:
+def _slq_ts_fs(A: np.ndarray, m: int, niters: int, ts: np.ndarray, rademacher: bool, fs: list) -> np.ndarray:
     r"""Compute the trace of matrix functions
 
     Args:

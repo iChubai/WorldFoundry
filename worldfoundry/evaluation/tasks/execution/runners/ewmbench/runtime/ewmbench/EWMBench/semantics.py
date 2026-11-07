@@ -36,7 +36,7 @@ def run_metric_eval(metric, gen_strings, gt_strings, metric_type):
 
 
 def get_strings(json_path, key):
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
     all_idxs = []
     all_strings = []
@@ -62,7 +62,9 @@ def compute_metric_scores(semantics_model, metric_type, list_gen_strings, list_g
 
     scores = [
         run_metric_eval(metric, gen_strings, gt_strings, metric_type)
-        for gen_strings, gt_strings in tqdm(list(zip(list_gen_strings, list_gt_strings)), desc="Compute metric scores")
+        for gen_strings, gt_strings in tqdm(
+            list(zip(list_gen_strings, list_gt_strings, strict=False)), desc="Compute metric scores"
+        )
     ]
     return scores
 
@@ -76,7 +78,7 @@ def evaluate_run(semantics_model, eval_config, dt_json, gt_json):
     gt_idxs, gt_strings = get_strings(gt_json, key)
     expanded_gt_strings = []
 
-    for gen_id, _gen_string in zip(gen_idxs, gen_strings):
+    for gen_id, _gen_string in zip(gen_idxs, gen_strings, strict=False):
         task_eps_trail = gen_id.split("_dataset_")[-1].split("_")
         task_id = task_eps_trail[0]
         if len(task_eps_trail) == 3:

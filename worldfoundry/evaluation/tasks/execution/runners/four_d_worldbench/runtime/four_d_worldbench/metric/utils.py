@@ -1,27 +1,26 @@
 import io
-import os
-import re
-import yaml
-import cv2
 import json
+import os
 import random
-import numpy as np
-
-from PIL import Image, ImageSequence
-from tqdm import tqdm
-from pathlib import Path
+import re
 from bisect import bisect_left
+from collections import defaultdict
+from pathlib import Path
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
+import yaml
 from decord import VideoReader, cpu
-from torchvision import transforms
-from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, ToPILImage
-from collections import defaultdict
-from scenedetect import open_video, SceneManager, split_video_ffmpeg
+from PIL import Image, ImageSequence
+from scenedetect import SceneManager, open_video, split_video_ffmpeg
 from scenedetect.detectors import ContentDetector
+from torchvision import transforms
+from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
+from tqdm import tqdm
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -33,8 +32,8 @@ except ImportError:
     BILINEAR = Image.BILINEAR
 
 from worldfoundry.core.distributed.collectives.evaluation import (
-    get_rank,
     barrier,
+    get_rank,
 )
 
 
@@ -256,7 +255,7 @@ def load_json(path):
     Returns:
     - data (dict or list): The data loaded from the JSON file, which could be a dictionary or a list.
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 

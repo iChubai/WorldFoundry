@@ -1,11 +1,12 @@
+from typing import List
+
 import numpy as np
-from tqdm import tqdm
-from PIL import Image
 import torch
 import torch.nn.functional as F
-from typing import List
+from PIL import Image
+from skimage import color, io
 from skimage.metrics import structural_similarity as ssim
-from skimage import io, color
+from tqdm import tqdm
 
 ROUND_DIGIT = 3
 NUM_ASPECT = 5
@@ -26,7 +27,7 @@ TEM_SSIM_POINT_LOW = 0.6
 def clip_inter_frame(
     model,
     tokenizer,
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     device = model.device
     frame_sim_list = []
@@ -55,7 +56,7 @@ def clip_inter_frame(
 def dino_inter_frame(
     model,
     preprocess,
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     frame_sim_list = []
@@ -83,7 +84,7 @@ def dino_inter_frame(
 
 
 def ssim_inter_frame(
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     ssim_list = []
     for f_idx in range(len(frame_path_list) - 1):

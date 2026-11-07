@@ -5,9 +5,10 @@
 # email: xuanyili.edu@gmail.com
 # github: https://github.com/meteorshowers/SoraGeoEvaluate
 #############################################################################
-import cv2
 import csv
 import os
+
+import cv2
 import numpy as np
 
 
@@ -28,7 +29,7 @@ def compute_fundamental_error(inliers, src_pts, dst_pts, F):
     # Calculate Median Error
     median_error = np.median(errors)
     # Calculate Root Mean Squared Error (RMSE)
-    rmse = np.sqrt(np.mean((errors**2)))
+    rmse = np.sqrt(np.mean(errors**2))
     # Calculate Mean Absolute Error (MAE)
     mae = np.mean(errors)
 
@@ -227,7 +228,7 @@ def DrawMatchingPoints(img1, img2, pts1, pts2, inliers):
     img3[:h2, w1 : w1 + w2, :] = img2
 
     # Draw lines between matching points
-    for pt1, pt2, flag in zip(pts1, pts2, inliers):
+    for pt1, pt2, flag in zip(pts1, pts2, inliers, strict=False):
         print(pt1[0][0], pt1[0][1])
         x1, y1 = map(int, (int(pt1[0][0]), int(pt1[0][1])))
         x2, y2 = map(int, (int(pt2[0][0]), int(pt2[0][1])))

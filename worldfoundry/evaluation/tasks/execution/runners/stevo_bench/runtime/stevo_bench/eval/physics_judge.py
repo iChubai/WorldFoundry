@@ -32,18 +32,17 @@ Deps:
 
 import json
 import re
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
 import yaml
-
-from eval.control_judge import _load_task_fields, _compute_requested_fields, _ensemble_decide
+from eval.control_judge import _compute_requested_fields, _ensemble_decide, _load_task_fields
 from eval.judge_client import make_judge_client
 from eval.task_resolver import ResolvedTask
 from eval.utils import _path_to_rel
-
 
 # ---------------------------------------------------------------------------
 # Result dataclass
@@ -188,12 +187,12 @@ def _unwrap_full_fence(s: str) -> str:
     return m.group(1).strip() if m else s
 
 
-def _extract_first_object(s: str) -> Optional[str]:
+def _extract_first_object(s: str) -> str | None:
     m = re.search(r"\{.*\}", s or "", flags=re.DOTALL)
     return m.group(0).strip() if m else None
 
 
-def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
+def _try_load_json(s: str) -> dict[str, Any] | None:
     try:
         obj = json.loads(s)
         return obj if isinstance(obj, dict) else None
@@ -201,7 +200,7 @@ def _try_load_json(s: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def _parse_judge_output(raw_text: str) -> Dict[str, Any]:
+def _parse_judge_output(raw_text: str) -> dict[str, Any]:
     raw = (raw_text or "").strip()
     data = _try_load_json(_unwrap_full_fence(raw))
     if data is None:
@@ -244,7 +243,7 @@ def evaluate_physics_one_task(
         init2final_edit_prompt=init2final,
     )
 
-    def _single_query(_: int) -> Dict[str, Any]:
+    def _single_query(_: int) -> dict[str, Any]:
         raw = client.judge(prompt=prompt, video_path=Path(task.wm_video))
         parsed = _parse_judge_output(raw)
         return {
@@ -286,7 +285,7 @@ def evaluate_physics_one_task(
     else:
         notes = responses[0]["notes"] if responses else ""
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "task_id": task.task_id,
         "provider": client.provider,
         "model": model,
@@ -326,8 +325,8 @@ def evaluate_physics_all_tasks(
     camera_controlled: bool = False,
     ensemble_size: int = 1,
     ensemble_mode: str = "majority",
-) -> List[PhysicsJudgeResult]:
-    out: List[PhysicsJudgeResult] = []
+) -> list[PhysicsJudgeResult]:
+    out: list[PhysicsJudgeResult] = []
     for t in tasks:
         out.append(
             evaluate_physics_one_task(
@@ -349,7 +348,7 @@ def evaluate_physics_all_tasks(
 
 
 def append_physics_results_to_summary(
-    tasks: List[ResolvedTask],
+    tasks: list[ResolvedTask],
     *,
     judge_slug: str,
     report_filename: str,

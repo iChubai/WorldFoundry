@@ -35,10 +35,8 @@ from pathlib import Path
 from threading import Lock
 from typing import Dict, List, Optional, Tuple
 
-from filelock import FileLock
-
 import yaml
-
+from filelock import FileLock
 from generation.world_models import WorldModelRunner, build_runner
 
 # ---------------------------------------------------------------------------
@@ -56,8 +54,8 @@ def _occlusion_base(task_id: str) -> str:
 
 
 def _dedup_for_camera_model(
-    tasks: List[Tuple[str, dict, Optional[Path]]],
-) -> List[Tuple[str, dict, Optional[Path]]]:
+    tasks: list[tuple[str, dict, Path | None]],
+) -> list[tuple[str, dict, Path | None]]:
     """For camera-controlled models, collapse occlusion variants to one per base name.
 
     Keeps the first variant encountered (tasks are sorted alphabetically by
@@ -66,7 +64,7 @@ def _dedup_for_camera_model(
     video and map entry use e.g. "ice_on_burner" rather than "ice_on_burner_cardboard".
     """
     seen: set = set()
-    result: List[Tuple[str, dict, Optional[Path]]] = []
+    result: list[tuple[str, dict, Path | None]] = []
     for task_id, task, init_frame in tasks:
         base = _occlusion_base(task_id)
         if base not in seen:
@@ -113,7 +111,7 @@ class RpmLimiter:
 # ---------------------------------------------------------------------------
 
 
-def discover_tasks(tasks_root: Path) -> List[Tuple[str, dict, Optional[Path]]]:
+def discover_tasks(tasks_root: Path) -> list[tuple[str, dict, Path | None]]:
     """Walk tasks_root recursively and return one entry per valid task directory.
 
     A directory is treated as a task dir if it contains a YAML file named
@@ -124,7 +122,7 @@ def discover_tasks(tasks_root: Path) -> List[Tuple[str, dict, Optional[Path]]]:
         task_id is taken from the YAML 'id' field, falling back to the folder name.
     """
     tasks_root = Path(tasks_root).expanduser().resolve()
-    found: List[Tuple[str, dict, Optional[Path]]] = []
+    found: list[tuple[str, dict, Path | None]] = []
 
     for d in sorted(tasks_root.rglob("*")):
         if not d.is_dir():
@@ -179,14 +177,14 @@ def _run_one(
     runner: WorldModelRunner,
     task_id: str,
     task: dict,
-    init_frame: Optional[Path],
+    init_frame: Path | None,
     output_path: Path,
 ) -> bool:
     """Extract the right prompt + camera_control from the task YAML and call generate()."""
     prompts = task.get("prompts") or {}
     prompt = (prompts.get(runner.prompt_field) or "").strip()
 
-    camera_control: Optional[str] = None
+    camera_control: str | None = None
     if runner.camera_control_field:
         cc = (task.get("camera_control") or {}).get(runner.camera_control_field)
         if cc and str(cc).strip().lower() not in ("null", "none", ""):
@@ -229,7 +227,7 @@ def _num_frames_from_pose(pose_string: str) -> int:
 
 def _build_daemon_task_list(
     runner,
-    work_queue: List[Tuple[str, dict, Optional[Path], Path]],
+    work_queue: list[tuple[str, dict, Path | None, Path]],
 ) -> list:
     """Translate a work-queue slice into the JSON task list expected by daemon scripts."""
     tasks_for_daemon = []
@@ -239,14 +237,14 @@ def _build_daemon_task_list(
         prompts = task.get("prompts") or {}
         prompt = (prompts.get(runner.prompt_field) or "").strip()
 
-        camera_control: Optional[str] = None
+        camera_control: str | None = None
         if runner.camera_control_field:
             cc = (task.get("camera_control") or {}).get(runner.camera_control_field)
             if cc and str(cc).strip().lower() not in ("null", "none", ""):
                 camera_control = str(cc).strip()
         effective_cc = camera_control or getattr(runner, "camera_control_default", None) or ""
 
-        num_frames: Optional[int] = None
+        num_frames: int | None = None
         if effective_cc:
             try:
                 num_frames = _num_frames_from_pose(effective_cc)
@@ -268,12 +266,12 @@ def _build_daemon_task_list(
 
 def _collect_daemon_results(
     runner,
-    work_queue: List[Tuple[str, dict, Optional[Path], Path]],
+    work_queue: list[tuple[str, dict, Path | None, Path]],
     map_path: Path,
     map_lock: Lock,
-) -> Dict[str, bool]:
+) -> dict[str, bool]:
     """Check which outputs were produced and update the output map."""
-    results: Dict[str, bool] = {}
+    results: dict[str, bool] = {}
     for task_id, _task, _init_frame, out_path in work_queue:
         ok = out_path.exists()
         if ok:
@@ -287,17 +285,17 @@ def _collect_daemon_results(
 
 def _run_batch_daemon(
     runner,
-    work_queue: List[Tuple[str, dict, Optional[Path], Path]],
+    work_queue: list[tuple[str, dict, Path | None, Path]],
     map_path: Path,
     map_lock: Lock,
-) -> Dict[str, bool]:
+) -> dict[str, bool]:
     """Launch daemon subprocess(es) to process all tasks.
 
     When the runner has gpu_per_task < n_gpu, tasks are distributed across
     multiple daemon processes running in parallel (one per GPU slice).
     Otherwise a single daemon handles the full queue sequentially.
     """
-    gpu_per_task: Optional[int] = getattr(runner, "gpu_per_task", None)
+    gpu_per_task: int | None = getattr(runner, "gpu_per_task", None)
     total_gpus: int = runner.n_gpu or 1
 
     if gpu_per_task is not None and total_gpus > gpu_per_task:
@@ -341,12 +339,12 @@ def _run_batch_daemon(
 
 def _run_batch_daemon_task_parallel(
     runner,
-    work_queue: List[Tuple[str, dict, Optional[Path], Path]],
+    work_queue: list[tuple[str, dict, Path | None, Path]],
     map_path: Path,
     map_lock: Lock,
     gpu_per_task: int,
     n_workers: int,
-) -> Dict[str, bool]:
+) -> dict[str, bool]:
     """Run N daemon processes in parallel, each pinned to a disjoint GPU slice.
 
     Tasks are distributed round-robin across workers so each worker gets a
@@ -363,8 +361,8 @@ def _run_batch_daemon_task_parallel(
         f"{gpu_per_task} GPU(s) each — {len(work_queue)} tasks total"
     )
 
-    tmp_files: List[str] = []
-    procs: List[Tuple[subprocess.Popen, List, str, int]] = []
+    tmp_files: list[str] = []
+    procs: list[tuple[subprocess.Popen, list, str, int]] = []
 
     for w_idx, chunk in enumerate(chunks):
         gpu_start = w_idx * gpu_per_task
@@ -433,13 +431,13 @@ def run_model(
     *,
     runner: WorldModelRunner,
     model_type: str,
-    tasks: List[Tuple[str, dict, Optional[Path]]],
+    tasks: list[tuple[str, dict, Path | None]],
     out_dir: Path,
     run_name: str,
     workers: int,
     overwrite: bool,
-    rpm_limit: Optional[int],
-) -> Dict[str, bool]:
+    rpm_limit: int | None,
+) -> dict[str, bool]:
     """Run all tasks through one model. Returns {task_id: success}."""
     out_dir.mkdir(parents=True, exist_ok=True)
     map_path = out_dir / f"{runner.name}_output_map_{run_name}.json"
@@ -447,7 +445,7 @@ def run_model(
     limiter = RpmLimiter(rpm_limit) if rpm_limit else None
 
     # Build work queue — skip tasks that are already done unless --overwrite
-    work_queue: List[Tuple[str, dict, Optional[Path], Path]] = []
+    work_queue: list[tuple[str, dict, Path | None, Path]] = []
     for task_id, task, init_frame in tasks:
         out_path = out_dir / f"{task_id}.mp4"
         if out_path.exists() and not overwrite:
@@ -468,9 +466,9 @@ def run_model(
     if work_queue and getattr(runner, "daemon_script", None):
         return _run_batch_daemon(runner, work_queue, map_path, map_lock)
 
-    results: Dict[str, bool] = {}
+    results: dict[str, bool] = {}
 
-    def do_one(item: Tuple) -> Tuple[str, bool]:
+    def do_one(item: tuple) -> tuple[str, bool]:
         task_id, task, init_frame, out_path = item
         if limiter:
             limiter.acquire()
@@ -582,7 +580,7 @@ def main() -> int:
     models_config = _load_models_config(config_path)
     requested = list(models_config) if args.models == ["all"] else args.models
 
-    runners: Dict[str, WorldModelRunner] = {}
+    runners: dict[str, WorldModelRunner] = {}
     for name in requested:
         if name not in models_config:
             print(
@@ -627,7 +625,7 @@ def main() -> int:
     output_root = Path(args.output_root).expanduser().resolve()
 
     # ---- Run each model in sequence (tasks within a model may be parallel) ----
-    overall_failed: Dict[str, List[str]] = {}
+    overall_failed: dict[str, list[str]] = {}
 
     for model_name, runner in runners.items():
         model_tasks = tasks

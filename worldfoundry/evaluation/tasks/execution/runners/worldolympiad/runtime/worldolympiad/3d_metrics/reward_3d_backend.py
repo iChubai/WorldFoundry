@@ -9,26 +9,26 @@ from _bootstrap import setup_paths
 
 setup_paths()
 
-import torch
-import torch.nn.functional as F
-import numpy as np
-from PIL import Image
-from pathlib import Path
 import difflib
-from typing import List, Tuple, Optional
+import json
 import os
 import sys
-import json
+from pathlib import Path
+from typing import List, Optional, Tuple
+
 import matplotlib
+import numpy as np
+import torch
+import torch.nn.functional as F
+from PIL import Image
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-
 from depth_anything_3.api import DepthAnything3
 from depth_anything_3.model.utils.gs_renderer import run_renderer_in_chunk_w_trj_mode
 from depth_anything_3.specs import Gaussians
+from matplotlib.lines import Line2D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 def _default_reconstruction_model() -> str:
@@ -120,14 +120,14 @@ class Reward3DBackend:
 
     def process_video_frames(
         self,
-        frames: List[np.ndarray],
-        dynamic_masks: Optional[List[np.ndarray]] = None,
+        frames: list[np.ndarray],
+        dynamic_masks: list[np.ndarray] | None = None,
         process_res: int = 504,
-        gs_render_size: Tuple[int, int] = (512, 512),
+        gs_render_size: tuple[int, int] = (512, 512),
         trj_mode: str = "extend",
         chunk_size: int = 4,
         camera_trajectory=None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, float, Optional[np.ndarray]]:
+    ) -> tuple[torch.Tensor, torch.Tensor, float, np.ndarray | None]:
         """
         Process video frames and generate 3D reward renderings.
 
@@ -181,7 +181,7 @@ class Reward3DBackend:
 
         return gs_video, meta_view, camera_motion_score, trajectory_comparison_image
 
-    def _filter_gaussians_by_dynamic_masks(self, prediction, dynamic_masks: Optional[List[np.ndarray]]) -> None:
+    def _filter_gaussians_by_dynamic_masks(self, prediction, dynamic_masks: list[np.ndarray] | None) -> None:
         if dynamic_masks is None or prediction.gaussians is None:
             return
 
@@ -254,7 +254,7 @@ class Reward3DBackend:
     def _generate_gs_video(
         self,
         prediction,
-        render_size: Tuple[int, int],
+        render_size: tuple[int, int],
         trj_mode: str,
         chunk_size: int,
     ) -> torch.Tensor:
@@ -304,7 +304,7 @@ class Reward3DBackend:
 
         return gs_video
 
-    def _generate_meta_view(self, prediction, render_size: Tuple[int, int] = (512, 512)) -> torch.Tensor:
+    def _generate_meta_view(self, prediction, render_size: tuple[int, int] = (512, 512)) -> torch.Tensor:
         """
         Generate meta view by rendering GS from the farthest camera position
 
@@ -318,8 +318,8 @@ class Reward3DBackend:
         Returns:
             meta_view: (3, H, W) tensor in range [0, 1] - single rendered image
         """
-        from depth_anything_3.utils.geometry import affine_inverse, as_homogeneous
         from depth_anything_3.model.utils.gs_renderer import render_3dgs
+        from depth_anything_3.utils.geometry import affine_inverse, as_homogeneous
 
         gaussians = prediction.gaussians
         H, W = render_size
@@ -403,7 +403,7 @@ class Reward3DBackend:
             return pose
         raise ValueError(f"Unsupported trajectory matrix shape: {matrix.shape}")
 
-    def _trajectory_frame_keys(self, camera_trajectory) -> List[str]:
+    def _trajectory_frame_keys(self, camera_trajectory) -> list[str]:
         try:
             return sorted(
                 camera_trajectory.keys(),
@@ -412,7 +412,7 @@ class Reward3DBackend:
         except ValueError:
             return list(camera_trajectory.keys())
 
-    def _select_frame_indices(self, total_frames: int, target_len: int) -> List[int]:
+    def _select_frame_indices(self, total_frames: int, target_len: int) -> list[int]:
         if total_frames <= 0 or target_len <= 0:
             return []
         if target_len >= total_frames:
@@ -543,7 +543,7 @@ class Reward3DBackend:
 
         rotation_errors = [
             self._rotation_geodesic_deg(target_pose[:3, :3], pred_pose[:3, :3])
-            for pred_pose, target_pose in zip(pred_poses, target_poses)
+            for pred_pose, target_pose in zip(pred_poses, target_poses, strict=False)
         ]
         mean_rotation_error = float(np.mean(rotation_errors))
         final_rotation_error = float(rotation_errors[-1]) if rotation_errors else 180.0
@@ -596,7 +596,7 @@ class Reward3DBackend:
         vertex_transformed = vertex_std @ c2w.T
         return [vertex_transformed[i, :-1] for i in range(5)]
 
-    def _compute_bounds(self, *pose_sets: Optional[np.ndarray]) -> tuple[list[float], list[float], list[float]]:
+    def _compute_bounds(self, *pose_sets: np.ndarray | None) -> tuple[list[float], list[float], list[float]]:
         valid_sets = [poses for poses in pose_sets if poses is not None and len(poses) > 0]
         if not valid_sets:
             return [-1, 1], [-1, 1], [-1, 1]
@@ -613,10 +613,10 @@ class Reward3DBackend:
 
     def _render_trajectory_comparison(
         self,
-        pred_pose_rel: Optional[np.ndarray],
-        target_pose_rel: Optional[np.ndarray],
+        pred_pose_rel: np.ndarray | None,
+        target_pose_rel: np.ndarray | None,
         frustum_step: int = 3,
-    ) -> Optional[np.ndarray]:
+    ) -> np.ndarray | None:
         if pred_pose_rel is None or target_pose_rel is None:
             return None
 
@@ -672,7 +672,7 @@ class Reward3DBackend:
 
     def _compute_camera_motion_score(
         self, prediction, camera_trajectory=None
-    ) -> Tuple[float, Optional[np.ndarray], Optional[np.ndarray]]:
+    ) -> tuple[float, np.ndarray | None, np.ndarray | None]:
         """
         Compute camera motion similarity between predicted and target trajectories.
 
@@ -683,7 +683,7 @@ class Reward3DBackend:
         Returns:
             score: Camera motion similarity score in range [0, 1]
         """
-        from depth_anything_3.utils.geometry import as_homogeneous, affine_inverse_np
+        from depth_anything_3.utils.geometry import affine_inverse_np, as_homogeneous
         from depth_anything_3.utils.pose_align import align_poses_umeyama
 
         pred_extrinsics = as_homogeneous(np.asarray(prediction.extrinsics, dtype=np.float32))
@@ -734,10 +734,10 @@ class Reward3DBackend:
         self,
         video_tensor: torch.Tensor,
         process_res: int = 504,
-        gs_render_size: Tuple[int, int] = (512, 512),
+        gs_render_size: tuple[int, int] = (512, 512),
         camera_trajectory=None,
-        dynamic_masks: Optional[List[np.ndarray]] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, float, Optional[np.ndarray]]:
+        dynamic_masks: list[np.ndarray] | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, float, np.ndarray | None]:
         """
         Process video tensor and return gs_video and meta_view
 

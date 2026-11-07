@@ -13,7 +13,6 @@ from ..aggregate import clean_float, mean_valid, numeric, skill_result
 from ..io import atomic_write_json, file_fingerprint, read_json, value_digest
 from .common import MetricCacheContract, SkillBackendIdentity, skill_cache_path
 
-
 SKILL_ID = "offscreen_evolution_verifier"
 DEFINITION_VERSION = "harnesseval.offscreen_evolution"
 PROMPT_VERSION = "harnesseval.offscreen_evolution.prompt"
@@ -55,27 +54,27 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
+    "ANALYZE_AGENT_CACHE_SCHEMA",
+    "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
     "DEFINITION_VERSION",
     "PROMPT_VERSION",
-    "RESULT_CACHE_SCHEMA",
-    "ANALYZE_AGENT_CACHE_SCHEMA",
-    "VERIFY_AGENT_CACHE_SCHEMA",
-    "BACKEND_OUTPUT_SCHEMA",
-    "SAMPLING",
     "Q_FIELDS",
     "Q_LEVELS",
-    "CACHE_CONTRACT",
+    "RESULT_CACHE_SCHEMA",
+    "SAMPLING",
+    "SKILL_ID",
+    "VERIFY_AGENT_CACHE_SCHEMA",
     "OffscreenEvolutionBackend",
-    "canonical_spec",
-    "expected_spec_messages",
-    "video_judge_messages",
-    "normalize_q_scores",
     "aggregate_q_scores",
-    "result_from_judgment",
-    "is_compatible_result",
     "cache_paths",
+    "canonical_spec",
     "evaluate",
+    "expected_spec_messages",
+    "is_compatible_result",
+    "normalize_q_scores",
+    "result_from_judgment",
+    "video_judge_messages",
 ]
 
 
@@ -402,7 +401,7 @@ def video_judge_messages(
     ]
     labels = _frame_chunk_labels(spec, sampling)
     indices = sampling.get("sample_indices") or []
-    for position, (frame, chunk_id, frame_index) in enumerate(zip(frames, labels, indices)):
+    for position, (frame, chunk_id, frame_index) in enumerate(zip(frames, labels, indices, strict=False)):
         content.append(
             {
                 "type": "text",
@@ -735,7 +734,7 @@ def evaluate(
     case_id = str(case.get("case_id") or "").strip()
     if not case_id:
         raise ValueError("Offscreen case_id is required")
-    family = str(((case.get("taxonomy") or {}).get("probe_family") or ""))
+    family = str((case.get("taxonomy") or {}).get("probe_family") or "")
     if family != "offscreen_evolution":
         raise ValueError(f"Offscreen skill does not accept family {family!r}")
     spec = canonical_spec(case)

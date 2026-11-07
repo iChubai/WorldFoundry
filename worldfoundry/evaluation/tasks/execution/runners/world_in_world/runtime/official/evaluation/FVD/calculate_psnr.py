@@ -1,7 +1,8 @@
+import math
+
 import numpy as np
 import torch
 from tqdm import tqdm
-import math
 
 
 def img_psnr(img1, img2):

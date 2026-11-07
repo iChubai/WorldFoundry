@@ -35,8 +35,8 @@ class CLIPScoreMetric(IQAPytorchMetric):
 
     def _compute_scores(
         self,
-        rendered_images: List[Union[str, Image.Image]],
-        caption_list: List[str],
+        rendered_images: list[str | Image.Image],
+        caption_list: list[str],
     ) -> float:
         imgs = self._process_image(rendered_images)
 

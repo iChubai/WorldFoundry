@@ -64,7 +64,7 @@ class Cosmos3CameraAdapter:
             payload_type="cosmos3_camera_pose_actions",
             payload={
                 "action_mode": "forward_dynamics",
-                "action_chunk_size": int(len(actions)),
+                "action_chunk_size": len(actions),
                 "domain_name": "camera_pose",
                 "raw_actions": actions,
                 "resolution_tier": 480,

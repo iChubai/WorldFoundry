@@ -7,15 +7,15 @@ References:
 """
 
 import warnings
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce
 from piq.functional import crop_patches
+from piq.utils import _reduce, _validate_input
 
 
 class PieAPPModel(nn.Module):
@@ -55,7 +55,7 @@ class PieAPPModel(nn.Module):
         # Term for numerical stability
         self.EPS = 1e-6
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         r"""
         Forward pass a batch of square patches with shape :math:`(N, C, F, F)`.
 
@@ -91,7 +91,7 @@ class PieAPPModel(nn.Module):
 
     def compute_difference(
         self, features_diff: torch.Tensor, weights_diff: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         r"""
         Args:
             features_diff: Tensor. Shape :math:`(N, C_1)`
@@ -143,7 +143,7 @@ class PieAPP(_Loss):
     _weights_url = "https://github.com/photosynthesis-team/piq/releases/download/v0.5.4/PieAPPv0.1.pth"
 
     def __init__(
-        self, reduction: str = "mean", data_range: Union[int, float] = 1.0, stride: int = 27, enable_grad: bool = False
+        self, reduction: str = "mean", data_range: int | float = 1.0, stride: int = 27, enable_grad: bool = False
     ) -> None:
         super().__init__()
 
@@ -195,11 +195,11 @@ class PieAPP(_Loss):
         weights = weights.reshape(N, -1)
 
         # Scale scores, then average across patches
-        loss = torch.stack([(d * w).sum() / w.sum() for d, w in zip(distances, weights)])
+        loss = torch.stack([(d * w).sum() / w.sum() for d, w in zip(distances, weights, strict=False)])
 
         return _reduce(loss, self.reduction)
 
-    def get_features(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def get_features(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         r"""
 
         Args:

@@ -26,11 +26,11 @@ from .helpers import get_kwarg, vassert, vprint
 from .registry import (
     DATASETS_REGISTRY,
     FEATURE_EXTRACTORS_REGISTRY,
-    SAMPLE_SIMILARITY_REGISTRY,
     INTERPOLATION_REGISTRY,
     NOISE_SOURCE_REGISTRY,
+    SAMPLE_SIMILARITY_REGISTRY,
 )
-from .utils_torch import torch_maybe_compile, torch_atomic_save
+from .utils_torch import torch_atomic_save, torch_maybe_compile
 
 DEFAULT_FEATURE_EXTRACTOR = {
     "isc": "inception-v3-compat",
@@ -312,7 +312,7 @@ def prepare_input_from_descriptor(input_desc, **kwargs):
 
 def prepare_input_descriptor_from_input_id(input_id, **kwargs):
     vassert(
-        type(input_id) is int or type(input_id) is str and input_id in DATASETS_REGISTRY,
+        type(input_id) is int or (type(input_id) is str and input_id in DATASETS_REGISTRY),
         "Input can be either integer (1 or 2) specifying the first or the second set of kwargs, or a string as a "
         "shortcut for registered datasets",
     )
@@ -341,7 +341,7 @@ def resolve_feature_extractor(**kwargs):
                 default_fe = DEFAULT_FEATURE_EXTRACTOR[metric]
                 vassert(out in (None, default_fe), "Cannot have several feature extractors in one call")
                 out = default_fe
-        vassert(out is not None, f"Feature extractor was not resolved")
+        vassert(out is not None, "Feature extractor was not resolved")
     vassert(out in FEATURE_EXTRACTORS_REGISTRY, f'Feature extractor "{out}" not registered')
     return out
 
@@ -386,12 +386,12 @@ def cache_lookup_group_recompute_all_on_any_miss(cached_filename_prefix, item_na
     cached_paths = [os.path.join(cache_root, cached_filename_prefix + a + ".pt") for a in item_names]
     if all([os.path.exists(a) for a in cached_paths]):
         out = {}
-        for n, p in zip(item_names, cached_paths):
+        for n, p in zip(item_names, cached_paths, strict=False):
             vprint(verbose, f"Loading cached {p}")
             out[n] = torch.load(p, map_location="cpu", weights_only=False)
         return out
     items = fn_recompute()
-    for n, p in zip(item_names, cached_paths):
+    for n, p in zip(item_names, cached_paths, strict=False):
         vprint(verbose, f"Caching {p}")
         torch_atomic_save(items[n], p)
     return items

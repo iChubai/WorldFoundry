@@ -8,14 +8,15 @@ GPT: 3 prompts → majority vote → GPT verdict
 Final: Gemini verdict AND GPT verdict must both be True
 """
 
-import os
-import time
 import base64
+import os
 import tempfile
-from pathlib import Path
-from typing import Dict, Optional, Tuple, List
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 import cv2
 
 # Suppress gRPC fork warnings when using parallel execution
@@ -23,12 +24,12 @@ os.environ["GRPC_VERBOSITY"] = "ERROR"
 os.environ["GLOG_minloglevel"] = "2"
 
 import google.generativeai as genai
-from PIL import Image
 from openai import OpenAI
+from PIL import Image
 
 
 class GeminiGPTDoubleEnsemble:
-    def __init__(self, gemini_api_key: Optional[str] = None, openai_api_key: Optional[str] = None):
+    def __init__(self, gemini_api_key: str | None = None, openai_api_key: str | None = None):
         """Initialize double ensemble evaluator with both API keys."""
         # Initialize Gemini
         if gemini_api_key is None:
@@ -47,17 +48,17 @@ class GeminiGPTDoubleEnsemble:
 
         self.gpt_model = "gpt-5.2"
 
-        print(f"Using DOUBLE ENSEMBLE:")
-        print(f"  - Gemini: 3 prompts → majority vote")
-        print(f"  - GPT: 3 prompts → majority vote")
-        print(f"  - Final: Both must agree (unanimous)")
+        print("Using DOUBLE ENSEMBLE:")
+        print("  - Gemini: 3 prompts → majority vote")
+        print("  - GPT: 3 prompts → majority vote")
+        print("  - Final: Both must agree (unanimous)")
 
     def _encode_image(self, image_path: str) -> str:
         """Encode image to base64 for OpenAI API."""
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode("utf-8")
 
-    def _extract_frames(self, video_path: str, frame_interval: int = 5) -> List[str]:
+    def _extract_frames(self, video_path: str, frame_interval: int = 5) -> list[str]:
         """Extract frames from video at regular intervals."""
         cap = cv2.VideoCapture(video_path)
         frame_paths = []
@@ -87,7 +88,7 @@ class GeminiGPTDoubleEnsemble:
 
         return frame_paths
 
-    def predict_expected_process(self, image_path: str, action_prompt: Optional[str] = None) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: str | None = None) -> tuple[str, str]:
         """Use Gemini to predict expected process (single call, not ensemble)."""
         start_time = time.time()
 
@@ -122,7 +123,7 @@ After your full explanation, provide a one-sentence summary on the last line in 
 Process: [concise one-sentence description of the expected evolution]"""
 
         # Call Gemini
-        print(f"    Calling Gemini for process prediction...")
+        print("    Calling Gemini for process prediction...")
         try:
             image = Image.open(image_path)
             response = self.gemini_model.generate_content([prompt, image])
@@ -149,7 +150,7 @@ Process: [concise one-sentence description of the expected evolution]"""
         print("    Warning: Could not find 'Process:' line, using full response")
         return response_text
 
-    def _get_verification_prompts(self, expected_process: str, model_type: str) -> List[str]:
+    def _get_verification_prompts(self, expected_process: str, model_type: str) -> list[str]:
         """Generate 3 different prompt variations for ensemble voting."""
         # Determine occlusion question based on model type
         if model_type in ["veo", "sora"]:
@@ -240,17 +241,17 @@ EXPLANATION: [Your analysis]"""
 
     def _verify_with_gemini_ensemble(
         self, video_path: str, expected_process: str, model_type: str
-    ) -> Tuple[Dict, bool]:
+    ) -> tuple[dict, bool]:
         """Run Gemini 3-prompt ensemble with majority voting."""
         # Upload video file
         upload_start = time.time()
-        print(f"    Uploading video for Gemini...")
+        print("    Uploading video for Gemini...")
         video_file = genai.upload_file(path=video_path)
         upload_time = time.time() - upload_start
         print(f"    Upload took {upload_time:.1f}s")
 
         # Wait for video processing
-        print(f"    Waiting for video processing...")
+        print("    Waiting for video processing...")
         wait_count = 0
         while video_file.state.name == "PROCESSING":
             time.sleep(1)
@@ -260,7 +261,7 @@ EXPLANATION: [Your analysis]"""
             video_file = genai.get_file(video_file.name)
 
         if video_file.state.name == "FAILED":
-            raise ValueError(f"Video processing failed")
+            raise ValueError("Video processing failed")
 
         # Get 3 prompt variations
         prompts = self._get_verification_prompts(expected_process, model_type)
@@ -289,7 +290,7 @@ EXPLANATION: [Your analysis]"""
                 results.append(
                     {
                         "prompt_id": i,
-                        "response": f"ERROR: {str(e)}",
+                        "response": f"ERROR: {e!s}",
                         "verdict": None,
                         "time": time.time() - verify_start,
                     }
@@ -316,8 +317,8 @@ EXPLANATION: [Your analysis]"""
         }, final_verdict
 
     def _verify_with_gpt_ensemble(
-        self, frame_paths: List[str], expected_process: str, model_type: str
-    ) -> Tuple[Dict, bool]:
+        self, frame_paths: list[str], expected_process: str, model_type: str
+    ) -> tuple[dict, bool]:
         """Run GPT 3-prompt ensemble with majority voting using frames."""
         # Get 3 prompt variations
         prompts = self._get_verification_prompts(expected_process, model_type)
@@ -367,7 +368,7 @@ EXPLANATION: [Your analysis]"""
                 results.append(
                     {
                         "prompt_id": i,
-                        "response": f"ERROR: {str(e)}",
+                        "response": f"ERROR: {e!s}",
                         "verdict": None,
                         "time": time.time() - verify_start,
                     }
@@ -395,7 +396,7 @@ EXPLANATION: [Your analysis]"""
 
     def verify_process_in_video_double_ensemble(
         self, video_path: str, expected_process: str, model_type: str = "unknown"
-    ) -> Tuple[Dict, bool]:
+    ) -> tuple[dict, bool]:
         """
         Double ensemble verification:
         1. Gemini: 3 prompts → majority vote
@@ -403,12 +404,12 @@ EXPLANATION: [Your analysis]"""
         3. Final: Both must agree (unanimous)
         """
         # Extract frames first (for GPT)
-        print(f"    Extracting frames for GPT...")
+        print("    Extracting frames for GPT...")
         frame_paths = self._extract_frames(video_path, frame_interval=5)
         print(f"    Extracted {len(frame_paths)} frames")
 
         # Run both ensembles in parallel
-        print(f"    Running both model ensembles (in parallel)...")
+        print("    Running both model ensembles (in parallel)...")
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             gemini_future = executor.submit(self._verify_with_gemini_ensemble, video_path, expected_process, model_type)
@@ -486,7 +487,7 @@ EXPLANATION: [Your analysis]"""
         else:
             return "unknown"
 
-    def evaluate_task(self, task_data: Dict) -> Dict:
+    def evaluate_task(self, task_data: dict) -> dict:
         """
         Evaluate a single task with double ensemble.
 

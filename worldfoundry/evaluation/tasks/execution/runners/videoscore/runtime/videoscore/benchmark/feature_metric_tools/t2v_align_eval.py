@@ -1,7 +1,8 @@
-import numpy as np
-from PIL import Image
-import torch.nn.functional as F
 from typing import List
+
+import numpy as np
+import torch.nn.functional as F
+from PIL import Image
 
 NUM_ASPECT = 5
 ROUND_DIGIT = 3
@@ -22,7 +23,7 @@ def clip_score(
     model,
     tokenizer,
     text: str,
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     device = model.device
     input_t = tokenizer(text=text, max_length=MAX_LENGTH, truncation=True, return_tensors="pt", padding=True).to(device)
@@ -52,7 +53,7 @@ def x_clip_score(
     tokenizer,
     processor,
     text: str,
-    frame_path_list: List[str],
+    frame_path_list: list[str],
 ):
     def _read_video_frames(frame_paths, max_frames):
         total_frames = len(frame_paths)

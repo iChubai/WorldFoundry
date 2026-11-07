@@ -9,14 +9,14 @@ into multiple per-frame motions with the same per-step speeds used by
 HY-WorldPlay-New (forward_speed=0.08, yaw_speed=3°, pitch_speed=3°).
 """
 
-import numpy as np
-import sys
 import os
+import sys
+
+import numpy as np
 
 # Add HY-WorldPlay-New to path
 sys.path.insert(0, "<path_to_your_HY-WorldPlay_repo>/hyvideo")
 from generate_custom_trajectory import generate_camera_trajectory_local
-
 
 # Per-frame motion speeds (same as HY-WorldPlay-New's parse_pose_string)
 FORWARD_SPEED = 0.08

@@ -19,7 +19,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEPTH_ANYTHING_3_SRC = REPO_ROOT / "Depth-Anything-3" / "src"
 
@@ -153,7 +152,7 @@ def extract_camera_trajectory(
     extrinsics = as_homogeneous(np.asarray(prediction.extrinsics, dtype=np.float32))
     poses_c2w = affine_inverse_np(extrinsics)
 
-    trajectory = {f"frame{frame_idx}": pose.tolist() for frame_idx, pose in zip(frame_indices, poses_c2w)}
+    trajectory = {f"frame{frame_idx}": pose.tolist() for frame_idx, pose in zip(frame_indices, poses_c2w, strict=False)}
 
     resolved_output_path.write_text(
         json.dumps(trajectory, ensure_ascii=False, indent=2) + "\n",

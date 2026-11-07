@@ -1,11 +1,12 @@
-from inspect import isfunction
 import math
+from inspect import isfunction
+from typing import Any, Optional
+
 import torch
 import torch as th
 import torch.nn.functional as F
-from torch import nn, einsum
 from einops import rearrange, repeat
-from typing import Optional, Any
+from torch import einsum, nn
 
 try:
     import xformers
@@ -18,8 +19,8 @@ except:
 from src.modules.utils import (
     checkpoint,
     conv_nd,
-    zero_module,
     normalization,
+    zero_module,
 )
 
 
@@ -28,7 +29,7 @@ def exists(val):
 
 
 def uniq(arr):
-    return {el: True for el in arr}.keys()
+    return dict.fromkeys(arr, True).keys()
 
 
 def default(val, d):
@@ -366,7 +367,7 @@ class CrossAttention(nn.Module):
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
         self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
-        self.attention_op: Optional[Any] = None
+        self.attention_op: Any | None = None
 
     def forward(self, x, context=None, mask=None):
         h = self.heads
@@ -1174,7 +1175,7 @@ class QKVAttention(nn.Module):
 
         if use_tempoal_causal_attn:
             # weight = torch.tril(weight)
-            assert mask is None, f"Not implemented for merging two masks!"
+            assert mask is None, "Not implemented for merging two masks!"
             mask = torch.tril(torch.ones(weight.shape))
         else:
             if mask is not None:  # only keep upper-left matrix

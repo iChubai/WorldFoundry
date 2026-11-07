@@ -2,23 +2,24 @@
 # "export $(grep -v '^#' .env | xargs)"
 # in the shell, please run it first!
 
+import json
+import os
 from argparse import Namespace
+from collections import defaultdict
+from pathlib import Path
+
 import fire
 import numpy as np
-from collections import defaultdict
 from omegaconf import OmegaConf
-import os
-from pathlib import Path
-import json
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.utils import (
-    print_banner,
-)
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
     check_model,
-    type2model,
     get_model2type,
+    type2model,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.utils import (
+    print_banner,
 )
 
 worldscore_list = {
@@ -89,7 +90,7 @@ def calculate_worldscore(model_name: str, visual_movement_list: list[str], calcu
     # Interpolate environment variables in the YAML file
     config = OmegaConf.to_container(config, resolve=True)
 
-    scores = {aspect: 0 for movement in worldscore_list.keys() for aspect in worldscore_list[movement]}
+    scores = {aspect: 0 for movement in worldscore_list for aspect in worldscore_list[movement]}
     for visual_movement in visual_movement_list:
         root_path = Path(f"{config['runs_root']}/{config['output_dir']}/{visual_movement}")
 
@@ -123,7 +124,7 @@ def calculate_worldscore(model_name: str, visual_movement_list: list[str], calcu
                                                 continue
 
                                             metrics_results[aspect][metric_name].append(metric_score)
-                                except Exception as e:
+                                except Exception:
                                     pass
             calculate_mean_scores(metrics_results, visual_movement, scores, calculate_raw_score)
 
@@ -152,7 +153,7 @@ def calculate_worldscore(model_name: str, visual_movement_list: list[str], calcu
                                             continue
 
                                         metrics_results[aspect][metric_name].append(metric_score)
-                            except Exception as e:
+                            except Exception:
                                 pass
             calculate_mean_scores(metrics_results, visual_movement, scores, calculate_raw_score)
 

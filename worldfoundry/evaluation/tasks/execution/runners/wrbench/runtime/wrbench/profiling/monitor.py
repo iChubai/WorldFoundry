@@ -10,14 +10,14 @@ import socket
 import subprocess
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from .stage import utc_now_iso
 
-
 RESOURCE_PROFILE_SCHEMA_VERSION = "wrbench_generation_resource_profile_v1"
-SampleFn = Callable[[Optional[list[str]]], list[dict[str, Any]]]
+SampleFn = Callable[[list[str] | None], list[dict[str, Any]]]
 
 
 def run_profiled_command(

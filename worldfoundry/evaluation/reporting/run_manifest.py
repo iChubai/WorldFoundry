@@ -7,7 +7,9 @@ independently verified.
 
 from __future__ import annotations
 
+import contextlib
 import importlib
+import itertools
 import os
 import platform
 import re
@@ -89,7 +91,7 @@ def is_sensitive_key(key: str) -> bool:
     )
     if any(segment in _SENSITIVE_KEY_SEGMENTS for segment in segments):
         return True
-    return any(pair in _SENSITIVE_KEY_SEGMENT_PAIRS for pair in zip(segments, segments[1:], strict=False))
+    return any(pair in _SENSITIVE_KEY_SEGMENT_PAIRS for pair in itertools.pairwise(segments))
 
 
 def _redacted_literal(value: str) -> str:
@@ -142,11 +144,16 @@ def _redact_sequence(value: Sequence[Any]) -> list[Any]:
     index = 0
     while index < len(value):
         item = value[index]
-        if isinstance(item, str) and item.startswith("--") and "=" not in item:
-            if is_sensitive_key(item.lstrip("-")) and index + 1 < len(value):
-                redacted.extend((item, "<redacted>"))
-                index += 2
-                continue
+        if (
+            isinstance(item, str)
+            and item.startswith("--")
+            and "=" not in item
+            and is_sensitive_key(item.lstrip("-"))
+            and index + 1 < len(value)
+        ):
+            redacted.extend((item, "<redacted>"))
+            index += 2
+            continue
         redacted.append(redact_secrets(item))
         index += 1
     return redacted
@@ -268,10 +275,9 @@ def _torch_environment() -> dict[str, Any]:
             pass
     cudnn = getattr(getattr(torch, "backends", None), "cudnn", None)
     if cudnn is not None:
-        try:
+        # cuDNN probing is optional metadata.
+        with contextlib.suppress(Exception):
             cuda_payload["cudnn_version"] = cudnn.version()
-        except Exception:  # cuDNN probing is optional metadata.
-            pass
     return {"torch": torch_payload, "cuda": cuda_payload}
 
 

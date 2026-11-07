@@ -164,9 +164,12 @@ def _best_by_metric(
             metric = _mapping(_mapping(_mapping(summary.get("metrics")).get("per_metric")).get(metric_id))
             if row.get("score_valid") is False or metric.get("valid") is False:
                 continue
-            if metric.get("n_total") is not None and metric.get("n_valid") is not None:
-                if metric["n_valid"] < metric["n_total"]:
-                    continue
+            if (
+                metric.get("n_total") is not None
+                and metric.get("n_valid") is not None
+                and metric["n_valid"] < metric["n_total"]
+            ):
+                continue
             value = _number_or_none(_mapping(row.get("metrics")).get(metric_id))
             if value is not None:
                 candidates.append((float(value), row))

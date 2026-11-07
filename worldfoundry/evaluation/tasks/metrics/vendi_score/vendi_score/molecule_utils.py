@@ -1,7 +1,11 @@
 import numpy as np
-from rdkit import Chem, DataStructs, rdBase
-from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
-from vendi_score.data_utils import Example
+
+_rdkit = __import__("rdkit", fromlist=["Chem", "DataStructs", "rdBase"])
+Chem, DataStructs, rdBase = _rdkit.Chem, _rdkit.DataStructs, _rdkit.rdBase
+GetMorganFingerprintAsBitVect = __import__(
+    "rdkit.Chem.AllChem", fromlist=["GetMorganFingerprintAsBitVect"]
+).GetMorganFingerprintAsBitVect
+Example = __import__("vendi_score.data_utils", fromlist=["Example"]).Example
 
 
 def disable_rdkit_log():
@@ -63,7 +67,7 @@ def get_tanimoto_K(mols, fp="morgan"):
     elif fp == "morgan":
         fps = [GetMorganFingerprintAsBitVect(x, 2, nBits=1024) for x in mols]
     else:
-        fps = [fp(x) for e in mols]
+        fps = [fp(x) for x in mols]
     for i in range(N):
         for j in range(i, N):
             K[i, j] = K[j, i] = DataStructs.FingerprintSimilarity(fps[i], fps[j])

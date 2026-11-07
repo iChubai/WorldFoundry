@@ -34,7 +34,7 @@ import models  # noqa: F401
 import utils
 from bench_utils.cas_utils import final_merge, final_test
 from dataset import build_dataset
-from engine_for_finetuning import final_test, merge, train_one_epoch, validation_one_epoch
+from engine_for_finetuning import merge, train_one_epoch, validation_one_epoch
 from optim_factory import (
     LayerDecayValueAssigner,
     create_optimizer,

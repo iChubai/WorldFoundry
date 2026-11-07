@@ -91,10 +91,7 @@ class LIBEROProBenchmark(LIBEROBenchmark):
         self._perturbation = self._resolve_perturbation(perturbation)
 
         # Construct the full suite name for LIBERO-Pro based on whether a perturbation is applied.
-        if self._perturbation:
-            full_suite = f"{suite}_{self._perturbation}"
-        else:
-            full_suite = suite
+        full_suite = f"{suite}_{self._perturbation}" if self._perturbation else suite
 
         # Infer the base suite to correctly look up the maximum number of steps.
         self._base_suite = self._infer_base_suite(suite)

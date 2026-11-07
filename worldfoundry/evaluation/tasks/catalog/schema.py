@@ -4,7 +4,7 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api.json_contract import JsonContract, require_mapping, to_plain
 from worldfoundry.evaluation.api.json_contract import tuple_of_str as _tuple_of_str
@@ -1011,7 +1011,7 @@ class BenchmarkRunnerSpec(JsonSerializable):
             repo_url=runner.get("repo_url", runtime.get("repo_url", runtime.get("official_repo_url"))),
             repo_revision=runner.get("repo_revision", runtime.get("repo_revision", runtime.get("revision"))),
             clone_dir=runner.get("clone_dir", runtime.get("clone_dir", runtime.get("root"))),
-            install_commands=install_commands,
+            install_commands=cast(tuple[Any, ...], install_commands),
             env=_require_mapping(runner.get("env", runtime.get("env", {})), "BenchmarkRunnerSpec.env"),
             assets=_require_mapping(runner.get("assets", runtime.get("assets", {})), "BenchmarkRunnerSpec.assets"),
             dependency_profile=runner.get("dependency_profile", runtime.get("dependency_profile")),

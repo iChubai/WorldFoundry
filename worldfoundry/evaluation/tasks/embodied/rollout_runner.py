@@ -104,12 +104,12 @@ class EmbodiedClosedLoopRunner(WorldModelRunner):
         self._load_benchmark_class()
 
     @property
-    def model_id(self) -> str:
+    def model_id(self) -> str:  # ty: ignore[invalid-property-type-override]  # Identity is read-only configuration.
         """Configured model identifier."""
         return self._model_id
 
     @property
-    def capabilities(self) -> Collection[str]:
+    def capabilities(self) -> Collection[str]:  # ty: ignore[invalid-property-type-override]  # Capability tags are read-only configuration.
         """Supported runner capability tags."""
         return self._capabilities
 

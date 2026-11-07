@@ -13,6 +13,7 @@ Success is detected via dm_control's ``timestep.last()`` termination signal.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 from typing import Any
@@ -93,10 +94,9 @@ class VLABenchBenchmark(BaseSimulator):
         degraded states.
         """
         if self._env is not None:
-            try:
+            # Ignore errors during closing if the environment is already in a bad state.
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                pass  # Ignore errors during closing if the environment is already in a bad state.
             self._env = None
 
     def _ensure_vlabench(self) -> None:
@@ -107,15 +107,15 @@ class VLABenchBenchmark(BaseSimulator):
         """
         # Importing VLABench modules dynamically to avoid potential issues if not installed
         # and to allow for custom environment setup before imports.
-        import VLABench  # triggers VLABENCH_ROOT setup
-        import VLABench.robots  # registers robot classes with VLABench
-        import VLABench.tasks  # noqa: F401 — registers task classes with VLABench
+        __import__("VLABench")  # triggers VLABENCH_ROOT setup
+        __import__("VLABench.robots")  # registers robot classes with VLABench
+        __import__("VLABench.tasks")  # registers task classes with VLABench
 
         # Monkey-patch to skip PCD generator (Open3D segfaults in headless
         # containers and we never request point clouds). This prevents crashes
         # when running in environments without GUI/Open3D support or when Open3D
         # causes conflicts.
-        from VLABench.envs.dm_env import LM4ManipDMEnv
+        LM4ManipDMEnv = __import__("VLABench.envs.dm_env", fromlist=["LM4ManipDMEnv"]).LM4ManipDMEnv
 
         if not hasattr(LM4ManipDMEnv, "_pcd_patched"):
             # Define a stub class that mimics the necessary attribute for the PCD generator.
@@ -148,7 +148,7 @@ class VLABenchBenchmark(BaseSimulator):
             The initial observation from the environment after reset.
         """
         self._ensure_vlabench()
-        from VLABench.envs import load_env
+        load_env = __import__("VLABench.envs", fromlist=["load_env"]).load_env
 
         task_name = task["name"]
 
@@ -186,7 +186,11 @@ class VLABenchBenchmark(BaseSimulator):
         Returns:
             A StepResult containing the new observation, reward, done status, and info.
         """
-        from VLABench.utils.utils import euler_to_quaternion, quaternion_to_euler
+        rotation_utils = __import__("VLABench.utils.utils", fromlist=["euler_to_quaternion", "quaternion_to_euler"])
+        euler_to_quaternion, quaternion_to_euler = (
+            rotation_utils.euler_to_quaternion,
+            rotation_utils.quaternion_to_euler,
+        )
 
         # Extract the raw 7D action from the input dictionary.
         raw_action = action.get("actions", action.get("action"))

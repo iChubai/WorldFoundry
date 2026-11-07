@@ -97,7 +97,7 @@ class LIBEROPlusBenchmark(LIBEROBenchmark):
 
         # Lazy import `libero` package because it is only available inside the
         # benchmark Docker image, ensuring the benchmark runs outside without it.
-        from libero.libero import benchmark as libero_benchmark
+        libero_benchmark = __import__("libero.libero", fromlist=["benchmark"]).benchmark
 
         # Determine the path to the task_classification.json file relative to the libero benchmark package.
         benchmark_dir = Path(libero_benchmark.__file__).parent

@@ -26,8 +26,9 @@ Success modes (set via model server ``get_observation_params()``):
 
 from __future__ import annotations
 
+import contextlib
 from itertools import product
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -208,11 +209,9 @@ class SimplerEnvBenchmark(BaseSimulator):
     def cleanup(self) -> None:
         """Safely close and clean up the active Simpler environment."""
         if self._env is not None:
-            try:
+            # Ignore errors during cleanup
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                # Ignore errors during cleanup
-                pass
             self._env = None
 
     # ------------------------------------------------------------------
@@ -291,14 +290,14 @@ class SimplerEnvBenchmark(BaseSimulator):
         Returns:
             A tuple of (gym_env, reset_kwargs).
         """
-        import gymnasium as gym
-        import simpler_env  # noqa: F401 -- registers ManiSkill2 envs
+        gym = __import__("gymnasium")
+        __import__("simpler_env")  # registers ManiSkill2 envs
 
         # Construct make_kwargs, merging common args and VA-specific build kwargs
-        make_kwargs = {"obs_mode": "rgbd", **self.env_build_kwargs, **self._common_make_kwargs()}
+        make_kwargs: dict[str, Any] = {"obs_mode": "rgbd", **self.env_build_kwargs, **self._common_make_kwargs()}
         if self.scene_name is not None:
             make_kwargs["scene_name"] = self.scene_name
-        env = gym.make(self.env_name, **make_kwargs)
+        env = gym.make(cast(str, self.env_name), **make_kwargs)
 
         # Build reset_kwargs using the precomputed VA grid if available
         reset_kwargs = self._build_va_reset_kwargs(task) if self._va_grid is not None else {}
@@ -313,7 +312,7 @@ class SimplerEnvBenchmark(BaseSimulator):
         Returns:
             A tuple of (simpler_env, reset_kwargs).
         """
-        import simpler_env
+        simpler_env = __import__("simpler_env")
 
         env = simpler_env.make(self.task_name, **self._common_make_kwargs())
 
@@ -408,9 +407,9 @@ class SimplerEnvBenchmark(BaseSimulator):
         if self._env is None:
             return None
         try:
-            from simpler_env.utils.env.observation_utils import (
-                get_image_from_maniskill2_obs_dict,
-            )
+            get_image_from_maniskill2_obs_dict = __import__(
+                "simpler_env.utils.env.observation_utils", fromlist=["get_image_from_maniskill2_obs_dict"]
+            ).get_image_from_maniskill2_obs_dict
 
             # Attempt to extract the primary image from the ManiSkill2 observation dictionary
             return np.asarray(get_image_from_maniskill2_obs_dict(self._env, raw_obs))
@@ -428,9 +427,9 @@ class SimplerEnvBenchmark(BaseSimulator):
         Returns:
             A standard observation dictionary containing image, language description, and optional state.
         """
-        from simpler_env.utils.env.observation_utils import (
-            get_image_from_maniskill2_obs_dict,
-        )
+        get_image_from_maniskill2_obs_dict = __import__(
+            "simpler_env.utils.env.observation_utils", fromlist=["get_image_from_maniskill2_obs_dict"]
+        ).get_image_from_maniskill2_obs_dict
 
         # Extract the primary image from the raw observation
         image = get_image_from_maniskill2_obs_dict(self._env, raw_obs)

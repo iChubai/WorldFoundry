@@ -349,10 +349,8 @@ def _metric_mappings(value: Any) -> tuple[Mapping[str, Any], ...]:
         metrics = []
         # Convert a dictionary of metrics to a list of mappings, ensuring each has an 'id'.
         for name, metric in value.items():
-            if isinstance(metric, Mapping):
-                metric_mapping = dict(metric)
-            else:
-                metric_mapping = {"value": metric}  # If metric is scalar, wrap it.
+            # If metric is scalar, wrap it.
+            metric_mapping = dict(metric) if isinstance(metric, Mapping) else {"value": metric}
             metric_mapping.setdefault("id", str(name))
             metrics.append(metric_mapping)
         return tuple(metrics)

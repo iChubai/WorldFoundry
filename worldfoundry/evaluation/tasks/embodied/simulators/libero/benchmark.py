@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import contextlib
 import math
 import os
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -143,12 +144,10 @@ class LIBEROBenchmark(BaseSimulator):
         references to prevent resource leaks.
         """
         if self._env is not None:
-            try:
+            # Ignore errors during close, as env might already be partially destroyed
+            # or in an inconsistent state, especially during abnormal termination.
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                # Ignore errors during close, as env might already be partially destroyed
-                # or in an inconsistent state, especially during abnormal termination.
-                pass
             self._env = None
 
     def _init_libero(self) -> None:
@@ -174,9 +173,9 @@ class LIBEROBenchmark(BaseSimulator):
             kwargs.setdefault("weights_only", False)
             return _original_torch_load(*args, **kwargs)
 
-        torch.load = _patched_load
+        cast(Any, torch).load = _patched_load
 
-        from libero.libero import benchmark
+        benchmark = __import__("libero.libero", fromlist=["benchmark"]).benchmark
 
         benchmark_dict = benchmark.get_benchmark_dict()
         self._task_suite = benchmark_dict[self.suite]()
@@ -225,8 +224,8 @@ class LIBEROBenchmark(BaseSimulator):
         """
         from pathlib import Path
 
-        from libero.libero import get_libero_path
-        from libero.libero.envs import OffScreenRenderEnv
+        get_libero_path = __import__("libero.libero", fromlist=["get_libero_path"]).get_libero_path
+        OffScreenRenderEnv = __import__("libero.libero.envs", fromlist=["OffScreenRenderEnv"]).OffScreenRenderEnv
 
         task_obj = task["task_obj"]
         task_id = task["task_id"]
@@ -291,11 +290,8 @@ class LIBEROBenchmark(BaseSimulator):
 
         # Discretize gripper action: -1 for open, 1 for close based on sign.
         # This maps the continuous gripper command to a discrete Robosuite gripper state.
-        if raw_action[-1] < 0:
-            gripper = -1.0
-        else:
-            gripper = 1.0
-        processed_action = raw_action[:-1] + [gripper]
+        gripper = -1.0 if raw_action[-1] < 0 else 1.0
+        processed_action = [*raw_action[:-1], gripper]
 
         assert self._env is not None
         obs, reward, done, info = self._env.step(processed_action)

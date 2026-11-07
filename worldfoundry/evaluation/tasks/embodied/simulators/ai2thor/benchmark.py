@@ -97,7 +97,7 @@ class AI2ThorBenchmark(BaseSimulator):
 
     def _import_controller(self) -> Any:
         try:
-            from ai2thor.controller import Controller
+            Controller = __import__("ai2thor.controller", fromlist=["Controller"]).Controller
         except ImportError as exc:
             raise ImportError(
                 "AI2-THOR is not installed. Install `ai2thor` in the active evaluation environment."
@@ -118,7 +118,7 @@ class AI2ThorBenchmark(BaseSimulator):
             kwargs["local_executable_path"] = self.executable_path
         if self.headless:
             try:
-                from ai2thor.platform import CloudRendering
+                CloudRendering = __import__("ai2thor.platform", fromlist=["CloudRendering"]).CloudRendering
 
                 kwargs["platform"] = CloudRendering
             except ImportError:

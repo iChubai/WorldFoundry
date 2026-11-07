@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -227,8 +227,11 @@ class Behavior1KBenchmark(BaseSimulator):
         """
         if self._available_tasks is not None:
             return
-        from gello.robots.sim_robot.og_teleop_utils import load_available_tasks
-        from omnigibson.macros import gm, macros
+        load_available_tasks = __import__(
+            "gello.robots.sim_robot.og_teleop_utils", fromlist=["load_available_tasks"]
+        ).load_available_tasks
+        macro_module = __import__("omnigibson.macros", fromlist=["gm", "macros"])
+        gm, macros = macro_module.gm, macro_module.macros
 
         # Match the official challenge eval defaults from learning/eval.py.
         # HEADLESS=True is critical: without it Isaac Sim tries to start
@@ -266,11 +269,17 @@ class Behavior1KBenchmark(BaseSimulator):
             description="BEHAVIOR Dataset ToS (one-time, ~35 GiB download).",
         )
         data_path.mkdir(parents=True, exist_ok=True)
-        from omnigibson.utils.asset_utils import (
-            download_2025_challenge_task_instances,
-            download_behavior_1k_assets,
-            download_omnigibson_robot_assets,
+        asset_utils = __import__(
+            "omnigibson.utils.asset_utils",
+            fromlist=[
+                "download_2025_challenge_task_instances",
+                "download_behavior_1k_assets",
+                "download_omnigibson_robot_assets",
+            ],
         )
+        download_2025_challenge_task_instances = asset_utils.download_2025_challenge_task_instances
+        download_behavior_1k_assets = asset_utils.download_behavior_1k_assets
+        download_omnigibson_robot_assets = asset_utils.download_omnigibson_robot_assets
 
         logger.info("Fetching BEHAVIOR-1K assets into %s", data_path)
         download_omnigibson_robot_assets()
@@ -296,7 +305,7 @@ class Behavior1KBenchmark(BaseSimulator):
         _orig_signal = None
         if threading.current_thread() is not threading.main_thread():
             _orig_signal = _signal.signal
-            _signal.signal = lambda *a, **kw: None
+            cast(Any, _signal).signal = lambda *a, **kw: None
 
         try:
             return self._make_env_inner(task_name)
@@ -317,19 +326,26 @@ class Behavior1KBenchmark(BaseSimulator):
         Returns:
             An instantiated environment object.
         """
-        import omnigibson as og
-        from gello.robots.sim_robot.og_teleop_cfg import DISABLED_TRANSITION_RULES
-        from gello.robots.sim_robot.og_teleop_utils import (
-            augment_rooms,
-            generate_robot_config,
-            get_task_relevant_room_types,
+        og = __import__("omnigibson")
+        DISABLED_TRANSITION_RULES = __import__(
+            "gello.robots.sim_robot.og_teleop_cfg", fromlist=["DISABLED_TRANSITION_RULES"]
+        ).DISABLED_TRANSITION_RULES
+        teleop_utils = __import__(
+            "gello.robots.sim_robot.og_teleop_utils",
+            fromlist=["augment_rooms", "generate_robot_config", "get_task_relevant_room_types"],
         )
-        from hydra.utils import instantiate
+        augment_rooms = teleop_utils.augment_rooms
+        generate_robot_config = teleop_utils.generate_robot_config
+        get_task_relevant_room_types = teleop_utils.get_task_relevant_room_types
+        instantiate = __import__("hydra.utils", fromlist=["instantiate"]).instantiate
         from omegaconf import OmegaConf
-        from omnigibson.learning.utils.eval_utils import (
-            PROPRIOCEPTION_INDICES,
-            generate_basic_environment_config,
+
+        eval_utils = __import__(
+            "omnigibson.learning.utils.eval_utils",
+            fromlist=["PROPRIOCEPTION_INDICES", "generate_basic_environment_config"],
         )
+        PROPRIOCEPTION_INDICES = eval_utils.PROPRIOCEPTION_INDICES
+        generate_basic_environment_config = eval_utils.generate_basic_environment_config
 
         # Disable a curated set of transition rules to match the data-collection setup for official evaluation.
         for rule in DISABLED_TRANSITION_RULES:
@@ -434,9 +450,13 @@ class Behavior1KBenchmark(BaseSimulator):
         import json
         import os
 
-        import omnigibson as og
-        from omnigibson.utils.asset_utils import get_task_instance_path
-        from omnigibson.utils.python_utils import recursively_convert_to_torch
+        og = __import__("omnigibson")
+        get_task_instance_path = __import__(
+            "omnigibson.utils.asset_utils", fromlist=["get_task_instance_path"]
+        ).get_task_instance_path
+        recursively_convert_to_torch = __import__(
+            "omnigibson.utils.python_utils", fromlist=["recursively_convert_to_torch"]
+        ).recursively_convert_to_torch
 
         env = self._env
         task = env.task
@@ -546,7 +566,9 @@ class Behavior1KBenchmark(BaseSimulator):
             The image numpy array (H, W, 3) in uint8 format, or None if no suitable camera
             image is found.
         """
-        from omnigibson.learning.utils.eval_utils import flatten_obs_dict
+        flatten_obs_dict = __import__(
+            "omnigibson.learning.utils.eval_utils", fromlist=["flatten_obs_dict"]
+        ).flatten_obs_dict
 
         flat = flatten_obs_dict(raw_obs)
         for cam in self._camera_names:
@@ -579,7 +601,9 @@ class Behavior1KBenchmark(BaseSimulator):
             A standard observation dictionary containing images (per camera), task description,
             and optionally proprioceptive states.
         """
-        from omnigibson.learning.utils.eval_utils import flatten_obs_dict
+        flatten_obs_dict = __import__(
+            "omnigibson.learning.utils.eval_utils", fromlist=["flatten_obs_dict"]
+        ).flatten_obs_dict
 
         flat = flatten_obs_dict(raw_obs)
 

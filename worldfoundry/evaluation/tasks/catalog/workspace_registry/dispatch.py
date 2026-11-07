@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.execution.process import read_text_tail, run_logged_subprocess
 from worldfoundry.core.io.paths import project_root
@@ -246,10 +246,10 @@ def workspace_benchmark_runtime_hints() -> dict[str, dict[str, Any]]:
         "metrics": _catalog_metric_ids("vbench-plus-plus") or ["vbench_plus_plus_average"],
         "default_metrics": ["temporal_flickering"],
         "presets": {
-            **{variant: names for variant, names in sorted(variant_dimensions.items())},
+            **dict(sorted(variant_dimensions.items())),
             **plus_presets,
         },
-        "primary_presets": {variant: names for variant, names in sorted(variant_dimensions.items())},
+        "primary_presets": dict(sorted(variant_dimensions.items())),
         "variants": sorted(variant_dimensions),
         "default_variant": "long",
         "input_kind": "generated_video_dir_or_official_results",
@@ -366,7 +366,7 @@ def _run_classic_vbench(
         dimensions=tuple(dimensions),
         benchmark_id=_payload_get(payload, "benchmark_id") or "vbench",
         vbench_root=_first_non_empty(config.get("vbench_root"), config.get("runtime_root"))
-        or VBenchRunRequest.__dataclass_fields__["vbench_root"].default,
+        or cast(str | Path, VBenchRunRequest.__dataclass_fields__["vbench_root"].default),
         mode=mode,
         prompt=_first_non_empty(config.get("prompt"), _payload_get(payload, "prompt")),
         prompt_file=_first_non_empty(config.get("prompt_file"), config.get("prompt_path")),

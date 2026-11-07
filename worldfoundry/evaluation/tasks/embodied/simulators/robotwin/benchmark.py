@@ -17,9 +17,10 @@ import logging
 import os
 import sys
 import types
+from collections.abc import Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -264,7 +265,7 @@ def _patched_robot_set_planner(enabled: bool):
         return
 
     # Import the robot module dynamically as it might not be loaded yet.
-    import envs.robot.robot as robot_mod
+    robot_mod = __import__("envs.robot.robot", fromlist=["__name__"])
 
     # Store the original method to restore it later, ensuring proper cleanup.
     original = robot_mod.Robot.set_planner
@@ -293,7 +294,7 @@ def _patched_render_setup(enabled: bool):
         return
 
     # Import sapien.render dynamically.
-    import sapien.render as sapien_render
+    sapien_render = __import__("sapien.render", fromlist=["__name__"])
 
     # Store original functions to restore them later, ensuring proper cleanup.
     originals = {
@@ -313,10 +314,10 @@ def _patched_render_setup(enabled: bool):
 
     # Apply patches: replace set_camera_shader_dir to enforce 'default' and
     # make ray tracing settings no-ops to prevent expensive ray tracing initialization.
-    sapien_render.set_camera_shader_dir = _set_camera_shader_dir_fast
-    sapien_render.set_ray_tracing_samples_per_pixel = lambda _spp: None
-    sapien_render.set_ray_tracing_path_depth = lambda depth: None
-    sapien_render.set_ray_tracing_denoiser = lambda name: None
+    cast(Any, sapien_render).set_camera_shader_dir = _set_camera_shader_dir_fast
+    cast(Any, sapien_render).set_ray_tracing_samples_per_pixel = lambda _spp: None
+    cast(Any, sapien_render).set_ray_tracing_path_depth = lambda depth: None
+    cast(Any, sapien_render).set_ray_tracing_denoiser = lambda name: None
     try:
         yield
     finally:
@@ -415,7 +416,7 @@ class RoboTwinBenchmark(BaseSimulator):
         with _working_directory(robotwin_root):
             self._load_robotwin_config(robotwin_root)
 
-    def _load_robotwin_config(self, robotwin_root: str) -> None:
+    def _load_robotwin_config(self, robotwin_root: str | Path) -> None:
         import yaml
 
         # Load the task-specific configuration YAML.
@@ -431,9 +432,9 @@ class RoboTwinBenchmark(BaseSimulator):
         args["task_config"] = self.task_config
 
         # Resolve embodiment configurations based on the loaded YAML.
-        from envs import CONFIGS_PATH
+        CONFIGS_PATH = __import__("envs", fromlist=["CONFIGS_PATH"]).CONFIGS_PATH
 
-        embodiment_type = args.get("embodiment")
+        embodiment_type = cast(Sequence[Any], args.get("embodiment"))
         with open(os.path.join(CONFIGS_PATH, "_embodiment_config.yml")) as f:
             _embodiment_types = yaml.safe_load(f)
 
@@ -546,7 +547,9 @@ class RoboTwinBenchmark(BaseSimulator):
         # Full expert check — run oracle planner per seed to verify solvability.
         # This is an expensive process but ensures all generated tasks are solvable by the oracle.
         with _working_directory(self.robotwin_root):
-            from generate_episode_instructions import generate_episode_descriptions
+            generate_episode_descriptions = __import__(
+                "generate_episode_instructions", fromlist=["generate_episode_descriptions"]
+            ).generate_episode_descriptions
 
         env = self._create_env()
         tasks: list[dict[str, Any]] = []

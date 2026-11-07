@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import (
     AggregateResult,
@@ -101,20 +101,22 @@ def _nested_mappings(result: GenerationResult) -> tuple[Mapping[str, Any], ...]:
         A tuple of mappings, prioritized by likelihood of containing relevant metrics.
     """
     metadata = result.metadata if isinstance(result.metadata, Mapping) else {}
-    vla_va_wam = metadata.get("vla_va_wam") if isinstance(metadata.get("vla_va_wam"), Mapping) else {}
-    extra = metadata.get("extra") if isinstance(metadata.get("extra"), Mapping) else {}
+    vla_va_wam = (
+        cast(Mapping[str, Any], metadata.get("vla_va_wam")) if isinstance(metadata.get("vla_va_wam"), Mapping) else {}
+    )
+    extra = cast(Mapping[str, Any], metadata.get("extra")) if isinstance(metadata.get("extra"), Mapping) else {}
     return (
         metadata,
-        metadata.get("metrics") if isinstance(metadata.get("metrics"), Mapping) else {},
-        metadata.get("scores") if isinstance(metadata.get("scores"), Mapping) else {},
-        metadata.get("outputs") if isinstance(metadata.get("outputs"), Mapping) else {},
+        cast(Mapping[str, Any], metadata.get("metrics")) if isinstance(metadata.get("metrics"), Mapping) else {},
+        cast(Mapping[str, Any], metadata.get("scores")) if isinstance(metadata.get("scores"), Mapping) else {},
+        cast(Mapping[str, Any], metadata.get("outputs")) if isinstance(metadata.get("outputs"), Mapping) else {},
         vla_va_wam,
-        vla_va_wam.get("metrics") if isinstance(vla_va_wam.get("metrics"), Mapping) else {},
-        vla_va_wam.get("scores") if isinstance(vla_va_wam.get("scores"), Mapping) else {},
-        vla_va_wam.get("outputs") if isinstance(vla_va_wam.get("outputs"), Mapping) else {},
+        cast(Mapping[str, Any], vla_va_wam.get("metrics")) if isinstance(vla_va_wam.get("metrics"), Mapping) else {},
+        cast(Mapping[str, Any], vla_va_wam.get("scores")) if isinstance(vla_va_wam.get("scores"), Mapping) else {},
+        cast(Mapping[str, Any], vla_va_wam.get("outputs")) if isinstance(vla_va_wam.get("outputs"), Mapping) else {},
         extra,
-        extra.get("metrics") if isinstance(extra.get("metrics"), Mapping) else {},
-        extra.get("scores") if isinstance(extra.get("scores"), Mapping) else {},
+        cast(Mapping[str, Any], extra.get("metrics")) if isinstance(extra.get("metrics"), Mapping) else {},
+        cast(Mapping[str, Any], extra.get("scores")) if isinstance(extra.get("scores"), Mapping) else {},
     )
 
 

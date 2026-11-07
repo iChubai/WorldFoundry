@@ -153,6 +153,7 @@ class BaseSimulator(ABC):
         This method should be called at the end of an evaluation run to ensure
         proper resource management and avoid memory leaks. Defaults to a no-op.
         """
+        return None
 
     def get_action_spec(self) -> dict[str, Any]:
         """Get the expected action specification for the simulator.

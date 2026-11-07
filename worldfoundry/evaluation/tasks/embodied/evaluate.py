@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import (
@@ -23,7 +23,7 @@ from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import (
     execute_evaluate_run,
 )
 
-from .contracts import EmbodiedGenerationSpec
+from .contracts import ActionSpaceSpec, EmbodiedGenerationSpec, EvaluationTrack, RequestKind
 from .materialize import materialize_vla_va_wam_requests
 from .metrics import metric_suite
 
@@ -122,7 +122,7 @@ def _model_parameters(run_request: VlaVaWamRunRequest, spec: EmbodiedGenerationS
         A dictionary containing parameters formatted for the model runner.
     """
     return {
-        "track": spec.track.value,
+        "track": cast(EvaluationTrack, spec.track).value,
         "metadata_namespace": "vla_va_wam",
         "capabilities": list(spec.required_capabilities),
         **dict(run_request.model_parameters or {}),
@@ -145,9 +145,9 @@ def _benchmark_metadata(run_request: VlaVaWamRunRequest, spec: EmbodiedGeneratio
         "benchmark_id": run_request.benchmark_id or spec.task_name,
         "task_type": spec.task_name,
         "evaluation_protocol": "worldfoundry_evaluate_model",
-        "track": spec.track.value,
-        "request_kind": spec.kind.value,
-        "action_space": spec.action_space.to_dict(),
+        "track": cast(EvaluationTrack, spec.track).value,
+        "request_kind": cast(RequestKind, spec.kind).value,
+        "action_space": cast(ActionSpaceSpec, spec.action_space).to_dict(),
         "required_capabilities": list(spec.required_capabilities),
     }
 
@@ -165,7 +165,7 @@ def _model_metadata(run_request: VlaVaWamRunRequest, spec: EmbodiedGenerationSpe
     model_id = run_request.model_id
     metadata: dict[str, Any] = {
         "model_type": "world_model",
-        "evaluation_track": spec.track.value,
+        "evaluation_track": cast(EvaluationTrack, spec.track).value,
         "required_capabilities": list(spec.required_capabilities),
     }
     if model_id is not None:
@@ -207,7 +207,7 @@ def build_vla_va_wam_evaluate_request(
         model_parameters=_model_parameters(run_request, spec),
         model_runtime=run_request.model_runtime,
         model_config=run_request.model_config,
-        metrics=metric_suite(run_request.metric_ids, track=spec.track.value),
+        metrics=metric_suite(run_request.metric_ids, track=cast(EvaluationTrack, spec.track).value),
         benchmark=_benchmark_metadata(run_request, spec),
         model=_model_metadata(run_request, spec),
         dataset={

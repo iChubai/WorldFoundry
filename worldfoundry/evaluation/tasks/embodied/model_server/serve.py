@@ -8,7 +8,7 @@ import inspect
 import logging
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -72,7 +72,11 @@ async def _handle_connection(ws: Any, adapter: EmbodiedPolicyAdapter) -> None:
                 if callable(hook):
                     await _maybe_call(hook, message.payload)
             elif message.type == MessageType.OBSERVATION:
-                obs = message.payload.get("obs") if isinstance(message.payload.get("obs"), Mapping) else message.payload
+                obs = (
+                    cast(Mapping[str, Any], message.payload.get("obs"))
+                    if isinstance(message.payload.get("obs"), Mapping)
+                    else message.payload
+                )
                 instruction = str(
                     message.payload.get("instruction")
                     or message.payload.get("task_description")

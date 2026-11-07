@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -56,7 +56,7 @@ def _load_runtime_profile(benchmark_id: str) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _docker_defaults_for_benchmarks(benchmarks: list[Mapping[str, Any]]) -> dict[str, Any]:
+def _docker_defaults_for_benchmarks(benchmarks: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     defaults: dict[str, Any] = {}
     for bench in benchmarks:
         benchmark_id = str(bench.get("benchmark_id") or bench.get("id") or "")

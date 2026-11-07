@@ -7,7 +7,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api.json_contract import sha256_file as file_sha256
 from worldfoundry.evaluation.utils import jsonable, read_json, read_json_or_jsonl, write_json
@@ -209,8 +209,8 @@ class DatasetManifest:
             duplicate_sample_ids=tuple(data.get("duplicate_sample_ids") or ()),
             source_uri=data.get("source_uri"),
             license=data.get("license"),
-            access=data.get("access") if isinstance(data.get("access"), Mapping) else {},
-            metadata=data.get("metadata") if isinstance(data.get("metadata"), Mapping) else {},
+            access=cast(Mapping[str, Any], data.get("access")) if isinstance(data.get("access"), Mapping) else {},
+            metadata=cast(Mapping[str, Any], data.get("metadata")) if isinstance(data.get("metadata"), Mapping) else {},
             schema_version=str(data.get("schema_version", DATASET_MANIFEST_SCHEMA_VERSION)),
         )
 

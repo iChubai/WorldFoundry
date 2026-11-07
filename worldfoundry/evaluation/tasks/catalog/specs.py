@@ -455,7 +455,7 @@ def get_benchmark_zoo_cli_task(
             continue
         if benchmark_name in aliases or benchmark_name == entry.benchmark_id:
             return benchmark_zoo_entry_to_cli_task_dict(entry)
-    available = [f"{item}/{item}" for item in registry.keys()]
+    available = [f"{item}/{item}" for item in registry.keys()]  # noqa: SIM118 - Registry iteration yields entries, not keys.
     raise KeyError(f"Unknown benchmark '{task_type}/{benchmark_name}'. Available entries: {available}")
 
 

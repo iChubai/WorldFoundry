@@ -156,8 +156,8 @@ class KinetixBenchmark(BaseSimulator):
         if self._jax is not None:
             return
         # Perform JAX and JAX NumPy imports.
-        import jax
-        import jax.numpy as jnp
+        jax = __import__("jax")
+        jnp = __import__("jax.numpy", fromlist=["__name__"])
 
         self._jax = jax
         self._jnp = jnp
@@ -179,8 +179,8 @@ class KinetixBenchmark(BaseSimulator):
 
         # Kinetix environment related imports are done here to avoid circular dependencies
         # or early imports of heavy modules if KinetixBenchmark is only partially used.
-        from kinetix.environment import env as kenv
-        from kinetix.util.saving import load_from_json_file
+        kenv = __import__("kinetix.environment", fromlist=["env"]).env
+        load_from_json_file = __import__("kinetix.util.saving", fromlist=["load_from_json_file"]).load_from_json_file
 
         # Resolve the level file path and load its state and parameters.
         level_path = _resolve_level_path(level, self._rtc_worlds_dir)

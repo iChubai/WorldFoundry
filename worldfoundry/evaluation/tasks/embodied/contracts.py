@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 
 from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, WorldModelConfig
 from worldfoundry.evaluation.api.json_contract import JsonContract, copy_mapping, to_plain
@@ -91,6 +91,7 @@ JsonValue = Any
 JsonDataclass = JsonContract
 _to_plain = to_plain
 _copy_mapping = copy_mapping
+_EnumT = TypeVar("_EnumT", bound=Enum)
 
 
 def _tuple_of_str(value: Any) -> tuple[str, ...]:
@@ -107,7 +108,7 @@ def _tuple_of_str(value: Any) -> tuple[str, ...]:
     return tuple(str(item) for item in value)
 
 
-def _coerce_enum(enum_cls: type[Enum], value: Any, field_name: str) -> Enum:
+def _coerce_enum(enum_cls: type[_EnumT], value: Any, field_name: str) -> _EnumT:
     """Coerces arbitrary string/value inputs into their proper Enum representations with strict checking.
 
     Args:
@@ -184,9 +185,9 @@ class ActionSpaceSpec(JsonDataclass):
             kind=data["kind"],
             actions=data.get("actions", ()),
             dimensions=data.get("dimensions"),
-            bounds=data.get("bounds"),
-            schema=data.get("schema"),
-            metadata=data.get("metadata"),
+            bounds=cast(Mapping[str, Any], data.get("bounds")),
+            schema=cast(Mapping[str, Any], data.get("schema")),
+            metadata=cast(Mapping[str, Any], data.get("metadata")),
             schema_version=data.get("schema_version", VLA_VA_WAM_CONTRACT_SCHEMA_VERSION),
         )
 
@@ -254,7 +255,7 @@ class SessionControl(JsonDataclass):
             max_session_steps=data.get("max_session_steps"),
             deterministic_reset=data.get("deterministic_reset", False),
             state_checkpoint_format=data.get("state_checkpoint_format", ""),
-            metadata=data.get("metadata"),
+            metadata=cast(Mapping[str, Any], data.get("metadata")),
             schema_version=data.get("schema_version", VLA_VA_WAM_CONTRACT_SCHEMA_VERSION),
         )
 
@@ -366,8 +367,8 @@ class EmbodiedGenerationSpec(JsonDataclass):
             required_capabilities=data.get("required_capabilities", ()),
             session_control=data.get("session_control"),
             horizon_steps=data.get("horizon_steps"),
-            controls=data.get("controls"),
-            metadata=data.get("metadata"),
+            controls=cast(Mapping[str, Any], data.get("controls")),
+            metadata=cast(Mapping[str, Any], data.get("metadata")),
             schema_version=data.get("schema_version", VLA_VA_WAM_CONTRACT_SCHEMA_VERSION),
         )
 
@@ -463,7 +464,7 @@ class RunnerCapabilities(JsonDataclass):
             capabilities=data.get("capabilities", ()),
             action_spaces=data.get("action_spaces", ()),
             max_horizon_steps=data.get("max_horizon_steps"),
-            metadata=data.get("metadata"),
+            metadata=cast(Mapping[str, Any], data.get("metadata")),
             schema_version=data.get("schema_version", VLA_VA_WAM_CONTRACT_SCHEMA_VERSION),
         )
 

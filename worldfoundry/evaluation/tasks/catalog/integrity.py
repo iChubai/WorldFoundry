@@ -528,7 +528,8 @@ def catalog_runner_table_issues() -> list[str]:
             )
     if "pawbench" not in VIDEO_RUNNER_REGISTRY:
         issues.append("pawbench must stay a specialized video runner")
-    if official_runner_spec("pawbench") is None or official_runner_spec("pawbench").result_dispatch == "embodied":
+    pawbench_spec = official_runner_spec("pawbench")
+    if pawbench_spec is None or pawbench_spec.result_dispatch == "embodied":
         issues.append("pawbench must not be routed as embodied/generic")
     if set(supported_in_tree_benchmark_ids()) != set(scoring_benchmark_ids("in_tree")):
         issues.append("in-tree registry membership is not sourced from runner.scoring.engines")

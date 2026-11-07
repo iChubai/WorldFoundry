@@ -15,6 +15,7 @@ language task description obtained via ``env.get_ep_meta()["lang"]``.
 
 from __future__ import annotations
 
+import contextlib
 import os
 from typing import Any
 
@@ -111,12 +112,10 @@ class RoboCasaBenchmark(BaseSimulator):
         If an environment is active, it attempts to close it to release resources.
         """
         if self._env is not None:
-            try:
+            # Catch any errors during environment closing to prevent crashes
+            # but ensure the environment reference is cleared.
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                # Catch any errors during environment closing to prevent crashes
-                # but ensure the environment reference is cleared.
-                pass
             self._env = None
 
     def get_tasks(self) -> list[dict[str, Any]]:
@@ -140,7 +139,7 @@ class RoboCasaBenchmark(BaseSimulator):
         Returns:
             The initial observation from the environment after reset.
         """
-        from robocasa.utils.env_utils import create_env
+        create_env = __import__("robocasa.utils.env_utils", fromlist=["create_env"]).create_env
 
         task_name = task["name"]
 

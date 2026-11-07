@@ -134,9 +134,12 @@ class MolmoSpacesBenchmark(BaseSimulator):
                 if hasattr(self._sampler, "close"):
                     self._sampler.close()
                 # Otherwise, attempt to close the environment if the sampler holds it.
-                elif hasattr(self._sampler, "_env") and self._sampler._env is not None:
-                    if hasattr(self._sampler._env, "close"):
-                        self._sampler._env.close()
+                elif (
+                    hasattr(self._sampler, "_env")
+                    and self._sampler._env is not None
+                    and hasattr(self._sampler._env, "close")
+                ):
+                    self._sampler._env.close()
             except Exception:
                 # Suppress exceptions during cleanup.
                 pass
@@ -156,7 +159,9 @@ class MolmoSpacesBenchmark(BaseSimulator):
         Raises:
             RuntimeError: If no episodes are found in the specified benchmark directory.
         """
-        from molmo_spaces.evaluation.benchmark_schema import load_all_episodes
+        load_all_episodes = __import__(
+            "molmo_spaces.evaluation.benchmark_schema", fromlist=["load_all_episodes"]
+        ).load_all_episodes
 
         self._episodes = load_all_episodes(self.benchmark_dir)
         if not self._episodes:
@@ -196,7 +201,9 @@ class MolmoSpacesBenchmark(BaseSimulator):
         Raises:
             RuntimeError: If the MuJoCo task fails to be created.
         """
-        from molmo_spaces.tasks.json_eval_task_sampler import JsonEvalTaskSampler
+        JsonEvalTaskSampler = __import__(
+            "molmo_spaces.tasks.json_eval_task_sampler", fromlist=["JsonEvalTaskSampler"]
+        ).JsonEvalTaskSampler
 
         # Build the eval exp_config lazily to avoid importing MuJoCo/JAX at class load time.
         if self._exp_config is None:
@@ -211,16 +218,21 @@ class MolmoSpacesBenchmark(BaseSimulator):
         self._exp_config.task_horizon = int(horizon)
 
         # Add EvalRuntimeParams to the config, necessary for JsonEvalRunner.patch_config.
-        from molmo_spaces.evaluation.eval_main import EvalRuntimeParams
+        EvalRuntimeParams = __import__(
+            "molmo_spaces.evaluation.eval_main", fromlist=["EvalRuntimeParams"]
+        ).EvalRuntimeParams
 
         self._exp_config.eval_runtime_params = EvalRuntimeParams()
 
         # Clean up any previous sampler's environment before creating a new one to prevent resource leaks.
         if self._sampler is not None:
             try:
-                if hasattr(self._sampler, "_env") and self._sampler._env is not None:
-                    if hasattr(self._sampler._env, "close"):
-                        self._sampler._env.close()
+                if (
+                    hasattr(self._sampler, "_env")
+                    and self._sampler._env is not None
+                    and hasattr(self._sampler._env, "close")
+                ):
+                    self._sampler._env.close()
             except Exception:
                 pass
 
@@ -235,10 +247,7 @@ class MolmoSpacesBenchmark(BaseSimulator):
         # BaseMujocoTask.reset() returns (obs_list, info) per gym convention.
         reset_output = self._task.reset()
         # Extract raw observation from the reset output, handling tuple or direct obs.
-        if isinstance(reset_output, tuple):
-            raw_obs = reset_output[0]
-        else:
-            raw_obs = reset_output
+        raw_obs = reset_output[0] if isinstance(reset_output, tuple) else reset_output
         unwrapped = self._unwrap_batch(raw_obs)
         self._recorder.record_video(self._extract_frame(unwrapped))
         return unwrapped

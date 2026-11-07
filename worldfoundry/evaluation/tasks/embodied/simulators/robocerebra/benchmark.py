@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -100,10 +101,9 @@ class RoboCerebraBenchmark(BaseSimulator):
         suppressing any errors during the cleanup process to ensure robust termination.
         """
         if self._env is not None:
-            try:
+            # Ignore errors during cleanup
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                pass  # Ignore errors during cleanup
             self._env = None
 
     # ------------------------------------------------------------------
@@ -116,7 +116,7 @@ class RoboCerebraBenchmark(BaseSimulator):
             return
         # Importing this module triggers the registration of all RoboCerebra tasks
         # in `libero.libero.envs.TASK_MAPPING`.
-        import libero.libero.envs  # noqa: F401
+        __import__("libero.libero.envs")
 
         self._libero_inited = True
 
@@ -187,17 +187,16 @@ class RoboCerebraBenchmark(BaseSimulator):
         Returns:
             The initial raw observation dictionary from MuJoCo/robosuite after reset and warm-up.
         """
-        import h5py
-        import libero.libero.envs.bddl_utils as BDDLUtils
-        from libero.libero.envs import TASK_MAPPING
-        from robosuite import load_controller_config
+        h5py = __import__("h5py")
+        BDDLUtils = __import__("libero.libero.envs.bddl_utils", fromlist=["__name__"])
+        TASK_MAPPING = __import__("libero.libero.envs", fromlist=["TASK_MAPPING"]).TASK_MAPPING
+        load_controller_config = __import__("robosuite", fromlist=["load_controller_config"]).load_controller_config
 
         if self._env is not None:
             # Clean up any existing environment before creating a new one
-            try:
+            # Ignore errors during cleanup
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                pass  # Ignore errors during cleanup
             self._env = None
 
         bddl_file = task["bddl_file"]
@@ -300,7 +299,7 @@ class RoboCerebraBenchmark(BaseSimulator):
         # -1.0 for open (when raw_action[-1] < 0), 1.0 for close (when raw_action[-1] >= 0).
         gripper = -1.0 if raw_action[-1] < 0 else 1.0
         # Combine position/rotation deltas with the processed gripper command
-        processed = raw_action[:6] + [gripper]
+        processed = [*raw_action[:6], gripper]
 
         obs, reward, done, info = self._env.step(processed)
 

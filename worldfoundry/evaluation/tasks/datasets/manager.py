@@ -1401,10 +1401,7 @@ def _direct_dataset_expected_files(dataset_dir: Path) -> tuple[str, ...]:
     expected: list[str] = []
     seen: set[str] = set()
     for item in siblings:
-        if isinstance(item, Mapping):
-            value = item.get("rfilename")
-        else:
-            value = item
+        value = item.get("rfilename") if isinstance(item, Mapping) else item
         normalized = _safe_direct_dataset_relative_path(value)
         if not normalized:
             continue

@@ -13,8 +13,9 @@ Key details:
 
 from __future__ import annotations
 
+import contextlib
 import os
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -99,11 +100,9 @@ class ManiSkill2Benchmark(BaseSimulator):
         is properly closed to release resources, even if an error occurs during closing.
         """
         if self._env is not None:
-            try:
+            # Catch any exception during close to ensure graceful cleanup.
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                # Catch any exception during close to ensure graceful cleanup.
-                pass
             self._env = None
 
     def get_tasks(self) -> list[dict[str, Any]]:
@@ -128,8 +127,8 @@ class ManiSkill2Benchmark(BaseSimulator):
         Returns:
             The initial observation from the environment.
         """
-        import gymnasium as gym
-        import mani_skill2.envs  # noqa: F401 — register envs
+        gym = __import__("gymnasium")
+        __import__("mani_skill2.envs")  # register envs
 
         env_name = task["env_name"]
 
@@ -142,7 +141,7 @@ class ManiSkill2Benchmark(BaseSimulator):
                 obs_mode="rgbd",
                 control_mode="pd_ee_delta_pose",
                 render_mode="cameras",
-                camera_cfgs=dict(width=self.render_resolution[0], height=self.render_resolution[1]),
+                camera_cfgs={"width": self.render_resolution[0], "height": self.render_resolution[1]},
                 max_episode_steps=self.max_episode_steps,
             )
             self._current_task = env_name
@@ -187,7 +186,7 @@ class ManiSkill2Benchmark(BaseSimulator):
 
         # Binarize gripper command: raw value < 0.5 means close (1.0), >= 0.5 means open (-1.0).
         gripper = 1.0 if raw[-1] < 0.5 else -1.0
-        env_action = np.array(raw[:6] + [gripper], dtype=np.float32)
+        env_action = np.array([*raw[:6], gripper], dtype=np.float32)
 
         # Render goal site to make the green target sphere visible in camera observations.
         # ManiSkill2 hides it by default (_hidden_objects), but the model was trained
@@ -210,7 +209,7 @@ class ManiSkill2Benchmark(BaseSimulator):
             truncated=bool(truncated),
             success=bool(info.get("success", False)),
         )
-        return StepResult(obs=obs, reward=reward, done=done, info=info)
+        return StepResult(obs=obs, reward=cast(float, reward), done=done, info=info)
 
     def _extract_frame(self, raw_obs: Any) -> np.ndarray | None:
         """Extract and format the RGB frame from a raw ManiSkill2 observation.
@@ -326,7 +325,8 @@ class ManiSkill2Benchmark(BaseSimulator):
         """
         try:
             assert self._env is not None
-            obj = self._env.unwrapped.obj
+            unwrapped: Any = self._env.unwrapped
+            obj = unwrapped.obj
             # Extract the meaningful part of the object name, e.g., "ycb_chips_can" -> "chips can".
             return " ".join(obj.name.split("_")[1:])
         except (AttributeError, IndexError):

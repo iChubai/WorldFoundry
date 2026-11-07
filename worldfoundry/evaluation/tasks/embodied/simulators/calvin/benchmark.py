@@ -6,6 +6,7 @@ Each sequence is treated as one episode from the orchestrator's perspective.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import math
 import os
@@ -13,7 +14,7 @@ import sys
 from collections.abc import Mapping
 from copy import copy
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -133,7 +134,7 @@ def _get_env_state_for_initial_condition(initial_condition: dict) -> tuple[np.nd
     Returns:
         A tuple of (robot_observation, scene_observation) numpy arrays.
     """
-    import fnvhash
+    fnvhash = __import__("fnvhash")
 
     robot_obs = np.array(
         [
@@ -274,10 +275,8 @@ class CALVINBenchmark(BaseSimulator):
     def cleanup(self) -> None:
         """Safely close the CALVIN PyBullet simulator environment and release allocations."""
         if self._env is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                pass
             self._env = None
 
     def _init_calvin(self) -> None:
@@ -288,8 +287,8 @@ class CALVINBenchmark(BaseSimulator):
         if self.calvin_root is not None:
             _prepend_calvin_source_paths(self.calvin_root)
 
-        import hydra
-        import pytorch_lightning as pl
+        hydra = __import__("hydra")
+        pl = __import__("pytorch_lightning")
         import torch
         from omegaconf import OmegaConf
 
@@ -297,9 +296,9 @@ class CALVINBenchmark(BaseSimulator):
         self._device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Locate CALVIN conf directory
-        import calvin_agent
+        calvin_agent = __import__("calvin_agent")
 
-        conf_dir = Path(calvin_agent.__file__).parent.parent / "conf"
+        conf_dir = Path(cast(str, calvin_agent.__file__)).parent.parent / "conf"
 
         # Load task oracle
         tasks_cfg = OmegaConf.load(conf_dir / "callbacks/rollout/tasks/new_playtable_tasks.yaml")
@@ -473,7 +472,9 @@ class CALVINBenchmark(BaseSimulator):
         self._env = hydra.utils.instantiate(rollout_cfg.env_cfg, val_ds, self._device, show_gui=False)
 
         # Generate evaluation sequences
-        from calvin_agent.evaluation.multistep_sequences import get_sequences
+        get_sequences = __import__(
+            "calvin_agent.evaluation.multistep_sequences", fromlist=["get_sequences"]
+        ).get_sequences
 
         self._sequences = get_sequences(self.num_sequences)
         logger.info("CALVIN initialized: %d sequences on %s", len(self._sequences), self._device)
@@ -556,10 +557,7 @@ class CALVINBenchmark(BaseSimulator):
 
         ep_len = self._ep_len or EP_LEN
 
-        if self.absolute_action:
-            act = self._process_absolute_action(action)
-        else:
-            act = self._process_delta_action(action)
+        act = self._process_absolute_action(action) if self.absolute_action else self._process_delta_action(action)
 
         # Step environment (expects shape [1, 1, 7] torch tensor)
         assert self._env is not None

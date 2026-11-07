@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import Any
 
@@ -38,10 +39,8 @@ class EmbodiedWebSocketConnection:
 
     async def close(self) -> None:
         if self._ws is not None:
-            try:
+            with contextlib.suppress(Exception):
                 await self._ws.close()
-            except Exception:
-                pass
             self._ws = None
 
     async def reconnect(self) -> None:

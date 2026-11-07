@@ -7,6 +7,7 @@ headless rendering.
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 import numpy as np
@@ -65,11 +66,9 @@ class RLBenchBenchmark(BaseSimulator):
         to release resources, handling potential exceptions during shutdown.
         """
         if self._env is not None:
-            try:
+            # Suppress exceptions during shutdown to ensure cleanup completes
+            with contextlib.suppress(Exception):
                 self._env.shutdown()
-            except Exception:
-                # Suppress exceptions during shutdown to ensure cleanup completes
-                pass
             self._env = None
             self._task_env = None
 
@@ -84,11 +83,14 @@ class RLBenchBenchmark(BaseSimulator):
         """
         if self._env is not None:
             return
-        from rlbench.action_modes.action_mode import MoveArmThenGripper
-        from rlbench.action_modes.arm_action_modes import JointVelocity
-        from rlbench.action_modes.gripper_action_modes import Discrete
-        from rlbench.environment import Environment
-        from rlbench.observation_config import CameraConfig, ObservationConfig
+        MoveArmThenGripper = __import__(
+            "rlbench.action_modes.action_mode", fromlist=["MoveArmThenGripper"]
+        ).MoveArmThenGripper
+        JointVelocity = __import__("rlbench.action_modes.arm_action_modes", fromlist=["JointVelocity"]).JointVelocity
+        Discrete = __import__("rlbench.action_modes.gripper_action_modes", fromlist=["Discrete"]).Discrete
+        Environment = __import__("rlbench.environment", fromlist=["Environment"]).Environment
+        observation_config = __import__("rlbench.observation_config", fromlist=["CameraConfig", "ObservationConfig"])
+        CameraConfig, ObservationConfig = observation_config.CameraConfig, observation_config.ObservationConfig
 
         # Configure the primary camera for RGB observations at the specified resolution
         cam = CameraConfig(
@@ -151,7 +153,7 @@ class RLBenchBenchmark(BaseSimulator):
         Returns:
             The initial observation from the environment after reset.
         """
-        from rlbench import utils as rlbench_utils
+        rlbench_utils = __import__("rlbench", fromlist=["utils"]).utils
 
         self._ensure_env()
         assert self._env is not None

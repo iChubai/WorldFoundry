@@ -6,7 +6,7 @@ import importlib
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 def normalize_model_id(model_id: str) -> str:
@@ -14,7 +14,7 @@ def normalize_model_id(model_id: str) -> str:
 
 
 def first_image(obs: Mapping[str, Any]) -> Any:
-    images = obs.get("images") if isinstance(obs.get("images"), Mapping) else {}
+    images = cast(Mapping[str, Any], obs.get("images")) if isinstance(obs.get("images"), Mapping) else {}
     for source, key in (
         (images, "agentview"),
         (images, "primary"),

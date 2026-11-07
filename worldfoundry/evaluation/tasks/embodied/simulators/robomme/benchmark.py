@@ -8,12 +8,13 @@ as ``video_history`` on the first observation.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import re
 import subprocess
 import sys
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 
@@ -333,7 +334,7 @@ class RoboMMEBenchmark(BaseSimulator):
         os.environ["VK_ICD_FILENAMES"] = lavapipe_icd
         logger.info("SAPIEN rendering: using lavapipe software Vulkan (%s)", lavapipe_icd)
 
-        import sapien.render as sr
+        sr = __import__("sapien.render", fromlist=["__name__"])
 
         # Store the original RenderSystem class before patching.
         _OrigRenderSystem = sr.RenderSystem
@@ -343,11 +344,11 @@ class RoboMMEBenchmark(BaseSimulator):
             return _OrigRenderSystem()
 
         # Apply the monkey patch to sapien.render.RenderSystem.
-        sr.RenderSystem = _lavapipe_render_system
+        cast(Any, sr).RenderSystem = _lavapipe_render_system
 
         # Patch `parse_sim_and_render_backend` in ManiSkill3 to ensure render backend resolves to `sapien_cpu`.
         try:
-            from mani_skill.envs.utils.system import backend as _backend_mod
+            _backend_mod = __import__("mani_skill.envs.utils.system", fromlist=["backend"]).backend
 
             _orig_parse = _backend_mod.parse_sim_and_render_backend
 
@@ -363,7 +364,7 @@ class RoboMMEBenchmark(BaseSimulator):
 
             # Also patch the imported reference in `mani_skill.envs.sapien_env`
             # in case it was imported before this patch was applied.
-            import mani_skill.envs.sapien_env
+            mani_skill = __import__("mani_skill.envs.sapien_env")
 
             mani_skill.envs.sapien_env.parse_sim_and_render_backend = _patched_parse
         except Exception as e:
@@ -387,15 +388,15 @@ class RoboMMEBenchmark(BaseSimulator):
         """
         self._setup_rendering()
         # Import RoboMME environments to ensure they are registered with gym.
-        import robomme.robomme_env  # noqa: F401
-        from robomme.env_record_wrapper import BenchmarkEnvBuilder
+        __import__("robomme.robomme_env")
+        BenchmarkEnvBuilder = __import__(
+            "robomme.env_record_wrapper", fromlist=["BenchmarkEnvBuilder"]
+        ).BenchmarkEnvBuilder
 
         # Close the previous environment if it exists, to ensure a fresh start for each episode.
         if self._env is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                pass
 
         episode_idx = task.get("episode_idx", 0)
         self._task = task
@@ -651,10 +652,8 @@ class RoboMMEBenchmark(BaseSimulator):
         properly closed and internal state variables are reset.
         """
         if self._env is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                pass
             self._env = None
         self._video_frames = []
         self._wrist_video_frames = []

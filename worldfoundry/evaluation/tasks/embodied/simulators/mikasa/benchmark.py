@@ -17,6 +17,7 @@ Key details:
 
 from __future__ import annotations
 
+import contextlib
 import os
 from typing import Any
 
@@ -117,12 +118,10 @@ class MIKASABenchmark(BaseSimulator):
         release resources, handling potential exceptions during closure.
         """
         if self._env is not None:
-            try:
+            # Catch any exceptions during env closure to prevent crashing
+            # in case the environment is already in an invalid state.
+            with contextlib.suppress(Exception):
                 self._env.close()
-            except Exception:
-                # Catch any exceptions during env closure to prevent crashing
-                # in case the environment is already in an invalid state.
-                pass
             self._env = None
 
     def get_tasks(self) -> list[dict[str, Any]]:
@@ -148,8 +147,8 @@ class MIKASABenchmark(BaseSimulator):
         """
         # Imports are placed here to allow for lazy loading of ManiSkill3 and
         # Mikasa-Robo, which can be computationally expensive to import.
-        import gymnasium as gym
-        import mikasa_robo_suite  # noqa: F401 — registers envs with gymnasium
+        gym = __import__("gymnasium")
+        __import__("mikasa_robo_suite")  # registers envs with gymnasium
 
         env_name = task["name"]
 
@@ -165,7 +164,9 @@ class MIKASABenchmark(BaseSimulator):
             )
             # Wrap the environment to convert state observations (which MIKASA uses)
             # into a dictionary format compatible with the expected API.
-            from mikasa_robo_suite.utils.wrappers import StateOnlyTensorToDictWrapper
+            StateOnlyTensorToDictWrapper = __import__(
+                "mikasa_robo_suite.utils.wrappers", fromlist=["StateOnlyTensorToDictWrapper"]
+            ).StateOnlyTensorToDictWrapper
 
             self._env = StateOnlyTensorToDictWrapper(self._env)
             self._current_task = env_name

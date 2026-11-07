@@ -261,26 +261,20 @@ def infer_normalizer(metric_id: str, overrides: Mapping[str, str]) -> str | None
     """Infers the metric scaling strategy based on metric names or explicit user overrides."""
     if metric_id in overrides:
         return overrides[metric_id]
-    if (
-        metric_id
-        in {
-            "success",
-            "success_rate",
-            "task_success",
-            "sequence_success",
-            "episode_success",
-            "rollout_success",
-            "goal_success",
-            "planning_success",
-            "paraphrase_success_rate",
-            "language_generalization_success",
-            "completion",
-            "action_accuracy",
-        }
-        or metric_id.endswith("_success")
-        or metric_id.endswith("_rate")
-        or metric_id.endswith("_accuracy")
-    ):
+    if metric_id in {
+        "success",
+        "success_rate",
+        "task_success",
+        "sequence_success",
+        "episode_success",
+        "rollout_success",
+        "goal_success",
+        "planning_success",
+        "paraphrase_success_rate",
+        "language_generalization_success",
+        "completion",
+        "action_accuracy",
+    } or metric_id.endswith(("_success", "_rate", "_accuracy")):
         return "percent_or_fraction_to_unit"
     return None
 
@@ -312,13 +306,7 @@ def normalized_metric_rows(
             candidate_fields = tuple(
                 field
                 for field in row
-                if (
-                    field in DEFAULT_NUMERIC_FIELDS
-                    or field.endswith("_rate")
-                    or field.endswith("_score")
-                    or field.endswith("_success")
-                    or field.endswith("_accuracy")
-                )
+                if (field in DEFAULT_NUMERIC_FIELDS or field.endswith(("_rate", "_score", "_success", "_accuracy")))
             )
             values = row
         for metric_id in candidate_fields:

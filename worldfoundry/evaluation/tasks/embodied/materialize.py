@@ -16,11 +16,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import GenerationRequest
 
-from .contracts import EmbodiedGenerationSpec
+from .contracts import EmbodiedGenerationSpec, EvaluationTrack
 
 # Standard schema version for materialized request outputs.
 VLA_VA_WAM_REQUESTS_SCHEMA_VERSION = "worldfoundry-vla-va-wam-requests"
@@ -320,7 +320,7 @@ def materialize_vla_va_wam_requests(
     )
     return VlaVaWamMaterializedRequests(
         schema_version=VLA_VA_WAM_REQUESTS_SCHEMA_VERSION,
-        track=resolved_spec.track.value,
+        track=cast(EvaluationTrack, resolved_spec.track).value,
         task_name=resolved_spec.task_name,
         split=split,
         requests=requests,

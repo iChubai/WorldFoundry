@@ -176,7 +176,7 @@ class EmbodiedEvalOrchestrator:
                                 except asyncio.CancelledError:
                                     continue
                             raise
-                        result = tuple(result_batch)[0]
+                        result = tuple(result_batch)[0]  # noqa: RUF015 - Exhaust results before cleanup and returning to the event loop.
                         all_results.append(result)
                         if writer is not None:
                             writer.write(result.to_dict())

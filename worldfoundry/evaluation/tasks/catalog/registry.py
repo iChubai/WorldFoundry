@@ -8,6 +8,7 @@ and an internal registry format.
 
 from __future__ import annotations
 
+import builtins
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -232,7 +233,7 @@ class TaskRegistry:
         benchmark: str | None = None,
         tag: str | None = None,
         protocol: str | None = None,
-    ) -> list[TaskRegistryEntry]:
+    ) -> builtins.list[TaskRegistryEntry]:
         """Lists registered TaskRegistryEntry objects matching optional filters.
 
         Args:

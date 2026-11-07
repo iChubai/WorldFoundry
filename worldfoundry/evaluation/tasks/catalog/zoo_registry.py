@@ -8,6 +8,7 @@ various metadata fields like domain, modality, and integration status.
 
 from __future__ import annotations
 
+import builtins
 from collections.abc import Iterable, Iterator, Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -231,7 +232,7 @@ class BenchmarkZooRegistry:
         """
         return self._store.get(key)
 
-    def list(self) -> list[BenchmarkZooEntry]:
+    def list(self) -> builtins.list[BenchmarkZooEntry]:
         """Lists all registered BenchmarkZooEntry objects.
 
         Returns:
@@ -239,7 +240,7 @@ class BenchmarkZooRegistry:
         """
         return self._store.list()
 
-    def keys(self) -> list[str]:
+    def keys(self) -> builtins.list[str]:
         """Lists all canonical registered benchmark ID keys.
 
         Returns:
@@ -261,7 +262,7 @@ class BenchmarkZooRegistry:
         """
         return self._entry_aliases(self.get(key))
 
-    def by_domain(self, domain: str) -> list[BenchmarkZooEntry]:
+    def by_domain(self, domain: str) -> builtins.list[BenchmarkZooEntry]:
         """Filters registered benchmarks by domain.
 
         The search is case-insensitive and matches against the `domains` tuple of each entry.
@@ -274,7 +275,7 @@ class BenchmarkZooRegistry:
         """
         return self._find_in_tuple("domains", domain)
 
-    def by_modality(self, modality: str) -> list[BenchmarkZooEntry]:
+    def by_modality(self, modality: str) -> builtins.list[BenchmarkZooEntry]:
         """Filters registered benchmarks by modality.
 
         The search is case-insensitive and matches against the `modalities` tuple of each entry.
@@ -287,7 +288,7 @@ class BenchmarkZooRegistry:
         """
         return self._find_in_tuple("modalities", modality)
 
-    def by_tag(self, tag: str) -> list[BenchmarkZooEntry]:
+    def by_tag(self, tag: str) -> builtins.list[BenchmarkZooEntry]:
         """Filters registered benchmarks by tag.
 
         The search is case-insensitive and matches against the `tags` tuple of each entry.
@@ -300,7 +301,7 @@ class BenchmarkZooRegistry:
         """
         return self._find_in_tuple("tags", tag)
 
-    def by_integration_status(self, status: str) -> list[BenchmarkZooEntry]:
+    def by_integration_status(self, status: str) -> builtins.list[BenchmarkZooEntry]:
         """Filters registered benchmarks by their integration status.
 
         The search is case-insensitive. Valid statuses are defined in `INTEGRATION_STATUSES`.
@@ -327,7 +328,7 @@ class BenchmarkZooRegistry:
         modality: str | None = None,
         tag: str | None = None,
         integration_status: str | None = None,
-    ) -> list[BenchmarkZooEntry]:
+    ) -> builtins.list[BenchmarkZooEntry]:
         """Performs a multi-criteria query across all registered benchmark-zoo entries.
 
         All provided criteria are combined with an AND logic, meaning an entry must match
@@ -367,7 +368,7 @@ class BenchmarkZooRegistry:
             matches = [entry for entry in matches if entry.integration_status == status_key]
         return matches
 
-    def _find_in_tuple(self, field_name: str, value: str) -> list[BenchmarkZooEntry]:
+    def _find_in_tuple(self, field_name: str, value: str) -> builtins.list[BenchmarkZooEntry]:
         """Helper method to filter benchmarks based on a string value present in a tuple field.
 
         Args:

@@ -409,6 +409,7 @@ class InceptionI3d(nn.Module):
                 x = cast(nn.Module, self._modules[end_point])(x)  # use _modules to work with dataparallel
 
         x = cast(Unit3D, self.logits)(self.dropout(self.avg_pool(x)))
+        logits = x
         if self._spatial_squeeze:
             logits = x.squeeze(3).squeeze(3)
         logits = logits.mean(dim=2)

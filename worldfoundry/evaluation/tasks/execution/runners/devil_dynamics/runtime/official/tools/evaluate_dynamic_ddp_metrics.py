@@ -1,9 +1,11 @@
 import argparse
-import json
+import itertools
 import math
 import os
 import pdb
+import random
 import shutil
+import subprocess
 import warnings
 from pathlib import Path
 
@@ -13,27 +15,25 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 from easydict import EasyDict as edict
-from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToTensor
+from torchvision.transforms import Compose, Normalize, Resize
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
 
+# Optional metric providers inherit the upstream warning filter.
 warnings.filterwarnings("ignore")
-import random
-import subprocess
-import time
 
-import pandas as pd
-import timm
-import tqdm
-from metrics_utils.cal_ssim import cal_ssim_dist, cal_ssim_dist_chunk
-from metrics_utils.standard_video_dataset import StandardVidoDataset, standard_collate_fn
-from PIL import Image
-from sklearn.linear_model import LinearRegression
-from viclip import _frame_from_video, frames2tensor, get_viclip, get_vid_feat, retrieve_text
+import pandas as pd  # noqa: E402
+import timm  # noqa: E402
+import tqdm  # noqa: E402
+from metrics_utils.cal_ssim import cal_ssim_dist  # noqa: E402
+from metrics_utils.standard_video_dataset import StandardVidoDataset, standard_collate_fn  # noqa: E402
+from viclip import get_viclip, get_vid_feat  # noqa: E402
 
-from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
-from worldfoundry.base_models.perception_core.optical_flow.raft.raft import RAFT
-from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder
+from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import (  # noqa: E402
+    backbones as dinov2_backbones,
+)
+from worldfoundry.base_models.perception_core.optical_flow.raft.raft import RAFT  # noqa: E402
+from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder  # noqa: E402
 
 RUNTIME_ROOT = Path(__file__).resolve().parents[1]
 
@@ -201,7 +201,7 @@ def build_raft(model_path, rank):
     args_new = edict({"model": model_path, "small": False, "mixed_precision": False, "alternate_corr": False})
     model = RAFT(args_new)
     state_dict = torch.load(model_path, map_location=torch.device("cpu"))
-    new_state_dict = dict()
+    new_state_dict = {}
     for key in state_dict:
         new_state_dict[key.replace("module.", "")] = state_dict[key]
     model.load_state_dict(new_state_dict)
@@ -250,9 +250,9 @@ def build_viclip(model_name, rank, args):
 
 def cal_flow_strength(model, video_data, video_lengths, video_names):
     results = []
-    for i, frames in enumerate(video_data):
+    for _i, frames in enumerate(video_data):
         static_score = []
-        for image1, image2 in zip(frames[:-1], frames[1:], strict=False):
+        for image1, image2 in itertools.pairwise(frames):
             padder = InputPadder(image1[None].shape)
             image1, image2 = padder.pad(image1[None], image2[None])
             _, flow_up = model(image1, image2, iters=50, test_mode=True)
@@ -265,11 +265,11 @@ def cal_flow_strength(model, video_data, video_lengths, video_names):
 
 def cal_flow_strength_batch(model, video_data, video_lengths, video_names, max_batch=20):
     results = []
-    for i, frames in enumerate(video_data):
+    for _i, frames in enumerate(video_data):
         static_score = []
         padder = InputPadder(frames.shape)
         image1s, image2s = padder.pad(frames[:-1], frames[1:])
-        iter_n = int(math.ceil(image1s.shape[0] / max_batch))
+        iter_n = math.ceil(image1s.shape[0] / max_batch)
         flow_ups = []
         for bidx in range(iter_n):
             image1 = image1s[bidx * max_batch : (bidx + 1) * max_batch]
@@ -313,7 +313,8 @@ def build_clip(model_name, rank, args):
     return model_clip, process_clip
 
 
-def cal_viclip_segment_dist(model, video_data, video_lengths, block_lengths_ratio=[0.25]):
+# The upstream segment-ratio default is read-only.
+def cal_viclip_segment_dist(model, video_data, video_lengths, block_lengths_ratio=[0.25]):  # noqa: B006
     distances = []
     for video in video_data.split(video_lengths):
         dist_obj = 0
@@ -515,7 +516,7 @@ def cal_temporal_entropy(video_paths, output_folder, temporal_info_script):
         if output_folder == "/" or output_folder.startswith("/ "):
             print(f"***************output_folder: {output_folder}***************")
             exit(0)
-        result = subprocess.run(["bash", temporal_info_script] + args, stdout=subprocess.PIPE, text=True, check=True)
+        result = subprocess.run(["bash", temporal_info_script, *args], stdout=subprocess.PIPE, text=True, check=True)
         results.append(float(result.stdout.strip()))
         # print(f'{output_folder} done.')
         shutil.rmtree(output_folder)
@@ -663,8 +664,8 @@ def get_prompt_dynamic_grades(Video_names, col_name="video_name"):
 def cal_controllability_winning_rate(prompt_dynamics, video_dynamics):
     video_dynamics = np.array(video_dynamics)
     prompt_dynamics = np.array(prompt_dynamics)
-    x_degree_other = dict()
-    y_degree_other = dict()
+    x_degree_other = {}
+    y_degree_other = {}
     for y in np.unique(prompt_dynamics):
         idx = prompt_dynamics == y
         x_degree_other.update({y: video_dynamics[~idx]})

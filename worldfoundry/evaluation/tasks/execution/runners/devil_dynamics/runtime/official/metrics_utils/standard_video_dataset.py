@@ -1,5 +1,3 @@
-import glob
-import json
 import os
 import pdb
 
@@ -7,7 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from torchvision.io import read_video
-from torchvision.transforms import Compose, Resize, ToTensor
+from torchvision.transforms import Compose, Resize
 
 
 def change_fps(video_tensor, fps, target_fps):
@@ -76,11 +74,11 @@ def find_video_files(root_dir):
     video_files = []
 
     # 遍历指定的根目录
-    for dirpath, dirnames, filenames in os.walk(root_dir):
+    for dirpath, _dirnames, filenames in os.walk(root_dir):
         # 检查当前目录下的每个文件
         for filename in filenames:
             # 检查文件扩展名是否为 mp4 或 avi
-            if filename.endswith(".mp4") or filename.endswith(".avi"):
+            if filename.endswith((".mp4", ".avi")):
                 # 构建文件的完整路径并添加到列表中
                 full_path = os.path.join(dirpath, filename)
                 video_files.append(full_path)

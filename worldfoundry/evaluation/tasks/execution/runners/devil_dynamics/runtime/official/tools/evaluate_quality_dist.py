@@ -1,20 +1,13 @@
 import argparse
-import json
-import math
 import os
-import pdb
 import random
 import shutil
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import timm
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-import torch.nn.functional as F
 import tqdm
 from metrics_utils.standard_video_dataset import StandardVidoDataset, standard_collate_fn
 from quality_metrics import (
@@ -24,7 +17,6 @@ from quality_metrics import (
     motion_smoothness,
     subject_consistency,
 )
-from transformers import ViTModel
 
 from worldfoundry.base_models.capabilities import vbench_asset_path
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
@@ -174,7 +166,7 @@ def clear_folder(folder):
 def find_mp4_files(directory):
     mp4_files = []
     # 遍历指定目录及其子目录
-    for root, dirs, files in os.walk(directory, followlinks=True):
+    for root, _dirs, files in os.walk(directory, followlinks=True):
         for file in files:
             # 检查文件扩展名是否为.mp4
             if file.endswith(".mp4") and not file.startswith("._"):
@@ -208,7 +200,7 @@ def merge_excel_files(file1, file2, output_file):
 def main_dist(args):
     dist.init_process_group(backend="nccl")
     rank = dist.get_rank()
-    world_size = dist.get_world_size()
+    _world_size = dist.get_world_size()
     torch.cuda.set_device(rank)
     output_file = f"{args.save_dir}/.tmp/results_{rank}.pth"
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -262,7 +254,7 @@ def calculate_quality_scores(args):
     output_file = f"{args.save_dir}/.tmp/results_{rank}.pth"
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     clear_folder(os.path.dirname(output_file))
-    video_list = find_mp4_files(args.video_dir)
+    _video_list = find_mp4_files(args.video_dir)
     with open(output_file, "w") as file:
         file.write("")  # 清空文件内容
 

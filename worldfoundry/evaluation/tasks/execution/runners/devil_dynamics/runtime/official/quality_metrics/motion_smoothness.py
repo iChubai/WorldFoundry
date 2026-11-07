@@ -1,11 +1,11 @@
 import glob
+import itertools
 import os
 
 import cv2
 import numpy as np
 import torch
 from omegaconf import OmegaConf
-from tqdm import tqdm
 from vbench.utils import load_dimension_info
 
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
@@ -120,10 +120,10 @@ class MotionSmoothness:
 
         # -----------------------  Interpolater -----------------------
         # print(f'Start frame interpolation:')
-        for i in range(iters):
+        for _i in range(iters):
             # print(f'Iter {i+1}. input_frames={len(inputs)} output_frames={2*len(inputs)-1}')
             outputs = [inputs[0]]
-            for in_0, in_1 in zip(inputs[:-1], inputs[1:], strict=False):
+            for in_0, in_1 in itertools.pairwise(inputs):
                 in_0 = in_0.to(self.device)
                 in_1 = in_1.to(self.device)
                 with torch.no_grad():
@@ -158,7 +158,7 @@ class MotionSmoothness:
 
 def motion_smoothness(config, video_path, motion, device):
     sim = []
-    video_results = dict()
+    video_results = {}
     score_per_video = motion.motion_score(video_path)
     video_results.update({os.path.basename(video_path): score_per_video})
     sim.append(score_per_video)

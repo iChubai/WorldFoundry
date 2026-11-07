@@ -1,6 +1,5 @@
 import math
 import os
-import pdb
 import shutil
 import subprocess
 
@@ -10,7 +9,6 @@ import numpy as np
 import pandas as pd
 import torch
 from PIL import Image
-from pytorch_msssim import ms_ssim
 from pytorch_msssim import ssim as torch_ssim
 from skimage.metrics import structural_similarity as ssim
 from tqdm import tqdm
@@ -224,7 +222,7 @@ def calculate_psnr(img1, img2):
 def stat_inter_keyframe_ssim(video_path, key_frame_folder):
     output_path = os.path.join("outputs", os.path.basename(video_path))
     convert_to_h264(video_path, output_path)
-    key_frame_numbers = extract_keyframes_and_last_frame(output_path, output_folder=key_frame_folder)
+    _key_frame_numbers = extract_keyframes_and_last_frame(output_path, output_folder=key_frame_folder)
     images = load_images(key_frame_folder)
     ssim_scores = calculate_ssim(images)
     return ssim_scores
@@ -252,7 +250,6 @@ def stat_ssim_with_path(video_path):
     prev_phash = calculate_phash(prev_frame)
     prev_whash = calculate_whash(prev_frame)
 
-    frame_count = 0
     ssims = []
     psnrs = []
     phashs = []
@@ -268,7 +265,6 @@ def stat_ssim_with_path(video_path):
 
         prev_phash = current_phash
         prev_whash = current_whash
-        frame_count += 1
         prev_frame = current_frame
         ssims.append(current_ssim)
         psnrs.append(current_psnr)
@@ -288,7 +284,6 @@ def stat_ssim(video_data, topk=0.1):
     prev_phash = calculate_phash(prev_frame)
     prev_whash = calculate_whash(prev_frame)
 
-    frame_count = 0
     ssims = []
     phashs = []
 
@@ -298,11 +293,10 @@ def stat_ssim(video_data, topk=0.1):
         current_whash = calculate_whash(current_frame)
 
         phash_diff = current_phash - prev_phash if prev_phash is not None else 0
-        whash_diff = current_whash - prev_whash if prev_whash is not None else 0
+        _whash_diff = current_whash - prev_whash if prev_whash is not None else 0
 
         prev_phash = current_phash
         prev_whash = current_whash
-        frame_count += 1
         prev_frame = current_frame
         ssims.append(current_ssim)
         phashs.append(phash_diff)
@@ -352,21 +346,19 @@ def stat_phash(video_data, average=True):
 #         phashs.append(phash)
 #     return ssims, msssims, phashs
 
-import piqa
-
 
 def cal_ssim_dist(video_data, org_videos, video_names, topk=None):
-    device = video_data[0].device
+    _device = video_data[0].device
     ssims = []
     phashs = []
-    for i, (video, org_video) in enumerate(zip(video_data, org_videos, strict=False)):
+    for _i, (video, org_video) in enumerate(zip(video_data, org_videos, strict=False)):
         if topk is None:
             phash = stat_phash(org_video.cpu().numpy())
             ssim = torch_ssim(
                 (video[:-1]).clamp(0, 1), (video[1:]).clamp(0, 1), data_range=1.0, size_average=True
             ).item()
         else:
-            L = int(math.ceil(video.shape[0] * topk))
+            L = math.ceil(video.shape[0] * topk)
             phash = stat_phash(org_video.cpu().numpy(), L)
             ssim = (
                 (1 - torch_ssim(video[:-1], video[1:], data_range=1.0, size_average=False))
@@ -382,12 +374,12 @@ def cal_ssim_dist(video_data, org_videos, video_names, topk=None):
 
 
 def cal_ssim_dist_chunk(video_data, org_videos, video_names, max_frames=200):
-    device = video_data[0].device
+    _device = video_data[0].device
     ssims = []
-    msssims = []
-    psnrs = []
+    _msssims = []
+    _psnrs = []
     phashs = []
-    for i, (video, org_video) in enumerate(zip(video_data, org_videos, strict=False)):
+    for _i, (video, org_video) in enumerate(zip(video_data, org_videos, strict=False)):
         # print(f'calculating ssims for {video_names[i]}')
         num_frames = video.shape[0]
         frame_start = 0

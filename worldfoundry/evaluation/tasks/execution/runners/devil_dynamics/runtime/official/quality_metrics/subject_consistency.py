@@ -1,27 +1,16 @@
-import io
-import json
 import os
-import pdb
 
-import cv2
-import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
 from PIL import Image
-from tqdm import tqdm
-from vbench.utils import dino_transform, dino_transform_Image, load_dimension_info, load_video
+from vbench.utils import dino_transform, dino_transform_Image, load_video
 
 
 def subject_consistency(model, video_path, device, read_frame=False):
     sim = 0.0
     cnt = 0
-    video_results = dict()
-    if read_frame:
-        image_transform = dino_transform_Image(224)
-    else:
-        image_transform = dino_transform(224)
+    _video_results = {}
+    image_transform = dino_transform_Image(224) if read_frame else dino_transform(224)
     # for video_path in tqdm(video_list):
     video_sim = 0.0
     if read_frame:
@@ -33,6 +22,7 @@ def subject_consistency(model, video_path, device, read_frame=False):
     else:
         images = load_video(video_path)
         images = image_transform(images)
+    former_image_features: torch.Tensor | None = None
     for i in range(len(images)):
         with torch.no_grad():
             image = images[i].unsqueeze(0)

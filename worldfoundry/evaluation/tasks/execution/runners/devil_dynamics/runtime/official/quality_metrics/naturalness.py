@@ -1,8 +1,9 @@
 import argparse
+import contextlib
 import json
 import os
 import time
-from multiprocessing import Manager, Pool
+from multiprocessing import Pool
 
 import google.generativeai as genai
 import tqdm
@@ -47,7 +48,7 @@ def parse_txt_file(txt_file_path):
 
 
 def map_video_paths(combined_dict, key_to_video_path):
-    for key in combined_dict.keys():
+    for key in combined_dict:
         if key in key_to_video_path:
             combined_dict[key]["video_name"] = key_to_video_path[key]
         else:
@@ -59,7 +60,7 @@ def save_to_excel(data, excel_path):
     wb = Workbook()
     ws = wb.active
     # 假设字典中的值是字典类型，我们添加一个标题行，具体列标题可能需要根据实际内容调整
-    headers = ["Key"] + list(next(iter(data.values())).keys())  # 取任意一项的键作为标题
+    headers = ["Key", *list(next(iter(data.values())).keys())]  # 取任意一项的键作为标题
     ws.append(headers)
     for key, value_dict in data.items():
         row = [key] + [value_dict.get(header) for header in headers[1:]]  # 按标题顺序提取值
@@ -86,7 +87,7 @@ def read_paths_and_indices(file_path):
 
 
 def judge_reality(index, video_file_path, api_key=None):
-    result = dict()
+    result = {}
     genai.configure(api_key=api_key)
     uploaded_file = genai.upload_file(path=video_file_path)
     while getattr(uploaded_file, "state", None) and uploaded_file.state.name == "PROCESSING":
@@ -131,10 +132,8 @@ def judge_reality(index, video_file_path, api_key=None):
         text = "\n".join(part.text for part in parts if getattr(part, "text", None))
     print(index, ": ", text)
     result.update({index: text})
-    try:
+    with contextlib.suppress(Exception):
         genai.delete_file(uploaded_file.name)
-    except Exception:
-        pass
     return result
 
 
@@ -150,7 +149,7 @@ def save_naturalness_results(results_json_dir, mp4_file_list_path, excel_output_
 def find_mp4_files(directory, output_file):
     with open(output_file, "w") as file:
         counter = 1  # 初始化文件计数器
-        for root, dirs, files in os.walk(directory):
+        for root, _dirs, files in os.walk(directory):
             # 过滤出 .mp4 文件
             mp4_files = [f for f in files if f.endswith(".mp4") and not f.startswith(".")]
             for mp4_file in mp4_files:
@@ -163,7 +162,7 @@ def find_mp4_files(directory, output_file):
 def process_video(args):
     path, api_key = args
     index, video_path = path
-    result = dict()
+    result = {}
     repeat_times = 0
     sleep_time = 5
 

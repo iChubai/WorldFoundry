@@ -77,7 +77,7 @@ def _resolve_required_file(
     for candidate in ordered:
         if candidate is not None and candidate.is_file():
             return candidate
-    hints = [name for name in env_names]
+    hints = list(env_names)
     if explicit:
         hints.insert(0, str(explicit))
     raise FileNotFoundError(f"missing DEVIL {label}; set one of: {', '.join(hints) or label}")

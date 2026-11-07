@@ -1,6 +1,5 @@
 import argparse
 import os
-import pdb
 
 import numpy as np
 import pandas as pd
@@ -111,7 +110,12 @@ def intergrate_per_method_auto_bin(
     args,
     df_quality,
     df_dynamics,
-    keys=["motion_smoothness", "naturalness", "subject_consistency", "background_consistency"],
+    keys=[  # noqa: B006 - Read-only upstream metric ordering.
+        "motion_smoothness",
+        "naturalness",
+        "subject_consistency",
+        "background_consistency",
+    ],
     name_col="video_name",
 ):
     # def intergrate_per_method_auto_bin(args, df_quality, df_dynamics, keys=['subject_consistency', 'background_consistency'], name_col='video_name'):
@@ -119,13 +123,13 @@ def intergrate_per_method_auto_bin(
     df_dynamics, df_quality = filter_dataframes_by_common_videos(df_dynamics, df_quality, video_basename_col=name_col)
 
     video_names_dynamics_score, dynamic_total = get_overall_dynamic_scores(df_dynamics, args.regress_model_weight_path)
-    scores = dict()
+    scores = {}
 
     for key in keys:
         scores.update({key: df_quality[key]})
 
     video_names_dynamics_score = video_names_dynamics_score.str[:4].str.lower()
-    video_names = df_quality[name_col].str[:4].str.lower()
+    _video_names = df_quality[name_col].str[:4].str.lower()
     results_data = []
     # for name in video_names.unique():
     # idx = video_names == name
@@ -138,8 +142,8 @@ def intergrate_per_method_auto_bin(
         assert len(result) % 3 == 0
         overall_mean = result.mean()
         org_mean = scores[key].to_numpy().mean()
-        mse_dynamics = np.sqrt(np.mean((result - overall_mean) ** 2))
-        mse_oring = np.sqrt(np.mean((result - org_mean) ** 2))
+        _mse_dynamics = np.sqrt(np.mean((result - overall_mean) ** 2))
+        _mse_oring = np.sqrt(np.mean((result - org_mean) ** 2))
         # print('-' * 10, f'Metric: {key}', '-' * 10)
         # print(f'mse_dynamics: {mse_dynamics}')
         # print(f'mse_oring: {mse_oring}')
@@ -185,10 +189,7 @@ def calculate_mean_values(x, y, num_bins=12, x_min=0, x_max=1, default_value=0):
         y_values = y[indices]
 
         # 计算均值，如果当前区间没有数据，则返回NaN
-        if y_values.size > 0:
-            mean_value = np.mean(y_values)
-        else:
-            mean_value = default_value
+        mean_value = np.mean(y_values) if y_values.size > 0 else default_value
 
         y_means.append(mean_value)
 

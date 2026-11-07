@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from decord import VideoReader, cpu
+from decord import VideoReader
 from PIL import Image, ImageSequence
 from torchvision import transforms
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
@@ -19,6 +19,7 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     config_path as amt_config_path,
 )
 from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
+from worldfoundry.core.distributed.collectives.evaluation import barrier, get_rank
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -32,11 +33,6 @@ except ImportError:
 CACHE_DIR = os.environ.get("VBENCH_CACHE_DIR")
 if CACHE_DIR is None:
     CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "vbench")
-
-from worldfoundry.core.distributed.collectives.evaluation import (
-    barrier,
-    get_rank,
-)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -95,8 +91,9 @@ def get_frame_indices(num_frames, vlen, sample="rand", fix_start=None, input_fps
             ranges.append((interv, intervals[idx + 1] - 1))
         if sample == "rand":
             try:
-                frame_indices = [random.choice(range(x[0], x[1])) for x in ranges]
-            except:
+                # Upstream uses NumPy's RNG when random is unavailable.
+                frame_indices = [random.choice(range(x[0], x[1])) for x in ranges]  # noqa: F821
+            except BaseException:
                 frame_indices = np.random.permutation(vlen)[:acc_samples]
                 frame_indices.sort()
                 frame_indices = list(frame_indices)

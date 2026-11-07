@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 import torch
-from decord import VideoReader, cpu
+from decord import VideoReader
 from PIL import Image, ImageSequence
 from torchvision import transforms
 from torchvision.transforms import CenterCrop, Compose, Normalize, Resize, ToPILImage, ToTensor
@@ -127,8 +127,9 @@ def get_frame_indices(num_frames, vlen, sample="rand", fix_start=None, input_fps
             ranges.append((interv, intervals[idx + 1] - 1))
         if sample == "rand":
             try:
-                frame_indices = [random.choice(range(x[0], x[1])) for x in ranges]
-            except:
+                # Upstream uses NumPy's RNG when random is unavailable.
+                frame_indices = [random.choice(range(x[0], x[1])) for x in ranges]  # noqa: F821
+            except BaseException:
                 frame_indices = np.random.permutation(vlen)[:acc_samples]
                 frame_indices.sort()
                 frame_indices = list(frame_indices)

@@ -371,15 +371,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
     l1 = list(range(len(dataset)))
     for i in l1:
         data = dataset[i]
-        modelmessage = f"{len(data['frames'][modelname])} frames from {modelname}."
-
-        agents = [Agent("Assistant-one", logger, prompt, config), Agent("Assistant-two", logger, prompt, config)]
-        host = Host("Host", logger, prompt, config, modelname, modelmessage, agents)
-
-        for agent in agents:
-            agent.video_prompt = data["prompt"]
-        host.video_prompt = data["prompt"]
-        host.frames = data["frames"]
 
         score[i] = {}
         history[i] = {}
@@ -394,6 +385,13 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 model_scores[modelname] = {"total_score": 0, "count": 0}
 
             # 为自定义模型创建消息
+            modelmessage = f"{len(data['frames'][modelname])} frames from {modelname}."
+            agents = [Agent("Assistant-one", logger, prompt, config), Agent("Assistant-two", logger, prompt, config)]
+            host = Host("Host", logger, prompt, config, modelname, modelmessage, agents)
+            for agent in agents:
+                agent.video_prompt = data["prompt"]
+            host.video_prompt = data["prompt"]
+            host.frames = data["frames"]
 
             logger.info(f">>>>>>>>This is the {i}_{modelname} round>>>>>>>")
             try:
@@ -427,10 +425,6 @@ def eval(config, prompt, dimension, cur_full_info_path, models):
                 logger.info("Errormessage: " + str(e))
                 print(f"An error occurred: {e}")
                 score[i] = "Error"
-
-            for agent in agents:
-                agent.reset()
-            host.reset()
 
     average_scores = {
         model: model_scores[model]["total_score"] / model_scores[model]["count"]

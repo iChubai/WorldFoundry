@@ -1,14 +1,8 @@
-import io
-import json
 import logging
-import os
 
-import cv2
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
 from PIL import Image
 from tqdm import tqdm
 from vbench2_beta_i2v.utils import (
@@ -48,6 +42,7 @@ def i2v_subject(model, video_pair_list, device):
         # calculate sim between input image and frames in generated video
         conformity_scores = []
         consec_scores = []
+        former_image_features: torch.Tensor | None = None
         for i in range(len(images)):
             with torch.no_grad():
                 image = images[i].unsqueeze(0)

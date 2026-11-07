@@ -2,11 +2,13 @@ import importlib
 import os
 import sys
 
+# Runtime modules resolve imports through the upstream package name.
 sys.modules.setdefault("vbench2_beta_i2v", sys.modules[__name__])
 
-from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench
+from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench  # noqa: E402
 
-from .utils import init_submodules, load_json, save_json
+from .utils import init_submodules, save_json  # noqa: E402
+from .utils import load_json as load_json  # noqa: E402
 
 
 class VBenchI2V(VBench):
@@ -57,7 +59,8 @@ class VBenchI2V(VBench):
                     dimension_module = importlib.import_module(f"vbench.{dimension}")
                 evaluate_func = getattr(dimension_module, f"compute_{dimension}")
             except Exception as e:
-                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")
+                # Keep the upstream import failure as implicit exception context.
+                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")  # noqa: B904
             submodules_list = submodules_dict[dimension]
             print(f"cur_full_info_path: {cur_full_info_path}")  # TODO: to delete
             results = evaluate_func(cur_full_info_path, self.device, submodules_list, **kwargs)

@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 def save_json(data, save_file):
-    json.dump(data, open(save_file, "w"))
+    with open(save_file, "w") as file:
+        json.dump(data, file)
 
 
 def crop(img_path, bbox, save_root):
@@ -62,7 +63,8 @@ def transfer_bbox_to_origin_img(first_crop_info, old_bbox):
 
 
 def get_target_crop(args):
-    data = json.load(open(args.crop_info_path))
+    with open(args.crop_info_path) as file:
+        data = json.load(file)
     target_results = []
     os.makedirs(args.result_path, exist_ok=True)
 

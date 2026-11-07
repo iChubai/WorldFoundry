@@ -38,6 +38,8 @@ class DummyRecorder:
     if a recorder is active.
     """
 
+    _next_step: int = 0
+
     def record_step(self, *args: Any, **kwargs: Any) -> None:
         """Mock method for recording a step. Does nothing."""
 

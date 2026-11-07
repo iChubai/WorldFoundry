@@ -7,7 +7,7 @@ import os
 import threading
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import ExitStack
+from contextlib import ExitStack, suppress
 from numbers import Real
 from pathlib import Path
 from typing import Any
@@ -25,12 +25,10 @@ def _configure_outer_cpu_parallelism() -> None:
 
     cv2.setNumThreads(1)
     torch.set_num_threads(1)
-    try:
+    # PyTorch only permits changing this before the first inter-op task.
+    # A second backend in the same process can safely reuse the first value.
+    with suppress(RuntimeError):
         torch.set_num_interop_threads(1)
-    except RuntimeError:
-        # PyTorch only permits changing this before the first inter-op task.
-        # A second backend in the same process can safely reuse the first value.
-        pass
 
 
 def _decode_frames(video: Path) -> tuple[list[Any], float]:

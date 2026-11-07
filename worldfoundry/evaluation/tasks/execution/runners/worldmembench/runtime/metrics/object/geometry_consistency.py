@@ -45,8 +45,8 @@ def canonicalize_object_mask(
     crop_height, crop_width = crop.shape
     usable_size = canvas_size - 2 * padding
     scale = usable_size / float(max(crop_height, crop_width))
-    target_height = max(1, min(usable_size, int(round(crop_height * scale))))
-    target_width = max(1, min(usable_size, int(round(crop_width * scale))))
+    target_height = max(1, min(usable_size, round(crop_height * scale)))
+    target_width = max(1, min(usable_size, round(crop_width * scale)))
 
     source_y = np.minimum(
         (np.arange(target_height) * crop_height // target_height),

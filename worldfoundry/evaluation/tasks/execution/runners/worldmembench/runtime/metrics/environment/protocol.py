@@ -89,9 +89,9 @@ def protocol_for_sample(sample: dict, *, total_frames: int) -> EnvironmentProtoc
     phases = []
     cursor = 0
     for index, (action, count) in enumerate(zip(actions, transitions, strict=False)):
-        start = int(round(cursor * (total_frames - 1) / source_last))
+        start = round(cursor * (total_frames - 1) / source_last)
         cursor += count
-        end = int(round(cursor * (total_frames - 1) / source_last))
+        end = round(cursor * (total_frames - 1) / source_last)
         if end <= start:
             raise DataInvalidError(f"phase {index} collapses in decoded frame space")
         if action in ("move_left", "move_right"):

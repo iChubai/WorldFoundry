@@ -44,13 +44,13 @@ def _center_crop(
     height, width = image.shape[:2]
     source_aspect = width / float(height)
     if source_aspect > destination_aspect:
-        crop_width = max(1, min(width, int(round(height * destination_aspect))))
+        crop_width = max(1, min(width, round(height * destination_aspect)))
         left = (width - crop_width) // 2
         return (
             image[:, left : left + crop_width],
             mask[:, left : left + crop_width],
         )
-    crop_height = max(1, min(height, int(round(width / destination_aspect))))
+    crop_height = max(1, min(height, round(width / destination_aspect)))
     top = (height - crop_height) // 2
     return (
         image[top : top + crop_height],
@@ -67,8 +67,8 @@ def _letterbox_pair(
 ) -> tuple[np.ndarray, np.ndarray]:
     source_height, source_width = image.shape[:2]
     scale = min(width / float(source_width), height / float(source_height))
-    scaled_width = max(1, int(round(source_width * scale)))
-    scaled_height = max(1, int(round(source_height * scale)))
+    scaled_width = max(1, round(source_width * scale))
+    scaled_height = max(1, round(source_height * scale))
     scaled_image, scaled_mask = _resize_pair(
         image,
         mask,

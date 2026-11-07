@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import sys
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,9 +21,9 @@ import numpy as np
 import torch
 from PIL import Image
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-
 from wrbench.eval.d2 import extract_d2_dinov2_consistency_features as d2_base
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 METHOD_NAME = "dinov2_local_global_patch_bestmatch_v1"
 FORMULA_FAMILY = "fixed_nonlearned_scalar_variants_v1"
@@ -353,7 +352,7 @@ def _extract_one(
 
     out["d2_lg_original_frame_shape"] = [int(value) for value in frames.shape[1:]]
     global_features, patch_features, feature_meta = _extract_feature_tensors(
-        [frame for frame in frames],
+        list(frames),
         processor,
         model,
         device,
@@ -408,9 +407,8 @@ def qa_rows(rows: list[Mapping[str, Any]], requested: int) -> dict[str, Any]:
             "d2_lg_hard_cut_min",
         ):
             value = row.get(key)
-            if isinstance(value, (int, float)) and math.isfinite(float(value)):
-                if not (0.0 <= float(value) <= 1.0):
-                    out_of_bounds.append({"video_id": row.get("video_id"), "field": key, "value": value})
+            if isinstance(value, (int, float)) and math.isfinite(float(value)) and not (0.0 <= float(value) <= 1.0):
+                out_of_bounds.append({"video_id": row.get("video_id"), "field": key, "value": value})
     rows_written = len(rows)
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

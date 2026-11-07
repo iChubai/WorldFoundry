@@ -72,7 +72,7 @@ def _image_size_from_intrinsics(intrinsics: np.ndarray) -> list[int]:
     cx = float(intrinsics[0, 0, 2])
     cy = float(intrinsics[0, 1, 2])
     if cx > 1.0 and cy > 1.0:
-        return [int(round(cx * 2.0)), int(round(cy * 2.0))]
+        return [round(cx * 2.0), round(cy * 2.0)]
     return [832, 480]
 
 

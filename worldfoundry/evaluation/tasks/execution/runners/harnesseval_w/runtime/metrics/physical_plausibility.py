@@ -14,7 +14,7 @@ Usage:
 from __future__ import annotations
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 import torch
 
@@ -38,7 +38,7 @@ ANCHOR_WEIGHTS = torch.tensor([5.0, 4.0, 3.0, 2.0, 1.0])
 class PhysicalPlausibilityEvaluator:
     """Local PAVRM inference using Qwen3-VL reward model (transformers backend)."""
 
-    def __init__(self, model_path: str = None, device: str = "cuda"):
+    def __init__(self, model_path: str | None = None, device: str = "cuda"):
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         if model_path is None:

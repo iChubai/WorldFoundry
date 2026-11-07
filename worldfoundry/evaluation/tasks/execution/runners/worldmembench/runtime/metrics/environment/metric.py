@@ -203,7 +203,7 @@ class EnvironmentSceneReconstructionMetric(_EnvironmentMetric):
             raise ValueError("invalid reconstruction home window")
         phase0 = protocol.phases[0]
         home = window_indices(
-            available, phase0.start, int(round(phase0.start + home_fraction * (phase0.end - phase0.start))), home_frames
+            available, phase0.start, round(phase0.start + home_fraction * (phase0.end - phase0.start)), home_frames
         )
         radius = int(config.get("revisit_radius_frames", 14))
         threshold = float(context.metric_config("environment_return_validity").get("rotation_threshold_deg", 30.0))
@@ -242,14 +242,14 @@ class EnvironmentSceneReconstructionMetric(_EnvironmentMetric):
                 ).astype(bool)
                 for index, mask in zip(indices, predicted, strict=False)
             }
-        settings = dict(
-            semantic_masks=masks,
-            angular_width=int(config.get("angular_width", 128)),
-            confidence_quantile=float(config.get("confidence_quantile", 0.5)),
-            near_depth_percentile=float(config.get("near_depth_percentile", 5.0)),
-            far_depth_percentile=float(config.get("far_depth_percentile", 85.0)),
-            max_points_per_frame=int(config.get("max_points_per_frame", 5000)),
-        )
+        settings = {
+            "semantic_masks": masks,
+            "angular_width": int(config.get("angular_width", 128)),
+            "confidence_quantile": float(config.get("confidence_quantile", 0.5)),
+            "near_depth_percentile": float(config.get("near_depth_percentile", 5.0)),
+            "far_depth_percentile": float(config.get("far_depth_percentile", 85.0)),
+            "max_points_per_frame": int(config.get("max_points_per_frame", 5000)),
+        }
         reference = spherical_range_field(geometry, home, poses[0, :3, :3], **settings)
         minimum_bins, require_departure = (
             int(config.get("minimum_common_bins", 64)),

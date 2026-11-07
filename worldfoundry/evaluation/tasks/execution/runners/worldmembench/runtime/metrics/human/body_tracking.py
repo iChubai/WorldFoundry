@@ -210,7 +210,7 @@ class YoloSamBodyTracker:
         first_people = self.person_detector.detect(frames[0])
         people_by_frame = {0: first_people}
         first_assignments = assign_faces_to_person_boxes(
-            {target_id: box for target_id, box in enumerate(protocol.target_face_boxes)},
+            dict(enumerate(protocol.target_face_boxes)),
             first_people,
         )
         masks = self.mask_propagator.track(
@@ -279,7 +279,7 @@ class YoloSamBodyTracker:
         people_by_frame: dict[int, list[tuple[BoundingBox, float]]],
         total_frames: int,
     ) -> list[dict[int, BoundingBox]]:
-        direct = [dict() for _ in stable_runs]
+        direct = [{} for _ in stable_runs]
         for frame_index in range(total_frames):
             eligible_faces = {}
             for target_id, runs in enumerate(stable_runs):

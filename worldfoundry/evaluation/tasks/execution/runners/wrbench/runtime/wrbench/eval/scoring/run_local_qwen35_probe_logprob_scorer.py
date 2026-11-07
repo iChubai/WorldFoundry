@@ -44,14 +44,18 @@ except ImportError:
         DEFAULT_PROMPT_MODE,
         PROBE_CATALOG_VERSION,
         PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
-        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
-        RUNTIME_V2_PROBE_CATALOG,
         SUPPORTED_PROMPT_MODES,
         RuntimeV2Probe,
         active_probe_catalog,
         build_runtime_v2_probe_prompt,
         question_for_probe,
         validate_prompt_mode,
+    )
+    from wrbench.eval.scoring.prompts_v2_probe import (
+        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY as PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
+    )
+    from wrbench.eval.scoring.prompts_v2_probe import (
+        RUNTIME_V2_PROBE_CATALOG as RUNTIME_V2_PROBE_CATALOG,
     )
     from wrbench.eval.scoring.runtime_common import META_KEYS
 

@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import logging
 from itertools import combinations
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -389,10 +388,7 @@ def _build_gt_rotation(pred_turn: np.ndarray, action: str, perspective: str) -> 
     gt_range = np.linalg.norm(gt_pos, axis=1).mean() + 1e-12
     pred_range = np.linalg.norm(pred_pos, axis=1).mean() + 1e-12
 
-    if pred_rot < MIN_ROT_THRESHOLD or pred_range < MIN_DISP_THRESHOLD:
-        scale = 1.0
-    else:
-        scale = pred_range / gt_range
+    scale = 1.0 if pred_rot < MIN_ROT_THRESHOLD or pred_range < MIN_DISP_THRESHOLD else pred_range / gt_range
 
     gt_pos_rot = (R_align @ gt_pos.T).T
     start_pos = pred_turn[0, :3, 3]

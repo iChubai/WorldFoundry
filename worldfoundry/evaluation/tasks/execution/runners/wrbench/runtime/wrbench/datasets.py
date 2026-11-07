@@ -153,10 +153,7 @@ def load_natural25_t2v_event_tails(path: str | Path | None = None) -> dict[str, 
 
 def _join_anchors(anchor_names: list[str]) -> str:
     names = [name.strip() for name in anchor_names if name.strip()]
-    if len(names) == 1:
-        text = names[0]
-    else:
-        text = " and ".join(names[:2])
+    text = names[0] if len(names) == 1 else " and ".join(names[:2])
     return text[:1].upper() + text[1:]
 
 

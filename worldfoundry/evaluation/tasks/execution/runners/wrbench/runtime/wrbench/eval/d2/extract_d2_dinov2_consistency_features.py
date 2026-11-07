@@ -184,8 +184,8 @@ def _sample_frames(
 
 def _center_crop(frame: np.ndarray, crop_fraction: float) -> np.ndarray:
     h, w = frame.shape[:2]
-    side_h = max(1, int(round(h * crop_fraction)))
-    side_w = max(1, int(round(w * crop_fraction)))
+    side_h = max(1, round(h * crop_fraction))
+    side_w = max(1, round(w * crop_fraction))
     y0 = max(0, (h - side_h) // 2)
     x0 = max(0, (w - side_w) // 2)
     return frame[y0 : y0 + side_h, x0 : x0 + side_w]
@@ -211,8 +211,8 @@ def _motion_bbox(
     y0, y1 = int(ys.min()), int(ys.max())
     if (x1 - x0 + 1) * (y1 - y0 + 1) < h * w * min_area_fraction:
         return None
-    pad_x = int(round((x1 - x0 + 1) * pad_fraction))
-    pad_y = int(round((y1 - y0 + 1) * pad_fraction))
+    pad_x = round((x1 - x0 + 1) * pad_fraction)
+    pad_y = round((y1 - y0 + 1) * pad_fraction)
     x0 = max(0, x0 - pad_x)
     x1 = min(w - 1, x1 + pad_x)
     y0 = max(0, y0 - pad_y)
@@ -323,7 +323,7 @@ def _extract_one(
         return out
     out["dinov2_frame_count"] = len(frames)
     if "global" in crop_modes:
-        global_feats = _feature_tensor([frame for frame in frames], processor, model, device, batch_size)
+        global_feats = _feature_tensor(list(frames), processor, model, device, batch_size)
         out.update(_stats("dinov2_global", global_feats))
     if "center" in crop_modes:
         crop_feats = _feature_tensor(

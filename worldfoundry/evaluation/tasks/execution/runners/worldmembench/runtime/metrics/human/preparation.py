@@ -157,7 +157,7 @@ def source_anchors(
         dtype=np.float64,
     )
     pairs = _hungarian_pairs(scores)
-    by_target = {target_id: detection_id for target_id, detection_id in pairs}
+    by_target = dict(pairs)
     if len(by_target) != len(canonical_boxes):
         raise ManifestBuildError("source first-frame target assignment is incomplete")
     anchors: list[np.ndarray] = []
@@ -200,7 +200,7 @@ def generated_target_boxes(
         dtype=np.float64,
     )
     pairs = _hungarian_pairs(scores)
-    by_target = {target_id: detection_id for target_id, detection_id in pairs}
+    by_target = dict(pairs)
     if len(by_target) != len(anchors):
         raise ManifestBuildError("generated first-frame identity assignment is incomplete")
     boxes: list[list[float]] = []

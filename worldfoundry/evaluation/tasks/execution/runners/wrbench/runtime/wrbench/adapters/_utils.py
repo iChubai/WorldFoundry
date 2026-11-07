@@ -162,7 +162,7 @@ def linspace_frame_indices(requested_frame_count: int, sample_count: int) -> lis
     if int(sample_count) == 1:
         return [0]
     values = np.linspace(0, int(requested_frame_count) - 1, int(sample_count))
-    return [int(round(float(v))) for v in values]
+    return [round(float(v)) for v in values]
 
 
 def build_model_control_timeline_metadata(

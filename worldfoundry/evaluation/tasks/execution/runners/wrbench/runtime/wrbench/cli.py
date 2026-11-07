@@ -221,7 +221,7 @@ def _resolve_preset_camera(camera_str: str, args: argparse.Namespace):
         print(f"error: {exc}", file=sys.stderr)
         names = wrbench.presets.preset_names()
         print(f"  valid presets: {', '.join(names)}", file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1)  # noqa: B904 - Preserve the CLI's implicit exception context.
     return script
 
 
@@ -340,7 +340,7 @@ def _cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
     artifacts: dict[str, str] = result.get("artifacts", {})
-    payload = result.get("payload")
+    _payload = result.get("payload")
     print(f"model    : {result['model']}")
     print(f"dry_run  : {result['dry_run']}")
     print("artifacts:")

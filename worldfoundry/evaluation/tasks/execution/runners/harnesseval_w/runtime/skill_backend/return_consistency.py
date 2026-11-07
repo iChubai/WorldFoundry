@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import math
 import threading
 from collections.abc import Mapping
@@ -235,7 +236,7 @@ class _Backend:
             )
         diffs = [
             float(np.mean(np.abs(right["gray"].astype(np.float32) - left["gray"].astype(np.float32))) / 255.0)
-            for left, right in zip(samples[:-1], samples[1:], strict=False)
+            for left, right in itertools.pairwise(samples)
         ]
         if not diffs:
             raise RuntimeError("Return requires consecutive sampled frames")

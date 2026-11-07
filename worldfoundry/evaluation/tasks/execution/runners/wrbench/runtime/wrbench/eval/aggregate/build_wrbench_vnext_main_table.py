@@ -137,7 +137,7 @@ def build_table(
     d2_records: list[dict[str, Any]],
     d1_camalign_records: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    camalign_spec = metric_contract.metric_by_dimension("D1-CamAlign")
+    _camalign_spec = metric_contract.metric_by_dimension("D1-CamAlign")
     d1_by_id = _index(d1_records, artifact_name="D1 score artifact")
     d2_by_id = _index(d2_records, artifact_name="D2 score artifact")
     camalign_by_id = (

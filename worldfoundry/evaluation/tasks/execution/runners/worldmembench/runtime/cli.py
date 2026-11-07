@@ -55,7 +55,12 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(registry.names()) or "WorldMemBench has no metrics yet.")
         return 0
     try:
-        filters = dict(models=args.models, categories=args.categories, trajectories=args.trajectories, cases=args.cases)
+        filters = {
+            "models": args.models,
+            "categories": args.categories,
+            "trajectories": args.trajectories,
+            "cases": args.cases,
+        }
         if args.command == "manifest":
             samples = load_samples(args.input, **filters)
             output = write_manifest(samples, args.output)

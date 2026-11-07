@@ -12,7 +12,7 @@ import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .stage import utc_now_iso
 
@@ -342,7 +342,7 @@ def sample_gpu_memory(gpu_ids: list[str] | None = None) -> list[dict[str, Any]]:
         "--query-gpu=index,uuid,name,memory.used",
         "--format=csv,noheader,nounits",
     ]
-    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    proc = subprocess.run(cmd, text=True, capture_output=True, check=False)
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.strip() or "nvidia-smi failed")
     wanted = set(gpu_ids or [])

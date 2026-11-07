@@ -137,7 +137,6 @@ class DashScopeT2IProvider:
                 return {"source": "base64", "provider": self.provider_name, "model": self.model}
             raise RuntimeError(f"No image in DashScope response: {data}")
         # Download first URL
-        import httpx
 
         img_resp = self._client.get(urls[0])
         img_resp.raise_for_status()

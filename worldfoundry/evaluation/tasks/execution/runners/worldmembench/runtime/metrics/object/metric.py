@@ -57,7 +57,7 @@ class _ObjectMetric(Metric):
         if error:
             exception = DataInvalidError if error["status"] == "data_invalid" else EvaluationError
             raise exception(error["message"])
-        kwargs = dict(tracker=self.tracker, redetector=self.redetector, reader=self.reader)
+        kwargs = {"tracker": self.tracker, "redetector": self.redetector, "reader": self.reader}
         extra_scores, extra_metadata = {}, {}
         if self.geometry:
             track = object_track_analysis_for_item(sample, context, weight_metric=self.name, **kwargs)

@@ -41,14 +41,13 @@ def local_vlm_generate(*, prompt: str, video_path: Path, model_path: Path) -> st
         }
     ]
     text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
+    image_inputs, video_inputs = process_vision_info(messages)
     inputs = processor(
         text=[text],
         images=image_inputs,
         videos=video_inputs,
         padding=True,
         return_tensors="pt",
-        **video_kwargs,
     )
     inputs = inputs.to(model.device)
     generated_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)

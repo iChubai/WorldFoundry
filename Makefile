@@ -23,6 +23,9 @@ INFER_TENSOR_MANIFEST ?= tmp/inference-cpu-selection.json
 INFER_TENSOR_JUNIT ?= tmp/inference-cpu-contracts.xml
 STRICT_TEST_RUNNER = $(PYTHON) tests/manual/validate_junit_contract.py run
 PUBLIC_GATE_CONTRACTS = \
+	tests/eval_core/test_videoverse_local_vlm.py \
+	tests/eval_core/test_vendi_molecule_kernel.py \
+	tests/eval_core/test_libero_mem_recording.py \
 	tests/eval_core/test_model_benchmark_resume_controls.py \
 	tests/eval_core/test_run_manifest.py \
 	tests/runtime/test_geometry_regression_lazy_dispatch.py \

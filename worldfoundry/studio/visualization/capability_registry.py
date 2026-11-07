@@ -274,12 +274,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         ("text", "media"),
         "perception_core/action_recognition/umt/models/modeling_finetune.py",
     ),
-    _cap(
-        "videomae-mmaction",
-        "perception_core/action_recognition/videomae_mmaction",
-        ("text", "media"),
-        "perception_core/action_recognition/videomae_mmaction/configs/_base_/default_runtime.py",
-    ),
     _cap("grit", "perception_core/captioning/grit", ("detection", "text"), "perception_core/captioning/grit/model.py"),
     _cap(
         "tag2text", "perception_core/captioning/tag2text", ("text",), "perception_core/captioning/tag2text/tag2text.py"
@@ -295,12 +289,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "perception_core/detection/yolo_world",
         ("detection",),
         "perception_core/detection/yolo_world/mmyolo/demo/image_demo.py",
-    ),
-    _cap(
-        "deepface",
-        "perception_core/face/deepface",
-        ("detection", "text", "media"),
-        "perception_core/face/deepface/deepface/commons/realtime.py",
     ),
     _cap(
         "amt",

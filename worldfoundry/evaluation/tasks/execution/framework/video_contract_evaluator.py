@@ -10,10 +10,10 @@ import csv
 import json
 import os
 import shutil
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.io.formats.serialization import iter_jsonl, write_json, write_jsonl
 from worldfoundry.core.media.codecs.video import probe_video_metadata
@@ -354,7 +354,10 @@ def _local_metric_rows(
         _boolean_row(
             "generated_video_exists",
             samples,
-            [_sample_video_path(sample) is not None and _sample_video_path(sample).exists() for sample in samples],
+            [
+                _sample_video_path(sample) is not None and cast(Path, _sample_video_path(sample)).exists()
+                for sample in samples
+            ],
         ),
         _boolean_row(
             "generated_video_nonempty", samples, [_is_nonempty(_sample_video_path(sample)) for sample in samples]
@@ -385,7 +388,9 @@ def _manifest_coverage_row(
         return _not_available_row(
             "artifact_manifest_coverage", NO_MANIFEST_REASON, {"generated_video_count": len(generated_files)}
         )
-    checks = [_sample_video_path(sample) is not None and _sample_video_path(sample).exists() for sample in samples]
+    checks = [
+        _sample_video_path(sample) is not None and cast(Path, _sample_video_path(sample)).exists() for sample in samples
+    ]
     return _boolean_row(
         "artifact_manifest_coverage",
         samples,
@@ -537,7 +542,7 @@ def _sidecar_path(path: Path) -> Path | None:
 
 
 def _readability_row(
-    samples: list[Mapping[str, JsonValue]], probes: list[Mapping[str, JsonValue]]
+    samples: list[Mapping[str, JsonValue]], probes: Sequence[Mapping[str, JsonValue]]
 ) -> dict[str, JsonValue]:
     """Score generated video readability based on local probe evidence.
 
@@ -563,7 +568,7 @@ def _readability_row(
 def _probe_check_row(
     metric_id: str,
     samples: list[Mapping[str, JsonValue]],
-    probes: list[Mapping[str, JsonValue]],
+    probes: Sequence[Mapping[str, JsonValue]],
     kwargs: Mapping[str, JsonValue],
     field: str,
 ) -> dict[str, JsonValue]:
@@ -592,7 +597,7 @@ def _probe_check_row(
 
 def _resolution_check_row(
     samples: list[Mapping[str, JsonValue]],
-    probes: list[Mapping[str, JsonValue]],
+    probes: Sequence[Mapping[str, JsonValue]],
     kwargs: Mapping[str, JsonValue],
 ) -> dict[str, JsonValue]:
     """Score width and height metadata availability and optional bounds.
@@ -876,7 +881,9 @@ def write_video_contract_evaluation(
     judge_rows = _load_judge_rows(official_results_path)
     generated_files = _generated_video_files(artifact_root)
     samples = _samples(prompt_records, judge_rows, artifact_root, generated_files)
-    local_rows = _local_metric_rows(samples, prompt_manifest_path, generated_files, kwargs)
+    local_rows = _local_metric_rows(
+        cast(list[Mapping[str, JsonValue]], samples), prompt_manifest_path, generated_files, kwargs
+    )
     official_rows = _official_metric_rows(
         benchmark_id,
         official_metric_ids,

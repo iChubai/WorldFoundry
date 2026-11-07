@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.tasks.datasets import (
@@ -259,7 +259,7 @@ def materialize_requests_from_dataset_manifest(
         if manifest_path is not None
         else manifest
         if isinstance(manifest, DatasetManifest)
-        else DatasetManifest.from_dict(manifest)
+        else DatasetManifest.from_dict(cast(Mapping[str, Any], manifest))
     )
     samples_path = resolve_dataset_samples_path(dataset_manifest, manifest_path=manifest_path)
     samples = read_dataset_samples(samples_path)

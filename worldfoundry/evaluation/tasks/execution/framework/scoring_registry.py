@@ -6,9 +6,9 @@ catalog YAML. Engine implementations stay in the per-bench hook modules.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from functools import lru_cache
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.catalog.benchmark_id import normalize_benchmark_id
 from worldfoundry.evaluation.tasks.catalog.dispatch import parse_scoring_hook
@@ -46,7 +46,7 @@ def supported_in_tree_benchmark_ids() -> tuple[str, ...]:
 @lru_cache(maxsize=1)
 def target_benchmark_metrics() -> dict[str, tuple[str, ...]]:
     return {
-        benchmark_id: tuple(get_in_tree_benchmark_config(benchmark_id)["metric_ids"])  # type: ignore[arg-type]
+        benchmark_id: tuple(cast(Sequence[str], get_in_tree_benchmark_config(benchmark_id)["metric_ids"]))
         for benchmark_id in supported_in_tree_benchmark_ids()
     }
 

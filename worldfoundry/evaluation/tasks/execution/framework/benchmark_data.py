@@ -6,7 +6,7 @@ import csv
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.tasks.execution.framework.runner_common import VIDEO_EXTENSIONS
 
@@ -182,7 +182,7 @@ def _write_tiny_video(path: Path, *, frames: int = 32, size: int = 224, fps: int
 
         writer = cv2.VideoWriter(
             str(path),
-            cv2.VideoWriter_fourcc(*"mp4v"),
+            cast(Any, cv2).VideoWriter_fourcc(*"mp4v"),
             float(fps),
             (size, size),
         )
@@ -200,7 +200,7 @@ def _write_tiny_video(path: Path, *, frames: int = 32, size: int = 224, fps: int
         import numpy as np
 
         arrays = [np.asarray(frame) for frame in _tiny_rgb_frames(frames=frames, size=size)]
-        imageio.mimsave(path, arrays, fps=fps)
+        cast(Any, imageio.mimsave)(path, arrays, fps=fps)
         return "imageio"
     except Exception:
         pass

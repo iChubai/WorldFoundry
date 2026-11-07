@@ -8,7 +8,7 @@ directory setup.
 from __future__ import annotations
 
 from asyncio import CancelledError
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime, timezone
@@ -91,7 +91,7 @@ def run_stage(
     stage: str,
     *,
     manifest: Mapping[str, Any] | None = None,
-) -> Iterator[None]:
+) -> Generator[None, None, None]:
     """Keep stage failures and current report availability consistent across executors."""
     if manifest is not None:
         _clear_reports(paths)

@@ -11,7 +11,7 @@ import os
 from collections.abc import Iterable, Mapping
 from math import isfinite
 from pathlib import Path
-from typing import Any
+from typing import Any, cast, overload
 
 from worldfoundry.core.io.formats.serialization import (
     append_jsonl,
@@ -36,6 +36,18 @@ JsonMapping = Mapping[str, Any]
 DEFAULT_SCORE_KEYS = ("score", "raw_score", "value", "mean", "average")
 
 
+@overload
+def env_path(name: object, path: Path, /, *, default: Path | str | None = None) -> Path: ...
+
+
+@overload
+def env_path(*names: object, default: Path | str) -> Path: ...
+
+
+@overload
+def env_path(*names: object, default: Path | str | None = None) -> Path | None: ...
+
+
 def env_path(*names: object, default: Path | str | None = None) -> Path | None:
     """Attempts to find and parse a file path from a prioritized list of OS environment variables.
 
@@ -52,7 +64,7 @@ def env_path(*names: object, default: Path | str | None = None) -> Path | None:
     """
     if names and not isinstance(names[-1], str):
         if default is None:
-            default = names[-1]
+            default = cast(Path | str | None, names[-1])
         names = names[:-1]
     for name in names:
         value = os.environ.get(str(name))

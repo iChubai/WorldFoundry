@@ -11,7 +11,7 @@ import os
 import shutil
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.io.formats.serialization import iter_jsonl_objects
 from worldfoundry.evaluation.api import ArtifactRef, GenerationResult
@@ -82,8 +82,12 @@ def build_import_metric_rows(
     reason_template: str = "score_not_available_in_results",
 ) -> list[dict[str, Any]]:
     """Build normalized per-metric rows from imported upstream results."""
-    direct_metrics = computed.get("metrics") if isinstance(computed.get("metrics"), Mapping) else {}
-    components = computed.get("components") if isinstance(computed.get("components"), Mapping) else {}
+    direct_metrics = (
+        cast(Mapping[str, Any], computed.get("metrics")) if isinstance(computed.get("metrics"), Mapping) else {}
+    )
+    components = (
+        cast(Mapping[str, Any], computed.get("components")) if isinstance(computed.get("components"), Mapping) else {}
+    )
     rows: list[dict[str, Any]] = []
     for metric_id in metric_order:
         spec = metric_specs[metric_id]

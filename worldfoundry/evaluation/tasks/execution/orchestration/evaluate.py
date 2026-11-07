@@ -263,10 +263,7 @@ def _rows_from_source(value: Any, *, preferred_keys: Sequence[str]) -> list[Any]
         # Otherwise, treat the mapping as a dict of sample_id -> item.
         rows = []
         for sample_id, item in value.items():
-            if isinstance(item, Mapping):
-                row = dict(item)
-            else:
-                row = {"value": item}
+            row = dict(item) if isinstance(item, Mapping) else {"value": item}
             row.setdefault("sample_id", str(sample_id))
             rows.append(row)
         return rows
@@ -343,10 +340,7 @@ def _normalize_requests(source: Any) -> list[GenerationRequest | dict[str, Any]]
         if isinstance(item, GenerationRequest):
             normalized.append(item)
             continue
-        if isinstance(item, Mapping):
-            row = dict(item)
-        else:
-            row = {"inputs": {"value": item}}
+        row = dict(item) if isinstance(item, Mapping) else {"inputs": {"value": item}}
         row.setdefault("sample_id", _sample_id_from(item, index))
         row.setdefault("task_name", _task_name_from(item))
         normalized.append(row)
@@ -359,10 +353,7 @@ def _derive_requests_from_results(results_source: Any) -> list[GenerationRequest
     requests: list[GenerationRequest] = []
     for index, item in enumerate(rows):
         sample_id = _sample_id_from(item, index)
-        if isinstance(item, Mapping) and isinstance(item.get("request"), Mapping):
-            row = dict(item["request"])
-        else:
-            row = {}
+        row = dict(item["request"]) if isinstance(item, Mapping) and isinstance(item.get("request"), Mapping) else {}
         row.setdefault("sample_id", sample_id)
         row.setdefault("task_name", _task_name_from(item))
         requests.append(GenerationRequest.from_dict(row))
@@ -695,7 +686,7 @@ def _resolve_metrics(
     supported = target_benchmark_metrics().get(lookup_id, ())
     in_tree_ids = tuple(key for key in metric_ids if key in supported)
     offline_ids = tuple(key for key in metric_ids if key not in supported)
-    resolved = list(objects)
+    resolved: list[Any] = list(objects)
     if in_tree_ids:
         resolved.append(
             BenchmarkZooInTreeEvaluator(

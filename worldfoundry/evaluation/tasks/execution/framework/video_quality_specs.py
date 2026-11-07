@@ -234,7 +234,6 @@ _METRIC_ALIASES: dict[str, dict[str, str]] = {
         "aesthetic_quality": "aesthetic_quality",
         "iq": "imaging_quality",
         "imaging_quality": "imaging_quality",
-        "imaging_quality": "imaging_quality",
         "ca": "camera_alignment",
         "cameraalignment": "camera_alignment",
         "camera_alignment": "camera_alignment",

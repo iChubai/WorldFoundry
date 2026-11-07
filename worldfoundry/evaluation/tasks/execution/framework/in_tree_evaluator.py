@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import AggregateResult, GenerationRequest, GenerationResult, MetricResult
 from worldfoundry.evaluation.tasks.execution.framework.io import coerce_unit_score
@@ -90,7 +90,7 @@ class BenchmarkZooInTreeEvaluator:
         """
         key = benchmark_id.strip().lower()
         config = get_in_tree_benchmark_config(key)
-        known_metrics = tuple(config["metric_ids"])  # type: ignore[arg-type]
+        known_metrics = tuple(cast(Sequence[str], config["metric_ids"]))
         if key not in supported_in_tree_benchmark_ids():
             known = ", ".join(sorted(supported_in_tree_benchmark_ids()))
             raise ValueError(f"unsupported in-tree benchmark evaluator {benchmark_id!r}; known: {known}")
@@ -101,7 +101,7 @@ class BenchmarkZooInTreeEvaluator:
         self.benchmark_id = key
         self.metric_ids = metrics
         required = config.get("required_artifacts", ("generated_video",))
-        self.required_artifacts = tuple(required_artifacts or required)  # type: ignore[arg-type]
+        self.required_artifacts = tuple(required_artifacts or cast(Sequence[str], required))
         self._config = config
         self.parameters = {"benchmark_id": key}
         self.higher_is_better = bool(config.get("higher_is_better", True))

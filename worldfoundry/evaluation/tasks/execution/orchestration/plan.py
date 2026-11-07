@@ -11,7 +11,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.evaluation.api import GenerationRequest
 from worldfoundry.evaluation.api.json_contract import tuple_of_str as _coerce_str_tuple
@@ -205,21 +205,23 @@ class RunPlan:
             mode=str(data.get("mode", "existing-results")),
             output_dir=str(data["output_dir"]),
             task=data.get("task") if isinstance(data.get("task"), Mapping) else None,
-            model=data.get("model") if isinstance(data.get("model"), Mapping) else {},
-            dataset=data.get("dataset") if isinstance(data.get("dataset"), Mapping) else {},
+            model=cast(Mapping[str, Any], data.get("model")) if isinstance(data.get("model"), Mapping) else {},
+            dataset=cast(Mapping[str, Any], data.get("dataset")) if isinstance(data.get("dataset"), Mapping) else {},
             metrics=tuple(data.get("metrics") or ("artifact_count",)),
             required_artifacts=tuple(data.get("required_artifacts") or ()),
             requests=tuple(data.get("requests") or ()),
             requests_path=data.get("requests_path"),
             results_path=data.get("results_path"),
-            materialization=data.get("materialization") if isinstance(data.get("materialization"), Mapping) else {},
+            materialization=cast(Mapping[str, Any], data.get("materialization"))
+            if isinstance(data.get("materialization"), Mapping)
+            else {},
             run_id=data.get("run_id"),
             fail_on_sample_error=bool(data.get("fail_on_sample_error", False)),
             write_artifacts_index=bool(data.get("write_artifacts_index", True)),
             generation_cache_dir=data.get("generation_cache_dir"),
             generation_cache_mode=str(data.get("generation_cache_mode", "off")),
             generation_cache_namespace=str(data.get("generation_cache_namespace", "run_plan")),
-            metadata=data.get("metadata") if isinstance(data.get("metadata"), Mapping) else {},
+            metadata=cast(Mapping[str, Any], data.get("metadata")) if isinstance(data.get("metadata"), Mapping) else {},
             schema_version=str(data.get("schema_version", RUN_PLAN_SCHEMA_VERSION)),
         )
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -282,10 +283,8 @@ def build_metrics_summary(
         if owner is None:
             from worldfoundry.evaluation.tasks.metrics.registry import default_metric_registry
 
-            try:
+            with contextlib.suppress(KeyError):
                 direction = default_metric_registry().get(key).higher_is_better
-            except KeyError:
-                pass
         payload = aggregate.to_dict()
         payload.pop("schema_version")
         payload.pop("metric_id")

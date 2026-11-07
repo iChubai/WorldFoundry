@@ -9,6 +9,7 @@ score evidence.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -272,10 +273,8 @@ def _cuda_check(
         **result,
     }
     if result.get("stdout"):
-        try:
+        with contextlib.suppress(json.JSONDecodeError):
             payload["runtime"] = json.loads(str(result["stdout"]).splitlines()[-1])
-        except json.JSONDecodeError:
-            pass
     return payload
 
 

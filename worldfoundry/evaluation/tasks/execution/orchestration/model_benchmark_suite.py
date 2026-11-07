@@ -25,7 +25,7 @@ from collections import deque
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass, fields, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from worldfoundry.core.io.formats.serialization import read_jsonl_objects
 from worldfoundry.core.observability.logging_setup import get_logger
@@ -641,7 +641,7 @@ def _benchmark_aware_provenance(
 
     payload = dict(provenance)
     claim = dict(payload.get("claim") or {})
-    reasons = list(payload.get("reasons") or ())
+    reasons: list[str] = list(payload.get("reasons") or ())
     full_official_evidence = bool(
         benchmark.official_benchmark_verified
         and benchmark.integration_evidence
@@ -1551,6 +1551,7 @@ def _run_models_in_spawn_workers(
 ) -> list[dict[str, Any]]:
     """Dynamically run one model per spawned process on immutable CUDA groups."""
     import multiprocessing
+    from multiprocessing.connection import Connection
     from multiprocessing.connection import wait as wait_for_connections
 
     try:
@@ -1610,7 +1611,7 @@ def _run_models_in_spawn_workers(
             if not active:
                 continue
 
-            ready = set(wait_for_connections(tuple(active), timeout=0.25))
+            ready = set(cast(list[Connection], wait_for_connections(tuple(active), timeout=0.25)))
             ready.update(connection for connection, (process, _, _) in active.items() if not process.is_alive())
             for connection in ready:
                 process, model_id, cuda_devices = active.pop(connection)

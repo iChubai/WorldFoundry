@@ -161,21 +161,21 @@ def _workspace_official_run_command(
     return tuple(build_workspace_benchmark_command(payload, output_dir))
 
 
-def _resolve_python_command(command: str | tuple[str, ...] | list[str]) -> str | tuple[str, ...]:
+def _resolve_python_command(command: str | tuple[str, ...] | list[str]) -> str | tuple[str, ...] | list[str]:
     """Rewrite leading ``python`` to ``sys.executable``."""
     if isinstance(command, (tuple, list)) and command and command[0] in {"python", "python3"}:
         return (sys.executable, *command[1:])
     return command
 
 
-def _command_to_json(command: str | tuple[str, ...] | None) -> JsonValue:
+def _command_to_json(command: str | tuple[str, ...] | list[str] | None) -> JsonValue:
     """Coerce a command to JSON-safe string or list."""
     if command is None:
         return None
     return command if isinstance(command, str) else list(command)
 
 
-def _subprocess_command(command: str | tuple[str, ...]) -> str | list[str]:
+def _subprocess_command(command: str | tuple[str, ...] | list[str]) -> str | list[str]:
     """Format a command for ``subprocess.run``."""
     return command if isinstance(command, str) else list(command)
 
@@ -1359,7 +1359,7 @@ class ManifestBenchmarkRunner:
             task_metadata["required_artifacts"] = [
                 item if isinstance(item, str) else item.get("path", item.get("uri"))
                 for item in self.entry.expected_artifacts
-                if isinstance(item, str) or isinstance(item, Mapping)
+                if isinstance(item, (str, Mapping))
             ]
 
         metric_results = [

@@ -235,7 +235,7 @@ def main():
 
     prompt = []
 
-    assert args.custom_input == False, "(Deprecated) use --mode=custom_input instead"
+    assert not args.custom_input, "(Deprecated) use --mode=custom_input instead"
 
     if (args.prompt_file is not None) and (args.prompt != ""):
         raise Exception("--prompt_file and --prompt cannot be used together")
@@ -245,7 +245,7 @@ def main():
     if args.prompt_file:
         with open(args.prompt_file) as f:
             prompt = json.load(f)
-        assert type(prompt) == dict, 'Invalid prompt file format. The correct format is {"video_path": prompt, ... }'
+        assert type(prompt) is dict, 'Invalid prompt file format. The correct format is {"video_path": prompt, ... }'
     elif args.prompt != "":
         prompt = [args.prompt]
 

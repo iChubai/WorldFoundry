@@ -1,35 +1,26 @@
-import io
-import json
 import logging
 import os
-import random
 import re
 from bisect import bisect_left
 from collections import defaultdict
 from pathlib import Path
 
-import cv2
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torchvision.transforms as transforms
 import yaml
 from decord import VideoReader
-from PIL import Image
-from tqdm import tqdm
-from vbench.utils import CACHE_DIR, dino_transform, dino_transform_Image, load_dimension_info, load_video, save_json
+from vbench.utils import load_video, save_json
 
 from worldfoundry.core.media.codecs.video import write_video_torchvision as write_video
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-from moviepy.editor import VideoFileClip
-from scenedetect import SceneManager, open_video, split_video_ffmpeg
-from scenedetect.detectors import ContentDetector
-from scenedetect.video_splitter import split_video_ffmpeg
-from scipy.stats import rankdata
+# Provider initialization uses the runtime's logging configuration.
+from scenedetect import SceneManager, open_video  # noqa: E402
+from scenedetect.detectors import ContentDetector  # noqa: E402
+from scipy.stats import rankdata  # noqa: E402
 
 ###################################################################################################
 # Consistency Dimensions' Score Distribution Transformation
@@ -87,7 +78,7 @@ def split_video_into_scenes(video_path, output_dir, threshold=27.0):
         output_dir = os.path.dirname(video_path)
     if scene_list:
         save_video_by_scene_list(video_path, video_name, scene_list, output_dir=output_dir)
-    return True if scene_list else False
+    return bool(scene_list)
 
 
 def save_video_by_scene_list(video_path, video_name, scene_list, output_dir=None):
@@ -353,10 +344,10 @@ def fuse_inclip_clip2clip(inclip_avg_results, clip2clip_avg_results, inclip_dict
 
     w_inclip = kwargs["w_inclip"]
     w_clip2clip = kwargs["w_clip2clip"]
-    inclip_mean = kwargs["inclip_mean"]
-    inclip_std = kwargs["inclip_std"]
-    clip2clip_mean = kwargs["clip2clip_mean"]
-    clip2clip_std = kwargs["clip2clip_std"]
+    _inclip_mean = kwargs["inclip_mean"]
+    _inclip_std = kwargs["inclip_std"]
+    _clip2clip_mean = kwargs["clip2clip_mean"]
+    _clip2clip_std = kwargs["clip2clip_std"]
 
     # Load the mapping table from the YAML file
     with open(kwargs[f"{postfix}_mapping_file_path"]) as f:
@@ -421,7 +412,7 @@ def get_duration_from_json(video_path, full_info_list, clip_lengths):
         dimensions = [prompt["dimension"] for prompt in full_info_list if prompt["prompt_en"] == video_description]
         if dimensions:
             # Flatten the list of dimensions and remove duplicates
-            unique_dimensions = set(dim for sublist in dimensions for dim in sublist)
+            unique_dimensions = {dim for sublist in dimensions for dim in sublist}
             # Retrieve the clip lengths for each dimension and find the maximum length
             length_values = [clip_lengths[dim] for dim in unique_dimensions if dim in clip_lengths]
             max_length = max(length_values) if length_values else None

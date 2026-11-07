@@ -38,7 +38,7 @@ def gender_bias_blip(retina_model, video_dict, device):
         video_results = []
         prompt_clip_results_gender = []
         for video_path in tqdm(video_list):
-            text_gender = clip.tokenize(gender_list).to(device)
+            _text_gender = clip.tokenize(gender_list).to(device)
             images = load_video(video_path)
             total_frames = images.shape[0]
             if total_frames <= 16:

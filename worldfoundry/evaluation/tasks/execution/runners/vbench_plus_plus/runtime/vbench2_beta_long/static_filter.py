@@ -14,17 +14,18 @@ from tqdm import tqdm
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-from vbench.utils import CACHE_DIR, load_json
-from vbench2_beta_long.utils import get_prompt_from_filename
+# Provider initialization uses the runtime's logging configuration.
+from vbench.utils import load_json  # noqa: E402
+from vbench2_beta_long.utils import get_prompt_from_filename  # noqa: E402
 
-from worldfoundry.base_models.perception_core.optical_flow.raft import (
+from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402
     RAFT,
     InputPadder,
 )
-from worldfoundry.base_models.perception_core.optical_flow.raft import (
+from worldfoundry.base_models.perception_core.optical_flow.raft import (  # noqa: E402
     checkpoint_path as raft_checkpoint_path,
 )
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset  # noqa: E402
 
 CUR_PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEVICE = "cuda"
@@ -79,10 +80,7 @@ class StaticFilter:
                 count += 1
             if count > count_num:
                 return False
-        for score in score_list[-2:]:
-            if score > thres * count_num * 2:
-                return False
-        return True
+        return not any(score > thres * count_num * 2 for score in score_list[-2:])
 
     def set_params(self, frame, count):
         scale = min(list(frame.shape)[-2:])
@@ -94,7 +92,7 @@ class StaticFilter:
             self.set_params(frame=frames[0], count=len(frames))
             static_score = []
             for image1, image2 in zip(
-                frames[:-1] + [frames[0], frames[-1]], frames[1:] + [frames[-1], frames[0]], strict=False
+                [*frames[:-1], frames[0], frames[-1]], [*frames[1:], frames[-1], frames[0]], strict=False
             ):
                 padder = InputPadder(image1.shape)
                 image1, image2 = padder.pad(image1, image2)
@@ -130,7 +128,7 @@ def check_and_move(args, filter_results, target_path=None):
     for prompt, v in filter_results.items():
         if v["static_count"] < 5 and args.filter_scope == "temporal_flickering":
             logger.warning(f"Prompt: '{prompt}' has fewer than 5 filter results.")
-        for i, video_path in enumerate(v["static_path"]):
+        for _i, video_path in enumerate(v["static_path"]):
             target_name = os.path.join(target_path, os.path.basename(video_path))
             clips_to_video_name = os.path.basename(video_path).split("_")[0]
             target_video_name = os.path.join(target_video_path, f"{clips_to_video_name}.mp4")
@@ -174,15 +172,18 @@ def static_filter(args):
 
     for path in tqdm(paths):
         name = get_prompt_from_filename(path)
-        if name in prompt_list:
-            if prompt_dict[name]["static_count"] < 5 or args.filter_scope != "temporal_flickering":
-                if static_filter.infer(path):
-                    prompt_dict[name]["static_count"] += 1
-                    prompt_dict[name]["static_path"].append(path)
+        if (
+            name in prompt_list
+            and (prompt_dict[name]["static_count"] < 5 or args.filter_scope != "temporal_flickering")
+            and static_filter.infer(path)
+        ):
+            prompt_dict[name]["static_count"] += 1
+            prompt_dict[name]["static_path"].append(path)
 
     os.makedirs(args.result_path, exist_ok=True)
     info_file = os.path.join(args.result_path, args.store_name)
-    json.dump(prompt_dict, open(info_file, "w"))
+    with open(info_file, "w") as file:
+        json.dump(prompt_dict, file)
     logger.info(f"Filtered results info is saved in the '{info_file}' file")
     check_and_move(args, prompt_dict)
 

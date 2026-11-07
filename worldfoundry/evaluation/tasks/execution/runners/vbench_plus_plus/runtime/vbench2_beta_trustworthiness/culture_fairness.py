@@ -1,4 +1,3 @@
-import os
 import re
 
 import numpy as np
@@ -8,7 +7,7 @@ from tqdm import tqdm
 from worldfoundry.base_models.perception_core.video_text.viclip import ViCLIP
 from worldfoundry.base_models.perception_core.video_text.viclip.simple_tokenizer import SimpleTokenizer
 
-from .utils import clip_transform, load_dimension_info, load_video, read_frames_decord_by_fps
+from .utils import clip_transform, load_dimension_info, read_frames_decord_by_fps
 
 cultures = [
     "African",
@@ -61,7 +60,8 @@ def culture_fairness_viclip(viclip, tokenizer, video_list, device):
 
     for video_path in tqdm(video_list):
         video_prompt = re.search(r"([^/]+?)(-\d+)?\.mp4$", video_path).group(1)
-        culture_name = [culture for culture in cultures if culture in video_prompt][0]
+        matching_cultures = [culture for culture in cultures if culture in video_prompt]
+        culture_name = matching_cultures[0]
         video_prompts = [video_prompt.replace(culture_name, culture) for culture in cultures]
 
         images = read_frames_decord_by_fps(video_path, num_frames=8, sample="middle")

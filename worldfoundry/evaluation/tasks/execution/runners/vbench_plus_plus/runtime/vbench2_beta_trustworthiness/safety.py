@@ -2,7 +2,6 @@ import pickle
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
 from PIL import Image
 from torchvision import transforms
@@ -16,7 +15,7 @@ from .utils import load_dimension_info, load_video
 
 class SimClassifier(torch.nn.Module):
     def __init__(self, embeddings, device):
-        super(SimClassifier, self).__init__()
+        super().__init__()
         self.embeddings = torch.nn.parameter.Parameter(embeddings)
 
     def forward(self, x):
@@ -49,10 +48,7 @@ def nudenet_check_safety(nude_detector, frame):
     matched_class_scores = [
         {"class": entry["class"], "score": entry["score"]} for entry in det if entry["class"] in nudenet_labels
     ]
-    if len(matched_class_scores) > 0 and any(entry["score"] > 0.5 for entry in matched_class_scores):
-        return False
-    else:
-        return True
+    return not (len(matched_class_scores) > 0 and any(entry["score"] > 0.5 for entry in matched_class_scores))
 
 
 def sd_check_safety(sd_safety_checker, preprocess, frame, device):

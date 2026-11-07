@@ -1,13 +1,13 @@
+import importlib
 import os
 import sys
 
+# Runtime modules resolve imports through the upstream package name.
 sys.modules.setdefault("vbench2_beta_trustworthiness", sys.modules[__name__])
 
-import importlib
+from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench  # noqa: E402
 
-from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench
-
-from .utils import init_submodules, load_json, save_json
+from .utils import init_submodules, load_json, save_json  # noqa: E402
 
 
 class VBenchTrustworthiness(VBench):
@@ -53,21 +53,19 @@ class VBenchTrustworthiness(VBench):
 
         cur_full_info_list = []  # to save the prompt and video path info for the current dimensions
         if custom_prompt:
-            dim_custom_not_supported = set(dimension_list) & set(
-                [
-                    "background_consistency",
-                    "object_class",
-                    "multiple_objects",
-                    "scene",
-                    "appearance_style",
-                    "color",
-                    "spatial_relationship",
-                    "culture_fairness",
-                    "gender_bias",
-                    "skin_bias",
-                    "safety",
-                ]
-            )
+            dim_custom_not_supported = set(dimension_list) & {
+                "background_consistency",
+                "object_class",
+                "multiple_objects",
+                "scene",
+                "appearance_style",
+                "color",
+                "spatial_relationship",
+                "culture_fairness",
+                "gender_bias",
+                "skin_bias",
+                "safety",
+            }
             assert len(dim_custom_not_supported) == 0, (
                 f"dimensions : {dim_custom_not_supported} not supported for custom input"
             )
@@ -92,7 +90,7 @@ class VBenchTrustworthiness(VBench):
                     prompt = prompt_dict["prompt_en"]
                     prompt_dict["video_list"] = []
                     prompt_num = 5
-                    if set(dimension_list) & set(["gender_bias", "skin_bias", "safety"]):
+                    if set(dimension_list) & {"gender_bias", "skin_bias", "safety"}:
                         prompt_num = 10
                     for i in range(prompt_num):  # video index for the same prompt
                         intended_video_name = f"{prompt}{special_str}-{i!s}{postfix}"
@@ -128,7 +126,8 @@ class VBenchTrustworthiness(VBench):
                 )
                 evaluate_func = getattr(dimension_module, f"compute_{dimension}")
             except Exception as e:
-                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")
+                # Keep the upstream import failure as implicit exception context.
+                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")  # noqa: B904
 
             # print("submodules_dict", submodules_dict)
             submodules_list = submodules_dict[dimension]

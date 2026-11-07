@@ -1,17 +1,13 @@
 import logging
 import os
 
-import cv2
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
-from decord import VideoReader
 from dreamsim import dreamsim
 from PIL import Image
 from tqdm import tqdm
 from vbench.subject_consistency import compute_subject_consistency, subject_consistency
-from vbench.utils import dino_transform, dino_transform_Image, load_dimension_info, load_video
+from vbench.utils import load_video
 from vbench2_beta_long.utils import (
     create_video_from_first_frames,
     dinov2_transform,
@@ -37,7 +33,8 @@ def compute_long_subject_consistency(json_dir, device, submodules_list, **kwargs
 
     # compute clip2clip scores
     # sample first frames in each clip, and cat them into a new video
-    base_path_video = os.path.dirname(list(detailed_results[0].values())[0]).split("split_clip")[0]
+    first_result_values = list(detailed_results[0].values())
+    base_path_video = os.path.dirname(first_result_values[0]).split("split_clip")[0]
     long_video_path = os.path.join(base_path_video, "split_clip")
     new_cat_video_path = os.path.join(base_path_video, "subject_consistency_cat_firstframes_videos")
     if not os.path.exists(new_cat_video_path):
@@ -90,10 +87,7 @@ def subject_consistency_dreamsim(model, video_list, device, read_frame):
     sim = 0.0
     cnt = 0
     video_results = []
-    if read_frame:
-        image_transform = dreamsim_transform_Image(224)
-    else:
-        image_transform = dreamsim_transform(224)
+    image_transform = dreamsim_transform_Image(224) if read_frame else dreamsim_transform(224)
     # image_transform = preprocess if read_frame else dino_transform(224)
 
     for video_path in tqdm(video_list):
@@ -110,6 +104,7 @@ def subject_consistency_dreamsim(model, video_list, device, read_frame):
             images = image_transform(images)
 
         images = images.to(device)
+        former_image_features: torch.Tensor | None = None
 
         for i in range(len(images)):
             with torch.no_grad():
@@ -139,10 +134,7 @@ def subject_consistency_dinov2(model, video_list, device, read_frame):
     sim = 0.0
     cnt = 0
     video_results = []
-    if read_frame:
-        image_transform = dinov2_transform_Image(224)
-    else:
-        image_transform = dinov2_transform(224)
+    image_transform = dinov2_transform_Image(224) if read_frame else dinov2_transform(224)
     for video_path in tqdm(video_list):
         video_sim = 0.0
         if read_frame:
@@ -154,6 +146,7 @@ def subject_consistency_dinov2(model, video_list, device, read_frame):
         else:
             images = load_video(video_path)
             images = image_transform(images)
+        former_image_features: torch.Tensor | None = None
         for i in range(len(images)):
             with torch.no_grad():
                 image = images[i].unsqueeze(0)

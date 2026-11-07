@@ -1,22 +1,18 @@
 import logging
 import os
 
-import cv2
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms as transforms
 from dreamsim import dreamsim
 from PIL import Image
 from tqdm import tqdm
 from vbench.background_consistency import background_consistency, compute_background_consistency
-from vbench.utils import clip_transform, dino_transform, dino_transform_Image, load_dimension_info, load_video
+from vbench.utils import load_video
 from vbench2_beta_long.utils import (
     create_video_from_first_frames,
     dreamsim_transform,
     fuse_inclip_clip2clip,
     reorganize_clips_results,
-    save_segment,
 )
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip as clip
@@ -33,7 +29,8 @@ def compute_long_background_consistency(json_dir, device, submodules_list, **kwa
 
     # compute clip2clip scores
     # sample first frames in each clip, and cat them into a new video
-    base_path_video = os.path.dirname(list(detailed_results[0].values())[0]).split("split_clip")[0]
+    first_result_values = list(detailed_results[0].values())
+    base_path_video = os.path.dirname(first_result_values[0]).split("split_clip")[0]
     long_video_path = os.path.join(base_path_video, "split_clip")
     new_cat_video_path = os.path.join(base_path_video, "background_consistency_cat_firstframes_videos")
     if not os.path.exists(new_cat_video_path):
@@ -99,6 +96,7 @@ def background_consistency_dreamsim(model, preprocess, video_list, device, read_
         images = images.to(device)
         image_features = model.embed(images)
         image_features = F.normalize(image_features, dim=-1, p=2)
+        former_image_feature: torch.Tensor | None = None
         for i in range(len(image_features)):
             image_feature = image_features[i].unsqueeze(0)
             if i == 0:

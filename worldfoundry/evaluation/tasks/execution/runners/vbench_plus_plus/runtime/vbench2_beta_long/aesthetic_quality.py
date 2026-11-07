@@ -1,8 +1,4 @@
-import os
-from collections import defaultdict
-
 from vbench.aesthetic_quality import compute_aesthetic_quality
-from vbench.utils import load_json, save_json
 from vbench2_beta_long.utils import reorganize_clips_results
 
 

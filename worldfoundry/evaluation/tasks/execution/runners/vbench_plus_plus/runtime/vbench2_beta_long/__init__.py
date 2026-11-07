@@ -7,11 +7,12 @@ from pathlib import Path
 
 from worldfoundry.evaluation.tasks.execution.runners.vbench.runtime.vbench import VBench
 
+# Runtime modules resolve imports through the upstream package name.
 sys.modules.setdefault("vbench2_beta_long", sys.modules[__name__])
 
-from vbench.utils import get_prompt_from_filename, init_submodules, load_json, save_json
-from vbench2_beta_long.temporal_flickering import filter_static_clips
-from vbench2_beta_long.utils import (
+from vbench.utils import get_prompt_from_filename, init_submodules, load_json, save_json  # noqa: E402
+from vbench2_beta_long.temporal_flickering import filter_static_clips as filter_static_clips  # noqa: E402
+from vbench2_beta_long.utils import (  # noqa: E402
     get_duration_from_json,
     load_clip_lengths,
     split_video_into_clips,
@@ -113,7 +114,7 @@ class VBenchLong(VBench):
         self,
         videos_path,
         name,
-        prompt_list=[],
+        prompt_list=[],  # noqa: B006 - Preserve the public prompt-list default.
         dimension_list=None,
         local=False,
         read_frame=False,
@@ -148,7 +149,8 @@ class VBenchLong(VBench):
                 dimension_module = importlib.import_module(f"vbench2_beta_long.{dimension}")
                 evaluate_func = getattr(dimension_module, f"compute_long_{dimension}")
             except Exception as e:
-                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")
+                # Keep the upstream import failure as implicit exception context.
+                raise NotImplementedError(f"UnImplemented dimension {dimension}!, {e}")  # noqa: B904
             submodules_list = submodules_dict[dimension]
             print(f"cur_full_info_path: {cur_full_info_path}")  # TODO: to delete
 
@@ -163,7 +165,7 @@ class VBenchLong(VBench):
         videos_path,
         name,
         dimension_list,
-        prompt_list=[],
+        prompt_list=[],  # noqa: B006 - Read-only upstream prompt-list default.
         special_str="",
         verbose=False,
         mode="vbench_standard",
@@ -213,11 +215,9 @@ class VBenchLong(VBench):
                         for file in list(chain.from_iterable(vid["video_list"] for vid in cur_full_info_list))
                     ]
                     backslash = "\n"
-                    assert (
-                        len(set(all_video_path) - set([os.path.abspath(path_key) for path_key in prompt_list])) == 0
-                    ), f"""
+                    assert len(set(all_video_path) - {os.path.abspath(path_key) for path_key in prompt_list}) == 0, f"""
                     The prompts for the following videos are not found in the prompt file: \n
-                    {backslash.join(set(all_video_path) - set([os.path.abspath(path_key) for path_key in prompt_list]))}
+                    {backslash.join(set(all_video_path) - {os.path.abspath(path_key) for path_key in prompt_list})}
                     """
 
                     video_map = {}
@@ -233,10 +233,7 @@ class VBenchLong(VBench):
             category_supported = [
                 Path(category).stem for category in os.listdir("prompts/prompts_per_category")
             ]  # TODO: probably need refactoring again
-            if "category" not in kwargs:
-                category = category_supported
-            else:
-                category = kwargs["category"]
+            category = kwargs.get("category", category_supported)
 
             assert category is not None, "Please specify the category to be evaluated with --category"
             assert category in category_supported, f"""

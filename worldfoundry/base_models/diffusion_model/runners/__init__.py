@@ -7,7 +7,7 @@ need. It does not register recipes at import time.
 Must not: put a runner factory on a recipe; implement a sampling loop in this file.
 """
 
-from .autoregressive import AutoregressiveWindowRunner, WindowedDenoiser
+from .autoregressive import AutoregressiveStream, AutoregressiveWindowRunner, WindowedDenoiser
 from .base import DualConditionGuidanceRunner, NativeDiffusionRunner, RunnerComponents
 from .chunked import ChunkedCacheDenoiser, ChunkedKVCacheRunner
 from .multistage import (
@@ -46,6 +46,7 @@ def __getattr__(name: str):
 
 __all__ = [
     "DiffusionExecutor",
+    "AutoregressiveStream",
     "AutoregressiveWindowRunner",
     "DualConditionGuidanceRunner",
     "ChunkedCacheDenoiser",

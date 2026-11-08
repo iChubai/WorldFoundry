@@ -21,6 +21,7 @@ from worldfoundry.base_models.diffusion_model.contracts import (
 )
 from worldfoundry.base_models.diffusion_model.extensions import DiffusionExtension
 from worldfoundry.base_models.diffusion_model.runners.autoregressive import (
+    AutoregressiveStream,
     AutoregressiveWindowRunner,
 )
 from worldfoundry.base_models.diffusion_model.runners.base import RunnerComponents
@@ -585,3 +586,118 @@ def test_run_matches_recorded_rollout(case: str) -> None:
     assert output.metadata == _EXPECTED_METADATA[case]
     assert output.artifacts == {"frames": _CASES[case].frames}
     assert [error for _, error in denoiser.end_calls] == [None]
+
+
+def _step_all(stream: AutoregressiveStream) -> tuple[list[torch.Tensor], list[tuple[int, int]]]:
+    blocks: list[torch.Tensor] = []
+    frames: list[tuple[int, int]] = []
+    already_completed = stream.completed_blocks
+    while not stream.done:
+        blocks.append(stream.step().clone())
+        assert stream.last_block_frames is not None
+        frames.append(stream.last_block_frames)
+        assert stream.completed_blocks == already_completed + len(blocks)
+    return blocks, frames
+
+
+@pytest.mark.parametrize("case", sorted(_CASES))
+def test_stream_blocks_assemble_to_run_latents(case: str) -> None:
+    events: list[str] = []
+    runner, denoiser = _runner(case, events=events)
+    stream = runner.open_stream(_request(case))
+    assert stream.completed_blocks == 0
+    assert stream.last_block_frames is None
+    blocks, frames = _step_all(stream)
+    assert stream.total_blocks == len(blocks)
+    stream.close()
+
+    expected_steps = _EXPECTED_EVENTS[case].count("after_step")
+    assert events == ["on_run_start", "prepare_conditioning", *["after_step"] * expected_steps, "on_run_end"]
+    assert denoiser.trace == _EXPECTED_TRACE[case]
+    assert [error for _, error in denoiser.end_calls] == [None]
+    assert denoiser.live_caches() == 0
+    assert torch.equal(_assemble(case, blocks, frames), runner.run(_request(case)).latents)
+
+
+@pytest.mark.parametrize("case", ["flow-cfg", "distilled-x0-views"])
+def test_runner_isolates_a_b_a_requests_across_cancelled_stream(case: str) -> None:
+    runner, denoiser = _runner(case)
+    first = runner.run(_request(case))
+    cancelled = runner.open_stream(_request(case, seed=12, prompt="another window"))
+    cancelled.step()
+    cancelled.close()
+    other = runner.run(_request(case, seed=12, prompt="another window"))
+    again = runner.run(_request(case))
+
+    assert not torch.equal(first.latents, other.latents)
+    assert torch.equal(first.latents, again.latents)
+    assert torch.equal(first.sample, again.sample)
+    assert denoiser.live_caches() == 0
+
+
+def test_close_mid_rollout_releases_caches_and_ends_run_once() -> None:
+    events: list[str] = []
+    runner, denoiser = _runner("flow-cfg", events=events)
+    stream = runner.open_stream(_request("flow-cfg"))
+    stream.step()
+    assert denoiser.live_caches() == 2
+
+    stream.close()
+    stream.close()
+
+    assert events.count("on_run_end") == 1
+    assert not any(event.startswith("on_run_error") for event in events)
+    assert [error for _, error in denoiser.end_calls] == [None]
+    assert denoiser.live_caches() == 0
+    assert stream.completed_blocks == 1
+    assert not stream.done
+    with pytest.raises(RuntimeError, match="closed"):
+        stream.step()
+
+
+def test_step_failure_closes_stream_and_next_stream_matches_fresh_run() -> None:
+    events: list[str] = []
+    failing_call = _EXPECTED_TRACE["flow-cfg"].index("positive:0:2-4:2")
+    runner, denoiser = _runner("flow-cfg", denoiser=_WindowDenoiser(fail_on_call=failing_call), events=events)
+    stream = runner.open_stream(_request("flow-cfg"))
+    stream.step()
+    with pytest.raises(RuntimeError, match="denoiser failed") as caught:
+        stream.step()
+
+    assert events.count("on_run_error:denoiser failed") == 1
+    assert "on_run_end" not in events
+    assert denoiser.end_calls[-1][1] is caught.value
+    assert stream.completed_blocks == 1
+    with pytest.raises(RuntimeError, match="closed"):
+        stream.step()
+    stream.close()
+    assert len(denoiser.end_calls) == 1
+    del caught
+    denoiser.end_calls.clear()
+    assert denoiser.live_caches() == 0
+
+    denoiser.fail_on_call = None
+    recovered = runner.open_stream(_request("flow-cfg"))
+    blocks, frames = _step_all(recovered)
+    recovered.close()
+    reference, _ = _runner("flow-cfg")
+    assert torch.equal(_assemble("flow-cfg", blocks, frames), reference.run(_request("flow-cfg")).latents)
+
+
+def test_runner_allows_one_active_stream() -> None:
+    events: list[str] = []
+    runner, _ = _runner("flow-cfg", events=events)
+    stream = runner.open_stream(_request("flow-cfg"))
+    first = stream.step().clone()
+    first_frames = stream.last_block_frames
+    with pytest.raises(RuntimeError, match="already open"):
+        runner.open_stream(_request("flow-cfg"))
+    with pytest.raises(RuntimeError, match="already open"):
+        runner.run(_request("flow-cfg"))
+    assert events.count("on_run_start") == 1
+
+    assert first_frames == (0, 2)
+    blocks, frames = _step_all(stream)
+    stream.close()
+    assembled = _assemble("flow-cfg", [first, *blocks], [first_frames, *frames])
+    assert torch.equal(assembled, runner.run(_request("flow-cfg")).latents)

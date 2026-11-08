@@ -6,9 +6,14 @@ Implements the ``autoregressive-window`` strategy runner at the bottom of:
         → build_autoregressive_window_strategy
         → AutoregressiveWindowRunner.run
 
+``run`` steps one :class:`AutoregressiveStream` to completion and decodes the
+assembled latents once. Realtime callers use ``open_stream`` directly and
+decode each committed block themselves.
+
 Inputs: WindowedDenoiser plus canonical RunnerComponents, prediction_mode
 (flow / distilled-x0), fixed_timesteps, and context_timestep.
-Output: DiffusionOutput; metadata includes block_size / n_views / prediction_mode.
+Output: DiffusionOutput, or one BCTHW latent block per ``AutoregressiveStream.step``;
+metadata includes block_size / n_views / prediction_mode.
 Must not: let a model package own KV-cache windows or bypass
 WindowedDenoiser.create_kv_cache; on the distilled-x0 path, do not shift
 context_timestep a second time (see the cache-commit comment).
@@ -17,6 +22,7 @@ context_timestep a second time (see the cache-commit comment).
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Protocol, cast, runtime_checkable
 
 import torch
@@ -92,6 +98,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         self.renoise_dtype = renoise_dtype
         if self.prediction_mode == "distilled-x0" and not self.fixed_timesteps:
             raise ValueError("distilled-x0 execution requires fixed_timesteps")
+        self._active_stream: AutoregressiveStream | None = None
 
     def _prepare_context(
         self,
@@ -372,11 +379,100 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         return clean
 
     @torch.no_grad()
+    def open_stream(self, request: DiffusionRequest) -> AutoregressiveStream:
+        """Open a resident rollout for ``request``; each :meth:`AutoregressiveStream.step` commits one block.
+
+        Opening encodes conditions, runs extension ``on_run_start`` /
+        ``prepare_conditioning``, draws the full-length initial noise through the
+        latent initializer, creates the KV caches, and commits KV-only prefixes or
+        the first-frame latent. One stream may be open per runner: opening a second
+        one, or calling :meth:`run`, while a stream is open raises :exc:`RuntimeError`.
+        """
+        if self._active_stream is not None:
+            raise RuntimeError("an autoregressive stream is already open on this runner")
+        stream = AutoregressiveStream(self, request)
+        self._active_stream = stream
+        return stream
+
+    @torch.no_grad()
     def run(self, request: DiffusionRequest) -> DiffusionOutput:
-        context: DiffusionRunContext | None = None
-        run_error: BaseException | None = None
+        """Step one stream to completion, then decode the assembled latents once."""
+        stream = self.open_stream(request)
         try:
-            context, initial_noise, artifacts = self._prepare_context(request)
+            while not stream.done:
+                stream.step()
+            context = stream._context
+            state = stream._state
+            assert state is not None
+            latents = rearrange(state.output_by_view, "B C V T H W -> B C (V T) H W")
+            self._notify_diffusion_complete(context, latents)
+            sample = self.components.decoder.decode(latents, request)
+            output_frames = stream._output_num_frames
+            if output_frames is not None and not request.inputs.get("return_latent", False):
+                if sample.ndim != 5 or not 0 < int(output_frames) <= sample.shape[2]:
+                    raise ValueError("output_num_frames must fit the decoded BCTHW video")
+                sample = sample[:, :, :int(output_frames)]
+            for extension in self.extensions:
+                sample = extension.after_decode(context, sample)
+            result = DiffusionOutput(
+                sample=sample,
+                latents=latents,
+                artifacts=stream._artifacts,
+                metadata={
+                    "model_id": self.model_id,
+                    "seed": request.sampling.seed,
+                    "num_inference_steps": request.sampling.num_inference_steps,
+                    "guidance_scale": request.sampling.guidance_scale,
+                    "execution_strategy": "autoregressive-window",
+                    "prediction_mode": self.prediction_mode,
+                    "block_size": stream._block_size,
+                    "n_views": stream._n_views,
+                    "first_frame_conditioned": stream._first_frame_conditioned,
+                    "kv_prefix_frames": stream._prefix_frames,
+                },
+            )
+        except BaseException as error:
+            stream._finish(error)
+            raise
+        stream.close()
+        return result
+
+
+@dataclass(slots=True)
+class _RolloutState:
+    """Tensors and caches a stream holds between blocks; dropped on close."""
+
+    noise_by_view: Tensor
+    output_by_view: Tensor
+    positive_cache: Any
+    negative_cache: Any
+    positive_base: dict[str, object]
+    negative_base: dict[str, object] | None
+
+
+class AutoregressiveStream:
+    """One resident ``autoregressive-window`` rollout, advanced one latent block per :meth:`step`.
+
+    Created by :meth:`AutoregressiveWindowRunner.open_stream`. The stream owns the
+    run context, generator, KV caches, full-length initial noise and latent buffer,
+    so stepping to completion reproduces :meth:`AutoregressiveWindowRunner.run`
+    bitwise. Decoding stays with the caller (for example
+    ``WanVideoDecoder.new_stream_state()`` / ``decode_chunk()``).
+
+    :meth:`close` releases the caches and runs extension ``on_run_end`` once; it is
+    idempotent. A failure inside opening or :meth:`step` runs ``on_run_error``
+    instead, releases the caches and leaves the stream closed, so the runner can
+    open the next stream.
+    """
+
+    def __init__(self, runner: AutoregressiveWindowRunner, request: DiffusionRequest) -> None:
+        self._runner = runner
+        self._closed = False
+        self._completed_blocks = 0
+        self._last_block_frames: tuple[int, int] | None = None
+        context: DiffusionRunContext | None = None
+        try:
+            context, initial_noise, artifacts = runner._prepare_context(request)
             n_views = int(context.conditioning.shared.get("n_views", 1))
             frames_per_view = int(
                 context.conditioning.shared.get(
@@ -384,7 +480,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     initial_noise.shape[2] // n_views,
                 )
             )
-            block_size = int(self.windowed_denoiser.block_size)
+            block_size = int(runner.windowed_denoiser.block_size)
             first_frame_latent = context.conditioning.shared.get("first_frame_latent")
             if first_frame_latent is not None:
                 if not isinstance(first_frame_latent, Tensor) or n_views != 1:
@@ -412,11 +508,11 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                 "latent_frames_per_view": frames_per_view + prefix_frames,
                 "frame_sequence_length": frame_sequence_length,
                 "device": initial_noise.device,
-                "dtype": self.dtype,
+                "dtype": runner.dtype,
             }
-            positive_cache = self.windowed_denoiser.create_kv_cache(**cache_kwargs)
-            use_negative = self._use_negative_branch(context)
-            negative_cache = self.windowed_denoiser.create_kv_cache(**cache_kwargs) if use_negative else None
+            positive_cache = runner.windowed_denoiser.create_kv_cache(**cache_kwargs)
+            use_negative = runner._use_negative_branch(context)
+            negative_cache = runner.windowed_denoiser.create_kv_cache(**cache_kwargs) if use_negative else None
 
             output = torch.zeros_like(initial_noise)
             noise_by_view = rearrange(initial_noise, "B C (V T) H W -> B C V T H W", V=n_views)
@@ -431,8 +527,8 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             if prefix is not None:
                 context.step = SchedulerStep(
                     index=0,
-                    timestep=torch.tensor(0.0, device=self.device),
-                    next_timestep=torch.tensor(0.0, device=self.device),
+                    timestep=torch.tensor(0.0, device=runner.device),
+                    next_timestep=torch.tensor(0.0, device=runner.device),
                 )
                 for branch, base, cache in (
                     ("positive-cache-commit", positive_base, positive_cache),
@@ -440,14 +536,14 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                 ):
                     if base is None:
                         continue
-                    conditioning = self._window_conditioning(
+                    conditioning = runner._window_conditioning(
                         base, n_views=1, frames_per_view=frames_per_view,
                         start=0, end=prefix_frames, cache=cache,
                         frame_sequence_length=frame_sequence_length, block_noise=prefix,
                     )
                     conditioning.update(current_start=0, current_end=prefix_frames * frame_sequence_length,
                                         start_frame_for_rope=0)
-                    self._call_denoiser_with_conditioning(
+                    runner._call_denoiser_with_conditioning(
                         context, latents=prefix, branch=branch, conditioning=conditioning,
                     )
 
@@ -459,10 +555,10 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                 output_by_view[:, :, :, :1] = first_frame_latent.unsqueeze(2)
                 context.step = SchedulerStep(
                     index=max(request.sampling.num_inference_steps - 1, 0),
-                    timestep=torch.tensor(0.0, device=self.device),
-                    next_timestep=torch.tensor(0.0, device=self.device),
+                    timestep=torch.tensor(0.0, device=runner.device),
+                    next_timestep=torch.tensor(0.0, device=runner.device),
                 )
-                positive_seed = self._window_conditioning(
+                positive_seed = runner._window_conditioning(
                     positive_base,
                     n_views=1,
                     frames_per_view=frames_per_view,
@@ -472,14 +568,14 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     frame_sequence_length=frame_sequence_length,
                     block_noise=first_frame_latent,
                 )
-                self._call_denoiser_with_conditioning(
+                runner._call_denoiser_with_conditioning(
                     context,
                     latents=first_frame_latent,
                     branch="positive-cache-commit",
                     conditioning=positive_seed,
                 )
                 if negative_base is not None and negative_cache is not None:
-                    negative_seed = self._window_conditioning(
+                    negative_seed = runner._window_conditioning(
                         negative_base,
                         n_views=1,
                         frames_per_view=frames_per_view,
@@ -489,137 +585,201 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                         frame_sequence_length=frame_sequence_length,
                         block_noise=first_frame_latent,
                     )
-                    self._call_denoiser_with_conditioning(
+                    runner._call_denoiser_with_conditioning(
                         context,
                         latents=first_frame_latent,
                         branch="negative-cache-commit",
                         conditioning=negative_seed,
                     )
                 start_frame = 1
+        except BaseException as error:
+            try:
+                if context is not None:
+                    for extension in reversed(runner.extensions):
+                        extension.on_run_error(context, error)
+            finally:
+                runner._end_denoiser_request(context, error=error)
+            raise
 
-            for start in range(start_frame, frames_per_view, block_size):
-                end = min(start + block_size, frames_per_view)
-                block_noise = rearrange(
-                    noise_by_view[:, :, :, start:end],
-                    "B C V T H W -> B C (V T) H W",
-                )
-                positive = self._window_conditioning(
-                    positive_base,
+        self._context = context
+        self._artifacts = artifacts
+        self._n_views = n_views
+        self._frames_per_view = frames_per_view
+        self._block_size = block_size
+        self._prefix_frames = prefix_frames
+        self._first_frame_conditioned = first_frame_latent is not None
+        self._frame_sequence_length = frame_sequence_length
+        self._output_num_frames = cast(int | None, shared.get("output_num_frames"))
+        self._block_starts = tuple(range(start_frame, frames_per_view, block_size))
+        self._state: _RolloutState | None = _RolloutState(
+            noise_by_view=noise_by_view,
+            output_by_view=output_by_view,
+            positive_cache=positive_cache,
+            negative_cache=negative_cache,
+            positive_base=positive_base,
+            negative_base=negative_base,
+        )
+
+    @property
+    def total_blocks(self) -> int:
+        """Number of noisy blocks in the rollout, excluding prefix and first-frame commits."""
+        return len(self._block_starts)
+
+    @property
+    def completed_blocks(self) -> int:
+        """Number of blocks denoised and committed so far."""
+        return self._completed_blocks
+
+    @property
+    def done(self) -> bool:
+        """Whether every block has been committed."""
+        return self._completed_blocks == len(self._block_starts)
+
+    @property
+    def last_block_frames(self) -> tuple[int, int] | None:
+        """Per-view latent frame range ``[start, end)`` of the latest :meth:`step`, or ``None`` before it."""
+        return self._last_block_frames
+
+    @torch.no_grad()
+    def step(self) -> Tensor:
+        """Denoise the next block, commit it to the KV caches, and return its latents.
+
+        The result is a ``B C (V T) H W`` slice of the stream's latent buffer in the
+        layout of ``DiffusionOutput.latents``, covering :attr:`last_block_frames` of
+        every view. Stepping a closed or finished stream raises :exc:`RuntimeError`;
+        any other failure closes the stream through ``on_run_error`` and re-raises.
+        """
+        state = self._state
+        if state is None:
+            raise RuntimeError("autoregressive stream is closed")
+        if self.done:
+            raise RuntimeError("autoregressive stream has no blocks left")
+        runner = self._runner
+        context = self._context
+        n_views = self._n_views
+        frames_per_view = self._frames_per_view
+        frame_sequence_length = self._frame_sequence_length
+        start = self._block_starts[self._completed_blocks]
+        end = min(start + self._block_size, frames_per_view)
+        try:
+            block_noise = rearrange(
+                state.noise_by_view[:, :, :, start:end],
+                "B C V T H W -> B C (V T) H W",
+            )
+            positive = runner._window_conditioning(
+                state.positive_base,
+                n_views=n_views,
+                frames_per_view=frames_per_view,
+                start=start,
+                end=end,
+                cache=state.positive_cache,
+                frame_sequence_length=frame_sequence_length,
+                block_noise=block_noise,
+            )
+            negative = None
+            if state.negative_base is not None and state.negative_cache is not None:
+                negative = runner._window_conditioning(
+                    state.negative_base,
                     n_views=n_views,
                     frames_per_view=frames_per_view,
                     start=start,
                     end=end,
-                    cache=positive_cache,
+                    cache=state.negative_cache,
                     frame_sequence_length=frame_sequence_length,
                     block_noise=block_noise,
                 )
-                negative = None
-                if negative_base is not None and negative_cache is not None:
-                    negative = self._window_conditioning(
-                        negative_base,
-                        n_views=n_views,
-                        frames_per_view=frames_per_view,
-                        start=start,
-                        end=end,
-                        cache=negative_cache,
-                        frame_sequence_length=frame_sequence_length,
-                        block_noise=block_noise,
-                    )
 
-                if self.prediction_mode == "flow":
-                    block = self._run_flow_window(
-                        context,
-                        block_noise,
-                        positive=positive,
-                        negative=negative,
-                    )
-                else:
-                    block = self._run_distilled_window(
-                        context,
-                        block_noise,
-                        positive=positive,
-                    )
-                output_by_view[:, :, :, start:end] = rearrange(
-                    block, "B C (V T) H W -> B C V T H W", V=n_views
+            if runner.prediction_mode == "flow":
+                block = runner._run_flow_window(
+                    context,
+                    block_noise,
+                    positive=positive,
+                    negative=negative,
                 )
+            else:
+                block = runner._run_distilled_window(
+                    context,
+                    block_noise,
+                    positive=positive,
+                )
+            state.output_by_view[:, :, :, start:end] = rearrange(
+                block, "B C (V T) H W -> B C V T H W", V=n_views
+            )
 
-                commit = block
-                commit_timestep = self.context_timestep if self.prediction_mode == "distilled-x0" else 0
-                if commit_timestep > 0:
-                    # ``context_timestep`` is already expressed on the
-                    # model's shifted timeline.  Gamma's official runtime
-                    # passes 128 directly to both FlowMatchScheduler.add_noise
-                    # and the denoiser, which resolves to sigma=0.128.  Only
-                    # the released *denoising* indices above need the
-                    # raw-to-shifted conversion; shifting the context value a
-                    # second time injects sigma~=0.423 noise into every cache
-                    # commit and causes progressive block corruption.
-                    sigma = torch.tensor(
-                        commit_timestep / 1000.0,
-                        device=commit.device,
-                    )
-                    commit = add_flow_noise(
-                        commit,
-                        self._noise_like(commit, context.generator),
-                        sigma,
-                    )
-                context.step = SchedulerStep(
-                    index=max(request.sampling.num_inference_steps - 1, 0),
-                    timestep=torch.tensor(commit_timestep, device=self.device),
-                    next_timestep=torch.tensor(0, device=self.device),
+            commit = block
+            commit_timestep = runner.context_timestep if runner.prediction_mode == "distilled-x0" else 0
+            if commit_timestep > 0:
+                # ``context_timestep`` is already expressed on the
+                # model's shifted timeline.  Gamma's official runtime
+                # passes 128 directly to both FlowMatchScheduler.add_noise
+                # and the denoiser, which resolves to sigma=0.128.  Only
+                # the released *denoising* indices above need the
+                # raw-to-shifted conversion; shifting the context value a
+                # second time injects sigma~=0.423 noise into every cache
+                # commit and causes progressive block corruption.
+                sigma = torch.tensor(
+                    commit_timestep / 1000.0,
+                    device=commit.device,
                 )
-                self._call_denoiser_with_conditioning(
+                commit = add_flow_noise(
+                    commit,
+                    runner._noise_like(commit, context.generator),
+                    sigma,
+                )
+            context.step = SchedulerStep(
+                index=max(context.request.sampling.num_inference_steps - 1, 0),
+                timestep=torch.tensor(commit_timestep, device=runner.device),
+                next_timestep=torch.tensor(0, device=runner.device),
+            )
+            runner._call_denoiser_with_conditioning(
+                context,
+                latents=commit,
+                branch="positive-cache-commit",
+                conditioning=positive,
+            )
+            if negative is not None:
+                runner._call_denoiser_with_conditioning(
                     context,
                     latents=commit,
-                    branch="positive-cache-commit",
-                    conditioning=positive,
+                    branch="negative-cache-commit",
+                    conditioning=negative,
                 )
-                if negative is not None:
-                    self._call_denoiser_with_conditioning(
-                        context,
-                        latents=commit,
-                        branch="negative-cache-commit",
-                        conditioning=negative,
-                    )
-
-            latents = rearrange(output_by_view, "B C V T H W -> B C (V T) H W")
-            self._notify_diffusion_complete(context, latents)
-            sample = self.components.decoder.decode(latents, request)
-            output_frames = cast(int | None, shared.get("output_num_frames"))
-            if output_frames is not None and not request.inputs.get("return_latent", False):
-                if sample.ndim != 5 or not 0 < int(output_frames) <= sample.shape[2]:
-                    raise ValueError("output_num_frames must fit the decoded BCTHW video")
-                sample = sample[:, :, :int(output_frames)]
-            for extension in self.extensions:
-                sample = extension.after_decode(context, sample)
-            result = DiffusionOutput(
-                sample=sample,
-                latents=latents,
-                artifacts=artifacts,
-                metadata={
-                    "model_id": self.model_id,
-                    "seed": request.sampling.seed,
-                    "num_inference_steps": request.sampling.num_inference_steps,
-                    "guidance_scale": request.sampling.guidance_scale,
-                    "execution_strategy": "autoregressive-window",
-                    "prediction_mode": self.prediction_mode,
-                    "block_size": block_size,
-                    "n_views": n_views,
-                    "first_frame_conditioned": first_frame_latent is not None,
-                    "kv_prefix_frames": prefix_frames,
-                },
-            )
-            for extension in reversed(self.extensions):
-                extension.on_run_end(context)
-            return result
         except BaseException as error:
-            run_error = error
-            if context is not None:
-                for extension in reversed(self.extensions):
-                    extension.on_run_error(context, error)
+            self._finish(error)
             raise
+        self._completed_blocks += 1
+        self._last_block_frames = (start, end)
+        return rearrange(state.output_by_view[:, :, :, start:end], "B C V T H W -> B C (V T) H W")
+
+    def close(self) -> None:
+        """Release the caches and buffers, then run extension ``on_run_end``. Idempotent."""
+        self._finish(None)
+
+    def _finish(self, error: BaseException | None) -> None:
+        """Close once: drop rollout state, run end or error hooks, end the denoiser request."""
+        if self._closed:
+            return
+        self._closed = True
+        self._state = None
+        runner = self._runner
+        if runner._active_stream is self:
+            runner._active_stream = None
+        context = self._context
+        try:
+            if error is None:
+                try:
+                    for extension in reversed(runner.extensions):
+                        extension.on_run_end(context)
+                except BaseException as end_error:
+                    error = end_error
+                    for extension in reversed(runner.extensions):
+                        extension.on_run_error(context, end_error)
+                    raise
+            else:
+                for extension in reversed(runner.extensions):
+                    extension.on_run_error(context, error)
         finally:
-            self._end_denoiser_request(context, error=run_error)
+            runner._end_denoiser_request(context, error=error)
 
 
-__all__ = ["AutoregressiveWindowRunner", "WindowedDenoiser"]
+__all__ = ["AutoregressiveStream", "AutoregressiveWindowRunner", "WindowedDenoiser"]

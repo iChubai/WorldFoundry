@@ -11,7 +11,7 @@ clouds and Gaussian splats, and camera tracking / SLAM. Three kinds of consumers
 
 | Path | Contents |
 | --- | --- |
-| `depth/` | Depth estimation behind a shared adapter (`base.py`, `adapter.py`, `alignment.py`): Depth Anything, Depth Pro, Metric3D, MiDaS, MoGe, UniDepth, Video Depth Anything, PriorDA, DVLT, ViGeo |
+| `depth/` | Depth estimation behind a shared adapter (`base.py`, `adapter.py`, `alignment.py`): Depth Anything, Depth Pro, Metric3D, MiDaS, MoGe, UniDepth, Video Depth Anything, PriorDA, ViGeo |
 | `general_3d/` | Multi-view and dynamic reconstruction: MASt3R, MapAnything, GeoCalib, ViPE, MVDiffusion, LaGeR-NVS, Uni3C |
 | `point_clouds/` | Feed-forward point maps and splats: VGGT, VGGT-Omega, Pi3, CUT3R, Stream3R, LoGeR, Infinite-VGGT, LingBot-Map, FlashWorld, Lyra, HunyuanWorld-Mirror / Voyager, WorldFM, SHARP, pixelSplat, Gaussian splatting; plus PLY IO, projection, depth warping |
 | `slam/` | DROID-SLAM and MegaSaM camera tracking (including a resident variant) |

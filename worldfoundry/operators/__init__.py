@@ -24,7 +24,6 @@ _OPERATOR_MODULES = {
     "DreamDojoOperator": "dreamdojo_operator",
     "DreamZeroOperator": "dreamzero_operator",
     "DualCamCtrlOperator": "dualcamctrl_operator",
-    "DVLTOperator": "dvlt_operator",
     "EmbodiedActionOperator": "embodied_action_operator",
     "FantasyWorldOperator": "fantasy_world_operator",
     "FlashWorldOperator": "flash_world_operator",

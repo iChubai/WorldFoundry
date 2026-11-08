@@ -327,7 +327,7 @@ def _entry_inference_spec(entry: CatalogEntry):
                 for task in spec.tasks
             ),
         )
-    if entry.model_id in {"dvlt", "lingbot-map"}:
+    if entry.model_id == "lingbot-map":
         spec = replace(
             spec,
             tasks=tuple(

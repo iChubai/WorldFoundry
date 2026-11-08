@@ -289,23 +289,6 @@
   "cosmos-predict-2.5": {
     "figures": []
   },
-  "dvlt": {
-    "paper": {
-      "title": "Déjà View: Looping Transformers for Multi-View 3D Reconstruction",
-      "year": 2026,
-      "venue": null,
-      "arxivId": "2605.30215",
-      "abstract": "Recent feed-forward 3D reconstruction transformers have scaled to over a billion parameters, following the broader trend of increasing model capacity in computer vision. Yet emerging evidence suggests that contiguous transformer layers often behave like repeated applications of similar operations, and multi-view reconstruction transformers refine their predictions progressively across decoder depth. We posit that model depth partially buys iteration, paid for inefficiently in unique parameters, and instead make that iteration explicit in architecture. Our model, DéjàView, applies a single looped transformer block recurrently to per-view features for K refinement steps. Trained once, it exposes K as an inference-time compute knob, matching or outperforming substantially larger feed-forward baselines across five reconstruction benchmarks spanning indoor, outdoor, object-centric, and drivin"
-    },
-    "figures": [
-      {
-        "kind": "image",
-        "src": "/models/dvlt/paper.png",
-        "caption": "Déjà View: Looping Transformers for Multi-View 3D Reconstruction",
-        "captionZh": "Déjà View: Looping Transformers for Multi-View 3D Reconstruction"
-      }
-    ]
-  },
   "echo-memory-context-k1": {
     "paper": {
       "title": "Echo-Memory: A Controlled Study of Memory in Action World Models",

@@ -176,30 +176,6 @@ distribution_metrics = [
     "tqdm",
     "transformers>=4.57.0,<5",
 ]
-dvlt = [
-    "accelerate",
-    "h5py",
-    "huggingface-hub",
-    "hydra-core",
-    "matplotlib",
-    "numpy",
-    "omegaconf",
-    "opencv-python",
-    "open3d",
-    "pillow",
-    "plotly",
-    "pydantic",
-    "rerun-sdk<0.23",
-    "rich",
-    "safetensors",
-    "scipy",
-    "tensorboard",
-    "torch",
-    "torchvision",
-    "tqdm",
-    "trimesh",
-    "wandb",
-]
 ui = [
     "aiohttp>=3.10,<4",
     "aiortc>=1.9,<2",
@@ -878,10 +854,8 @@ include-package-data = true
 # excluded namespace packages as data of the nearest retained parent. Keep a
 # second, per-parent barrier for every license-gated subtree.
 "worldfoundry.base_models.three_dimensions.depth" = [
+    "dvlt/**/*",
     "unik3d/**/*",
-]
-"worldfoundry.base_models.three_dimensions.depth.dvlt" = [
-    "dvlt_runtime/**/*",
 ]
 "worldfoundry.base_models.three_dimensions.general_3d" = [
     "dust3r/**/*",

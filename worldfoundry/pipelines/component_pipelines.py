@@ -423,15 +423,6 @@ DreamDojoPipeline = _component_pipeline_class(
 )
 
 
-DVLTPipeline = _component_pipeline_class(
-    "DVLTPipeline",
-    doc="WorldFoundry pipeline for the in-tree DVLT multi-view 3D reconstruction runtime.",
-    model_id="dvlt",
-    operator_target="worldfoundry.operators.dvlt_operator:DVLTOperator",
-    memory_target="worldfoundry.synthesis.visual_generation.memory.runtime:RuntimeMemory",
-    synthesis_target="worldfoundry.base_models.three_dimensions.depth.dvlt:DVLTSynthesis",
-)
-DVLTPipeline.MODEL_PATH_OPTION = "checkpoint_path"
 OpenMAGVIT2Pipeline = _component_pipeline_class(
     "OpenMAGVIT2Pipeline",
     doc="WorldFoundry video/token-generation pipeline for Open-MAGVIT2.",
@@ -476,7 +467,6 @@ __all__ = [
     "CogACTPipeline",
     "ComponentPipeline",
     "DBCogACTPipeline",
-    "DVLTPipeline",
     "DiffusionPolicyPipeline",
     "DreamDojoPipeline",
     "DreamZeroPipeline",

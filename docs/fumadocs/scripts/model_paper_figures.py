@@ -316,16 +316,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：DualCamCtrl 的双分支框架联合生成对齐的 RGB 与深度视频潜变量。",
         ),
     },
-    "dvlt": {
-        "teaser": (
-            "Official paper teaser: DéjàView. Given multiple input views (top-left) , DéjàView reconstructs camera poses and consistent depth by repeatedly applying the same transformer block, with the number of refinement steps K K exposed as an.",
-            "论文官方 Teaser：Déjà View Looping Transformer 的几何与深度论文配图。",
-        ),
-        "overview": (
-            "Method overview: Method overview. V V input images are encoded by a shared DINOv2 ( Oquab et al., 2024 ) backbone. A single looped transformer block with frame-wise and global attention sub-blocks is then applied recurrently to the.",
-            "论文方法总览：Déjà View Looping Transformer 的方法架构。",
-        ),
-    },
     "dynamicrafter": {
         "overview": (
             "Method overview: Flowchart of the proposed DynamiCrafter . During training, we randomly select a video frame as the image condition of the denoising process through the proposed dual-stream image injection mechanism to inherit visual.",

@@ -26,7 +26,6 @@ _TEMPLATE_TO_WORKLOAD = {
         ("recammaster", "Video-to-Video", "video-to-video", "v2v"),
         ("neoverse", "Video-to-Video", "video-to-video", "v2v"),
         ("worldlabs-marble-1.1", "Remote API", "hosted-api", "api"),
-        ("dvlt", "3D Scene", "scene-3d", "3d"),
         ("lagernvs", "3D Scene", "scene-3d", "3d"),
         ("lingbot-map", "3D Scene", "scene-3d", "3d"),
         ("lyra-1", "3D Scene", "scene-3d", "3d"),

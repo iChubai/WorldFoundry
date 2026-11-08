@@ -372,14 +372,6 @@ def _lagernvs_default_ref() -> str:
     )
 
 
-def _dvlt_default_ref() -> str:
-    return resolve._prefer_existing_model_ref(
-        str(checkpoint_root_path("dvlt")),
-        *resolve._cache_candidates("nvidia--dvlt", "dvlt"),
-        "nvidia/dvlt",
-    )
-
-
 def _pixelsplat_default_ref() -> str:
     return resolve._prefer_existing_model_ref(
         str(checkpoint_root_path("pixelSplat", "re10k.ckpt")),
@@ -1081,22 +1073,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         ),
         "tags": ("novel-view", "video-to-video", "camera-control", "trajectory"),
         "notes": "Video-to-video model that re-renders an input clip along a new camera trajectory.",
-    },
-    "dvlt": {
-        "display_name": "DVLT",
-        "category": "3D Scene",
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "default_model_ref": _dvlt_default_ref,
-        "default_task_type": "multi-view-3d-reconstruction",
-        "default_call_kwargs": _geometry_prior_default_call_kwargs(
-            input_path=_geometry_prior_image_fixture(),
-        ),
-        "call_params": _geometry_prior_call_params(),
-        "load_params": _geometry_prior_load_params(),
-        "tags": ("3d", "point-reconstruction", "multi-view"),
-        "notes": "Multi-view point cloud reconstruction; not image-to-video generation.",
     },
     "lingbot-map": {
         "display_name": "LingBot Map",

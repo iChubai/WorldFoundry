@@ -165,20 +165,6 @@ def test_mmaudio_resolves_dfn5b_from_alternate_plural_root(monkeypatch, tmp_path
     assert resolve_bigvgan_v2_checkpoint() == bigvgan.resolve()
 
 
-def test_dvlt_wrapper_refuses_remote_checkpoint_in_offline_mode(monkeypatch, tmp_path):
-    from worldfoundry.base_models.three_dimensions.depth.dvlt.runtime import DVLTRuntime
-
-    monkeypatch.setenv("HF_HUB_OFFLINE", "1")
-    runtime = DVLTRuntime(device="cpu", checkpoint_path="https://example.invalid/model.pt")
-    monkeypatch.setattr(
-        runtime,
-        "_activate_runtime_path",
-        lambda: pytest.fail("offline DVLT should not enter the vendor runtime"),  # ty: ignore[invalid-argument-type]  # ty 0.0.99 misreads pytest.fail's signature
-    )
-    with pytest.raises(RuntimeError, match="offline mode is enabled"):
-        runtime.predict(images=tmp_path / "input.png", allow_cpu=True)
-
-
 def test_echo_and_infinite_world_catalog_expose_runtime_load_controls(monkeypatch, tmp_path):
     from worldfoundry.studio.inference import catalog as catalog
 

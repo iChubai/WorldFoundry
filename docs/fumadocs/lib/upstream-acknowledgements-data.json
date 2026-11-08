@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 218,
+  "modelsTotal": 217,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -606,7 +606,7 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 29,
+      "count": 28,
       "entries": [
         {
           "name": "CUT3R",
@@ -627,10 +627,6 @@
         {
           "name": "Depth Anything V2",
           "url": "https://github.com/DepthAnything/Depth-Anything-V2"
-        },
-        {
-          "name": "Déjà View Looping Transformer",
-          "url": "https://github.com/nv-tlabs/dvlt"
         },
         {
           "name": "FantasyWorld",

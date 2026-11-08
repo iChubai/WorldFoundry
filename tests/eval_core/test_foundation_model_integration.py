@@ -236,7 +236,6 @@ def test_perception_and_3d_base_models_do_not_package_training_data_helpers():
     removed_paths = [
         base_models / "perception_core/detection/grounding_dino/datasets",
         base_models / "perception_core/tracking/track_anything/groundingdino",
-        base_models / "three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/callbacks",
         base_models / "three_dimensions/slam/droid_slam/data_readers",
         base_models / "three_dimensions/slam/droid_slam/geom/losses.py",
         base_models / "three_dimensions/depth/moge/utils/data_augmentation.py",

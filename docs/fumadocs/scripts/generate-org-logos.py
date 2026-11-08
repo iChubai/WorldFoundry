@@ -1154,7 +1154,6 @@ MODEL_ORGS: dict[str, str] = {
     "dreamx-world-5b-cam": "amap",
     "dreamzero": "nvidia",
     "dualcamctrl": "hkust",
-    "dvlt": "nvidia",
     "dynamicrafter": "tencent",
     "easyanimate": "alibaba",
     "echo-infinity": "jd",

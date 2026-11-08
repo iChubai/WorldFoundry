@@ -74,12 +74,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/depth/depth_anything/depth_anything_v3/api.py",
     ),
     _cap(
-        "dvlt",
-        "three_dimensions/depth/dvlt",
-        ("depth", "normal", "camera", "point-cloud"),
-        "three_dimensions/depth/dvlt/viz/camera_overlay.py",
-    ),
-    _cap(
         "metric3d",
         "three_dimensions/depth/metric3d",
         ("depth", "normal"),

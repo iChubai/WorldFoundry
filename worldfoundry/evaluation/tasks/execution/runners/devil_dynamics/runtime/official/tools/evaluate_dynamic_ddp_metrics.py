@@ -128,11 +128,10 @@ def parse_args():
 
 
 def cal_p99_1(data):
-    # 计算1%和99%的百分位数
+    """Return the 1st-to-99th percentile range of ``data``."""
     p1 = np.percentile(data, 1)
     p99 = np.percentile(data, 99)
 
-    # 计算动态范围
     dynamic_range_percentile = p99 - p1
     return dynamic_range_percentile
 
@@ -152,15 +151,13 @@ class RegressionModel:
 
 
 def json_to_xlsx(json_file, xlsx_file):
-    # 读取 JSON 数据
-    df = pd.read_json(json_file)  # 假设 JSON 文件每行一个 JSON 对象
-    # 将 DataFrame 保存到 XLSX 文件
+    df = pd.read_json(json_file)
     with pd.ExcelWriter(xlsx_file, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False)  # 不保存行索引
+        df.to_excel(writer, index=False)
 
 
 def save_dicts_to_excel(dicts, filename):
-    # 获取所有字典中的所有键
+    # Columns are the union of the keys of all dicts.
     df_list = pd.DataFrame(dicts)
 
     # Save the DataFrame to an Excel file
@@ -180,7 +177,6 @@ def load_and_merge(pth_folder, save_folder, dynamic_score_save_name):
 
 def cal_info_variance(model, video_data, video_lengths):
     features = model(video_data)
-    # 处理提取的特征,例如保存到文件或进一步处理
 
     features = F.normalize(features, dim=-1, p=2)
     features = features.split(video_lengths)
@@ -399,13 +395,13 @@ def to_same_size(segments, target_size=8):
     batch_size, segment_length, *rest_dims = segments.size()
 
     if segment_length > target_size:
-        # 下采样：线性插值
+        # Keep evenly spaced frames.
         indices = torch.linspace(0, segment_length - 1, steps=target_size).long()
         resized_segments = segments[:, indices]
     else:
-        # 上采样：通过重复最后一帧填充
+        # Pad by repeating the last frame.
         repeats_needed = target_size - segment_length
-        last_frame = segments[:, -1:]  # 取最后一帧
+        last_frame = segments[:, -1:]
         repeated_last_frames = last_frame.repeat(1, repeats_needed, *[1] * len(rest_dims))
         resized_segments = torch.cat((segments, repeated_last_frames), dim=1)
 
@@ -415,10 +411,8 @@ def to_same_size(segments, target_size=8):
 def cal_segment_dist(features):
     features = F.normalize(features, dim=-1, p=2)
     sims = features @ features.T
-    # 获取上三角掩码矩阵
+    # Average over the upper triangle, diagonal included.
     mask = torch.triu(torch.ones_like(sims, dtype=torch.bool))
-
-    # 使用掩码选择上三角元素
     sims = torch.masked_select(sims, mask)
     return sims.mean()
 
@@ -430,7 +424,7 @@ def calc_acf(features, k):
 
 
 def cal_frechet(block_stats):
-    # 计算块之间的 Frechet 距离
+    """Return the mean Frechet distance between consecutive ``(mu, sigma)`` block statistics."""
     distances = []
     for i in range(len(block_stats) - 1):
         dist = frechet_distance(*block_stats[i], *block_stats[i + 1])
@@ -441,7 +435,6 @@ def cal_frechet(block_stats):
 def cal_frechet_distance(model, video_data, video_lengths, block_lengths_ratio, features=None):
     if features is None:
         features = model(video_data)
-        # 处理提取的特征,例如保存到文件或进一步处理
         features = F.normalize(features, dim=-1, p=2)
         features = features.split(video_lengths)
     distances = []
@@ -455,7 +448,7 @@ def cal_frechet_distance(model, video_data, video_lengths, block_lengths_ratio, 
 
 
 def process_blocks(features, block_lengths):
-    # 计算块的数量]
+    """Return, for each block length, the ``(mu, sigma)`` of every full block of ``features``; the tail is dropped."""
     results = []
     for block_length in block_lengths:
         num_blocks = len(features) // block_length
@@ -471,17 +464,15 @@ def process_blocks(features, block_lengths):
 
 
 def calculate_covariance_matrix(features):
-    """计算特征向量的协方差矩阵。
-    参数:
-    features (torch.Tensor): 形状为 (n_samples, n_features) 的张量。
+    """Return the unbiased covariance matrix of ``features``.
 
-    返回:
-    torch.Tensor: 协方差矩阵，形状为 (n_features, n_features)。
+    Args:
+        features (torch.Tensor): Tensor of shape (n_samples, n_features).
+
+    Returns:
+        torch.Tensor: Covariance matrix of shape (n_features, n_features).
     """
-    # 中心化特征向量
     mean_centered = features - features.mean(dim=0)
-
-    # 计算协方差矩阵
     cov_matrix = mean_centered.T @ mean_centered / (features.size(0) - 1)
 
     return cov_matrix
@@ -494,7 +485,7 @@ def calculate_statistics(features):
 
 
 def matrix_sqrt(matrix):
-    """使用SVD计算矩阵的平方根，返回平方根矩阵"""
+    """Return a square root of ``matrix`` computed from its SVD as ``U sqrt(S) V^T``."""
     u, s, v = torch.svd(matrix)
     sqrt_diag = torch.diag(torch.sqrt(s))
     return u @ sqrt_diag @ v.t()
@@ -528,15 +519,14 @@ def clear_folder(folder):
         file_path = os.path.join(folder, filename)
         try:
             if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)  # 删除文件或符号链接
+                os.unlink(file_path)
             elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)  # 删除文件夹
+                shutil.rmtree(file_path)
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
 
 
 def cal_dynamics_scores(args):
-    # 初始化分布式环境
     dist.init_process_group(backend="nccl")
     rank = dist.get_rank()
     args.rank = rank
@@ -546,9 +536,8 @@ def cal_dynamics_scores(args):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     clear_folder(os.path.dirname(output_file))
     with open(output_file, "w") as file:
-        file.write("")  # 清空文件内容
+        file.write("")
 
-    # 加载预训练的模型
     model_dino = build_dino(args.timm_dino_model_name, rank, args)
     model_dino_v2 = build_dinov2("dinov2_vitl14", rank, args)
     model_clip, process_clip = build_clip("ViT-L/14", rank, args)
@@ -559,7 +548,7 @@ def cal_dynamics_scores(args):
 
     transform = Compose(
         [
-            Resize((224, 224)),  # 调整图像大小以匹配模型
+            Resize((224, 224)),  # model input size
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )

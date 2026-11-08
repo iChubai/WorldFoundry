@@ -54,27 +54,26 @@ def get_overall_dynamic_scores(dynamics_scores, regress_model_weight_path):
 def filter_dataframes_by_common_videos(
     df_dynamics, df_quality, video_name_col="video_name", video_basename_col="video_name"
 ):
-    """
-    根据两个DataFrame中的视频名称列的交集，过滤并返回仅包含交集部分的两个DataFrame。
+    """Keep only the videos present in both DataFrames, matched by lowercase name without extension.
 
-    :param df_dynamics: 包含视频评分的DataFrame。
-    :param df_quality: 包含其他视频相关数据的DataFrame。
-    :param video_name_col: dynamics_scores中包含视频名称的列名。
-    :param video_basename_col: df中包含视频名称的列名。
-    :return: 两个过滤后的DataFrame（dynamics_scores_filtered, df_filtered）。
+    Both inputs are sorted, deduplicated and have their name columns normalized in place.
+
+    :param df_dynamics: DataFrame with the dynamics scores.
+    :param df_quality: DataFrame with the other per-video data.
+    :param video_name_col: Video-name column of ``df_dynamics``.
+    :param video_basename_col: Video-name column of ``df_quality``.
+    :return: The filtered ``(df_dynamics, df_quality)`` pair.
     """
     df_dynamics.sort_values(by=video_name_col, inplace=True)
     df_quality.sort_values(by=video_basename_col, inplace=True)
 
     df_dynamics.drop_duplicates(subset=[video_name_col], inplace=True)
 
-    # 计算交集
     df_dynamics[video_name_col] = df_dynamics[video_name_col].str.lower().str.split(".").str[0]
     df_quality[video_basename_col] = df_quality[video_basename_col].str.lower().str.split(".").str[0]
     df_quality.drop_duplicates(subset=[video_basename_col], inplace=True)
 
     common_videos = pd.Index(df_dynamics[video_name_col]).intersection(df_quality[video_basename_col])
-    # 过滤dynamics_scores和df，只保留交集中的条目
     filtered_dynamics_scores = df_dynamics[df_dynamics[video_name_col].isin(common_videos)]
     filtered_df = df_quality[df_quality[video_basename_col].isin(common_videos)]
 
@@ -171,24 +170,23 @@ def intergrate_per_method_auto_bin(
 
 
 def calculate_mean_values(x, y, num_bins=12, x_min=0, x_max=1, default_value=0):
-    # 检查x和y的长度是否匹配
+    """Return the mean of ``y`` within each of ``num_bins`` equal-width bins of ``x`` over ``[x_min, x_max]``.
+
+    Empty bins get ``default_value``; ``x`` values outside ``[x_min, x_max)`` fall into no bin.
+
+    Raises:
+        ValueError: ``x`` and ``y`` have different lengths.
+    """
     if len(x) != len(y):
-        raise ValueError("x和y的长度必须相同")
+        raise ValueError("x and y must have the same length")
 
-    # 生成等间距的区间边界
     bins = np.linspace(x_min, x_max, num_bins + 1)
-
-    # 使用digitize找到每个x值所属的区间
     bin_indices = np.digitize(x, bins)
 
-    # 计算每个区间的y值均值
     y_means = []
     for i in range(1, num_bins + 1):
-        # 选择当前区间内的y值
         indices = bin_indices == i
         y_values = y[indices]
-
-        # 计算均值，如果当前区间没有数据，则返回NaN
         mean_value = np.mean(y_values) if y_values.size > 0 else default_value
 
         y_means.append(mean_value)
@@ -227,7 +225,6 @@ def print_results(metrics):
     table.field_names = ["Metric", "Value (%)"]
 
     for key, value in metrics.items():
-        # 在添加行之前格式化数值
         formatted_value = format_value(value)
         table.add_row([key, formatted_value])
 

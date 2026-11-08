@@ -33,7 +33,7 @@ def read_json_files(file_list):
         with open(file_path) as file:
             data = json.load(file)
             for key, value in data.items():
-                if key not in combined_dict:  # 只保留第一次出现的键值对
+                if key not in combined_dict:  # the first file that scores a key wins
                     combined_dict[key] = {"naturalness": reality_mapping(value)}
     return combined_dict
 
@@ -43,7 +43,7 @@ def parse_txt_file(txt_file_path):
     with open(txt_file_path) as file:
         for line in file:
             key, video_path = line.strip().split(". ")
-            key_to_video_path[key] = os.path.basename(video_path)  # 获取文件名
+            key_to_video_path[key] = os.path.basename(video_path)
     return key_to_video_path
 
 
@@ -52,18 +52,18 @@ def map_video_paths(combined_dict, key_to_video_path):
         if key in key_to_video_path:
             combined_dict[key]["video_name"] = key_to_video_path[key]
         else:
-            combined_dict[key]["video_name"] = None  # 如果没有对应的video_path，则设为None
+            combined_dict[key]["video_name"] = None
     return combined_dict
 
 
 def save_to_excel(data, excel_path):
     wb = Workbook()
     ws = wb.active
-    # 假设字典中的值是字典类型，我们添加一个标题行，具体列标题可能需要根据实际内容调整
-    headers = ["Key", *list(next(iter(data.values())).keys())]  # 取任意一项的键作为标题
+    # Column headers come from the first entry; every value is a dict with the same keys.
+    headers = ["Key", *list(next(iter(data.values())).keys())]
     ws.append(headers)
     for key, value_dict in data.items():
-        row = [key] + [value_dict.get(header) for header in headers[1:]]  # 按标题顺序提取值
+        row = [key] + [value_dict.get(header) for header in headers[1:]]
         ws.append(row)
     wb.save(excel_path)
 
@@ -148,15 +148,14 @@ def save_naturalness_results(results_json_dir, mp4_file_list_path, excel_output_
 
 def find_mp4_files(directory, output_file):
     with open(output_file, "w") as file:
-        counter = 1  # 初始化文件计数器
+        counter = 1
         for root, _dirs, files in os.walk(directory):
-            # 过滤出 .mp4 文件
             mp4_files = [f for f in files if f.endswith(".mp4") and not f.startswith(".")]
             for mp4_file in mp4_files:
                 full_path = os.path.join(root, mp4_file)
-                # 将文件路径和序号写入文件
+                # One "<index>. <path>" line per video, read back by parse_txt_file.
                 file.write(f"{counter}. {full_path}\n")
-                counter += 1  # 更新序号
+                counter += 1
 
 
 def process_video(args):

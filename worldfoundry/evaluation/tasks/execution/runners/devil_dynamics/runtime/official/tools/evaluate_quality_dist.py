@@ -127,15 +127,13 @@ def build_dino_vitb16(args, rank):
 
 
 def json_to_xlsx(json_file, xlsx_file):
-    # 读取 JSON 数据
-    df = pd.read_json(json_file)  # 假设 JSON 文件每行一个 JSON 对象
-    # 将 DataFrame 保存到 XLSX 文件
+    df = pd.read_json(json_file)
     with pd.ExcelWriter(xlsx_file, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False)  # 不保存行索引
+        df.to_excel(writer, index=False)
 
 
 def save_dicts_to_excel(dicts, filename):
-    # 获取所有字典中的所有键
+    # Columns are the union of the keys of all dicts.
     df_list = pd.DataFrame(dicts)
 
     # Save the DataFrame to an Excel file
@@ -161,43 +159,35 @@ def clear_folder(folder):
         file_path = os.path.join(folder, filename)
         try:
             if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)  # 删除文件或符号链接
+                os.unlink(file_path)
             elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)  # 删除文件夹
+                shutil.rmtree(file_path)
         except Exception as e:
             print(f"Failed to delete {file_path}. Reason: {e}")
 
 
 def find_mp4_files(directory):
+    """Return the ``.mp4`` paths under ``directory``, recursively and following symlinks; ``._*`` files are skipped."""
     mp4_files = []
-    # 遍历指定目录及其子目录
     for root, _dirs, files in os.walk(directory, followlinks=True):
         for file in files:
-            # 检查文件扩展名是否为.mp4
             if file.endswith(".mp4") and not file.startswith("._"):
-                # 将完整的文件路径添加到列表中
                 mp4_files.append(os.path.join(root, file))
     return mp4_files
 
 
 def merge_excel_files(file1, file2, output_file):
-    # 加载Excel文件
     df1 = pd.read_excel(file1)
     df2 = pd.read_excel(file2)
-    # 根据 'video_name' 对数据框进行排序
     df1 = df1.sort_values(by="video_name").drop_duplicates().reset_index(drop=True)
     df2 = df2.sort_values(by="video_name").drop_duplicates().reset_index(drop=True)
-    # 检查排序后的 'video_name' 列是否相同
     if not df1["video_name"].equals(df2["video_name"]):
         raise ValueError("The 'video_name' columns do not match.")
     intersection = pd.Series(list(set(df1["video_name"]).intersection(set(df2["video_name"]))))
     df1 = df1[df1["video_name"].isin(intersection)]
     df2 = df2[df2["video_name"].isin(intersection)]
 
-    # 根据 'video_name' 合并数据框
     merged_df = pd.merge(df1, df2, on="video_name")
-
-    # 保存合并后的数据框到新的Excel文件
     merged_df.to_excel(output_file, index=False)
     print(f"Merged file saved as {output_file}")
 
@@ -213,7 +203,7 @@ def main_dist(args):
 
     video_list = find_mp4_files(args.video_dir)
     with open(output_file, "w") as file:
-        file.write("")  # 清空文件内容
+        file.write("")
     if rank == 0:
         progress_bar = tqdm.tqdm(total=len(video_list), position=0, leave=True)
 
@@ -261,7 +251,7 @@ def calculate_quality_scores(args):
     clear_folder(os.path.dirname(output_file))
     _video_list = find_mp4_files(args.video_dir)
     with open(output_file, "w") as file:
-        file.write("")  # 清空文件内容
+        file.write("")
 
     clip_model, preprocess = clip.load(args.clip_path, rank)
     dino_model = build_dino_vitb16(args, rank)

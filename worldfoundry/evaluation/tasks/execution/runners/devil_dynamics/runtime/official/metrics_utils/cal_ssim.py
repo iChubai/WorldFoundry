@@ -15,11 +15,7 @@ from tqdm import tqdm
 
 
 def count_png_files(directory):
-    """
-    递归统计指定文件夹及其子文件夹中PNG文件的数量。
-    :param directory: 要统计的文件夹路径
-    :return: PNG文件的数量
-    """
+    """Count the PNG files directly inside ``directory`` (not recursive)."""
     count = 0
     for file in os.listdir(directory):
         if file.endswith(".png"):
@@ -28,41 +24,33 @@ def count_png_files(directory):
 
 
 def convert_to_h264(input_video, output_video):
-    """
-    将视频文件重新编码为H.264格式。
-    :param input_video: 输入视频的文件路径
-    :param output_video: 输出视频的文件路径
-    """
+    """Re-encode ``input_video`` to H.264 at ``output_video``; exit the process if ffmpeg fails."""
     command = [
         "ffmpeg",
         "-i",
-        input_video,  # 输入文件
+        input_video,
         "-c:v",
-        "libx264",  # 指定视频编解码器为libx264（H.264）
+        "libx264",
         "-preset",
-        "fast",  # 压缩预设，可调整（ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow）
-        output_video,  # 输出文件
+        "fast",  # x264 preset, from ultrafast to veryslow
+        output_video,
         "-y",
         "-loglevel",
         "error",
     ]
     try:
         subprocess.run(command, check=True)
-        # print("视频已成功重新编码为H.264格式。")
+        # print("Video re-encoded to H.264.")
     except subprocess.CalledProcessError as e:
-        print(f"发生错误：{e}")
+        print(f"Error: {e}")
         exit(0)
 
 
 def read_frames(video_path):
-    """
-    逐帧读取视频。
+    """Yield the BGR frames of ``video_path`` one at a time.
 
-    参数:
-        video_path (str): 视频文件的路径。
-
-    返回:
-        generator: 返回帧的生成器。
+    Raises:
+        ValueError: The video cannot be opened.
     """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -78,25 +66,16 @@ def read_frames(video_path):
 
 
 def calculate_frame_ssim(frame1, frame2):
-    """
-    计算两帧之间的SSIM。
-
-    参数:
-        frame1, frame2 (numpy.ndarray): 需要比较的两帧图像。
-
-    返回:
-        float: 两帧之间的SSIM值。
-    """
+    """Return the grayscale SSIM between two BGR frames (``numpy.ndarray``)."""
     gray1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
     return ssim(gray1, gray2, data_range=gray2.max() - gray2.min())
 
 
 def extract_keyframes(input_video, output_folder):
-    """
-    使用FFmpeg从视频中提取关键帧并保存为图像。
-    :param input_video: 输入视频的文件路径
-    :param output_folder: 输出图像的文件夹
+    """Extract the I-frames of ``input_video`` into ``output_folder`` as PNGs and return their count.
+
+    ``output_folder`` is recreated empty; the process exits if ffmpeg fails.
     """
     if os.path.exists(output_folder):
         shutil.rmtree(output_folder)
@@ -105,21 +84,21 @@ def extract_keyframes(input_video, output_folder):
     command = [
         "ffmpeg",
         "-i",
-        input_video,  # 输入文件
+        input_video,
         "-vf",
-        "select=eq(pict_type\\,I)",  # 选择I帧（关键帧）
+        "select=eq(pict_type\\,I)",  # keep I-frames (keyframes) only
         "-vsync",
-        "vfr",  # 使用变帧率
+        "vfr",
         "-y",
         "-loglevel",
         "error",
-        f"{output_folder}/keyframe_%03d.png",  # 输出文件格式和路径
+        f"{output_folder}/keyframe_%03d.png",
     ]
     try:
         subprocess.run(command, check=True)
-        print("关键帧提取完成。")
+        print("Keyframe extraction finished.")
     except subprocess.CalledProcessError as e:
-        print(f"发生错误：{e}")
+        print(f"Error: {e}")
         exit(0)
 
     count = count_png_files(output_folder)
@@ -131,7 +110,6 @@ def extract_keyframes_and_last_frame(input_video, output_folder):
     if os.path.exists(output_folder):
         shutil.rmtree(output_folder)
     os.makedirs(output_folder, exist_ok=True)
-    # 提取关键帧
     command_keyframes = [
         "ffmpeg",
         "-i",
@@ -147,10 +125,9 @@ def extract_keyframes_and_last_frame(input_video, output_folder):
     ]
     subprocess.run(command_keyframes)
 
-    # 确定最后一个关键帧的编号
     key_frames = sorted([f for f in os.listdir(output_folder) if f.startswith("keyframe_") and f.endswith(".png")])
     last_index = int(key_frames[-1].split("_")[1].split(".")[0]) if key_frames else 0
-    # 获取总帧数
+    # A video with a single keyframe also gets its last frame, so SSIM has a pair to compare.
     if len(key_frames) == 1:
         command_count_frames = [
             "ffprobe",
@@ -186,12 +163,12 @@ def extract_keyframes_and_last_frame(input_video, output_folder):
 
 
 def get_image_files(directory):
-    """获取指定目录下所有的PNG文件路径"""
+    """Return the paths of the PNG files directly inside ``directory``."""
     return [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith(".png")]
 
 
 def load_images(image_folder):
-    """加载图像文件并转换为灰度图"""
+    """Load the PNG images of ``image_folder`` as grayscale arrays, skipping unreadable files."""
     file_paths = get_image_files(image_folder)
 
     images = []
@@ -237,11 +214,9 @@ def calculate_whash(image):
 
 
 def stat_ssim_with_path(video_path):
-    """
-    处理视频，打印每一帧与下一帧之间的SSIM值。
+    """Return the mean SSIM, PSNR, pHash and wHash differences between consecutive frames of a video file.
 
-    参数:
-        video_path (str): 视频文件的路径。
+    Returns ``None`` when the video has no frames.
     """
     frame_generator = read_frames(video_path)
     prev_frame = next(frame_generator, None)
@@ -274,12 +249,7 @@ def stat_ssim_with_path(video_path):
 
 
 def stat_ssim(video_data, topk=0.1):
-    """
-    处理视频，打印每一帧与下一帧之间的SSIM值。
-
-    参数:
-        video_path (str): 视频文件的路径。
-    """
+    """Return the mean SSIM and pHash difference between consecutive frames of ``video_data`` (HWC uint8 frames)."""
     prev_frame = video_data[0]
     prev_phash = calculate_phash(prev_frame)
     prev_whash = calculate_whash(prev_frame)
@@ -304,12 +274,7 @@ def stat_ssim(video_data, topk=0.1):
 
 
 def stat_phash(video_data, average=True):
-    """
-    处理视频，打印每一帧与下一帧之间的SSIM值。
-
-    参数:
-        video_path (str): 视频文件的路径。
-    """
+    """Return the pHash differences between consecutive frames of ``video_data``, averaged when ``average`` is truthy."""
     prev_frame = video_data[0]
     prev_phash = calculate_phash(prev_frame)
 

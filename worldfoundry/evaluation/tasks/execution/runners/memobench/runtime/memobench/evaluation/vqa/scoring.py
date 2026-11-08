@@ -1,6 +1,5 @@
 import csv
 import json
-import time
 
 if __name__ == "__main__":
     inputs = []

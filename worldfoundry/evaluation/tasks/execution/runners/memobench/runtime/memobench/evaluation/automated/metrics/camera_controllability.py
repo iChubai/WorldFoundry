@@ -139,7 +139,7 @@ _mapanything_model = None
 _mapanything_device = None
 
 
-def _load_mapanything(device: str = None):
+def _load_mapanything(device: str | None = None):
     global _mapanything_model, _mapanything_device
     if _mapanything_model is not None:
         return _mapanything_model, _mapanything_device
@@ -222,7 +222,7 @@ def camera_controllability_score(
     frames,
     gt_poses: np.ndarray,
     K: np.ndarray,  # kept for API compatibility, not used by MapAnything
-    device: str = None,
+    device: str | None = None,
     tau_deg: float = 15.0,
 ) -> dict:
     """

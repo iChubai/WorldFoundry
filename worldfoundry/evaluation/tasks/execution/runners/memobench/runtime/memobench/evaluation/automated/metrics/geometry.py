@@ -18,7 +18,7 @@ _DINO_TRANSFORM = T.Compose(
 )
 
 
-def _load_dino(device: str = None) -> tuple:
+def _load_dino(device: str | None = None) -> tuple:
     global _dino, _dino_device
     if _dino is not None:
         return _dino, _dino_device
@@ -67,7 +67,9 @@ def _dino_similarity(f0: torch.Tensor, fk: torch.Tensor) -> float:
     return float(np.clip(sim, 0.0, 1.0))
 
 
-def identity_consistency(frames, n_sample: int = 9, device: str = None, start: int = 0, end: int = None) -> dict:
+def identity_consistency(
+    frames, n_sample: int = 9, device: str | None = None, start: int = 0, end: int | None = None
+) -> dict:
     """
     Visual identity consistency via DINOv2 CLS token cosine similarity.
 
@@ -116,9 +118,9 @@ def object_centric_identity_consistency(
     frames,
     n_sample: int = 9,
     top_k_frac: float = 0.4,
-    device: str = None,
+    device: str | None = None,
     start: int = 0,
-    end: int = None,
+    end: int | None = None,
 ) -> dict:
     """
     Object-centric visual identity consistency using DINOv2 patch tokens.
@@ -186,7 +188,7 @@ _depth_processor = None
 _depth_device = None
 
 
-def _load_depth_anything(device: str = None):
+def _load_depth_anything(device: str | None = None):
     global _depth_model, _depth_processor, _depth_device
     if _depth_model is not None:
         return _depth_model, _depth_processor, _depth_device
@@ -224,7 +226,9 @@ def _depth_similarity(d1: torch.Tensor, d2: torch.Tensor) -> float:
     return float(np.clip(sim, 0.0, 1.0))
 
 
-def geometry_3d_consistency(frames, device: str = None, n_sample: int = 9, start: int = 0, end: int = None) -> dict:
+def geometry_3d_consistency(
+    frames, device: str | None = None, n_sample: int = 9, start: int = 0, end: int | None = None
+) -> dict:
     """
     Geometric 3D consistency via Depth Anything V2 cosine similarity.
 

@@ -19,7 +19,7 @@ from worldfoundry.evaluation.tasks.metrics._shared.clip_embed import (
 _CLIP_MODEL = "openai:ViT-B-32"
 
 
-def _embed(img: np.ndarray, device: str = None) -> np.ndarray:
+def _embed(img: np.ndarray, device: str | None = None) -> np.ndarray:
     """L2-normalized CLIP embedding of one BGR frame."""
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return encode_clip_images([rgb], model=_CLIP_MODEL, device=device)[0]
@@ -34,7 +34,9 @@ def _phase_indices(start: int, end: int, n: int, total: int) -> list:
     return [start + int(i * (end - start) / (n - 1)) for i in range(n)]
 
 
-def scene_consistency_score(frames, n_sample: int = 9, device: str = None, start: int = 0, end: int = None) -> dict:
+def scene_consistency_score(
+    frames, n_sample: int = 9, device: str | None = None, start: int = 0, end: int | None = None
+) -> dict:
     """
     Mean CLIP cosine similarity between consecutive sampled frames within
     [start, end]. Catches sudden scene identity shifts or jump cuts.
@@ -63,7 +65,7 @@ def scene_consistency_score(frames, n_sample: int = 9, device: str = None, start
     }
 
 
-def revisit_metrics(frames, h_start: int, r_start: int, n_sample: int = 6, device: str = None) -> dict:
+def revisit_metrics(frames, h_start: int, r_start: int, n_sample: int = 6, device: str | None = None) -> dict:
     """
     Phase-aware V-D-R metrics using CLIP similarity vs frame_0 as the anchor.
 
@@ -134,7 +136,7 @@ def revisit_metrics(frames, h_start: int, r_start: int, n_sample: int = 6, devic
     }
 
 
-def prompt_alignment_score(frames, prompt: str, n_sample: int = 5, device: str = None) -> float:
+def prompt_alignment_score(frames, prompt: str, n_sample: int = 5, device: str | None = None) -> float:
     """
     CLIP text-image cosine similarity between the text prompt and sampled frames.
     Measures how well the generated video follows the input instruction.
@@ -150,7 +152,7 @@ def prompt_alignment_score(frames, prompt: str, n_sample: int = 5, device: str =
     return round(float(np.mean(sims)), 4)
 
 
-def clip_frame_similarity(img_a: np.ndarray, img_b: np.ndarray, device: str = None) -> float:
+def clip_frame_similarity(img_a: np.ndarray, img_b: np.ndarray, device: str | None = None) -> float:
     """
     CLIP cosine similarity between two BGR frames.
     Used for GT-grounded R-phase comparison: generated frame vs GT frame.

@@ -40,7 +40,7 @@ VQA_METRICS = [
 LOWER_IS_BETTER = {"GT_ALL_LPIPS"}
 
 # Display order
-DISPLAY_ORDER = AUTOMATED_METRICS + [ORS_METRIC] + FIDELITY_METRICS + VQA_METRICS
+DISPLAY_ORDER = [*AUTOMATED_METRICS, ORS_METRIC, *FIDELITY_METRICS, *VQA_METRICS]
 
 # Pretty names for display
 PRETTY_NAMES = {
@@ -344,8 +344,6 @@ def format_latex(df: pd.DataFrame) -> str:
         r"\toprule",
     ]
 
-    # Header with pretty names
-    pretty_cols = [PRETTY_NAMES.get(c, c) for c in df.columns]
     # Add arrows
     arrows = []
     for c in df.columns:
@@ -644,7 +642,6 @@ def print_terminal(df: pd.DataFrame, sort_by: str | None = None):
     GREEN = "\033[92m"
     RED = "\033[91m"
     CYAN = "\033[96m"
-    DIM = "\033[2m"
     UNDERLINE = "\033[4m"
     RESET = "\033[0m"
 

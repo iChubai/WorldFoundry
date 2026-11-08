@@ -10,7 +10,7 @@ def _resize_max_side(img: np.ndarray, max_side: int) -> np.ndarray:
     if m <= max_side:
         return img
     scale = max_side / float(m)
-    return cv2.resize(img, (int(round(w * scale)), int(round(h * scale))), interpolation=cv2.INTER_AREA)
+    return cv2.resize(img, (round(w * scale), round(h * scale)), interpolation=cv2.INTER_AREA)
 
 
 class FrameReader:
@@ -41,8 +41,7 @@ class FrameReader:
     def iter_indices(self, start: int, end: int, step: int):
         start = max(0, start)
         end = min(self._n - 1, end)
-        for i in range(start, end + 1, step):
-            yield i
+        yield from range(start, end + 1, step)
 
 
 class VideoReader:
@@ -87,5 +86,4 @@ class VideoReader:
     def iter_indices(self, start: int, end: int, step: int):
         start = max(0, start)
         end = min(self._n - 1, end)
-        for i in range(start, end + 1, step):
-            yield i
+        yield from range(start, end + 1, step)

@@ -4,7 +4,6 @@ import os
 import re
 from datetime import datetime
 
-import cv2
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -15,8 +14,8 @@ logging.getLogger("open_clip").setLevel(logging.WARNING)
 logging.getLogger("ImageReward").setLevel(logging.WARNING)
 logging.getLogger(__name__).setLevel(logging.WARNING)
 
-from automated.io.frames import FrameReader, VideoReader
-from automated.io.metadata import (
+from automated.io.frames import FrameReader, VideoReader  # noqa: E402 - After logger setup.
+from automated.io.metadata import (  # noqa: E402 - After logger setup.
     extract_gt_frame_at,
     extract_gt_frames_batch,
     load_gt_frame_count_real,
@@ -24,21 +23,25 @@ from automated.io.metadata import (
     load_intrinsics,
     load_intrinsics_json,
 )
-from automated.metrics.camera_controllability import (
+from automated.metrics.camera_controllability import (  # noqa: E402 - After logger setup.
     camera_controllability_score,
     load_gt_poses_real,
     load_gt_poses_synthetic,
     load_intrinsics_real,
     load_intrinsics_synthetic,
 )
-from automated.metrics.clip_metrics import clip_frame_similarity
-from automated.metrics.geometry import (
+from automated.metrics.clip_metrics import clip_frame_similarity  # noqa: E402 - After logger setup.
+from automated.metrics.geometry import (  # noqa: E402 - After logger setup.
     geometry_3d_consistency,
     object_centric_identity_consistency,
 )
-from automated.metrics.reference_fidelity import gt_phase_pixel_fidelity
-from automated.metrics.temporal import temporal_flow_score
-from automated.metrics.visual_quality import aesthetic_score, image_quality_score, image_reward_score
+from automated.metrics.reference_fidelity import gt_phase_pixel_fidelity  # noqa: E402 - After logger setup.
+from automated.metrics.temporal import temporal_flow_score  # noqa: E402 - After logger setup.
+from automated.metrics.visual_quality import (  # noqa: E402 - After logger setup.
+    aesthetic_score,
+    image_quality_score,
+    image_reward_score,
+)
 
 GT_ROOT_SYNTHETIC = "data/Synthetic_processed"
 GEN_ROOT_SYNTHETIC = "output/Synthetic"  # default; override with --gen_root
@@ -310,13 +313,11 @@ def _find_frames_dir(clip_path: str):
     then {clip_path} itself (PNG-direct layout used by OpenSora).
     """
     frames_subdir = os.path.join(clip_path, "frames")
-    if os.path.isdir(frames_subdir):
-        if any(f.endswith(".png") for f in os.listdir(frames_subdir)):
-            return frames_subdir
+    if os.path.isdir(frames_subdir) and any(f.endswith(".png") for f in os.listdir(frames_subdir)):
+        return frames_subdir
     samples_subdir = os.path.join(clip_path, "samples-rgb")
-    if os.path.isdir(samples_subdir):
-        if any(f.endswith(".png") for f in os.listdir(samples_subdir)):
-            return samples_subdir
+    if os.path.isdir(samples_subdir) and any(f.endswith(".png") for f in os.listdir(samples_subdir)):
+        return samples_subdir
     if any(f.endswith(".png") for f in os.listdir(clip_path)):
         return clip_path
     return None
@@ -328,8 +329,8 @@ def _add_synthetic_clip(
     scene: str,
     frames_dir: str,
     kf_map: dict,
-    prompt_map: dict = None,
-    video_path: str = None,
+    prompt_map: dict | None = None,
+    video_path: str | None = None,
 ) -> None:
     """frames_dir: path to PNG frames dir (None for mp4-based models).
     video_path: path to generated video mp4 (None for PNG-based models).
@@ -345,10 +346,7 @@ def _add_synthetic_clip(
     if not os.path.exists(gt_video_path):
         return
     kf = kf_map[clip_name]
-    if prompt_map is not None:
-        prompt = prompt_map.get(clip_name, kf.get("prompt", ""))
-    else:
-        prompt = kf.get("prompt", "")
+    prompt = prompt_map.get(clip_name, kf.get("prompt", "")) if prompt_map is not None else kf.get("prompt", "")
     clips.append(
         {
             "id": clip_name,
@@ -366,7 +364,7 @@ def _add_synthetic_clip(
     )
 
 
-def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC, prompt_map: dict = None) -> list:
+def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC, prompt_map: dict | None = None) -> list:
     """Scan gen_root for synthetic clips. Auto-detects five layouts:
 
       Nested + frames/  {Scene}/{clip}/frames/*.png  — LingBot-World, Wan2.2
@@ -429,7 +427,7 @@ def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC, prompt_map: dic
     return clips
 
 
-def discover_clips_real(gen_root: str = GEN_ROOT_REAL, prompt_map: dict = None) -> list:
+def discover_clips_real(gen_root: str = GEN_ROOT_REAL, prompt_map: dict | None = None) -> list:
     """Scan gen_root for real clips. Auto-detects four layouts:
 
       Standard  {NNN}/frames/*.png      — LingBot-World, Wan2.2, Matrix-Game

@@ -9,7 +9,7 @@ _raft = None
 _raft_device = None
 
 
-def _load_raft(device: str = None):
+def _load_raft(device: str | None = None):
     global _raft, _raft_device
     if _raft is not None:
         return _raft, _raft_device
@@ -70,7 +70,7 @@ def _warp_error(model, device: str, img1: np.ndarray, img2: np.ndarray) -> float
     return float((warped - t2).abs().mean().item())
 
 
-def temporal_flow_score(frames, start: int, end: int, sample_step: int = 4, device: str = None) -> float:
+def temporal_flow_score(frames, start: int, end: int, sample_step: int = 4, device: str | None = None) -> float:
     """
     Motion smoothness via RAFT optical-flow warp error (VBench formulation).
 

@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import csv
 import glob
 import json
@@ -124,12 +125,13 @@ def frames_to_video(frames_dir, fps=16):
 
     # Auto-detect FPS from frame count
     n = len(frame_paths)
-    if n > 100:
-        fps = 24  # LTX-Video / Open-SoRA (129 frames)
-    else:
-        fps = 16  # most models (81 frames)
+    fps = (
+        24  # LTX-Video / Open-SoRA (129 frames)
+        if n > 100
+        else 16  # most models (81 frames)
+    )
 
-    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)  # noqa: SIM115 - Closed on the next line; only its name is kept.
     tmp.close()
 
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -141,10 +143,8 @@ def frames_to_video(frames_dir, fps=16):
                 writer.write(frame)
         return tmp.name
     except Exception:
-        try:
+        with contextlib.suppress(FileNotFoundError):
             os.unlink(tmp.name)
-        except FileNotFoundError:
-            pass
         raise
     finally:
         writer.release()
@@ -297,10 +297,7 @@ def compute_scores(evaluation_json, questions_json=None):
             # Derive correct verdict from answer + polarity
             polarity = polarity_map.get(item["ID"], "Positive")
             answer = item.get("Answer", "").strip().lower()
-            if polarity == "Positive":
-                passed = answer == "yes"
-            else:  # Negative polarity
-                passed = answer == "no"
+            passed = answer == "yes" if polarity == "Positive" else answer == "no"  # Negative polarity
         else:
             passed = item["Verdict"] == "Pass"
 
@@ -446,10 +443,8 @@ if __name__ == "__main__":
                         break
         finally:
             if tmp_video is not None:
-                try:
+                with contextlib.suppress(FileNotFoundError):
                     os.unlink(tmp_video)
-                except FileNotFoundError:
-                    pass
 
         if evaluation_json is None:
             continue

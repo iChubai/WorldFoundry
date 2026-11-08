@@ -4,7 +4,6 @@ import glob
 import os
 import re
 import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -134,27 +133,29 @@ def load_sam3_metadata():
 
     syn_csv = os.path.join(SAM3_DATA, "synthetic_metadata.csv")
     if os.path.exists(syn_csv):
-        for row in csv.DictReader(open(syn_csv)):
-            scene = row["scene"]
-            vid = int(row["video_id"])
-            clip_id = f"{scene}_{vid:03d}"
-            mask_path = os.path.join(SAM3_OUT_SYN, scene, f"video{vid}_mask.png")
-            syn_meta[clip_id] = {
-                "subject": row["subject"],
-                "prompt": row.get("prompt", ""),
-                "mask": mask_path,
-            }
+        with open(syn_csv) as csv_file:
+            for row in csv.DictReader(csv_file):
+                scene = row["scene"]
+                vid = int(row["video_id"])
+                clip_id = f"{scene}_{vid:03d}"
+                mask_path = os.path.join(SAM3_OUT_SYN, scene, f"video{vid}_mask.png")
+                syn_meta[clip_id] = {
+                    "subject": row["subject"],
+                    "prompt": row.get("prompt", ""),
+                    "mask": mask_path,
+                }
 
     real_csv = os.path.join(SAM3_DATA, "real_metadata.csv")
     if os.path.exists(real_csv):
-        for row in csv.DictReader(open(real_csv)):
-            clip_id = str(row["video_id"]).zfill(3)
-            mask_path = os.path.join(SAM3_OUT_REAL, clip_id, "frame_mask.png")
-            real_meta[clip_id] = {
-                "subject": row["subject"],
-                "prompt": row.get("prompt", ""),
-                "mask": mask_path,
-            }
+        with open(real_csv) as csv_file:
+            for row in csv.DictReader(csv_file):
+                clip_id = str(row["video_id"]).zfill(3)
+                mask_path = os.path.join(SAM3_OUT_REAL, clip_id, "frame_mask.png")
+                real_meta[clip_id] = {
+                    "subject": row["subject"],
+                    "prompt": row.get("prompt", ""),
+                    "mask": mask_path,
+                }
 
     return syn_meta, real_meta
 
@@ -349,10 +350,7 @@ def compute_ors_for_clip(processor, frame_paths_or_arrays, r_start, prompt_str, 
     confidences = []
 
     for idx in r_frames_indices:
-        if is_bgr_arrays:
-            frame = frame_paths_or_arrays[idx]
-        else:
-            frame = cv2.imread(frame_paths_or_arrays[idx])
+        frame = frame_paths_or_arrays[idx] if is_bgr_arrays else cv2.imread(frame_paths_or_arrays[idx])
         if frame is None:
             continue
 
@@ -380,7 +378,7 @@ def parse_args():
     parser.add_argument(
         "--model-name",
         required=True,
-        choices=list(MODEL_CONFIGS.keys()) + ["all"],
+        choices=[*list(MODEL_CONFIGS.keys()), "all"],
         help="Model to evaluate, or 'all' for all models.",
     )
     parser.add_argument("--output-dir", default=OUTPUT_DIR, help=f"Output directory. Default: {OUTPUT_DIR}")
@@ -399,8 +397,9 @@ def run_model(model_name, processor, syn_meta, real_meta, kf_syn, kf_real, args)
 
     existing = set()
     if args.skip_existing and os.path.exists(out_csv):
-        for row in csv.DictReader(open(out_csv)):
-            existing.add(row["clip_id"])
+        with open(out_csv) as csv_file:
+            for row in csv.DictReader(csv_file):
+                existing.add(row["clip_id"])
 
     results = []
     total = failed = skipped = 0
@@ -551,10 +550,7 @@ def main():
     print(f"  Synthetic: {len(syn_meta)} clips with prompts, {len(kf_syn)} with keyframes")
     print(f"  Real:      {len(real_meta)} clips with prompts, {len(kf_real)} with keyframes")
 
-    if args.model_name == "all":
-        models = list(MODEL_CONFIGS.keys())
-    else:
-        models = [args.model_name]
+    models = list(MODEL_CONFIGS.keys()) if args.model_name == "all" else [args.model_name]
 
     for model in models:
         print(f"\n{'#' * 60}")

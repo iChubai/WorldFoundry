@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 import cv2
 import lpips as lpips_lib
 import numpy as np
@@ -8,7 +6,7 @@ import torch
 _lpips_model = None
 
 
-def _get_lpips(device: str = None):
+def _get_lpips(device: str | None = None):
     global _lpips_model
     if _lpips_model is None:
         if device is None:
@@ -71,7 +69,7 @@ def reference_frame_fidelity(gt_image: np.ndarray, gen_frame0: np.ndarray) -> tu
 def gt_phase_pixel_fidelity(
     gt_frames: list[np.ndarray],
     gen_frames: list[np.ndarray],
-    device: str = None,
+    device: str | None = None,
     lpips_batch_size: int = 16,
 ) -> tuple[float, float, float]:
     """

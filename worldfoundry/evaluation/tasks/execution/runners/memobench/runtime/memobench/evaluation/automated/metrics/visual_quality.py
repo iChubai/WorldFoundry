@@ -20,7 +20,7 @@ _aes_model = None
 _aes_device = None
 
 
-def _load_aesthetic(device: str = None):
+def _load_aesthetic(device: str | None = None):
     """Load the MemoBench aesthetic scorer.
 
     Provenance: the CLIP ViT-L/14 backbone and improved-aesthetic-predictor MLP
@@ -65,7 +65,7 @@ def _aesthetic_score_single(aes_model, clip_model, preprocess, device, img: np.n
     return float(score)
 
 
-def aesthetic_score(frames, sample_step: int = 5, device: str = None) -> float:
+def aesthetic_score(frames, sample_step: int = 5, device: str | None = None) -> float:
     """
     Mean LAION aesthetic score over sampled frames. Higher is better (~0–10).
     """
@@ -83,7 +83,7 @@ _iqa_device = None
 _iqa_backend = None  # "clipiqa+" | "musiq" | "laplacian"
 
 
-def _load_iqa(device: str = None):
+def _load_iqa(device: str | None = None):
     global _iqa_metric, _iqa_device, _iqa_backend
     if _iqa_metric is not None:
         return _iqa_metric, _iqa_device, _iqa_backend
@@ -140,7 +140,7 @@ def _iqa_single(metric, backend: str, device: str, img: np.ndarray) -> float:
         return float(np.clip(raw / 100.0, 0.0, 1.0))
 
 
-def image_quality_score(frames, sample_step: int = 5, device: str = None) -> float:
+def image_quality_score(frames, sample_step: int = 5, device: str | None = None) -> float:
     """
     Perceptual image quality score in [0, 1]. Higher = better.
 
@@ -162,7 +162,7 @@ _ir_device = None
 _ir_load_error = None  # stores error message on first load failure
 
 
-def _load_image_reward(device: str = None):
+def _load_image_reward(device: str | None = None):
     global _ir_model, _ir_device, _ir_load_error
     if _ir_load_error is not None:
         raise RuntimeError(_ir_load_error)
@@ -173,7 +173,7 @@ def _load_image_reward(device: str = None):
         import ImageReward as IR
     except ImportError:
         _ir_load_error = "ImageReward not installed. Run: pip install image-reward"
-        raise RuntimeError(_ir_load_error)
+        raise RuntimeError(_ir_load_error)  # noqa: B904 - Keeps the implicit ImportError context.
 
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -186,7 +186,7 @@ def _load_image_reward(device: str = None):
     return _ir_model, _ir_device
 
 
-def image_reward_score(frames, prompt: str, n_sample: int = 5, device: str = None) -> float:
+def image_reward_score(frames, prompt: str, n_sample: int = 5, device: str | None = None) -> float:
     """
     ImageReward (2023) human-preference score averaged over sampled frames.
 
@@ -209,7 +209,7 @@ def image_reward_score(frames, prompt: str, n_sample: int = 5, device: str = Non
     except Exception as e:
         import warnings
 
-        warnings.warn(f"[ImageReward] {e}")
+        warnings.warn(f"[ImageReward] {e}", stacklevel=1)
         return None
 
     N = frames.num_frames

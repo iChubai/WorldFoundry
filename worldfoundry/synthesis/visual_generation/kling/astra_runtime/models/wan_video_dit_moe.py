@@ -489,6 +489,91 @@ class WanModelMoe(torch.nn.Module):
 
         return processed_modality_inputs, processed
 
+    def _frame_rope_freqs(self, t_idx, h, w):
+        """RoPE frequencies of one latent frame at temporal position ``t_idx``, shaped [h*w, total_freq_dim]."""
+        f_freq = self.freqs[0][t_idx : t_idx + 1]  # [1, freq_dim]
+        h_freq = self.freqs[1][:h]  # [h, freq_dim]
+        w_freq = self.freqs[2][:w]  # [w, freq_dim]
+        return torch.cat(
+            [
+                f_freq.view(1, 1, 1, -1).expand(1, h, w, -1),
+                h_freq.view(1, h, 1, -1).expand(1, h, w, -1),
+                w_freq.view(1, 1, w, -1).expand(1, h, w, -1),
+            ],
+            dim=-1,
+        ).reshape(h * w, -1)
+
+    def _indexed_rope_freqs(self, frame_indices, batch_size, h, w):
+        """RoPE frequencies for per-sample temporal positions ``frame_indices`` [B, f], shaped [B, f*h*w, total_freq_dim]."""
+        return torch.stack(
+            [
+                torch.cat([self._frame_rope_freqs(t_idx, h, w) for t_idx in frame_indices[b]], dim=0)
+                for b in range(batch_size)
+            ],
+            dim=0,
+        )
+
+    def _prepend_downsampled_clean_latents(
+        self,
+        hidden_states,
+        rope_freqs,
+        combined_modality_embeddings,
+        clean_latents_scaled,
+        clean_latent_scaled_indices,
+        scale,
+        kernel_size,
+        cam_emb,
+        start_indice,
+    ):
+        """Prepend the 2x or 4x clean latents with their RoPE frequencies and camera embeddings.
+
+        Valid indices are non-negative; -1 marks padding. Inputs are returned unchanged when there are no
+        valid indices.
+        """
+        if (
+            clean_latents_scaled is None
+            or clean_latent_scaled_indices is None
+            or clean_latent_scaled_indices.numel() == 0
+        ):
+            return hidden_states, rope_freqs, combined_modality_embeddings
+        valid_indices = clean_latent_scaled_indices[clean_latent_scaled_indices >= 0]
+        if len(valid_indices) == 0:
+            return hidden_states, rope_freqs, combined_modality_embeddings
+
+        B = hidden_states.shape[0]
+        clean_latents_scaled = clean_latents_scaled.to(hidden_states)
+        clean_latents_scaled = self.pad_for_3d_conv(clean_latents_scaled, kernel_size)
+        clean_hidden_states = self.clean_x_embedder(clean_latents_scaled, scale=scale)
+
+        _, _, clean_f, clean_h, clean_w = clean_hidden_states.shape
+        clean_hidden_states = rearrange(clean_hidden_states, "b c f h w -> b (f h w) c")
+
+        # RoPE frequencies for the downsampled latents; frames past the valid indices reuse the last one.
+        frame_positions = [valid_indices[min(frame_idx, len(valid_indices) - 1)] for frame_idx in range(clean_f)]
+        clean_rope_freqs = torch.stack(
+            [
+                torch.cat([self._frame_rope_freqs(t_idx, clean_h, clean_w) for t_idx in frame_positions], dim=0)
+                for _ in range(B)
+            ],
+            dim=0,
+        )
+
+        if cam_emb is not None:
+            # Camera embeddings, zero for frames without a valid index
+            clean_camera = torch.zeros(B, clean_f, cam_emb.shape[-1], dtype=cam_emb.dtype, device=cam_emb.device)
+            for frame_idx in range(min(clean_f, len(valid_indices))):
+                cam_idx = valid_indices[frame_idx].item() - start_indice
+                if 0 <= cam_idx < cam_emb.shape[1]:
+                    clean_camera[:, frame_idx, :] = cam_emb[:, cam_idx, :]
+
+            clean_camera_spatial = clean_camera.unsqueeze(2).unsqueeze(3).repeat(1, 1, clean_h, clean_w, 1)
+            clean_camera_spatial = rearrange(clean_camera_spatial, "b f h w d -> b (f h w) d")
+            combined_modality_embeddings = torch.cat([clean_camera_spatial, combined_modality_embeddings], dim=1)
+
+        hidden_states = torch.cat([clean_hidden_states, hidden_states], dim=1)
+        rope_freqs = torch.cat([clean_rope_freqs, rope_freqs], dim=1)
+        return hidden_states, rope_freqs, combined_modality_embeddings
+
     def process_input_hidden_states(
         self,
         latents,
@@ -513,29 +598,7 @@ class WanModelMoe(torch.nn.Module):
         if latent_indices is None:
             latent_indices = torch.arange(0, f, device=hidden_states.device).unsqueeze(0).expand(B, -1)
 
-        main_rope_freqs_list = []
-        for b in range(B):
-            batch_rope_freqs = []
-            for t_idx in latent_indices[b]:
-                f_freq = self.freqs[0][t_idx : t_idx + 1]  # [1, freq_dim]
-                h_freq = self.freqs[1][:h]  # [h, freq_dim]
-                w_freq = self.freqs[2][:w]  # [w, freq_dim]
-
-                spatial_freqs = torch.cat(
-                    [
-                        f_freq.view(1, 1, 1, -1).expand(1, h, w, -1),
-                        h_freq.view(1, h, 1, -1).expand(1, h, w, -1),
-                        w_freq.view(1, 1, w, -1).expand(1, h, w, -1),
-                    ],
-                    dim=-1,
-                ).reshape(h * w, -1)  # [h*w, total_freq_dim]
-
-                batch_rope_freqs.append(spatial_freqs)
-
-            batch_rope_freqs = torch.cat(batch_rope_freqs, dim=0)  # [f*h*w, total_freq_dim]
-            main_rope_freqs_list.append(batch_rope_freqs)
-
-        rope_freqs = torch.stack(main_rope_freqs_list, dim=0)  # [B, f*h*w, total_freq_dim]
+        rope_freqs = self._indexed_rope_freqs(latent_indices, B, h, w)  # [B, f*h*w, total_freq_dim]
 
         # Camera embeddings of the target latents (1x scale, h*w tokens per frame)
         start_indice = clean_latent_indices[0][0].item() if clean_latent_indices is not None else 0
@@ -557,29 +620,7 @@ class WanModelMoe(torch.nn.Module):
             clean_hidden_states = self.clean_x_embedder(clean_latents, scale="1x")
             clean_hidden_states = rearrange(clean_hidden_states, "b c f h w -> b (f h w) c")
 
-            clean_rope_freqs_list = []
-            for b in range(B):
-                clean_batch_rope_freqs = []
-                for t_idx in clean_latent_indices[b]:
-                    f_freq = self.freqs[0][t_idx : t_idx + 1]
-                    h_freq = self.freqs[1][:h]
-                    w_freq = self.freqs[2][:w]
-
-                    spatial_freqs = torch.cat(
-                        [
-                            f_freq.view(1, 1, 1, -1).expand(1, h, w, -1),
-                            h_freq.view(1, h, 1, -1).expand(1, h, w, -1),
-                            w_freq.view(1, 1, w, -1).expand(1, h, w, -1),
-                        ],
-                        dim=-1,
-                    ).reshape(h * w, -1)
-
-                    clean_batch_rope_freqs.append(spatial_freqs)
-
-                clean_batch_rope_freqs = torch.cat(clean_batch_rope_freqs, dim=0)
-                clean_rope_freqs_list.append(clean_batch_rope_freqs)
-
-            clean_rope_freqs = torch.stack(clean_rope_freqs_list, dim=0)
+            clean_rope_freqs = self._indexed_rope_freqs(clean_latent_indices, B, h, w)
 
             # Camera embeddings of the clean latents
             if cam_emb is not None:
@@ -599,139 +640,22 @@ class WanModelMoe(torch.nn.Module):
             hidden_states = torch.cat([clean_hidden_states, hidden_states], dim=1)
             rope_freqs = torch.cat([clean_rope_freqs, rope_freqs], dim=1)
 
-        # clean_latents_2x (2x scale)
-        if clean_latents_2x is not None and clean_latent_2x_indices is not None and clean_latent_2x_indices.numel() > 0:
-            # Valid indices are non-negative; -1 marks padding.
-            valid_2x_indices = clean_latent_2x_indices[clean_latent_2x_indices >= 0]
-
-            if len(valid_2x_indices) > 0:
-                clean_latents_2x = clean_latents_2x.to(hidden_states)
-                clean_latents_2x = self.pad_for_3d_conv(clean_latents_2x, (2, 4, 4))
-                clean_hidden_states_2x = self.clean_x_embedder(clean_latents_2x, scale="2x")
-
-                _, _, clean_2x_f, clean_2x_h, clean_2x_w = clean_hidden_states_2x.shape
-                clean_hidden_states_2x = rearrange(clean_hidden_states_2x, "b c f h w -> b (f h w) c")
-
-                # RoPE frequencies for the downsampled 2x latents
-                clean_2x_rope_freqs_list = []
-                for b in range(B):  # noqa: B007 - The loop variable is read outside the loop.
-                    clean_2x_batch_rope_freqs = []
-
-                    for frame_idx in range(clean_2x_f):
-                        if frame_idx < len(valid_2x_indices):
-                            t_idx = valid_2x_indices[frame_idx]
-                        else:
-                            # Past the valid indices, reuse the last valid index.
-                            t_idx = valid_2x_indices[-1] if len(valid_2x_indices) > 0 else 0
-
-                        f_freq = self.freqs[0][t_idx : t_idx + 1]
-                        h_freq = self.freqs[1][:clean_2x_h]
-                        w_freq = self.freqs[2][:clean_2x_w]
-
-                        spatial_freqs = torch.cat(
-                            [
-                                f_freq.view(1, 1, 1, -1).expand(1, clean_2x_h, clean_2x_w, -1),
-                                h_freq.view(1, clean_2x_h, 1, -1).expand(1, clean_2x_h, clean_2x_w, -1),
-                                w_freq.view(1, 1, clean_2x_w, -1).expand(1, clean_2x_h, clean_2x_w, -1),
-                            ],
-                            dim=-1,
-                        ).reshape(clean_2x_h * clean_2x_w, -1)
-
-                        clean_2x_batch_rope_freqs.append(spatial_freqs)
-
-                    clean_2x_batch_rope_freqs = torch.cat(clean_2x_batch_rope_freqs, dim=0)
-                    clean_2x_rope_freqs_list.append(clean_2x_batch_rope_freqs)
-
-                clean_2x_rope_freqs = torch.stack(clean_2x_rope_freqs_list, dim=0)
-
-                if cam_emb is not None:
-                    # 2x camera embeddings, zero for frames without a valid index
-                    clean_2x_camera = torch.zeros(
-                        B, clean_2x_f, cam_emb.shape[-1], dtype=cam_emb.dtype, device=cam_emb.device
-                    )
-
-                    for frame_idx in range(min(clean_2x_f, len(valid_2x_indices))):
-                        cam_idx = valid_2x_indices[frame_idx].item() - start_indice
-                        if 0 <= cam_idx < cam_emb.shape[1]:
-                            clean_2x_camera[:, frame_idx, :] = cam_emb[:, cam_idx, :]
-
-                    clean_2x_camera_spatial = (
-                        clean_2x_camera.unsqueeze(2).unsqueeze(3).repeat(1, 1, clean_2x_h, clean_2x_w, 1)
-                    )
-                    clean_2x_camera_spatial = rearrange(clean_2x_camera_spatial, "b f h w d -> b (f h w) d")
-                    combined_modality_embeddings = torch.cat(
-                        [clean_2x_camera_spatial, combined_modality_embeddings], dim=1
-                    )
-
-                hidden_states = torch.cat([clean_hidden_states_2x, hidden_states], dim=1)
-                rope_freqs = torch.cat([clean_2x_rope_freqs, rope_freqs], dim=1)
-
-        # clean_latents_4x (4x scale)
-        if clean_latents_4x is not None and clean_latent_4x_indices is not None and clean_latent_4x_indices.numel() > 0:
-            # Valid indices are non-negative; -1 marks padding.
-            valid_4x_indices = clean_latent_4x_indices[clean_latent_4x_indices >= 0]
-
-            if len(valid_4x_indices) > 0:
-                clean_latents_4x = clean_latents_4x.to(hidden_states)
-                clean_latents_4x = self.pad_for_3d_conv(clean_latents_4x, (4, 8, 8))
-                clean_hidden_states_4x = self.clean_x_embedder(clean_latents_4x, scale="4x")
-
-                _, _, clean_4x_f, clean_4x_h, clean_4x_w = clean_hidden_states_4x.shape
-                clean_hidden_states_4x = rearrange(clean_hidden_states_4x, "b c f h w -> b (f h w) c")
-
-                # RoPE frequencies for the downsampled 4x latents
-                clean_4x_rope_freqs_list = []
-                for b in range(B):  # noqa: B007 - The loop variable is read outside the loop.
-                    clean_4x_batch_rope_freqs = []
-
-                    for frame_idx in range(clean_4x_f):
-                        if frame_idx < len(valid_4x_indices):
-                            t_idx = valid_4x_indices[frame_idx]
-                        else:
-                            # Past the valid indices, reuse the last valid index.
-                            t_idx = valid_4x_indices[-1] if len(valid_4x_indices) > 0 else 0
-
-                        f_freq = self.freqs[0][t_idx : t_idx + 1]
-                        h_freq = self.freqs[1][:clean_4x_h]
-                        w_freq = self.freqs[2][:clean_4x_w]
-
-                        spatial_freqs = torch.cat(
-                            [
-                                f_freq.view(1, 1, 1, -1).expand(1, clean_4x_h, clean_4x_w, -1),
-                                h_freq.view(1, clean_4x_h, 1, -1).expand(1, clean_4x_h, clean_4x_w, -1),
-                                w_freq.view(1, 1, clean_4x_w, -1).expand(1, clean_4x_h, clean_4x_w, -1),
-                            ],
-                            dim=-1,
-                        ).reshape(clean_4x_h * clean_4x_w, -1)
-
-                        clean_4x_batch_rope_freqs.append(spatial_freqs)
-
-                    clean_4x_batch_rope_freqs = torch.cat(clean_4x_batch_rope_freqs, dim=0)
-                    clean_4x_rope_freqs_list.append(clean_4x_batch_rope_freqs)
-
-                clean_4x_rope_freqs = torch.stack(clean_4x_rope_freqs_list, dim=0)
-
-                if cam_emb is not None:
-                    # 4x camera embeddings, zero for frames without a valid index
-                    clean_4x_camera = torch.zeros(
-                        B, clean_4x_f, cam_emb.shape[-1], dtype=cam_emb.dtype, device=cam_emb.device
-                    )
-
-                    for frame_idx in range(min(clean_4x_f, len(valid_4x_indices))):
-                        cam_idx = valid_4x_indices[frame_idx].item() - start_indice
-                        if 0 <= cam_idx < cam_emb.shape[1]:
-                            clean_4x_camera[:, frame_idx, :] = cam_emb[:, cam_idx, :]
-
-                    clean_4x_camera_spatial = (
-                        clean_4x_camera.unsqueeze(2).unsqueeze(3).repeat(1, 1, clean_4x_h, clean_4x_w, 1)
-                    )
-                    clean_4x_camera_spatial = rearrange(clean_4x_camera_spatial, "b f h w d -> b (f h w) d")
-                    combined_modality_embeddings = torch.cat(
-                        [clean_4x_camera_spatial, combined_modality_embeddings], dim=1
-                    )
-
-                hidden_states = torch.cat([clean_hidden_states_4x, hidden_states], dim=1)
-                rope_freqs = torch.cat([clean_4x_rope_freqs, rope_freqs], dim=1)
+        # clean_latents_2x (2x scale), then clean_latents_4x (4x scale)
+        for scale, kernel_size, scaled_latents, scaled_indices in (
+            ("2x", (2, 4, 4), clean_latents_2x, clean_latent_2x_indices),
+            ("4x", (4, 8, 8), clean_latents_4x, clean_latent_4x_indices),
+        ):
+            hidden_states, rope_freqs, combined_modality_embeddings = self._prepend_downsampled_clean_latents(
+                hidden_states,
+                rope_freqs,
+                combined_modality_embeddings,
+                scaled_latents,
+                scaled_indices,
+                scale,
+                kernel_size,
+                cam_emb,
+                start_indice,
+            )
 
         rope_freqs = rope_freqs.unsqueeze(2).to(device=hidden_states.device)
 

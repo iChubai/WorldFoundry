@@ -18,7 +18,6 @@ from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants impo
     DEFAULT_IM_END_TOKEN,
     DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_TOKEN,
-    IMAGE_PLACEHOLDER,
     IMAGE_TOKEN_INDEX,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates

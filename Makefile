@@ -27,6 +27,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/evaluation/execution/test_wbench_sam2_tracking_summary.py \
 	tests/evaluation/execution/test_stevo_bench_eval_utils.py \
 	tests/evaluation/execution/test_t2vworldbench_evaluator_imports.py \
+	tests/evaluation/execution/test_t2v_compbench_mllm_metric_imports.py \
 	tests/evaluation/execution/test_fetv_blip_modes.py \
 	tests/evaluation/execution/test_fetv_video_frames.py \
 	tests/evaluation/execution/test_vmbench_qalign_helpers.py \
@@ -258,6 +259,7 @@ EVALUATION_CPU_CONTRACTS = \
 	tests/evaluation/execution/test_wbench_sam2_tracking_summary.py \
 	tests/evaluation/execution/test_stevo_bench_eval_utils.py \
 	tests/evaluation/execution/test_t2vworldbench_evaluator_imports.py \
+	tests/evaluation/execution/test_t2v_compbench_mllm_metric_imports.py \
 	tests/evaluation/execution/test_fetv_blip_modes.py \
 	tests/evaluation/execution/test_fetv_video_frames.py \
 	tests/evaluation/execution/test_vmbench_qalign_helpers.py \

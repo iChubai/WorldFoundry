@@ -7,7 +7,6 @@ import re
 from io import BytesIO
 
 import cv2
-import moviepy.editor as mp
 import numpy as np
 import requests
 import torch
@@ -15,12 +14,10 @@ from PIL import Image
 from torchvision.io import write_video
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    DEFAULT_IM_END_TOKEN,
-    DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_TOKEN,
     IMAGE_TOKEN_INDEX,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
     get_model_name_from_path,
     process_images,
@@ -143,7 +140,7 @@ class Video_preprocess:
 
 
 def load_image(image_file):
-    if image_file.startswith("http") or image_file.startswith("https"):
+    if image_file.startswith(("http", "https")):
         response = requests.get(image_file)
         image = Image.open(BytesIO(response.content)).convert("RGB")
     else:
@@ -192,7 +189,7 @@ def set_seed(seed: int):
 
 def eval_model(args):
     frame_folder = args.frame_folder
-    if frame_folder == None:
+    if frame_folder is None:
         video_path = args.video_path
         video_preprocess = Video_preprocess()
         frame_folder = video_preprocess.convert_video_to_frames(video_path, num_frames=8)
@@ -274,7 +271,7 @@ def eval_model(args):
 
             for j in range(2):
                 set_seed(args.seed)
-                if j == 0:
+                if j == 0:  # noqa: SIM108 - Commented branches.
                     state_num = 0  # get initial image
                 else:
                     state_num = -1  # get end image
@@ -285,7 +282,6 @@ def eval_model(args):
                     model.device, dtype=torch.float16
                 )
 
-                image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
                 qs = initial
                 qs = DEFAULT_IMAGE_TOKEN + "\n" + qs
                 conv_mode = "chatml_direct"
@@ -305,7 +301,7 @@ def eval_model(args):
                         input_ids,
                         images=images_tensor,
                         image_sizes=image_sizes,
-                        do_sample=True if args.temperature > 0 else False,
+                        do_sample=args.temperature > 0,
                         temperature=args.temperature,  # 0.2
                         top_p=args.top_p,
                         num_beams=args.num_beams,  # 1
@@ -321,7 +317,6 @@ def eval_model(args):
                 conv.append_message(conv.roles[1], None)
 
                 for k in range(2):
-                    image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
                     question_group_tmp = phrases[(k) % 2]
                     qs = (
                         f"According to the image and your previous answer, evaluate if this prompt '{question_group_tmp}' is correctly described in the image. \
@@ -350,7 +345,7 @@ Provide your analysis and explanation in JSON format with the following keys: sc
                             input_ids,
                             images=images_tensor,
                             image_sizes=image_sizes,
-                            do_sample=True if args.temperature > 0 else False,
+                            do_sample=args.temperature > 0,
                             temperature=args.temperature,
                             top_p=args.top_p,
                             num_beams=args.num_beams,
@@ -393,7 +388,7 @@ Provide your analysis and explanation in JSON format with the following keys: sc
                 first_frame_score = score_1 * (1 - score_1_1)  # 0~1
                 last_frame_score = (1 - score_2) * score_2_1  # 0~1
                 temp_score = first_frame_score * last_frame_score
-            except:
+            except BaseException:
                 temp_score = "bad reply"
 
             flag = -1
@@ -404,7 +399,7 @@ Provide your analysis and explanation in JSON format with the following keys: sc
                 intermediate_frames = 8 - 2
                 frame_array = np.arange(1, 7)
 
-                for j, inter_state in enumerate(frame_array):
+                for _j, inter_state in enumerate(frame_array):
                     set_seed(args.seed)
                     image_file = [os.path.join(frame_folder, frame_images[i], image_files[inter_state])]
                     images = load_images(image_file)
@@ -434,7 +429,7 @@ Provide your analysis and explanation in JSON format with the following keys: sc
                             input_ids,
                             images=images_tensor,
                             image_sizes=image_sizes,
-                            do_sample=True if args.temperature > 0 else False,
+                            do_sample=args.temperature > 0,
                             temperature=args.temperature,  # 0.2
                             top_p=args.top_p,
                             num_beams=args.num_beams,  # 1
@@ -446,7 +441,6 @@ Provide your analysis and explanation in JSON format with the following keys: sc
                     out.append(outputs)  # out[6] out[8]
                     conv.messages[-1][-1] = outputs
 
-                    image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
                     qs = f"Evaluate if the image aligns with the prompt '{phrase_0}' or '{phrase_1}'. \
 Give a score from 3 to 0 according the criteria: \
 3: the image matches the prompt '{phrase_0}'. \
@@ -472,7 +466,7 @@ Provide your analysis and explanation in JSON format with the following keys: sc
                             input_ids,
                             images=images_tensor,
                             image_sizes=image_sizes,
-                            do_sample=True if args.temperature > 0 else False,
+                            do_sample=args.temperature > 0,
                             temperature=args.temperature,
                             top_p=args.top_p,
                             num_beams=args.num_beams,
@@ -544,7 +538,7 @@ def model_score(csv_path):
                 score_tmp = float(line[-1])
                 score += score_tmp
                 cnt += 1
-            except:
+            except BaseException:
                 continue
 
         score = score / cnt

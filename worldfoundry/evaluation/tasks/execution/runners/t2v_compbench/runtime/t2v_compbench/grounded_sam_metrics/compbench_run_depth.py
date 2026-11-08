@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 
@@ -7,7 +6,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torchvision.transforms import Compose
-from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1.dpt import DepthAnything
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1.util.transform import (
@@ -132,13 +130,6 @@ class Video_preprocess:
 
 
 def run_depth(video_path, t2v_model, output_dir, meta_file, encoder="vitl", pred_only=True, grayscale=True):
-    margin_width = 50
-    caption_height = 60
-
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1
-    font_thickness = 2
-
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
     depth_anything = DepthAnything.from_pretrained(f"LiheYoung/depth_anything_{encoder}14").to(DEVICE).eval()
@@ -182,10 +173,10 @@ def run_depth(video_path, t2v_model, output_dir, meta_file, encoder="vitl", pred
 
         num = int(videos[i]) - 1
 
-        prompt = prompts[num]["prompt"]
+        _prompt = prompts[num]["prompt"]
         spatial = prompts[num]["spatial"]  # A is on the left of B
-        phrase_0 = prompts[num]["object_1"]
-        phrase_1 = prompts[num]["object_2"]
+        _phrase_0 = prompts[num]["object_1"]
+        _phrase_1 = prompts[num]["object_2"]
         spatial = prompts[num]["spatial"]
         if spatial not in ["left", "right", "above", "on", "under", "below", "in front of", "behind"]:
             print(spatial, "spatial not included!!!, index: ", vid)

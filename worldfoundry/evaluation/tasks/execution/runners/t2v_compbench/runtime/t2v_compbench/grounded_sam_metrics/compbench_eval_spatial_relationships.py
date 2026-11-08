@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
-from tqdm import tqdm
 
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
@@ -88,7 +87,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     pred_phrases = []
 
     prob = []
-    for logit, box in zip(logits_filt, boxes_filt, strict=False):
+    for logit, _box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -171,11 +170,6 @@ def clean_boxes(boxes, size):
 
 
 def calculate_iou(box0, box1):  # xywh
-    centre_0 = [box0[0].item(), box0[1].item()]
-    centre_1 = [box1[0].item(), box1[1].item()]
-    dw = centre_0[0] - centre_1[0]  # x0-x1
-    dh = centre_0[1] - centre_1[1]  # y0-y1
-
     # Calculate IoU
     # from xywh to xyxy
     [box0_xmin, box0_ymin] = box0[:2] - box0[2:] / 2
@@ -270,10 +264,7 @@ def pick_max_2d(total_score_1_list, record_all_correct_spatial):
 
 # 3d functions
 def show_mask(mask, ax, my_color, random_color=False):
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = my_color
+    color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0) if random_color else my_color
     h, w = mask.shape[-2:]
     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
     ax.imshow(mask_image)
@@ -336,9 +327,9 @@ def combine_frame(input_csv, output_csv):
             score_vid_1.append(sum(frame_score_1) / 16)
             score_frame_1.append(frame_score_1)
 
-    score_vid_1 = ["Score_1"] + score_vid_1
-    id = ["id"] + id
-    score_frame_1 = ["Score_frame_1"] + score_frame_1
+    score_vid_1 = ["Score_1", *score_vid_1]
+    id = ["id", *id]
+    score_frame_1 = ["Score_frame_1", *score_frame_1]
 
     if len(score_vid_1) != len(score_frame_1) != len(id):
         print("counting error")
@@ -364,7 +355,7 @@ def combine_csv_and_cal_model_score(csv_2d, csv_3d, output_file):
 
     lines = lines_2d[1:] + lines_3d[1:]
     lines = sorted(lines, key=lambda x: int(x[0]))  # Sort by the first element
-    lines = [["id", "score_frame", "Score"]] + lines
+    lines = [["id", "score_frame", "Score"], *lines]
     score = []
     print(lines)
     for line in lines[1:]:
@@ -554,7 +545,6 @@ def spatial_3d(args):
     grounded_checkpoint = args.grounded_checkpoint  # change the path of the model
     sam_version = args.sam_version
     sam_checkpoint = args.sam_checkpoint
-    sam_hq_checkpoint = args.sam_hq_checkpoint
     use_sam_hq = args.use_sam_hq
     depth_folder = os.path.join(args.depth_folder, args.t2v_model)
 
@@ -649,15 +639,9 @@ def spatial_3d(args):
                         all_phrase[j] for j, phrase in enumerate(all_phrase) if phrase.split("(")[0] == phrase_1
                     ]
 
-                    if len(clean_boxes_0) > 0:
-                        boxes_filt_0 = torch.stack(clean_boxes_0, dim=0)
-                    else:
-                        boxes_filt_0 = torch.tensor([])
+                    boxes_filt_0 = torch.stack(clean_boxes_0, dim=0) if len(clean_boxes_0) > 0 else torch.tensor([])
 
-                    if len(clean_boxes_1) > 0:
-                        boxes_filt_1 = torch.stack(clean_boxes_1, dim=0)
-                    else:
-                        boxes_filt_1 = torch.tensor([])
+                    boxes_filt_1 = torch.stack(clean_boxes_1, dim=0) if len(clean_boxes_1) > 0 else torch.tensor([])
 
                     m0 = len(clean_prob_0)
                     m1 = len(clean_prob_1)
@@ -758,31 +742,30 @@ def spatial_3d(args):
 
                                             record_all_correct_spatial.append(info)
 
-                                    elif spatial == "behind":
-                                        if d1 < d2:
-                                            prob_score = 0.5 * prob_0[ii] + 0.5 * prob_1[jj]
-                                            spatial_score_1 = IoU
-                                            total_score_1 = 0.5 * prob_score + 0.5 * spatial_score_1
+                                    elif spatial == "behind" and d1 < d2:
+                                        prob_score = 0.5 * prob_0[ii] + 0.5 * prob_1[jj]
+                                        spatial_score_1 = IoU
+                                        total_score_1 = 0.5 * prob_score + 0.5 * spatial_score_1
 
-                                            seg_save_path = os.path.join(
-                                                output_dir, videos[i], image_name.split(".")[0], f"obj1_seg_{ii}.png"
-                                            )
-                                            cv2.imwrite(seg_save_path, obj1_seg)
-                                            seg_save_path = os.path.join(
-                                                output_dir, videos[i], image_name.split(".")[0], f"obj2_seg_{jj}.png"
-                                            )
-                                            cv2.imwrite(seg_save_path, obj2_seg)
+                                        seg_save_path = os.path.join(
+                                            output_dir, videos[i], image_name.split(".")[0], f"obj1_seg_{ii}.png"
+                                        )
+                                        cv2.imwrite(seg_save_path, obj1_seg)
+                                        seg_save_path = os.path.join(
+                                            output_dir, videos[i], image_name.split(".")[0], f"obj2_seg_{jj}.png"
+                                        )
+                                        cv2.imwrite(seg_save_path, obj2_seg)
 
-                                            info = {}
-                                            info["name"] = f"{ii}_{jj}"
-                                            info["box0"] = clean_boxes_0[ii]
-                                            info["box1"] = clean_boxes_1[jj]
-                                            info["total_score_1"] = total_score_1
-                                            info["spatial_score_1"] = spatial_score_1
-                                            info["mask0"] = masks_0[ii]
-                                            info["mask1"] = masks_1[jj]
+                                        info = {}
+                                        info["name"] = f"{ii}_{jj}"
+                                        info["box0"] = clean_boxes_0[ii]
+                                        info["box1"] = clean_boxes_1[jj]
+                                        info["total_score_1"] = total_score_1
+                                        info["spatial_score_1"] = spatial_score_1
+                                        info["mask0"] = masks_0[ii]
+                                        info["mask1"] = masks_1[jj]
 
-                                            record_all_correct_spatial.append(info)
+                                        record_all_correct_spatial.append(info)
 
                         if len(record_all_correct_spatial) != 0:
                             total_score_1_list = []

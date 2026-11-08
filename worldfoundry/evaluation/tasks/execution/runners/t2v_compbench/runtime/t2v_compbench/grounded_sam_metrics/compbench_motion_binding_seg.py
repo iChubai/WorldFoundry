@@ -1,14 +1,12 @@
 import argparse
 import json
 import os
-import sys
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
-from tqdm import tqdm
 
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
@@ -196,7 +194,7 @@ def get_grounding_output(model, image, caption, box_threshold, text_threshold, w
     pred_phrases = []
 
     logits_list = []
-    for logit, box in zip(logits_filt, boxes_filt, strict=False):
+    for logit, _box in zip(logits_filt, boxes_filt, strict=False):
         pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
         if with_logits:
             pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -229,9 +227,9 @@ def save_mask_data(output_dir, mask_list, box_list, label_list):
     value = 1
 
     mask_img = torch.ones(mask_list.shape[-2:])
-    for idx, mask in enumerate(mask_list):
+    for _idx, mask in enumerate(mask_list):
         # mask_img[mask.cpu().numpy()[0] == True] = value + idx + 1
-        mask_img[mask.cpu().numpy()[0] == True] = value - 1
+        mask_img[mask.cpu().numpy()[0] == True] = value - 1  # noqa: E712 - Elementwise NumPy mask comparison.
     plt.figure(figsize=(10, 10))
     plt.imshow(mask_img.numpy(), cmap="gray")
     plt.axis("off")
@@ -259,7 +257,7 @@ def save_mask_foreground(output_dir, mask, obj_prompt):
     value = 0
 
     mask_img = torch.zeros(mask.shape[-2:])
-    mask_img[mask.cpu().numpy()[0] == True] = value + 1
+    mask_img[mask.cpu().numpy()[0] == True] = value + 1  # noqa: E712 - Elementwise NumPy mask comparison.
     plt.figure(figsize=(10, 10))
     plt.imshow(mask_img.numpy(), cmap="gray")
     plt.axis("off")
@@ -274,7 +272,6 @@ def foreground_background_mask(args):
     grounded_checkpoint = args.grounded_checkpoint  # change the path of the model
     sam_version = args.sam_version
     sam_checkpoint = args.sam_checkpoint
-    sam_hq_checkpoint = args.sam_hq_checkpoint
     use_sam_hq = args.use_sam_hq
     box_threshold = args.box_threshold
     text_threshold = args.text_threshold
@@ -317,7 +314,7 @@ def foreground_background_mask(args):
         video_name = videos[k]
         num = int(video_name[0:4]) - 1
 
-        prompt = prompts[num]["prompt"]
+        _prompt = prompts[num]["prompt"]
         object_1 = prompts[num]["object_1"]  # A is on the left of B
         object_2 = prompts[num]["object_2"]
         d_1 = prompts[num]["d_1"]

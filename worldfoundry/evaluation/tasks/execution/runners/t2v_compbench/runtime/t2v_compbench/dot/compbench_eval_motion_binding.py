@@ -13,7 +13,6 @@ from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.tracking.dot.models import create_model
 from worldfoundry.base_models.perception_core.tracking.dot.utils.io import (
-    create_folder,
     read_frame,
     read_video,
     write_video,
@@ -329,15 +328,15 @@ def combine_fore_back(foreground, background, output_csv):
                     try:
                         obj_net_left = float(back_x[num]) - float(fore_x)
                         obj_net_up = float(back_y[num]) - float(fore_y)
-                    except:  # back_x[num] or fore_x is ''
+                    except BaseException:  # back_x[num] or fore_x is ''
                         obj_net_left = 0.0
                         obj_net_up = 0.0
-                    row = foreground_lines[j + 1][:6] + [obj_net_left, obj_net_up]
+                    row = [*foreground_lines[j + 1][:6], obj_net_left, obj_net_up]
                     writer.writerow(row)
                     output_file.flush()
 
                 elif foreground_lines[j + 1][-2] == "" and foreground_lines[j + 1][-1] == "":
-                    row = foreground_lines[j + 1][:6] + ["", ""]
+                    row = [*foreground_lines[j + 1][:6], "", ""]
                     writer.writerow(row)
                     output_file.flush()
                 else:
@@ -406,7 +405,6 @@ def cal_score(output_csv, score_csv):
                             obj1_net_left, left_thresh, obj1_net_up, up_thresh, d_1
                         )
                     elif obj1_net_left == "":  # 1 object not detected
-                        correct_direction = False
                         score_tmp = -1
                     else:
                         print("only 1 object detected, error in obj1_net_left")
@@ -432,14 +430,14 @@ def cal_score(output_csv, score_csv):
                     else:
                         print("2 objects detected, error in obj2_net_left")
 
-                    if correct_direction_1 == True and correct_direction_2 == True:
+                    if correct_direction_1 and correct_direction_2:
                         score_tmp = (score_tmp_1 + score_tmp_2) * 0.5
-                    elif correct_direction_1 == True and correct_direction_2 == False:
+                    elif correct_direction_1 and not correct_direction_2:
                         score_tmp = 0.5 * score_tmp_1
-                    elif correct_direction_1 == False and correct_direction_2 == True:
+                    elif not correct_direction_1 and correct_direction_2:
                         score_tmp = 0.5 * score_tmp_2
-                    elif correct_direction_1 == False and correct_direction_2 == False:
-                        if score_tmp_1 < 0 and score_tmp_2 < 0:  # 2 object neither detected
+                    elif not correct_direction_1 and not correct_direction_2:
+                        if score_tmp_1 < 0 and score_tmp_2 < 0:  # noqa: SIM108 - Commented branches; 2 object neither detected
                             score_tmp = -1
                         else:
                             score_tmp = 0  # 1 or 2 among 2 objects detected, wrong direction/static
@@ -605,10 +603,7 @@ def background(args):
                         points = data["tracks"][0]
                         x, y = points[..., 0].long(), points[..., 1].long()
                         x, y = x - x.min(), y - y.min()
-                        if args.rainbow_mode == "left_right":
-                            idx = y + x * y.max()
-                        else:
-                            idx = x + y * x.max()
+                        idx = y + x * y.max() if args.rainbow_mode == "left_right" else x + y * x.max()
                         order = idx.argsort(dim=0)
                         data["tracks"] = data["tracks"][:, order]
 
@@ -760,10 +755,7 @@ def foreground(args):
                         points = data["tracks"][0]
                         x, y = points[..., 0].long(), points[..., 1].long()
                         x, y = x - x.min(), y - y.min()
-                        if args.rainbow_mode == "left_right":
-                            idx = y + x * y.max()
-                        else:
-                            idx = x + y * x.max()
+                        idx = y + x * y.max() if args.rainbow_mode == "left_right" else x + y * x.max()
                         order = idx.argsort(dim=0)
                         data["tracks"] = data["tracks"][:, order]
 

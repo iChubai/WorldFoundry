@@ -13,12 +13,10 @@ from PIL import Image
 from torchvision.io import write_video
 
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
-    DEFAULT_IM_END_TOKEN,
-    DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_TOKEN,
     IMAGE_TOKEN_INDEX,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import SeparatorStyle, conv_templates
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
     get_model_name_from_path,
     process_images,
@@ -141,7 +139,7 @@ class Video_preprocess:
 
 
 def load_image(image_file):
-    if image_file.startswith("http") or image_file.startswith("https"):
+    if image_file.startswith(("http", "https")):
         response = requests.get(image_file)
         image = Image.open(BytesIO(response.content)).convert("RGB")
     else:
@@ -191,7 +189,7 @@ def set_seed(seed: int):
 def eval_model(args):
     # preprocess: video 2 grid
     image_grid_path = args.image_grid_path
-    if image_grid_path == None:
+    if image_grid_path is None:
         video_path = args.video_path
         video_preprocess = Video_preprocess()
         image_grid_path = video_preprocess.convert_video_to_grid(video_path)
@@ -270,7 +268,6 @@ def eval_model(args):
 
             Q1 = "The provided image arranges key frames from an AI generated video in a grid layout.  Describe the video, highlight all the characters and objects that appear throughout the frames and indicate how they act."
             qs1 = Q1
-            image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
             qs1 = DEFAULT_IMAGE_TOKEN + "\n" + qs1
 
             conv_mode = "chatml_direct"
@@ -305,7 +302,7 @@ def eval_model(args):
                         input_ids_init,
                         images=images_tensor,
                         image_sizes=image_sizes,
-                        do_sample=True if args.temperature > 0 else False,
+                        do_sample=args.temperature > 0,
                         temperature=args.temperature,  # 0.2
                         top_p=args.top_p,
                         num_beams=args.num_beams,  # 1
@@ -339,7 +336,7 @@ Put the option in JSON format with the following keys: option (e.g., A), explana
                         input_ids,
                         images=images_tensor,
                         image_sizes=image_sizes,
-                        do_sample=True if args.temperature > 0 else False,
+                        do_sample=args.temperature > 0,
                         temperature=args.temperature,  # 0.2
                         top_p=args.top_p,
                         num_beams=args.num_beams,  # 1
@@ -355,7 +352,7 @@ Put the option in JSON format with the following keys: option (e.g., A), explana
 
                 try:
                     option_value_2 = json_obj_2["adjust"]
-                except:
+                except BaseException:
                     option_value_2 = "bad reply 1"
 
                 print("option_value_2 ", option_value_2)
@@ -415,7 +412,7 @@ Put the options in JSON format with the following keys: option (e.g., A), explan
                             input_ids,
                             images=images_tensor,
                             image_sizes=image_sizes,
-                            do_sample=True if args.temperature > 0 else False,
+                            do_sample=args.temperature > 0,
                             temperature=args.temperature,  # 0.2
                             top_p=args.top_p,
                             num_beams=args.num_beams,  # 1
@@ -465,10 +462,7 @@ Put the options in JSON format with the following keys: option (e.g., A), explan
             for score in scores_tmp:
                 if not isinstance(score, int):
                     int_flag = 1
-            if int_flag == 0:
-                score_avg = sum(scores_tmp) / len(scores_tmp)
-            else:
-                score_avg = "bad reply"
+            score_avg = sum(scores_tmp) / len(scores_tmp) if int_flag == 0 else "bad reply"
 
             csv_writer.writerow(
                 [
@@ -506,7 +500,7 @@ def model_score(csv_path):
                 score_tmp = (float(line[-1]) - 1) / 9  # normalize
                 score += score_tmp
                 cnt += 1
-            except:
+            except BaseException:
                 continue
         score = score / cnt
         print("number of images evaluated: ", cnt, " action binding model score: ", score)

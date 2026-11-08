@@ -7,7 +7,6 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
-from tqdm import tqdm
 
 import worldfoundry.base_models.perception_core.detection.grounding_dino.util.transforms as T
 from worldfoundry.base_models.perception_core.detection.grounding_dino.models import build_model
@@ -17,7 +16,6 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.paths imp
 from worldfoundry.base_models.perception_core.detection.grounding_dino.paths import (
     config_path as grounding_dino_config_path,
 )
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util import box_ops
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slconfig import SLConfig
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.utils import (
     clean_state_dict,
@@ -266,7 +264,7 @@ def get_grounding_output(
         pred_phrases = []
         # sky
         prob = []
-        for logit, box in zip(logits_filt, boxes_filt, strict=False):
+        for logit, _box in zip(logits_filt, boxes_filt, strict=False):
             pred_phrase = get_phrases_from_posmap(logit > text_threshold, tokenized, tokenlizer)
             if with_logits:
                 pred_phrases.append(pred_phrase + f"({str(logit.max().item())[:4]})")
@@ -277,7 +275,7 @@ def get_grounding_output(
 
     else:
         # given-phrase mode
-        positive_maps = create_positive_map_from_span(model.tokenizer(text_prompt), token_span=token_spans).to(
+        positive_maps = create_positive_map_from_span(model.tokenizer(text_prompt), token_span=token_spans).to(  # noqa: F821 - Upstream given-phrase mode; the runner never passes --token_spans.
             image.device
         )  # n_phrase, 256
 
@@ -306,11 +304,6 @@ def get_grounding_output(
 
 
 def calculate_iou(box0, box1):  # xywh
-    centre_0 = [box0[0].item(), box0[1].item()]
-    centre_1 = [box1[0].item(), box1[1].item()]
-    dw = centre_0[0] - centre_1[0]  # x0-x1
-    dh = centre_0[1] - centre_1[1]  # y0-y1
-
     # Calculate IoU
     # from xywh to xyxy
     [box0_xmin, box0_ymin] = box0[:2] - box0[2:] / 2
@@ -413,9 +406,9 @@ def combine_frame(input_csv, output_csv):
 
     print("number of videos evaluated: ", cnt, " numeracy model score: ", score_avg)
 
-    score_vid_1 = ["Score_1"] + score_vid_1
-    id = ["id"] + id
-    score_frame_1 = ["Score_frame_1"] + score_frame_1
+    score_vid_1 = ["Score_1", *score_vid_1]
+    id = ["id", *id]
+    score_frame_1 = ["Score_frame_1", *score_frame_1]
 
     if len(score_vid_1) != len(score_frame_1) != len(id):
         print("counting error")
@@ -507,10 +500,7 @@ if __name__ == "__main__":
     os.makedirs(output_path, exist_ok=True)
 
     vid2frame = Video_preprocess()
-    if args.frame_folder == None:
-        frame_folder = vid2frame.convert_video_to_frames(video_path)
-    else:
-        frame_folder = args.frame_folder
+    frame_folder = vid2frame.convert_video_to_frames(video_path) if args.frame_folder is None else args.frame_folder
 
     videos = os.listdir(frame_folder)
     videos.sort()  # sort
@@ -555,7 +545,7 @@ if __name__ == "__main__":
                 try:
                     nums[j] = nums[j].strip()
                     nums[j] = int(nums[j])
-                except:
+                except BaseException:
                     print("object number not int")
             print(objs, nums)
 
@@ -586,7 +576,7 @@ if __name__ == "__main__":
                     )
                     size = image_pil.size
 
-                    all_box = all_box + [boxes_filt_0]
+                    all_box = [*all_box, boxes_filt_0]
                     all_prob = all_prob + prob_0
                     all_phrase = all_phrase + pred_phrases_0
 

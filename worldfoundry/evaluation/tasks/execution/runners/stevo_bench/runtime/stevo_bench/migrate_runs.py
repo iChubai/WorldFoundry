@@ -40,7 +40,6 @@ import argparse
 import json
 import shutil
 from pathlib import Path
-from typing import Dict, Optional
 
 # Key fields that distinguish a real LLM result from an init stub (null = stub)
 _KEY_FIELDS: dict[str, tuple] = {
@@ -170,7 +169,7 @@ def migrate_summary(run_dir: Path, dry_run: bool) -> None:
             llm_evals.setdefault(slug, {})[field] = task[field]
 
         # Recompute derived fields per slug.
-        for slug, ev in llm_evals.items():
+        for _slug, ev in llm_evals.items():
             occ = ev.get("occlusion_done")
             trig = ev.get("trigger_applied")
             art = ev.get("artifact")

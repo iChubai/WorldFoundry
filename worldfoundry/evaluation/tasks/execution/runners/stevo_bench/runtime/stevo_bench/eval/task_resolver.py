@@ -27,7 +27,7 @@ Video link can be:
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from benchmark.runners.utils import load_yaml, resolve_task_paths
 from eval.utils import (
@@ -139,10 +139,7 @@ def _load_questions(task_yaml: Path) -> tuple[list[Question], str | None]:
     eval_block = task.get("evaluation", {}) or {}
 
     spec_prompt = eval_block.get("init2final_edit_prompt")
-    if isinstance(spec_prompt, str):
-        spec_prompt = spec_prompt.strip()
-    else:
-        spec_prompt = None
+    spec_prompt = spec_prompt.strip() if isinstance(spec_prompt, str) else None
 
     q_raw = eval_block.get("questions", []) or []
     questions: list[Question] = []

@@ -55,7 +55,6 @@ import argparse
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pandas as pd

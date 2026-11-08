@@ -31,7 +31,7 @@ import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 def _avg(values: list[float]) -> float | None:

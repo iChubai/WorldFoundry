@@ -7,7 +7,6 @@ import json
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
 
 
 class PairwiseAgreementAnalyzer:
@@ -270,10 +269,7 @@ class PairwiseAgreementAnalyzer:
         # Calculate weighted agreement rates
         pairwise_agreement_rates = {}
         for pair, stats in pairwise_stats.items():
-            if stats["count"] > 0:
-                agreement_rate = stats["total_score"] / stats["count"]
-            else:
-                agreement_rate = 0
+            agreement_rate = stats["total_score"] / stats["count"] if stats["count"] > 0 else 0
             pairwise_agreement_rates[pair] = agreement_rate
 
         overall_agreement_rate = overall_total_score / overall_count if overall_count > 0 else 0

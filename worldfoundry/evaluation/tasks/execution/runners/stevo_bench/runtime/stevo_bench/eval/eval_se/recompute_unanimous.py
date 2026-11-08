@@ -6,7 +6,6 @@ Uses existing evaluation results with saved individual judge verdicts.
 import json
 import sys
 from pathlib import Path
-from typing import Dict
 
 
 def recompute_with_unanimous(results_file: str, project_root: str) -> dict:
@@ -55,10 +54,7 @@ def recompute_with_unanimous(results_file: str, project_root: str) -> dict:
         original_verdict = result["verdict"]
 
         # Recompute with unanimous voting
-        if not valid_verdicts:
-            unanimous_verdict = False
-        else:
-            unanimous_verdict = all(v == True for v in valid_verdicts)
+        unanimous_verdict = False if not valid_verdicts else all(v == True for v in valid_verdicts)  # noqa: E712 - Verdicts are loaded from JSON; equality keeps the upstream handling of non-bool values.
 
         # Track passes
         if original_verdict:

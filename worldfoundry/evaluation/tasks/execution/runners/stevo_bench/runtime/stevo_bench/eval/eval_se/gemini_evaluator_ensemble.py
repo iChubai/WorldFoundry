@@ -6,8 +6,6 @@ Runs 3 different prompt variations and uses majority vote for final verdict.
 import os
 import time
 from collections import Counter
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import google.generativeai as genai
 from PIL import Image
@@ -283,7 +281,7 @@ EXPLANATION: [Your analysis]"""
             final_verdict = False
         else:
             # Require ALL judges to say YES
-            final_verdict = all(v == True for v in valid_verdicts)
+            final_verdict = all(v == True for v in valid_verdicts)  # noqa: E712 - Equality keeps the upstream verdict comparison.
 
             # Print voting summary
             yes_votes = sum(1 for v in valid_verdicts if v)
@@ -321,11 +319,8 @@ EXPLANATION: [Your analysis]"""
 
         # Fallback: check if "yes" appears in first few lines
         first_100_chars = response_text[:100].lower()
-        if "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars:
-            return True
-
         # Default to False if unclear
-        return False
+        return "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars
 
     def _get_model_type(self, run_name: str) -> str:
         """Determine model type from run name."""

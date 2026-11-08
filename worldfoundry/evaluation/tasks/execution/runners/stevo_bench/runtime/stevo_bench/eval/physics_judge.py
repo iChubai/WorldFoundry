@@ -36,7 +36,7 @@ from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from eval.control_judge import _compute_requested_fields, _ensemble_decide, _load_task_fields

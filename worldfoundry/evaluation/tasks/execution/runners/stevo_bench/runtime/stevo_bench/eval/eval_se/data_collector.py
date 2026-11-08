@@ -4,9 +4,7 @@ Collects task data from summary.json files and organizes resources.
 """
 
 import json
-import os
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import yaml
 

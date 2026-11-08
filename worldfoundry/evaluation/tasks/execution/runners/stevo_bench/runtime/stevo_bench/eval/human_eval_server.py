@@ -28,7 +28,7 @@ import mimetypes
 import random
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from flask import Flask, Response, abort, jsonify, request
 

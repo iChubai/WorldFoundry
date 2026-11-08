@@ -12,15 +12,15 @@ import os
 import tempfile
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from concurrent.futures import ThreadPoolExecutor
 
 import cv2
 
 # Suppress gRPC fork warnings when using parallel execution
 os.environ["GRPC_VERBOSITY"] = "ERROR"
-os.environ["GLOG_minloglevel"] = "2"
+os.environ["GLOG_minloglevel"] = "2"  # noqa: SIM112 - glog reads its flags as GLOG_<lowercase flag name>.
+
+import contextlib
 
 import google.generativeai as genai
 from openai import OpenAI
@@ -268,15 +268,13 @@ EXPLANATION: [Your detailed explanation]"""
 
         # Clean up frames after both calls complete
         for frame_path in frame_paths:
-            try:
+            with contextlib.suppress(BaseException):
                 os.remove(frame_path)
-            except:
-                pass
         try:
             temp_dir = os.path.dirname(frame_paths[0]) if frame_paths else None
             if temp_dir:
                 os.rmdir(temp_dir)
-        except:
+        except BaseException:
             pass
 
         # Consensus: both must agree
@@ -401,10 +399,7 @@ EXPLANATION: [Your detailed explanation]"""
 
         # Fallback
         first_100_chars = response_text[:100].lower()
-        if "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars:
-            return True
-
-        return False
+        return "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars
 
     def _get_model_type(self, run_name: str) -> str:
         """Determine model type from run name."""

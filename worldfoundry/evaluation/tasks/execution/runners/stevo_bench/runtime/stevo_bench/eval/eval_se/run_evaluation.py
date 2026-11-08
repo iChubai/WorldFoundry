@@ -10,7 +10,6 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 from data_collector import TaskDataCollector
 from gemini_evaluator import GeminiEvaluator
@@ -87,7 +86,9 @@ class EvaluationRunner:
                 "pass": False,
             }
 
-    def run_evaluation(self, limit: int = None, output_filename: str = None, max_workers: int = 1) -> dict:
+    def run_evaluation(
+        self, limit: int | None = None, output_filename: str | None = None, max_workers: int = 1
+    ) -> dict:
         """
         Run evaluation on all collected tasks.
         Saves results incrementally after each task.
@@ -214,7 +215,7 @@ class EvaluationRunner:
             "by_run": by_run,
         }
 
-    def save_results(self, evaluation_results: dict, filename: str = None):
+    def save_results(self, evaluation_results: dict, filename: str | None = None):
         """Save final evaluation results to JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

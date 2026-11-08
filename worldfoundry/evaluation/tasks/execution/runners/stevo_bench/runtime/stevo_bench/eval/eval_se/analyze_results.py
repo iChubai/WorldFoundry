@@ -6,9 +6,6 @@ Creates confusion matrix comparing Gemini verdicts vs. ground truth.
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List
-
-import numpy as np
 
 try:
     from sklearn.metrics import roc_auc_score, roc_curve
@@ -91,13 +88,13 @@ class ResultsAnalyzer:
             first_result = eval_results["results"][0]
             if "ensemble_results" in first_result:
                 is_ensemble = True
-            elif "verification_results" in first_result:
-                # Check if it's cross-model (has both gemini_verdict and gpt_verdict)
-                if (
-                    "gemini_verdict" in first_result["verification_results"]
-                    and "gpt_verdict" in first_result["verification_results"]
-                ):
-                    is_cross_model = True
+            # Check if it's cross-model (has both gemini_verdict and gpt_verdict)
+            elif (
+                "verification_results" in first_result
+                and "gemini_verdict" in first_result["verification_results"]
+                and "gpt_verdict" in first_result["verification_results"]
+            ):
+                is_cross_model = True
 
         # Initialize confusion matrix
         # [predicted_negative, predicted_positive] x [actual_negative, actual_positive]
@@ -147,10 +144,7 @@ class ResultsAnalyzer:
                 if ground_truth_field_used is None:
                     for task in summary.get("tasks", []):
                         if task.get("task_id") == task_id:
-                            if "se_success" in task:
-                                ground_truth_field_used = "se_success"
-                            else:
-                                ground_truth_field_used = "human_state_evol"
+                            ground_truth_field_used = "se_success" if "se_success" in task else "human_state_evol"
                             break
 
                 # Calculate score for ROC AUC (if ensemble or cross-model)

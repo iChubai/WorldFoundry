@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import base64
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import Protocol
 
 
 class ControlJudgeClient(Protocol):
@@ -55,7 +55,7 @@ class GeminiControlJudgeClient:
         try:
             import cv2  # type: ignore
         except ImportError:
-            raise RuntimeError("opencv-python is required for Gemini frame-sampling mode: pip install opencv-python")
+            raise RuntimeError("opencv-python is required for Gemini frame-sampling mode: pip install opencv-python")  # noqa: B904 - Keeps the implicit ImportError context.
 
         cap = cv2.VideoCapture(str(video_path))
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -165,7 +165,7 @@ class OpenAIControlJudgeClient:
         try:
             import cv2  # type: ignore
         except ImportError:
-            raise RuntimeError("opencv-python is required for OpenAI video judging: pip install opencv-python")
+            raise RuntimeError("opencv-python is required for OpenAI video judging: pip install opencv-python")  # noqa: B904 - Keeps the implicit ImportError context.
 
         cap = cv2.VideoCapture(str(video_path))
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -267,7 +267,7 @@ class AnthropicControlJudgeClient:
         try:
             import cv2  # type: ignore
         except ImportError:
-            raise RuntimeError("opencv-python is required for Claude video judging: pip install opencv-python")
+            raise RuntimeError("opencv-python is required for Claude video judging: pip install opencv-python")  # noqa: B904 - Keeps the implicit ImportError context.
 
         cap = cv2.VideoCapture(str(video_path))
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))

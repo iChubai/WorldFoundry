@@ -21,11 +21,10 @@ Returns:
 """
 
 import json
-from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from eval.control_judge import _ensemble_decide, _load_task_fields
 from eval.judge_client import make_judge_client

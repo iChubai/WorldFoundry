@@ -5,7 +5,6 @@ Extracts expected_process_concise from evaluation results and generates full pro
 
 import json
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 
@@ -49,7 +48,7 @@ VERDICT: [Yes/No]
 EXPLANATION: [Your detailed explanation]"""
 
 
-def extract_prompts_from_results(results_file: str, output_file: str = None):
+def extract_prompts_from_results(results_file: str, output_file: str | None = None):
     """
     Extract all tasks and generate complete prompts from evaluation results.
 
@@ -82,7 +81,7 @@ def extract_prompts_from_results(results_file: str, output_file: str = None):
     # Generate prompts for each task
     prompts_data = []
 
-    for key, info in sorted(tasks_info.items()):
+    for _key, info in sorted(tasks_info.items()):
         # Generate complete Gemini prompt
         gemini_prompt = generate_gemini_prompt(info["expected_process_concise"], info["model_type"])
 

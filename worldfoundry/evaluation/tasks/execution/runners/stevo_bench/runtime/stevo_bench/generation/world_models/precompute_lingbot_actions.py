@@ -13,7 +13,6 @@ Each folder contains poses.npy and intrinsics.npy for the LingBot run script.
 """
 
 import argparse
-import os
 import sys
 from pathlib import Path
 

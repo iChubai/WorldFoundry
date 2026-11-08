@@ -1,6 +1,5 @@
 import subprocess
 from pathlib import Path
-from typing import List, Optional
 
 from .local_script import LocalScriptRunner
 
@@ -40,7 +39,8 @@ class LingBotRunner(LocalScriptRunner):
         master_port: int | None = None,
     ) -> list[str]:
         """Extend the base daemon command with the LingBot actions root."""
-        return super().build_daemon_cmd(tasks_json_path, nproc_per_node=nproc_per_node, master_port=master_port) + [
+        return [
+            *super().build_daemon_cmd(tasks_json_path, nproc_per_node=nproc_per_node, master_port=master_port),
             "--lingbot_actions_root",
             str(self._actions_root),
         ]

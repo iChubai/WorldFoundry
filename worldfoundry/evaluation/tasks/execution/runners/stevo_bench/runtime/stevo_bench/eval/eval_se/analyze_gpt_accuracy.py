@@ -3,6 +3,7 @@ Analyze GPT accuracy from evaluation results.
 Extracts GPT verdicts and compares against ground truth.
 """
 
+import contextlib
 import json
 import sys
 from collections import defaultdict
@@ -193,10 +194,8 @@ class GPTAccuracyAnalyzer:
         # Calculate ROC AUC if sklearn available
         roc_auc = None
         if SKLEARN_AVAILABLE and len(set(ground_truth)) > 1:
-            try:
+            with contextlib.suppress(BaseException):
                 roc_auc = roc_auc_score(ground_truth, scores)
-            except:
-                pass
 
         return {
             "confusion_matrix": {"tp": tp, "fp": fp, "tn": tn, "fn": fn},

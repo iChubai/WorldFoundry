@@ -24,7 +24,6 @@ import argparse
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -111,7 +110,7 @@ def compute_model_ranking_agreement(
     llm_scores: dict[str, list[float]] = {m: [] for m in METRICS}
     human_scores: dict[str, list[float]] = {m: [] for m in METRICS}
 
-    for (name_a, tasks_a), (name_b, tasks_b) in combinations(run_tasks, 2):
+    for (_name_a, tasks_a), (_name_b, tasks_b) in combinations(run_tasks, 2):
         shared_ids = sorted(set(tasks_a) & set(tasks_b))
         for task_id in shared_ids:
             ta, tb = tasks_a[task_id], tasks_b[task_id]

@@ -2,9 +2,7 @@ import argparse
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Optional, Tuple
 
-import yaml
 from eval.control_judge import (
     ControlJudgeResult,
     _compute_requested_fields,

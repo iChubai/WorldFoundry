@@ -8,8 +8,6 @@ Two-step evaluation:
 
 import os
 import time
-from pathlib import Path
-from typing import Dict, Optional, Tuple
 
 import google.generativeai as genai
 from PIL import Image
@@ -219,11 +217,8 @@ EXPLANATION: [List your observations and evidence]"""
 
         # Fallback: check if "yes" appears in first few lines
         first_100_chars = response_text[:100].lower()
-        if "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars:
-            return True
-
         # Default to False if unclear
-        return False
+        return "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars
 
     def _get_model_type(self, run_name: str) -> str:
         """Determine model type from run name."""

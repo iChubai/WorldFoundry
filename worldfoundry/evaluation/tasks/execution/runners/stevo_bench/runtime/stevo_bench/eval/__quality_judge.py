@@ -23,10 +23,10 @@ Deps:
 import json
 import re
 from collections.abc import Sequence
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 from eval.control_judge import _compute_requested_fields, _load_task_fields
@@ -407,10 +407,7 @@ def evaluate_artifact_one_task(
     artifact = _ensemble_decide(votes_artifact, n, ensemble_mode)
 
     intended_state_evolution = responses[0]["intended_state_evolution"]
-    if n > 1:
-        notes = f"Ensemble {votes_artifact}/{n} members flagged an artifact."
-    else:
-        notes = responses[0]["notes"]
+    notes = f"Ensemble {votes_artifact}/{n} members flagged an artifact." if n > 1 else responses[0]["notes"]
 
     run_task_dir = Path(task.final_frame).parent  # per_task/<task_id>/
     report_path = run_task_dir / report_filename
@@ -564,10 +561,7 @@ def evaluate_coherence_one_task(
     coherence = _ensemble_decide(votes_coherent, n, ensemble_mode)
 
     main_subject = responses[0]["main_subject"]
-    if n > 1:
-        notes = f"Ensemble {votes_coherent}/{n} members found the video coherent."
-    else:
-        notes = responses[0]["notes"]
+    notes = f"Ensemble {votes_coherent}/{n} members found the video coherent." if n > 1 else responses[0]["notes"]
 
     run_task_dir = Path(task.final_frame).parent  # per_task/<task_id>/
     report_path = run_task_dir / report_filename

@@ -7,7 +7,6 @@ import json
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -154,7 +153,7 @@ class ModelWinRateAnalyzer:
             }
 
         # For each task, compare all pairs of models
-        for task_id, models_data in task_data.items():
+        for _task_id, models_data in task_data.items():
             # Get all models that ran this task
             models_in_task = list(models_data.keys())
 
@@ -290,7 +289,7 @@ class ModelWinRateAnalyzer:
             transform=plt.gca().transAxes,
             fontsize=11,
             verticalalignment="top",
-            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+            bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
         )
 
         # Grid and legend

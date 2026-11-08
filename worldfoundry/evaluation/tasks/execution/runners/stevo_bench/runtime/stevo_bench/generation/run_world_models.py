@@ -33,7 +33,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
-from typing import Dict, List, Optional, Tuple
 
 import yaml
 from filelock import FileLock
@@ -159,13 +158,15 @@ def _update_map(map_path: Path, task_id: str, filename: str, lock: Lock) -> None
     from separate terminals are safe.
     """
     lock_path = map_path.with_suffix(".lock")
-    with lock:  # serialise threads within this process
-        with FileLock(str(lock_path)):  # serialise across processes
-            data: dict = {}
-            if map_path.exists():
-                data = json.loads(map_path.read_text(encoding="utf-8"))
-            data[task_id] = filename
-            map_path.write_text(json.dumps(data, indent=4), encoding="utf-8")
+    with (
+        lock,  # serialise threads within this process
+        FileLock(str(lock_path)),  # serialise across processes
+    ):
+        data: dict = {}
+        if map_path.exists():
+            data = json.loads(map_path.read_text(encoding="utf-8"))
+        data[task_id] = filename
+        map_path.write_text(json.dumps(data, indent=4), encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -400,11 +401,9 @@ def _run_batch_daemon_task_parallel(
 
     with ThreadPoolExecutor(max_workers=actual_workers) as pool:
         futures = {pool.submit(_wait, item): item for item in procs}
-        any_failed = False
         for future in as_completed(futures):
             returncode, stdout, stderr, gpu_ids, w_idx = future.result()
             if returncode != 0:
-                any_failed = True
                 print(f"[{runner.name}] Worker {w_idx} (GPU={gpu_ids}) exited {returncode}")
                 if stdout:
                     print(stdout, end="")
@@ -457,7 +456,7 @@ def run_model(
 
     # Batch mode: single subprocess invocation, model loaded once
     if getattr(runner, "batch_script", None) and work_queue:
-        return _run_batch_local(runner, work_queue, map_path, map_lock)
+        return _run_batch_local(runner, work_queue, map_path, map_lock)  # noqa: F821 - Upstream batch mode; no runner defines batch_script.
 
     if limiter:
         print(f"[{runner.name}] RPM limit: {rpm_limit} requests/min")

@@ -24,8 +24,11 @@ from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
+import yaml
+from eval.judge_client import make_judge_client
+from eval.task_resolver import ResolvedTask
 from eval.utils import _path_to_rel
 
 
@@ -43,11 +46,6 @@ def _ensemble_decide(votes_true: int, n: int, mode: str) -> bool:
         return votes_true == n
     else:
         return votes_true * 2 > n
-
-
-import yaml
-from eval.judge_client import make_judge_client
-from eval.task_resolver import ResolvedTask
 
 
 @dataclass
@@ -164,10 +162,7 @@ def _compute_requested_fields(
     # camera_WM is the authoritative source for the kick-off action.
     # image_implied tasks always have camera_WM empty (no kickoff needed).
     # simple_kickoff tasks always have camera_WM filled with the kickoff sentence.
-    if camera_wm:
-        requested_trigger = camera_wm
-    else:
-        requested_trigger = "none"
+    requested_trigger = camera_wm or "none"
 
     # --- requested_occlusion ---
     if camera_controlled:

@@ -1,6 +1,5 @@
 import subprocess
 from pathlib import Path
-from typing import List, Optional
 
 from .base import WorldModelRunner
 
@@ -73,11 +72,7 @@ class LocalScriptRunner(WorldModelRunner):
         ]
         if master_port is not None:
             cmd.append(f"--master_port={master_port}")
-        cmd += [
-            str(script_path),
-            "--tasks_json",
-            tasks_json_path,
-        ] + self.daemon_args
+        cmd += [str(script_path), "--tasks_json", tasks_json_path, *self.daemon_args]
         return cmd
 
     def generate(

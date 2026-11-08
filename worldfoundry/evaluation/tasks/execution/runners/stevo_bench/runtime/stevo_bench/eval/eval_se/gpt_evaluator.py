@@ -7,15 +7,13 @@ Two-step evaluation:
 """
 
 import base64
+import contextlib
 import os
 import tempfile
 import time
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import cv2
 from openai import OpenAI
-from PIL import Image
 
 
 class GPTEvaluator:
@@ -246,15 +244,13 @@ EXPLANATION: [Your detailed explanation]"""
 
             # Clean up temp frames
             for frame_path in frame_paths:
-                try:
+                with contextlib.suppress(BaseException):
                     os.remove(frame_path)
-                except:
-                    pass
             # Remove temp directory
             try:
                 temp_dir = os.path.dirname(frame_paths[0])
                 os.rmdir(temp_dir)
-            except:
+            except BaseException:
                 pass
 
             return response_text, verdict
@@ -263,10 +259,8 @@ EXPLANATION: [Your detailed explanation]"""
             print(f"    ERROR after {verify_time:.1f}s: {e}")
             # Clean up on error
             for frame_path in frame_paths:
-                try:
+                with contextlib.suppress(BaseException):
                     os.remove(frame_path)
-                except:
-                    pass
             raise
 
     def _parse_verdict(self, response_text: str) -> bool:
@@ -289,11 +283,8 @@ EXPLANATION: [Your detailed explanation]"""
 
         # Fallback: check if "yes" appears in first few lines
         first_100_chars = response_text[:100].lower()
-        if "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars:
-            return True
-
         # Default to False if unclear
-        return False
+        return "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars
 
     def _get_model_type(self, run_name: str) -> str:
         """Determine model type from run name."""

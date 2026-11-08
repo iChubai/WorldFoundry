@@ -2,7 +2,6 @@ import io
 import os
 import time
 from pathlib import Path
-from typing import Optional
 
 from .base import WorldModelRunner
 
@@ -56,14 +55,14 @@ class SoraRunner(WorldModelRunner):
 
             client = OpenAI(api_key=self.api_key)
 
-            kwargs: dict = dict(
-                model=self.model_id,
-                prompt=prompt
+            kwargs: dict = {
+                "model": self.model_id,
+                "prompt": prompt
                 if prompt and prompt.strip()
                 else "Camera remains stationary. No cuts, no scene change, do not add new entities.",
-                size=self.size,
-                seconds=self.seconds,
-            )
+                "size": self.size,
+                "seconds": self.seconds,
+            }
 
             # Attach the conditioning frame, resized to match `size`
             ref_file = None

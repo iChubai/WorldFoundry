@@ -1,10 +1,8 @@
 import shutil
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urlparse
 
 import requests
-import yaml
 
 # ---------------------------------------------------------------------------
 # Occlusion-variant helpers
@@ -49,10 +47,7 @@ def _resolve_video_source(link: str, outputs_json_path: Path) -> tuple[str, Path
         return "url", Path(link)  # keep as "Path-like" for uniformity
 
     p = Path(link)
-    if not p.is_absolute():
-        p = (outputs_json_path.parent / p).resolve()
-    else:
-        p = p.resolve()
+    p = (outputs_json_path.parent / p).resolve() if not p.is_absolute() else p.resolve()
     return "file", p
 
 

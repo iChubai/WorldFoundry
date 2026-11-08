@@ -6,7 +6,6 @@ https://arxiv.org/pdf/1802.02664.pdf
 """
 
 from multiprocessing import Pool
-from typing import Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -44,7 +43,7 @@ def relative(intervals: np.ndarray, alpha_max: float, i_max: int = 100) -> np.nd
         rlt[0] = 1.0
         return rlt
 
-    persistence_intervals_ext = np.array(persistence_intervals + [[0, alpha_max]])
+    persistence_intervals_ext = np.array([*persistence_intervals, [0, alpha_max]])
     persistence_intervals = np.array(persistence_intervals)
 
     # Change in the value of beta_1 may happen only at the boundary points
@@ -79,7 +78,7 @@ def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> tuple[np.ndarray
     try:
         import scipy
     except ImportError:
-        raise ImportError(
+        raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
             "Scipy is required for computation of the Geometry Score but not installed. "
             "Please install scipy using the following command: pip install --user scipy"
         )
@@ -89,7 +88,8 @@ def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> tuple[np.ndarray
     if len(scipy_version) != 0 and scipy_version < recommended_scipy_version:
         warn(
             f"Scipy of version {scipy.__version__} is used while version >= {recommended_scipy_version} is "
-            f"recommended. Consider updating scipy to avoid potential long compute time with older versions."
+            f"recommended. Consider updating scipy to avoid potential long compute time with older versions.",
+            stacklevel=1,
         )
 
     from scipy.spatial.distance import cdist
@@ -116,7 +116,7 @@ def witness(features: np.ndarray, sample_size: int = 64, gamma: float | None = N
     try:
         import gudhi
     except ImportError:
-        raise ImportError(
+        raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
             "GUDHI is required for computation of the Geometry Score but not installed. "
             "Please install scipy using the following command: pip install --user gudhi"
         )
@@ -126,7 +126,8 @@ def witness(features: np.ndarray, sample_size: int = 64, gamma: float | None = N
     if len(gudhi_version) != 0 and gudhi_version < recommended_gudhi_version:
         warn(
             f"GUDHI of version {gudhi.__version__} is used while version >= {recommended_gudhi_version} is "
-            f"recommended. Consider updating GUDHI to avoid potential problems."
+            f"recommended. Consider updating GUDHI to avoid potential problems.",
+            stacklevel=1,
         )
 
     N = features.shape[0]

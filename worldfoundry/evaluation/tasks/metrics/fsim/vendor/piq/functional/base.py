@@ -1,7 +1,5 @@
 r"""General purpose functions"""
 
-from typing import Optional, Tuple, Union
-
 import torch
 
 from piq.utils import _parse_version

@@ -7,7 +7,7 @@ and implementation of one of pull requests to the PyTorch by Kangfu Mei (@MKFMIK
 https://github.com/pytorch/pytorch/pull/22289/files
 """
 
-from typing import List, Tuple, Union
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -141,7 +141,7 @@ class SSIMLoss(_Loss):
         DOI:`10.1109/TIP.2003.819861`
     """
 
-    __constants__ = ["kernel_size", "k1", "k2", "sigma", "kernel", "reduction"]
+    __constants__: ClassVar[list[str]] = ["kernel_size", "k1", "k2", "sigma", "kernel", "reduction"]
 
     def __init__(
         self,

@@ -1,7 +1,5 @@
 r"""Custom layers used in metrics computations"""
 
-from typing import Optional
-
 import torch
 
 from piq.functional import hann_filter

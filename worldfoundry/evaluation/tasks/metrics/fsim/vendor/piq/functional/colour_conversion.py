@@ -1,7 +1,5 @@
 r"""Colour space conversion functions"""
 
-from typing import Dict, Union
-
 import torch
 
 

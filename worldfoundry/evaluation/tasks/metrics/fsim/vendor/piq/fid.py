@@ -8,8 +8,6 @@ Credits:
     https://github.com/mseitzer/pytorch-fid
 """
 
-from typing import Tuple
-
 import torch
 
 from piq.base import BaseFeatureMetric
@@ -37,14 +35,14 @@ def _sqrtm_newton_schulz(matrix: torch.Tensor, num_iters: int = 100) -> tuple[to
     dim = matrix.size(0)
     norm_of_matrix = matrix.norm(p="fro")
     Y = matrix.div(norm_of_matrix)
-    I = torch.eye(dim, dim, device=matrix.device, dtype=matrix.dtype)
+    identity = torch.eye(dim, dim, device=matrix.device, dtype=matrix.dtype)
     Z = torch.eye(dim, dim, device=matrix.device, dtype=matrix.dtype)
 
     s_matrix = torch.empty_like(matrix)
     error = torch.empty(1, device=matrix.device, dtype=matrix.dtype)
 
     for _ in range(num_iters):
-        T = 0.5 * (3.0 * I - Z.mm(Y))
+        T = 0.5 * (3.0 * identity - Z.mm(Y))
         Y = Y.mm(T)
         Z = T.mm(Z)
 

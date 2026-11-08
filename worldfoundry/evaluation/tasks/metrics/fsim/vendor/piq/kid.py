@@ -1,5 +1,3 @@
-from typing import Optional, Tuple, Union
-
 import torch
 
 from piq.base import BaseFeatureMetric
@@ -199,10 +197,7 @@ class KID(BaseFeatureMetric):
         """
         _validate_input([x_features, y_features], dim_range=(2, 2), size_range=(1, 2))
         var_at_m = min(x_features.size(0), y_features.size(0))
-        if self.subset_size is None:
-            subset_size = x_features.size(0)
-        else:
-            subset_size = self.subset_size
+        subset_size = x_features.size(0) if self.subset_size is None else self.subset_size
 
         results = []
         for _ in range(self.n_subsets):

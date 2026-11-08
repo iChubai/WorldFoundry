@@ -2,7 +2,6 @@ r"""Implementation of Multi-scale Evaluation metric, based on paper
 https://arxiv.org/abs/1905.11141 and author's repository https://github.com/xgfs/msid
 """
 
-from typing import List, Optional, Tuple
 from warnings import warn
 
 import numpy as np
@@ -73,7 +72,7 @@ def _lanczos_m(
     """
     orthtol = 1e-5
     if starting_vectors is None:
-        if rademacher:
+        if rademacher:  # noqa: SIM108 - Branch comments document each case.
             starting_vectors = np.sign(np.random.randn(A.shape[0], nv))
         else:
             starting_vectors = np.random.randn(A.shape[0], nv)  # init random vectors in columns: n x nv
@@ -264,7 +263,7 @@ def _normalize_msid(msid: np.ndarray, normalization: str, n: int, k: int, ts: np
 
 def _msid_descriptor(
     x: np.ndarray,
-    ts: np.ndarray = np.logspace(-1, 1, 256),
+    ts: np.ndarray = np.logspace(-1, 1, 256),  # noqa: B008 - Default evaluated once at definition; retain the public signature.
     k: int = 5,
     m: int = 10,
     niters: int = 100,
@@ -291,7 +290,7 @@ def _msid_descriptor(
     try:
         import scipy
     except ImportError:
-        raise ImportError(
+        raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
             "Scipy is required for computation of the Geometry Score but not installed. "
             "Please install scipy using the following command: pip install --user scipy"
         )
@@ -301,7 +300,8 @@ def _msid_descriptor(
     if len(scipy_version) != 0 and scipy_version < recommended_scipy_version:
         warn(
             f"Scipy of version {scipy.__version__} is used while version >= {recommended_scipy_version} is "
-            f"recommended. Consider updating scipy to avoid potential long compute time with older versions."
+            f"recommended. Consider updating scipy to avoid potential long compute time with older versions.",
+            stacklevel=1,
         )
 
     Lx = _build_graph(x, k, normalized_laplacian)
@@ -356,7 +356,7 @@ class MSID(BaseFeatureMetric):
         normalize: str = "empty",
         msid_mode: str = "max",
     ) -> None:
-        super(MSID, self).__init__()
+        super().__init__()
 
         if ts is None:
             ts = torch.logspace(-1, 1, 256)

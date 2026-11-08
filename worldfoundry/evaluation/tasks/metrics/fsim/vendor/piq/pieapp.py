@@ -7,7 +7,6 @@ References:
 """
 
 import warnings
-from typing import Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -182,7 +181,8 @@ class PieAPP(_Loss):
             y = y.repeat(1, 3, 1, 1)
             warnings.warn(
                 "The original PieAPP supports only RGB images."
-                "The input images were converted to RGB by copying the grey channel 3 times."
+                "The input images were converted to RGB by copying the grey channel 3 times.",
+                stacklevel=1,
             )
 
         self.model.to(device=x.device)

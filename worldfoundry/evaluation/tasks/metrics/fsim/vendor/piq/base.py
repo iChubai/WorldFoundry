@@ -9,7 +9,7 @@ class BaseFeatureMetric(torch.nn.Module):
     """
 
     def __init__(self) -> None:
-        super(BaseFeatureMetric, self).__init__()
+        super().__init__()
 
     def forward(self, x_features: torch.Tensor, y_features: torch.Tensor) -> torch.Tensor:
         return self.compute_metric(x_features, y_features)

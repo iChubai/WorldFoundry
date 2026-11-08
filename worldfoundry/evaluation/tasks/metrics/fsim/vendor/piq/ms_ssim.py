@@ -7,7 +7,7 @@ and implementation of one of pull requests to the PyTorch by Kangfu Mei (@MKFMIK
 https://github.com/pytorch/pytorch/pull/22289/files
 """
 
-from typing import Optional, Union
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
@@ -150,7 +150,7 @@ class MultiScaleSSIMLoss(_Loss):
         The size of the image should be at least ``(kernel_size - 1) * 2 ** (levels - 1) + 1``.
     """
 
-    __constants__ = ["kernel_size", "k1", "k2", "sigma", "kernel", "reduction"]
+    __constants__: ClassVar[list[str]] = ["kernel_size", "k1", "k2", "sigma", "kernel", "reduction"]
 
     def __init__(
         self,
@@ -252,7 +252,7 @@ def _multi_scale_ssim(
         mcs.append(cs)
 
     # mcs, (level, batch)
-    mcs_ssim = torch.relu(torch.stack(mcs[:-1] + [ssim_val], dim=0))
+    mcs_ssim = torch.relu(torch.stack([*mcs[:-1], ssim_val], dim=0))
 
     # weights, (level)
     msssim_val = torch.prod((mcs_ssim ** scale_weights.view(-1, 1, 1)), dim=0).mean(1)
@@ -310,7 +310,7 @@ def _multi_scale_ssim_complex(
         mcs.append(cs)
 
     # mcs, (level, batch)
-    mcs_ssim = torch.relu(torch.stack(mcs[:-1] + [ssim_val], dim=0))
+    mcs_ssim = torch.relu(torch.stack([*mcs[:-1], ssim_val], dim=0))
 
     mcs_ssim_real = mcs_ssim[..., 0]
     mcs_ssim_imag = mcs_ssim[..., 1]

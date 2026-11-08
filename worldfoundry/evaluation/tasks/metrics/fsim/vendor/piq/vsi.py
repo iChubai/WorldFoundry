@@ -8,7 +8,6 @@ References:
 
 import functools
 import warnings
-from typing import Union
 
 import torch
 from torch.nn.functional import avg_pool2d, interpolate, pad
@@ -74,7 +73,8 @@ def vsi(
         y = y.repeat(1, 3, 1, 1)
         warnings.warn(
             "The original VSI supports only RGB images. The input images were converted to RGB by copying "
-            "the grey channel 3 times."
+            "the grey channel 3 times.",
+            stacklevel=1,
         )
 
     # Scale to [0, 255] range to match scale of constant

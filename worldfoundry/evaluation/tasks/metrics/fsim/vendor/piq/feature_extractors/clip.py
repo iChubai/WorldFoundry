@@ -2,7 +2,6 @@ import hashlib
 import os
 import warnings
 from collections import OrderedDict
-from typing import Optional, Tuple, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
@@ -42,11 +41,12 @@ def _download(url: str, root: str) -> str:
 
     if os.path.isfile(download_target):
         if is_sha256_hash(expected_sha256):
-            if hashlib.sha256(open(download_target, "rb").read()).hexdigest() == expected_sha256:
+            if hashlib.sha256(open(download_target, "rb").read()).hexdigest() == expected_sha256:  # noqa: SIM115 - The handle is read once inline; keep the upstream hash check.
                 return download_target
             else:
                 warnings.warn(
-                    f"{download_target} exists, but the SHA256 checksum does not match; re-downloading the file"
+                    f"{download_target} exists, but the SHA256 checksum does not match; re-downloading the file",
+                    stacklevel=1,
                 )
         else:
             return download_target
@@ -60,9 +60,11 @@ def _download(url: str, root: str) -> str:
             output.write(buff)
 
     # Perform hash check iff hash is actually present.
-    if is_sha256_hash(expected_sha256):
-        if hashlib.sha256(open(download_target, "rb").read()).hexdigest() != expected_sha256:
-            raise RuntimeError("Model has been downloaded but the SHA256 checksum does not match")
+    if (
+        is_sha256_hash(expected_sha256)
+        and hashlib.sha256(open(download_target, "rb").read()).hexdigest() != expected_sha256  # noqa: SIM115 - The handle is read once inline; keep the upstream hash check.
+    ):
+        raise RuntimeError("Model has been downloaded but the SHA256 checksum does not match")
 
     return download_target
 
@@ -531,26 +533,26 @@ class CLIP(nn.Module):
 def convert_weights(model: nn.Module):
     r"""Convert applicable model parameters to fp16"""
 
-    def _convert_weights_to_fp16(l):
-        if isinstance(l, (nn.Conv1d, nn.Conv2d, nn.Linear)):
-            l.weight.data = l.weight.data.half()
-            if l.bias is not None:
-                l.bias.data = l.bias.data.half()
+    def _convert_weights_to_fp16(submodule):
+        if isinstance(submodule, (nn.Conv1d, nn.Conv2d, nn.Linear)):
+            submodule.weight.data = submodule.weight.data.half()
+            if submodule.bias is not None:
+                submodule.bias.data = submodule.bias.data.half()
 
-        if isinstance(l, nn.MultiheadAttention):
+        if isinstance(submodule, nn.MultiheadAttention):
             for attr in [
                 *[f"{s}_proj_weight" for s in ["in", "q", "k", "v"]],
                 "in_proj_bias",
                 "bias_k",
                 "bias_v",
             ]:
-                tensor = getattr(l, attr)
+                tensor = getattr(submodule, attr)
                 if tensor is not None:
                     tensor.data = tensor.data.half()
 
         for name in ["text_projection", "proj"]:
-            if hasattr(l, name):
-                attr = getattr(l, name)
+            if hasattr(submodule, name):
+                attr = getattr(submodule, name)
                 if attr is not None:
                     attr.data = attr.data.half()
 
@@ -575,7 +577,7 @@ def build_model(state_dict: dict):
         image_resolution = vision_patch_size * grid_size
     else:
         vision_layers = tuple(
-            len(set(k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}"))) for b in [1, 2, 3, 4]
+            len({k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}")}) for b in [1, 2, 3, 4]
         )
         vision_width = state_dict["visual.layer1.0.conv1.weight"].shape[0]
         output_width = round((state_dict["visual.attnpool.positional_embedding"].shape[0] - 1) ** 0.5)
@@ -588,7 +590,7 @@ def build_model(state_dict: dict):
     vocab_size = state_dict["token_embedding.weight"].shape[0]
     transformer_width = state_dict["ln_final.weight"].shape[0]
     transformer_heads = transformer_width // 64
-    transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith("transformer.resblocks")))
+    transformer_layers = len({k.split(".")[2] for k in state_dict if k.startswith("transformer.resblocks")})
 
     model = CLIP(
         embed_dim,

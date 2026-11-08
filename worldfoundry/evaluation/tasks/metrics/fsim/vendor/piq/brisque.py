@@ -8,7 +8,6 @@ Credits:
 """
 
 import warnings
-from typing import Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -53,7 +52,8 @@ def brisque(
             f"BRISQUE does not support back propagation due to bug in torch={torch.__version__}."
             f"Update torch to the latest version to access full functionality of the BRIQSUE."
             f"More info is available at https://github.com/photosynthesis-team/piq/pull/79 and"
-            f"https://github.com/pytorch/pytorch/issues/38869."
+            f"https://github.com/pytorch/pytorch/issues/38869.",
+            stacklevel=1,
         )
 
     assert kernel_size % 2 == 1, f"Kernel size must be odd, got [{kernel_size}]"

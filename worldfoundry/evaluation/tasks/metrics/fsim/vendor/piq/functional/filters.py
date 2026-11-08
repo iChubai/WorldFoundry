@@ -1,7 +1,5 @@
 r"""Filters for gradient computation, bluring, etc."""
 
-from typing import Optional
-
 import numpy as np
 import torch
 

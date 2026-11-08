@@ -8,7 +8,6 @@ References:
 
 import functools
 import warnings
-from typing import Union
 
 import torch
 from torch.nn.functional import avg_pool2d, pad
@@ -79,7 +78,8 @@ def mdsi(
         y = y.repeat(1, 3, 1, 1)
         warnings.warn(
             "The original MDSI supports only RGB images. The input images were converted to RGB by copying "
-            "the grey channel 3 times."
+            "the grey channel 3 times.",
+            stacklevel=1,
         )
 
     x = x / float(data_range) * 255

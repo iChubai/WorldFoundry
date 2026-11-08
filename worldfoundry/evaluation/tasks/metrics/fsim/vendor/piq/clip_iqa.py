@@ -11,7 +11,6 @@ Ref url: https://github.com/IceClear/CLIP-IQA
 """
 
 import os
-from typing import Union
 
 import torch
 from torch.nn.modules.loss import _Loss

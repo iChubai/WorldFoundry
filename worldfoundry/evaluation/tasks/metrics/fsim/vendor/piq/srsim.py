@@ -6,7 +6,6 @@ References:
 """
 
 import functools
-from typing import Union
 
 import torch
 import torch.nn.functional as F

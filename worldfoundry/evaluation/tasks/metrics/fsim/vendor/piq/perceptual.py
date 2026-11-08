@@ -12,7 +12,6 @@ References:
 """
 
 from collections.abc import Collection
-from typing import List, Union
 
 import torch
 import torch.nn as nn
@@ -147,7 +146,7 @@ class ContentLoss(_Loss):
         self,
         feature_extractor: str | torch.nn.Module = "vgg16",
         layers: Collection[str] = ("relu3_3",),
-        weights: list[float | torch.Tensor] = [1.0],
+        weights: list[float | torch.Tensor] = [1.0],  # noqa: B006 - Read-only default; retain the public signature.
         replace_pooling: bool = False,
         distance: str = "mse",
         reduction: str = "mean",
@@ -169,10 +168,10 @@ class ContentLoss(_Loss):
         else:
             if feature_extractor == "vgg16":
                 self.model = vgg16(pretrained=True, progress=False).features
-                self.layers = [VGG16_LAYERS[l] for l in layers]
+                self.layers = [VGG16_LAYERS[layer_name] for layer_name in layers]
             elif feature_extractor == "vgg19":
                 self.model = vgg19(pretrained=True, progress=False).features
-                self.layers = [VGG19_LAYERS[l] for l in layers]
+                self.layers = [VGG19_LAYERS[layer_name] for layer_name in layers]
             else:
                 raise ValueError("Unknown feature extractor")
 

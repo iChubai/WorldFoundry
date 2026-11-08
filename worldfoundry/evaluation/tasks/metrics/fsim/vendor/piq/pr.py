@@ -3,8 +3,6 @@ Assessing Generative Models https://arxiv.org/abs/1904.06991 and repository
 https://github.com/clovaai/generative-evaluation-prdc/blob/master/prdc/prdc.py
 """
 
-from typing import Optional, Tuple
-
 import torch
 
 from piq.base import BaseFeatureMetric
@@ -80,7 +78,7 @@ class PR(BaseFeatureMetric):
         Args:
             nearest_k: Nearest neighbor to compute the non-parametric representation. Shape :math:`1`
         """
-        super(PR, self).__init__()
+        super().__init__()
 
         self.nearest_k = nearest_k
 

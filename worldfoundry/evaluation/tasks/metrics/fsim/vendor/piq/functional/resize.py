@@ -18,15 +18,14 @@ tensor([[[[ 0.7506,  2.1004,  3.4503],
 """
 
 import math
-import typing
 
 import torch
 from torch.nn import functional as F
 
 __all__ = ["imresize"]
 
-_I = typing.Optional[int]
-_D = typing.Optional[torch.dtype]
+_I = int | None
+_D = torch.dtype | None
 
 
 def nearest_contribution(x: torch.Tensor) -> torch.Tensor:
@@ -78,10 +77,7 @@ def discrete_kernel(kernel: str, scale: float, antialiasing: bool = True) -> tor
     else:
         raise ValueError("Pass!")
 
-    if antialiasing:
-        kernel_size = kernel_size_orig * downsampling_factor
-    else:
-        kernel_size = kernel_size_orig
+    kernel_size = kernel_size_orig * downsampling_factor if antialiasing else kernel_size_orig
 
     if downsampling_factor % 2 == 0:
         a = kernel_size_orig * (0.5 - 1 / (2 * kernel_size))
@@ -222,7 +218,7 @@ def reshape_output(x: torch.Tensor, b: _I, c: _I) -> torch.Tensor:
     if b is not None:
         x = x.view(b, c, rh, rw)  # 4-dim
     else:
-        if c is not None:
+        if c is not None:  # noqa: SIM108 - Branch comments document each case.
             x = x.view(c, rh, rw)  # 3-dim
         else:
             x = x.view(rh, rw)  # 2-dim
@@ -276,10 +272,7 @@ def resize_1d(
         return x
 
     # Default bicubic kernel with antialiasing (only when downsampling)
-    if kernel == "cubic":
-        kernel_size = 4
-    else:
-        kernel_size = math.floor(6 * sigma)
+    kernel_size = 4 if kernel == "cubic" else math.floor(6 * sigma)
 
     if antialiasing and (scale < 1):
         antialiasing_factor = scale

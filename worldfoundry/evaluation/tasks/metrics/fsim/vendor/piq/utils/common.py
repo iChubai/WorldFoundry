@@ -1,7 +1,7 @@
 import os
 import re
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 from urllib.request import urlopen
 
 import torch
@@ -160,8 +160,8 @@ def _parse_version(version: str | bytes) -> tuple[int, ...]:
     match = regex.search(version)
 
     if match is None:
-        warnings.warn(f"{version} is not a valid SemVer or PEP 440 string")
-        return tuple()
+        warnings.warn(f"{version} is not a valid SemVer or PEP 440 string", stacklevel=1)
+        return ()
 
     release = tuple(int(i) for i in match.group("release").split("."))
     return release

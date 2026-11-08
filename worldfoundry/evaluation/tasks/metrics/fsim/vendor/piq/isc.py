@@ -86,7 +86,7 @@ class IS(BaseFeatureMetric):
 
     def __init__(self, num_splits: int = 10, distance: str = "l1") -> None:
         r""" """
-        super(IS, self).__init__()
+        super().__init__()
         self.num_splits = num_splits
         self.distance = distance
 

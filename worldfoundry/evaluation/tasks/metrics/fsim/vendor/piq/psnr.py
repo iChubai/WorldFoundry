@@ -1,7 +1,5 @@
 r"""This module implements Peak Signal-to-Noise Ratio (PSNR) in PyTorch."""
 
-from typing import Union
-
 import torch
 
 from piq.utils import _reduce, _validate_input

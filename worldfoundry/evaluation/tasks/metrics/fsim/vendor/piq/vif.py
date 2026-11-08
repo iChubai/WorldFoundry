@@ -6,8 +6,6 @@ References:
     https://ieeexplore.ieee.org/abstract/document/1576816/
 """
 
-from typing import Union
-
 import torch
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss

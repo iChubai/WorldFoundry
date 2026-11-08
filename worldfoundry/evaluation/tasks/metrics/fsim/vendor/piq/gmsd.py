@@ -9,8 +9,6 @@ Reference:
 
 """
 
-from typing import Optional, Union
-
 import torch
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss

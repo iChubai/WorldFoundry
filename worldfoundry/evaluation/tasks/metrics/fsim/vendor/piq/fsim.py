@@ -7,7 +7,6 @@ References:
 
 import functools
 import math
-from typing import Union
 
 import torch
 from torch.nn.modules.loss import _Loss

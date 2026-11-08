@@ -12,7 +12,7 @@ import uuid
 import warnings
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import cv2
 import numpy as np
@@ -203,8 +203,8 @@ def _resize_image(image: np.ndarray, max_side: int) -> np.ndarray:
     if longest_side <= max_side:
         return image
     scale = max_side / float(longest_side)
-    resized_width = max(1, int(round(width * scale)))
-    resized_height = max(1, int(round(height * scale)))
+    resized_width = max(1, round(width * scale))
+    resized_height = max(1, round(height * scale))
     return cv2.resize(image, (resized_width, resized_height), interpolation=cv2.INTER_AREA)
 
 
@@ -302,7 +302,7 @@ def _sample_frame_indices(total_frames: int, max_frames: int) -> list[int]:
     if total_frames <= max_frames:
         return list(range(total_frames))
 
-    positions = [int(round(index * (total_frames - 1) / float(max_frames - 1))) for index in range(max_frames)]
+    positions = [round(index * (total_frames - 1) / float(max_frames - 1)) for index in range(max_frames)]
 
     deduplicated: list[int] = []
     seen = set()

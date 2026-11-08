@@ -7,21 +7,21 @@ from _bootstrap import setup_paths
 
 setup_paths()
 
-import base64
-import datetime
-import json
-import multiprocessing as mp
-import os
-import re
-import uuid
-from io import BytesIO
-from pathlib import Path
-from typing import Any, Optional
+import base64  # noqa: E402 - Follows setup_paths().
+import datetime  # noqa: E402 - Follows setup_paths().
+import json  # noqa: E402 - Follows setup_paths().
+import multiprocessing as mp  # noqa: E402 - Follows setup_paths().
+import os  # noqa: E402 - Follows setup_paths().
+import re  # noqa: E402 - Follows setup_paths().
+import uuid  # noqa: E402 - Follows setup_paths().
+from io import BytesIO  # noqa: E402 - Follows setup_paths().
+from pathlib import Path  # noqa: E402 - Follows setup_paths().
+from typing import Any  # noqa: E402 - Follows setup_paths().
 
-import numpy as np
-import torch
-from dotenv import load_dotenv
-from model.vlm import (
+import numpy as np  # noqa: E402 - Follows setup_paths().
+import torch  # noqa: E402 - Follows setup_paths().
+from dotenv import load_dotenv  # noqa: E402 - Follows setup_paths().
+from model.vlm import (  # noqa: E402 - Follows setup_paths().
     DEFAULT_VLM_BACKEND,
     chat_vlm_call,
     clean_json_content,
@@ -30,8 +30,8 @@ from model.vlm import (
     resolve_model_name,
     resolve_vlm_backend,
 )
-from PIL import Image
-from reward_3d_backend import DEFAULT_RECONSTRUCTION_MODEL, Reward3DBackend
+from PIL import Image  # noqa: E402 - Follows setup_paths().
+from reward_3d_backend import DEFAULT_RECONSTRUCTION_MODEL, Reward3DBackend  # noqa: E402 - Follows setup_paths().
 
 load_dotenv()
 
@@ -554,7 +554,7 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                 try:
                     torch_local.cuda.empty_cache()
                     torch_local.cuda.synchronize()
-                except:
+                except BaseException:
                     pass
 
                 result_queue.put((batch_idx, 0.0, 0.0, 0.0, 0.0, "", "", ""))
@@ -885,7 +885,7 @@ def _sample_indices(total_frames: int, max_frames: int | None) -> list[int]:
         return list(range(total_frames))
     if max_frames == 1:
         return [0]
-    return [int(round(i * (total_frames - 1) / (max_frames - 1))) for i in range(max_frames)]
+    return [round(i * (total_frames - 1) / (max_frames - 1)) for i in range(max_frames)]
 
 
 def load_video_frames_as_jpeg_with_indices(

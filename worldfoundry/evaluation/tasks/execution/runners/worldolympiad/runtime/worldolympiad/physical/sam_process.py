@@ -26,14 +26,13 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import os
 import subprocess
 import sys
 import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import cv2
 import imageio_ffmpeg
@@ -46,7 +45,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import (
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
@@ -136,7 +135,7 @@ def _make_safe_names(text_prompts: list[str]) -> defaultdict:
                 return text_prompts[idx % len(text_prompts)]
             return f"object_{idx}"
 
-    return _SafeNames(str, {i: name for i, name in enumerate(text_prompts)})
+    return _SafeNames(str, dict(enumerate(text_prompts)))
 
 
 def extract_dynamic_objects(
@@ -430,20 +429,20 @@ def build_sam3_predictor(
     iou: float = 0.7,
 ) -> Any:
     """Build a SAM3 predictor that can be reused across multiple videos."""
-    overrides = dict(
-        conf=conf,
-        iou=iou,
-        task="segment",
-        mode="predict",
-        imgsz=800,
-        model=sam3_model_path,
-        half=True,
-        save=False,
-        device=device,
-        show_boxes=True,
-        show_labels=False,
-        show_conf=False,
-    )
+    overrides = {
+        "conf": conf,
+        "iou": iou,
+        "task": "segment",
+        "mode": "predict",
+        "imgsz": 800,
+        "model": sam3_model_path,
+        "half": True,
+        "save": False,
+        "device": device,
+        "show_boxes": True,
+        "show_labels": False,
+        "show_conf": False,
+    }
     return SAM3VideoSemanticPredictor(overrides=overrides)
 
 

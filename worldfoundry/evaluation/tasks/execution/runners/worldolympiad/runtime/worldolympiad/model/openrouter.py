@@ -1,8 +1,7 @@
-import base64
 import json
 import os
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 import requests
 
@@ -62,7 +61,6 @@ def _post_with_retry(
     """
     Call OpenRouter with simple retry on network / bad JSON / missing choices.
     """
-    last_err = None
     for attempt in range(max_retries):
         try:
             resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
@@ -79,7 +77,6 @@ def _post_with_retry(
                 raise RuntimeError(f"OpenRouter response missing choices: {resp_json}")
             return resp_json
         except Exception as exc:
-            last_err = exc
             if attempt < max_retries - 1:
                 time.sleep(1 * (attempt + 1))
                 continue

@@ -7,21 +7,22 @@ from _bootstrap import setup_paths
 
 setup_paths()
 
-import argparse
-import hmac
-import ipaddress
-import json
-import os
-import signal
-import socket
-import sys
-import threading
-from collections.abc import Mapping, Sequence
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
-from urllib.parse import urlsplit
+import argparse  # noqa: E402 - Follows setup_paths().
+import contextlib  # noqa: E402 - Follows setup_paths().
+import hmac  # noqa: E402 - Follows setup_paths().
+import ipaddress  # noqa: E402 - Follows setup_paths().
+import json  # noqa: E402 - Follows setup_paths().
+import os  # noqa: E402 - Follows setup_paths().
+import signal  # noqa: E402 - Follows setup_paths().
+import socket  # noqa: E402 - Follows setup_paths().
+import sys  # noqa: E402 - Follows setup_paths().
+import threading  # noqa: E402 - Follows setup_paths().
+from collections.abc import Mapping, Sequence  # noqa: E402 - Follows setup_paths().
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer  # noqa: E402 - Follows setup_paths().
+from pathlib import Path  # noqa: E402 - Follows setup_paths().
+from urllib.parse import urlsplit  # noqa: E402 - Follows setup_paths().
 
-from model.vlm import resolve_model_name, resolve_vlm_backend
+from model.vlm import resolve_model_name, resolve_vlm_backend  # noqa: E402 - Follows setup_paths().
 
 DEFAULT_MODEL_NAME = "worldeval/weights/da3"
 DEFAULT_SCORING_MODEL: str | None = None
@@ -465,10 +466,8 @@ def main():
 
     import multiprocessing as mp
 
-    try:
+    with contextlib.suppress(RuntimeError):
         mp.set_start_method("spawn")
-    except RuntimeError:
-        pass
 
     from reward_3d import MultiGPUReward3DManager
 

@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import contextlib
 import json
 import subprocess
 import sys
@@ -38,7 +39,7 @@ import tempfile
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -48,7 +49,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import (
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
@@ -297,7 +298,7 @@ def _load_build_sam3_predictor():
     try:
         from sam3 import build_sam3_predictor  # type: ignore
     except ImportError:
-        raise ImportError(
+        raise ImportError(  # noqa: B904 - Preserve the implicit context.
             "Failed to import SAM3. Ensure the local `sam3/` package is importable and install "
             "its runtime dependencies (for example `setuptools` and `iopath`). "
             "A reliable setup is: `python -m pip install -e ./sam3`."
@@ -409,10 +410,10 @@ def _mask_to_xyxy(mask_bool: np.ndarray) -> tuple[int, int, int, int] | None:
 
 def _normalized_xywh_to_xyxy(box_xywh: Sequence[float], width: int, height: int) -> tuple[int, int, int, int]:
     x, y, w, h = [float(value) for value in box_xywh]
-    x1 = int(round(x * width))
-    y1 = int(round(y * height))
-    x2 = int(round((x + w) * width))
-    y2 = int(round((y + h) * height))
+    x1 = round(x * width)
+    y1 = round(y * height)
+    x2 = round((x + w) * width)
+    y2 = round((y + h) * height)
     x1 = max(0, min(width - 1, x1))
     y1 = max(0, min(height - 1, y1))
     x2 = max(0, min(width - 1, x2))
@@ -654,20 +655,16 @@ def segment_with_sam3(
         return mask_final, bbox_final
     finally:
         if session_id is not None:
-            try:
+            with contextlib.suppress(Exception):
                 predictor.handle_request(
                     {
                         "type": "close_session",
                         "session_id": session_id,
                     }
                 )
-            except Exception:
-                pass
         if hasattr(predictor, "shutdown"):
-            try:
+            with contextlib.suppress(Exception):
                 predictor.shutdown()
-            except Exception:
-                pass
 
 
 def run_sam_process(

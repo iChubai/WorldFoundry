@@ -5,11 +5,10 @@ Docstring for problem.problem_filter
 """
 
 import base64
-from typing import Dict
 
 from model.openrouter import video_openrouter_call
 
-from problem.problem_set import MATERIAL_QUESTIONS, MECHANICS_QUESTIONS, THERMOTICS_QUESTIONS, get_question_by_id
+from problem.problem_set import get_question_by_id
 
 
 def enrich_problems(video, model_name, video_prompt, related_problem: dict) -> str:

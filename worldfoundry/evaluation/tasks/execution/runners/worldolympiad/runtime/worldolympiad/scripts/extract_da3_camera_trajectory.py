@@ -40,7 +40,7 @@ def sample_indices(total_frames: int, max_frames: int | None) -> list[int]:
         return list(range(total_frames))
     if max_frames == 1:
         return [0]
-    return [int(round(i * (total_frames - 1) / (max_frames - 1))) for i in range(max_frames)]
+    return [round(i * (total_frames - 1) / (max_frames - 1)) for i in range(max_frames)]
 
 
 def load_video_frames(video_path: str | os.PathLike[str], max_frames: int | None) -> tuple[list[np.ndarray], list[int]]:
@@ -75,16 +75,11 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
     model_name = os.fspath(model_name)
     candidate = Path(model_name).expanduser()
 
-    looks_like_path = (
-        candidate.is_absolute() or model_name.startswith(".") or model_name.startswith("~") or candidate.exists()
-    )
+    looks_like_path = candidate.is_absolute() or model_name.startswith((".", "~")) or candidate.exists()
     if not looks_like_path:
         return model_name
 
-    if not candidate.is_absolute():
-        candidate = (Path.cwd() / candidate).resolve()
-    else:
-        candidate = candidate.resolve()
+    candidate = (Path.cwd() / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
 
     if not candidate.exists():
         raise FileNotFoundError(f"Local DA3 model path does not exist: {candidate}")

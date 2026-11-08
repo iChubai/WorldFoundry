@@ -21,11 +21,12 @@ from __future__ import annotations
 
 import argparse
 import base64
+import itertools
 import json
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import cv2
 from dotenv import load_dotenv
@@ -34,7 +35,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import chat_vlm_call, parse_json_content, resolve_model_name, resolve_vlm_backend
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
+    chat_vlm_call,
+    parse_json_content,
+    resolve_model_name,
+    resolve_vlm_backend,
+)
 
 load_dotenv()
 
@@ -193,7 +199,7 @@ def sample_video_frames(
     output_root = Path(output_dir)
     for idx, sample_time in enumerate(sample_times):
         if fps > 0:
-            frame_index = max(0, int(round(sample_time * fps)))
+            frame_index = max(0, round(sample_time * fps))
             if total_frames > 0:
                 frame_index = min(frame_index, max(0, total_frames - 1))
             capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
@@ -419,7 +425,7 @@ def evaluate_interaction(
 
         transition_results: list[dict[str, Any]] = []
         if not skip_transition:
-            for left, right in zip(chunks, chunks[1:], strict=False):
+            for left, right in itertools.pairwise(chunks):
                 print(f"Evaluating transition {left['chunk_index']} -> {right['chunk_index']}...")
                 left_frames = sample_video_frames(
                     gen_video,

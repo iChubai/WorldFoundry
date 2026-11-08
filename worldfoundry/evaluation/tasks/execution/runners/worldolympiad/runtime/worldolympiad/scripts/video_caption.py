@@ -20,7 +20,6 @@ import base64
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List
 
 from dotenv import load_dotenv
 
@@ -28,8 +27,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from judge_pipeline import parse_llm_response
-from model.vlm import resolve_model_name, resolve_vlm_backend, video_vlm_call
+from judge_pipeline import parse_llm_response  # noqa: E402 - Follows the sys.path setup.
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
+    resolve_model_name,
+    resolve_vlm_backend,
+    video_vlm_call,
+)
 
 load_dotenv()
 

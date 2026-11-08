@@ -26,7 +26,7 @@ PROJECT_ROOT = REPO_ROOT.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import resolve_model_name, resolve_vlm_backend
+from model.vlm import resolve_model_name, resolve_vlm_backend  # noqa: E402 - Follows the sys.path setup.
 
 DEFAULT_MAX_FRAMES = 128
 DEFAULT_SAM_CONF = 0.7

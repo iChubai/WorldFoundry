@@ -8,7 +8,6 @@ that are not called by `physical/vlm_judge.py`.
 from __future__ import annotations
 
 import json
-from typing import Dict, List, Tuple
 
 ACTIVE_ENTRYPOINTS = [
     "physical/vlm_judge.py",

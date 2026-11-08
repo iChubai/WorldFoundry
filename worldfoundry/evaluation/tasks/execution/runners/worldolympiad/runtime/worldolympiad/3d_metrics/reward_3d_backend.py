@@ -9,26 +9,24 @@ from _bootstrap import setup_paths
 
 setup_paths()
 
-import difflib
-import json
-import os
-import sys
-from pathlib import Path
-from typing import List, Optional, Tuple
+import difflib  # noqa: E402 - Follows setup_paths().
+import json  # noqa: E402 - Follows setup_paths().
+import os  # noqa: E402 - Follows setup_paths().
+from pathlib import Path  # noqa: E402 - Follows setup_paths().
 
-import matplotlib
-import numpy as np
-import torch
-import torch.nn.functional as F
-from PIL import Image
+import matplotlib  # noqa: E402 - Follows setup_paths().
+import numpy as np  # noqa: E402 - Follows setup_paths().
+import torch  # noqa: E402 - Follows setup_paths().
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from depth_anything_3.api import DepthAnything3
-from depth_anything_3.model.utils.gs_renderer import run_renderer_in_chunk_w_trj_mode
-from depth_anything_3.specs import Gaussians
-from matplotlib.lines import Line2D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import matplotlib.pyplot as plt  # noqa: E402 - Follows the Agg backend selection.
+from depth_anything_3.api import DepthAnything3  # noqa: E402 - Follows the Agg backend selection.
+from depth_anything_3.model.utils.gs_renderer import (  # noqa: E402 - Follows the Agg backend selection.
+    run_renderer_in_chunk_w_trj_mode,
+)
+from depth_anything_3.specs import Gaussians  # noqa: E402 - Follows the Agg backend selection.
+from matplotlib.lines import Line2D  # noqa: E402 - Follows the Agg backend selection.
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection  # noqa: E402 - Follows the Agg backend selection.
 
 
 def _default_reconstruction_model() -> str:
@@ -71,14 +69,9 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
     candidate = Path(model_name).expanduser()
 
     # Treat explicit filesystem-like inputs as local paths.
-    looks_like_path = (
-        candidate.is_absolute() or model_name.startswith(".") or model_name.startswith("~") or candidate.exists()
-    )
+    looks_like_path = candidate.is_absolute() or model_name.startswith((".", "~")) or candidate.exists()
     if looks_like_path:
-        if not candidate.is_absolute():
-            candidate = (Path.cwd() / candidate).resolve()
-        else:
-            candidate = candidate.resolve()
+        candidate = (Path.cwd() / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
 
         if not candidate.exists():
             suggestion = _suggest_existing_path(candidate)
@@ -419,7 +412,7 @@ class Reward3DBackend:
             return list(range(total_frames)) + [total_frames - 1] * (target_len - total_frames)
         if target_len == 1:
             return [0]
-        return [int(round(i * (total_frames - 1) / (target_len - 1))) for i in range(target_len)]
+        return [round(i * (total_frames - 1) / (target_len - 1)) for i in range(target_len)]
 
     def _extract_target_camera_poses(self, camera_trajectory, target_len: int) -> np.ndarray | None:
         if camera_trajectory is None:

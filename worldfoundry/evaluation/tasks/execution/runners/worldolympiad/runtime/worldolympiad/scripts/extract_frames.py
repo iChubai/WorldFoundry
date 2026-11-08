@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import List, Optional
 
 import cv2
 
@@ -39,7 +38,7 @@ def parse_frames_arg(arg: str | None) -> list[int] | None:
         try:
             parts.append(int(token))
         except ValueError:
-            raise ValueError(f"Invalid frame index: {token}")
+            raise ValueError(f"Invalid frame index: {token}")  # noqa: B904 - Preserve the implicit context.
     return sorted(set(parts))
 
 

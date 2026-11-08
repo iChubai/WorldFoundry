@@ -21,10 +21,8 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -32,30 +30,30 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from material.prompt import (
+from material.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_compliance_prompt as build_material_compliance_prompt,
 )
-from material.prompt import (
+from material.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_relevance_prompt as build_material_relevance_prompt,
 )
-from mechanics.prompt import (
+from mechanics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_compliance_prompt as build_mechanics_compliance_prompt,
 )
-from mechanics.prompt import (
+from mechanics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_relevance_prompt as build_mechanics_relevance_prompt,
 )
-from model.vlm import (
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
     chat_vlm_call,
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
     video_vlm_call,
 )
-from problem.problem_set import ALL_QUESTIONS, get_question_by_id
-from thermotics.prompt import (
+from problem.problem_set import ALL_QUESTIONS, get_question_by_id  # noqa: E402 - Follows the sys.path setup.
+from thermotics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_compliance_prompt as build_thermotics_compliance_prompt,
 )
-from thermotics.prompt import (
+from thermotics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_relevance_prompt as build_thermotics_relevance_prompt,
 )
 

@@ -129,7 +129,12 @@ for path in (REPO_ROOT, PHYSICAL_DIR, THREE_D_DIR, INTERACTION_DIR):
     if path_str not in sys.path:
         sys.path.insert(0, path_str)
 
-from model.vlm import parse_json_content, resolve_model_name, resolve_vlm_backend, text_vlm_call
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
+    parse_json_content,
+    resolve_model_name,
+    resolve_vlm_backend,
+    text_vlm_call,
+)
 
 DEFAULT_VLM_MODEL: str | None = None
 DEFAULT_3D_MODEL_NAME = "worldeval/weights/da3"

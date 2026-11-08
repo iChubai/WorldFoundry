@@ -6,7 +6,6 @@ Docstring for problem.problem_filter
 
 import base64
 import json
-from typing import Dict
 
 from model.openrouter import video_openrouter_call
 

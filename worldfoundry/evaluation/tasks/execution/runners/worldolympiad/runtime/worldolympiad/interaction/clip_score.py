@@ -21,7 +21,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -193,7 +193,7 @@ def sample_chunk_frames(
     images: list[Image.Image] = []
     for sample_time in sample_times:
         if fps > 0:
-            frame_index = max(0, int(round(sample_time * fps)))
+            frame_index = max(0, round(sample_time * fps))
             if total_frames > 0:
                 frame_index = min(frame_index, max(0, total_frames - 1))
             capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)

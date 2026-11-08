@@ -37,6 +37,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/evaluation/metrics/test_nexus_configuration.py \
 	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
+	tests/evaluation/metrics/test_fvmd_colormaps.py \
 	tests/eval_core/test_videoverse_local_vlm.py \
 	tests/eval_core/test_vendi_molecule_kernel.py \
 	tests/eval_core/test_libero_mem_recording.py \
@@ -284,6 +285,7 @@ EVALUATION_CPU_CONTRACTS = \
 	tests/evaluation/metrics/test_worldscore_aggregation.py \
 	tests/evaluation/metrics/test_fvd_batch_preprocessing.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
+	tests/evaluation/metrics/test_fvmd_colormaps.py \
 	tests/evaluation/metrics/test_artscore_loader.py \
 	tests/cli/test_cli_mcp_contracts.py \
 	tests/cli/test_cli_mcp_usage_context.py \

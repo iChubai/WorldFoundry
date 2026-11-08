@@ -328,7 +328,7 @@ def colorize(d):
         assert d.ndim == 3
 
     # color_map = cm.get_cmap('plasma')
-    color_map = cm.get_cmap("inferno")
+    color_map = plt.get_cmap("inferno")
     # S1, D = traj.shape
 
     # print('d1', d.shape)
@@ -547,7 +547,7 @@ class Summ_writer:
 
         # color_map = cm.get_cmap('tab20')
         # color_map = cm.get_cmap('set1')
-        color_map = cm.get_cmap("Accent")
+        color_map = plt.get_cmap("Accent")
         color_map = color_map.colors
         # print('color_map', color_map)
 
@@ -899,7 +899,7 @@ class Summ_writer:
         if label_colors is None:
             custom_label_colors = False
             # label_colors = get_n_colors(int(torch.max(seg).item()), sequential=True)
-            label_colors = cm.get_cmap(colormap).colors
+            label_colors = plt.get_cmap(colormap).colors
             label_colors = [[int(i * 255) for i in label_rgb] for label_rgb in label_colors]
         else:
             custom_label_colors = True
@@ -977,7 +977,7 @@ class Summ_writer:
             traj = trajs[:, i]  # S,2
             valid = valids[:, i]  # S
 
-            color_map = cm.get_cmap(cmap)
+            color_map = plt.get_cmap(cmap)
             color = np.array(color_map(i)[:3]) * 255  # rgb
             for s in range(S):
                 if valid[s]:
@@ -1025,7 +1025,7 @@ class Summ_writer:
             traj = trajs[:, i]  # S,2
             valid = valids[:, i]  # S
 
-            color_map = cm.get_cmap(cmap)
+            color_map = plt.get_cmap(cmap)
             color = np.array(color_map(0)[:3]) * 255  # rgb
             for s in range(S):
                 if valid[s]:
@@ -1370,7 +1370,7 @@ class Summ_writer:
         S1, D = traj.shape
         assert D == 2
 
-        color_map = cm.get_cmap(cmap)
+        color_map = plt.get_cmap(cmap)
         S1, D = traj.shape
 
         for s in range(S1):
@@ -1495,7 +1495,7 @@ class Summ_writer:
 
         for s in range(S1):
             if cmap is not None:
-                color_map = cm.get_cmap(cmap)
+                color_map = plt.get_cmap(cmap)
                 # color = np.array(color_map(s/(S-1))[:3]) * 255 # rgb
                 color = np.array(color_map((s + 1) / max(1, float(S - 1)))[:3]) * 255  # rgb
                 # color = color.astype(np.uint8)

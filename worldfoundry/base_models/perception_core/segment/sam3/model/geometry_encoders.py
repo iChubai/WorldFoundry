@@ -665,10 +665,7 @@ class SequenceGeometryEncoder(nn.Module):
             assert list(sampled.shape) == [bs, self.d_model, n_points, 1]
             sampled = sampled.squeeze(-1).permute(2, 0, 1)
             proj = self.points_pool_project(sampled)
-            if points_embed is None:
-                points_embed = proj
-            else:
-                points_embed = points_embed + proj
+            points_embed = proj if points_embed is None else points_embed + proj
 
         if self.points_pos_enc_project is not None:
             x, y = points.unbind(-1)
@@ -678,10 +675,7 @@ class SequenceGeometryEncoder(nn.Module):
             enc = torch.cat([enc_x, enc_y], -1)
 
             proj = self.points_pos_enc_project(enc)
-            if points_embed is None:
-                points_embed = proj
-            else:
-                points_embed = points_embed + proj
+            points_embed = proj if points_embed is None else points_embed + proj
 
         type_embed = self.label_embed(points_labels.long())
         return type_embed + points_embed, points_mask
@@ -722,10 +716,7 @@ class SequenceGeometryEncoder(nn.Module):
             ]
             proj = self.boxes_pool_project(sampled)
             proj = proj.view(bs, n_boxes, self.d_model).transpose(0, 1)
-            if boxes_embed is None:
-                boxes_embed = proj
-            else:
-                boxes_embed = boxes_embed + proj
+            boxes_embed = proj if boxes_embed is None else boxes_embed + proj
 
         if self.boxes_pos_enc_project is not None:
             cx, cy, w, h = boxes.unbind(-1)
@@ -733,10 +724,7 @@ class SequenceGeometryEncoder(nn.Module):
             enc = enc.view(boxes.shape[0], boxes.shape[1], enc.shape[-1])
 
             proj = self.boxes_pos_enc_project(enc)
-            if boxes_embed is None:
-                boxes_embed = proj
-            else:
-                boxes_embed = boxes_embed + proj
+            boxes_embed = proj if boxes_embed is None else boxes_embed + proj
 
         type_embed = self.label_embed(boxes_labels.long())
         return type_embed + boxes_embed, boxes_mask

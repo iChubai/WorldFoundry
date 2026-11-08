@@ -65,7 +65,7 @@ class PriorDepthAnything(nn.Module):
             conditioned_model_size: The conditioned model size.
             coarse_only: The coarse only.
         """
-        super(PriorDepthAnything, self).__init__()
+        super().__init__()
 
         self.args = Arguments()
         self.device = device

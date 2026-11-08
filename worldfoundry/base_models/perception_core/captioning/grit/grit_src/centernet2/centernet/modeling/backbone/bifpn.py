@@ -39,7 +39,7 @@ def swish(x, inplace: bool = False):
 
 class Swish(nn.Module):
     def __init__(self, inplace: bool = False):
-        super(Swish, self).__init__()
+        super().__init__()
         self.inplace = inplace
 
     def forward(self, x):
@@ -48,7 +48,7 @@ class Swish(nn.Module):
 
 class SequentialAppend(nn.Sequential):
     def __init__(self, *args):
-        super(SequentialAppend, self).__init__(*args)
+        super().__init__(*args)
 
     def forward(self, x):
         for module in self:
@@ -58,7 +58,7 @@ class SequentialAppend(nn.Sequential):
 
 class SequentialAppendLast(nn.Sequential):
     def __init__(self, *args):
-        super(SequentialAppendLast, self).__init__(*args)
+        super().__init__(*args)
 
     # def forward(self, x: List[torch.Tensor]):
     def forward(self, x):
@@ -80,7 +80,7 @@ class ConvBnAct2d(nn.Module):
         norm="",
         act_layer=Swish,
     ):
-        super(ConvBnAct2d, self).__init__()
+        super().__init__()
         # self.conv = create_conv2d(
         #     in_channels, out_channels, kernel_size, stride=stride, dilation=dilation, padding=padding, bias=bias)
         self.conv = Conv2d(
@@ -120,7 +120,7 @@ class SeparableConv2d(nn.Module):
         act_layer=Swish,
         norm="",
     ):
-        super(SeparableConv2d, self).__init__()
+        super().__init__()
 
         # self.conv_dw = create_conv2d(
         #     in_channels, int(in_channels * channel_multiplier), kernel_size,
@@ -174,7 +174,7 @@ class ResampleFeatureMap(nn.Sequential):
         conv_after_downsample=False,
         redundant_bias=False,
     ):
-        super(ResampleFeatureMap, self).__init__()
+        super().__init__()
         pooling_type = pooling_type or "max"
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -230,7 +230,7 @@ class FpnCombine(nn.Module):
         redundant_bias=False,
         weight_method="attn",
     ):
-        super(FpnCombine, self).__init__()
+        super().__init__()
         self.inputs_offsets = inputs_offsets
         self.weight_method = weight_method
 
@@ -303,7 +303,7 @@ class BiFpnLayer(nn.Module):
         separable_conv=True,
         redundant_bias=False,
     ):
-        super(BiFpnLayer, self).__init__()
+        super().__init__()
         self.fpn_config = fpn_config
         self.num_levels = num_levels
         self.conv_bn_relu_pattern = False
@@ -331,7 +331,7 @@ class BiFpnLayer(nn.Module):
                 redundant_bias=redundant_bias,
                 weight_method=fpn_config["weight_method"],
             )
-            self.feature_info.append(dict(num_chs=fpn_channels, reduction=reduction))
+            self.feature_info.append({"num_chs": fpn_channels, "reduction": reduction})
 
             # after combine ops
             after_combine = OrderedDict()
@@ -342,15 +342,15 @@ class BiFpnLayer(nn.Module):
             else:
                 conv_bias = False
                 conv_act = act_layer
-            conv_kwargs = dict(
-                in_channels=fpn_channels,
-                out_channels=fpn_channels,
-                kernel_size=3,
-                padding=pad_type,
-                bias=conv_bias,
-                norm=norm,
-                act_layer=conv_act,
-            )
+            conv_kwargs = {
+                "in_channels": fpn_channels,
+                "out_channels": fpn_channels,
+                "kernel_size": 3,
+                "padding": pad_type,
+                "bias": conv_bias,
+                "norm": norm,
+                "act_layer": conv_act,
+            }
             after_combine["conv"] = SeparableConv2d(**conv_kwargs) if separable_conv else ConvBnAct2d(**conv_kwargs)
             fnode_layers["after_combine"] = nn.Sequential(after_combine)
 
@@ -375,7 +375,7 @@ class BiFPN(Backbone):
         num_bifpn=4,
         separable_conv=False,
     ):
-        super(BiFPN, self).__init__()
+        super().__init__()
         assert isinstance(bottom_up, Backbone)
 
         # Feature map strides and channels from the bottom up network (e.g. ResNet)
@@ -429,7 +429,7 @@ class BiFPN(Backbone):
                 )
                 in_chs = out_channels
                 reduction = int(reduction * reduction_ratio)
-                feature_info.append(dict(num_chs=in_chs, reduction=reduction))
+                feature_info.append({"num_chs": in_chs, "reduction": reduction})
 
         self.cell = nn.Sequential()
         for rep in range(self.num_bifpn):
@@ -467,7 +467,7 @@ class BiFPN(Backbone):
         _shapes = [xx.shape for xx in x]
         # print('resample shapes', shapes)
         x = self.cell(x)
-        out = {f: xx for f, xx in zip(self._out_features, x, strict=False)}
+        out = dict(zip(self._out_features, x, strict=False))
         # import pdb; pdb.set_trace()
         return out
 

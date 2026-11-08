@@ -290,10 +290,7 @@ def write_images_text(images, path):
         void Reconstruction::ReadImagesText(const std::string& path)
         void Reconstruction::WriteImagesText(const std::string& path)
     """
-    if len(images) == 0:
-        mean_observations = 0
-    else:
-        mean_observations = sum((len(img.point3D_ids) for _, img in images.items())) / len(images)
+    mean_observations = 0 if len(images) == 0 else sum(len(img.point3D_ids) for _, img in images.items()) / len(images)
     HEADER = (
         "# Image list with two lines of data per image:\n"
         + "#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n"

@@ -225,8 +225,11 @@ def vk_q_mm_divide_fwd(
     # Allocates output.
     c_mid = torch.empty((B, N, H, D + 1), device=a.device, dtype=compute_dtype)
     c = torch.empty((B, N, H, D), device=a.device, dtype=output_dtype)
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (B * H * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+    def grid(META):
+        return (B * H * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+
     if compute_dtype == torch.float:
         vk_q_mm_divide_fwd_kernel_fp32[grid](
             a,

@@ -22,7 +22,7 @@ class FrozenBatchNorm2d(nn.Module):
             n: The n.
             epsilon: The epsilon.
         """
-        super(FrozenBatchNorm2d, self).__init__()
+        super().__init__()
         self.register_buffer("weight", torch.ones(n))
         self.register_buffer("bias", torch.zeros(n))
         self.register_buffer("running_mean", torch.zeros(n))

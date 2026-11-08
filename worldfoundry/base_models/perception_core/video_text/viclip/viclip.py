@@ -20,7 +20,7 @@ class ViCLIP(nn.Module):
         pretrain=os.path.join(os.path.dirname(os.path.abspath(__file__)), "ViClip-InternVid-10M-FLT.pth"),
         freeze_text=True,
     ):
-        super(ViCLIP, self).__init__()
+        super().__init__()
         if tokenizer:
             self.tokenizer = tokenizer
         else:
@@ -102,9 +102,9 @@ class ViCLIP(nn.Module):
         ## VTC loss
         loss_vtc = self.clip_loss.vtc_loss(vision_embeds, text_embeds, idx, self.temp, all_gather=True)
 
-        return dict(
-            loss_vtc=loss_vtc,
-        )
+        return {
+            "loss_vtc": loss_vtc,
+        }
 
     def encode_vision(self, image, test=False):
         """encode image / videos as features.
@@ -118,10 +118,7 @@ class ViCLIP(nn.Module):
             - pooled_vision_embeds (torch.Tensor): The pooled features. Shape: [B,T,C].
 
         """
-        if image.ndim == 5:
-            image = image.permute(0, 2, 1, 3, 4).contiguous()
-        else:
-            image = image.unsqueeze(2)
+        image = image.permute(0, 2, 1, 3, 4).contiguous() if image.ndim == 5 else image.unsqueeze(2)
 
         if not test and self.masking_prob > 0.0:
             return self.vision_encoder(image, masking_prob=self.masking_prob)

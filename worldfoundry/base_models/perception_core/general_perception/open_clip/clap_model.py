@@ -106,10 +106,7 @@ class CLAP(nn.Module):
             audio: The audio.
             normalize: The normalize.
         """
-        if self._training_head:
-            features = self.audio(audio, apply_proj=False)
-        else:
-            features = self.audio(audio)
+        features = self.audio(audio, apply_proj=False) if self._training_head else self.audio(audio)
         return F.normalize(features, dim=-1) if normalize else features
 
     def encode_text(self, text, normalize: bool = False):

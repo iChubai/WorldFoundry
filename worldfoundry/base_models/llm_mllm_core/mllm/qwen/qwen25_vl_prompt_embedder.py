@@ -15,7 +15,7 @@ class Qwen25VL_7b_Embedder(torch.nn.Module):
             dtype: The dtype.
             device: The device.
         """
-        super(Qwen25VL_7b_Embedder, self).__init__()
+        super().__init__()
         self.max_length = max_length
         self.dtype = dtype
         self.device = device

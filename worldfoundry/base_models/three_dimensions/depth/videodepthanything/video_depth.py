@@ -65,7 +65,7 @@ class VideoDepthAnything(nn.Module):
             num_frames: The num frames.
             pe: The pe.
         """
-        super(VideoDepthAnything, self).__init__()
+        super().__init__()
 
         self.intermediate_layer_idx = {"vits": [2, 5, 8, 11], "vitl": [4, 11, 17, 23]}
 
@@ -156,9 +156,8 @@ class VideoDepthAnything(nn.Module):
             if pre_input is not None:
                 cur_input[:, :OVERLAP, ...] = pre_input[:, KEYFRAMES, ...]
 
-            with torch.no_grad():
-                with torch.autocast(device_type=device, enabled=(not fp32)):
-                    depth = self.forward(cur_input)  # depth shape: [1, T, H, W]
+            with torch.no_grad(), torch.autocast(device_type=device, enabled=(not fp32)):
+                depth = self.forward(cur_input)  # depth shape: [1, T, H, W]
 
             depth = F.interpolate(
                 depth.flatten(0, 1).unsqueeze(1),

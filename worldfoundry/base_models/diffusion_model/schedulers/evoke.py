@@ -143,14 +143,8 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
         # Determine the ratio of each stage according to flow length
         tot_distance = sum(stage_distance)
         for i_s in range(stages):
-            if i_s == 0:
-                start_ratio = 0.0
-            else:
-                start_ratio = sum(stage_distance[:i_s]) / tot_distance
-            if i_s == stages - 1:
-                end_ratio = 0.9999999999999999
-            else:
-                end_ratio = sum(stage_distance[: i_s + 1]) / tot_distance
+            start_ratio = 0.0 if i_s == 0 else sum(stage_distance[:i_s]) / tot_distance
+            end_ratio = 0.9999999999999999 if i_s == stages - 1 else sum(stage_distance[: i_s + 1]) / tot_distance
 
             self.timestep_ratios[i_s] = (start_ratio, end_ratio)
 
@@ -207,10 +201,7 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
         Setting the timesteps and sigmas for each stage
         """
         if self.config.scheduler_type == "dmd":
-            if is_amplify_first_chunk:
-                num_inference_steps = num_inference_steps * 2 + 1
-            else:
-                num_inference_steps = num_inference_steps + 1
+            num_inference_steps = num_inference_steps * 2 + 1 if is_amplify_first_chunk else num_inference_steps + 1
 
         self.num_inference_steps = num_inference_steps
         self.init_sigmas()
@@ -322,19 +313,14 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
     ) -> EvokeSchedulerOutput | tuple:
         assert (sigma is None) == (sigma_next is None), "sigma and sigma_next must both be None or both be not None"
 
-        if sigma is None and sigma_next is None:
-            if (
-                isinstance(timestep, int)
-                or isinstance(timestep, torch.IntTensor)
-                or isinstance(timestep, torch.LongTensor)
-            ):
-                raise ValueError(
-                    (
-                        "Passing integer indices (e.g. from `enumerate(timesteps)`) as timesteps to"
-                        " `EulerDiscreteScheduler.step()` is not supported. Make sure to pass"
-                        " one of the `scheduler.timesteps` as a timestep."
-                    ),
-                )
+        if sigma is None and sigma_next is None and (isinstance(timestep, (int, torch.IntTensor, torch.LongTensor))):
+            raise ValueError(
+                (
+                    "Passing integer indices (e.g. from `enumerate(timesteps)`) as timesteps to"
+                    " `EulerDiscreteScheduler.step()` is not supported. Make sure to pass"
+                    " one of the `scheduler.timesteps` as a timestep."
+                ),
+            )
 
         if self.step_index is None:
             self._step_index = 0
@@ -420,10 +406,7 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
             elif self.config.prediction_type == "v_prediction":
                 x0_pred = alpha_t * sample - sigma_t * model_output
             elif self.config.prediction_type == "flow_prediction":
-                if flag:
-                    sigma_t = self.sigmas[self.step_index]
-                else:
-                    sigma_t = sigma
+                sigma_t = self.sigmas[self.step_index] if flag else sigma
                 x0_pred = sample - sigma_t * model_output
             else:
                 raise ValueError(
@@ -538,9 +521,8 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
             sigma_next=sigma_next,
         )
 
-        if cus_lower_order_num is None:
-            if self.lower_order_nums < self.config.solver_order:
-                self.lower_order_nums += 1
+        if cus_lower_order_num is None and self.lower_order_nums < self.config.solver_order:
+            self.lower_order_nums += 1
 
         # upon completion increase step index by one
         if cus_step_index is None:

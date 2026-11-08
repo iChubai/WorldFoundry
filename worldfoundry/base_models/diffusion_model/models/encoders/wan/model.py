@@ -58,7 +58,7 @@ class T5LayerNorm(nn.Module):
             dim: The dim.
             eps: The eps.
         """
-        super(T5LayerNorm, self).__init__()
+        super().__init__()
         self.dim = dim
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
@@ -88,7 +88,7 @@ class T5Attention(nn.Module):
             dropout: The dropout.
         """
         assert dim_attn % num_heads == 0
-        super(T5Attention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.num_heads = num_heads
@@ -148,7 +148,7 @@ class T5FeedForward(nn.Module):
             dim_ffn: The dim ffn.
             dropout: The dropout.
         """
-        super(T5FeedForward, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_ffn = dim_ffn
 
@@ -186,7 +186,7 @@ class T5SelfAttention(nn.Module):
             shared_pos: The shared pos.
             dropout: The dropout.
         """
-        super(T5SelfAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -227,7 +227,7 @@ class T5RelativeEmbedding(nn.Module):
             bidirectional: The bidirectional.
             max_dist: The max dist.
         """
-        super(T5RelativeEmbedding, self).__init__()
+        super().__init__()
         self.num_buckets = num_buckets
         self.num_heads = num_heads
         self.bidirectional = bidirectional
@@ -331,7 +331,7 @@ class WanTextEncoder(torch.nn.Module):
             shared_pos: The shared pos.
             dropout: The dropout.
         """
-        super(WanTextEncoder, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn

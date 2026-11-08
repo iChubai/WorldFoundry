@@ -9,10 +9,7 @@ from cuda_timer import CudaTimer
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import AltCorrBlock, CorrBlock
 
-if torch.__version__.startswith("2"):
-    autocast = partial(torch.autocast, device_type="cuda")
-else:
-    autocast = torch.cuda.amp.autocast
+autocast = partial(torch.autocast, device_type="cuda") if torch.__version__.startswith("2") else torch.cuda.amp.autocast
 
 
 class FactorGraph:
@@ -390,9 +387,8 @@ class FactorGraph:
             if d[k] > thresh:
                 continue
 
-            if self.max_factors > 0:
-                if len(es) > self.max_factors:
-                    break
+            if self.max_factors > 0 and len(es) > self.max_factors:
+                break
 
             i = ii[k]
             j = jj[k]

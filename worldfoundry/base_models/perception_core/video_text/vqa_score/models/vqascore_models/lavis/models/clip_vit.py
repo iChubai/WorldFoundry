@@ -252,10 +252,7 @@ def interpolate_pos_embed(model, state_dict, interpolation: str = "bicubic", seq
         align_corners=True,
     )
     pos_emb_img = pos_emb_img.permute(0, 2, 3, 1).reshape(1, grid_size[0] * grid_size[1], -1)[0]
-    if pos_emb_tok is not None:
-        new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0)
-    else:
-        new_pos_embed = pos_emb_img
+    new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0) if pos_emb_tok is not None else pos_emb_img
     state_dict["positional_embedding"] = new_pos_embed
 
 

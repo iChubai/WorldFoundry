@@ -69,10 +69,7 @@ def rgb(ftensor, true_shape=None):
     if true_shape is not None:
         H, W = true_shape
         ftensor = ftensor[:H, :W]
-    if ftensor.dtype == np.uint8:
-        img = np.float32(ftensor) / 255
-    else:
-        img = (ftensor * 0.5) + 0.5
+    img = np.float32(ftensor) / 255 if ftensor.dtype == np.uint8 else ftensor * 0.5 + 0.5
     return img.clip(min=0, max=1)
 
 
@@ -137,12 +134,12 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True):
         if verbose:
             print(f" - adding {path} with resolution {W1}x{H1} --> {W2}x{H2}")
         imgs.append(
-            dict(
-                img=ImgNorm(img)[None],
-                true_shape=np.int32([img.size[::-1]]),
-                idx=len(imgs),
-                instance=str(len(imgs)),
-            )
+            {
+                "img": ImgNorm(img)[None],
+                "true_shape": np.int32([img.size[::-1]]),
+                "idx": len(imgs),
+                "instance": str(len(imgs)),
+            }
         )
 
     assert imgs, "no images foud at " + root
@@ -203,12 +200,12 @@ def load_images_for_eval(folder_or_list, size, square_ok=False, verbose=True, cr
         if verbose:
             print(f" - adding {path} with resolution {W1}x{H1} --> {W2}x{H2}")
         imgs.append(
-            dict(
-                img=ImgNorm(img)[None],
-                true_shape=np.int32([img.size[::-1]]),
-                idx=len(imgs),
-                instance=str(len(imgs)),
-            )
+            {
+                "img": ImgNorm(img)[None],
+                "true_shape": np.int32([img.size[::-1]]),
+                "idx": len(imgs),
+                "instance": str(len(imgs)),
+            }
         )
 
     assert imgs, "no images foud at " + root
@@ -263,12 +260,12 @@ def load_images_512(folder_or_list, size, square_ok=False, verbose=True):
         if verbose:
             print(f" - adding {path} with resolution {W1}x{H1} --> {W2}x{H2}")
         imgs.append(
-            dict(
-                img=ImgNorm(img)[None],
-                true_shape=np.int32([img.size[::-1]]),
-                idx=len(imgs),
-                instance=str(len(imgs)),
-            )
+            {
+                "img": ImgNorm(img)[None],
+                "true_shape": np.int32([img.size[::-1]]),
+                "idx": len(imgs),
+                "instance": str(len(imgs)),
+            }
         )
 
     assert imgs, "no images foud at " + root

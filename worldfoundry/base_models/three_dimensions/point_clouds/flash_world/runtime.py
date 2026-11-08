@@ -251,10 +251,7 @@ class FlashWorldRepresentation:
                 w, h = image.size
 
                 # Calculate scale factor to maintain aspect ratio
-                if image_height / h > image_width / w:
-                    scale = image_height / h
-                else:
-                    scale = image_width / w
+                scale = image_height / h if image_height / h > image_width / w else image_width / w
 
                 # Calculate new dimensions for center crop
                 new_h = int(image_height / scale)

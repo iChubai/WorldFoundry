@@ -70,7 +70,7 @@ def extract_ucpe_camera_adapter_state_dict(checkpoint_path: str | Path):
 
     mapped_state = {}
     for key, value in state_dict.items():
-        if ".cam_self_attn." in key and (key.startswith("pipe.dit.blocks.") or key.startswith("blocks.")):
+        if ".cam_self_attn." in key and (key.startswith(("pipe.dit.blocks.", "blocks."))):
             mapped_state[key] = value
 
     if not mapped_state:
@@ -198,10 +198,7 @@ def _relative_pose_chunk(
     window_num_frames: int,
     device: torch.device,
 ) -> torch.Tensor | None:
-    if isinstance(global_c2w, torch.Tensor):
-        pose = global_c2w.detach().cpu().numpy()
-    else:
-        pose = np.asarray(global_c2w)
+    pose = global_c2w.detach().cpu().numpy() if isinstance(global_c2w, torch.Tensor) else np.asarray(global_c2w)
     if pose.ndim == 3:
         pose = pose[None]
     if pose.ndim != 4 or pose.shape[0] != 1 or pose.shape[-2:] not in ((3, 4), (4, 4)):

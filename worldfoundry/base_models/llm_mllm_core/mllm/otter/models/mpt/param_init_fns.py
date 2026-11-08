@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from .norm import NORM_CLASS_REGISTRY
+import itertools
 
 
 def torch_default_param_init_fn_(module: nn.Module, verbose: int = 0, **kwargs):
@@ -23,7 +24,7 @@ def fused_init_helper_(module: nn.Module, init_fn_):
         raise RuntimeError("Internal logic error")
     (dim, splits) = _fused
     splits = (0, *splits, module.weight.size(dim))
-    for s, e in zip(splits[:-1], splits[1:], strict=False):
+    for s, e in itertools.pairwise(splits):
         slice_indices = [slice(None)] * module.weight.ndim
         slice_indices[dim] = slice(s, e)
         init_fn_(module.weight[slice_indices])
@@ -48,20 +49,19 @@ def generic_param_init_fn_(
         div_is_residual = 1.0
     elif init_div_is_residual is True:
         div_is_residual = math.sqrt(2 * n_layers)
-    elif isinstance(init_div_is_residual, float) or isinstance(init_div_is_residual, int):
+    elif isinstance(init_div_is_residual, (float, int)):
         div_is_residual = init_div_is_residual
     elif isinstance(init_div_is_residual, str) and init_div_is_residual.isnumeric():
         div_is_residual = float(init_div_is_residual)
     else:
         div_is_residual = 1.0
         raise ValueError(f"Expected init_div_is_residual to be boolean or numeric, got {init_div_is_residual}")
-    if init_div_is_residual is not False:
-        if verbose > 1:
-            warnings.warn(
-                f"Initializing _is_residual layers then dividing them by {div_is_residual:.3f}. "
-                + "Set `init_div_is_residual: false` in init config to disable this.",
-                stacklevel=1,
-            )
+    if init_div_is_residual is not False and verbose > 1:
+        warnings.warn(
+            f"Initializing _is_residual layers then dividing them by {div_is_residual:.3f}. "
+            + "Set `init_div_is_residual: false` in init config to disable this.",
+            stacklevel=1,
+        )
     if isinstance(module, nn.Linear):
         if hasattr(module, "_fused"):
             fused_init_helper_(module, init_fn_)
@@ -114,7 +114,7 @@ def generic_param_init_fn_(
             assert d_model is not None
             _d = d_model
             splits = (0, _d, 2 * _d, 3 * _d)
-            for s, e in zip(splits[:-1], splits[1:], strict=False):
+            for s, e in itertools.pairwise(splits):
                 init_fn_(module.in_proj_weight[s:e])
         else:
             assert (

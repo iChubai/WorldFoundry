@@ -57,8 +57,8 @@ class YOLOv7p6HeadModule(YOLOv5HeadModule):
         main_out_channels: Sequence[int] = [256, 512, 768, 1024],
         aux_out_channels: Sequence[int] = [320, 640, 960, 1280],
         use_aux: bool = True,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         **kwargs,
     ):
         self.main_out_channels = main_out_channels
@@ -283,11 +283,11 @@ class YOLOv7Head(YOLOv5Head):
             loss_box += self.aux_loss_weights * loss_box_aux
 
         _, world_size = get_dist_info()
-        return dict(
-            loss_cls=loss_cls * batch_size * world_size,
-            loss_obj=loss_obj * batch_size * world_size,
-            loss_bbox=loss_box * batch_size * world_size,
-        )
+        return {
+            "loss_cls": loss_cls * batch_size * world_size,
+            "loss_obj": loss_obj * batch_size * world_size,
+            "loss_bbox": loss_box * batch_size * world_size,
+        }
 
     def _calc_loss(
         self,

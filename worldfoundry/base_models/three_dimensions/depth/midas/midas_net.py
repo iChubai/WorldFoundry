@@ -23,9 +23,9 @@ class MidasNet(BaseModel):
         """
         print("Loading weights: ", path)
 
-        super(MidasNet, self).__init__()
+        super().__init__()
 
-        use_pretrained = False if path is None else True
+        use_pretrained = not path is None
 
         self.pretrained, self.scratch = _make_encoder(
             backbone="resnext101_wsl", features=features, use_pretrained=use_pretrained

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import torch
 import torch.nn.functional as F
+import itertools
 
 _BF16 = torch.bfloat16
 _FP32 = torch.float32
@@ -452,7 +453,7 @@ def attention_with_sink(
         # for exact sink correction; public SDPA returns only the output.
         out = torch.empty_like(q)
         bounds = cu_seqlens.tolist()
-        for start, stop in zip(bounds[:-1], bounds[1:], strict=False):
+        for start, stop in itertools.pairwise(bounds):
             if stop <= start:
                 continue
             attended, lse, *_ = torch.ops.aten._scaled_dot_product_flash_attention(
@@ -470,7 +471,7 @@ def attention_with_sink(
 
     out = torch.empty_like(q, dtype=_FP32)
     bounds = cu_seqlens.tolist()
-    for start, stop in zip(bounds[:-1], bounds[1:], strict=False):
+    for start, stop in itertools.pairwise(bounds):
         length = int(stop) - int(start)
         if length <= 0:
             continue

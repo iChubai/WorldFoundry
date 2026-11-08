@@ -547,10 +547,7 @@ def image_transform(
     resize_mode = resize_mode or "shortest"
     assert resize_mode in ("shortest", "longest", "squash")
 
-    if isinstance(aug_cfg, dict):
-        aug_cfg = AugmentationCfg(**aug_cfg)
-    else:
-        aug_cfg = aug_cfg or AugmentationCfg()
+    aug_cfg = AugmentationCfg(**aug_cfg) if isinstance(aug_cfg, dict) else aug_cfg or AugmentationCfg()
 
     normalize = Normalize(mean=mean, std=std)
 

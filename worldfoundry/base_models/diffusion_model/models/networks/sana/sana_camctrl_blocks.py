@@ -591,8 +591,12 @@ def _prepare_ray_apply_fns(
         rope_fn = partial(_apply_complex_rope, freqs=rotary_emb, inverse=False)
         rope_fn_inv = partial(_apply_complex_rope, freqs=rotary_emb, inverse=True)
     else:
-        rope_fn = lambda x: x
-        rope_fn_inv = lambda x: x
+
+        def rope_fn(x):
+            return x
+
+        def rope_fn_inv(x):
+            return x
 
     transforms_q = [
         (partial(_apply_ray_projmat, matrix=P_T), head_dim // 2),
@@ -608,7 +612,9 @@ def _prepare_ray_apply_fns(
             (rope_fn_inv, head_dim // 2),
         ]
     else:
-        transforms_o = lambda x: x
+
+        def transforms_o(x):
+            return x
 
     apply_fn_q = partial(_apply_block_diagonal, func_size_pairs=transforms_q)
     apply_fn_kv = partial(_apply_block_diagonal, func_size_pairs=transforms_kv)

@@ -61,7 +61,7 @@ class RoPE3D(RoPE1D):
     """Factorized 3D RoPE: split head dim across (F, H, W) and rotate each band."""
 
     def __init__(self, freq=1e4, F0=1.0, scaling_factor=1.0):
-        super(RoPE3D, self).__init__(freq, F0, scaling_factor)
+        super().__init__(freq, F0, scaling_factor)
         self.position_cache = {}
 
     def get_mesh_3d(self, rope_positions, bsz):

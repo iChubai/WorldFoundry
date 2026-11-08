@@ -122,10 +122,7 @@ def load_tf_weights_in_t5(model, config, tf_checkpoint_path):
         array = tf_weights[txt_name]
 
         for m_name in name:
-            if re.fullmatch(r"[A-Za-z]+_\d+", m_name):
-                scope_names = re.split(r"_(\d+)", m_name)
-            else:
-                scope_names = [m_name]
+            scope_names = re.split(r"_(\d+)", m_name) if re.fullmatch(r"[A-Za-z]+_\d+", m_name) else [m_name]
             if scope_names[0] in ["kernel", "scale", "embedding"]:
                 pointer = pointer.weight
             elif scope_names[0] == "self_attention":
@@ -701,10 +698,7 @@ class T5Block(nn.Module):
         if do_cross_attention:
             # the actual query length is unknown for cross attention
             # if using past key value states. Need to inject it here
-            if present_key_value_state is not None:
-                query_length = present_key_value_state[0].shape[2]
-            else:
-                query_length = None
+            query_length = present_key_value_state[0].shape[2] if present_key_value_state is not None else None
 
             cross_attention_outputs = self.layer[1](
                 hidden_states,
@@ -741,10 +735,7 @@ class T5Block(nn.Module):
 
         outputs = (hidden_states,)
 
-        if use_cache:
-            outputs = outputs + (present_key_value_state,) + attention_outputs
-        else:
-            outputs = outputs + attention_outputs
+        outputs = outputs + (present_key_value_state,) + attention_outputs if use_cache else outputs + attention_outputs
 
         return outputs  # hidden-states, present_key_value_states, (self-attention position bias), (self-attention weights), (cross-attention position bias), (cross-attention weights)
 

@@ -363,12 +363,9 @@ class ViewDecompositionDataset(torch.utils.data.Dataset):
                     for line in fin:
                         line_split = line.strip().split(",")
                         filename, a, t, label = line_split
-                        if self.fully_supervised:
-                            label = float(a), float(t), float(label)
-                        else:
-                            label = float(label)
+                        label = (float(a), float(t), float(label)) if self.fully_supervised else float(label)
                         filename = osp.join(self.data_prefix, filename)
-                        self.video_infos.append(dict(filename=filename, label=label))
+                        self.video_infos.append({"filename": filename, "label": label})
             except BaseException:
                 #### No Label Testing
                 video_filenames = []
@@ -379,7 +376,7 @@ class ViewDecompositionDataset(torch.utils.data.Dataset):
                 print(len(video_filenames))
                 video_filenames = sorted(video_filenames)
                 for filename in video_filenames:
-                    self.video_infos.append(dict(filename=filename, label=-1))
+                    self.video_infos.append({"filename": filename, "label": -1})
 
     def __getitem__(self, index):
         video_info = self.video_infos[index]

@@ -15,7 +15,7 @@ class ResidualBlock(nn.Module):
             norm_fn: The norm fn.
             stride: The stride.
         """
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
@@ -81,7 +81,7 @@ class BottleneckBlock(nn.Module):
             norm_fn: The norm fn.
             stride: The stride.
         """
-        super(BottleneckBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
         self.conv2 = nn.Conv2d(planes // 4, planes // 4, kernel_size=3, padding=1, stride=stride)
@@ -156,7 +156,7 @@ class BasicEncoder(nn.Module):
             dropout: The dropout.
             multidim: The multidim.
         """
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
         self.multidim = multidim
 

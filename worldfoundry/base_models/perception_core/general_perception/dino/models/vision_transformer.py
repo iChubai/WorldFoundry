@@ -55,7 +55,7 @@ class DropPath(nn.Module):
         Args:
             drop_prob: The drop prob.
         """
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):

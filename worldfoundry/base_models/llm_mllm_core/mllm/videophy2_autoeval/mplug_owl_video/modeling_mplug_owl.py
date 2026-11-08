@@ -179,7 +179,7 @@ class QuickGELU(nn.Module):
 
 class MplugOwlVisionLocalTemporal(nn.Module):
     def __init__(self, config):
-        super(MplugOwlVisionLocalTemporal, self).__init__()
+        super().__init__()
 
         self.image_size = config.image_size
         self.patch_size = config.patch_size
@@ -420,7 +420,7 @@ class MplugOwlPreTrainedModel(PreTrainedModel):
     def _init_weights(self, module):
         """Initialize the weights"""
         factor = self.config.initializer_range
-        if isinstance(module, nn.Conv2d) or isinstance(module, nn.Embedding) or isinstance(module, nn.Linear):
+        if isinstance(module, (nn.Conv2d, nn.Embedding, nn.Linear)):
             module.weight.data.normal_(mean=0.0, std=factor)
             if hasattr(module, "bias") and module.bias is not None:
                 module.bias.data.zero_()
@@ -1852,12 +1852,11 @@ def bloom_forward(
     all_self_attentions = () if output_attentions else None
     all_hidden_states = () if output_hidden_states else None
 
-    if self.gradient_checkpointing and self.training:
-        if use_cache:
-            logger.warning_once(
-                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-            )
-            use_cache = False
+    if self.gradient_checkpointing and self.training and use_cache:
+        logger.warning_once(
+            "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+        )
+        use_cache = False
 
     # Compute alibi tensor: check build_alibi_tensor documentation
     seq_length_with_past = seq_length

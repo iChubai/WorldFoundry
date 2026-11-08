@@ -15,9 +15,9 @@ from .config import CLIPAudioCfg
 _logger = logging.getLogger(__name__)
 
 _HTSAT_CONFIGS = {
-    "tiny": dict(embed_dim=96, depths=[2, 2, 6, 2], num_heads=[4, 8, 16, 32]),
-    "base": dict(embed_dim=128, depths=[2, 2, 12, 2], num_heads=[4, 8, 16, 32]),
-    "large": dict(embed_dim=256, depths=[2, 2, 12, 2], num_heads=[4, 8, 16, 32]),
+    "tiny": {"embed_dim": 96, "depths": [2, 2, 6, 2], "num_heads": [4, 8, 16, 32]},
+    "base": {"embed_dim": 128, "depths": [2, 2, 12, 2], "num_heads": [4, 8, 16, 32]},
+    "large": {"embed_dim": 256, "depths": [2, 2, 12, 2], "num_heads": [4, 8, 16, 32]},
 }
 
 

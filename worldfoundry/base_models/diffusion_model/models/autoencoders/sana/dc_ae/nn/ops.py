@@ -1163,10 +1163,7 @@ class LiteMLA(nn.Module):
             out = out.float()
         out = out[:, :, :-1] / (out[:, :, -1:] + self.eps)
 
-        if not is_video:
-            out = torch.reshape(out, (B, -1, H, W))
-        else:
-            out = torch.reshape(out, (B, -1, T, H, W))
+        out = torch.reshape(out, (B, -1, H, W)) if not is_video else torch.reshape(out, (B, -1, T, H, W))
         return out
 
     @torch.autocast(device_type="cuda", enabled=False)
@@ -1229,10 +1226,7 @@ class LiteMLA(nn.Module):
         if qkv.ndim == 4:
             H, W = list(qkv.size())[-2:]
             # num_tokens = H * W
-            if self.dim < H * W:
-                out = self.relu_linear_att(qkv).to(qkv.dtype)
-            else:
-                out = self.relu_quadratic_att(qkv)
+            out = self.relu_linear_att(qkv).to(qkv.dtype) if self.dim < H * W else self.relu_quadratic_att(qkv)
         elif qkv.ndim == 5:
             _, _, T, H, W = list(qkv.size())
             # num_tokens = H * W * T

@@ -44,7 +44,7 @@ class DensePredModel(nn.Module):
         Returns:
             The return value.
         """
-        super(DensePredModel, self).__init__()
+        super().__init__()
 
         self.encoder = get_func(
             "worldfoundry.base_models.three_dimensions.depth.metric3d.model."
@@ -81,7 +81,7 @@ class BaseDepthModel(nn.Module):
         Returns:
             The return value.
         """
-        super(BaseDepthModel, self).__init__()
+        super().__init__()
         self.depth_model = DensePredModel(cfg)
 
     def forward(self, data):

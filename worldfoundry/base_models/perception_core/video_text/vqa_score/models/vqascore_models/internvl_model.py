@@ -324,13 +324,13 @@ class InternVL2Model(VQAScoreModel):
         orig_width, orig_height = image.size
         aspect_ratio = orig_width / orig_height
 
-        target_ratios = set(
+        target_ratios = {
             (i, j)
             for n in range(min_num, max_num + 1)
             for i in range(1, n + 1)
             for j in range(1, n + 1)
             if i * j <= max_num and i * j >= min_num
-        )
+        }
         target_ratios = sorted(target_ratios, key=lambda x: x[0] * x[1])
 
         target_aspect_ratio = self.find_closest_aspect_ratio(
@@ -466,9 +466,12 @@ class InternVL2Model(VQAScoreModel):
             # Chat Arguments:
             pixel_values = data.to(self.device)
             pixel_values = pixel_values.to(self.model.dtype)
-            generation_config = dict(
-                max_new_tokens=1, do_sample=False, output_scores=True, return_dict_in_generate=True
-            )
+            generation_config = {
+                "max_new_tokens": 1,
+                "do_sample": False,
+                "output_scores": True,
+                "return_dict_in_generate": True,
+            }
             IMG_START_TOKEN = "<img>"
             IMG_END_TOKEN = "</img>"
             IMG_CONTEXT_TOKEN = "<IMG_CONTEXT>"
@@ -540,9 +543,12 @@ class InternVL2Model(VQAScoreModel):
                 num_patches = [num_patches]
 
             pixel_values = data.to(self.device)
-            generation_config = dict(
-                max_new_tokens=max_new_tokens, do_sample=False, output_scores=True, return_dict_in_generate=True
-            )
+            generation_config = {
+                "max_new_tokens": max_new_tokens,
+                "do_sample": False,
+                "output_scores": True,
+                "return_dict_in_generate": True,
+            }
             IMG_START_TOKEN = "<img>"
             IMG_END_TOKEN = "</img>"
             IMG_CONTEXT_TOKEN = "<IMG_CONTEXT>"

@@ -149,7 +149,7 @@ class ConvNeXt(nn.Module):
             self.downsample_layers.append(downsample_layer)
 
         self.stages = nn.ModuleList()
-        dp_rates = [x for x in np.linspace(0, drop_path_rate, sum(depths))]
+        dp_rates = list(np.linspace(0, drop_path_rate, sum(depths)))
         cur = 0
         for i in range(4):
             stage = nn.Sequential(
@@ -306,10 +306,7 @@ class ConvNeXt(nn.Module):
 
         if norm:
             nchw_shapes = [out[-1].shape for out in outputs]
-            if isinstance(n, int):
-                norms = self.norms[-n:]
-            else:
-                norms = [self.norms[i] for i in n]
+            norms = self.norms[-n:] if isinstance(n, int) else [self.norms[i] for i in n]
             outputs = [
                 (
                     norm(cls_token),
@@ -332,22 +329,22 @@ class ConvNeXt(nn.Module):
 
 
 convnext_sizes = {
-    "tiny": dict(
-        depths=[3, 3, 9, 3],
-        dims=[96, 192, 384, 768],
-    ),
-    "small": dict(
-        depths=[3, 3, 27, 3],
-        dims=[96, 192, 384, 768],
-    ),
-    "base": dict(
-        depths=[3, 3, 27, 3],
-        dims=[128, 256, 512, 1024],
-    ),
-    "large": dict(
-        depths=[3, 3, 27, 3],
-        dims=[192, 384, 768, 1536],
-    ),
+    "tiny": {
+        "depths": [3, 3, 9, 3],
+        "dims": [96, 192, 384, 768],
+    },
+    "small": {
+        "depths": [3, 3, 27, 3],
+        "dims": [96, 192, 384, 768],
+    },
+    "base": {
+        "depths": [3, 3, 27, 3],
+        "dims": [128, 256, 512, 1024],
+    },
+    "large": {
+        "depths": [3, 3, 27, 3],
+        "dims": [192, 384, 768, 1536],
+    },
 }
 
 

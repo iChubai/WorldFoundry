@@ -723,6 +723,6 @@ class HunyuanVideoVAEDecoderStateDictConverter:
         """
         state_dict_ = {}
         for name in state_dict:
-            if name.startswith("decoder.") or name.startswith("post_quant_conv."):
+            if name.startswith(("decoder.", "post_quant_conv.")):
                 state_dict_[name] = state_dict[name]
         return state_dict_

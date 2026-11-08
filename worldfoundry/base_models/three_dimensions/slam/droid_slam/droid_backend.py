@@ -34,9 +34,8 @@ class DroidBackend:
         """main update"""
 
         t = self.video.counter.value
-        if normalize:
-            if not self.video.stereo and not torch.any(self.video.disps_sens):
-                self.video.normalize()
+        if normalize and not self.video.stereo and not torch.any(self.video.disps_sens):
+            self.video.normalize()
 
         graph = FactorGraph(self.video, self.update_op, corr_impl="alt", max_factors=16 * t, upsample=self.upsample)
 
@@ -88,9 +87,8 @@ class DroidAsyncBackend:
         """main update"""
 
         t = self.video.counter.value
-        if normalize:
-            if not self.video.stereo and not torch.any(self.video.disps_sens):
-                self.video.normalize()
+        if normalize and not self.video.stereo and not torch.any(self.video.disps_sens):
+            self.video.normalize()
 
         self.graph.add_proximity_factors(
             rad=self.backend_radius,

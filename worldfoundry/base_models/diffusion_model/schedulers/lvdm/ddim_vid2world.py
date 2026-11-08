@@ -87,7 +87,9 @@ class DDIMSampler:
         )
         alphas_cumprod = self.model.alphas_cumprod
         assert alphas_cumprod.shape[0] == self.ddpm_num_timesteps, "alphas have to be defined for each timestep"
-        to_torch = lambda x: x.clone().detach().to(torch.float32).to(self.model.device)
+
+        def to_torch(x):
+            return x.clone().detach().to(torch.float32).to(self.model.device)
 
         if self.model.use_dynamic_rescale:
             self.ddim_scale_arr = self.model.scale_arr[self.ddim_timesteps]
@@ -309,13 +311,9 @@ class DDIMSampler:
         """
         device = self.model.betas.device
         b = shape[0]  # shape: (B,C,T,H_latent,W_latent)
-        if x_T is None:
-            img = torch.randn(shape, device=device)
-        else:
-            img = x_T
-        if precision is not None:
-            if precision == 16:
-                img = img.to(dtype=torch.float16)
+        img = torch.randn(shape, device=device) if x_T is None else x_T
+        if precision is not None and precision == 16:
+            img = img.to(dtype=torch.float16)
 
         if timesteps is None:
             timesteps = self.ddpm_num_timesteps if ddim_use_original_steps else self.ddim_timesteps
@@ -326,10 +324,7 @@ class DDIMSampler:
         intermediates = {"x_inter": [img], "pred_x0": [img]}
         time_range = reversed(range(timesteps)) if ddim_use_original_steps else np.flip(timesteps)
         total_steps = timesteps if ddim_use_original_steps else timesteps.shape[0]
-        if verbose:
-            iterator = tqdm(time_range, desc="DDIM Sampler", total=total_steps)
-        else:
-            iterator = time_range
+        iterator = tqdm(time_range, desc="DDIM Sampler", total=total_steps) if verbose else time_range
 
         clean_cond = kwargs.pop("clean_cond", False)
 
@@ -580,16 +575,13 @@ class DDIMSampler:
             kv_cache_info_uncond: The kv cache info uncond.
         """
         b, *_, device = *x.shape, x.device
-        if x.dim() == 5:
-            is_video = True
-        else:
-            is_video = False
+        is_video = x.dim() == 5
         # import pdb; pdb.set_trace()
         if unconditional_conditioning is None or unconditional_guidance_scale == 1.0:
             model_output = self.model.apply_model(x, t, c, kv_cache_info=kv_cache_info, **kwargs)  # unet denoiser
         else:
             ### do_classifier_free_guidance
-            if isinstance(c, torch.Tensor) or isinstance(c, dict):
+            if isinstance(c, (torch.Tensor, dict)):
                 # The cool thing here is since we only add guidance on the most recent action, the same cache can be reused for cond and ucond
                 e_t_cond = self.model.apply_model(
                     x, t, c, kv_cache_info=kv_cache_info, **kwargs
@@ -623,10 +615,7 @@ class DDIMSampler:
         sigmas = self.ddim_sigmas_for_original_num_steps if use_original_steps else self.ddim_sigmas
         # select parameters corresponding to the currently considered timestep
 
-        if is_video:
-            size = (b, 1, 1, 1, 1)
-        else:
-            size = (b, 1, 1, 1)
+        size = (b, 1, 1, 1, 1) if is_video else (b, 1, 1, 1)
         a_t = torch.full(size, alphas[index], device=device)
         a_prev = torch.full(size, alphas_prev[index], device=device)
         sigma_t = torch.full(size, sigmas[index], device=device)

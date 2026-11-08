@@ -53,8 +53,8 @@ class YOLOv6HeadModule(BaseModule):
         num_base_priors: int = 1,
         reg_max=0,
         featmap_strides: Sequence[int] = (8, 16, 32),
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -221,20 +221,25 @@ class YOLOv6Head(YOLOv5Head):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(type="mmdet.MlvlPointGenerator", offset=0.5, strides=[8, 16, 32]),
-        bbox_coder: ConfigType = dict(type="DistancePointBBoxCoder"),
-        loss_cls: ConfigType = dict(
-            type="mmdet.VarifocalLoss",
-            use_sigmoid=True,
-            alpha=0.75,
-            gamma=2.0,
-            iou_weighted=True,
-            reduction="sum",
-            loss_weight=1.0,
-        ),
-        loss_bbox: ConfigType = dict(
-            type="IoULoss", iou_mode="giou", bbox_format="xyxy", reduction="mean", loss_weight=2.5, return_iou=False
-        ),
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0.5, "strides": [8, 16, 32]},
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
+        loss_cls: ConfigType = {
+            "type": "mmdet.VarifocalLoss",
+            "use_sigmoid": True,
+            "alpha": 0.75,
+            "gamma": 2.0,
+            "iou_weighted": True,
+            "reduction": "sum",
+            "loss_weight": 1.0,
+        },
+        loss_bbox: ConfigType = {
+            "type": "IoULoss",
+            "iou_mode": "giou",
+            "bbox_format": "xyxy",
+            "reduction": "mean",
+            "loss_weight": 2.5,
+            "return_iou": False,
+        },
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,
@@ -395,4 +400,4 @@ class YOLOv6Head(YOLOv5Head):
             loss_bbox = flatten_pred_bboxes.sum() * 0
 
         _, world_size = get_dist_info()
-        return dict(loss_cls=loss_cls * world_size, loss_bbox=loss_bbox * world_size)
+        return {"loss_cls": loss_cls * world_size, "loss_bbox": loss_bbox * world_size}

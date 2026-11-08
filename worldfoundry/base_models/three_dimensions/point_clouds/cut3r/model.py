@@ -357,7 +357,7 @@ class ARCroco3DStereo(CroCoNet):
             return load_model(pretrained_model_name_or_path, device="cpu")
         else:
             try:
-                model = super(ARCroco3DStereo, cls).from_pretrained(pretrained_model_name_or_path, **kw)
+                model = super().from_pretrained(pretrained_model_name_or_path, **kw)
             except TypeError:
                 raise Exception(f"tried to load {pretrained_model_name_or_path} from huggingface, but failed")
             return model

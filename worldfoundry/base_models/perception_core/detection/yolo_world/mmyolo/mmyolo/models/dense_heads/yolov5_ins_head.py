@@ -42,8 +42,8 @@ class ProtoModule(BaseModule):
         in_channels: int = 32,
         middle_channels: int = 256,
         mask_channels: int = 32,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -85,8 +85,8 @@ class YOLOv5InsHeadModule(YOLOv5HeadModule):
         mask_channels: int = 32,
         proto_channels: int = 256,
         widen_factor: float = 1.0,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         **kwargs,
     ):
         self.mask_channels = mask_channels
@@ -155,7 +155,7 @@ class YOLOv5InsHead(YOLOv5Head):
         self,
         *args,
         mask_overlap: bool = True,
-        loss_mask: ConfigType = dict(type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="none"),
+        loss_mask: ConfigType = {"type": "mmdet.CrossEntropyLoss", "use_sigmoid": True, "reduction": "none"},
         loss_mask_weight=0.05,
         **kwargs,
     ):
@@ -365,12 +365,12 @@ class YOLOv5InsHead(YOLOv5Head):
                 ).mean()
 
         _, world_size = get_dist_info()
-        return dict(
-            loss_cls=loss_cls * batch_size * world_size,
-            loss_obj=loss_obj * batch_size * world_size,
-            loss_bbox=loss_box * batch_size * world_size,
-            loss_mask=loss_mask * self.loss_mask_weight * world_size,
-        )
+        return {
+            "loss_cls": loss_cls * batch_size * world_size,
+            "loss_obj": loss_obj * batch_size * world_size,
+            "loss_bbox": loss_box * batch_size * world_size,
+            "loss_mask": loss_mask * self.loss_mask_weight * world_size,
+        }
 
     def _convert_gt_to_norm_format(
         self, batch_gt_instances: Sequence[InstanceData], batch_img_metas: Sequence[dict]
@@ -562,12 +562,12 @@ class YOLOv5InsHead(YOLOv5Head):
             if cfg.multi_label is False:
                 scores, labels = scores.max(1, keepdim=True)
                 scores, _, keep_idxs, results = filter_scores_and_topk(
-                    scores, score_thr, nms_pre, results=dict(labels=labels[:, 0], coeffs=coeffs)
+                    scores, score_thr, nms_pre, results={"labels": labels[:, 0], "coeffs": coeffs}
                 )
                 labels = results["labels"]
                 coeffs = results["coeffs"]
             else:
-                out = filter_scores_and_topk(scores, score_thr, nms_pre, results=dict(coeffs=coeffs))
+                out = filter_scores_and_topk(scores, score_thr, nms_pre, results={"coeffs": coeffs})
                 scores, labels, keep_idxs, filtered_results = out
                 coeffs = filtered_results["coeffs"]
 

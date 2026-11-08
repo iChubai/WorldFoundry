@@ -317,9 +317,8 @@ def run_initial_optim(
     num_frames = bases.num_frames
     device = bases.params["rots"].device
 
-    w_smooth_func = lambda i, min_v, max_v, th: (
-        min_v if i <= th else (max_v - min_v) * (i - th) / (num_iters - th) + min_v
-    )
+    def w_smooth_func(i, min_v, max_v, th):
+        return min_v if i <= th else (max_v - min_v) * (i - th) / (num_iters - th) + min_v
 
     gt_2d, gt_depth = project_2d_tracks(tracks_3d.xyz.swapaxes(0, 1), Ks, w2cs, return_depth=True)
     # (G, T, 2)

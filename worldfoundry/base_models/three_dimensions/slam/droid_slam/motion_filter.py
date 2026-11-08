@@ -8,10 +8,7 @@ import torch
 import worldfoundry.base_models.three_dimensions.slam.droid_slam.geom.projective_ops as pops
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.modules.corr import CorrBlock
 
-if torch.__version__.startswith("2"):
-    autocast = partial(torch.autocast, device_type="cuda")
-else:
-    autocast = torch.cuda.amp.autocast
+autocast = partial(torch.autocast, device_type="cuda") if torch.__version__.startswith("2") else torch.cuda.amp.autocast
 
 
 class MotionFilter:

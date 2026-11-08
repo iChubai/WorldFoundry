@@ -30,6 +30,7 @@ from flow3d.data.utils import (
     parse_tapir_track_info,
 )
 from flow3d.transforms import rt_to_mat4
+import contextlib
 
 
 @dataclass
@@ -793,10 +794,8 @@ class iPhoneDataset(BaseDataset):
         }
         if self.training:
             # (H, W, 3).
-            try:
+            with contextlib.suppress(BaseException):
                 data["normals"] = self.normals[index]
-            except BaseException:
-                pass
 
             # (H, W).
             data["depths"] = self.depths[index]

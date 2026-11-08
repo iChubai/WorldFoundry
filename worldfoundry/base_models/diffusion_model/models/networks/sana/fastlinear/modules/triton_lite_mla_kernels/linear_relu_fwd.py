@@ -213,8 +213,11 @@ def linear_relu_fwd(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     # Allocates output.
     c = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=a.dtype)
     relu_mask = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=bool)
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+    def grid(META):
+        return (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+
     if a.dtype == b.dtype:
         linear_relu_fwd_kernel[grid](
             a,

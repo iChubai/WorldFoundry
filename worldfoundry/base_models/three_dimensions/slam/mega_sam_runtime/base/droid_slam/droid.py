@@ -29,7 +29,7 @@ from trajectory_filler import PoseTrajectoryFiller
 
 class Droid:
     def __init__(self, args, net=None):
-        super(Droid, self).__init__()
+        super().__init__()
         if net is None:
             self.load_weights(args.weights)
         else:

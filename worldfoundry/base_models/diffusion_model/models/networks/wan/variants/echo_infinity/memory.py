@@ -433,17 +433,17 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
                 memory_kv_list = [kv] * num_blocks
         else:
             memory_kv_list = [None] * num_blocks
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-            sink_recache_after_switch=sink_recache_after_switch,
-            memory_kv=None,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+            "sink_recache_after_switch": sink_recache_after_switch,
+            "memory_kv": None,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

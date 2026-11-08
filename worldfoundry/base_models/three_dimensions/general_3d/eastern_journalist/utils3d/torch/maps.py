@@ -570,10 +570,7 @@ def masked_nearest_resize(
     nearest_indices = (*batch_indices, nearest_i, nearest_j)
     outputs = tuple(x[nearest_indices] for x in image)
 
-    if return_index:
-        ret = (*outputs, target_mask, nearest_indices)
-    else:
-        ret = (*outputs, target_mask)
+    ret = (*outputs, target_mask, nearest_indices) if return_index else (*outputs, target_mask)
 
     if len(ret) == 1:
         return ret[0]
@@ -735,10 +732,7 @@ def flood_fill(*image: Tensor, mask: Tensor, return_index: bool = False) -> Tens
 
     outputs = tuple(x[nearest_indices] for x in image)
 
-    if return_index:
-        ret = *outputs, nearest_indices
-    else:
-        ret = outputs
+    ret = (*outputs, nearest_indices) if return_index else outputs
 
     if len(ret) == 1:
         return ret[0]

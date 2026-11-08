@@ -376,7 +376,7 @@ def sdpa_forward(
         key_states = key_states.contiguous()
         value_states = value_states.contiguous()
 
-    is_causal = True if causal_mask is None and q_len > 1 else False
+    is_causal = bool(causal_mask is None and q_len > 1)
 
     # patch position rolling
     query_states, key_states, value_states, causal_mask = _preprocess_qkv(

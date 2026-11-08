@@ -117,10 +117,7 @@ def reshape_transform(feats: Tensor | list[Tensor], max_shape: tuple[int, int] =
 
     max_h = max([im.shape[-2] for im in feats])
     max_w = max([im.shape[-1] for im in feats])
-    if -1 in max_shape:
-        max_shape = (max_h, max_w)
-    else:
-        max_shape = (min(max_h, max_shape[0]), min(max_w, max_shape[1]))
+    max_shape = (max_h, max_w) if -1 in max_shape else (min(max_h, max_shape[0]), min(max_w, max_shape[1]))
 
     activations = []
     for feat in feats:
@@ -166,12 +163,15 @@ class BoxAMDetectorWrapper(nn.Module):
         if self.is_need_loss:
             assert pred_instances is not None
             pred_instances = pred_instances.numpy()
-            data = dict(
-                img=self.image, img_id=0, gt_bboxes=pred_instances.bboxes, gt_bboxes_labels=pred_instances.labels
-            )
+            data = {
+                "img": self.image,
+                "img_id": 0,
+                "gt_bboxes": pred_instances.bboxes,
+                "gt_bboxes_labels": pred_instances.labels,
+            }
             data = self.test_pipeline(data)
         else:
-            data = dict(img=self.image, img_id=0)
+            data = {"img": self.image, "img_id": 0}
             data = self.test_pipeline(data)
             data["inputs"] = [data["inputs"]]
             data["data_samples"] = [data["data_samples"]]
@@ -232,7 +232,7 @@ class BoxAMDetectorVisualizer:
             self.cam = AblationCAM(
                 model,
                 target_layers,
-                use_cuda=True if "cuda" in model.device else False,
+                use_cuda="cuda" in model.device,
                 reshape_transform=reshape_transform,
                 batch_size=batch_size,
                 ablation_layer=extra_params["ablation_layer"],
@@ -242,7 +242,7 @@ class BoxAMDetectorVisualizer:
             self.cam = method_class(
                 model,
                 target_layers,
-                use_cuda=True if "cuda" in model.device else False,
+                use_cuda="cuda" in model.device,
                 reshape_transform=reshape_transform,
             )
             if self.is_need_grad:
@@ -449,10 +449,7 @@ class SpatialBaseCAM(BaseCAM):
     ) -> np.ndarray:
         weights = self.get_cam_weights(input_tensor, target_layer, targets, activations, grads)
         weighted_activations = weights * activations
-        if eigen_smooth:
-            cam = get_2d_projection(weighted_activations)
-        else:
-            cam = weighted_activations.sum(axis=1)
+        cam = get_2d_projection(weighted_activations) if eigen_smooth else weighted_activations.sum(axis=1)
         return cam
 
 

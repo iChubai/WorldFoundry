@@ -38,10 +38,7 @@ def process_checkpoint(in_file, out_file):
     else:
         torch.save(checkpoint, out_file)
     sha = subprocess.check_output(["sha256sum", out_file]).decode()
-    if out_file.endswith(".pth"):
-        out_file_name = out_file[:-4]
-    else:
-        out_file_name = out_file
+    out_file_name = out_file[:-4] if out_file.endswith(".pth") else out_file
     final_file = out_file_name + f"-{sha[:8]}.pth"
     subprocess.Popen(["mv", out_file, final_file])
 

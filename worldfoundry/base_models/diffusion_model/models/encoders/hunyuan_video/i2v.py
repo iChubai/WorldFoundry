@@ -255,12 +255,12 @@ class TextEncoder(nn.Module):
             else:
                 raise TypeError(f"Unsupported text type: {type(text)}")
 
-        kwargs = dict(
-            truncation=True,
-            max_length=self.max_length,
-            padding="max_length",
-            return_tensors="pt",
-        )
+        kwargs = {
+            "truncation": True,
+            "max_length": self.max_length,
+            "padding": "max_length",
+            "return_tensors": "pt",
+        }
         if tokenize_input_type == "str":
             return self.tokenizer(
                 text,

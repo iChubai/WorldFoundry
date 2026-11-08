@@ -64,7 +64,7 @@ class NeighborhoodAttention(nn.Module):
     """Windowed 3D self-attn over the post-patch ``(T, H, W)`` lattice."""
 
     def __init__(self, natten_parameters, base_attn_op):
-        super(NeighborhoodAttention, self).__init__()
+        super().__init__()
 
         self.base_attn_op = base_attn_op
 

@@ -24,7 +24,7 @@ NUM_FRAMES_IN_BATCH = {128: 32, 256: 32, 512: 8, 1024: 2}
 def compute_fid(opts, max_real, num_gen):
     # Direct TorchScript translation of http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
     detector_url = "https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/metrics/inception-2015-12-05.pkl"
-    detector_kwargs = dict(return_features=True)  # Return raw features before the softmax layer.
+    detector_kwargs = {"return_features": True}  # Return raw features before the softmax layer.
 
     batch_size = NUM_FRAMES_IN_BATCH[opts.dataset_kwargs.resolution]
 
@@ -42,11 +42,11 @@ def compute_fid(opts, max_real, num_gen):
     if opts.generator_as_dataset:
         compute_gen_stats_fn = metric_utils.compute_feature_stats_for_dataset
         gen_opts = metric_utils.rewrite_opts_for_gen_dataset(opts)
-        gen_kwargs = dict(use_image_dataset=True)
+        gen_kwargs = {"use_image_dataset": True}
     else:
         compute_gen_stats_fn = metric_utils.compute_feature_stats_for_generator
         gen_opts = opts
-        gen_kwargs = dict()
+        gen_kwargs = {}
 
     mu_gen, sigma_gen = compute_gen_stats_fn(
         opts=gen_opts,

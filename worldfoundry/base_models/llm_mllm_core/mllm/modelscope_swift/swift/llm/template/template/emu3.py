@@ -43,10 +43,7 @@ class Emu3GenTemplate(Template):
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         if self.is_training:
             p_prob = random.random()
-            if p_prob < self.NULL_PROMPT_PROB:
-                prompt = ""
-            else:
-                prompt = inputs.to_history()["response"]
+            prompt = "" if p_prob < self.NULL_PROMPT_PROB else inputs.to_history()["response"]
             image = self.smart_resize(inputs.images[0].convert("RGB"))
             with torch.no_grad():
                 image = self.processor.image_processor(image, return_tensors="pt")["pixel_values"].to(

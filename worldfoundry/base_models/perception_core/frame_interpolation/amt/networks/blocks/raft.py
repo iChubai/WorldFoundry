@@ -32,7 +32,7 @@ def coords_grid(batch, ht, wd, device):
 
 class SmallUpdateBlock(nn.Module):
     def __init__(self, cdim, hidden_dim, flow_dim, corr_dim, fc_dim, corr_levels=4, radius=3, scale_factor=None):
-        super(SmallUpdateBlock, self).__init__()
+        super().__init__()
         cor_planes = corr_levels * (2 * radius + 1) ** 2
         self.scale_factor = scale_factor
 
@@ -95,7 +95,7 @@ class BasicUpdateBlock(nn.Module):
         scale_factor=None,
         out_num=1,
     ):
-        super(BasicUpdateBlock, self).__init__()
+        super().__init__()
         cor_planes = corr_levels * (2 * radius + 1) ** 2
 
         self.scale_factor = scale_factor

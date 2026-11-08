@@ -131,17 +131,17 @@ class CausalWanSelfAttention(nn.Module):
             use_memory = True
             mem_end_pos = local_start_pos - 1
             mem_start_pos = mem_end_pos - N_Q + 1
-        return dict(
-            is_bulk_forward=is_bulk_forward,
-            use_memory=use_memory,
-            q_start=q_start_pos,
-            q_last=q_last_pos,
-            local_start=local_start_pos,
-            local_end=local_end_pos,
-            mem_start=mem_start_pos,
-            mem_end=mem_end_pos,
-            sink_start=0,
-        )
+        return {
+            "is_bulk_forward": is_bulk_forward,
+            "use_memory": use_memory,
+            "q_start": q_start_pos,
+            "q_last": q_last_pos,
+            "local_start": local_start_pos,
+            "local_end": local_end_pos,
+            "mem_start": mem_start_pos,
+            "mem_end": mem_end_pos,
+            "sink_start": 0,
+        }
 
     def forward(
         self,
@@ -1375,17 +1375,17 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                 memory_kv_list = [kv] * num_blocks
         else:
             memory_kv_list = [None] * num_blocks
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-            sink_recache_after_switch=sink_recache_after_switch,
-            memory_kv=None,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+            "sink_recache_after_switch": sink_recache_after_switch,
+            "memory_kv": None,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.
@@ -1592,15 +1592,15 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             e_clean = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, aug_t.flatten()).type_as(x))
             e0_clean = self.time_projection(e_clean).unflatten(1, (6, self.dim)).unflatten(dim=0, sizes=t.shape)
             e0 = torch.cat([e0_clean, e0], dim=1)
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

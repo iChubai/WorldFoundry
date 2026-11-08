@@ -251,10 +251,7 @@ class WindowAttention3D(nn.Module):
             attn = self.softmax(attn)
         attn = self.attn_drop(attn)
 
-        if B_ < 16:
-            avg_attn = (attn.mean((1, 2)).detach(), attn.mean((1, 3)).detach())
-        else:
-            avg_attn = None
+        avg_attn = (attn.mean((1, 2)).detach(), attn.mean((1, 3)).detach()) if B_ < 16 else None
 
         x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
         x = self.proj(x)
@@ -416,10 +413,7 @@ class SwinTransformerBlock3D(nn.Module):
                 x, avg_attn = self.forward_part1(x, mask_matrix)
             x = shortcut + self.drop_path(x)
 
-        if self.use_checkpoint:
-            x = x + checkpoint.checkpoint(self.forward_part2, x)
-        else:
-            x = x + self.forward_part2(x)
+        x = x + checkpoint.checkpoint(self.forward_part2, x) if self.use_checkpoint else x + self.forward_part2(x)
 
         return x, avg_attn
 
@@ -830,9 +824,8 @@ class SwinTransformer3D(nn.Module):
 
         ## Only Support for 2X
         for key, value in model_state_dict.items():
-            if key in clean_dict:
-                if value.shape != clean_dict[key].shape:
-                    clean_dict.pop(key)
+            if key in clean_dict and value.shape != clean_dict[key].shape:
+                clean_dict.pop(key)
 
         self.load_state_dict(clean_dict, strict=strict)
 
@@ -890,10 +883,7 @@ class SwinTransformer3D(nn.Module):
         x = self.norm(x)
         x = rearrange(x, "n d h w c -> n c d h w")
 
-        if multi:
-            x = feats[:-1] + [x]
-        else:
-            x = x
+        x = feats[:-1] + [x] if multi else x
 
         if require_attn:
             return x, avg_attns
@@ -902,5 +892,5 @@ class SwinTransformer3D(nn.Module):
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""
-        super(SwinTransformer3D, self).train(mode)
+        super().train(mode)
         self._freeze_stages()

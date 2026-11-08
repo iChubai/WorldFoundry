@@ -23,8 +23,8 @@ class PoseSimOTAAssigner(SimOTAAssigner):
         cls_weight: float = 1.0,
         oks_weight: float = 0.0,
         vis_weight: float = 0.0,
-        iou_calculator: ConfigType = dict(type="BboxOverlaps2D"),
-        oks_calculator: ConfigType = dict(type="OksLoss"),
+        iou_calculator: ConfigType = {"type": "BboxOverlaps2D"},
+        oks_calculator: ConfigType = {"type": "OksLoss"},
     ):
         self.center_radius = center_radius
         self.candidate_topk = candidate_topk

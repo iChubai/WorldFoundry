@@ -48,9 +48,13 @@ class YOLOv7PAFPN(BaseYOLONeck):
         self,
         in_channels: list[int],
         out_channels: list[int],
-        block_cfg: dict = dict(
-            type="ELANBlock", middle_ratio=0.5, block_ratio=0.25, num_blocks=4, num_convs_in_block=1
-        ),
+        block_cfg: dict = {
+            "type": "ELANBlock",
+            "middle_ratio": 0.5,
+            "block_ratio": 0.25,
+            "num_blocks": 4,
+            "num_convs_in_block": 1,
+        },
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         spp_expand_ratio: float = 0.5,
@@ -60,8 +64,8 @@ class YOLOv7PAFPN(BaseYOLONeck):
         use_repconv_outs: bool = True,
         upsample_feats_cat_first: bool = False,
         freeze_all: bool = False,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = None,
     ):
         self.is_tiny_version = is_tiny_version

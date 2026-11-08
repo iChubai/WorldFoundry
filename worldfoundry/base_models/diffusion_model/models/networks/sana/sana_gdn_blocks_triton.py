@@ -319,10 +319,7 @@ class BidirectionalGDNUCPESinglePathLiteLATriton(BidirectionalGDNUCPESinglePathL
             self._cam_debug_step_counter += 1
 
         # Pre-compute shared gates once for both branches.
-        if HW is not None:
-            precomputed_gates = self._compute_frame_gates(x, HW)
-        else:
-            precomputed_gates = None
+        precomputed_gates = self._compute_frame_gates(x, HW) if HW is not None else None
 
         # Main branch — Triton-fused bidirectional scan.
         main_raw = BidirectionalGDNTriton.forward(

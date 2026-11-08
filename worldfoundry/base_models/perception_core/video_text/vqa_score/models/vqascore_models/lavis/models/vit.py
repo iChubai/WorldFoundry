@@ -416,10 +416,7 @@ class VisionTransformerEncoder(VisionTransformer, BaseEncoder):
         norm_layer_eps = cfg.get("vit_layer_norm_epsilon", -1)
         use_grad_checkpointing = cfg.get("vit_grad_ckpt", False)
 
-        if norm_layer_eps == -1:
-            norm_layer = None
-        else:
-            norm_layer = partial(nn.LayerNorm, eps=norm_layer_eps)
+        norm_layer = None if norm_layer_eps == -1 else partial(nn.LayerNorm, eps=norm_layer_eps)
 
         #     norm_layer=partial(nn.LayerNorm, eps=1e-6),
         assert vit_type in ["base", "large"], "vit parameter must be base or large"

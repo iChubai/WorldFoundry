@@ -824,12 +824,12 @@ class WanAttentionBlock(nn.Module):
         # self-attention
         x_dtype = x.dtype
         x_sa_in = (self.norm1(x).float() * (1 + e[1]) + e[0]).to(x_dtype)
-        self_attn_kwargs = dict(
-            x=x_sa_in,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=freqs,
-        )
+        self_attn_kwargs = {
+            "x": x_sa_in,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": freqs,
+        }
 
         y = self.self_attn(**self_attn_kwargs)
 
@@ -1114,14 +1114,14 @@ class WanModel(nn.Module, NativeConfigMixin):
             context = torch.concat([context_clip, context], dim=1)
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context.to(self.dtype),
-            context_lens=context_lens,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context.to(self.dtype),
+            "context_lens": context_lens,
+        }
 
         for _i, block in enumerate(self.blocks):
             if self.gradient_checkpointing:
@@ -1407,15 +1407,15 @@ class WanLinearAttentionModel(WanModel):
 
         for _i, block in enumerate(self.blocks):
             # arguments
-            kwargs = dict(
-                e=e0,
-                seq_lens=seq_lens,
-                grid_sizes=grid_sizes,
-                freqs=self.freqs,
-                context=context.to(self.dtype),
-                context_lens=context_lens,
-                block_mask=None,
-            )
+            kwargs = {
+                "e": e0,
+                "seq_lens": seq_lens,
+                "grid_sizes": grid_sizes,
+                "freqs": self.freqs,
+                "context": context.to(self.dtype),
+                "context_lens": context_lens,
+                "block_mask": None,
+            }
 
             if self.gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(block, x, **kwargs, use_reentrant=False)

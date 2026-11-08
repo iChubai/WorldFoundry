@@ -52,7 +52,7 @@ class GraphAgg(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(GraphAgg, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(128, 128, 3, padding=1)
         self.conv2 = nn.Conv2d(128, 128, 3, padding=1)
         self.relu = nn.ReLU(inplace=True)
@@ -91,7 +91,7 @@ class UpdateModule(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(UpdateModule, self).__init__()
+        super().__init__()
         cor_planes = 4 * (2 * 3 + 1) ** 2
 
         self.corr_encoder = nn.Sequential(
@@ -163,7 +163,7 @@ class DroidNet(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(DroidNet, self).__init__()
+        super().__init__()
         self.fnet = BasicEncoder(output_dim=128, norm_fn="instance")
         self.cnet = BasicEncoder(output_dim=256, norm_fn="none")
         self.update = UpdateModule()

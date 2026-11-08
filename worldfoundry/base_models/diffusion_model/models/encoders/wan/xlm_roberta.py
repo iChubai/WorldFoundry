@@ -198,18 +198,18 @@ def xlm_roberta_large(pretrained=False, return_tokenizer=False, device="cpu", **
     XLMRobertaLarge adapted from Huggingface.
     """
     # params
-    cfg = dict(
-        vocab_size=250002,
-        max_seq_len=514,
-        type_size=1,
-        pad_id=1,
-        dim=1024,
-        num_heads=16,
-        num_layers=24,
-        post_norm=True,
-        dropout=0.1,
-        eps=1e-5,
-    )
+    cfg = {
+        "vocab_size": 250002,
+        "max_seq_len": 514,
+        "type_size": 1,
+        "pad_id": 1,
+        "dim": 1024,
+        "num_heads": 16,
+        "num_layers": 24,
+        "post_norm": True,
+        "dropout": 0.1,
+        "eps": 1e-5,
+    }
     cfg.update(**kwargs)
 
     # init a model on device

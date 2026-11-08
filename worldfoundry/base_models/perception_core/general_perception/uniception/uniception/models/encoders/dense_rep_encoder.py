@@ -32,7 +32,7 @@ class ResidualBlock(nn.Module):
     "Redidual block for Dense Representation Encoder"
 
     def __init__(self, in_channels: int, out_channels: int, act_layer: type[nn.Module] = nn.GELU):
-        super(ResidualBlock, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
         self.act = act_layer()
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)

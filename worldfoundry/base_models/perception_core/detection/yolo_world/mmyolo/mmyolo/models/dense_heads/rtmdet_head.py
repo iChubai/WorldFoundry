@@ -60,8 +60,8 @@ class RTMDetSepBNHeadModule(BaseModule):
         share_conv: bool = True,
         pred_kernel_size: int = 1,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = dict(type="BN"),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN"},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -216,10 +216,10 @@ class RTMDetHead(YOLOv5Head):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(type="mmdet.MlvlPointGenerator", offset=0, strides=[8, 16, 32]),
-        bbox_coder: ConfigType = dict(type="DistancePointBBoxCoder"),
-        loss_cls: ConfigType = dict(type="mmdet.QualityFocalLoss", use_sigmoid=True, beta=2.0, loss_weight=1.0),
-        loss_bbox: ConfigType = dict(type="mmdet.GIoULoss", loss_weight=2.0),
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
+        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},
+        loss_bbox: ConfigType = {"type": "mmdet.GIoULoss", "loss_weight": 2.0},
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,
@@ -252,7 +252,7 @@ class RTMDetHead(YOLOv5Head):
         if self.train_cfg:
             self.assigner = TASK_UTILS.build(self.train_cfg.assigner)
             if self.train_cfg.get("sampler", None) is not None:
-                self.sampler = TASK_UTILS.build(self.train_cfg.sampler, default_args=dict(context=self))
+                self.sampler = TASK_UTILS.build(self.train_cfg.sampler, default_args={"context": self})
             else:
                 self.sampler = PseudoSampler(context=self)
 
@@ -357,4 +357,4 @@ class RTMDetHead(YOLOv5Head):
         else:
             loss_bbox = bbox_preds.sum() * 0
 
-        return dict(loss_cls=loss_cls, loss_bbox=loss_bbox)
+        return {"loss_cls": loss_cls, "loss_bbox": loss_bbox}

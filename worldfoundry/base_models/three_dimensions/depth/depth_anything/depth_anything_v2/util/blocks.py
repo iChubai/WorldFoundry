@@ -106,7 +106,7 @@ class FeatureFusionBlock(nn.Module):
         Args:
             features (int): number of features
         """
-        super(FeatureFusionBlock, self).__init__()
+        super().__init__()
 
         self.deconv = deconv
         self.align_corners = align_corners

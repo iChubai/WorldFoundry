@@ -69,7 +69,7 @@ class GroupAttnRPEContext(nn.Module):
     """Latent cost tokens attend to different group"""
 
     def __init__(self, dim, num_heads=8, attn_drop=0.0, proj_drop=0.0, ws=1, cfg=None, vert_c_dim=0):
-        super(GroupAttnRPEContext, self).__init__()
+        super().__init__()
         assert ws != 1
         assert cfg is not None
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
@@ -177,7 +177,7 @@ class GroupAttnRPE(nn.Module):
     """Latent cost tokens attend to different group"""
 
     def __init__(self, dim, num_heads=8, attn_drop=0.0, proj_drop=0.0, ws=1, cfg=None):
-        super(GroupAttnRPE, self).__init__()
+        super().__init__()
         assert ws != 1
         assert cfg is not None
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
@@ -273,7 +273,7 @@ class LocallyGroupedAttnRPEContext(nn.Module):
 
     def __init__(self, dim, num_heads=8, attn_drop=0.0, proj_drop=0.0, ws=1, vert_c_dim=0, encoder_latent_dim=256):
         assert ws != 1
-        super(LocallyGroupedAttnRPEContext, self).__init__()
+        super().__init__()
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
 
         self.dim = dim
@@ -473,7 +473,7 @@ class LocallyGroupedAttnRPE(nn.Module):
 
     def __init__(self, dim, num_heads=8, attn_drop=0.0, proj_drop=0.0, ws=1):
         assert ws != 1
-        super(LocallyGroupedAttnRPE, self).__init__()
+        super().__init__()
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
 
         self.dim = dim
@@ -704,7 +704,7 @@ class LocallyGroupedAttn(nn.Module):
 
     def __init__(self, dim, num_heads=8, attn_drop=0.0, proj_drop=0.0, ws=1):
         assert ws != 1
-        super(LocallyGroupedAttn, self).__init__()
+        super().__init__()
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
 
         self.dim = dim
@@ -947,7 +947,7 @@ class Block(nn.Module):
 class PosConv(nn.Module):
     # PEG  from https://arxiv.org/abs/2102.10882
     def __init__(self, in_chans, embed_dim=768, stride=1):
-        super(PosConv, self).__init__()
+        super().__init__()
         self.proj = nn.Sequential(
             nn.Conv2d(in_chans, embed_dim, 3, stride, 1, bias=True, groups=embed_dim),
         )
@@ -1071,7 +1071,7 @@ class Twins(nn.Module):
 
     @torch.jit.ignore
     def no_weight_decay(self):
-        return set(["pos_block." + n for n, p in self.pos_block.named_parameters()])
+        return {"pos_block." + n for n, p in self.pos_block.named_parameters()}
 
     def get_classifier(self):
         return self.head

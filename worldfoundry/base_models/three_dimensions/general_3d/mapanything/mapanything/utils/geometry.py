@@ -1125,10 +1125,7 @@ def depthmap_to_pts3d(depth, pseudo_focal, pp=None, **_):
         pseudo_focalx = pseudo_focaly = pseudo_focal
     elif len(pseudo_focal.shape) == 4:  # [B,2,H,W] or [B,1,H,W]
         pseudo_focalx = pseudo_focal[:, 0]
-        if pseudo_focal.shape[1] == 2:
-            pseudo_focaly = pseudo_focal[:, 1]
-        else:
-            pseudo_focaly = pseudo_focalx
+        pseudo_focaly = pseudo_focal[:, 1] if pseudo_focal.shape[1] == 2 else pseudo_focalx
     else:
         raise NotImplementedError("Error, unknown input focal shape format.")
 
@@ -1379,10 +1376,7 @@ def crop_to_aspect_ratio(image, depth, camera_params, target_ratio=1.5):
         cropped_image = image.crop((left, 0, right, height))
 
         # Crop depth
-        if len(depth.shape) == 3:
-            cropped_depth = depth[:, left:right, :]
-        else:
-            cropped_depth = depth[:, left:right]
+        cropped_depth = depth[:, left:right, :] if len(depth.shape) == 3 else depth[:, left:right]
 
         # Adjust camera parameters
         new_cx = cx - left
@@ -1398,10 +1392,7 @@ def crop_to_aspect_ratio(image, depth, camera_params, target_ratio=1.5):
         cropped_image = image.crop((0, top, width, bottom))
 
         # Crop depth
-        if len(depth.shape) == 3:
-            cropped_depth = depth[top:bottom, :, :]
-        else:
-            cropped_depth = depth[top:bottom, :]
+        cropped_depth = depth[top:bottom, :, :] if len(depth.shape) == 3 else depth[top:bottom, :]
 
         # Adjust camera parameters
         new_cy = cy - top

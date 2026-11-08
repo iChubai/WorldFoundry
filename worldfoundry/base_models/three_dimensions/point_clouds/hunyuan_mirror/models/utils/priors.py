@@ -128,10 +128,7 @@ def normalize_depth(depth, eps=1e-6, min_percentile=1, max_percentile=99):
 
         # Filter out zero values if needed
         non_zero_mask = depth_flat > 0
-        if non_zero_mask.sum() > 0:
-            values_to_use = depth_flat[non_zero_mask]
-        else:
-            values_to_use = depth_flat
+        values_to_use = depth_flat[non_zero_mask] if non_zero_mask.sum() > 0 else depth_flat
 
         # Only calculate percentiles when there are enough values
         if values_to_use.numel() > 100:  # Ensure enough samples for percentile calculation

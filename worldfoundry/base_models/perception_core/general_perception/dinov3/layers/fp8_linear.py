@@ -96,14 +96,8 @@ try:
                 grad_a = matmul(grad_out, amax_grad_out, b, amax_b, None)
             else:
                 grad_a = None
-            if ctx.b_requires_grad:
-                grad_b = grad_out.t() @ a
-            else:
-                grad_b = None
-            if ctx.bias_requires_grad:
-                grad_bias = grad_out.sum(dim=0)
-            else:
-                grad_bias = None
+            grad_b = grad_out.t() @ a if ctx.b_requires_grad else None
+            grad_bias = grad_out.sum(dim=0) if ctx.bias_requires_grad else None
             return grad_a, grad_b, grad_bias
 
     class Fp8Linear(torch.nn.Linear):

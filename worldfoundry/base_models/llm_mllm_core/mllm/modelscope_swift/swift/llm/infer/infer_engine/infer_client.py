@@ -75,9 +75,8 @@ class InferClient(InferEngine):
 
     async def get_model_list_async(self) -> ModelList:
         url = f"{self.base_url.rstrip('/')}/models"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, **self._get_request_kwargs()) as resp:
-                resp_obj = await resp.json()
+        async with aiohttp.ClientSession() as session, session.get(url, **self._get_request_kwargs()) as resp:
+            resp_obj = await resp.json()
         return from_dict(ModelList, resp_obj)
 
     def infer(

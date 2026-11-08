@@ -75,13 +75,13 @@ class HunyuanVideo15Resources:
                 byT5_google_path = "google/byt5-small"
             multilingual_prompt_format_color_path = os.path.join(glyph_root, "assets/color_idx.json")
             multilingual_prompt_format_font_path = os.path.join(glyph_root, "assets/multilingual_10-lang_idx.json")
-            byt5_args = dict(
-                byT5_google_path=byT5_google_path,
-                byT5_ckpt_path=os.path.join(glyph_root, "checkpoints/byt5_model.pt"),
-                multilingual_prompt_format_color_path=multilingual_prompt_format_color_path,
-                multilingual_prompt_format_font_path=multilingual_prompt_format_font_path,
-                byt5_max_length=byt5_max_length,
-            )
+            byt5_args = {
+                "byT5_google_path": byT5_google_path,
+                "byT5_ckpt_path": os.path.join(glyph_root, "checkpoints/byt5_model.pt"),
+                "multilingual_prompt_format_color_path": multilingual_prompt_format_color_path,
+                "multilingual_prompt_format_font_path": multilingual_prompt_format_font_path,
+                "byt5_max_length": byt5_max_length,
+            }
             byt5_kwargs = load_glyph_byT5_v2(byt5_args, device=device)
             prompt_format = MultilingualPromptFormat(
                 font_path=multilingual_prompt_format_font_path, color_path=multilingual_prompt_format_color_path

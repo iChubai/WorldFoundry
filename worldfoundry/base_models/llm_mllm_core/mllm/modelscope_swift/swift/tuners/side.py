@@ -146,7 +146,7 @@ class SideModule(nn.Module, ActivationMixin):
     """
 
     def __init__(self, dim, adapter_name, module_key, side_module_name="fcn4"):
-        super(SideModule, self).__init__()
+        super().__init__()
         super(nn.Module, self).__init__(module_key)
         self.adapter_name = adapter_name
 
@@ -187,7 +187,7 @@ class FCN4(nn.Module):
     """The implementation of simple FCN4 network for side network."""
 
     def __init__(self, out_dims=-1, **kwargs):
-        super(FCN4, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False, dilation=1), nn.GroupNorm(2, 16), nn.ReLU()

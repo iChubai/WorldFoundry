@@ -168,15 +168,15 @@ def plot_curve(lr_list, args, param_name, iters_per_epoch, by_epoch=True):
 def simulate_train(data_loader, cfg, by_epoch):
     model = SimpleModel()
     param_record_hook = ParamRecordHook(by_epoch=by_epoch)
-    default_hooks = dict(
-        param_scheduler=cfg.default_hooks["param_scheduler"],
-        runtime_info=None,
-        timer=None,
-        logger=None,
-        checkpoint=None,
-        sampler_seed=None,
-        param_record=param_record_hook,
-    )
+    default_hooks = {
+        "param_scheduler": cfg.default_hooks["param_scheduler"],
+        "runtime_info": None,
+        "timer": None,
+        "logger": None,
+        "checkpoint": None,
+        "sampler_seed": None,
+        "param_record": param_record_hook,
+    }
 
     runner = Runner(
         model=model,
@@ -194,9 +194,11 @@ def simulate_train(data_loader, cfg, by_epoch):
 
     runner.train()
 
-    param_dict = dict(
-        lr=param_record_hook.lr_list, momentum=param_record_hook.momentum_list, wd=param_record_hook.wd_list
-    )
+    param_dict = {
+        "lr": param_record_hook.lr_list,
+        "momentum": param_record_hook.momentum_list,
+        "wd": param_record_hook.wd_list,
+    }
 
     return param_dict
 

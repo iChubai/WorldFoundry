@@ -116,10 +116,7 @@ def inject_low_rank_branches(model: nn.Module) -> int:
             continue
         parent, child = _parent_and_child(model, module_name)
         replacement: nn.Module
-        if isinstance(module, nn.Linear):
-            replacement = LowRankLinear(module)
-        else:
-            replacement = LowRankConv2d(module)
+        replacement = LowRankLinear(module) if isinstance(module, nn.Linear) else LowRankConv2d(module)
         setattr(parent, child, replacement)
         count += 1
     if count != EXPECTED_LOW_RANK_MODULES:

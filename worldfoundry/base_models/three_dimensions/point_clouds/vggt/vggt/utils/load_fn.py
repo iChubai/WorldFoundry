@@ -88,10 +88,9 @@ def load_and_preprocess_images_square(image_path_list, target_size=1024):
     original_coords = torch.from_numpy(np.array(original_coords)).float()
 
     # Add additional dimension if single image to ensure correct shape
-    if len(image_path_list) == 1:
-        if images.dim() == 3:
-            images = images.unsqueeze(0)
-            original_coords = original_coords.unsqueeze(0)
+    if len(image_path_list) == 1 and images.dim() == 3:
+        images = images.unsqueeze(0)
+        original_coords = original_coords.unsqueeze(0)
 
     return images, original_coords
 

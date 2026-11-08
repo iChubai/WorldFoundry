@@ -68,7 +68,7 @@ def format_coco_annotations(points: list, image_id: int, annotations_id: int, ca
     Return:
         annotation_info (dict): COCO annotation data.
     """
-    annotation_info = dict()
+    annotation_info = {}
     annotation_info["iscrowd"] = 0
     annotation_info["category_id"] = category_id
     annotation_info["id"] = annotations_id
@@ -154,7 +154,7 @@ def parse_labelme_to_coco(image_dir: str, labels_root: str, all_classes_id: dict
     image_id = 0
     annotations_id = 0
     if all_classes_id is None:
-        category_to_id = dict()
+        category_to_id = {}
         categories_labels = []
     else:
         category_to_id = all_classes_id
@@ -246,7 +246,7 @@ def convert_labelme_to_coco(image_dir: str, labels_dir: str, out_path: str, clas
     if class_id_txt is not None:
         assert Path(class_id_txt).suffix == ".txt"
 
-        all_classes_id = dict()
+        all_classes_id = {}
         with open(class_id_txt, encoding="utf-8") as f:
             txt_lines = f.read().splitlines()
         assert len(txt_lines) > 0

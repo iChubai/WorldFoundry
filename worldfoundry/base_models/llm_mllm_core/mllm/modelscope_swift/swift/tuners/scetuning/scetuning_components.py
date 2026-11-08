@@ -75,7 +75,7 @@ class SCEAdapter(nn.Module):
         zero_init_last=True,
         use_bias=True,
     ):
-        super(SCEAdapter, self).__init__()
+        super().__init__()
         self.dim = dim
         self.adapter_length = adapter_length
         self.adapter_type = adapter_type

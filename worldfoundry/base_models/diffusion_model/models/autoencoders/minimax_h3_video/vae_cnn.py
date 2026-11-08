@@ -146,17 +146,11 @@ class ResnetBlock3D(nn.Module):
     def forward(self, x, zq=None):
         h = x
 
-        if self.use_fused_norm:
-            h = self.norm1(h, zq)
-        else:
-            h = norm_silu(h, self.norm1, zq)
+        h = self.norm1(h, zq) if self.use_fused_norm else norm_silu(h, self.norm1, zq)
 
         h = self.conv1(h)
 
-        if self.use_fused_norm:
-            h = self.norm2(h, zq)
-        else:
-            h = norm_silu(h, self.norm2, zq)
+        h = self.norm2(h, zq) if self.use_fused_norm else norm_silu(h, self.norm2, zq)
 
         h = self.conv2(h)
 
@@ -204,11 +198,11 @@ class EncoderFCN3D(nn.Module):
         block_in = [block_mid[0]] + block_mid[:-1]
         block_out = block_mid
 
-        conv_kwargs = dict(
-            padding_mode=padding_mode,
-            padding_mode_t=padding_mode_t,
-            causal=causal,
-        )
+        conv_kwargs = {
+            "padding_mode": padding_mode,
+            "padding_mode_t": padding_mode_t,
+            "causal": causal,
+        }
 
         self.conv_in = BaseConv3d(in_channels, block_in[0], kernel_size=3, padding=1, **conv_kwargs)
 
@@ -273,10 +267,7 @@ class EncoderFCN3D(nn.Module):
             if hasattr(self.down[i_level], "downsample"):
                 h = self.down[i_level].downsample(h)
 
-        if self.use_fused_norm:
-            h = self.norm_out(h, zq)
-        else:
-            h = norm_silu(h, self.norm_out, zq)
+        h = self.norm_out(h, zq) if self.use_fused_norm else norm_silu(h, self.norm_out, zq)
 
         h = self.conv_out(h)
         return h

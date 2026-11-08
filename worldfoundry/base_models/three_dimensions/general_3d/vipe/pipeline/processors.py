@@ -630,7 +630,7 @@ class MultiviewDepthProcessor(StreamProcessor):
                         *[self.keyframes_data[t].dav3_conditions() for t in sw_keyframe_inds], strict=False
                     )
                 else:
-                    kf_images, kf_exts, kf_ints = tuple(), tuple(), tuple()
+                    kf_images, kf_exts, kf_ints = (), (), ()
 
                 # Perform inference
                 dav3_inference_result = self.dav3_api.inference(

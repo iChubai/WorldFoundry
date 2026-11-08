@@ -107,10 +107,7 @@ class LongShortTermTransformer(nn.Module):
         layers = []
         for idx in range(num_layers):
             if droppath_scaling:
-                if num_layers == 1:
-                    droppath_rate = 0
-                else:
-                    droppath_rate = droppath * idx / (num_layers - 1)
+                droppath_rate = 0 if num_layers == 1 else droppath * idx / (num_layers - 1)
             else:
                 droppath_rate = droppath
             layers.append(
@@ -248,10 +245,7 @@ class DualBranchGPM(nn.Module):
         layers = []
         for idx in range(num_layers):
             if droppath_scaling:
-                if num_layers == 1:
-                    droppath_rate = 0
-                else:
-                    droppath_rate = droppath * idx / (num_layers - 1)
+                droppath_rate = 0 if num_layers == 1 else droppath * idx / (num_layers - 1)
             else:
                 droppath_rate = droppath
             layers.append(
@@ -384,10 +378,7 @@ class LongShortTermTransformerBlock(nn.Module):
         self.long_term_attn = MultiheadAttention(d_model, att_nhead, use_linear=False, dropout=lt_dropout)
 
         # MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
-        if enable_corr:
-            MultiheadLocalAttention = MultiheadLocalAttentionV2
-        else:
-            MultiheadLocalAttention = MultiheadLocalAttentionV3
+        MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
         self.short_term_attn = MultiheadLocalAttention(
             d_model,
             att_nhead,
@@ -471,10 +462,7 @@ class LongShortTermTransformerBlock(nn.Module):
         tgt2 = self.long_term_attn(curr_Q, global_K, global_V)[0]
         tgt3 = self.short_term_attn(local_Q, local_K, local_V)[0]
 
-        if self.droppath_lst:
-            tgt = tgt + self.droppath(tgt2 + tgt3)
-        else:
-            tgt = tgt + self.lst_dropout(tgt2 + tgt3)
+        tgt = tgt + self.droppath(tgt2 + tgt3) if self.droppath_lst else tgt + self.lst_dropout(tgt2 + tgt3)
 
         # Feed-forward
         _tgt = self.norm3(tgt)
@@ -552,10 +540,7 @@ class LongShortTermTransformerBlockV2(nn.Module):
         self.long_term_attn = MultiheadAttention(d_model, att_nhead, use_linear=False, dropout=lt_dropout)
 
         # MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
-        if enable_corr:
-            MultiheadLocalAttention = MultiheadLocalAttentionV2
-        else:
-            MultiheadLocalAttention = MultiheadLocalAttentionV3
+        MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
         self.short_term_attn = MultiheadLocalAttention(
             d_model,
             att_nhead,
@@ -637,10 +622,7 @@ class LongShortTermTransformerBlockV2(nn.Module):
         tgt2 = self.long_term_attn(curr_Q, global_K, global_V)[0]
         tgt3 = self.short_term_attn(local_Q, local_K, local_V)[0]
 
-        if self.droppath_lst:
-            tgt = tgt + self.droppath(tgt2 + tgt3)
-        else:
-            tgt = tgt + self.lst_dropout(tgt2 + tgt3)
+        tgt = tgt + self.droppath(tgt2 + tgt3) if self.droppath_lst else tgt + self.lst_dropout(tgt2 + tgt3)
 
         # Feed-forward
         _tgt = self.norm3(tgt)

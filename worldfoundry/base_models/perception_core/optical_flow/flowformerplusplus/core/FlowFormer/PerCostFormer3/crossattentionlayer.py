@@ -17,7 +17,7 @@ class CrossAttentionLayer(nn.Module):
         drop_path=0.0,
         dropout=0.0,
     ):
-        super(CrossAttentionLayer, self).__init__()
+        super().__init__()
         assert qk_dim % num_heads == 0, f"dim {qk_dim} should be divided by num_heads {num_heads}."
         assert v_dim % num_heads == 0, f"dim {v_dim} should be divided by num_heads {num_heads}."
         """
@@ -84,7 +84,7 @@ class CrossAttentionLayer_two_level(nn.Module):
         drop_path=0.0,
         dropout=0.0,
     ):
-        super(CrossAttentionLayer_two_level, self).__init__()
+        super().__init__()
         assert qk_dim % num_heads == 0, f"dim {qk_dim} should be divided by num_heads {num_heads}."
         assert v_dim % num_heads == 0, f"dim {v_dim} should be divided by num_heads {num_heads}."
         """
@@ -173,7 +173,7 @@ class CrossAttentionLayer_convk3s2(nn.Module):
         drop_path=0.0,
         dropout=0.0,
     ):
-        super(CrossAttentionLayer_convk3s2, self).__init__()
+        super().__init__()
         assert qk_dim % num_heads == 0, f"dim {qk_dim} should be divided by num_heads {num_heads}."
         assert v_dim % num_heads == 0, f"dim {v_dim} should be divided by num_heads {num_heads}."
         """
@@ -316,7 +316,7 @@ class CrossAttentionLayer_two_level_rep(nn.Module):
         drop_path=0.0,
         dropout=0.0,
     ):
-        super(CrossAttentionLayer_two_level_rep, self).__init__()
+        super().__init__()
         assert qk_dim % num_heads == 0, f"dim {qk_dim} should be divided by num_heads {num_heads}."
         assert v_dim % num_heads == 0, f"dim {v_dim} should be divided by num_heads {num_heads}."
         """
@@ -418,7 +418,7 @@ class CrossAttentionLayer_34(nn.Module):
         drop_path=0.0,
         dropout=0.0,
     ):
-        super(CrossAttentionLayer_34, self).__init__()
+        super().__init__()
         assert qk_dim % num_heads == 0, f"dim {qk_dim} should be divided by num_heads {num_heads}."
         assert v_dim % num_heads == 0, f"dim {v_dim} should be divided by num_heads {num_heads}."
         """

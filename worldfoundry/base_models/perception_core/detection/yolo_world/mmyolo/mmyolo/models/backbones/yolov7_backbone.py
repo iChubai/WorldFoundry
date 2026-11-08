@@ -41,22 +41,65 @@ class YOLOv7Backbone(BaseBackbone):
             list[:obj:`ConfigDict`]): Initialization config dict.
     """
 
-    _tiny_stage1_cfg = dict(type="TinyDownSampleBlock", middle_ratio=0.5)
-    _tiny_stage2_4_cfg = dict(type="TinyDownSampleBlock", middle_ratio=1.0)
-    _l_expand_channel_2x = dict(type="ELANBlock", middle_ratio=0.5, block_ratio=0.5, num_blocks=2, num_convs_in_block=2)
-    _l_no_change_channel = dict(
-        type="ELANBlock", middle_ratio=0.25, block_ratio=0.25, num_blocks=2, num_convs_in_block=2
-    )
-    _x_expand_channel_2x = dict(type="ELANBlock", middle_ratio=0.4, block_ratio=0.4, num_blocks=3, num_convs_in_block=2)
-    _x_no_change_channel = dict(type="ELANBlock", middle_ratio=0.2, block_ratio=0.2, num_blocks=3, num_convs_in_block=2)
-    _w_no_change_channel = dict(type="ELANBlock", middle_ratio=0.5, block_ratio=0.5, num_blocks=2, num_convs_in_block=2)
-    _e_no_change_channel = dict(type="ELANBlock", middle_ratio=0.4, block_ratio=0.4, num_blocks=3, num_convs_in_block=2)
-    _d_no_change_channel = dict(
-        type="ELANBlock", middle_ratio=1 / 3, block_ratio=1 / 3, num_blocks=4, num_convs_in_block=2
-    )
-    _e2e_no_change_channel = dict(
-        type="EELANBlock", num_elan_block=2, middle_ratio=0.4, block_ratio=0.4, num_blocks=3, num_convs_in_block=2
-    )
+    _tiny_stage1_cfg = {"type": "TinyDownSampleBlock", "middle_ratio": 0.5}
+    _tiny_stage2_4_cfg = {"type": "TinyDownSampleBlock", "middle_ratio": 1.0}
+    _l_expand_channel_2x = {
+        "type": "ELANBlock",
+        "middle_ratio": 0.5,
+        "block_ratio": 0.5,
+        "num_blocks": 2,
+        "num_convs_in_block": 2,
+    }
+    _l_no_change_channel = {
+        "type": "ELANBlock",
+        "middle_ratio": 0.25,
+        "block_ratio": 0.25,
+        "num_blocks": 2,
+        "num_convs_in_block": 2,
+    }
+    _x_expand_channel_2x = {
+        "type": "ELANBlock",
+        "middle_ratio": 0.4,
+        "block_ratio": 0.4,
+        "num_blocks": 3,
+        "num_convs_in_block": 2,
+    }
+    _x_no_change_channel = {
+        "type": "ELANBlock",
+        "middle_ratio": 0.2,
+        "block_ratio": 0.2,
+        "num_blocks": 3,
+        "num_convs_in_block": 2,
+    }
+    _w_no_change_channel = {
+        "type": "ELANBlock",
+        "middle_ratio": 0.5,
+        "block_ratio": 0.5,
+        "num_blocks": 2,
+        "num_convs_in_block": 2,
+    }
+    _e_no_change_channel = {
+        "type": "ELANBlock",
+        "middle_ratio": 0.4,
+        "block_ratio": 0.4,
+        "num_blocks": 3,
+        "num_convs_in_block": 2,
+    }
+    _d_no_change_channel = {
+        "type": "ELANBlock",
+        "middle_ratio": 1 / 3,
+        "block_ratio": 1 / 3,
+        "num_blocks": 4,
+        "num_convs_in_block": 2,
+    }
+    _e2e_no_change_channel = {
+        "type": "EELANBlock",
+        "num_elan_block": 2,
+        "middle_ratio": 0.4,
+        "block_ratio": 0.4,
+        "num_blocks": 3,
+        "num_convs_in_block": 2,
+    }
 
     # From left to right:
     # in_channels, out_channels, Block_params
@@ -118,8 +161,8 @@ class YOLOv7Backbone(BaseBackbone):
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         plugins: dict | list[dict] = None,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         norm_eval: bool = False,
         init_cfg: OptMultiConfig = None,
     ):
@@ -223,9 +266,8 @@ class YOLOv7Backbone(BaseBackbone):
         stage = []
         if self.arch in ["W", "E", "D", "E2E"]:
             stage_block_cfg["in_channels"] = out_channels
-        elif self.arch in ["L", "X"]:
-            if stage_idx == 0:
-                stage_block_cfg["in_channels"] = out_channels // 2
+        elif self.arch in ["L", "X"] and stage_idx == 0:
+            stage_block_cfg["in_channels"] = out_channels // 2
 
         downsample_layer = self._build_downsample_layer(stage_idx, in_channels, out_channels)
         stage.append(MODELS.build(stage_block_cfg))
@@ -244,10 +286,7 @@ class YOLOv7Backbone(BaseBackbone):
                 in_channels, out_channels, 3, stride=2, padding=1, norm_cfg=self.norm_cfg, act_cfg=self.act_cfg
             )
         elif self.arch == "Tiny":
-            if stage_idx != 0:
-                downsample_layer = nn.MaxPool2d(2, 2)
-            else:
-                downsample_layer = None
+            downsample_layer = nn.MaxPool2d(2, 2) if stage_idx != 0 else None
         elif self.arch in ["L", "X"]:
             if stage_idx == 0:
                 downsample_layer = ConvModule(

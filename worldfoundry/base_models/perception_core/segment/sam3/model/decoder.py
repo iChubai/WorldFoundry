@@ -1579,10 +1579,7 @@ class TransformerEncoderDecoupledCrossAttention(nn.Module):
                 act_ckpt_enable=self.training and self.use_act_checkpoint,
             )
 
-        if self.use_image_in_output:
-            normed_output = self.norm(output + image)
-        else:
-            normed_output = self.norm(output)
+        normed_output = self.norm(output + image) if self.use_image_in_output else self.norm(output)
 
         if self.batch_first:
             # Convert back to seq first

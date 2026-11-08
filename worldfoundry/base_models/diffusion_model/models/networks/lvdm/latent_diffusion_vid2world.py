@@ -239,7 +239,7 @@ class DDPM(pl.LightningModule):
                 if context is not None:
                     mainlogger.info(f"{context}: Restored training weights")
 
-    def init_from_ckpt(self, path, ignore_keys=list(), only_model=False):
+    def init_from_ckpt(self, path, ignore_keys=[], only_model=False):
         """Init from ckpt.
 
         Args:
@@ -579,7 +579,7 @@ class LatentDiffusion(DDPM):
         self.encoder_type = encoder_type
         assert encoder_type in ["2d", "3d"]
         self.uncond_prob = uncond_prob
-        self.classifier_free_guidance = True if uncond_prob > 0 else False
+        self.classifier_free_guidance = uncond_prob > 0
         assert uncond_type in ["zero_embed", "empty_seq"]
         self.uncond_type = uncond_type
 
@@ -777,7 +777,7 @@ class LatentDiffusion(DDPM):
             for i, _ci in enumerate(cond):
                 if random.random() < self.uncond_prob:
                     cond[i] = ""
-        if isinstance(cond, dict) or isinstance(cond, list):
+        if isinstance(cond, (dict, list)):
             cond_emb = self.get_learned_conditioning(cond)
         else:
             cond_emb = self.get_learned_conditioning(cond.to(self.device))
@@ -1008,10 +1008,7 @@ class LatentDiffusion(DDPM):
         device = self.betas.device
         b = shape[0]
         # sample an initial noise
-        if x_T is None:
-            img = torch.randn(shape, device=device)
-        else:
-            img = x_T
+        img = torch.randn(shape, device=device) if x_T is None else x_T
 
         intermediates = [img]
         if timesteps is None:
@@ -1086,7 +1083,7 @@ class LatentDiffusion(DDPM):
                 cond = {
                     key: cond[key][:batch_size]
                     if not isinstance(cond[key], list)
-                    else list(map(lambda x: x[:batch_size], cond[key]))
+                    else [x[:batch_size] for x in cond[key]]
                     for key in cond
                 }
             else:
@@ -1229,7 +1226,7 @@ class LatentVisualDiffusion(LatentDiffusion):
         ## get caption condition
         cond_input = batch[self.cond_stage_key]
 
-        if isinstance(cond_input, dict) or isinstance(cond_input, list):
+        if isinstance(cond_input, (dict, list)):
             cond_emb = self.get_learned_conditioning(cond_input)
         else:
             cond_emb = self.get_learned_conditioning(cond_input.to(self.device))
@@ -1379,17 +1376,11 @@ class DiffusionWrapper(pl.LightningModule):
             out = self.diffusion_model(xc, t, context=None, s=s, mask=mask, kv_cache_info=kv_cache_info)
         elif self.conditioning_key == "concat-adm-mask":
             # assert s is not None
-            if c_concat is not None:
-                xc = torch.cat([x] + c_concat, dim=1)
-            else:
-                xc = x
+            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x
             out = self.diffusion_model(xc, t, context=None, y=s, mask=mask, kv_cache_info=kv_cache_info)
         elif self.conditioning_key == "hybrid-adm-mask":
             cc = torch.cat(c_crossattn, 1)
-            if c_concat is not None:
-                xc = torch.cat([x] + c_concat, dim=1)
-            else:
-                xc = x
+            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x
             out = self.diffusion_model(xc, t, context=cc, y=s, mask=mask, kv_cache_info=kv_cache_info)
         elif self.conditioning_key == "hybrid-time-adm":  # adm means y, e.g., class index
             # assert s is not None

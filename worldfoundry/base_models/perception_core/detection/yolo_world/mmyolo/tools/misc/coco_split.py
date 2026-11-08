@@ -72,10 +72,7 @@ def split_coco_dataset(coco_json_path: str, save_dir: str, ratios: list, shuffle
 
     # split each dataset
     train_image_ids = coco_image_ids[:train_image_num]
-    if val_image_num != 0:
-        val_image_ids = coco_image_ids[train_image_num : train_image_num + val_image_num]
-    else:
-        val_image_ids = None
+    val_image_ids = coco_image_ids[train_image_num : train_image_num + val_image_num] if val_image_num != 0 else None
     test_image_ids = coco_image_ids[train_image_num + val_image_num :]
 
     # Save new json

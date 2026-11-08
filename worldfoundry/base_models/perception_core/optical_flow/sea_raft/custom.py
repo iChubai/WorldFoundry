@@ -184,10 +184,7 @@ def main():
     else:
         model = RAFT.from_pretrained(args.url, args=args)
 
-    if args.device == "cuda":
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
+    device = torch.device("cuda") if args.device == "cuda" else torch.device("cpu")
     model = model.to(device)
     model.eval()
     demo_custom(model, args, device=device)

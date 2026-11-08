@@ -30,7 +30,7 @@ class Bottleneck(Module):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         self.conv1 = conv1x1(inplanes, planes)
         self.bn1 = BatchNorm2d(planes)
         self.conv2 = conv3x3(planes, planes, stride)
@@ -73,7 +73,7 @@ class ResNet(Module):
         block: block function
         layers: layers in each block
         """
-        super(ResNet, self).__init__()
+        super().__init__()
         assert input_size[0] in [112, 224], "input_size should be [112, 112] or [224, 224]"
         self.inplanes = 64
         self.conv1 = Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)

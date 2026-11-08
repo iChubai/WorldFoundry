@@ -36,10 +36,7 @@ def torch_dfs(model: nn.Module, parent_name="root"):
     modules.append(model)
 
     for name, child in model.named_children():
-        if parent_name:
-            child_name = f"{parent_name}.{name}"
-        else:
-            child_name = name
+        child_name = f"{parent_name}.{name}" if parent_name else name
         child_modules, child_names = torch_dfs(child, child_name)
         module_names += child_names
         modules += child_modules

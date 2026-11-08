@@ -98,18 +98,9 @@ class Attention(nn.Module):
         if (q.dtype == torch.bfloat16 or q.dtype == torch.float16) and (
             flash_attn_func_v3 is not None or flash_attn_func_v2 is not None
         ):
-            if q.is_contiguous():
-                q = q.transpose(1, 2)
-            else:
-                q = q.transpose(1, 2).contiguous()
-            if k.is_contiguous():
-                k = k.transpose(1, 2)
-            else:
-                k = k.transpose(1, 2).contiguous()
-            if v.is_contiguous():
-                v = v.transpose(1, 2)
-            else:
-                v = v.transpose(1, 2).contiguous()
+            q = q.transpose(1, 2) if q.is_contiguous() else q.transpose(1, 2).contiguous()
+            k = k.transpose(1, 2) if k.is_contiguous() else k.transpose(1, 2).contiguous()
+            v = v.transpose(1, 2) if v.is_contiguous() else v.transpose(1, 2).contiguous()
             if _USE_FLASH_ATTN_V3:
                 x = flash_attn_func_v3(q, k, v)
             else:
@@ -122,10 +113,7 @@ class Attention(nn.Module):
                 x = x[0]
             if not isinstance(x, Tensor):
                 raise TypeError(f"FlashAttention returned {type(x)!r}, expected a tensor.")
-            if x.is_contiguous():
-                x = x.transpose(1, 2)
-            else:
-                x = x.transpose(1, 2).contiguous()
+            x = x.transpose(1, 2) if x.is_contiguous() else x.transpose(1, 2).contiguous()
         else:
             x = _worldfoundry_scaled_dot_product_attention(
                 q, k, v, dropout_p=self.attn_drop.p if self.training else 0.0

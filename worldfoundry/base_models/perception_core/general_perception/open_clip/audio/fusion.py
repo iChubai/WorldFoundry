@@ -16,7 +16,7 @@ class DAF(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(DAF, self).__init__()
+        super().__init__()
 
     def forward(self, x, residual):
         """Forward.
@@ -41,7 +41,7 @@ class iAFF(nn.Module):
             r: The r.
             type: The type.
         """
-        super(iAFF, self).__init__()
+        super().__init__()
         inter_channels = int(channels // r)
 
         if type == "1D":
@@ -164,7 +164,7 @@ class AFF(nn.Module):
             r: The r.
             type: The type.
         """
-        super(AFF, self).__init__()
+        super().__init__()
         inter_channels = int(channels // r)
 
         if type == "1D":

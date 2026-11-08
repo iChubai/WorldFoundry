@@ -14,7 +14,7 @@ class ConvGRU(nn.Module):
             h_planes: The h planes.
             i_planes: The i planes.
         """
-        super(ConvGRU, self).__init__()
+        super().__init__()
         self.do_checkpoint = False
         self.convz = nn.Conv2d(h_planes + i_planes, h_planes, 3, padding=1)
         self.convr = nn.Conv2d(h_planes + i_planes, h_planes, 3, padding=1)

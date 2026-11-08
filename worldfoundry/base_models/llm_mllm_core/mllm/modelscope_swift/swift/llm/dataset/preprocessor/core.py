@@ -3,7 +3,7 @@ import ast
 import os
 from collections import Counter
 from collections.abc import Callable
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any, Union
 
 import numpy as np
@@ -334,18 +334,15 @@ class RowPreprocessor:
         dataset = self.prepare_dataset(dataset)
         dataset = self._cast_pil_image(dataset)
 
-        ignore_max_length_error = True if isinstance(dataset, HfDataset) and num_proc > 1 else False
+        ignore_max_length_error = bool(isinstance(dataset, HfDataset) and num_proc > 1)
         keep_columns = ["channel"]
-        with self._patch_arrow_writer(), safe_ddp_context(None, True):
-            try:
-                dataset_mapped = dataset.map(
-                    self.batched_preprocess,
-                    fn_kwargs={"strict": strict, "ignore_max_length_error": ignore_max_length_error},
-                    remove_columns=[col for col in dataset.features.keys() if col not in keep_columns],
-                    **map_kwargs,
-                )
-            except NotImplementedError:
-                pass
+        with self._patch_arrow_writer(), safe_ddp_context(None, True), suppress(NotImplementedError):
+            dataset_mapped = dataset.map(
+                self.batched_preprocess,
+                fn_kwargs={"strict": strict, "ignore_max_length_error": ignore_max_length_error},
+                remove_columns=[col for col in dataset.features.keys() if col not in keep_columns],
+                **map_kwargs,
+            )
         if isinstance(dataset_mapped, HfDataset) and len(dataset) != len(dataset_mapped):
             logger.info(
                 f"Dataset filtered, origin length: {len(dataset)}, filtered dataset length: {len(dataset_mapped)}"
@@ -375,15 +372,14 @@ class ResponsePreprocessor(RowPreprocessor):
 
     def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         response = row.pop("response", None)
-        if response is not None:
-            if isinstance(response, (list, tuple)):
-                from transformers.utils import strtobool
+        if response is not None and isinstance(response, (list, tuple)):
+            from transformers.utils import strtobool
 
-                # sometimes response is a list, pick one randomly
-                if strtobool(os.environ.get("RANDOM_DATASET_RESPONSE", "True")):
-                    response = self.random_state.choice(response)
-                else:
-                    response = response[0]
+            # sometimes response is a list, pick one randomly
+            if strtobool(os.environ.get("RANDOM_DATASET_RESPONSE", "True")):
+                response = self.random_state.choice(response)
+            else:
+                response = response[0]
         history = row.pop("history", None) or []
         query = row.pop("query", None)
         system = row.pop("system", None)
@@ -398,10 +394,7 @@ class ResponsePreprocessor(RowPreprocessor):
 class AlpacaPreprocessor(ResponsePreprocessor):
     @classmethod
     def concat_inst_input(cls, instruction, input_):
-        if instruction and input_:
-            query = f"{instruction}\n{input_}"
-        else:
-            query = instruction or input_
+        query = f"{instruction}\n{input_}" if instruction and input_ else instruction or input_
         assert isinstance(query, str), f"query: {query}"
         return query
 

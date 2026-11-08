@@ -211,7 +211,7 @@ class DropPath(nn.Module):
             drop_prob: The drop prob.
             batch_dim: The batch dim.
         """
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
         self.batch_dim = batch_dim
 
@@ -250,7 +250,7 @@ class DropOutLogit(nn.Module):
         Args:
             drop_prob: The drop prob.
         """
-        super(DropOutLogit, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):

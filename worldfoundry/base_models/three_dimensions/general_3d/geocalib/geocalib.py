@@ -131,7 +131,7 @@ class GeoCalib(nn.Module):
     def flexible_load(self, state_dict: dict[str, torch.Tensor]) -> None:
         """Load a checkpoint with flexible key names."""
         dict_params = set(state_dict.keys())
-        model_params = set(map(lambda n: n[0], self.named_parameters()))
+        model_params = {n[0] for n in self.named_parameters()}
 
         if dict_params == model_params:  # perfect fit
             logger.info("Loading all parameters of the checkpoint.")

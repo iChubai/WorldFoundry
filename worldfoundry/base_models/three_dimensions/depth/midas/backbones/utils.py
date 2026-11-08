@@ -13,7 +13,7 @@ class Slice(nn.Module):
         Args:
             start_index: The start index.
         """
-        super(Slice, self).__init__()
+        super().__init__()
         self.start_index = start_index
 
     def forward(self, x):
@@ -34,7 +34,7 @@ class AddReadout(nn.Module):
         Args:
             start_index: The start index.
         """
-        super(AddReadout, self).__init__()
+        super().__init__()
         self.start_index = start_index
 
     def forward(self, x):
@@ -43,10 +43,7 @@ class AddReadout(nn.Module):
         Args:
             x: The x.
         """
-        if self.start_index == 2:
-            readout = (x[:, 0] + x[:, 1]) / 2
-        else:
-            readout = x[:, 0]
+        readout = (x[:, 0] + x[:, 1]) / 2 if self.start_index == 2 else x[:, 0]
         return x[:, self.start_index :] + readout.unsqueeze(1)
 
 
@@ -60,7 +57,7 @@ class ProjectReadout(nn.Module):
             in_features: The in features.
             start_index: The start index.
         """
-        super(ProjectReadout, self).__init__()
+        super().__init__()
         self.start_index = start_index
 
         self.project = nn.Sequential(nn.Linear(2 * in_features, in_features), nn.GELU())
@@ -87,7 +84,7 @@ class Transpose(nn.Module):
             dim0: The dim0.
             dim1: The dim1.
         """
-        super(Transpose, self).__init__()
+        super().__init__()
         self.dim0 = dim0
         self.dim1 = dim1
 

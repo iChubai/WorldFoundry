@@ -21,18 +21,26 @@ train_num_workers = 2
 log_interval = 1
 
 # =======================Unmodified in most cases==================
-train_dataloader = dict(
-    batch_size=train_batch_size_per_gpu,
-    num_workers=train_num_workers,
-    dataset=dict(
-        data_root=data_root, metainfo=metainfo, data_prefix=dict(img=train_data_prefix), ann_file=train_ann_file
-    ),
-)
-val_dataloader = dict(
-    dataset=dict(data_root=data_root, metainfo=metainfo, data_prefix=dict(img=val_data_prefix), ann_file=val_ann_file)
-)
+train_dataloader = {
+    "batch_size": train_batch_size_per_gpu,
+    "num_workers": train_num_workers,
+    "dataset": {
+        "data_root": data_root,
+        "metainfo": metainfo,
+        "data_prefix": {"img": train_data_prefix},
+        "ann_file": train_ann_file,
+    },
+}
+val_dataloader = {
+    "dataset": {
+        "data_root": data_root,
+        "metainfo": metainfo,
+        "data_prefix": {"img": val_data_prefix},
+        "ann_file": val_ann_file,
+    }
+}
 test_dataloader = val_dataloader
-val_evaluator = dict(ann_file=data_root + val_ann_file)
+val_evaluator = {"ann_file": data_root + val_ann_file}
 test_evaluator = val_evaluator
-model = dict(bbox_head=dict(head_module=dict(num_classes=num_classes)))
-default_hooks = dict(logger=dict(interval=log_interval))
+model = {"bbox_head": {"head_module": {"num_classes": num_classes}}}
+default_hooks = {"logger": {"interval": log_interval}}

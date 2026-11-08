@@ -30,7 +30,7 @@ class AverageMeter:
 
 class AverageMeterGroups:
     def __init__(self) -> None:
-        self.meter_dict = dict()
+        self.meter_dict = {}
 
     def update(self, dict, n=1):
         for name, val in dict.items():
@@ -110,7 +110,7 @@ def read(file):
         return readFloat(file)
     elif file.endswith(".flo"):
         return readFlow(file)
-    elif file.endswith(".ppm") or file.endswith(".pgm") or file.endswith(".png") or file.endswith(".jpg"):
+    elif file.endswith((".ppm", ".pgm", ".png", ".jpg")):
         return readImage(file)
     elif file.endswith(".pfm"):
         return readPFM(file)[0]
@@ -123,7 +123,7 @@ def write(file, data):
         return writeFloat(file, data)
     elif file.endswith(".flo"):
         return writeFlow(file, data)
-    elif file.endswith(".ppm") or file.endswith(".pgm") or file.endswith(".png") or file.endswith(".jpg"):
+    elif file.endswith((".ppm", ".pgm", ".png", ".jpg")):
         return writeImage(file, data)
     elif file.endswith(".pfm"):
         return writePFM(file, data)
@@ -200,7 +200,7 @@ def writePFM(file, image, scale=1):
 
 
 def readFlow(name):
-    if name.endswith(".pfm") or name.endswith(".PFM"):
+    if name.endswith((".pfm", ".PFM")):
         return readPFM(name)[0][:, :, 0:2]
 
     f = open(name, "rb")
@@ -218,7 +218,7 @@ def readFlow(name):
 
 
 def readImage(name):
-    if name.endswith(".pfm") or name.endswith(".PFM"):
+    if name.endswith((".pfm", ".PFM")):
         data = readPFM(name)[0]
         if len(data.shape) == 3:
             return data[:, :, 0:3]
@@ -228,7 +228,7 @@ def readImage(name):
 
 
 def writeImage(name, data):
-    if name.endswith(".pfm") or name.endswith(".PFM"):
+    if name.endswith((".pfm", ".PFM")):
         return writePFM(name, data, 1)
     return imwrite(name, data)
 

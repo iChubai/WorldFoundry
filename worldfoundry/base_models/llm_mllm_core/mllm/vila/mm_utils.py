@@ -429,10 +429,7 @@ def dynamic_s2_process_images_and_prompt(images, prompt, data_args, image_folder
         all_images.append(processed_images)
         all_block_size.append(block_size)
         idx += 2
-    if all_images:
-        all_images = torch.cat(all_images)
-    else:
-        all_images = None
+    all_images = torch.cat(all_images) if all_images else None
     return all_images, all_block_size
 
 
@@ -465,10 +462,7 @@ def process_image(
         return torch.stack(images), block_size
     if "dynamic" in data_args.image_aspect_ratio and enable_dynamic_res:
         assert crop_size["height"] == crop_size["width"]
-        if max_tiles is not None:
-            max_num = max_tiles
-        else:
-            max_num = data_args.max_tiles
+        max_num = max_tiles if max_tiles is not None else data_args.max_tiles
         images = dynamic_preprocess(image, min_num=data_args.min_tiles, max_num=max_num, image_size=crop_size["height"])
         images = [processor.preprocess(image, return_tensors="pt")["pixel_values"][0] for image in images]
         return torch.stack(images)

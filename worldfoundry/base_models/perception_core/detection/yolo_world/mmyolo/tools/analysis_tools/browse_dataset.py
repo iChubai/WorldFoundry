@@ -163,7 +163,7 @@ class InspectCompose(Compose):
         for t in self.ptransforms:
             data = t(data)
             # Keep the same meta_keys in the PackDetInputs
-            self.transforms[-1].meta_keys = [key for key in data]
+            self.transforms[-1].meta_keys = list(data)
             data_sample = self.transforms[-1](data)
             if data is None:
                 return None
@@ -228,7 +228,7 @@ def main():
         elif args.mode == "transformed":
             image = image_i[-1]
         else:
-            image = make_grid([result for result in image_i], [result["name"] for result in intermediate_imgs])
+            image = make_grid(list(image_i), [result["name"] for result in intermediate_imgs])
 
         if hasattr(datasample, "img_path"):
             filename = osp.basename(datasample.img_path)

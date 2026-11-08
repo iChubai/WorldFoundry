@@ -696,7 +696,7 @@ class WorldMirrorPipeline:
 
         t0 = time.perf_counter()
         with torch.amp.autocast("cuda", enabled=(not model_bf16 and use_amp), dtype=torch.bfloat16):
-            fwd_kw = dict(views=views, cond_flags=cond_flags, is_inference=True)
+            fwd_kw = {"views": views, "cond_flags": cond_flags, "is_inference": True}
             if self.sp_size > 1:
                 fwd_kw["sp_size"] = self.sp_size
                 fwd_kw["sp_group"] = self.sp_group
@@ -852,42 +852,42 @@ def main():
         disable_heads=args.disable_heads,
     )
 
-    call_kwargs = dict(
-        output_path=args.output_path,
-        target_size=args.target_size,
-        fps=args.fps,
-        video_strategy=args.video_strategy,
-        video_min_frames=args.video_min_frames,
-        video_max_frames=args.video_max_frames,
-        save_depth=not args.no_save_depth,
-        save_normal=not args.no_save_normal,
-        save_gs=not args.no_save_gs,
-        save_camera=not args.no_save_camera,
-        save_points=not args.no_save_points,
-        save_colmap=args.save_colmap,
-        save_conf=args.save_conf,
-        save_sky_mask=args.save_sky_mask,
-        apply_sky_mask=args.apply_sky_mask,
-        apply_edge_mask=args.apply_edge_mask,
-        apply_confidence_mask=args.apply_confidence_mask,
-        sky_mask_source=args.sky_mask_source,
-        model_sky_threshold=args.model_sky_threshold,
-        confidence_percentile=args.confidence_percentile,
-        edge_normal_threshold=args.edge_normal_threshold,
-        edge_depth_threshold=args.edge_depth_threshold,
-        compress_pts=args.compress_pts,
-        compress_pts_max_points=args.compress_pts_max_points,
-        compress_pts_voxel_size=args.compress_pts_voxel_size,
-        max_resolution=args.max_resolution,
-        compress_gs_max_points=args.compress_gs_max_points,
-        prior_cam_path=args.prior_cam_path,
-        prior_depth_path=args.prior_depth_path,
-        save_rendered=args.save_rendered,
-        render_interp_per_pair=args.render_interp_per_pair,
-        render_depth=args.render_depth,
-        log_time=args.log_time,
-        strict_output_path=args.strict_output_path,
-    )
+    call_kwargs = {
+        "output_path": args.output_path,
+        "target_size": args.target_size,
+        "fps": args.fps,
+        "video_strategy": args.video_strategy,
+        "video_min_frames": args.video_min_frames,
+        "video_max_frames": args.video_max_frames,
+        "save_depth": not args.no_save_depth,
+        "save_normal": not args.no_save_normal,
+        "save_gs": not args.no_save_gs,
+        "save_camera": not args.no_save_camera,
+        "save_points": not args.no_save_points,
+        "save_colmap": args.save_colmap,
+        "save_conf": args.save_conf,
+        "save_sky_mask": args.save_sky_mask,
+        "apply_sky_mask": args.apply_sky_mask,
+        "apply_edge_mask": args.apply_edge_mask,
+        "apply_confidence_mask": args.apply_confidence_mask,
+        "sky_mask_source": args.sky_mask_source,
+        "model_sky_threshold": args.model_sky_threshold,
+        "confidence_percentile": args.confidence_percentile,
+        "edge_normal_threshold": args.edge_normal_threshold,
+        "edge_depth_threshold": args.edge_depth_threshold,
+        "compress_pts": args.compress_pts,
+        "compress_pts_max_points": args.compress_pts_max_points,
+        "compress_pts_voxel_size": args.compress_pts_voxel_size,
+        "max_resolution": args.max_resolution,
+        "compress_gs_max_points": args.compress_gs_max_points,
+        "prior_cam_path": args.prior_cam_path,
+        "prior_depth_path": args.prior_depth_path,
+        "save_rendered": args.save_rendered,
+        "render_interp_per_pair": args.render_interp_per_pair,
+        "render_depth": args.render_depth,
+        "log_time": args.log_time,
+        "strict_output_path": args.strict_output_path,
+    }
 
     try:
         pipeline(args.input_path, **call_kwargs)

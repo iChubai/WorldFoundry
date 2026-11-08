@@ -254,25 +254,25 @@ class YOLOWorldSegHead(YOLOv5InsHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(type="mmdet.MlvlPointGenerator", offset=0.5, strides=[8, 16, 32]),
-        bbox_coder: ConfigType = dict(type="DistancePointBBoxCoder"),
-        loss_cls: ConfigType = dict(
-            type="mmdet.CrossEntropyLoss",
-            use_sigmoid=True,
-            reduction="none",
-            loss_weight=0.5,
-        ),
-        loss_bbox: ConfigType = dict(
-            type="IoULoss",
-            iou_mode="ciou",
-            bbox_format="xyxy",
-            reduction="sum",
-            loss_weight=7.5,
-            return_iou=False,
-        ),
-        loss_dfl=dict(type="mmdet.DistributionFocalLoss", reduction="mean", loss_weight=1.5 / 4),
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0.5, "strides": [8, 16, 32]},
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
+        loss_cls: ConfigType = {
+            "type": "mmdet.CrossEntropyLoss",
+            "use_sigmoid": True,
+            "reduction": "none",
+            "loss_weight": 0.5,
+        },
+        loss_bbox: ConfigType = {
+            "type": "IoULoss",
+            "iou_mode": "ciou",
+            "bbox_format": "xyxy",
+            "reduction": "sum",
+            "loss_weight": 7.5,
+            "return_iou": False,
+        },
+        loss_dfl={"type": "mmdet.DistributionFocalLoss", "reduction": "mean", "loss_weight": 1.5 / 4},
         mask_overlap: bool = True,
-        loss_mask: ConfigType = dict(type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="none"),
+        loss_mask: ConfigType = {"type": "mmdet.CrossEntropyLoss", "use_sigmoid": True, "reduction": "none"},
         loss_mask_weight=0.05,
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
@@ -565,9 +565,9 @@ class YOLOWorldSegHead(YOLOv5InsHead):
             loss_mask = flatten_pred_coeffs.sum() * 0
         _, world_size = get_dist_info()
 
-        return dict(
-            loss_cls=loss_cls * num_imgs * world_size,
-            loss_bbox=loss_bbox * num_imgs * world_size,
-            loss_dfl=loss_dfl * num_imgs * world_size,
-            loss_mask=loss_mask * self.loss_mask_weight * world_size,
-        )
+        return {
+            "loss_cls": loss_cls * num_imgs * world_size,
+            "loss_bbox": loss_bbox * num_imgs * world_size,
+            "loss_dfl": loss_dfl * num_imgs * world_size,
+            "loss_mask": loss_mask * self.loss_mask_weight * world_size,
+        }

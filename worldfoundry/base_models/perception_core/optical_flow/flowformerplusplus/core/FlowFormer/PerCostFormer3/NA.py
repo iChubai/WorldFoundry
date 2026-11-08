@@ -59,7 +59,7 @@ class NATTENQKRPBFunction(Function):
 
 class selfattentionlayer_nat(nn.Module):
     def __init__(self, cfg):
-        super(selfattentionlayer_nat, self).__init__()
+        super().__init__()
         dropout = cfg.dropout
         droppath = cfg.droppath
 
@@ -129,7 +129,7 @@ from .twins import Block
 
 class NATwins(nn.Module):
     def __init__(self, cfg):
-        super(NATwins, self).__init__()
+        super().__init__()
 
         self.cfg = cfg
         self.dim = dim = cfg.cost_latent_dim

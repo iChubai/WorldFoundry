@@ -73,7 +73,7 @@ class InferenceStage:
         if self.input_params_nega is not None:
             for _, param in self.input_params_nega.items():
                 params.append(param)
-        params = sorted(list(set(params)))
+        params = sorted(set(params))
         return params
 
     def fetch_output_params(self):
@@ -737,7 +737,7 @@ class InferenceStageGraph:
         # Establish updating chains for each variable
         # to track their computation process.
         params = sum([unit.fetch_input_params() + unit.fetch_output_params() for unit in units], [])
-        params = sorted(list(set(params)))
+        params = sorted(set(params))
         chains = {param: [] for param in params}
         for unit_id, unit in enumerate(units):
             for param in unit.fetch_output_params():
@@ -769,7 +769,7 @@ class InferenceStageGraph:
             direction: The direction.
         """
         # Search for subsequent related computation units.
-        related_unit_ids = [unit_id for unit_id in start_unit_ids]
+        related_unit_ids = list(start_unit_ids)
         while True:
             neighbors = []
             for source, target in edges:
@@ -777,12 +777,12 @@ class InferenceStageGraph:
                     neighbors.append(target)
                 elif direction == "source" and source not in related_unit_ids and target in related_unit_ids:
                     neighbors.append(source)
-            neighbors = sorted(list(set(neighbors)))
+            neighbors = sorted(set(neighbors))
             if len(neighbors) == 0:
                 break
             else:
                 related_unit_ids.extend(neighbors)
-        related_unit_ids = sorted(list(set(related_unit_ids)))
+        related_unit_ids = sorted(set(related_unit_ids))
         return related_unit_ids
 
     def search_updating_unit_ids(self, units: list[InferenceStage], chains, related_unit_ids):
@@ -809,7 +809,7 @@ class InferenceStageGraph:
                     if unit_id_ not in related_unit_ids:
                         updating_unit_ids.append(unit_id_)
         related_unit_ids.extend(updating_unit_ids)
-        related_unit_ids = sorted(list(set(related_unit_ids)))
+        related_unit_ids = sorted(set(related_unit_ids))
         return related_unit_ids
 
     def split_pipeline_units(self, units: list[InferenceStage], model_names: list[str]):

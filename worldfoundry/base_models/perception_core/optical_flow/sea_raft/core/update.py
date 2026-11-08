@@ -18,7 +18,7 @@ class FlowHead(nn.Module):
             hidden_dim: The hidden dim.
             output_dim: The output dim.
         """
-        super(FlowHead, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(input_dim, hidden_dim, 3, padding=1)
         self.conv2 = nn.Conv2d(hidden_dim, output_dim, 3, padding=1)
         self.relu = nn.ReLU(inplace=True)
@@ -42,7 +42,7 @@ class BasicMotionEncoder(nn.Module):
             args: The args.
             dim: The dim.
         """
-        super(BasicMotionEncoder, self).__init__()
+        super().__init__()
         cor_planes = args.corr_channel
         self.convc1 = nn.Conv2d(cor_planes, dim * 2, 1, padding=0)
         self.convc2 = nn.Conv2d(dim * 2, dim + dim // 2, 3, padding=1)
@@ -79,7 +79,7 @@ class BasicUpdateBlock(nn.Module):
             cdim: The cdim.
         """
         # net: hdim, inp: cdim
-        super(BasicUpdateBlock, self).__init__()
+        super().__init__()
         self.args = args
         self.encoder = BasicMotionEncoder(args, dim=cdim)
         self.refine = []

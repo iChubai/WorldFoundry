@@ -104,7 +104,7 @@ class AutoencoderKL(nn.Module):
         self.decodes = []
         self.save_decode_samples = 2048
 
-    def init_from_ckpt(self, path, ignore_keys=list()):
+    def init_from_ckpt(self, path, ignore_keys=[]):
         """Init from ckpt.
 
         Args:
@@ -157,10 +157,7 @@ class AutoencoderKL(nn.Module):
             sample_posterior: The sample posterior.
         """
         posterior = self.encode(input)
-        if sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if sample_posterior else posterior.mode()
         dec = self.decode(z)
         return dec, posterior
 
@@ -270,7 +267,7 @@ class AutoencoderKL(nn.Module):
             batch: The batch.
             only_inputs: The only inputs.
         """
-        log = dict()
+        log = {}
         x = self.get_input(batch, self.image_key)
         x = x.to(self.device)
         if not only_inputs:

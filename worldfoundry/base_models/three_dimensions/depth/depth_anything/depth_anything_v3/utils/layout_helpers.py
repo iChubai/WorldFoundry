@@ -54,10 +54,7 @@ def _sanitize_color(color: Color) -> Tensor:  # "#channel"
         color = color.tolist()
 
     # Turn iterators and individual items into lists.
-    if isinstance(color, Iterable):
-        color = list(color)
-    else:
-        color = [color]
+    color = list(color) if isinstance(color, Iterable) else [color]
 
     return torch.tensor(color, dtype=torch.float32)
 

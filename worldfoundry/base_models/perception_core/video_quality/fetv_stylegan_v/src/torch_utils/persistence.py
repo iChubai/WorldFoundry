@@ -28,8 +28,8 @@ from src import dnnlib
 _version = 6  # internal version number
 _decorators = set()  # {decorator_class, ...}
 _import_hooks = []  # [hook_function, ...]
-_module_to_src_dict = dict()  # {module: src, ...}
-_src_to_module_dict = dict()  # {src: module, ...}
+_module_to_src_dict = {}  # {module: src, ...}
+_src_to_module_dict = {}  # {src: module, ...}
 
 # ----------------------------------------------------------------------------
 
@@ -121,13 +121,13 @@ def persistent_class(orig_class):
             fields = list(super().__reduce__())
             fields += [None] * max(3 - len(fields), 0)
             if fields[0] is not _reconstruct_persistent_obj:
-                meta = dict(
-                    type="class",
-                    version=_version,
-                    module_src=self._orig_module_src,
-                    class_name=self._orig_class_name,
-                    state=fields[2],
-                )
+                meta = {
+                    "type": "class",
+                    "version": _version,
+                    "module_src": self._orig_module_src,
+                    "class_name": self._orig_class_name,
+                    "state": fields[2],
+                }
                 fields[0] = _reconstruct_persistent_obj  # reconstruct func
                 fields[1] = (meta,)  # reconstruct args
                 fields[2] = None  # state dict

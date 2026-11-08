@@ -73,7 +73,7 @@ class ResidualBlock(nn.Module):
             stride: The stride.
             kernel_size: The kernel size.
         """
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(
             in_planes, planes, kernel_size=kernel_size, padding=1, stride=stride, padding_mode="zeros"

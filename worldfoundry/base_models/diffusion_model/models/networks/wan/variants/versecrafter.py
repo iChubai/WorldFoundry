@@ -143,7 +143,7 @@ class VerseCrafterWanTransformer3DModel(WanTransformer3DModel):
             eps,
         )
 
-        self.geoada_layers = [i for i in range(0, self.num_layers, 2)] if geoada_layers is None else geoada_layers
+        self.geoada_layers = list(range(0, self.num_layers, 2)) if geoada_layers is None else geoada_layers
         self.geoada_in_dim = self.in_dim if geoada_in_dim is None else geoada_in_dim
 
         assert 0 in self.geoada_layers
@@ -201,7 +201,7 @@ class VerseCrafterWanTransformer3DModel(WanTransformer3DModel):
             c = torch.chunk(c, self.sp_world_size, dim=1)[self.sp_world_rank]
 
         # arguments
-        new_kwargs = dict(x=x)
+        new_kwargs = {"x": x}
         new_kwargs.update(kwargs)
 
         for block in self.geoada_blocks:
@@ -271,16 +271,16 @@ class VerseCrafterWanTransformer3DModel(WanTransformer3DModel):
             x = torch.chunk(x, self.sp_world_size, dim=1)[self.sp_world_rank]
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            dtype=dtype,
-            t=t,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "dtype": dtype,
+            "t": t,
+        }
         hints = self.forward_geoada(x, geoada_context, seq_len, kwargs)
 
         kwargs["hints"] = hints

@@ -87,7 +87,7 @@ def main():
         cfg = trigger_visualization_hook(cfg, args)
 
     if args.deploy:
-        cfg.custom_hooks.append(dict(type="SwitchToDeployHook"))
+        cfg.custom_hooks.append({"type": "SwitchToDeployHook"})
 
     # add `format_only` and `outfile_prefix` into cfg
     if args.json_prefix is not None:

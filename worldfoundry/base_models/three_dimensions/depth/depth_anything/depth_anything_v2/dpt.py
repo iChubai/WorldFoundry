@@ -77,7 +77,7 @@ class DPTHead(nn.Module):
             use_clstoken: The use clstoken.
             is_metric: The is metric.
         """
-        super(DPTHead, self).__init__()
+        super().__init__()
 
         self.use_clstoken = use_clstoken
 
@@ -219,7 +219,7 @@ class DepthAnythingV2(nn.Module):
             use_clstoken: The use clstoken.
             max_depth: The max depth.
         """
-        super(DepthAnythingV2, self).__init__()
+        super().__init__()
 
         self.intermediate_layer_idx = {
             "vits": [2, 5, 8, 11],
@@ -254,10 +254,7 @@ class DepthAnythingV2(nn.Module):
         )
 
         depth = self.depth_head(features, patch_h, patch_w)
-        if self.max_depth is not None:
-            depth = self.max_depth * depth
-        else:
-            depth = F.relu(depth)
+        depth = self.max_depth * depth if self.max_depth is not None else F.relu(depth)
 
         return depth.squeeze(1)
 

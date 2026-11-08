@@ -17,7 +17,7 @@ class ChannelAttention(nn.Module):
     """
 
     def __init__(self, num_feat, squeeze_factor=16):
-        super(ChannelAttention, self).__init__()
+        super().__init__()
         self.attention = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Conv2d(num_feat, num_feat // squeeze_factor, 1, padding=0),
@@ -33,7 +33,7 @@ class ChannelAttention(nn.Module):
 
 class CAB(nn.Module):
     def __init__(self, num_feat, is_light_sr=False, compress_ratio=3, squeeze_factor=30):
-        super(CAB, self).__init__()
+        super().__init__()
         self.cab = nn.Sequential(
             nn.Conv2d(num_feat, num_feat // compress_ratio, 3, 1, 1),
             nn.GELU(),
@@ -404,7 +404,7 @@ class MambaFeature(nn.Module):
         norm_layer=nn.LayerNorm,
         **kwargs,
     ):
-        super(MambaFeature, self).__init__()
+        super().__init__()
 
         self.num_stages = len(embed_dims)
 

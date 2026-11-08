@@ -338,10 +338,7 @@ class Sana(nn.Module):
         if self.y_norm:
             self.attention_y_norm = RMSNorm(hidden_size, scale_factor=y_norm_scale_factor, eps=norm_eps)
         drop_path = [x.item() for x in torch.linspace(0, drop_path, depth)]  # stochastic depth decay rule
-        if attn_type == "flash":
-            attention_head_dim = hidden_size // num_heads
-        else:
-            attention_head_dim = linear_head_dim
+        attention_head_dim = hidden_size // num_heads if attn_type == "flash" else linear_head_dim
         self.blocks = nn.ModuleList(
             [
                 SanaBlock(

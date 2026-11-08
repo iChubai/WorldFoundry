@@ -234,7 +234,10 @@ class SanaVideoMSBlock(nn.Module):
                 t_kernel_size=t_kernel_size,
             )
         elif ffn_type == "mlp":
-            approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+            def approx_gelu():
+                return nn.GELU(approximate="tanh")
+
             self.mlp = Mlp(
                 in_features=hidden_size, hidden_features=int(hidden_size * mlp_ratio), act_layer=approx_gelu, drop=0
             )
@@ -510,7 +513,10 @@ class SanaMSVideo(Sana):
         )
         self.patch_size = patch_size
         self.h = self.w = 0
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.t_block = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 6 * hidden_size, bias=True))
         self.pos_embed_ms = None
         self.pack_latents = pack_latents
@@ -538,10 +544,7 @@ class SanaMSVideo(Sana):
         else:
             self.image_embedder = None
 
-        if attn_type in ["flash"]:
-            attention_head_dim = hidden_size // num_heads
-        else:
-            attention_head_dim = linear_head_dim
+        attention_head_dim = hidden_size // num_heads if attn_type in ["flash"] else linear_head_dim
         if self.use_pe:
             self.rope = self.get_rope(pos_embed_type, attention_head_dim, patch_size, rope_fhw_dim)
         else:
@@ -574,9 +577,8 @@ class SanaMSVideo(Sana):
 
         self.final_layer = T2IFinalLayer(hidden_size, patch_size, self.out_channels)
 
-        if get_rank() == 0:
-            if ffn_type == "GLUMBConvTemp":
-                self.logger(f"{ffn_type} Temporal kernal: {t_kernel_size}")
+        if get_rank() == 0 and ffn_type == "GLUMBConvTemp":
+            self.logger(f"{ffn_type} Temporal kernal: {t_kernel_size}")
 
         self.initialize()
 

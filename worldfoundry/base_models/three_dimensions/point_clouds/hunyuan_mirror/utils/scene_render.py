@@ -13,6 +13,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.model
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.sh_utils import RGB2SH, SH2RGB
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils.gs_effects import GSEffects
 from worldfoundry.core.media.artifacts import apply_color_map_to_image
+import contextlib
 
 
 def rotation_matrix_to_quaternion(R):
@@ -235,7 +236,7 @@ def render_interpolated_video(
         return exts, ints
 
     if s > 1:
-        all_ext, all_int = build_interpolated_traj([i for i in range(s)], interp_per_pair)
+        all_ext, all_int = build_interpolated_traj(list(range(s)), interp_per_pair)
     else:
         means = splats["means"][0]
         center = means.median(dim=0).values
@@ -262,10 +263,8 @@ def render_interpolated_video(
         all_ext[0, :, :3, -1] = (all_ext[0, :, :3, -1] - shift) / scale_factor
         add_ext[0, :, :3, -1] = (add_ext[0, :, :3, -1] - shift) / scale_factor
         flag = None
-        try:
+        with contextlib.suppress(BaseException):
             raw_splats = gs_renderer.rasterizer.runner.splats
-        except BaseException:
-            pass
         for st in range(add_ext.shape[1]):
             ed = min(st + 1, add_ext.shape[1])
             assert gs_renderer.sh_degree == 0
@@ -422,10 +421,7 @@ def render_interpolated_video(
             The return value.
         """
         valid = d > 0
-        if valid.any():
-            near = d[valid].float().quantile(0.01).log()
-        else:
-            near = torch.tensor(0.0, device=d.device)
+        near = d[valid].float().quantile(0.01).log() if valid.any() else torch.tensor(0.0, device=d.device)
         far = d.flatten().float().quantile(0.99).log()
         x = d.float().clamp(min=1e-9).log()
         x = 1.0 - (x - near) / (far - near + 1e-9)
@@ -472,8 +468,6 @@ def render_interpolated_video(
     print(f"Video saved to {out_path} (mode: {save_mode})")
 
     if effects is not None:
-        try:
+        with contextlib.suppress(BaseException):
             gs_renderer.rasterizer.runner.splats = raw_splats
-        except BaseException:
-            pass
     torch.cuda.empty_cache()

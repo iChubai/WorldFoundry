@@ -221,10 +221,7 @@ def torch_recurrent_cam_single_path_delta_rule(
     k_rot_f = to_frame_seq(k_rot)
     v_f = to_frame_seq(v)
 
-    if beta.ndim == 4:
-        beta = beta.unsqueeze(3)
-    else:
-        beta = beta.view(B, H, T, 1, 1)
+    beta = beta.unsqueeze(3) if beta.ndim == 4 else beta.view(B, H, T, 1, 1)
     decay = decay.view(B, H, T, 1, 1)
 
     state_kv = torch.zeros(B, H, D, D, device=q_rot.device, dtype=q_rot.dtype)
@@ -298,10 +295,7 @@ def torch_chunk_cam_single_path_delta_rule(
     k_rot = to_frame_seq(k_rot)
     v = to_frame_seq(v)
 
-    if beta.ndim == 4:
-        beta = beta.unsqueeze(3)
-    else:
-        beta = beta.view(B, H, T, 1, 1)
+    beta = beta.unsqueeze(3) if beta.ndim == 4 else beta.view(B, H, T, 1, 1)
     decay = decay.view(B, H, T, 1, 1)
 
     # =========================================================================
@@ -1085,10 +1079,7 @@ class _GDNUCPEBase(GDN):
             self._cam_debug_step_counter += 1
 
         # Pre-compute shared gates once for both branches.
-        if HW is not None:
-            precomputed_gates = self._compute_frame_gates(x, HW)
-        else:
-            precomputed_gates = None
+        precomputed_gates = self._compute_frame_gates(x, HW) if HW is not None else None
 
         # Main branch -- raw attention without gate/proj.
         main_raw = super().forward(

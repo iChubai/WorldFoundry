@@ -103,7 +103,7 @@ class NudeDetector:
     def __init__(self, providers=None, model: str | os.PathLike | None = None):
         self.onnx_session = onnxruntime.InferenceSession(
             str(model_path() if model is None else model),
-            providers=ort_state.get_available_providers() if not providers else providers,
+            providers=providers if providers else ort_state.get_available_providers(),
         )
         model_inputs = self.onnx_session.get_inputs()
         input_shape = model_inputs[0].shape

@@ -628,9 +628,14 @@ class WanModel(nn.Module, NativeConfigMixin):
         if clip_fea is not None:
             context_clip = self.img_emb(clip_fea)
             context = torch.concat([context_clip, context], dim=1)
-        kwargs = dict(
-            e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.
@@ -709,9 +714,14 @@ class WanModel(nn.Module, NativeConfigMixin):
         if clip_fea is not None:
             context_clip = self.img_emb(clip_fea)
             context = torch.concat([context_clip, context], dim=1)
-        kwargs = dict(
-            e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

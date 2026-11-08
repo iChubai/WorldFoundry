@@ -180,10 +180,7 @@ def get_gaussian_mean(x, axis, other_axis, softmax=True):
     """
     mat2line = torch.sum(x, axis=other_axis)
     # mat2line = mat2line / mat2line.mean() * 10
-    if softmax:
-        u = torch.softmax(mat2line, axis=2)
-    else:
-        u = mat2line / (mat2line.sum(2, keepdim=True) + 1e-6)
+    u = torch.softmax(mat2line, axis=2) if softmax else mat2line / (mat2line.sum(2, keepdim=True) + 1e-06)
     size = x.shape[axis]
     ind = torch.linspace(0, 1, size).to(x.device)
     batch = x.shape[0]
@@ -264,7 +261,10 @@ def get_embedder(multires, i=0):
     }
 
     embedder_obj = Embedder(**embed_kwargs)
-    embed = lambda x, eo=embedder_obj: eo.embed(x)
+
+    def embed(x, eo=embedder_obj):
+        return eo.embed(x)
+
     return embed, embedder_obj.out_dim
 
 
@@ -468,7 +468,7 @@ def random_boxes(num=1, scale=1, rng=None):
 
 class ModelEma(torch.nn.Module):
     def __init__(self, model, decay=0.9997, device=None):
-        super(ModelEma, self).__init__()
+        super().__init__()
         # make a copy of the model for accumulating moving average of weights
         self.module = deepcopy(model)
         self.module.eval()

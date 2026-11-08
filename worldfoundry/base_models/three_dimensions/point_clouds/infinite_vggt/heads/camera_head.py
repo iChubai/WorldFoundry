@@ -178,10 +178,7 @@ class CameraHead(nn.Module):
             # Compute the delta update for the pose encoding.
             pred_pose_enc_delta = self.pose_branch(self.trunk_norm(pose_tokens_modulated))
 
-            if pred_pose_enc is None:
-                pred_pose_enc = pred_pose_enc_delta
-            else:
-                pred_pose_enc = pred_pose_enc + pred_pose_enc_delta
+            pred_pose_enc = pred_pose_enc_delta if pred_pose_enc is None else pred_pose_enc + pred_pose_enc_delta
 
             # Apply final activation functions for translation, quaternion, and field-of-view.
             activated_pose = activate_pose(

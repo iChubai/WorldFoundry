@@ -241,10 +241,7 @@ def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
             continue
         pointer = model
         for m_name in name:
-            if re.fullmatch(r"[A-Za-z]+_\d+", m_name):
-                scope_names = re.split(r"_(\d+)", m_name)
-            else:
-                scope_names = [m_name]
+            scope_names = re.split(r"_(\d+)", m_name) if re.fullmatch(r"[A-Za-z]+_\d+", m_name) else [m_name]
             if scope_names[0] == "kernel" or scope_names[0] == "gamma":
                 pointer = pointer.weight
             elif scope_names[0] == "output_bias" or scope_names[0] == "beta":
@@ -306,10 +303,7 @@ class BertEmbeddings(nn.Module):
         inputs_embeds=None,
         past_key_values_length=0,
     ):
-        if input_ids is not None:
-            input_shape = input_ids.size()
-        else:
-            input_shape = inputs_embeds.size()[:-1]
+        input_shape = input_ids.size() if input_ids is not None else inputs_embeds.size()[:-1]
 
         seq_length = input_shape[1]
 
@@ -1108,10 +1102,7 @@ class BertModel(BertPreTrainedModel):
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
-        if is_decoder:
-            use_cache = use_cache if use_cache is not None else self.config.use_cache
-        else:
-            use_cache = False
+        use_cache = (use_cache if use_cache is not None else self.config.use_cache) if is_decoder else False
 
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")

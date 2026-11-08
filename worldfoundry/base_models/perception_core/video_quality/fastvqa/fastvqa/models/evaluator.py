@@ -14,8 +14,8 @@ from .xclip_backbone import build_x_clip_model
 class BaseEvaluator(nn.Module):
     def __init__(
         self,
-        backbone=dict(),
-        vqa_head=dict(),
+        backbone={},
+        vqa_head={},
     ):
         super().__init__()
         self.backbone = VideoBackbone(**backbone)
@@ -49,9 +49,9 @@ class DiViDeAddEvaluator(nn.Module):
         backbone_preserve_keys="fragments,resize",
         multi=False,
         layer=-1,
-        backbone=dict(resize={"window_size": (4, 4, 4)}, fragments={"window_size": (4, 4, 4)}),
+        backbone={"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}},
         divide_head=False,
-        vqa_head=dict(in_channels=768),
+        vqa_head={"in_channels": 768},
         var=False,
     ):
         self.backbone_preserve_keys = backbone_preserve_keys.split(",")
@@ -62,10 +62,7 @@ class DiViDeAddEvaluator(nn.Module):
             print(backbone_size)
             if key not in self.backbone_preserve_keys:
                 continue
-            if backbone_size == "divided":
-                t_backbone_size = hypers["type"]
-            else:
-                t_backbone_size = backbone_size
+            t_backbone_size = hypers["type"] if backbone_size == "divided" else backbone_size
             if t_backbone_size == "swin_tiny":
                 b = swin_3d_tiny(**backbone[key])
             elif t_backbone_size == "swin_tiny_grpb":
@@ -122,10 +119,7 @@ class DiViDeAddEvaluator(nn.Module):
                     if return_pooled_feats:
                         feats[key] = feat.mean((-3, -2, -1))
                 if reduce_scores:
-                    if len(scores) > 1:
-                        scores = reduce(lambda x, y: x + y, scores)
-                    else:
-                        scores = scores[0]
+                    scores = reduce(lambda x, y: x + y, scores) if len(scores) > 1 else scores[0]
                     if pooled:
                         scores = torch.mean(scores, (1, 2, 3, 4))
             self.train()
@@ -147,10 +141,7 @@ class DiViDeAddEvaluator(nn.Module):
                 if return_pooled_feats:
                     feats[key] = feat.mean((-3, -2, -1))
             if reduce_scores:
-                if len(scores) > 1:
-                    scores = reduce(lambda x, y: x + y, scores)
-                else:
-                    scores = scores[0]
+                scores = reduce(lambda x, y: x + y, scores) if len(scores) > 1 else scores[0]
                 if pooled:
                     print(scores.shape)
                     scores = torch.mean(scores, (1, 2, 3, 4))
@@ -164,8 +155,8 @@ class DiViDeAddEvaluator(nn.Module):
 class BaseImageEvaluator(nn.Module):
     def __init__(
         self,
-        backbone=dict(),
-        iqa_head=dict(),
+        backbone={},
+        iqa_head={},
     ):
         super().__init__()
         self.backbone = ImageBackbone(**backbone)
@@ -196,7 +187,7 @@ if __name__ == "__main__":
     fusion_opt = {
         "anno_file": "./examplar_data_labels/KoNViD/labels.txt",
         "data_prefix": "../datasets/KoNViD",
-        "sample_types": {"fragments": dict(fragments_h=4, fragments_w=4), "resize": dict(size_h=128, size_w=128)},
+        "sample_types": {"fragments": {"fragments_h": 4, "fragments_w": 4}, "resize": {"size_h": 128, "size_w": 128}},
         "phase": "train",
         "clip_len": 16,
         "frame_interval": 2,
@@ -208,9 +199,7 @@ if __name__ == "__main__":
 
     dataset = FusionDataset(fusion_opt)
 
-    model = DiViDeEvaluator({"resize": dict(window_size=(4, 4, 4)), "fragments": dict(window_size=(4, 4, 4))}).to(
-        device
-    )
+    model = DiViDeEvaluator({"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}}).to(device)
     data = dataset[0]
     video = {}
     for key in fusion_opt["sample_types"]:

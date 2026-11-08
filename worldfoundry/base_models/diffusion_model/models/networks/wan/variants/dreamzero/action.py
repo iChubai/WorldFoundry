@@ -675,7 +675,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         # initialize weights
         self.init_weights()
 
-        self.independent_first_frame = False if self.num_frame_per_block == 1 else True
+        self.independent_first_frame = not self.num_frame_per_block == 1
 
     def _forward_blocks(
         self,

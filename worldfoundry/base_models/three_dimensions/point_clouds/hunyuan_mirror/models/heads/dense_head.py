@@ -59,7 +59,7 @@ class DPTHead(nn.Module):
         Returns:
             The return value.
         """
-        super(DPTHead, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
         self.activation = activation
         self.pos_embed = pos_embed
@@ -520,7 +520,7 @@ class FeatureFusionBlock(nn.Module):
             has_residual (bool): Whether to include residual connection
             groups (int): Number of groups for grouped convolution
         """
-        super(FeatureFusionBlock, self).__init__()
+        super().__init__()
 
         self.deconv = deconv
         self.align_corners = align_corners

@@ -140,7 +140,7 @@ class YOLOv5MixedGroundingDataset(BatchShapePolicyDataset, CocoDataset):
         min_size = self.filter_cfg.get("min_size", 0)
 
         # obtain images that contain annotation
-        ids_with_ann = set(data_info["img_id"] for data_info in self.data_list)
+        ids_with_ann = {data_info["img_id"] for data_info in self.data_list}
 
         valid_data_infos = []
         for _i, data_info in enumerate(self.data_list):

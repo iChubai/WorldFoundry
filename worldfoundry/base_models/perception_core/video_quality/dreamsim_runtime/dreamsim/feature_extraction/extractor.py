@@ -40,7 +40,7 @@ class ViTExtractor(nn.Module):
         :param stride: stride of first convolution layer. small stride -> higher resolution.
         :param load_dir: location of pretrained ViT checkpoints.
         """
-        super(ViTExtractor, self).__init__()
+        super().__init__()
         self.model_type = model_type
         self.device = device
         self.model = ViTExtractor.create_model(model_type, load_dir)

@@ -70,7 +70,7 @@ class SwiftDeploy(SwiftInfer):
         args = self.args
         model_list = [args.served_model_name or args.model_suffix]
         if args.adapter_mapping:
-            model_list += [name for name in args.adapter_mapping.keys()]
+            model_list += list(args.adapter_mapping.keys())
         return model_list
 
     async def get_available_models(self):

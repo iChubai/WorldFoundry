@@ -733,17 +733,17 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             cam_viewmats = None
             cam_K = None
 
-        block_kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            cam_viewmats=cam_viewmats,
-            cam_K=cam_K,
-            cache_update_policy=cache_update_policy,
-        )
+        block_kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "cam_viewmats": cam_viewmats,
+            "cam_K": cam_K,
+            "cache_update_policy": cache_update_policy,
+        }
 
         cache_update_infos = []
         for block_index, block in enumerate(self.blocks):

@@ -330,10 +330,7 @@ class MMSingleStreamBlock(nn.Module):
         )
         img_q, img_k = img_qq, img_kk
 
-        if is_flash:
-            attn_mode = "flash"
-        else:
-            attn_mode = self.attn_mode
+        attn_mode = "flash" if is_flash else self.attn_mode
         attn = parallel_attention(
             (img_q, txt_q),
             (img_k, txt_k),

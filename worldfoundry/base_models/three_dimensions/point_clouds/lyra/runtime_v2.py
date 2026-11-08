@@ -97,10 +97,7 @@ class Lyra2Representation:
         if video is None:
             raise ValueError("Lyra2Representation expects either 'video_path', 'video', or 'video_tensor'.")
 
-        if torch.is_tensor(video):
-            video = video_tensor_to_uint8_frames(video)
-        else:
-            video = np.asarray(video)
+        video = video_tensor_to_uint8_frames(video) if torch.is_tensor(video) else np.asarray(video)
         if video.ndim != 4:
             raise ValueError(f"Expected video with shape [T,H,W,C], got {tuple(video.shape)}")
 

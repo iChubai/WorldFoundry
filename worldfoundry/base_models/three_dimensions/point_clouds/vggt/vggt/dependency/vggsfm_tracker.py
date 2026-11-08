@@ -21,7 +21,7 @@ class TrackerPredictor(nn.Module):
 
     def __init__(self, **extra_args):
         """Init."""
-        super(TrackerPredictor, self).__init__()
+        super().__init__()
         """
         Initializes the tracker predictor.
 

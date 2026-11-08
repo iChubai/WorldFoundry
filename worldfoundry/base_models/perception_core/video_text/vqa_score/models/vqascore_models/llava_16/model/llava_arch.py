@@ -137,17 +137,14 @@ def get_anyres_image_grid_shape(image_size, grid_pinpoints, patch_size):
     Returns:
         tuple: The shape of the image patch grid in the format (width, height).
     """
-    if type(grid_pinpoints) is list:
-        possible_resolutions = grid_pinpoints
-    else:
-        possible_resolutions = ast.literal_eval(grid_pinpoints)
+    possible_resolutions = grid_pinpoints if type(grid_pinpoints) is list else ast.literal_eval(grid_pinpoints)
     width, height = select_best_resolution(image_size, possible_resolutions)
     return width // patch_size, height // patch_size
 
 
 class LlavaMetaModel:
     def __init__(self, config):
-        super(LlavaMetaModel, self).__init__(config)
+        super().__init__(config)
 
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
@@ -179,10 +176,7 @@ class LlavaMetaModel:
             else:
                 self.vision_tower = vision_tower
         else:
-            if fsdp is not None and len(fsdp) > 0:
-                vision_tower = self.vision_tower[0]
-            else:
-                vision_tower = self.vision_tower
+            vision_tower = self.vision_tower[0] if fsdp is not None and len(fsdp) > 0 else self.vision_tower
             vision_tower.load_model()
 
         self.config.use_mm_proj = True
@@ -266,7 +260,7 @@ class LlavaMetaForCausalLM(ABC):
         if type(images) is list or images.ndim == 5:
             if type(images) is list:
                 images = [x.unsqueeze(0) if x.ndim == 3 else x for x in images]
-            concat_images = torch.cat([image for image in images], dim=0)
+            concat_images = torch.cat(list(images), dim=0)
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)
@@ -464,15 +458,9 @@ class LlavaMetaForCausalLM(ABC):
 
         new_input_embeds = torch.stack(new_input_embeds_padded, dim=0)
 
-        if _labels is None:
-            new_labels = None
-        else:
-            new_labels = new_labels_padded
+        new_labels = None if _labels is None else new_labels_padded
 
-        if _attention_mask is None:
-            attention_mask = None
-        else:
-            attention_mask = attention_mask.to(dtype=_attention_mask.dtype)
+        attention_mask = None if _attention_mask is None else attention_mask.to(dtype=_attention_mask.dtype)
 
         if _position_ids is None:
             position_ids = None

@@ -119,7 +119,7 @@ class PickleHandler(BaseFileHandler):
         Args:
             filepath: The filepath.
         """
-        return super(PickleHandler, self).load_from_path(filepath, mode="rb", **kwargs)
+        return super().load_from_path(filepath, mode="rb", **kwargs)
 
     def dump_to_str(self, obj, **kwargs):
         """Dump to str.
@@ -147,7 +147,7 @@ class PickleHandler(BaseFileHandler):
             obj: The obj.
             filepath: The filepath.
         """
-        super(PickleHandler, self).dump_to_path(obj, filepath, mode="wb", **kwargs)
+        super().dump_to_path(obj, filepath, mode="wb", **kwargs)
 
 
 class YamlHandler(BaseFileHandler):

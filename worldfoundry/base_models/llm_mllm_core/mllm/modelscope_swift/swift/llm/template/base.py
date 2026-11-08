@@ -100,10 +100,7 @@ class Template(ProcessorMixin):
         self._processor_inited = False
         self.max_length = max_length
 
-        if not use_chat_template:
-            template_meta = template_meta.to_generate_template_meta()
-        else:
-            template_meta = deepcopy(template_meta)
+        template_meta = template_meta.to_generate_template_meta() if not use_chat_template else deepcopy(template_meta)
         # if default_system is None. not change self.default_system
         template_meta.check_system(default_system)
         if default_system is not None:
@@ -516,10 +513,7 @@ class Template(ProcessorMixin):
             return problem_type
         if labels is not None:
             if isinstance(labels, (list, tuple)):
-                if labels and isinstance(labels[0], float):
-                    problem_type = "regression"
-                else:
-                    problem_type = "multi_label_classification"
+                problem_type = "regression" if labels and isinstance(labels[0], float) else "multi_label_classification"
             else:
                 problem_type = "single_label_classification"
                 assert config.num_labels >= labels + 1
@@ -1051,10 +1045,7 @@ class Template(ProcessorMixin):
             res_context_list.append(sep_token)
             res_context_types.append(ContextType.SUFFIX)
         res_context_list, loss_scale_list = self.loss_scale(res_context_list, res_context_types, inputs.messages)
-        if self.is_training:
-            answer_len = len(extra_context_list) + bool(response is not None)
-        else:
-            answer_len = 0
+        answer_len = len(extra_context_list) + bool(response is not None) if self.is_training else 0
         return res_context_list, loss_scale_list, answer_len
 
     def _encode_truncated(self, inputs):
@@ -1158,7 +1149,7 @@ class Template(ProcessorMixin):
             encoded["labels"][0] = -100
         if not self.is_training:
             for k in list(encoded.keys()):
-                if k.endswith("labels") or k.endswith("loss_scale"):
+                if k.endswith(("labels", "loss_scale")):
                     encoded[k] = None
         return encoded
 

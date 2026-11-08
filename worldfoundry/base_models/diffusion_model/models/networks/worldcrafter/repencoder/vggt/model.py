@@ -81,17 +81,17 @@ class RepresentationBackbone(nn.Module):
         self.config = RepEncoderConfig() if config is None else config
         self.rope = RotaryPositionEmbedding2D(frequency=100)
         self.position_getter = PositionGetter()
-        block_args = dict(
-            dim=self.config.dino_dim,
-            num_heads=self.config.vggt_heads,
-            mlp_ratio=4.0,
-            qkv_bias=True,
-            proj_bias=True,
-            ffn_bias=True,
-            init_values=0.01,
-            qk_norm=True,
-            rope=self.rope,
-        )
+        block_args = {
+            "dim": self.config.dino_dim,
+            "num_heads": self.config.vggt_heads,
+            "mlp_ratio": 4.0,
+            "qkv_bias": True,
+            "proj_bias": True,
+            "ffn_bias": True,
+            "init_values": 0.01,
+            "qk_norm": True,
+            "rope": self.rope,
+        }
         self.frame_blocks = nn.ModuleList([Block(**block_args) for _ in range(self.config.vggt_depth)])
         self.global_blocks = nn.ModuleList([Block(**block_args) for _ in range(self.config.vggt_depth)])
         self.camera_token = nn.Parameter(torch.zeros(1, 2, 1, self.config.dino_dim))

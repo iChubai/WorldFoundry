@@ -205,10 +205,7 @@ def _ransac_align_sim3(pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_i
     rng = np.random.default_rng(random_state)
     N = pose_ref.shape[0]
     idx_all = np.arange(N)
-    if sub_n is None:
-        sub_n = max(3, (N + 1) // 2)
-    else:
-        sub_n = max(3, min(sub_n, N))
+    sub_n = max(3, (N + 1) // 2) if sub_n is None else max(3, min(sub_n, N))
 
     # Pre-alignment + default threshold
     r0, t0, s0, pose_est0 = _umeyama_sim3_from_paths(pose_ref, pose_est)

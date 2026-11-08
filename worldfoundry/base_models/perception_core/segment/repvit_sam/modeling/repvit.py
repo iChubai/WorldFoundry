@@ -198,7 +198,7 @@ class RepViTBlock(nn.Module):
             use_se: The use se.
             use_hs: The use hs.
         """
-        super(RepViTBlock, self).__init__()
+        super().__init__()
         assert stride in [1, 2]
 
         self.identity = stride == 1 and inp == oup
@@ -282,10 +282,7 @@ class BN_Linear(torch.nn.Sequential):
         w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         b = bn.bias - self.bn.running_mean * self.bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = l.weight * w[None, :]
-        if l.bias is None:
-            b = b @ self.l.weight.T
-        else:
-            b = (l.weight @ b[:, None]).view(-1) + self.l.bias
+        b = b @ self.l.weight.T if l.bias is None else (l.weight @ b[:, None]).view(-1) + self.l.bias
         m = torch.nn.Linear(w.size(1), w.size(0), device=l.weight.device)
         m.weight.data.copy_(w)
         m.bias.data.copy_(b)
@@ -350,7 +347,7 @@ class RepViT(nn.Module):
             distillation: The distillation.
             img_size: The img size.
         """
-        super(RepViT, self).__init__()
+        super().__init__()
         # setting of inverted residual blocks
         self.cfgs = cfgs
 

@@ -1223,15 +1223,15 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                 Ks = torch.chunk(Ks, sp_size, dim=1)[sp_rank]
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+        }
         if viewmats is not None:
             kwargs["viewmats"] = viewmats
             kwargs["Ks"] = Ks
@@ -1501,15 +1501,15 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
         # arguments
         block_mask = self.block_mask
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=block_mask,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": block_mask,
+        }
         if viewmats is not None:
             kwargs["viewmats"] = viewmats
             kwargs["Ks"] = Ks

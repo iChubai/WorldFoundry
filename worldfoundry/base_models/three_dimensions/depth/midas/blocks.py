@@ -244,7 +244,7 @@ class Interpolate(nn.Module):
             scale_factor (float): scaling
             mode (str): interpolation mode
         """
-        super(Interpolate, self).__init__()
+        super().__init__()
 
         self.interp = nn.functional.interpolate
         self.scale_factor = scale_factor
@@ -309,7 +309,7 @@ class FeatureFusionBlock(nn.Module):
         Args:
             features (int): number of features
         """
-        super(FeatureFusionBlock, self).__init__()
+        super().__init__()
 
         self.resConfUnit1 = ResidualConvUnit(features)
         self.resConfUnit2 = ResidualConvUnit(features)
@@ -396,7 +396,7 @@ class FeatureFusionBlock_custom(nn.Module):
         Args:
             features (int): number of features
         """
-        super(FeatureFusionBlock_custom, self).__init__()
+        super().__init__()
 
         self.deconv = deconv
         self.align_corners = align_corners

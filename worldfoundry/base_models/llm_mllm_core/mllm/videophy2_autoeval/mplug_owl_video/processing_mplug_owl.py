@@ -25,7 +25,7 @@ def load_video(path, num_frames=4):
     total_frames = len(vr)
     # print(f'total frames: {total_frames}')
     frame_indices = get_index(total_frames, num_frames)
-    images_group = list()
+    images_group = []
     for frame_index in frame_indices:
         img = Image.fromarray(vr[frame_index].asnumpy()).convert("RGB")
         images_group.append(img)
@@ -214,10 +214,7 @@ def _tokenize_prompt(prompt, tokenizer, add_BOS=False, media_info={"<image>": 65
     media_tokens = {k: -int(i + 1) for i, k in enumerate(media_info.keys())}
     media_lengths = media_info.copy()
 
-    if add_BOS:
-        prompt_chunk = [tokenizer.bos_token_id]
-    else:
-        prompt_chunk = []
+    prompt_chunk = [tokenizer.bos_token_id] if add_BOS else []
 
     # Pure Text
     if all([media_token not in prompt for media_token in media_tokens]):

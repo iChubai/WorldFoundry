@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
@@ -54,7 +54,7 @@ class ResidualBlock(nn.Module):
 
 class BottleneckBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(BottleneckBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
         self.conv2 = nn.Conv2d(planes // 4, planes // 4, kernel_size=3, padding=1, stride=stride)
@@ -114,7 +114,7 @@ DIM = 32
 
 class BasicEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0, multidim=False):
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
         self.multidim = multidim
 

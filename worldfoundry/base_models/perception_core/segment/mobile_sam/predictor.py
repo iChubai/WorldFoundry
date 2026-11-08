@@ -213,10 +213,7 @@ class SamPredictor:
         if not self.is_image_set:
             raise RuntimeError("An image must be set with .set_image(...) before mask prediction.")
 
-        if point_coords is not None:
-            points = (point_coords, point_labels)
-        else:
-            points = None
+        points = (point_coords, point_labels) if point_coords is not None else None
 
         # Embed prompts
         sparse_embeddings, dense_embeddings = self.model.prompt_encoder(

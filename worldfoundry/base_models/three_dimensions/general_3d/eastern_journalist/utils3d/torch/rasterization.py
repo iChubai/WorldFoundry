@@ -158,10 +158,7 @@ def rasterize_triangles(
             image = dr.antialias(image, rast_out, pos_clip, faces)
         image = image.flip(1)
 
-        if return_image_derivatives is not None:
-            image_dr = image_dr.flip(1)
-        else:
-            image_dr = None
+        image_dr = image_dr.flip(1) if return_image_derivatives is not None else None
     else:
         image = None
         image_dr = None
@@ -323,10 +320,7 @@ def rasterize_triangles_peeling(
                     image = dr.antialias(image, rast_out, pos_clip, faces)
                 image = image.flip(1).permute(0, 3, 1, 2)
 
-                if return_image_derivatives is not None:
-                    image_dr = image_dr.flip(1).permute(0, 3, 1, 2)
-                else:
-                    image_dr = None
+                image_dr = image_dr.flip(1).permute(0, 3, 1, 2) if return_image_derivatives is not None else None
             else:
                 image = None
                 image_dr = None

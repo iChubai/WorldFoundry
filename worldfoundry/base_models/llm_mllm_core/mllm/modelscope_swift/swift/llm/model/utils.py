@@ -111,10 +111,7 @@ class HfConfigFactory:
 
         for k in keys:
             if k.endswith("_config"):
-                if isinstance(config, dict):
-                    v = config[k]
-                else:
-                    v = getattr(config, k)
+                v = config[k] if isinstance(config, dict) else getattr(config, k)
                 res += HfConfigFactory._get_config_attrs(v, attr_name, k)
         return res
 
@@ -350,10 +347,7 @@ def get_llm_model(model: torch.nn.Module, model_meta=None):
         model_meta = model.model_meta
 
     llm_prefix = getattr(get_model_arch(model_meta.model_arch), "language_model", None)
-    if llm_prefix:
-        llm_model = deep_getattr(model, llm_prefix[0])
-    else:
-        llm_model = model
+    llm_model = deep_getattr(model, llm_prefix[0]) if llm_prefix else model
 
     if "CausalLM" not in llm_model.__class__.__name__:
         llm_model = model

@@ -11,10 +11,10 @@ test_ann_file = "annotations/test.json"
 test_data_prefix = "test_images/"
 class_name = ("E", "Es-l", "Es-c", "F1", "F2", "Spread-F")
 num_classes = len(class_name)
-metainfo = dict(
-    classes=class_name,
-    palette=[(250, 165, 30), (120, 69, 125), (53, 125, 34), (0, 11, 123), (130, 20, 12), (120, 121, 80)],
-)
+metainfo = {
+    "classes": class_name,
+    "palette": [(250, 165, 30), (120, 69, 125), (53, 125, 34), (0, 11, 123), (130, 20, 12), (120, 121, 80)],
+}
 # Batch size of a single GPU during training
 train_batch_size_per_gpu = 96
 # Worker to pre-fetch data for each single GPU during training
@@ -42,65 +42,73 @@ val_begin = 20
 tta_model = None
 tta_pipeline = None
 
-visualizer = dict(vis_backends=[dict(type="LocalVisBackend"), dict(type="WandbVisBackend")])
+visualizer = {"vis_backends": [{"type": "LocalVisBackend"}, {"type": "WandbVisBackend"}]}
 
 # ===================== Unmodified in most cases ==================
-model = dict(
-    bbox_head=dict(
-        head_module=dict(num_classes=num_classes),
-        prior_generator=dict(base_sizes=anchors),
-        loss_cls=dict(loss_weight=0.5 * (num_classes / 80 * 3 / _base_.num_det_layers)),
-    )
-)
+model = {
+    "bbox_head": {
+        "head_module": {"num_classes": num_classes},
+        "prior_generator": {"base_sizes": anchors},
+        "loss_cls": {"loss_weight": 0.5 * (num_classes / 80 * 3 / _base_.num_det_layers)},
+    }
+}
 
-train_dataloader = dict(
-    batch_size=train_batch_size_per_gpu,
-    num_workers=train_num_workers,
-    dataset=dict(
-        _delete_=True,
-        type="RepeatDataset",
-        times=1,
-        dataset=dict(
-            type=_base_.dataset_type,
-            data_root=data_root,
-            metainfo=metainfo,
-            ann_file=train_ann_file,
-            data_prefix=dict(img=train_data_prefix),
-            filter_cfg=dict(filter_empty_gt=False, min_size=32),
-            pipeline=_base_.train_pipeline,
-        ),
-    ),
-)
+train_dataloader = {
+    "batch_size": train_batch_size_per_gpu,
+    "num_workers": train_num_workers,
+    "dataset": {
+        "_delete_": True,
+        "type": "RepeatDataset",
+        "times": 1,
+        "dataset": {
+            "type": _base_.dataset_type,
+            "data_root": data_root,
+            "metainfo": metainfo,
+            "ann_file": train_ann_file,
+            "data_prefix": {"img": train_data_prefix},
+            "filter_cfg": {"filter_empty_gt": False, "min_size": 32},
+            "pipeline": _base_.train_pipeline,
+        },
+    },
+}
 
-val_dataloader = dict(
-    batch_size=train_batch_size_per_gpu,
-    num_workers=train_num_workers,
-    dataset=dict(metainfo=metainfo, data_root=data_root, ann_file=val_ann_file, data_prefix=dict(img=val_data_prefix)),
-)
+val_dataloader = {
+    "batch_size": train_batch_size_per_gpu,
+    "num_workers": train_num_workers,
+    "dataset": {
+        "metainfo": metainfo,
+        "data_root": data_root,
+        "ann_file": val_ann_file,
+        "data_prefix": {"img": val_data_prefix},
+    },
+}
 
-test_dataloader = dict(
-    batch_size=train_batch_size_per_gpu,
-    num_workers=train_num_workers,
-    dataset=dict(
-        metainfo=metainfo, data_root=data_root, ann_file=test_ann_file, data_prefix=dict(img=test_data_prefix)
-    ),
-)
+test_dataloader = {
+    "batch_size": train_batch_size_per_gpu,
+    "num_workers": train_num_workers,
+    "dataset": {
+        "metainfo": metainfo,
+        "data_root": data_root,
+        "ann_file": test_ann_file,
+        "data_prefix": {"img": test_data_prefix},
+    },
+}
 
-optim_wrapper = dict(optimizer=dict(lr=base_lr))
+optim_wrapper = {"optimizer": {"lr": base_lr}}
 
-default_hooks = dict(
-    checkpoint=dict(
-        type="CheckpointHook",
-        save_param_scheduler=None,  # for yolov5
-        interval=save_epoch_intervals,
-        max_keep_ckpts=max_keep_ckpts,
-        save_best="auto",
-    ),
-    param_scheduler=dict(max_epochs=max_epochs),
-    logger=dict(type="LoggerHook", interval=logger_interval),
-)
+default_hooks = {
+    "checkpoint": {
+        "type": "CheckpointHook",
+        "save_param_scheduler": None,  # for yolov5
+        "interval": save_epoch_intervals,
+        "max_keep_ckpts": max_keep_ckpts,
+        "save_best": "auto",
+    },
+    "param_scheduler": {"max_epochs": max_epochs},
+    "logger": {"type": "LoggerHook", "interval": logger_interval},
+}
 
-val_evaluator = dict(ann_file=data_root + val_ann_file)
-test_evaluator = dict(ann_file=data_root + test_ann_file)
+val_evaluator = {"ann_file": data_root + val_ann_file}
+test_evaluator = {"ann_file": data_root + test_ann_file}
 
-train_cfg = dict(max_epochs=max_epochs, val_begin=val_begin, val_interval=val_interval)
+train_cfg = {"max_epochs": max_epochs, "val_begin": val_begin, "val_interval": val_interval}

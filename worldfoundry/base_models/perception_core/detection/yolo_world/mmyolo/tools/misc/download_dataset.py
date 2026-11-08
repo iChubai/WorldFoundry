@@ -53,32 +53,32 @@ def main():
     path = Path(args.save_dir)
     if not path.exists():
         path.mkdir(parents=True, exist_ok=True)
-    data2url = dict(
+    data2url = {
         # TODO: Support for downloading Panoptic Segmentation of COCO
-        coco2017=[
+        "coco2017": [
             "http://images.cocodataset.org/zips/train2017.zip",
             "http://images.cocodataset.org/zips/val2017.zip",
             "http://images.cocodataset.org/zips/test2017.zip",
             "http://images.cocodataset.org/annotations/" + "annotations_trainval2017.zip",
         ],
-        lvis=[
+        "lvis": [
             "https://s3-us-west-2.amazonaws.com/dl.fbaipublicfiles.com/LVIS/lvis_v1_train.json.zip",
             "https://s3-us-west-2.amazonaws.com/dl.fbaipublicfiles.com/LVIS/lvis_v1_train.json.zip",
         ],
-        voc2007=[
+        "voc2007": [
             "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar",
             "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar",
             "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCdevkit_08-Jun-2007.tar",
         ],
-        voc2012=[
+        "voc2012": [
             "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar",
         ],
-        balloon=[
+        "balloon": [
             # src link: https://github.com/matterport/Mask_RCNN/releases/download/v2.1/balloon_dataset.zip
             "https://download.openmmlab.com/mmyolo/data/balloon_dataset.zip"
         ],
-        cat=["https://download.openmmlab.com/mmyolo/data/cat_dataset.zip"],
-    )
+        "cat": ["https://download.openmmlab.com/mmyolo/data/cat_dataset.zip"],
+    }
     url = data2url.get(args.dataset_name, None)
     if url is None:
         print("Only support COCO, VOC, balloon, cat and LVIS now!")

@@ -1194,7 +1194,7 @@ def build_sam3_multiplex_video_predictor(
             ckpt = ckpt["model"]
         # Remap checkpoint keys if needed (internal naming -> OSS naming)
         # HF checkpoints are already remapped; local checkpoints may use old naming
-        needs_remap = any(k.startswith("sam3_model.") or k.startswith("sam2_predictor.") for k in ckpt)
+        needs_remap = any(k.startswith(("sam3_model.", "sam2_predictor.")) for k in ckpt)
         if needs_remap:
             remapped_ckpt = {}
             for k, v in ckpt.items():

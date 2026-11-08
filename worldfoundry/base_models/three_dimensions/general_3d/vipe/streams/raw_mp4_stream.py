@@ -156,7 +156,7 @@ class RawMP4StreamList(StreamList):
             self.mp4_sequences = [Path(base_path)]
             assert self.mp4_sequences[0].suffix == ".mp4", "Only mp4 files are accepted."
         else:
-            self.mp4_sequences = sorted(list(Path(base_path).glob("*.mp4")))
+            self.mp4_sequences = sorted(Path(base_path).glob("*.mp4"))
         self.frame_range = range(frame_start, frame_end, frame_skip)
         self.cached = cached
 

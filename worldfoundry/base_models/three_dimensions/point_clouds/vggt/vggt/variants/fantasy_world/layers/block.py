@@ -156,10 +156,7 @@ class Block(nn.Module):
                 e0 = e0.unsqueeze(1).repeat(1, x.shape[0] // B, 1, 1)
                 e0 = e0.reshape(x.shape[0], 6, -1)
 
-        if e0 is not None:
-            e_mod = (self.modulation + e0).chunk(6, dim=1)
-        else:
-            e_mod = None
+        e_mod = (self.modulation + e0).chunk(6, dim=1) if e0 is not None else None
 
         x = x + self.attn_residual_func(x, pos=pos, e=e_mod)
 

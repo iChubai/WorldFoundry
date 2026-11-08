@@ -13,7 +13,7 @@ __all__ = ["CenterNetHead"]
 
 class Scale(nn.Module):
     def __init__(self, init_value=1.0):
-        super(Scale, self).__init__()
+        super().__init__()
         self.scale = nn.Parameter(torch.FloatTensor([init_value]))
 
     def forward(self, input):
@@ -64,10 +64,7 @@ class CenterNetHead(nn.Module):
             num_convs, use_deformable = head_configs[head]
             channel = channels[head]
             for i in range(num_convs):
-                if use_deformable and i == num_convs - 1:
-                    conv_func = DFConv2d
-                else:
-                    conv_func = nn.Conv2d
+                conv_func = DFConv2d if use_deformable and i == num_convs - 1 else nn.Conv2d
                 tower.append(
                     conv_func(
                         in_channels if i == 0 else channel, channel, kernel_size=3, stride=1, padding=1, bias=True

@@ -68,8 +68,8 @@ class YOLOXHeadModule(BaseModule):
         dcn_on_last_conv: bool = False,
         conv_bias: bool | str = "auto",
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -114,10 +114,7 @@ class YOLOXHeadModule(BaseModule):
         stacked_convs = []
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
-            if self.dcn_on_last_conv and i == self.stacked_convs - 1:
-                conv_cfg = dict(type="DCNv2")
-            else:
-                conv_cfg = self.conv_cfg
+            conv_cfg = {"type": "DCNv2"} if self.dcn_on_last_conv and i == self.stacked_convs - 1 else self.conv_cfg
             stacked_convs.append(
                 conv(
                     chn,
@@ -215,12 +212,28 @@ class YOLOXHead(YOLOv5Head):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(type="mmdet.MlvlPointGenerator", offset=0, strides=[8, 16, 32]),
-        bbox_coder: ConfigType = dict(type="YOLOXBBoxCoder"),
-        loss_cls: ConfigType = dict(type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="sum", loss_weight=1.0),
-        loss_bbox: ConfigType = dict(type="mmdet.IoULoss", mode="square", eps=1e-16, reduction="sum", loss_weight=5.0),
-        loss_obj: ConfigType = dict(type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="sum", loss_weight=1.0),
-        loss_bbox_aux: ConfigType = dict(type="mmdet.L1Loss", reduction="sum", loss_weight=1.0),
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},
+        bbox_coder: ConfigType = {"type": "YOLOXBBoxCoder"},
+        loss_cls: ConfigType = {
+            "type": "mmdet.CrossEntropyLoss",
+            "use_sigmoid": True,
+            "reduction": "sum",
+            "loss_weight": 1.0,
+        },
+        loss_bbox: ConfigType = {
+            "type": "mmdet.IoULoss",
+            "mode": "square",
+            "eps": 1e-16,
+            "reduction": "sum",
+            "loss_weight": 5.0,
+        },
+        loss_obj: ConfigType = {
+            "type": "mmdet.CrossEntropyLoss",
+            "use_sigmoid": True,
+            "reduction": "sum",
+            "loss_weight": 1.0,
+        },
+        loss_bbox_aux: ConfigType = {"type": "mmdet.L1Loss", "reduction": "sum", "loss_weight": 1.0},
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,
@@ -349,7 +362,7 @@ class YOLOXHead(YOLOv5Head):
             loss_cls = flatten_cls_preds.sum() * 0
             loss_bbox = flatten_bboxes.sum() * 0
 
-        loss_dict = dict(loss_cls=loss_cls, loss_bbox=loss_bbox, loss_obj=loss_obj)
+        loss_dict = {"loss_cls": loss_cls, "loss_bbox": loss_bbox, "loss_obj": loss_obj}
 
         if self.use_bbox_aux:
             if num_pos > 0:

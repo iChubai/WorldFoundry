@@ -70,12 +70,10 @@ def sliding_window(
     axis = [axis[i] % x.ndim for i in range(len(axis))]
     if isinstance(window_size, Integral):
         window_size = (window_size,) * len(axis)
-    if dilation is not None:
-        if isinstance(dilation, Integral):
-            dilation = (dilation,) * len(axis)
-    if stride is not None:
-        if isinstance(stride, Integral):
-            stride = (stride,) * len(axis)
+    if dilation is not None and isinstance(dilation, Integral):
+        dilation = (dilation,) * len(axis)
+    if stride is not None and isinstance(stride, Integral):
+        stride = (stride,) * len(axis)
 
     # Pad the input array if needed
     if pad_size is not None:
@@ -410,10 +408,7 @@ def group_as_segments(labels: ndarray, data: Optional[np.ndarray] = None) -> Tup
     """
     group_labels, inv, counts = np.unique(labels, return_inverse=True, return_counts=True, axis=0)
     offsets = np.concatenate([[0], np.cumsum(counts, axis=0)])
-    if data is None:
-        data = np.argsort(inv)
-    else:
-        data = data[np.argsort(inv)]
+    data = np.argsort(inv) if data is None else data[np.argsort(inv)]
     return group_labels, data, offsets
 
 

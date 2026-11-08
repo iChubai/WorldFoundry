@@ -153,27 +153,37 @@ class YOLOv5Head(BaseDenseHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(
-            type="mmdet.YOLOAnchorGenerator",
-            base_sizes=[
+        prior_generator: ConfigType = {
+            "type": "mmdet.YOLOAnchorGenerator",
+            "base_sizes": [
                 [(10, 13), (16, 30), (33, 23)],
                 [(30, 61), (62, 45), (59, 119)],
                 [(116, 90), (156, 198), (373, 326)],
             ],
-            strides=[8, 16, 32],
-        ),
-        bbox_coder: ConfigType = dict(type="YOLOv5BBoxCoder"),
-        loss_cls: ConfigType = dict(type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="mean", loss_weight=0.5),
-        loss_bbox: ConfigType = dict(
-            type="IoULoss",
-            iou_mode="ciou",
-            bbox_format="xywh",
-            eps=1e-7,
-            reduction="mean",
-            loss_weight=0.05,
-            return_iou=True,
-        ),
-        loss_obj: ConfigType = dict(type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="mean", loss_weight=1.0),
+            "strides": [8, 16, 32],
+        },
+        bbox_coder: ConfigType = {"type": "YOLOv5BBoxCoder"},
+        loss_cls: ConfigType = {
+            "type": "mmdet.CrossEntropyLoss",
+            "use_sigmoid": True,
+            "reduction": "mean",
+            "loss_weight": 0.5,
+        },
+        loss_bbox: ConfigType = {
+            "type": "IoULoss",
+            "iou_mode": "ciou",
+            "bbox_format": "xywh",
+            "eps": 1e-7,
+            "reduction": "mean",
+            "loss_weight": 0.05,
+            "return_iou": True,
+        },
+        loss_obj: ConfigType = {
+            "type": "mmdet.CrossEntropyLoss",
+            "use_sigmoid": True,
+            "reduction": "mean",
+            "loss_weight": 1.0,
+        },
         prior_match_thr: float = 4.0,
         near_neighbor_thr: float = 0.5,
         ignore_iof_thr: float = -1.0,
@@ -357,10 +367,7 @@ class YOLOv5Head(BaseDenseHead):
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
-            if "pad_param" in img_meta:
-                pad_param = img_meta["pad_param"]
-            else:
-                pad_param = None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
 
             score_thr = cfg.get("score_thr", -1)
             # yolox_style does not require the following operations
@@ -386,7 +393,7 @@ class YOLOv5Head(BaseDenseHead):
             if cfg.multi_label is False:
                 scores, labels = scores.max(1, keepdim=True)
                 scores, _, keep_idxs, results = filter_scores_and_topk(
-                    scores, score_thr, nms_pre, results=dict(labels=labels[:, 0])
+                    scores, score_thr, nms_pre, results={"labels": labels[:, 0]}
                 )
                 labels = results["labels"]
             else:
@@ -589,11 +596,11 @@ class YOLOv5Head(BaseDenseHead):
                 loss_cls += cls_scores[i].sum() * 0
 
         _, world_size = get_dist_info()
-        return dict(
-            loss_cls=loss_cls * batch_size * world_size,
-            loss_obj=loss_obj * batch_size * world_size,
-            loss_bbox=loss_box * batch_size * world_size,
-        )
+        return {
+            "loss_cls": loss_cls * batch_size * world_size,
+            "loss_obj": loss_obj * batch_size * world_size,
+            "loss_bbox": loss_box * batch_size * world_size,
+        }
 
     def _convert_gt_to_norm_format(
         self, batch_gt_instances: Sequence[InstanceData], batch_img_metas: Sequence[dict]
@@ -817,8 +824,8 @@ class YOLOv5Head(BaseDenseHead):
                 loss_cls += cls_scores[i].sum() * 0
 
         _, world_size = get_dist_info()
-        return dict(
-            loss_cls=loss_cls * batch_size * world_size,
-            loss_obj=loss_obj * batch_size * world_size,
-            loss_bbox=loss_box * batch_size * world_size,
-        )
+        return {
+            "loss_cls": loss_cls * batch_size * world_size,
+            "loss_obj": loss_obj * batch_size * world_size,
+            "loss_bbox": loss_box * batch_size * world_size,
+        }

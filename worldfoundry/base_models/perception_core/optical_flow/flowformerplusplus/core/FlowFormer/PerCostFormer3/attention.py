@@ -6,7 +6,7 @@ from torch import einsum
 
 class BroadMultiHeadAttention(nn.Module):
     def __init__(self, dim, heads):
-        super(BroadMultiHeadAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.heads = heads
         self.scale = (dim / heads) ** -0.5
@@ -41,7 +41,7 @@ class BroadMultiHeadAttention(nn.Module):
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, dim, heads):
-        super(MultiHeadAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.heads = heads
         self.scale = (dim / heads) ** -0.5
@@ -113,7 +113,7 @@ class MultiHeadAttention(nn.Module):
 
 class MultiHeadAttentionRelative(nn.Module):
     def __init__(self, dim, heads):
-        super(MultiHeadAttentionRelative, self).__init__()
+        super().__init__()
         self.dim = dim
         self.heads = heads
         self.scale = (dim / heads) ** -0.5

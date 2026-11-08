@@ -233,8 +233,5 @@ class YOLOWorldImageDetector(YOLODetector):
             #         self.test_embeddings)
 
         if self.with_neck:
-            if self.mm_neck:
-                img_feats = self.neck(img_feats, txt_feats)
-            else:
-                img_feats = self.neck(img_feats)
+            img_feats = self.neck(img_feats, txt_feats) if self.mm_neck else self.neck(img_feats)
         return img_feats, txt_feats

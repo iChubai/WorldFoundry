@@ -360,7 +360,7 @@ def _adaptive_frame_selection(sparse_samples, fps, max_frames):
         if not any(_calculate_hist_similarity(last_hist, h) > 0.999 for h in selected_hists):
             candidate_indices.append(sparse_samples[-1]["idx"])
 
-    return sorted(list(set(candidate_indices)))
+    return sorted(set(candidate_indices))
 
 
 def _enforce_frame_constraints(candidate_indices, sparse_samples, min_frames, max_frames):
@@ -370,7 +370,7 @@ def _enforce_frame_constraints(candidate_indices, sparse_samples, min_frames, ma
         all_indices = [s["idx"] for s in sparse_samples]
         extras = np.linspace(0, len(all_indices) - 1, needed + 2)[1:-1]
         candidate_indices.extend([all_indices[int(e)] for e in extras])
-        candidate_indices = sorted(list(set(candidate_indices)))
+        candidate_indices = sorted(set(candidate_indices))
 
     if len(candidate_indices) > max_frames:
         indices_to_keep = np.linspace(0, len(candidate_indices) - 1, max_frames)

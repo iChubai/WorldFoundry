@@ -191,6 +191,5 @@ def set_norm_eps(model: nn.Module, eps: float | None = None) -> None:
         The return value.
     """
     for m in model.modules():
-        if isinstance(m, (nn.GroupNorm, nn.LayerNorm, _BatchNorm)):
-            if eps is not None:
-                m.eps = eps
+        if isinstance(m, (nn.GroupNorm, nn.LayerNorm, _BatchNorm)) and eps is not None:
+            m.eps = eps

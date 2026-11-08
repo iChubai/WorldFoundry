@@ -31,7 +31,7 @@ class DFConv2d(nn.Module):
         bias=False,
         padding=None,
     ):
-        super(DFConv2d, self).__init__()
+        super().__init__()
         if isinstance(kernel_size, (list, tuple)):
             assert isinstance(stride, (list, tuple))
             assert isinstance(dilation, (list, tuple))

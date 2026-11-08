@@ -26,7 +26,7 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.b
 
 class Model(nn.Module):
     def __init__(self, corr_radius=3, corr_lvls=4, num_flows=5, channels=[84, 96, 112, 128], skip_channels=84):
-        super(Model, self).__init__()
+        super().__init__()
         self.radius = corr_radius
         self.corr_levels = corr_lvls
         self.num_flows = num_flows

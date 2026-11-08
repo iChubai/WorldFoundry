@@ -18,7 +18,7 @@ def convrelu(in_channels, out_channels, kernel_size=3, stride=1, padding=1, dila
 
 class ResBlock(nn.Module):
     def __init__(self, in_channels, side_channels, bias=True):
-        super(ResBlock, self).__init__()
+        super().__init__()
         self.side_channels = side_channels
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1, bias=bias), nn.PReLU(in_channels)
@@ -56,7 +56,7 @@ class ResBlock(nn.Module):
 
 class Encoder(nn.Module):
     def __init__(self, channels, large=False):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.channels = channels
         prev_ch = 3
         for idx, ch in enumerate(channels, 1):

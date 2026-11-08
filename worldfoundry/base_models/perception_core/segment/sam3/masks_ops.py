@@ -155,10 +155,7 @@ def compute_F_measure(gt_boundary_rle, gt_dilated_boundary_rle, dt_boundary_rle,
         recall = maskUtils.area(gt_match) / float(n_gt)
 
     # Compute F measure
-    if precision + recall == 0:
-        f_val = 0
-    else:
-        f_val = 2 * precision * recall / (precision + recall)
+    f_val = 0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
 
     return f_val
 

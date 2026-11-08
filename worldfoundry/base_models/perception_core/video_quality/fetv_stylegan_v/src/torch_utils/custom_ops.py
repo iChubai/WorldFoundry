@@ -43,7 +43,7 @@ def _find_compiler_bindir():
 # ----------------------------------------------------------------------------
 # Main entry point for compiling and loading C++/CUDA plugins.
 
-_cached_plugins = dict()
+_cached_plugins = {}
 
 
 def get_plugin(module_name, sources, **build_kwargs):
@@ -82,9 +82,9 @@ def get_plugin(module_name, sources, **build_kwargs):
         # a single directory (just for simplicity) and if the TORCH_EXTENSIONS_DIR
         # environment variable is set (we take this as a signal that the user
         # actually cares about this.)
-        source_dirs_set = set(os.path.dirname(source) for source in sources)
+        source_dirs_set = {os.path.dirname(source) for source in sources}
         if len(source_dirs_set) == 1 and ("TORCH_EXTENSIONS_DIR" in os.environ):
-            all_source_files = sorted(list(x for x in Path(list(source_dirs_set)[0]).iterdir() if x.is_file()))
+            all_source_files = sorted(x for x in Path(list(source_dirs_set)[0]).iterdir() if x.is_file())
 
             # Compute a combined hash digest for all source files in the same
             # custom op directory (usually .cu, .cpp, .py and .h files).

@@ -17,6 +17,7 @@ from einops import rearrange, repeat
 from tqdm import tqdm
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+import itertools
 
 CACHE_T = 2
 
@@ -164,47 +165,42 @@ class Resample(nn.Module):
             feat_idx: The feat idx.
         """
         b, c, t, h, w = x.size()
-        if self.mode == "upsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = "Rep"
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -CACHE_T:, :, :].clone()
-                    if cache_x.shape[2] < 2 and feat_cache[idx] is not None and not isinstance(feat_cache[idx], str):
-                        # cache last frame of last two chunk
-                        cache_x = torch.cat(
-                            [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
-                        )
-                    if cache_x.shape[2] < 2 and isinstance(feat_cache[idx], str):
-                        cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
-                    if isinstance(feat_cache[idx], str):
-                        x = self.time_conv(x)
-                    else:
-                        x = self.time_conv(x, feat_cache[idx])
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "upsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = "Rep"
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -CACHE_T:, :, :].clone()
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and not isinstance(feat_cache[idx], str):
+                    # cache last frame of last two chunk
+                    cache_x = torch.cat(
+                        [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
+                    )
+                if cache_x.shape[2] < 2 and isinstance(feat_cache[idx], str):
+                    cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
+                x = self.time_conv(x) if isinstance(feat_cache[idx], str) else self.time_conv(x, feat_cache[idx])
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
 
-                    x = x.reshape(b, 2, c, t, h, w)
-                    x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
-                    x = x.reshape(b, c, t * 2, h, w)
+                x = x.reshape(b, 2, c, t, h, w)
+                x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
+                x = x.reshape(b, c, t * 2, h, w)
         t = x.shape[2]
         x = rearrange(x, "b c t h w -> (b t) c h w")
         x = self.resample(x)
         x = rearrange(x, "(b t) c h w -> b c t h w", t=t)
 
-        if self.mode == "downsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = x.clone()
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -1:, :, :].clone()
-                    x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "downsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = x.clone()
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -1:, :, :].clone()
+                x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
         return x, feat_cache, feat_idx
 
     def init_weight(self, conv):
@@ -703,7 +699,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 downsamples.append(ResidualBlock(in_dim, out_dim, dropout))
@@ -821,7 +817,7 @@ class Encoder3d_38(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -958,7 +954,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -1075,7 +1071,7 @@ class Decoder3d_38(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(

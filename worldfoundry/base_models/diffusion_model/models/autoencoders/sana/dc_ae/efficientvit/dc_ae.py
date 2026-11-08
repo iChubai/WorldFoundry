@@ -224,13 +224,7 @@ def build_downsample_block(
     """
 
     if block_type == "Conv":
-        if is_video:
-            if temporal_downsample:
-                stride = (2, 2, 2)
-            else:
-                stride = (1, 2, 2)
-        else:
-            stride = 2
+        stride = ((2, 2, 2) if temporal_downsample else (1, 2, 2)) if is_video else 2
         block = ConvLayer(
             in_channels=in_channels,
             out_channels=out_channels,

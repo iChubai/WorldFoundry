@@ -199,7 +199,7 @@ class ConfigValidator:
     def __init__(self, description):
         self.description = description
 
-        self.arguments = dict()
+        self.arguments = {}
 
         self.parsed_args = None
 

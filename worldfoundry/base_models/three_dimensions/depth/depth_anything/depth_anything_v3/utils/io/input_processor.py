@@ -141,8 +141,8 @@ class InputProcessor:
             raise ValueError("Length of extrinsics must match images when provided.")
         if intrinsics is not None and len(intrinsics) != len(images):
             raise ValueError("Length of intrinsics must match images when provided.")
-        exts_list = [e for e in extrinsics] if extrinsics is not None else None
-        ixts_list = [k for k in intrinsics] if intrinsics is not None else None
+        exts_list = list(extrinsics) if extrinsics is not None else None
+        ixts_list = list(intrinsics) if intrinsics is not None else None
         return exts_list, ixts_list
 
     def _run_parallel(

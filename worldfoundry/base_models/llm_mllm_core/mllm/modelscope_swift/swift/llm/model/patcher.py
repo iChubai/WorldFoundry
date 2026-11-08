@@ -189,10 +189,7 @@ def _patch_sequence_classification(model, model_meta):
         output = origin_forward(self, *args, **kwargs)
         output.logits = output.logits.to(self.score.weight.dtype)
         logits = self.score(output.logits)
-        if input_ids is not None:
-            batch_size = input_ids.shape[0]
-        else:
-            batch_size = inputs_embeds.shape[0]
+        batch_size = input_ids.shape[0] if input_ids is not None else inputs_embeds.shape[0]
 
         if self.config.pad_token_id is None and batch_size != 1:
             raise ValueError("Cannot handle batch sizes > 1 if no padding token is defined.")

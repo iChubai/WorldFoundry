@@ -545,12 +545,11 @@ class LlamaModel(LlamaPreTrainedModel):
 
         hidden_states = inputs_embeds
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                logger.warning_once(
-                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-                )
-                use_cache = False
+        if self.gradient_checkpointing and self.training and use_cache:
+            logger.warning_once(
+                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+            )
+            use_cache = False
 
         # decoder layers
         all_hidden_states = () if output_hidden_states else None
@@ -841,10 +840,7 @@ class LlamaForSequenceClassification(LlamaPreTrainedModel):
         hidden_states = transformer_outputs[0]
         logits = self.score(hidden_states)
 
-        if input_ids is not None:
-            batch_size = input_ids.shape[0]
-        else:
-            batch_size = inputs_embeds.shape[0]
+        batch_size = input_ids.shape[0] if input_ids is not None else inputs_embeds.shape[0]
 
         if self.config.pad_token_id is None and batch_size != 1:
             raise ValueError("Cannot handle batch sizes > 1 if no padding token is defined.")

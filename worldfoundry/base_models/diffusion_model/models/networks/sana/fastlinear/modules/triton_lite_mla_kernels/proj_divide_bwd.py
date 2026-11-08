@@ -279,8 +279,11 @@ def proj_divide_bwd(grad_y: torch.Tensor, proj_weight: torch.Tensor, vk_q: torch
 
     # Allocates output.
     grad_vk_q = torch.empty_like(vk_q)
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+    def grid(META):
+        return (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+
     proj_divide_bwd_kernel[grid](
         grad_y,
         proj_weight,

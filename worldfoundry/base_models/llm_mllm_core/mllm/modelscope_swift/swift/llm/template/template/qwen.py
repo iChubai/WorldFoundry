@@ -452,7 +452,7 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
             if self.use_audio_in_video:
                 import librosa
 
-                if video.startswith("http://") or video.startswith("https://"):
+                if video.startswith(("http://", "https://")):
                     import audioread
 
                     video = audioread.ffdec.FFmpegAudioFile(video)
@@ -564,10 +564,7 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
 
     def _get_position_ids(self, inputs: dict[str, Any]):
         feature_attention_mask = inputs.get("feature_attention_mask")
-        if feature_attention_mask is not None:
-            audio_feature_lengths = torch.sum(feature_attention_mask, dim=1)
-        else:
-            audio_feature_lengths = None
+        audio_feature_lengths = torch.sum(feature_attention_mask, dim=1) if feature_attention_mask is not None else None
         video_second_per_grid = inputs.pop("video_second_per_grid", None)
         input_ids = inputs["input_ids"]
         attention_mask = inputs.get("attention_mask")

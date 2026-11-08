@@ -57,7 +57,7 @@ class BatchATSSAssigner(nn.Module):
         topk (int): number of priors selected in each level
     """
 
-    def __init__(self, num_classes: int, iou_calculator: ConfigType = dict(type="mmdet.BboxOverlaps2D"), topk: int = 9):
+    def __init__(self, num_classes: int, iou_calculator: ConfigType = {"type": "mmdet.BboxOverlaps2D"}, topk: int = 9):
         super().__init__()
         self.num_classes = num_classes
         self.iou_calculator = TASK_UTILS.build(iou_calculator)

@@ -390,10 +390,7 @@ class AlbefVQA(AlbefBase, MomentumDistilationMixin):
         else:
             raise RuntimeError("checkpoint url or path is invalid")
 
-        if "model" in checkpoint:
-            state_dict = checkpoint["model"]
-        else:
-            state_dict = checkpoint
+        state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint
 
         # reshape positional embedding to accomodate for image resolution change
         pos_embed_reshaped = interpolate_pos_embed(state_dict["visual_encoder.pos_embed"], self.visual_encoder)
@@ -428,9 +425,8 @@ class AlbefVQA(AlbefBase, MomentumDistilationMixin):
                 del state_dict[key]
 
         for key in self.state_dict().keys():
-            if key in state_dict.keys():
-                if state_dict[key].shape != self.state_dict()[key].shape:
-                    del state_dict[key]
+            if key in state_dict.keys() and state_dict[key].shape != self.state_dict()[key].shape:
+                del state_dict[key]
 
         msg = self.load_state_dict(state_dict, strict=False)
         logging.info("load checkpoint from %s" % url_or_filename)

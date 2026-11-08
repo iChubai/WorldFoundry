@@ -321,7 +321,7 @@ class Decoder(nn.Module):
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
-        if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
+        if isinstance(m, (nn.Linear, nn.Conv2d)):
             trunc_normal_(m.weight, std=0.02)
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
@@ -382,7 +382,7 @@ class Decoder(nn.Module):
 
         # get features in b n d format
         # level shapes, the shape per level, for swin like [[128, 128], [64, 64],...], for vit [[32,32]] -> mult times resolutions
-        level_shapes = sorted(list(set([tuple([x.shape[1], x.shape[2]]) for x in inputs["features"]])))[::-1]
+        level_shapes = sorted({(x.shape[1], x.shape[2]) for x in inputs["features"]})[::-1]
         if len(level_shapes) == 1:
             level_shapes = level_shapes * self.num_resolutions
         input_shapes = [

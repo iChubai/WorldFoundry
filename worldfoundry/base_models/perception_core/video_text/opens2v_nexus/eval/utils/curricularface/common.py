@@ -31,7 +31,7 @@ class SEModule(Module):
     """SE block"""
 
     def __init__(self, channels, reduction):
-        super(SEModule, self).__init__()
+        super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc1 = Conv2d(channels, channels // reduction, kernel_size=1, padding=0, bias=False)
 

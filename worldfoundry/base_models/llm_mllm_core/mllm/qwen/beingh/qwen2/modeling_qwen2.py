@@ -906,12 +906,11 @@ class Qwen2Model(Qwen2PreTrainedModel):
         if (input_ids is None) ^ (inputs_embeds is not None):
             raise ValueError("You must specify exactly one of input_ids or inputs_embeds")
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                logger.warning_once(
-                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-                )
-                use_cache = False
+        if self.gradient_checkpointing and self.training and use_cache:
+            logger.warning_once(
+                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+            )
+            use_cache = False
 
         # kept for BC (non `Cache` `past_key_values` inputs)
         return_legacy_cache = False
@@ -938,10 +937,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
         if position_ids is None:
             position_ids = cache_position.unsqueeze(0)
 
-        if attention_mask is not None and 0.0 in attention_mask:
-            causal_mask = attention_mask
-        else:
-            causal_mask = None
+        causal_mask = attention_mask if attention_mask is not None and 0.0 in attention_mask else None
 
         hidden_states = inputs_embeds
         # create position embeddings to be shared across the decoder layers

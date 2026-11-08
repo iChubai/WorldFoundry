@@ -982,7 +982,7 @@ def convert(src, dst):
             state_dict[implicit_m] = torch.ones((1, 3 * 85, 1, 1))
 
     # save checkpoint
-    checkpoint = dict()
+    checkpoint = {}
     checkpoint["state_dict"] = state_dict
     torch.save(checkpoint, dst)
 

@@ -223,7 +223,7 @@ def _upfirdn2d_ref(x, f, up=1, down=1, padding=0, flip_filter=False, gain=1):
 
 # ----------------------------------------------------------------------------
 
-_upfirdn2d_cuda_cache = dict()
+_upfirdn2d_cuda_cache = {}
 
 
 def _upfirdn2d_cuda(up=1, down=1, padding=0, flip_filter=False, gain=1):

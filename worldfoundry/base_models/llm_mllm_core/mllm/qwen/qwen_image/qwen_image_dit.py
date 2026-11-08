@@ -163,10 +163,7 @@ class QwenEmbedRope(nn.Module):
         if isinstance(video_fhw, list):
             video_fhw = tuple(max([i[j] for i in video_fhw]) for j in range(3))
         _, height, width = video_fhw
-        if self.scale_rope:
-            max_vid_index = max(height // 2, width // 2)
-        else:
-            max_vid_index = max(height, width)
+        max_vid_index = max(height // 2, width // 2) if self.scale_rope else max(height, width)
         required_len = max_vid_index + max(txt_seq_lens)
         cur_max_len = self.pos_freqs.shape[0]
         if required_len <= cur_max_len:

@@ -190,10 +190,7 @@ class TimestepEmbedding(nn.Module):
 
         self.act = get_activation(act_fn)
 
-        if out_dim is not None:
-            time_embed_dim_out = out_dim
-        else:
-            time_embed_dim_out = time_embed_dim
+        time_embed_dim_out = out_dim if out_dim is not None else time_embed_dim
 
         self.linear_2 = linear_cls(
             time_embed_dim,

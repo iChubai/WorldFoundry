@@ -21,7 +21,7 @@ class Droid:
         Args:
             args: The args.
         """
-        super(Droid, self).__init__()
+        super().__init__()
         self.load_weights(args.weights)
         self.args = args
         self.disable_vis = args.disable_vis

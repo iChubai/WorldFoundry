@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
+import itertools
 
 
 def _scalar_timestep(value: Any, *, allow_batch: bool = False) -> float:
@@ -50,7 +51,7 @@ class WanExpertSchedule:
                 raise ValueError("expert schedule must decrease monotonically")
             high = bool(torch.tensor(timestep, dtype=torch.float32) / num_train_timesteps >= boundary_ratio)
             values.append((timestep, next_timestep, "high-noise" if high else "low-noise"))
-        for previous, current in zip(values, values[1:], strict=False):
+        for previous, current in itertools.pairwise(values):
             if previous[0] < current[0] or previous[1] != current[0]:
                 raise ValueError("expert schedule must decrease monotonically with matching next timesteps")
             if previous[2] == "low-noise" and current[2] == "high-noise":

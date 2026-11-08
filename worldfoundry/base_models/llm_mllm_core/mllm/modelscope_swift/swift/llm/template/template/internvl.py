@@ -25,10 +25,7 @@ class InternvlTemplate(Template):
     def replace_tag(
         self, media_type: Literal["image", "video", "audio"], index: int, inputs: StdTemplateInputs
     ) -> list[Context]:
-        if self.mode == "vllm":
-            image_context = ["<image>\n"]
-        else:
-            image_context = ["<img>", [-100], "</img>\n"]
+        image_context = ["<image>\n"] if self.mode == "vllm" else ["<img>", [-100], "</img>\n"]
         return image_context
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:

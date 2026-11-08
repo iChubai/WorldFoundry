@@ -9,10 +9,13 @@ widen_factor = 1.0
 channels = [160, 320, 640]
 
 _base_.nas_backbone.out_indices = (1, 2, 3)
-_base_.nas_backbone.init_cfg = dict(type="Pretrained", checkpoint=checkpoint_file, prefix="architecture.backbone.")
-nas_backbone = dict(
-    type="mmrazor.sub_model", fix_subnet=fix_subnet, cfg=_base_.nas_backbone, extra_prefix="architecture.backbone."
-)
+_base_.nas_backbone.init_cfg = {"type": "Pretrained", "checkpoint": checkpoint_file, "prefix": "architecture.backbone."}
+nas_backbone = {
+    "type": "mmrazor.sub_model",
+    "fix_subnet": fix_subnet,
+    "cfg": _base_.nas_backbone,
+    "extra_prefix": "architecture.backbone.",
+}
 
 _base_.model.backbone = nas_backbone
 _base_.model.neck.widen_factor = widen_factor

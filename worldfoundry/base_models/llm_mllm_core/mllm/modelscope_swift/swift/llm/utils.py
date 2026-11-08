@@ -167,10 +167,7 @@ def dynamic_gradient_checkpointing(model, including_vit: bool = False) -> None:
 
     model.supports_gradient_checkpointing = True
     for tower_name in tower_names:
-        if tower_name is None:
-            model_tower = model
-        else:
-            model_tower = deep_getattr(model, tower_name)
+        model_tower = model if tower_name is None else deep_getattr(model, tower_name)
         model_tower.supports_gradient_checkpointing = True
         module_list = find_module_list(model_tower)
         if module_list is None:
@@ -252,10 +249,7 @@ def save_checkpoint(
             copy_files_by_pattern(model.model_dir, output_dir, "*.json")
     processor.save_pretrained(output_dir)
 
-    if model_dirs is None:
-        model_dirs = []
-    else:
-        model_dirs = model_dirs.copy()
+    model_dirs = [] if model_dirs is None else model_dirs.copy()
     if model and model.model_dir and model.model_dir not in model_dirs:
         model_dirs.append(model.model_dir)
     for src_file in (additional_saved_files or []) + ["preprocessor_config.json", "args.json"]:

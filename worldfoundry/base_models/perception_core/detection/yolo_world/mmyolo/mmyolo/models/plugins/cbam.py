@@ -21,7 +21,7 @@ class ChannelAttention(BaseModule):
             Defaults to dict(type='ReLU').
     """
 
-    def __init__(self, channels: int, reduce_ratio: int = 16, act_cfg: dict = dict(type="ReLU")):
+    def __init__(self, channels: int, reduce_ratio: int = 16, act_cfg: dict = {"type": "ReLU"}):
         super().__init__()
 
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -72,7 +72,7 @@ class SpatialAttention(BaseModule):
             stride=1,
             padding=kernel_size // 2,
             conv_cfg=None,
-            act_cfg=dict(type="Sigmoid"),
+            act_cfg={"type": "Sigmoid"},
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -106,7 +106,7 @@ class CBAM(BaseModule):
         in_channels: int,
         reduce_ratio: int = 16,
         kernel_size: int = 7,
-        act_cfg: dict = dict(type="ReLU"),
+        act_cfg: dict = {"type": "ReLU"},
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg)

@@ -406,7 +406,7 @@ class Attention(nn.Module):
 
         if attn_impl == "flex_attention":
             assert mask is None or isinstance(mask, BlockMask)
-            xq, xk, xv = map(lambda e: e.transpose(1, 2), (xq, xk, xv))
+            xq, xk, xv = (e.transpose(1, 2) for e in (xq, xk, xv))
             output = flex_attention(xq, xk, xv, block_mask=mask)
             output = output.transpose(1, 2).contiguous()  # B H S D -> B S H D
 
@@ -416,7 +416,7 @@ class Attention(nn.Module):
             # This uses B S H D instead of B H S D of pytorch
 
         elif attn_impl == "sdpa":
-            xq, xk, xv = map(lambda e: e.transpose(1, 2), (xq, xk, xv))
+            xq, xk, xv = (e.transpose(1, 2) for e in (xq, xk, xv))
             assert mask is None or isinstance(mask, (str, torch.Tensor))
             is_causal = (mask == "causal") if isinstance(mask, str) else False
             mask = mask if isinstance(mask, torch.Tensor) else None

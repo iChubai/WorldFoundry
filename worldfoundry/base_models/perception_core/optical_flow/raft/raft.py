@@ -53,7 +53,7 @@ class RAFT(nn.Module):
         Args:
             args: The args.
         """
-        super(RAFT, self).__init__()
+        super().__init__()
         self.args = args
 
         if args.small:
@@ -161,10 +161,7 @@ class RAFT(nn.Module):
             coords1 = coords1 + delta_flow
 
             # upsample predictions
-            if up_mask is None:
-                flow_up = upflow8(coords1 - coords0)
-            else:
-                flow_up = self.upsample_flow(coords1 - coords0, up_mask)
+            flow_up = upflow8(coords1 - coords0) if up_mask is None else self.upsample_flow(coords1 - coords0, up_mask)
 
             flow_predictions.append(flow_up)
 

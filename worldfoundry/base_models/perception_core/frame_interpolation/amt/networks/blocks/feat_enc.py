@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class BottleneckBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(BottleneckBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
         self.conv2 = nn.Conv2d(planes // 4, planes // 4, kernel_size=3, padding=1, stride=stride)
@@ -61,7 +61,7 @@ class BottleneckBlock(nn.Module):
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
@@ -112,7 +112,7 @@ class ResidualBlock(nn.Module):
 
 class SmallEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
-        super(SmallEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
 
         if self.norm_fn == "group":
@@ -160,7 +160,7 @@ class SmallEncoder(nn.Module):
 
     def forward(self, x):
         # if input is list, combine batch dimension
-        is_list = isinstance(x, tuple) or isinstance(x, list)
+        is_list = isinstance(x, (tuple, list))
         if is_list:
             batch_dim = x[0].shape[0]
             x = torch.cat(x, dim=0)
@@ -185,7 +185,7 @@ class SmallEncoder(nn.Module):
 
 class BasicEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
 
         if self.norm_fn == "group":
@@ -234,7 +234,7 @@ class BasicEncoder(nn.Module):
 
     def forward(self, x):
         # if input is list, combine batch dimension
-        is_list = isinstance(x, tuple) or isinstance(x, list)
+        is_list = isinstance(x, (tuple, list))
         if is_list:
             batch_dim = x[0].shape[0]
             x = torch.cat(x, dim=0)
@@ -260,7 +260,7 @@ class BasicEncoder(nn.Module):
 
 class LargeEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
-        super(LargeEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
 
         if self.norm_fn == "group":
@@ -310,7 +310,7 @@ class LargeEncoder(nn.Module):
 
     def forward(self, x):
         # if input is list, combine batch dimension
-        is_list = isinstance(x, tuple) or isinstance(x, list)
+        is_list = isinstance(x, (tuple, list))
         if is_list:
             batch_dim = x[0].shape[0]
             x = torch.cat(x, dim=0)

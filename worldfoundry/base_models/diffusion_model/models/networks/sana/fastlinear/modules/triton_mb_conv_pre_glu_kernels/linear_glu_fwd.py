@@ -218,8 +218,11 @@ def linear_glu_fwd(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) ->
 
     # Allocates output.
     y = torch.empty(x.shape[:-1] + (N,), device=x.device, dtype=x.dtype)
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+    def grid(META):
+        return (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+
     if x.dtype == weight.dtype == bias.dtype:
         linear_glu_fwd_kernel[grid](
             x,

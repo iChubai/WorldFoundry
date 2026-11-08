@@ -59,10 +59,7 @@ class FPNSegmentationHead(nn.Module):
             inputs: The inputs.
             shortcuts: The shortcuts.
         """
-        if self.decode_intermediate_input:
-            x = torch.cat(inputs, dim=1)
-        else:
-            x = inputs[-1]
+        x = torch.cat(inputs, dim=1) if self.decode_intermediate_input else inputs[-1]
 
         x = F.relu_(self.conv_in(x))
         x = F.relu_(self.conv_16x(self.adapter_16x(shortcuts[-2]) + x))

@@ -39,7 +39,7 @@ class OksLoss(nn.Module):
                 raise ImportError(
                     'Please run "mim install -r requirements/mmpose.txt" to install mmpose first for OksLossn.'
                 )
-            metainfo = parse_pose_metainfo(dict(from_file=metainfo))
+            metainfo = parse_pose_metainfo({"from_file": metainfo})
             sigmas = metainfo.get("sigmas", None)
             if sigmas is not None:
                 self.register_buffer("sigmas", torch.as_tensor(sigmas))

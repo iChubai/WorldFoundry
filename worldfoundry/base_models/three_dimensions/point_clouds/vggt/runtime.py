@@ -199,42 +199,41 @@ class VGGTRepresentation:
                 query_points_tensor = query_points.to(self.device)
 
         results = {}
-        with torch.no_grad():
-            with torch.amp.autocast("cuda", dtype=self.dtype, enabled=(self.device == "cuda")):
-                images_batch = images[None]
-                aggregated_tokens_list, ps_idx = self.model.aggregator(images_batch)
+        with torch.no_grad(), torch.amp.autocast("cuda", dtype=self.dtype, enabled=(self.device == "cuda")):
+            images_batch = images[None]
+            aggregated_tokens_list, ps_idx = self.model.aggregator(images_batch)
 
-                if predict_cameras:
-                    pose_enc = self.model.camera_head(aggregated_tokens_list)[-1]
-                    extrinsic, intrinsic = pose_encoding_to_extri_intri(pose_enc, images_batch.shape[-2:])
-                    results["extrinsic"] = extrinsic.squeeze(0).cpu().numpy()
-                    results["intrinsic"] = intrinsic.squeeze(0).cpu().numpy()
+            if predict_cameras:
+                pose_enc = self.model.camera_head(aggregated_tokens_list)[-1]
+                extrinsic, intrinsic = pose_encoding_to_extri_intri(pose_enc, images_batch.shape[-2:])
+                results["extrinsic"] = extrinsic.squeeze(0).cpu().numpy()
+                results["intrinsic"] = intrinsic.squeeze(0).cpu().numpy()
 
-                if predict_depth:
-                    depth_map, depth_conf = self.model.depth_head(aggregated_tokens_list, images_batch, ps_idx)
-                    results["depth_map"] = depth_map.squeeze(0).cpu().numpy()
-                    results["depth_conf"] = depth_conf.squeeze(0).cpu().numpy()
+            if predict_depth:
+                depth_map, depth_conf = self.model.depth_head(aggregated_tokens_list, images_batch, ps_idx)
+                results["depth_map"] = depth_map.squeeze(0).cpu().numpy()
+                results["depth_conf"] = depth_conf.squeeze(0).cpu().numpy()
 
-                if predict_points:
-                    point_map, point_conf = self.model.point_head(aggregated_tokens_list, images_batch, ps_idx)
-                    results["point_map"] = point_map.squeeze(0).cpu().numpy()
-                    results["point_conf"] = point_conf.squeeze(0).cpu().numpy()
+            if predict_points:
+                point_map, point_conf = self.model.point_head(aggregated_tokens_list, images_batch, ps_idx)
+                results["point_map"] = point_map.squeeze(0).cpu().numpy()
+                results["point_conf"] = point_conf.squeeze(0).cpu().numpy()
 
-                if predict_tracks and query_points_tensor is not None:
-                    if query_points_tensor.dim() == 2:
-                        query_points_tensor = query_points_tensor.unsqueeze(0)
-                    track, vis_score, conf_score = self.model.track_head(
-                        aggregated_tokens_list, images_batch, ps_idx, query_points=query_points_tensor
-                    )
-                    results["tracks"] = track.squeeze(0).cpu().numpy()
-                    results["track_vis_score"] = vis_score.squeeze(0).cpu().numpy()
-                    results["track_conf_score"] = conf_score.squeeze(0).cpu().numpy()
+            if predict_tracks and query_points_tensor is not None:
+                if query_points_tensor.dim() == 2:
+                    query_points_tensor = query_points_tensor.unsqueeze(0)
+                track, vis_score, conf_score = self.model.track_head(
+                    aggregated_tokens_list, images_batch, ps_idx, query_points=query_points_tensor
+                )
+                results["tracks"] = track.squeeze(0).cpu().numpy()
+                results["track_vis_score"] = vis_score.squeeze(0).cpu().numpy()
+                results["track_conf_score"] = conf_score.squeeze(0).cpu().numpy()
 
-                if predict_depth and predict_cameras and predict_points:
-                    point_map_from_depth = unproject_depth_map_to_point_map(
-                        results["depth_map"], results["extrinsic"], results["intrinsic"]
-                    )
-                    results["point_map_from_depth"] = point_map_from_depth
+            if predict_depth and predict_cameras and predict_points:
+                point_map_from_depth = unproject_depth_map_to_point_map(
+                    results["depth_map"], results["extrinsic"], results["intrinsic"]
+                )
+                results["point_map_from_depth"] = point_map_from_depth
 
         return results
 

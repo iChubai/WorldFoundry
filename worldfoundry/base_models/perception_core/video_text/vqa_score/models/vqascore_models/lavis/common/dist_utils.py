@@ -85,10 +85,7 @@ def init_distributed_mode(args):
 
 
 def get_dist_info():
-    if torch.__version__ < "1.0":
-        initialized = dist._initialized
-    else:
-        initialized = dist.is_initialized()
+    initialized = dist._initialized if torch.__version__ < "1.0" else dist.is_initialized()
     if initialized:
         rank = dist.get_rank()
         world_size = dist.get_world_size()

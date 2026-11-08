@@ -356,7 +356,7 @@ class SwiftAdapter:
 
 class ModulesToSaveWrapper(ActivationMixin, _ModulesToSaveWrapper):
     def __init__(self, *args, module_key, **kwargs):
-        super(ModulesToSaveWrapper, self).__init__(module_key)
+        super().__init__(module_key)
         super(ActivationMixin, self).__init__(*args, **kwargs)
         SwiftAdapter.save_memory(self.original_module, "original_module", self.module_key, False, offload="cpu")
 

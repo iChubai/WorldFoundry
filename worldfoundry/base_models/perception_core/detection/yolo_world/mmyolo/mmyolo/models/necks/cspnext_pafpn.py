@@ -51,18 +51,18 @@ class CSPNeXtPAFPN(BaseYOLONeck):
         freeze_all: bool = False,
         use_depthwise: bool = False,
         expand_ratio: float = 0.5,
-        upsample_cfg: ConfigType = dict(scale_factor=2, mode="nearest"),
+        upsample_cfg: ConfigType = {"scale_factor": 2, "mode": "nearest"},
         conv_cfg: bool = None,
-        norm_cfg: ConfigType = dict(type="BN"),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
-        init_cfg: OptMultiConfig = dict(
-            type="Kaiming",
-            layer="Conv2d",
-            a=math.sqrt(5),
-            distribution="uniform",
-            mode="fan_in",
-            nonlinearity="leaky_relu",
-        ),
+        norm_cfg: ConfigType = {"type": "BN"},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        init_cfg: OptMultiConfig = {
+            "type": "Kaiming",
+            "layer": "Conv2d",
+            "a": math.sqrt(5),
+            "distribution": "uniform",
+            "mode": "fan_in",
+            "nonlinearity": "leaky_relu",
+        },
     ) -> None:
         self.num_csp_blocks = round(num_csp_blocks * deepen_factor)
         self.conv = DepthwiseSeparableConvModule if use_depthwise else ConvModule

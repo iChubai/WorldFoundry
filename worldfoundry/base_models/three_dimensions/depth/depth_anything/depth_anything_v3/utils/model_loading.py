@@ -88,10 +88,7 @@ def load_pretrained_weights(model, model_path: str, is_metric: bool = False) -> 
     """
     state_dict = torch.load(model_path, map_location="cpu")
 
-    if is_metric:
-        state_dict = convert_metric_state_dict(state_dict)
-    else:
-        state_dict = convert_general_state_dict(state_dict)
+    state_dict = convert_metric_state_dict(state_dict) if is_metric else convert_general_state_dict(state_dict)
 
     missed, unexpected = model.load_state_dict(state_dict, strict=False)
     logger.info("Missed keys:", missed)

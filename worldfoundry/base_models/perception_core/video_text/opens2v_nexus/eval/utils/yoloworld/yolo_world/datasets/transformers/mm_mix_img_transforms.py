@@ -131,10 +131,7 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
             dataset = results.pop("dataset", None)
             self.results_cache.append(copy.deepcopy(results))
             if len(self.results_cache) > self.max_cached_images:
-                if self.random_pop:
-                    index = random.randint(0, len(self.results_cache) - 1)
-                else:
-                    index = 0
+                index = random.randint(0, len(self.results_cache) - 1) if self.random_pop else 0
                 self.results_cache.pop(index)
 
             if len(self.results_cache) <= 4:
@@ -147,10 +144,7 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
 
         for _ in range(self.max_refetch):
             # get index of one or three other images
-            if self.use_cached:
-                indexes = self.get_indexes(self.results_cache)
-            else:
-                indexes = self.get_indexes(dataset)
+            indexes = self.get_indexes(self.results_cache) if self.use_cached else self.get_indexes(dataset)
 
             if not isinstance(indexes, collections.abc.Sequence):
                 indexes = [indexes]
@@ -333,7 +327,7 @@ class MultiModalMosaic(BaseMultiModalMixImageTransform):
         mosaic_bboxes_labels = []
         mosaic_ignore_flags = []
         mosaic_masks = []
-        with_mask = True if "gt_masks" in results else False
+        with_mask = "gt_masks" in results
         # print("with_mask: ", with_mask)
         # self.img_scale is wh format
         img_scale_w, img_scale_h = self.img_scale
@@ -358,10 +352,7 @@ class MultiModalMosaic(BaseMultiModalMixImageTransform):
 
         loc_strs = ("top_left", "top_right", "bottom_left", "bottom_right")
         for i, loc in enumerate(loc_strs):
-            if loc == "top_left":
-                results_patch = results
-            else:
-                results_patch = results["mix_results"][i - 1]
+            results_patch = results if loc == "top_left" else results["mix_results"][i - 1]
 
             img_i = results_patch["img"]
             h_i, w_i = img_i.shape[:2]

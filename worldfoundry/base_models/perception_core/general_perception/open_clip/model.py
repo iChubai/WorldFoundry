@@ -429,10 +429,7 @@ class CLIP(nn.Module):
         x = self.ln_final(x)  # [batch_size, n_ctx, transformer.width]
         x = text_global_pool(x, text, self.text_pool_type, eos_token_id=getattr(self, "text_eos_id", None))
         if self.text_projection is not None:
-            if isinstance(self.text_projection, nn.Linear):
-                x = self.text_projection(x)
-            else:
-                x = x @ self.text_projection
+            x = self.text_projection(x) if isinstance(self.text_projection, nn.Linear) else x @ self.text_projection
 
         return F.normalize(x, dim=-1) if normalize else x
 
@@ -943,10 +940,7 @@ def resize_pos_embed(state_dict, model, interpolation: str = "bicubic", antialia
         align_corners=False,
     )
     pos_emb_img = pos_emb_img.permute(0, 2, 3, 1).reshape(1, grid_size[0] * grid_size[1], -1)[0]
-    if pos_emb_tok is not None:
-        new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0)
-    else:
-        new_pos_embed = pos_emb_img
+    new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0) if pos_emb_tok is not None else pos_emb_img
     state_dict["visual.positional_embedding"] = new_pos_embed
 
 

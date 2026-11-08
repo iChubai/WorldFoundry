@@ -56,13 +56,13 @@ def _dynamic_preprocess(image, min_num=1, max_num=12, image_size=448, use_thumbn
     aspect_ratio = orig_width / orig_height
 
     # calculate the existing image aspect ratio
-    target_ratios = set(
+    target_ratios = {
         (i, j)
         for n in range(min_num, max_num + 1)
         for i in range(1, n + 1)
         for j in range(1, n + 1)
         if min_num <= i * j <= max_num
-    )
+    }
     target_ratios = sorted(target_ratios, key=lambda x: x[0] * x[1])
 
     # find the closest aspect ratio to the target
@@ -246,7 +246,7 @@ def load_video_minicpmv_mplug_owl3(video: str | bytes, max_num_frames):
     video_io = load_file(video)
     vr = VideoReader(video_io, ctx=cpu(0))
     sample_fps = round(vr.get_avg_fps() / 1)  # FPS
-    frame_idx = [i for i in range(0, len(vr), sample_fps)]
+    frame_idx = list(range(0, len(vr), sample_fps))
 
     if len(frame_idx) > max_num_frames:
         frame_idx = uniform_sample(frame_idx, max_num_frames)

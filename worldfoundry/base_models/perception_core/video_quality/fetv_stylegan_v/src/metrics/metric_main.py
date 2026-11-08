@@ -25,7 +25,7 @@ from . import (
 
 # ----------------------------------------------------------------------------
 
-_metric_dict = dict()  # name => fn
+_metric_dict = {}  # name => fn
 
 
 def register_metric(fn):
@@ -116,7 +116,7 @@ def report_metric(result_dict, run_dir=None, snapshot_pkl=None):
 def fid50k_full(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fid = frechet_inception_distance.compute_fid(opts, max_real=None, num_gen=50000)
-    return dict(fid50k_full=fid)
+    return {"fid50k_full": fid}
 
 
 @register_metric
@@ -125,77 +125,77 @@ def kid50k_full(opts):
     kid = kernel_inception_distance.compute_kid(
         opts, max_real=1000000, num_gen=50000, num_subsets=100, max_subset_size=1000
     )
-    return dict(kid50k_full=kid)
+    return {"kid50k_full": kid}
 
 
 @register_metric
 def is50k(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     mean, std = inception_score.compute_is(opts, num_gen=50000, num_splits=10)
-    return dict(is50k_mean=mean, is50k_std=std)
+    return {"is50k_mean": mean, "is50k_std": std}
 
 
 @register_metric
 def fvd2048_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=2048, num_gen=2048, num_frames=16)
-    return dict(fvd2048_16f=fvd)
+    return {"fvd2048_16f": fvd}
 
 
 @register_metric
 def fvd1024_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=1024, num_gen=1024, num_frames=16)
-    return dict(fvd1024_16f=fvd)
+    return {"fvd1024_16f": fvd}
 
 
 @register_metric
 def fvd512_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=512, num_gen=512, num_frames=16)
-    return dict(fvd512_16f=fvd)
+    return {"fvd512_16f": fvd}
 
 
 @register_metric
 def fvd300_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=300, num_gen=300, num_frames=16)
-    return dict(fvd300_16f=fvd)
+    return {"fvd300_16f": fvd}
 
 
 @register_metric
 def fvd256_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=256, num_gen=256, num_frames=16)
-    return dict(fvd256_16f=fvd)
+    return {"fvd256_16f": fvd}
 
 
 @register_metric
 def fvd128_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=128, num_gen=128, num_frames=16)
-    return dict(fvd128_16f=fvd)
+    return {"fvd128_16f": fvd}
 
 
 @register_metric
 def fvd64_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=64, num_gen=64, num_frames=16)
-    return dict(fvd64_16f=fvd)
+    return {"fvd64_16f": fvd}
 
 
 @register_metric
 def fvd32_16f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=32, num_gen=32, num_frames=16)
-    return dict(fvd32_16f=fvd)
+    return {"fvd32_16f": fvd}
 
 
 @register_metric
 def fvd2048_128f(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=2048, num_gen=2048, num_frames=128)
-    return dict(fvd2048_128f=fvd)
+    return {"fvd2048_128f": fvd}
 
 
 @register_metric
@@ -203,14 +203,14 @@ def fvd2048_128f_subsample8f(opts):
     """Similar to `fvd2048_128f`, but we sample each 8-th frame"""
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     fvd = frechet_video_distance.compute_fvd(opts, max_real=2048, num_gen=2048, num_frames=16, subsample_factor=8)
-    return dict(fvd2048_128f_subsample8f=fvd)
+    return {"fvd2048_128f_subsample8f": fvd}
 
 
 @register_metric
 def isv2048_ucf(opts):
     opts.dataset_kwargs.update(max_size=None, xflip=False)
     mean, std = video_inception_score.compute_isv(opts, num_gen=2048, num_splits=10, backbone="c3d_ucf101")
-    return dict(isv2048_ucf_mean=mean, isv2048_ucf_std=std)
+    return {"isv2048_ucf_mean": mean, "isv2048_ucf_std": std}
 
 
 # ----------------------------------------------------------------------------
@@ -221,7 +221,7 @@ def isv2048_ucf(opts):
 def fid50k(opts):
     opts.dataset_kwargs.update(max_size=None)
     fid = frechet_inception_distance.compute_fid(opts, max_real=50000, num_gen=50000)
-    return dict(fid50k=fid)
+    return {"fid50k": fid}
 
 
 @register_metric
@@ -230,7 +230,7 @@ def kid50k(opts):
     kid = kernel_inception_distance.compute_kid(
         opts, max_real=50000, num_gen=50000, num_subsets=100, max_subset_size=1000
     )
-    return dict(kid50k=kid)
+    return {"kid50k": kid}
 
 
 # ----------------------------------------------------------------------------

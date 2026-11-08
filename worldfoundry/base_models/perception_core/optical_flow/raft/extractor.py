@@ -16,7 +16,7 @@ class ResidualBlock(nn.Module):
             norm_fn: The norm fn.
             stride: The stride.
         """
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
@@ -82,7 +82,7 @@ class BottleneckBlock(nn.Module):
             norm_fn: The norm fn.
             stride: The stride.
         """
-        super(BottleneckBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
         self.conv2 = nn.Conv2d(planes // 4, planes // 4, kernel_size=3, padding=1, stride=stride)
@@ -153,7 +153,7 @@ class BasicEncoder(nn.Module):
             norm_fn: The norm fn.
             dropout: The dropout.
         """
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
 
         if self.norm_fn == "group":
@@ -214,7 +214,7 @@ class BasicEncoder(nn.Module):
         """
 
         # if input is list, combine batch dimension
-        is_list = isinstance(x, tuple) or isinstance(x, list)
+        is_list = isinstance(x, (tuple, list))
         if is_list:
             batch_dim = x[0].shape[0]
             x = torch.cat(x, dim=0)
@@ -249,7 +249,7 @@ class SmallEncoder(nn.Module):
             norm_fn: The norm fn.
             dropout: The dropout.
         """
-        super(SmallEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
 
         if self.norm_fn == "group":
@@ -309,7 +309,7 @@ class SmallEncoder(nn.Module):
         """
 
         # if input is list, combine batch dimension
-        is_list = isinstance(x, tuple) or isinstance(x, list)
+        is_list = isinstance(x, (tuple, list))
         if is_list:
             batch_dim = x[0].shape[0]
             x = torch.cat(x, dim=0)

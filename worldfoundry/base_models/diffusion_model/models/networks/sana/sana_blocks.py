@@ -1702,7 +1702,7 @@ class PatchEmbed(nn.Module):
         """
         super().__init__()
         kernel_size = kernel_size or patch_size
-        if isinstance(kernel_size, tuple) or isinstance(kernel_size, list):
+        if isinstance(kernel_size, (tuple, list)):
             kernel_size = kernel_size[0]
         img_size = to_2tuple(img_size)
         patch_size = to_2tuple(patch_size)
@@ -1762,7 +1762,7 @@ class PatchEmbedMS(nn.Module):
         """
         super().__init__()
         kernel_size = kernel_size or patch_size
-        if isinstance(kernel_size, tuple) or isinstance(kernel_size, list):
+        if isinstance(kernel_size, (tuple, list)):
             kernel_size = kernel_size[0]
         patch_size = to_2tuple(patch_size)
         self.patch_size = patch_size
@@ -2488,10 +2488,7 @@ class ChunkedLiteLAReLURope(LiteLAReLURope):
             vk_chunk = torch.matmul(v_chunk, k_rotated_chunk.transpose(-1, -2))  # (B, h, h_d, h_d)
 
             # accumulate results
-            if vk_accumulated is None:
-                vk_accumulated = vk_chunk
-            else:
-                vk_accumulated = vk_accumulated + vk_chunk
+            vk_accumulated = vk_chunk if vk_accumulated is None else vk_accumulated + vk_chunk
 
             # explicitly delete chunk tensors to free memory
             del v_chunk, k_rotated_chunk, vk_chunk

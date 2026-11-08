@@ -460,14 +460,14 @@ class Pi3X(nn.Module, PyTorchModelHubMixin):
             # convert local_points to metric
             local_points = local_points * metric.view(B, 1, 1, 1, 1)
 
-        return dict(
-            points=points,
-            local_points=local_points,
-            rays=rays,
-            conf=conf,
-            camera_poses=camera_poses,
-            metric=metric,
-        )
+        return {
+            "points": points,
+            "local_points": local_points,
+            "rays": rays,
+            "conf": conf,
+            "camera_poses": camera_poses,
+            "metric": metric,
+        }
 
     def decode(self, hidden, N, H, W, poses, use_pose_mask):
         if len(hidden.shape) == 4:
@@ -512,22 +512,21 @@ class Pi3X(nn.Module, PyTorchModelHubMixin):
 
             hidden = blk(hidden, xpos=pos)
 
-            if self.use_multimodal:
-                if i in [1, 9, 17, 25, 33] and use_pose_mask.sum() > 0:
-                    hidden = hidden.reshape(B, N, -1, 1024)
-                    poses_feat = self.pose_inject_blk[pose_inject_blk_idx](
-                        hidden[..., self.patch_start_idx :, :].reshape(B, N * (hw - self.patch_start_idx), -1),
-                        poses,
-                        H,
-                        W,
-                        H // 14,
-                        W // 14,
-                        attn_mask=pose_inject_mask,
-                    ).reshape(B, N, -1, 1024)
-                    hidden[..., self.patch_start_idx :, :] += poses_feat * use_pose_mask.view(B, N, 1, 1)
+            if self.use_multimodal and i in [1, 9, 17, 25, 33] and use_pose_mask.sum() > 0:
+                hidden = hidden.reshape(B, N, -1, 1024)
+                poses_feat = self.pose_inject_blk[pose_inject_blk_idx](
+                    hidden[..., self.patch_start_idx :, :].reshape(B, N * (hw - self.patch_start_idx), -1),
+                    poses,
+                    H,
+                    W,
+                    H // 14,
+                    W // 14,
+                    attn_mask=pose_inject_mask,
+                ).reshape(B, N, -1, 1024)
+                hidden[..., self.patch_start_idx :, :] += poses_feat * use_pose_mask.view(B, N, 1, 1)
 
-                    hidden = hidden.reshape(B, N * hw, -1)
-                    pose_inject_blk_idx += 1
+                hidden = hidden.reshape(B, N * hw, -1)
+                pose_inject_blk_idx += 1
 
             if i == len(self.decoder) - 2:
                 temp_features = hidden.clone().reshape(B * N, hw, -1)

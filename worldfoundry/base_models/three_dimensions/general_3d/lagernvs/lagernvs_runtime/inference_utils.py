@@ -553,10 +553,7 @@ def create_bspline_interp(
             idx = max(0, min(idx, len(arc_lengths) - 2))
 
             # Interpolate within segment to get exact arc length
-            if segment_lengths[idx] > 1e-8:
-                alpha = (target_length - arc_lengths[idx]) / segment_lengths[idx]
-            else:
-                alpha = 0.0
+            alpha = (target_length - arc_lengths[idx]) / segment_lengths[idx] if segment_lengths[idx] > 1e-08 else 0.0
             alpha = max(0.0, min(1.0, float(alpha)))
 
             # Get position at this arc length
@@ -1148,9 +1145,8 @@ def create_target_camera_path(image_names, video_length, num_cond_views, image_s
         )
     vggt_model.load_state_dict(vggt_pretrained_state, strict=False)
     vggt_model.to(device)
-    with torch.no_grad():
-        with torch.cuda.amp.autocast(dtype=dtype):
-            pose_enc = vggt_model(images)
+    with torch.no_grad(), torch.cuda.amp.autocast(dtype=dtype):
+        pose_enc = vggt_model(images)
 
     # Free VGGT memory (it is not used by the viewgen model itself)
     del vggt_model, vggt_pretrained_state

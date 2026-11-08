@@ -89,7 +89,7 @@ def convert(src, dst):
             convert_head(key, weight, state_dict, converted_names)
 
     # save checkpoint
-    checkpoint = dict()
+    checkpoint = {}
     checkpoint["state_dict"] = state_dict
     torch.save(checkpoint, dst)
 

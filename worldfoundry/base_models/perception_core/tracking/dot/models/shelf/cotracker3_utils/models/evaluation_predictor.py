@@ -34,7 +34,7 @@ class EvaluationPredictor(torch.nn.Module):
         n_iters: int = 6,
         local_extent: int = 50,
     ) -> None:
-        super(EvaluationPredictor, self).__init__()
+        super().__init__()
         self.grid_size = grid_size
         self.local_grid_size = local_grid_size
         self.sift_size = sift_size

@@ -18,10 +18,7 @@ def build_encoder(name, frozen_bn=True, freeze_at=-1):
         frozen_bn: The frozen bn.
         freeze_at: The freeze at.
     """
-    if frozen_bn:
-        BatchNorm = FrozenBatchNorm2d
-    else:
-        BatchNorm = nn.BatchNorm2d
+    BatchNorm = FrozenBatchNorm2d if frozen_bn else nn.BatchNorm2d
 
     if name == "resnet50":
         return ResNet50(16, BatchNorm, freeze_at=freeze_at)

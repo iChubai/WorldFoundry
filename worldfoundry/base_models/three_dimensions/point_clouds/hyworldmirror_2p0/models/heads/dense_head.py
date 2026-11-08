@@ -168,12 +168,15 @@ class _BaseDPTHead(nn.Module):
             if self.gradient_checkpoint
             else self.scratch_forward(feats)
         )
-        _interpolate_fn = lambda t: custom_interpolate(
-            t,
-            size=(int(ph * self.patch_size / self.down_ratio), int(pw * self.patch_size / self.down_ratio)),
-            mode="bilinear",
-            align_corners=True,
-        )
+
+        def _interpolate_fn(t):
+            return custom_interpolate(
+                t,
+                size=(int(ph * self.patch_size / self.down_ratio), int(pw * self.patch_size / self.down_ratio)),
+                mode="bilinear",
+                align_corners=True,
+            )
+
         fused = (
             checkpoint(_interpolate_fn, fused, use_reentrant=False)
             if self.gradient_checkpoint
@@ -671,7 +674,7 @@ class FeatureFusionBlock(nn.Module):
             has_residual (bool): Whether to include residual connection
             groups (int): Number of groups for grouped convolution
         """
-        super(FeatureFusionBlock, self).__init__()
+        super().__init__()
 
         self.deconv = deconv
         self.align_corners = align_corners

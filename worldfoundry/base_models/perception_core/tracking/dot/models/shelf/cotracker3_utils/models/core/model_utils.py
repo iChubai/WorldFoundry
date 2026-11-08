@@ -39,7 +39,7 @@ def get_superpoint_sampled_pts(
     device: torch.device | None = torch.device("cpu"),
 ):
     extractor = SuperPoint(max_num_keypoints=48).eval().cuda()
-    points = list()
+    points = []
     for _ in range(8):
         frame_num = random.randint(0, int(num_frames * 0.25))
         key_points = extractor.extract(video[0, frame_num, :, :, :] / 255.0, resize=None)["keypoints"]
@@ -61,7 +61,7 @@ def get_sift_sampled_pts(
 
     # assert size == 384, "hardcoded for experiment"
     sift = cv2.SIFT_create(nfeatures=size // num_sampled_frames)
-    points = list()
+    points = []
     for _ in range(num_sampled_frames):
         frame_num = random.randint(0, int(num_frames * sampling_length_percent))
         key_points, _ = sift.detectAndCompute(

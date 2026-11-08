@@ -15,10 +15,7 @@ try:
     # WAN_FA_VERSION: "2" or "3". Defaults to "3" if available.
     WAN_FA_VERSION = os.getenv("WAN_FA_VERSION", "3")
 
-    if WAN_FA_VERSION == "3":
-        FLASH_ATTN_3_AVAILABLE = True
-    else:
-        FLASH_ATTN_3_AVAILABLE = False
+    FLASH_ATTN_3_AVAILABLE = WAN_FA_VERSION == "3"
 except (ImportError, ModuleNotFoundError):
     FLASH_ATTN_3_AVAILABLE = False
 

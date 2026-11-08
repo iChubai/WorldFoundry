@@ -94,7 +94,7 @@ class SelfAttention(nn.Module):
         num_heads: int,
         rope: nn.Module | None = None,
     ):
-        super(SelfAttention, self).__init__()
+        super().__init__()
         self.embed_dim = embed_dim
 
         self.num_heads = num_heads
@@ -633,7 +633,7 @@ class TextTransformer(nn.Module):
 
 class CLIP(TextTransformer):
     def __init__(self, vision_cfg: PEConfig, text_cfg: PETextConfig, init_logit_scale: float = np.log(1 / 0.07)):
-        super(CLIP, self).__init__(**asdict(text_cfg))
+        super().__init__(**asdict(text_cfg))
         self.visual = VisionTransformer(**asdict(vision_cfg))
         self.image_size = self.visual.image_size  # For ease of use
         self.logit_scale = nn.Parameter(torch.ones([]) * init_logit_scale)

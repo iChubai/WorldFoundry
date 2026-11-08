@@ -1049,10 +1049,7 @@ def rasterize_triangles_peeling(
         interpolation_uv_tex = ctx.mgl_ctx.texture((width, height), 2, dtype="f4")
 
     # Create frame buffers
-    if return_interpolation:
-        color_attachments = [image_tex, interpolation_id_tex, interpolation_uv_tex]
-    else:
-        color_attachments = [image_tex]
+    color_attachments = [image_tex, interpolation_id_tex, interpolation_uv_tex] if return_interpolation else [image_tex]
     fbo_curr = ctx.mgl_ctx.framebuffer(
         color_attachments=color_attachments,
         depth_attachment=buffer_depth_tex_a,

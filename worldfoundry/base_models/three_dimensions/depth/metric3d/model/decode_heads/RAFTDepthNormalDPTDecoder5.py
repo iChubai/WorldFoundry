@@ -338,7 +338,7 @@ class Conv2dLoRA(ConvLoRA):
 
     def __init__(self, *args, **kwargs):
         """Init."""
-        super(Conv2dLoRA, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class ConvTranspose2dLoRA(ConvTransposeLoRA):
@@ -346,7 +346,7 @@ class ConvTranspose2dLoRA(ConvTransposeLoRA):
 
     def __init__(self, *args, **kwargs):
         """Init."""
-        super(ConvTranspose2dLoRA, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 def compute_depth_expectation(prob, depth_values):
@@ -531,7 +531,7 @@ class FlowHead(nn.Module):
             output_dim_norm: The output dim norm.
             tuning_mode: The tuning mode.
         """
-        super(FlowHead, self).__init__()
+        super().__init__()
         self.conv1d = Conv2dLoRA(
             input_dim,
             hidden_dim // 2,
@@ -586,7 +586,7 @@ class ConvGRU(nn.Module):
             kernel_size: The kernel size.
             tuning_mode: The tuning mode.
         """
-        super(ConvGRU, self).__init__()
+        super().__init__()
         self.convz = Conv2dLoRA(
             hidden_dim + input_dim,
             hidden_dim,
@@ -746,10 +746,7 @@ class BasicMultiUpdateBlock(nn.Module):
             else:
                 net[1] = self.gru16(net[1], *(inp[1]), interp(pool2x(net[0]), net[1]))
         if iter08:
-            if corr is not None:
-                motion_features = self.encoder(flow, corr)
-            else:
-                motion_features = flow
+            motion_features = self.encoder(flow, corr) if corr is not None else flow
             if self.n_gru_layers > 1:
                 net[0] = self.gru08(net[0], *(inp[0]), motion_features, interp(net[1], net[0]))
             else:
@@ -774,7 +771,7 @@ class LayerNorm2d(nn.LayerNorm):
         Args:
             dim: The dim.
         """
-        super(LayerNorm2d, self).__init__(dim)
+        super().__init__(dim)
 
     def forward(self, x):
         """Forward.
@@ -783,7 +780,7 @@ class LayerNorm2d(nn.LayerNorm):
             x: The x.
         """
         x = x.permute(0, 2, 3, 1).contiguous()
-        x = super(LayerNorm2d, self).forward(x)
+        x = super().forward(x)
         x = x.permute(0, 3, 1, 2).contiguous()
         return x
 
@@ -801,7 +798,7 @@ class ResidualBlock(nn.Module):
             stride: The stride.
             tuning_mode: The tuning mode.
         """
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = Conv2dLoRA(
             in_planes,
@@ -966,7 +963,7 @@ class ConvBlock(nn.Module):
             channels: The channels.
             tuning_mode: The tuning mode.
         """
-        super(ConvBlock, self).__init__()
+        super().__init__()
 
         self.act = nn.ReLU(inplace=True)
         self.conv1 = Conv2dLoRA(
@@ -1022,7 +1019,7 @@ class FuseBlock(nn.Module):
             scale_factor: The scale factor.
             tuning_mode: The tuning mode.
         """
-        super(FuseBlock, self).__init__()
+        super().__init__()
 
         self.fuse = fuse
         self.scale_factor = scale_factor
@@ -1072,7 +1069,7 @@ class Readout(nn.Module):
             num_register_tokens: The num register tokens.
             tuning_mode: The tuning mode.
         """
-        super(Readout, self).__init__()
+        super().__init__()
         self.use_cls_token = use_cls_token
         if self.use_cls_token:
             self.project_patch = LoRALinear(in_features, in_features, r=8 if tuning_mode == "lora" else 0)
@@ -1125,7 +1122,7 @@ class Token2Feature(nn.Module):
             num_register_tokens: The num register tokens.
             tuning_mode: The tuning mode.
         """
-        super(Token2Feature, self).__init__()
+        super().__init__()
         self.scale_factor = scale_factor
         self.readoper = Readout(
             in_features=vit_channel,
@@ -1206,7 +1203,7 @@ class EncoderFeature(nn.Module):
             num_register_tokens: The num register tokens.
             tuning_mode: The tuning mode.
         """
-        super(EncoderFeature, self).__init__()
+        super().__init__()
         self.vit_channel = vit_channel
         self.num_ch_dec = num_ch_dec
 
@@ -1275,7 +1272,7 @@ class DecoderFeature(nn.Module):
             use_cls_token: The use cls token.
             tuning_mode: The tuning mode.
         """
-        super(DecoderFeature, self).__init__()
+        super().__init__()
         self.vit_channel = vit_channel
         self.num_ch_dec = num_ch_dec
 
@@ -1675,17 +1672,17 @@ class RAFTDepthNormalDPT5(nn.Module):
             conf_predictions.append(flow_up[:, 1:2])
             normal_outs.append(norm_normalize(flow_up[:, 2:].clone()))
 
-        outputs = dict(
-            prediction=flow_predictions[-1],
-            predictions_list=flow_predictions,
-            confidence=conf_predictions[-1],
-            confidence_list=conf_predictions,
-            pred_logit=None,
+        outputs = {
+            "prediction": flow_predictions[-1],
+            "predictions_list": flow_predictions,
+            "confidence": conf_predictions[-1],
+            "confidence_list": conf_predictions,
+            "pred_logit": None,
             # samples_pred_list=samples_pred_list,
             # coord_list=coord_list,
-            prediction_normal=normal_outs[-1],
-            normal_out_list=normal_outs,
-            low_resolution_init=low_resolution_init,
-        )
+            "prediction_normal": normal_outs[-1],
+            "normal_out_list": normal_outs,
+            "low_resolution_init": low_resolution_init,
+        }
 
         return outputs

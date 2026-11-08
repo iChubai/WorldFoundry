@@ -94,7 +94,7 @@ class PixelwiseTaskWithDPT(nn.Module):
         **kwargs,
     ):
         """Init."""
-        super(PixelwiseTaskWithDPT, self).__init__()
+        super().__init__()
         self.return_all_layers = True  # backbone needs to return all layers
         self.postprocess = postprocess
         self.depth_mode = depth_mode
@@ -157,7 +157,7 @@ class DPTPts3dPose(nn.Module):
             has_rgb: The has rgb.
             has_pose: The has pose.
         """
-        super(DPTPts3dPose, self).__init__()
+        super().__init__()
         self.return_all_layers = True  # backbone needs to return all layers
         self.depth_mode = net.depth_mode
         self.conf_mode = net.conf_mode
@@ -178,24 +178,24 @@ class DPTPts3dPose(nn.Module):
         head_type = "regression"
         output_width_ratio = 1
 
-        pts_dpt_args = dict(
-            output_width_ratio=output_width_ratio,
-            num_channels=pts_channels,
-            feature_dim=feature_dim,
-            last_dim=last_dim,
-            dim_tokens=dim_tokens,
-            hooks_idx=hooks_idx,
-            head_type=head_type,
-        )
-        rgb_dpt_args = dict(
-            output_width_ratio=output_width_ratio,
-            num_channels=rgb_channels,
-            feature_dim=feature_dim,
-            last_dim=last_dim,
-            dim_tokens=dim_tokens,
-            hooks_idx=hooks_idx,
-            head_type=head_type,
-        )
+        pts_dpt_args = {
+            "output_width_ratio": output_width_ratio,
+            "num_channels": pts_channels,
+            "feature_dim": feature_dim,
+            "last_dim": last_dim,
+            "dim_tokens": dim_tokens,
+            "hooks_idx": hooks_idx,
+            "head_type": head_type,
+        }
+        rgb_dpt_args = {
+            "output_width_ratio": output_width_ratio,
+            "num_channels": rgb_channels,
+            "feature_dim": feature_dim,
+            "last_dim": last_dim,
+            "dim_tokens": dim_tokens,
+            "hooks_idx": hooks_idx,
+            "head_type": head_type,
+        }
         if hooks_idx is not None:
             pts_dpt_args.update(hooks=hooks_idx)
             rgb_dpt_args.update(hooks=hooks_idx)

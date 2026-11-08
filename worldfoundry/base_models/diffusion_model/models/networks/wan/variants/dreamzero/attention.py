@@ -260,10 +260,7 @@ class AttentionModule(torch.nn.Module):
         if backend is None:
             backend = "torch"
 
-        if os.getenv("ATTENTION_BACKEND") is not None:
-            backend = os.getenv("ATTENTION_BACKEND")
-        else:
-            backend = "FA2"
+        backend = os.getenv("ATTENTION_BACKEND") if os.getenv("ATTENTION_BACKEND") is not None else "FA2"
 
         # Check for TensorRT at runtime, not import time
         if os.getenv("ENABLE_TENSORRT", "False").lower() == "true":

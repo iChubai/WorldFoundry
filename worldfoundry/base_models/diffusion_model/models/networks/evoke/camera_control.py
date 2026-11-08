@@ -565,8 +565,8 @@ def set_camera_only_trainable(model: nn.Module, verbose: bool = True) -> int:
             p.requires_grad_(False)
 
     trainable = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
-    assert set(n for n, _ in trainable) == cam_names, (
-        f"camera-only freeze: trainable set != cam-name set; diff: {set(n for n, _ in trainable) ^ cam_names}"
+    assert {n for n, _ in trainable} == cam_names, (
+        f"camera-only freeze: trainable set != cam-name set; diff: { {n for n, _ in trainable} ^ cam_names }"
     )
     if verbose:
         total = sum(p.numel() for _, p in trainable)

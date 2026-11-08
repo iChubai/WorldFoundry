@@ -39,7 +39,7 @@ def get_model_url(data, name, hash):
 
 class BasicBlock(nn.Module):
     def __init__(self, inplanes, planes, stride=1, dilation=1, norm="BN"):
-        super(BasicBlock, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(
             inplanes, planes, kernel_size=3, stride=stride, padding=dilation, bias=False, dilation=dilation
         )
@@ -70,7 +70,7 @@ class Bottleneck(nn.Module):
     expansion = 2
 
     def __init__(self, inplanes, planes, stride=1, dilation=1, norm="BN"):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         expansion = Bottleneck.expansion
         bottle_planes = planes // expansion
         self.conv1 = nn.Conv2d(inplanes, bottle_planes, kernel_size=1, bias=False)
@@ -107,7 +107,7 @@ class Bottleneck(nn.Module):
 
 class Root(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, residual, norm="BN"):
-        super(Root, self).__init__()
+        super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, 1, stride=1, bias=False, padding=(kernel_size - 1) // 2)
         self.bn = get_norm(norm, out_channels)
         self.relu = nn.ReLU(inplace=True)
@@ -139,7 +139,7 @@ class Tree(nn.Module):
         root_residual=False,
         norm="BN",
     ):
-        super(Tree, self).__init__()
+        super().__init__()
         if root_dim == 0:
             root_dim = 2 * out_channels
         if level_root:
@@ -206,7 +206,7 @@ class DLA(nn.Module):
         """
         Args:
         """
-        super(DLA, self).__init__()
+        super().__init__()
         self.norm = norm
         self.channels = channels
         self.base_layer = nn.Sequential(
@@ -287,7 +287,7 @@ def fill_up_weights(up):
 
 class _DeformConv(nn.Module):
     def __init__(self, chi, cho, norm="BN"):
-        super(_DeformConv, self).__init__()
+        super().__init__()
         self.actf = nn.Sequential(get_norm(norm, cho), nn.ReLU(inplace=True))
         if DCNV1:
             self.offset = Conv2d(chi, 18, kernel_size=3, stride=1, padding=1, dilation=1)
@@ -316,7 +316,7 @@ class _DeformConv(nn.Module):
 
 class IDAUp(nn.Module):
     def __init__(self, o, channels, up_f, norm="BN"):
-        super(IDAUp, self).__init__()
+        super().__init__()
         for i in range(1, len(channels)):
             c = channels[i]
             f = int(up_f[i])
@@ -341,7 +341,7 @@ class IDAUp(nn.Module):
 
 class DLAUp(nn.Module):
     def __init__(self, startp, channels, scales, in_channels=None, norm="BN"):
-        super(DLAUp, self).__init__()
+        super().__init__()
         self.startp = startp
         if in_channels is None:
             in_channels = channels
@@ -371,7 +371,7 @@ DLA_CONFIGS = {
 
 class DLASeg(Backbone):
     def __init__(self, num_layers, out_features, use_dla_up=True, ms_output=False, norm="BN"):
-        super(DLASeg, self).__init__()
+        super().__init__()
         # depth = 34
         levels, channels, Block = DLA_CONFIGS[num_layers]
         self.base = DLA(num_layers=num_layers, levels=levels, channels=channels, block=Block, norm=norm)

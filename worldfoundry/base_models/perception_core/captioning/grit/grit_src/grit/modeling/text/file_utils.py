@@ -200,10 +200,7 @@ def get_from_cache(url, cache_dir=None):
     else:
         try:
             response = requests.head(url, allow_redirects=True)
-            if response.status_code != 200:
-                etag = None
-            else:
-                etag = response.headers.get("ETag")
+            etag = None if response.status_code != 200 else response.headers.get("ETag")
         except OSError:
             etag = None
 

@@ -103,10 +103,7 @@ def process_highres_image(image, processor, grid_pinpoints):
     grid_params = [int(x) for x in grid_pinpoints.split(",")]
     width_height = max(image.size)
     fit_grid_params = [x for x in grid_params if x >= width_height]
-    if len(fit_grid_params) == 0:
-        select_size = max(grid_params)
-    else:
-        select_size = min(fit_grid_params)
+    select_size = max(grid_params) if len(fit_grid_params) == 0 else min(fit_grid_params)
     # FIXME: always select the 448
     select_size = max(grid_params)
     image_padded = expand2square(image, tuple(int(x * 255) for x in processor.image_mean))
@@ -242,10 +239,7 @@ def get_anyres_image_grid_shape(image_size, grid_pinpoints, patch_size):
         ]
         # Multiply all elements by patch_size
         grid_pinpoints = [[dim * patch_size for dim in pair] for pair in grid_pinpoints]
-    if type(grid_pinpoints) is list:
-        possible_resolutions = grid_pinpoints
-    else:
-        possible_resolutions = ast.literal_eval(grid_pinpoints)
+    possible_resolutions = grid_pinpoints if type(grid_pinpoints) is list else ast.literal_eval(grid_pinpoints)
     width, height = select_best_resolution(image_size, possible_resolutions)
     return width // patch_size, height // patch_size
 
@@ -280,10 +274,7 @@ def process_anyres_image(image, processor, grid_pinpoints):
         # Multiply all elements by patch_size
         grid_pinpoints = [[dim * patch_size for dim in pair] for pair in grid_pinpoints]
 
-    if type(grid_pinpoints) is list:
-        possible_resolutions = grid_pinpoints
-    else:
-        possible_resolutions = ast.literal_eval(grid_pinpoints)
+    possible_resolutions = grid_pinpoints if type(grid_pinpoints) is list else ast.literal_eval(grid_pinpoints)
     best_resolution = select_best_resolution(image.size, possible_resolutions)
     image_padded = resize_and_pad_image(image, best_resolution)
 
@@ -292,10 +283,7 @@ def process_anyres_image(image, processor, grid_pinpoints):
     # FIXME: this seems to be a bug that it resizes instead of pad.
     # but to keep it consistent with previous, i will keep it as it is
     # TODO: uncomment below to ablate with the padding
-    if isinstance(processor.size, dict):
-        shortest_edge = processor.size["shortest_edge"]
-    else:
-        shortest_edge = min(processor.size)
+    shortest_edge = processor.size["shortest_edge"] if isinstance(processor.size, dict) else min(processor.size)
     image_original_resize = image.resize((shortest_edge, shortest_edge))
     # image_padded_square = expand2square(image, tuple(int(x*255) for x in processor.image_mean))
     # image_original_resize = image_padded_square.resize((processor.size['shortest_edge'], processor.size['shortest_edge']))

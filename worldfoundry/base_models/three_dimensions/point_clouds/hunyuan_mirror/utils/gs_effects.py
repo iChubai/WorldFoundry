@@ -227,10 +227,7 @@ class GSEffects:
 
             smoothstep_val = self.smoothstep(s - 0.5, s, l + 0.5)
             # final_scales = self.mix(scales, 0.002, smoothstep_val[:, None])
-            if not ignore_scale:
-                final_scales = self.mix(scales, 1e-9, smoothstep_val[:, None])
-            else:
-                final_scales = scales
+            final_scales = self.mix(scales, 1e-09, smoothstep_val[:, None]) if not ignore_scale else scales
 
             noise_input = torch.stack(
                 [

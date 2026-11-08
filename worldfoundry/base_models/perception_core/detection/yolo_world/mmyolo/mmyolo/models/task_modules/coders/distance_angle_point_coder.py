@@ -61,10 +61,7 @@ class DistanceAnglePointCoder(MMROTATE_DistanceAnglePointCoder):
         if self.clip_border is False:
             max_shape = None
 
-        if pred_bboxes.dim() == 2:
-            stride = stride[:, None]
-        else:
-            stride = stride[None, :, None]
+        stride = stride[:, None] if pred_bboxes.dim() == 2 else stride[None, :, None]
         pred_bboxes[..., :4] = pred_bboxes[..., :4] * stride
 
         return self.distance2obb(points, pred_bboxes, max_shape, self.angle_version)

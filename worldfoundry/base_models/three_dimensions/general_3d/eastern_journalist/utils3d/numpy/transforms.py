@@ -1594,10 +1594,7 @@ def procrustes(
     else:
         s = None
     if mean_x is not None and mean_y is not None:
-        if s is not None:
-            t = mean_y - transform_points(mean_x, s * R)
-        else:
-            t = mean_y - transform_points(mean_x, R)
+        t = mean_y - transform_points(mean_x, s * R) if s is not None else mean_y - transform_points(mean_x, R)
     else:
         t = None
     return s, R, t

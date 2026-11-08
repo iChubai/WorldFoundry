@@ -11,13 +11,13 @@ widen_factor = 0.75
 
 train_batch_size_per_gpu = 28
 
-model = dict(
-    backbone=dict(deepen_factor=deepen_factor, widen_factor=widen_factor, init_cfg=dict(checkpoint=checkpoint)),
-    neck=dict(
-        deepen_factor=deepen_factor,
-        widen_factor=widen_factor,
-    ),
-    bbox_head=dict(head_module=dict(widen_factor=widen_factor)),
-)
+model = {
+    "backbone": {"deepen_factor": deepen_factor, "widen_factor": widen_factor, "init_cfg": {"checkpoint": checkpoint}},
+    "neck": {
+        "deepen_factor": deepen_factor,
+        "widen_factor": widen_factor,
+    },
+    "bbox_head": {"head_module": {"widen_factor": widen_factor}},
+}
 
-train_dataloader = dict(batch_size=train_batch_size_per_gpu)
+train_dataloader = {"batch_size": train_batch_size_per_gpu}

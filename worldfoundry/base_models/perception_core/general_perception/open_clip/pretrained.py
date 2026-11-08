@@ -168,324 +168,326 @@ def _pecfg(url="", hf_hub="", **kwargs):
     }
 
 
-_RN50 = dict(
-    openai=_pcfg(
+_RN50 = {
+    "openai": _pcfg(
         hf_hub="timm/resnet50_clip.openai/",
         quick_gelu=True,
     ),
-    yfcc15m=_pcfg(
+    "yfcc15m": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/rn50-quickgelu-yfcc15m-455df137.pt",
         hf_hub="timm/resnet50_clip.yfcc15m/",
         quick_gelu=True,
     ),
-    cc12m=_pcfg(
+    "cc12m": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/rn50-quickgelu-cc12m-f000538c.pt",
         hf_hub="timm/resnet50_clip.cc12m/",
         quick_gelu=True,
     ),
-)
+}
 
-_RN101 = dict(
-    openai=_pcfg(
+_RN101 = {
+    "openai": _pcfg(
         hf_hub="timm/resnet101_clip.openai/",
         quick_gelu=True,
     ),
-    yfcc15m=_pcfg(
+    "yfcc15m": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/rn101-quickgelu-yfcc15m-3e04b30e.pt",
         hf_hub="timm/resnet101_clip.yfcc15m/",
         quick_gelu=True,
     ),
-)
+}
 
-_RN50x4 = dict(
-    openai=_pcfg(
+_RN50x4 = {
+    "openai": _pcfg(
         hf_hub="timm/resnet50x4_clip.openai/",
         quick_gelu=True,
     ),
-)
+}
 
-_RN50x16 = dict(
-    openai=_pcfg(
+_RN50x16 = {
+    "openai": _pcfg(
         hf_hub="timm/resnet50x16_clip.openai/",
         quick_gelu=True,
     ),
-)
+}
 
-_RN50x64 = dict(
-    openai=_pcfg(
+_RN50x64 = {
+    "openai": _pcfg(
         hf_hub="timm/resnet50x64_clip.openai/",
         quick_gelu=True,
     ),
-)
+}
 
-_VITB32 = dict(
-    openai=_pcfg(
+_VITB32 = {
+    "openai": _pcfg(
         hf_hub="timm/vit_base_patch32_clip_224.openai/",
         quick_gelu=True,
     ),
     # LAION 400M (quick gelu)
-    laion400m_e31=_pcfg(
+    "laion400m_e31": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_e31-d867053b.pt",
         hf_hub="timm/vit_base_patch32_clip_224.laion400m_e31/",
         quick_gelu=True,
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_e32-46683a32.pt",
         hf_hub="timm/vit_base_patch32_clip_224.laion400m_e32/",
         quick_gelu=True,
     ),
     # LAION 2B-en
-    laion2b_e16=_pcfg(
+    "laion2b_e16": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-laion2b_e16-af8dbd0c.pth",
         hf_hub="timm/vit_base_patch32_clip_224.laion2b_e16/",
     ),
-    laion2b_s34b_b79k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-laion2B-s34B-b79K/"),
+    "laion2b_s34b_b79k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-laion2B-s34B-b79K/"),
     # DataComp-XL models
-    datacomp_xl_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-DataComp.XL-s13B-b90K/"),
+    "datacomp_xl_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-DataComp.XL-s13B-b90K/"),
     # DataComp-M models
-    datacomp_m_s128m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-DataComp.M-s128M-b4K/"),
-    commonpool_m_clip_s128m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.clip-s128M-b4K/"),
-    commonpool_m_laion_s128m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.laion-s128M-b4K/"),
-    commonpool_m_image_s128m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.image-s128M-b4K/"),
-    commonpool_m_text_s128m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.text-s128M-b4K/"),
-    commonpool_m_basic_s128m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.basic-s128M-b4K/"),
-    commonpool_m_s128m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M-s128M-b4K/"),
+    "datacomp_m_s128m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-DataComp.M-s128M-b4K/"),
+    "commonpool_m_clip_s128m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.clip-s128M-b4K/"),
+    "commonpool_m_laion_s128m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.laion-s128M-b4K/"),
+    "commonpool_m_image_s128m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.image-s128M-b4K/"),
+    "commonpool_m_text_s128m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.text-s128M-b4K/"),
+    "commonpool_m_basic_s128m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M.basic-s128M-b4K/"),
+    "commonpool_m_s128m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.M-s128M-b4K/"),
     # DataComp-S models
-    datacomp_s_s13m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-DataComp.S-s13M-b4K/"),
-    commonpool_s_clip_s13m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.clip-s13M-b4K/"),
-    commonpool_s_laion_s13m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.laion-s13M-b4K/"),
-    commonpool_s_image_s13m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.image-s13M-b4K/"),
-    commonpool_s_text_s13m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.text-s13M-b4K/"),
-    commonpool_s_basic_s13m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.basic-s13M-b4K/"),
-    commonpool_s_s13m_b4k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S-s13M-b4K/"),
+    "datacomp_s_s13m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-DataComp.S-s13M-b4K/"),
+    "commonpool_s_clip_s13m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.clip-s13M-b4K/"),
+    "commonpool_s_laion_s13m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.laion-s13M-b4K/"),
+    "commonpool_s_image_s13m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.image-s13M-b4K/"),
+    "commonpool_s_text_s13m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.text-s13M-b4K/"),
+    "commonpool_s_basic_s13m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S.basic-s13M-b4K/"),
+    "commonpool_s_s13m_b4k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-CommonPool.S-s13M-b4K/"),
     # MetaClip models (NOTE quick-gelu activation used)
-    metaclip_400m=_pcfg(
+    "metaclip_400m": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/b32_400m.pt",
         hf_hub="timm/vit_base_patch32_clip_224.metaclip_400m/",
         quick_gelu=True,
     ),
-    metaclip_fullcc=_pcfg(
+    "metaclip_fullcc": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/b32_fullcc2.5b.pt",
         hf_hub="timm/vit_base_patch32_clip_224.metaclip_2pt5b/",
         quick_gelu=True,
     ),
-)
+}
 
-_VITB32_256 = dict(
-    datacomp_s34b_b86k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-256x256-DataComp-s34B-b86K/"),
-)
+_VITB32_256 = {
+    "datacomp_s34b_b86k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-256x256-DataComp-s34B-b86K/"),
+}
 
-_VITB16 = dict(
-    openai=_pcfg(
+_VITB16 = {
+    "openai": _pcfg(
         hf_hub="timm/vit_base_patch16_clip_224.openai/",
         quick_gelu=True,
     ),
     # LAION-400M
-    laion400m_e31=_pcfg(
+    "laion400m_e31": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16-laion400m_e31-00efa78f.pt",
         hf_hub="timm/vit_base_patch16_clip_224.laion400m_e31/",
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16-laion400m_e32-55e67d44.pt",
         hf_hub="timm/vit_base_patch16_clip_224.laion400m_e32/",
     ),
     # LAION-2B
-    laion2b_s34b_b88k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-laion2B-s34B-b88K/"),
+    "laion2b_s34b_b88k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-laion2B-s34B-b88K/"),
     # DataComp-XL models
-    datacomp_xl_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-DataComp.XL-s13B-b90K/"),
+    "datacomp_xl_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-DataComp.XL-s13B-b90K/"),
     # DataComp-L models
-    datacomp_l_s1b_b8k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-DataComp.L-s1B-b8K/"),
-    commonpool_l_clip_s1b_b8k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.clip-s1B-b8K/"),
-    commonpool_l_laion_s1b_b8k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.laion-s1B-b8K/"),
-    commonpool_l_image_s1b_b8k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.image-s1B-b8K/"),
-    commonpool_l_text_s1b_b8k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.text-s1B-b8K/"),
-    commonpool_l_basic_s1b_b8k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.basic-s1B-b8K/"),
-    commonpool_l_s1b_b8k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L-s1B-b8K/"),
+    "datacomp_l_s1b_b8k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-DataComp.L-s1B-b8K/"),
+    "commonpool_l_clip_s1b_b8k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.clip-s1B-b8K/"),
+    "commonpool_l_laion_s1b_b8k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.laion-s1B-b8K/"),
+    "commonpool_l_image_s1b_b8k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.image-s1B-b8K/"),
+    "commonpool_l_text_s1b_b8k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.text-s1B-b8K/"),
+    "commonpool_l_basic_s1b_b8k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L.basic-s1B-b8K/"),
+    "commonpool_l_s1b_b8k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-CommonPool.L-s1B-b8K/"),
     # DFN
-    dfn2b=_pcfg(
+    "dfn2b": _pcfg(
         hf_hub="apple/DFN2B-CLIP-ViT-B-16/",
         quick_gelu=True,
     ),
     # MetaCLIP (these are quick-gelu)
-    metaclip_400m=_pcfg(
+    "metaclip_400m": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/b16_400m.pt",
         hf_hub="timm/vit_base_patch16_clip_224.metaclip_400m/",
         quick_gelu=True,
     ),
-    metaclip_fullcc=_pcfg(
+    "metaclip_fullcc": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/b16_fullcc2.5b.pt",
         hf_hub="timm/vit_base_patch16_clip_224.metaclip_2pt5b/",
         quick_gelu=True,
     ),
-)
+}
 
-_VITB16_PLUS_240 = dict(
-    laion400m_e31=_pcfg(
+_VITB16_PLUS_240 = {
+    "laion400m_e31": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16_plus_240-laion400m_e31-8fb26589.pt",
         hf_hub="timm/vit_base_patch16_plus_clip_240.laion400m_e31/",
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16_plus_240-laion400m_e32-699c4b84.pt",
         hf_hub="timm/vit_base_patch16_plus_clip_240.laion400m_e31/",
     ),
-)
+}
 
-_VITL14 = dict(
-    openai=_pcfg(
+_VITL14 = {
+    "openai": _pcfg(
         hf_hub="timm/vit_large_patch14_clip_224.openai/",
         quick_gelu=True,
     ),
     # LAION-400M
-    laion400m_e31=_pcfg(
+    "laion400m_e31": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_l_14-laion400m_e31-69988bb6.pt",
         hf_hub="timm/vit_large_patch14_clip_224.laion400m_e31/",
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         url="https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_l_14-laion400m_e32-3d133497.pt",
         hf_hub="timm/vit_large_patch14_clip_224.laion400m_e32/",
     ),
     # LAION-2B-en
-    laion2b_s32b_b82k=_pcfg(hf_hub="laion/CLIP-ViT-L-14-laion2B-s32B-b82K/", mean=INCEPTION_MEAN, std=INCEPTION_STD),
+    "laion2b_s32b_b82k": _pcfg(hf_hub="laion/CLIP-ViT-L-14-laion2B-s32B-b82K/", mean=INCEPTION_MEAN, std=INCEPTION_STD),
     # DataComp-XL models
-    datacomp_xl_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-L-14-DataComp.XL-s13B-b90K/"),
-    commonpool_xl_clip_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-L-14-CommonPool.XL.clip-s13B-b90K/"),
-    commonpool_xl_laion_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-L-14-CommonPool.XL.laion-s13B-b90K/"),
-    commonpool_xl_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-L-14-CommonPool.XL-s13B-b90K/"),
+    "datacomp_xl_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-L-14-DataComp.XL-s13B-b90K/"),
+    "commonpool_xl_clip_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-L-14-CommonPool.XL.clip-s13B-b90K/"),
+    "commonpool_xl_laion_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-L-14-CommonPool.XL.laion-s13B-b90K/"),
+    "commonpool_xl_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-L-14-CommonPool.XL-s13B-b90K/"),
     # MetaCLIP
-    metaclip_400m=_pcfg(
+    "metaclip_400m": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/l14_400m.pt",
         hf_hub="timm/vit_large_patch14_clip_224.metaclip_400m/",
         quick_gelu=True,
     ),
-    metaclip_fullcc=_pcfg(
+    "metaclip_fullcc": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/l14_fullcc2.5b.pt",
         hf_hub="timm/vit_large_patch14_clip_224.metaclip_2pt5b/",
         quick_gelu=True,
     ),
     # DFN-2B (quick-gelu)
-    dfn2b=_pcfg(
+    "dfn2b": _pcfg(
         hf_hub="apple/DFN2B-CLIP-ViT-L-14/",
         quick_gelu=True,
     ),
     # DFN-2B 39B SS
-    dfn2b_s39b=_pcfg(
+    "dfn2b_s39b": _pcfg(
         hf_hub="apple/DFN2B-CLIP-ViT-L-14-39B/",
     ),
-)
+}
 
-_VITL14_336 = dict(
-    openai=_pcfg(
+_VITL14_336 = {
+    "openai": _pcfg(
         hf_hub="timm/vit_large_patch14_clip_336.openai/",
         quick_gelu=True,
     ),
-)
+}
 
-_VITH14 = dict(
+_VITH14 = {
     # LAION-2B-en
-    laion2b_s32b_b79k=_pcfg(hf_hub="laion/CLIP-ViT-H-14-laion2B-s32B-b79K/"),
+    "laion2b_s32b_b79k": _pcfg(hf_hub="laion/CLIP-ViT-H-14-laion2B-s32B-b79K/"),
     # MetaCLIP (quick-gelu)
-    metaclip_fullcc=_pcfg(
+    "metaclip_fullcc": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/h14_fullcc2.5b.pt",
         hf_hub="timm/vit_huge_patch14_clip_224.metaclip_2pt5b/",
         quick_gelu=True,
     ),
-    metaclip_altogether=_pcfg(
+    "metaclip_altogether": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/h14_v1.2_altogether.pt",
         hf_hub="timm/vit_huge_patch14_clip_224.metaclip_altogether/",
         # NOTE unlike other MetaCLIP models, this is not using QuickGELU, yay!
     ),
     # DFN-5B (quick-gelu)
-    dfn5b=_pcfg(hf_hub="apple/DFN5B-CLIP-ViT-H-14/", quick_gelu=True, interpolation="bicubic", resize_mode="squash"),
-)
+    "dfn5b": _pcfg(hf_hub="apple/DFN5B-CLIP-ViT-H-14/", quick_gelu=True, interpolation="bicubic", resize_mode="squash"),
+}
 
-_VITH14_378 = dict(
+_VITH14_378 = {
     # DFN-5B (quick-gelu)
-    dfn5b=_pcfg(
+    "dfn5b": _pcfg(
         hf_hub="apple/DFN5B-CLIP-ViT-H-14-378/", quick_gelu=True, interpolation="bicubic", resize_mode="squash"
     ),
-)
+}
 
-_VITg14 = dict(
-    laion2b_s12b_b42k=_pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s12B-b42K/"),
-    laion2b_s34b_b88k=_pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s34B-b88K/"),
-)
+_VITg14 = {
+    "laion2b_s12b_b42k": _pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s12B-b42K/"),
+    "laion2b_s34b_b88k": _pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s34B-b88K/"),
+}
 
-_VITbigG14 = dict(
+_VITbigG14 = {
     # LAION-2B-en
-    laion2b_s39b_b160k=_pcfg(hf_hub="laion/CLIP-ViT-bigG-14-laion2B-39B-b160k/"),
+    "laion2b_s39b_b160k": _pcfg(hf_hub="laion/CLIP-ViT-bigG-14-laion2B-39B-b160k/"),
     # MetaCLIP (quick-gelu)
-    metaclip_fullcc=_pcfg(
+    "metaclip_fullcc": _pcfg(
         url="https://dl.fbaipublicfiles.com/MMPT/metaclip/G14_fullcc2.5b.pt",
         hf_hub="timm/vit_gigantic_patch14_clip_224.metaclip_2pt5b/",
         quick_gelu=True,
     ),
-)
+}
 
-_robertaViTB32 = dict(
-    laion2b_s12b_b32k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-roberta-base-laion2B-s12B-b32k/"),
-)
+_robertaViTB32 = {
+    "laion2b_s12b_b32k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-roberta-base-laion2B-s12B-b32k/"),
+}
 
-_xlmRobertaBaseViTB32 = dict(
-    laion5b_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-xlm-roberta-base-laion5B-s13B-b90k/"),
-)
+_xlmRobertaBaseViTB32 = {
+    "laion5b_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-xlm-roberta-base-laion5B-s13B-b90k/"),
+}
 
-_xlmRobertaLargeFrozenViTH14 = dict(
-    frozen_laion5b_s13b_b90k=_pcfg(hf_hub="laion/CLIP-ViT-H-14-frozen-xlm-roberta-large-laion5B-s13B-b90k/"),
-)
+_xlmRobertaLargeFrozenViTH14 = {
+    "frozen_laion5b_s13b_b90k": _pcfg(hf_hub="laion/CLIP-ViT-H-14-frozen-xlm-roberta-large-laion5B-s13B-b90k/"),
+}
 
-_convnext_base = dict(
-    laion400m_s13b_b51k=_pcfg(hf_hub="laion/CLIP-convnext_base-laion400M-s13B-b51K/"),
-)
+_convnext_base = {
+    "laion400m_s13b_b51k": _pcfg(hf_hub="laion/CLIP-convnext_base-laion400M-s13B-b51K/"),
+}
 
-_convnext_base_w = dict(
-    laion2b_s13b_b82k=_pcfg(hf_hub="laion/CLIP-convnext_base_w-laion2B-s13B-b82K/"),
-    laion2b_s13b_b82k_augreg=_pcfg(hf_hub="laion/CLIP-convnext_base_w-laion2B-s13B-b82K-augreg/"),
-    laion_aesthetic_s13b_b82k=_pcfg(hf_hub="laion/CLIP-convnext_base_w-laion_aesthetic-s13B-b82K/"),
-)
+_convnext_base_w = {
+    "laion2b_s13b_b82k": _pcfg(hf_hub="laion/CLIP-convnext_base_w-laion2B-s13B-b82K/"),
+    "laion2b_s13b_b82k_augreg": _pcfg(hf_hub="laion/CLIP-convnext_base_w-laion2B-s13B-b82K-augreg/"),
+    "laion_aesthetic_s13b_b82k": _pcfg(hf_hub="laion/CLIP-convnext_base_w-laion_aesthetic-s13B-b82K/"),
+}
 
-_convnext_base_w_320 = dict(
-    laion_aesthetic_s13b_b82k=_pcfg(hf_hub="laion/CLIP-convnext_base_w_320-laion_aesthetic-s13B-b82K/"),
-    laion_aesthetic_s13b_b82k_augreg=_pcfg(hf_hub="laion/CLIP-convnext_base_w_320-laion_aesthetic-s13B-b82K-augreg/"),
-)
+_convnext_base_w_320 = {
+    "laion_aesthetic_s13b_b82k": _pcfg(hf_hub="laion/CLIP-convnext_base_w_320-laion_aesthetic-s13B-b82K/"),
+    "laion_aesthetic_s13b_b82k_augreg": _pcfg(
+        hf_hub="laion/CLIP-convnext_base_w_320-laion_aesthetic-s13B-b82K-augreg/"
+    ),
+}
 
-_convnext_large_d = dict(
-    laion2b_s26b_b102k_augreg=_pcfg(hf_hub="laion/CLIP-convnext_large_d.laion2B-s26B-b102K-augreg/"),
-)
+_convnext_large_d = {
+    "laion2b_s26b_b102k_augreg": _pcfg(hf_hub="laion/CLIP-convnext_large_d.laion2B-s26B-b102K-augreg/"),
+}
 
-_convnext_large_d_320 = dict(
-    laion2b_s29b_b131k_ft=_pcfg(hf_hub="laion/CLIP-convnext_large_d_320.laion2B-s29B-b131K-ft/"),
-    laion2b_s29b_b131k_ft_soup=_pcfg(hf_hub="laion/CLIP-convnext_large_d_320.laion2B-s29B-b131K-ft-soup/"),
-)
+_convnext_large_d_320 = {
+    "laion2b_s29b_b131k_ft": _pcfg(hf_hub="laion/CLIP-convnext_large_d_320.laion2B-s29B-b131K-ft/"),
+    "laion2b_s29b_b131k_ft_soup": _pcfg(hf_hub="laion/CLIP-convnext_large_d_320.laion2B-s29B-b131K-ft-soup/"),
+}
 
-_convnext_xxlarge = dict(
-    laion2b_s34b_b82k_augreg=_pcfg(hf_hub="laion/CLIP-convnext_xxlarge-laion2B-s34B-b82K-augreg/"),
-    laion2b_s34b_b82k_augreg_rewind=_pcfg(hf_hub="laion/CLIP-convnext_xxlarge-laion2B-s34B-b82K-augreg-rewind/"),
-    laion2b_s34b_b82k_augreg_soup=_pcfg(hf_hub="laion/CLIP-convnext_xxlarge-laion2B-s34B-b82K-augreg-soup/"),
-)
+_convnext_xxlarge = {
+    "laion2b_s34b_b82k_augreg": _pcfg(hf_hub="laion/CLIP-convnext_xxlarge-laion2B-s34B-b82K-augreg/"),
+    "laion2b_s34b_b82k_augreg_rewind": _pcfg(hf_hub="laion/CLIP-convnext_xxlarge-laion2B-s34B-b82K-augreg-rewind/"),
+    "laion2b_s34b_b82k_augreg_soup": _pcfg(hf_hub="laion/CLIP-convnext_xxlarge-laion2B-s34B-b82K-augreg-soup/"),
+}
 
-_coca_VITB32 = dict(
-    laion2b_s13b_b90k=_pcfg(hf_hub="laion/CoCa-ViT-B-32-laion2B-s13B-b90k/"),
-    mscoco_finetuned_laion2b_s13b_b90k=_pcfg(hf_hub="laion/mscoco_finetuned_CoCa-ViT-B-32-laion2B-s13B-b90k/"),
-)
+_coca_VITB32 = {
+    "laion2b_s13b_b90k": _pcfg(hf_hub="laion/CoCa-ViT-B-32-laion2B-s13B-b90k/"),
+    "mscoco_finetuned_laion2b_s13b_b90k": _pcfg(hf_hub="laion/mscoco_finetuned_CoCa-ViT-B-32-laion2B-s13B-b90k/"),
+}
 
-_coca_VITL14 = dict(
-    laion2b_s13b_b90k=_pcfg(hf_hub="laion/CoCa-ViT-L-14-laion2B-s13B-b90k/"),
-    mscoco_finetuned_laion2b_s13b_b90k=_pcfg(hf_hub="laion/mscoco_finetuned_CoCa-ViT-L-14-laion2B-s13B-b90k/"),
-)
+_coca_VITL14 = {
+    "laion2b_s13b_b90k": _pcfg(hf_hub="laion/CoCa-ViT-L-14-laion2B-s13B-b90k/"),
+    "mscoco_finetuned_laion2b_s13b_b90k": _pcfg(hf_hub="laion/mscoco_finetuned_CoCa-ViT-L-14-laion2B-s13B-b90k/"),
+}
 
-_CLAP_HTSAT_TINY_ROBERTA = dict(
-    laion=_clapcfg(
+_CLAP_HTSAT_TINY_ROBERTA = {
+    "laion": _clapcfg(
         hf_hub="laion/clap-htsat-unfused/pytorch_model.bin",
         hf_transformers_clap=True,
     ),
-)
+}
 
-_CLAP_HTSAT_TINY_ROBERTA_FUSED = dict(
-    laion=_clapcfg(
+_CLAP_HTSAT_TINY_ROBERTA_FUSED = {
+    "laion": _clapcfg(
         hf_hub="laion/clap-htsat-fused/model.safetensors",
         hf_transformers_clap=True,
     ),
-)
+}
 
 
 _PRETRAINED = {
@@ -517,253 +519,253 @@ _PRETRAINED = {
     "coca_ViT-L-14": _coca_VITL14,
     "CLAP-HTSAT-tiny-Roberta-base": _CLAP_HTSAT_TINY_ROBERTA,
     "CLAP-HTSAT-tiny-Roberta-base-fused": _CLAP_HTSAT_TINY_ROBERTA_FUSED,
-    "EVA01-g-14": dict(
+    "EVA01-g-14": {
         # from QuanSun/EVA-CLIP/EVA01_CLIP_g_14_psz14_s11B.pt
-        laion400m_s11b_b41k=_pcfg(hf_hub="timm/eva_giant_patch14_clip_224.laion400m_s11b_b41k/"),
-    ),
-    "EVA01-g-14-plus": dict(
+        "laion400m_s11b_b41k": _pcfg(hf_hub="timm/eva_giant_patch14_clip_224.laion400m_s11b_b41k/"),
+    },
+    "EVA01-g-14-plus": {
         # from QuanSun/EVA-CLIP/EVA01_CLIP_g_14_plus_psz14_s11B.pt
-        merged2b_s11b_b114k=_pcfg(hf_hub="timm/eva_giant_patch14_plus_clip_224.merged2b_s11b_b114k/"),
-    ),
-    "EVA02-B-16": dict(
+        "merged2b_s11b_b114k": _pcfg(hf_hub="timm/eva_giant_patch14_plus_clip_224.merged2b_s11b_b114k/"),
+    },
+    "EVA02-B-16": {
         # from QuanSun/EVA-CLIP/EVA02_CLIP_B_psz16_s8B.pt
-        merged2b_s8b_b131k=_pcfg(hf_hub="timm/eva02_base_patch16_clip_224.merged2b_s8b_b131k/"),
-    ),
-    "EVA02-L-14": dict(
+        "merged2b_s8b_b131k": _pcfg(hf_hub="timm/eva02_base_patch16_clip_224.merged2b_s8b_b131k/"),
+    },
+    "EVA02-L-14": {
         # from QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_s4B.pt
-        merged2b_s4b_b131k=_pcfg(hf_hub="timm/eva02_large_patch14_clip_224.merged2b_s4b_b131k/"),
-    ),
-    "EVA02-L-14-336": dict(
+        "merged2b_s4b_b131k": _pcfg(hf_hub="timm/eva02_large_patch14_clip_224.merged2b_s4b_b131k/"),
+    },
+    "EVA02-L-14-336": {
         # from QuanSun/EVA-CLIP/EVA02_CLIP_L_336_psz14_s6B.pt
-        merged2b_s6b_b61k=_pcfg(hf_hub="timm/eva02_large_patch14_clip_336.merged2b_s6b_b61k/"),
-    ),
-    "EVA02-E-14": dict(
+        "merged2b_s6b_b61k": _pcfg(hf_hub="timm/eva02_large_patch14_clip_336.merged2b_s6b_b61k/"),
+    },
+    "EVA02-E-14": {
         # from QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_s4B.pt
-        laion2b_s4b_b115k=_pcfg(hf_hub="timm/eva02_enormous_patch14_clip_224.laion2b_s4b_b115k/"),
-    ),
-    "EVA02-E-14-plus": dict(
+        "laion2b_s4b_b115k": _pcfg(hf_hub="timm/eva02_enormous_patch14_clip_224.laion2b_s4b_b115k/"),
+    },
+    "EVA02-E-14-plus": {
         # from QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_plus_s9B.pt
-        laion2b_s9b_b144k=_pcfg(hf_hub="timm/eva02_enormous_patch14_plus_clip_224.laion2b_s9b_b144k/"),
-    ),
-    "ViT-B-16-SigLIP": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP/"),
-    ),
-    "ViT-B-16-SigLIP-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP-256/"),
-    ),
-    "ViT-B-16-SigLIP-i18n-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP-i18n-256/"),
-    ),
-    "ViT-B-16-SigLIP-384": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP-384/"),
-    ),
-    "ViT-B-16-SigLIP-512": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP-512/"),
-    ),
-    "ViT-L-16-SigLIP-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-L-16-SigLIP-256/"),
-    ),
-    "ViT-L-16-SigLIP-384": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-L-16-SigLIP-384/"),
-    ),
-    "ViT-SO400M-14-SigLIP": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP/"),
-    ),
-    "ViT-SO400M-16-SigLIP-i18n-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP-i18n-256/"),
-    ),
-    "ViT-SO400M-14-SigLIP-378": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP-384/"),  # NOTE using 384 weights, but diff img_size used
-    ),
-    "ViT-SO400M-14-SigLIP-384": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP-384/"),
-    ),
-    "ViT-B-32-SigLIP2-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-32-SigLIP2-256/"),
-    ),
-    "ViT-B-16-SigLIP2": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP2/"),
-    ),
-    "ViT-B-16-SigLIP2-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-256/"),
-    ),
-    "ViT-B-16-SigLIP2-384": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-384/"),
-    ),
-    "ViT-B-16-SigLIP2-512": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-512/"),
-    ),
-    "ViT-B-16-SigLIP2-naflex": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-naflex/"),
-    ),
-    "ViT-L-16-SigLIP2-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-L-16-SigLIP2-256/"),
-    ),
-    "ViT-L-16-SigLIP2-384": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-L-16-SigLIP2-384/"),
-    ),
-    "ViT-L-16-SigLIP2-512": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-L-16-SigLIP2-512/"),
-    ),
-    "ViT-SO400M-14-SigLIP2": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP2/"),
-    ),
-    "ViT-SO400M-14-SigLIP2-378": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP2-378/"),
-    ),
-    "ViT-SO400M-16-SigLIP2-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-256/"),
-    ),
-    "ViT-SO400M-16-SigLIP2-384": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-384/"),
-    ),
-    "ViT-SO400M-16-SigLIP2-512": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-512/"),
-    ),
-    "ViT-SO400M-16-SigLIP2-naflex": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-naflex/"),
-    ),
-    "ViT-gopt-16-SigLIP2-256": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-gopt-16-SigLIP2-256/"),
-    ),
-    "ViT-gopt-16-SigLIP2-384": dict(
-        webli=_slpcfg(hf_hub="timm/ViT-gopt-16-SigLIP2-384/"),
-    ),
-    "ViT-L-14-CLIPA": dict(
-        datacomp1b=_apcfg(hf_hub="UCSC-VLAA/ViT-L-14-CLIPA-datacomp1B/"),
-    ),
-    "ViT-L-14-CLIPA-336": dict(
-        datacomp1b=_apcfg(hf_hub="UCSC-VLAA/ViT-L-14-CLIPA-336-datacomp1B/"),
-    ),
-    "ViT-H-14-CLIPA": dict(
-        datacomp1b=_apcfg(hf_hub="UCSC-VLAA/ViT-H-14-CLIPA-datacomp1B/"),
-    ),
-    "ViT-H-14-CLIPA-336": dict(
-        laion2b=_apcfg(hf_hub="UCSC-VLAA/ViT-H-14-CLIPA-336-laion2B/"),
-        datacomp1b=_apcfg(hf_hub="UCSC-VLAA/ViT-H-14-CLIPA-336-datacomp1B/"),
-    ),
-    "ViT-bigG-14-CLIPA": dict(
-        datacomp1b=_apcfg(hf_hub="UCSC-VLAA/ViT-bigG-14-CLIPA-datacomp1B/"),
-    ),
-    "ViT-bigG-14-CLIPA-336": dict(
-        datacomp1b=_apcfg(hf_hub="UCSC-VLAA/ViT-bigG-14-CLIPA-336-datacomp1B/"),
-    ),
-    "nllb-clip-base": dict(
-        v1=_pcfg(hf_hub="visheratin/nllb-clip-base-oc/"),
-    ),
-    "nllb-clip-large": dict(
-        v1=_pcfg(hf_hub="visheratin/nllb-clip-large-oc/"),
-    ),
-    "nllb-clip-base-siglip": dict(
-        v1=_slpcfg(hf_hub="visheratin/nllb-clip-base-siglip/"),
-        mrl=_slpcfg(hf_hub="visheratin/nllb-siglip-mrl-base/"),
-    ),
-    "nllb-clip-large-siglip": dict(
-        v1=_slpcfg(hf_hub="visheratin/nllb-clip-large-siglip/"),
-        mrl=_slpcfg(hf_hub="visheratin/nllb-siglip-mrl-large/"),
-    ),
-    "MobileCLIP-S1": dict(datacompdr=_mccfg(hf_hub="apple/MobileCLIP-S1-OpenCLIP/")),
-    "MobileCLIP-S2": dict(datacompdr=_mccfg(hf_hub="apple/MobileCLIP-S2-OpenCLIP/")),
-    "MobileCLIP-B": dict(
-        datacompdr=_mccfg(hf_hub="apple/MobileCLIP-B-OpenCLIP/"),
-        datacompdr_lt=_mccfg(hf_hub="apple/MobileCLIP-B-LT-OpenCLIP/"),
-    ),
-    "MobileCLIP2-B": dict(dfndr2b=_mccfg(hf_hub="timm/MobileCLIP2-B-OpenCLIP/")),
-    "MobileCLIP2-S0": dict(dfndr2b=_mccfg(hf_hub="timm/MobileCLIP2-S0-OpenCLIP/")),
-    "MobileCLIP2-S2": dict(dfndr2b=_mccfg(hf_hub="timm/MobileCLIP2-S2-OpenCLIP/")),
-    "MobileCLIP2-S3": dict(dfndr2b=_mc2cfg(hf_hub="timm/MobileCLIP2-S3-OpenCLIP/")),
-    "MobileCLIP2-S4": dict(dfndr2b=_mc2cfg(hf_hub="timm/MobileCLIP2-S4-OpenCLIP/")),
-    "MobileCLIP2-L-14": dict(dfndr2b=_mc2cfg(hf_hub="timm/MobileCLIP2-L-14-OpenCLIP/", interpolation="bicubic")),
-    "ViTamin-S": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-S/pytorch_model.bin"),
-    ),
-    "ViTamin-S-LTT": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-S-LTT/pytorch_model.bin"),
-    ),
-    "ViTamin-B": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-B/pytorch_model.bin"),
-    ),
-    "ViTamin-B-LTT": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-B-LTT/pytorch_model.bin"),
-    ),
-    "ViTamin-L": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L-224px/pytorch_model.bin"),
-    ),
-    "ViTamin-L-256": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L-256px/pytorch_model.bin"),
-    ),
-    "ViTamin-L-336": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L-336px/pytorch_model.bin"),
-    ),
-    "ViTamin-L-384": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L-384px/pytorch_model.bin"),
-    ),
-    "ViTamin-L2": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L2-224px/pytorch_model.bin"),
-    ),
-    "ViTamin-L2-256": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L2-256px/pytorch_model.bin"),
-    ),
-    "ViTamin-L2-336": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L2-336px/pytorch_model.bin"),
-    ),
-    "ViTamin-L2-384": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-L2-384px/pytorch_model.bin"),
-    ),
-    "ViTamin-XL-256": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-XL-256px/pytorch_model.bin"),
-    ),
-    "ViTamin-XL-336": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-XL-336px/pytorch_model.bin"),
-    ),
-    "ViTamin-XL-384": dict(
-        datacomp1b=_pcfg(hf_hub="jienengchen/ViTamin-XL-384px/pytorch_model.bin"),
-    ),
-    "PE-Core-T-16-384": dict(
+        "laion2b_s9b_b144k": _pcfg(hf_hub="timm/eva02_enormous_patch14_plus_clip_224.laion2b_s9b_b144k/"),
+    },
+    "ViT-B-16-SigLIP": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP/"),
+    },
+    "ViT-B-16-SigLIP-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP-256/"),
+    },
+    "ViT-B-16-SigLIP-i18n-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP-i18n-256/"),
+    },
+    "ViT-B-16-SigLIP-384": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP-384/"),
+    },
+    "ViT-B-16-SigLIP-512": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP-512/"),
+    },
+    "ViT-L-16-SigLIP-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-L-16-SigLIP-256/"),
+    },
+    "ViT-L-16-SigLIP-384": {
+        "webli": _slpcfg(hf_hub="timm/ViT-L-16-SigLIP-384/"),
+    },
+    "ViT-SO400M-14-SigLIP": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP/"),
+    },
+    "ViT-SO400M-16-SigLIP-i18n-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP-i18n-256/"),
+    },
+    "ViT-SO400M-14-SigLIP-378": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP-384/"),  # NOTE using 384 weights, but diff img_size used
+    },
+    "ViT-SO400M-14-SigLIP-384": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP-384/"),
+    },
+    "ViT-B-32-SigLIP2-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-32-SigLIP2-256/"),
+    },
+    "ViT-B-16-SigLIP2": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP2/"),
+    },
+    "ViT-B-16-SigLIP2-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-256/"),
+    },
+    "ViT-B-16-SigLIP2-384": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-384/"),
+    },
+    "ViT-B-16-SigLIP2-512": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-512/"),
+    },
+    "ViT-B-16-SigLIP2-naflex": {
+        "webli": _slpcfg(hf_hub="timm/ViT-B-16-SigLIP2-naflex/"),
+    },
+    "ViT-L-16-SigLIP2-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-L-16-SigLIP2-256/"),
+    },
+    "ViT-L-16-SigLIP2-384": {
+        "webli": _slpcfg(hf_hub="timm/ViT-L-16-SigLIP2-384/"),
+    },
+    "ViT-L-16-SigLIP2-512": {
+        "webli": _slpcfg(hf_hub="timm/ViT-L-16-SigLIP2-512/"),
+    },
+    "ViT-SO400M-14-SigLIP2": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP2/"),
+    },
+    "ViT-SO400M-14-SigLIP2-378": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-14-SigLIP2-378/"),
+    },
+    "ViT-SO400M-16-SigLIP2-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-256/"),
+    },
+    "ViT-SO400M-16-SigLIP2-384": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-384/"),
+    },
+    "ViT-SO400M-16-SigLIP2-512": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-512/"),
+    },
+    "ViT-SO400M-16-SigLIP2-naflex": {
+        "webli": _slpcfg(hf_hub="timm/ViT-SO400M-16-SigLIP2-naflex/"),
+    },
+    "ViT-gopt-16-SigLIP2-256": {
+        "webli": _slpcfg(hf_hub="timm/ViT-gopt-16-SigLIP2-256/"),
+    },
+    "ViT-gopt-16-SigLIP2-384": {
+        "webli": _slpcfg(hf_hub="timm/ViT-gopt-16-SigLIP2-384/"),
+    },
+    "ViT-L-14-CLIPA": {
+        "datacomp1b": _apcfg(hf_hub="UCSC-VLAA/ViT-L-14-CLIPA-datacomp1B/"),
+    },
+    "ViT-L-14-CLIPA-336": {
+        "datacomp1b": _apcfg(hf_hub="UCSC-VLAA/ViT-L-14-CLIPA-336-datacomp1B/"),
+    },
+    "ViT-H-14-CLIPA": {
+        "datacomp1b": _apcfg(hf_hub="UCSC-VLAA/ViT-H-14-CLIPA-datacomp1B/"),
+    },
+    "ViT-H-14-CLIPA-336": {
+        "laion2b": _apcfg(hf_hub="UCSC-VLAA/ViT-H-14-CLIPA-336-laion2B/"),
+        "datacomp1b": _apcfg(hf_hub="UCSC-VLAA/ViT-H-14-CLIPA-336-datacomp1B/"),
+    },
+    "ViT-bigG-14-CLIPA": {
+        "datacomp1b": _apcfg(hf_hub="UCSC-VLAA/ViT-bigG-14-CLIPA-datacomp1B/"),
+    },
+    "ViT-bigG-14-CLIPA-336": {
+        "datacomp1b": _apcfg(hf_hub="UCSC-VLAA/ViT-bigG-14-CLIPA-336-datacomp1B/"),
+    },
+    "nllb-clip-base": {
+        "v1": _pcfg(hf_hub="visheratin/nllb-clip-base-oc/"),
+    },
+    "nllb-clip-large": {
+        "v1": _pcfg(hf_hub="visheratin/nllb-clip-large-oc/"),
+    },
+    "nllb-clip-base-siglip": {
+        "v1": _slpcfg(hf_hub="visheratin/nllb-clip-base-siglip/"),
+        "mrl": _slpcfg(hf_hub="visheratin/nllb-siglip-mrl-base/"),
+    },
+    "nllb-clip-large-siglip": {
+        "v1": _slpcfg(hf_hub="visheratin/nllb-clip-large-siglip/"),
+        "mrl": _slpcfg(hf_hub="visheratin/nllb-siglip-mrl-large/"),
+    },
+    "MobileCLIP-S1": {"datacompdr": _mccfg(hf_hub="apple/MobileCLIP-S1-OpenCLIP/")},
+    "MobileCLIP-S2": {"datacompdr": _mccfg(hf_hub="apple/MobileCLIP-S2-OpenCLIP/")},
+    "MobileCLIP-B": {
+        "datacompdr": _mccfg(hf_hub="apple/MobileCLIP-B-OpenCLIP/"),
+        "datacompdr_lt": _mccfg(hf_hub="apple/MobileCLIP-B-LT-OpenCLIP/"),
+    },
+    "MobileCLIP2-B": {"dfndr2b": _mccfg(hf_hub="timm/MobileCLIP2-B-OpenCLIP/")},
+    "MobileCLIP2-S0": {"dfndr2b": _mccfg(hf_hub="timm/MobileCLIP2-S0-OpenCLIP/")},
+    "MobileCLIP2-S2": {"dfndr2b": _mccfg(hf_hub="timm/MobileCLIP2-S2-OpenCLIP/")},
+    "MobileCLIP2-S3": {"dfndr2b": _mc2cfg(hf_hub="timm/MobileCLIP2-S3-OpenCLIP/")},
+    "MobileCLIP2-S4": {"dfndr2b": _mc2cfg(hf_hub="timm/MobileCLIP2-S4-OpenCLIP/")},
+    "MobileCLIP2-L-14": {"dfndr2b": _mc2cfg(hf_hub="timm/MobileCLIP2-L-14-OpenCLIP/", interpolation="bicubic")},
+    "ViTamin-S": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-S/pytorch_model.bin"),
+    },
+    "ViTamin-S-LTT": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-S-LTT/pytorch_model.bin"),
+    },
+    "ViTamin-B": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-B/pytorch_model.bin"),
+    },
+    "ViTamin-B-LTT": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-B-LTT/pytorch_model.bin"),
+    },
+    "ViTamin-L": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L-224px/pytorch_model.bin"),
+    },
+    "ViTamin-L-256": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L-256px/pytorch_model.bin"),
+    },
+    "ViTamin-L-336": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L-336px/pytorch_model.bin"),
+    },
+    "ViTamin-L-384": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L-384px/pytorch_model.bin"),
+    },
+    "ViTamin-L2": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L2-224px/pytorch_model.bin"),
+    },
+    "ViTamin-L2-256": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L2-256px/pytorch_model.bin"),
+    },
+    "ViTamin-L2-336": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L2-336px/pytorch_model.bin"),
+    },
+    "ViTamin-L2-384": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-L2-384px/pytorch_model.bin"),
+    },
+    "ViTamin-XL-256": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-XL-256px/pytorch_model.bin"),
+    },
+    "ViTamin-XL-336": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-XL-336px/pytorch_model.bin"),
+    },
+    "ViTamin-XL-384": {
+        "datacomp1b": _pcfg(hf_hub="jienengchen/ViTamin-XL-384px/pytorch_model.bin"),
+    },
+    "PE-Core-T-16-384": {
         # original at facebook/PE-Core-T16-384/PE-Core-T16-384.pt
-        meta=_pecfg(hf_hub="timm/PE-Core-T-16-384/"),
-    ),
-    "PE-Core-S-16-384": dict(
+        "meta": _pecfg(hf_hub="timm/PE-Core-T-16-384/"),
+    },
+    "PE-Core-S-16-384": {
         # original at facebook/PE-Core-S16-384/PE-Core-S16-384.pt
-        meta=_pecfg(hf_hub="timm/PE-Core-S-16-384/"),
-    ),
-    "PE-Core-B-16": dict(
+        "meta": _pecfg(hf_hub="timm/PE-Core-S-16-384/"),
+    },
+    "PE-Core-B-16": {
         # original at facebook/PE-Core-B16-224/PE-Core-B16-224.pt
-        meta=_pecfg(hf_hub="timm/PE-Core-B-16/"),
-    ),
-    "PE-Core-L-14-336": dict(
+        "meta": _pecfg(hf_hub="timm/PE-Core-B-16/"),
+    },
+    "PE-Core-L-14-336": {
         # original at facebook/PE-Core-L14-336/PE-Core-L14-336.pt
-        meta=_pecfg(hf_hub="timm/PE-Core-L-14-336/"),
-    ),
-    "PE-Core-bigG-14-448": dict(
+        "meta": _pecfg(hf_hub="timm/PE-Core-L-14-336/"),
+    },
+    "PE-Core-bigG-14-448": {
         # original at facebook/PE-Core-G14-448/PE-Core-G14-448.pt
-        meta=_pecfg(hf_hub="timm/PE-Core-bigG-14-448/"),
-    ),
+        "meta": _pecfg(hf_hub="timm/PE-Core-bigG-14-448/"),
+    },
     # MetaCLIP 2
-    "ViT-H-14-worldwide": dict(
-        metaclip2_worldwide=_pcfg(
+    "ViT-H-14-worldwide": {
+        "metaclip2_worldwide": _pcfg(
             hf_hub="timm/vit_huge_patch14_clip_224.metaclip2_worldwide/",
             quick_gelu=True,
         ),
-    ),
-    "ViT-H-14-worldwide-378": dict(
-        metaclip2_worldwide=_pcfg(
+    },
+    "ViT-H-14-worldwide-378": {
+        "metaclip2_worldwide": _pcfg(
             hf_hub="timm/vit_huge_patch14_clip_378.metaclip2_worldwide/",
             resize_mode="squash",
             # NOTE not quick-gelu
         ),
-    ),
-    "ViT-bigG-14-worldwide": dict(
-        metaclip2_worldwide=_pcfg(hf_hub="timm/vit_gigantic_patch14_clip_224.metaclip2_worldwide/"),
+    },
+    "ViT-bigG-14-worldwide": {
+        "metaclip2_worldwide": _pcfg(hf_hub="timm/vit_gigantic_patch14_clip_224.metaclip2_worldwide/"),
         # NOTE not quick-gelu
-    ),
-    "ViT-bigG-14-worldwide-378": dict(
-        metaclip2_worldwide=_pcfg(
+    },
+    "ViT-bigG-14-worldwide-378": {
+        "metaclip2_worldwide": _pcfg(
             hf_hub="timm/vit_gigantic_patch14_clip_378.metaclip2_worldwide/",
             resize_mode="squash",
             # NOTE not quick-gelu
         ),
-    ),
+    },
 }
 
 _PRETRAINED_quickgelu = {}
@@ -928,7 +930,7 @@ def _get_safe_alternatives(filename: str) -> Iterable[str]:
     if filename == HF_WEIGHTS_NAME:
         yield HF_SAFE_WEIGHTS_NAME
 
-    if filename not in (HF_WEIGHTS_NAME,) and (filename.endswith(".bin") or filename.endswith(".pth")):
+    if filename not in (HF_WEIGHTS_NAME,) and (filename.endswith((".bin", ".pth"))):
         yield filename[:-4] + ".safetensors"
 
 

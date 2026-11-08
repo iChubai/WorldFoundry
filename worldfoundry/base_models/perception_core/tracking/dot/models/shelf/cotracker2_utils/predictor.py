@@ -178,10 +178,7 @@ class CoTrackerPredictor(torch.nn.Module):
         inv_queries = queries.clone()
         inv_queries[:, :, 0] = inv_video.shape[1] - inv_queries[:, :, 0] - 1
 
-        if self.cached_feat is not None:
-            inv_feat = self.cached_feat.flip(1)
-        else:
-            inv_feat = None
+        inv_feat = self.cached_feat.flip(1) if self.cached_feat is not None else None
 
         inv_tracks, inv_visibilities, __ = self.model(
             video=inv_video, queries=inv_queries, iters=6, cached_feat=inv_feat

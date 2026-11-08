@@ -219,13 +219,12 @@ def main():
     #
     # Output: (B, video_length, 3, H, W) — rendered RGB frames
     print(f"Rendering {args.video_length} frames...")
-    with torch.no_grad():
-        with torch.amp.autocast(device_type="cuda", dtype=dtype):
-            video_out = render_chunked(
-                model,
-                (images, rays, cam_tokens),
-                num_cond_views=num_cond_views,
-            )
+    with torch.no_grad(), torch.amp.autocast(device_type="cuda", dtype=dtype):
+        video_out = render_chunked(
+            model,
+            (images, rays, cam_tokens),
+            num_cond_views=num_cond_views,
+        )
     print(f"Output video shape: {video_out.shape}")
 
     # -------------------------------------------------------------------------

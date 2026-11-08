@@ -69,7 +69,7 @@ class CoTracker(nn.Module):
         space_depth=12,
         time_depth=12,
     ):
-        super(CoTracker, self).__init__()
+        super().__init__()
         self.S = S
         self.stride = stride
         self.hidden_dim = 256

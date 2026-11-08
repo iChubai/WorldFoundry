@@ -304,9 +304,6 @@ def predict_tracks_in_chunks(
     fine_pred_track = torch.cat(fine_pred_track_list, dim=2)
     pred_vis = torch.cat(pred_vis_list, dim=2)
 
-    if pred_score is not None:
-        pred_score = torch.cat(pred_score_list, dim=2)
-    else:
-        pred_score = None
+    pred_score = torch.cat(pred_score_list, dim=2) if pred_score is not None else None
 
     return fine_pred_track, pred_vis, pred_score

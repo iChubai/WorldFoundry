@@ -161,7 +161,7 @@ class DistributedAttention(torch.nn.Module):
         self,
         local_attention: Module | Callable,
     ) -> None:
-        super(DistributedAttention, self).__init__()
+        super().__init__()
         self.local_attn = local_attention
         self.pg = None
         self.stream = None
@@ -200,7 +200,7 @@ class DistributedAttention(torch.nn.Module):
 class MinimalA2AAttnOp(DistributedAttention):
     def __init__(self, *args, **kwargs):
         del args, kwargs
-        super(MinimalA2AAttnOp, self).__init__(attention)
+        super().__init__(attention)
 
     def set_context_parallel_group(self, process_group, ranks, stream, cp_comm_type: str = "p2p"):
         del ranks
@@ -213,6 +213,6 @@ class MinimalA2AAttnOp(DistributedAttention):
 
 class NattenA2AAttnOp(MinimalA2AAttnOp):
     def __init__(self, *args, **kwargs):
-        super(NattenA2AAttnOp, self).__init__(None)
+        super().__init__(None)
         self.natten_op = NeighborhoodAttention(*args, **kwargs, base_attn_op=attention)
         self.local_attn = self.natten_op

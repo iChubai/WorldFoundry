@@ -290,10 +290,7 @@ class SLAMSystem:
                 )
                 masks_list.append(~mask)
         images = rearrange(torch.stack(images_list), "n h w c -> n c h w")
-        if masks_list:
-            masks = torch.stack(masks_list)
-        else:
-            masks = None
+        masks = torch.stack(masks_list) if masks_list else None
         return images, masks
 
     @torch.no_grad()

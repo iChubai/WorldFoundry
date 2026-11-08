@@ -149,8 +149,11 @@ def depthwise_conv_fwd(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor
 
     # Allocates output.
     y = torch.empty_like(x)
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (B * C * triton.cdiv(H, META["BLOCK_SIZE_H"]) * triton.cdiv(W, META["BLOCK_SIZE_W"]),)
+    def grid(META):
+        return (B * C * triton.cdiv(H, META["BLOCK_SIZE_H"]) * triton.cdiv(W, META["BLOCK_SIZE_W"]),)
+
     if x.dtype == weight.dtype == bias.dtype:
         depthwise_conv_fwd_kernel[grid](
             x,

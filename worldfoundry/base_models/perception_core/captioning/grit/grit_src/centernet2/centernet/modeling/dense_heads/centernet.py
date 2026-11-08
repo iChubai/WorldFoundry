@@ -410,8 +410,8 @@ class CenterNet(nn.Module):
         flattened_hms = _transpose(flattened_hms, num_loc_list)
         for l in range(len(reg_targets)):
             reg_targets[l] = reg_targets[l] / float(self.strides[l])
-        reg_targets = cat([x for x in reg_targets], dim=0)  # MB x 4
-        flattened_hms = cat([x for x in flattened_hms], dim=0)  # MB x C
+        reg_targets = cat(list(reg_targets), dim=0)  # MB x 4
+        flattened_hms = cat(list(flattened_hms), dim=0)  # MB x C
 
         return pos_inds, labels, reg_targets, flattened_hms
 

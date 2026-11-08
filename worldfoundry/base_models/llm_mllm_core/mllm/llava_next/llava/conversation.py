@@ -143,8 +143,13 @@ class Conversation:
                     ret += role
 
         elif self.sep_style == SeparatorStyle.LLAMA_2:
-            wrap_sys = lambda msg: f"<<SYS>>\n{msg}\n<</SYS>>\n\n" if len(msg) > 0 else msg
-            wrap_inst = lambda msg: f"[INST] {msg} [/INST]"
+
+            def wrap_sys(msg):
+                return f"<<SYS>>\n{msg}\n<</SYS>>\n\n" if len(msg) > 0 else msg
+
+            def wrap_inst(msg):
+                return f"[INST] {msg} [/INST]"
+
             ret = ""
 
             for i, (role, message) in enumerate(messages):
@@ -232,16 +237,15 @@ class Conversation:
     def get_images(self, return_pil=False, return_path=False):
         images = []
         for i, (_role, msg) in enumerate(self.messages[self.offset :]):
-            if i % 2 == 0:
-                if type(msg) is tuple:
-                    msg, image, image_process_mode = msg
-                    if type(image) is not list:
-                        image = [image]
-                    for img in image:
-                        if not return_path and self.is_image_file(img):
-                            img = self.process_image(img, image_process_mode, return_pil=return_pil)
-                        else:
-                            images.append(img)
+            if i % 2 == 0 and type(msg) is tuple:
+                msg, image, image_process_mode = msg
+                if type(image) is not list:
+                    image = [image]
+                for img in image:
+                    if not return_path and self.is_image_file(img):
+                        img = self.process_image(img, image_process_mode, return_pil=return_pil)
+                    else:
+                        images.append(img)
         return images
 
     def is_image_file(self, filename):

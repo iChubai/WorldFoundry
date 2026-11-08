@@ -16,28 +16,34 @@ anchors = [
     [(73, 198), (124, 330), (255, 504)],  # P5/32
 ]
 
-model = dict(bbox_head=dict(head_module=dict(num_classes=num_classes), prior_generator=dict(base_sizes=anchors)))
+model = {"bbox_head": {"head_module": {"num_classes": num_classes}, "prior_generator": {"base_sizes": anchors}}}
 
-train_dataloader = dict(
-    dataset=dict(
-        type=dataset_type, data_root=data_root, ann_file="annotation_train.odgt", data_prefix=dict(img="Images/")
-    )
-)
+train_dataloader = {
+    "dataset": {
+        "type": dataset_type,
+        "data_root": data_root,
+        "ann_file": "annotation_train.odgt",
+        "data_prefix": {"img": "Images/"},
+    }
+}
 
-val_dataloader = dict(
-    dataset=dict(
-        type=dataset_type,
-        data_root=data_root,
-        ann_file="annotation_val.odgt",
-        data_prefix=dict(img="Images/"),
+val_dataloader = {
+    "dataset": {
+        "type": dataset_type,
+        "data_root": data_root,
+        "ann_file": "annotation_val.odgt",
+        "data_prefix": {"img": "Images/"},
         # CrowdHumanMetric does not support out-of-order output images
         # for the time being. batch_shapes_cfg does not support.
-        batch_shapes_cfg=None,
-    )
-)
+        "batch_shapes_cfg": None,
+    }
+}
 test_dataloader = val_dataloader
 
-val_evaluator = dict(
-    _delete_=True, type="mmdet.CrowdHumanMetric", ann_file=data_root + "annotation_val.odgt", metric=["AP", "MR", "JI"]
-)
+val_evaluator = {
+    "_delete_": True,
+    "type": "mmdet.CrowdHumanMetric",
+    "ann_file": data_root + "annotation_val.odgt",
+    "metric": ["AP", "MR", "JI"],
+}
 test_evaluator = val_evaluator

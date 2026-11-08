@@ -97,7 +97,7 @@ class TimmModel(nn.Module):
                 self.trunk.reset_classifier(0, global_pool="")
             else:
                 # reset global pool if pool config set, otherwise leave as network default
-                reset_kwargs = dict(global_pool=pool) if pool else {}
+                reset_kwargs = {"global_pool": pool} if pool else {}
                 self.trunk.reset_classifier(0, **reset_kwargs)
             prev_chs = self.trunk.num_features
 

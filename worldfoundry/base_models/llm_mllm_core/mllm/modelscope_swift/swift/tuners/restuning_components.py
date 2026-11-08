@@ -52,7 +52,7 @@ class ResTuner(nn.Module):
             tuner_cfg = tuner_cfg["upsample"] if isinstance(tuner_cfg, dict) else tuner_cfg
             if "upsample_out_channels" in kwargs:
                 out_channels = kwargs["upsample_out_channels"]
-                use_conv = True if out_channels else False
+                use_conv = bool(out_channels)
             else:
                 out_channels = dim
                 use_conv = False
@@ -63,10 +63,7 @@ class ResTuner(nn.Module):
             self.tuner = Identity()
 
     def forward(self, x, *args, **kwargs):
-        if self.tuner_cfg == "zero" or "zero" in self.tuner_cfg:
-            x_out = 0.0
-        else:
-            x_out = self.tuner(x, *args, **kwargs)
+        x_out = 0.0 if self.tuner_cfg == "zero" or "zero" in self.tuner_cfg else self.tuner(x, *args, **kwargs)
         return x_out
 
 
@@ -74,7 +71,7 @@ class ResAdapter(nn.Module):
     def __init__(
         self, dim, layer_num=-1, depth=-1, zero_init_last=False, stage="", tuner_cfg=None, act_layer=nn.GELU, **kwargs
     ):
-        super(ResAdapter, self).__init__()
+        super().__init__()
         self.dim = dim
         self.layer_num = layer_num
         self.depth = depth
@@ -155,7 +152,7 @@ class ResGroupAdapter(nn.Module):
     def __init__(
         self, dim, layer_num=-1, depth=-1, zero_init_last=False, stage="", tuner_cfg=None, act_layer=nn.GELU, **kwargs
     ):
-        super(ResGroupAdapter, self).__init__()
+        super().__init__()
         self.dim = dim
         self.layer_num = layer_num
         self.depth = depth

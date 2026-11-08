@@ -54,7 +54,7 @@ class TransNetV2(nn.Module):
         device="auto",
         weights_path: str | os.PathLike[str] | None = None,
     ):
-        super(TransNetV2, self).__init__()
+        super().__init__()
 
         # Handle device auto-detection
         if device == "auto":
@@ -588,7 +588,7 @@ class StackedDDCNNV2(nn.Module):
         pool_type="avg",
         stochastic_depth_drop_prob=0.0,
     ):
-        super(StackedDDCNNV2, self).__init__()
+        super().__init__()
 
         if use_octave_conv:
             raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
@@ -626,10 +626,7 @@ class StackedDDCNNV2(nn.Module):
         if self.shortcut is not None:
             if self.stochastic_depth_drop_prob != 0.0:
                 if self.training:
-                    if random.random() < self.stochastic_depth_drop_prob:
-                        x = shortcut
-                    else:
-                        x = x + shortcut
+                    x = shortcut if random.random() < self.stochastic_depth_drop_prob else x + shortcut
                 else:
                     x = (1 - self.stochastic_depth_drop_prob) * x + shortcut
             else:
@@ -641,7 +638,7 @@ class StackedDDCNNV2(nn.Module):
 
 class DilatedDCNNV2(nn.Module):
     def __init__(self, in_filters, filters, batch_norm=True, activation=None, octave_conv=False):  # not supported
-        super(DilatedDCNNV2, self).__init__()
+        super().__init__()
 
         if octave_conv:
             raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
@@ -684,7 +681,7 @@ class Conv3DConfigurable(nn.Module):
         use_bias=True,
         kernel_initializer=None,
     ):  # not supported
-        super(Conv3DConfigurable, self).__init__()
+        super().__init__()
 
         if octave:
             raise NotImplemented("Octave convolution not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
@@ -735,7 +732,7 @@ class FrameSimilarity(nn.Module):
         stop_gradient=False,  # not supported
         use_bias=False,
     ):
-        super(FrameSimilarity, self).__init__()
+        super().__init__()
 
         if stop_gradient:
             raise NotImplemented("Stop gradient not implemented in Pytorch version of Transnet!")  # noqa: F901 - Upstream guard; its exception type is unchanged.
@@ -782,7 +779,7 @@ class FrameSimilarity(nn.Module):
 
 class ColorHistograms(nn.Module):
     def __init__(self, lookup_window=101, output_dim=None):
-        super(ColorHistograms, self).__init__()
+        super().__init__()
 
         self.fc = nn.Linear(lookup_window, output_dim) if output_dim is not None else None
         self.lookup_window = lookup_window

@@ -146,10 +146,7 @@ class WanS2VAudioEncoder(torch.nn.Module):
 
         # retrieve logits & take argmax
         res = self.model(input_values, output_hidden_states=True)
-        if return_all_layers:
-            feat = torch.cat(res.hidden_states)
-        else:
-            feat = res.hidden_states[-1]
+        feat = torch.cat(res.hidden_states) if return_all_layers else res.hidden_states[-1]
         feat = linear_interpolation(feat, input_fps=50, output_fps=self.video_rate)
         return feat
 
@@ -164,10 +161,7 @@ class WanS2VAudioEncoder(torch.nn.Module):
         """
         num_layers, audio_frame_num, audio_dim = audio_embed.shape
 
-        if num_layers > 1:
-            return_all_layers = True
-        else:
-            return_all_layers = False
+        return_all_layers = num_layers > 1
 
         min_batch_num = int(audio_frame_num / (batch_frames * stride)) + 1
 
@@ -209,10 +203,7 @@ class WanS2VAudioEncoder(torch.nn.Module):
         """
         num_layers, audio_frame_num, audio_dim = audio_embed.shape
 
-        if num_layers > 1:
-            return_all_layers = True
-        else:
-            return_all_layers = False
+        return_all_layers = num_layers > 1
 
         scale = self.video_rate / fps
 

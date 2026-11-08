@@ -230,10 +230,7 @@ class SAM2VideoPredictor(SAM2Base):
         points = points.to(inference_state["device"])
         labels = labels.to(inference_state["device"])
 
-        if not clear_old_points:
-            point_inputs = point_inputs_per_frame.get(frame_idx, None)
-        else:
-            point_inputs = None
+        point_inputs = point_inputs_per_frame.get(frame_idx, None) if not clear_old_points else None
         point_inputs = concat_points(point_inputs, points, labels)
 
         point_inputs_per_frame[frame_idx] = point_inputs
@@ -245,10 +242,7 @@ class SAM2VideoPredictor(SAM2Base):
         obj_frames_tracked = inference_state["frames_tracked_per_obj"][obj_idx]
         is_init_cond_frame = frame_idx not in obj_frames_tracked
         # whether to track in reverse time order
-        if is_init_cond_frame:
-            reverse = False
-        else:
-            reverse = obj_frames_tracked[frame_idx]["reverse"]
+        reverse = False if is_init_cond_frame else obj_frames_tracked[frame_idx]["reverse"]
         obj_output_dict = inference_state["output_dict_per_obj"][obj_idx]
         obj_temp_output_dict = inference_state["temp_output_dict_per_obj"][obj_idx]
         # Add a frame to conditioning output if it's an initial conditioning frame or
@@ -348,10 +342,7 @@ class SAM2VideoPredictor(SAM2Base):
         obj_frames_tracked = inference_state["frames_tracked_per_obj"][obj_idx]
         is_init_cond_frame = frame_idx not in obj_frames_tracked
         # whether to track in reverse time order
-        if is_init_cond_frame:
-            reverse = False
-        else:
-            reverse = obj_frames_tracked[frame_idx]["reverse"]
+        reverse = False if is_init_cond_frame else obj_frames_tracked[frame_idx]["reverse"]
         obj_output_dict = inference_state["output_dict_per_obj"][obj_idx]
         obj_temp_output_dict = inference_state["temp_output_dict_per_obj"][obj_idx]
         # Add a frame to conditioning output if it's an initial conditioning frame or

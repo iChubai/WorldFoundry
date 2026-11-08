@@ -1661,10 +1661,7 @@ class LightX2VSparseAdapter:
 
     def _frame_num(self, grid: tuple[int, int, int] | None) -> int | None:
         configured = self.config.attnmap_frame_num
-        if grid is None:
-            frame_num = configured
-        else:
-            frame_num = _positive_int("grid temporal size", grid[0])
+        frame_num = configured if grid is None else _positive_int("grid temporal size", grid[0])
         if configured is not None and frame_num is not None and configured != frame_num:
             raise ValueError(
                 f"attnmap_frame_num/grid mismatch: configured={configured}, grid temporal size={frame_num}"

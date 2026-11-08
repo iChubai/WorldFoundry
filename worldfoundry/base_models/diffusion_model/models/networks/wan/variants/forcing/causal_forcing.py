@@ -900,15 +900,15 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             context = torch.concat([context_clip, context], dim=1)
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.
@@ -1068,15 +1068,15 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             e0 = torch.cat([e0_clean, e0], dim=1)
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

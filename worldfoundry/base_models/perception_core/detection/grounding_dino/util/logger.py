@@ -18,7 +18,7 @@ class _ColorfulFormatter(logging.Formatter):
         self._abbrev_name = kwargs.pop("abbrev_name", "")
         if len(self._abbrev_name):
             self._abbrev_name = self._abbrev_name + "."
-        super(_ColorfulFormatter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def formatMessage(self, record):
         """Formatmessage.
@@ -27,7 +27,7 @@ class _ColorfulFormatter(logging.Formatter):
             record: The record.
         """
         record.name = record.name.replace(self._root_name, self._abbrev_name)
-        log = super(_ColorfulFormatter, self).formatMessage(record)
+        log = super().formatMessage(record)
         if record.levelno == logging.WARNING:
             prefix = colored("WARNING", "red", attrs=["blink"])
         elif record.levelno == logging.ERROR or record.levelno == logging.CRITICAL:
@@ -78,10 +78,7 @@ def setup_logger(output=None, distributed_rank=0, *, color=True, name="imagenet"
 
     # file logging: all workers
     if output is not None:
-        if output.endswith(".txt") or output.endswith(".log"):
-            filename = output
-        else:
-            filename = os.path.join(output, "log.txt")
+        filename = output if output.endswith((".txt", ".log")) else os.path.join(output, "log.txt")
         if distributed_rank > 0:
             filename = filename + f".rank{distributed_rank}"
         os.makedirs(os.path.dirname(filename), exist_ok=True)

@@ -24,6 +24,7 @@ import trimesh
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
 from worldfoundry.studio.visualization.plugins.scene3d.depth_anything_v3.export_vis import export_to_depth_vis
+import itertools
 
 
 def set_sky_depth(prediction: Prediction, sky_mask: np.ndarray, sky_depth_def: float = 98.0):
@@ -57,10 +58,7 @@ def get_conf_thresh(
         conf_thresh_percentile: The conf thresh percentile.
         ensure_thresh_percentile: The ensure thresh percentile.
     """
-    if sky_mask is not None and (~sky_mask).sum() > 10:
-        conf_pixels = prediction.conf[~sky_mask]
-    else:
-        conf_pixels = prediction.conf
+    conf_pixels = prediction.conf[~sky_mask] if sky_mask is not None and (~sky_mask).sum() > 10 else prediction.conf
     lower = np.percentile(conf_pixels, conf_thresh_percentile)
     upper = np.percentile(conf_pixels, ensure_thresh_percentile)
     conf_thresh = min(max(conf_thresh, lower), upper)
@@ -431,7 +429,7 @@ def _camera_frustum_lines(K: np.ndarray, ext_w2c: np.ndarray, W: int, H: int, sc
         segs.append(np.stack([Cw, plane_w[k]], 0))
     # rectangle edges
     order = [0, 1, 2, 3, 0]
-    for a, b in zip(order[:-1], order[1:], strict=False):
+    for a, b in itertools.pairwise(order):
         segs.append(np.stack([plane_w[a], plane_w[b]], 0))
 
     return np.stack(segs, 0)  # (8,2,3)

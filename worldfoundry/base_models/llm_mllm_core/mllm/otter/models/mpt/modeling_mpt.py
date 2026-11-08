@@ -213,11 +213,10 @@ class MPTModel(MPTPreTrainedModel):
         # but have not yet been fully implemented in MPTModel
         if not return_dict:
             raise NotImplementedError("return_dict False is not implemented yet for MPT")
-        if output_attentions:
-            if self.attn_impl != "torch":
-                raise NotImplementedError(
-                    "output_attentions is not implemented for MPT when using attn_impl `flash` or `triton`."
-                )
+        if output_attentions and self.attn_impl != "torch":
+            raise NotImplementedError(
+                "output_attentions is not implemented for MPT when using attn_impl `flash` or `triton`."
+            )
 
         if attention_mask is not None and attention_mask[:, 0].sum() != attention_mask.shape[0] and self.training:
             raise NotImplementedError("MPT does not support training with left padding.")

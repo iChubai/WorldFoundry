@@ -282,7 +282,7 @@ class ResTuningBypassModule(nn.Module, ActivationMixin):
         zero_init_last=False,
         tuner_cfg=None,
     ):
-        super(ResTuningBypassModule, self).__init__()
+        super().__init__()
         super(nn.Module, self).__init__("")
         self.adapter_name = adapter_name
 

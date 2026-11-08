@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
+import contextlib
 
 RUNTIME_ROOT = Path(__file__).resolve().parent / "mega_sam_runtime"
 
@@ -121,10 +122,8 @@ def _gpu_worker_process(
     cpu_ids = available[start : start + n_cores]
     cpu_list = ",".join(str(c) for c in cpu_ids)
 
-    try:
+    with contextlib.suppress(AttributeError, OSError):
         os.sched_setaffinity(0, cpu_ids)
-    except (AttributeError, OSError):
-        pass
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     os.environ["OMP_NUM_THREADS"] = str(n_threads)

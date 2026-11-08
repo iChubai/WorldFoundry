@@ -27,9 +27,9 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         widen_factor: float = 1.0,
         num_csp_blocks: int = 3,
         freeze_all: bool = False,
-        block_cfg: ConfigType = dict(type="CSPLayerWithTwoConv"),
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        block_cfg: ConfigType = {"type": "CSPLayerWithTwoConv"},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = None,
     ) -> None:
         self.guide_channels = guide_channels
@@ -59,17 +59,17 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         """
         block_cfg = copy.deepcopy(self.block_cfg)
         block_cfg.update(
-            dict(
-                in_channels=make_divisible((self.in_channels[idx - 1] + self.in_channels[idx]), self.widen_factor),
-                out_channels=make_divisible(self.out_channels[idx - 1], self.widen_factor),
-                guide_channels=self.guide_channels,
-                embed_channels=make_round(self.embed_channels[idx - 1], self.widen_factor),
-                num_heads=make_round(self.num_heads[idx - 1], self.widen_factor),
-                num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
-                add_identity=False,
-                norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg,
-            )
+            {
+                "in_channels": make_divisible((self.in_channels[idx - 1] + self.in_channels[idx]), self.widen_factor),
+                "out_channels": make_divisible(self.out_channels[idx - 1], self.widen_factor),
+                "guide_channels": self.guide_channels,
+                "embed_channels": make_round(self.embed_channels[idx - 1], self.widen_factor),
+                "num_heads": make_round(self.num_heads[idx - 1], self.widen_factor),
+                "num_blocks": make_round(self.num_csp_blocks, self.deepen_factor),
+                "add_identity": False,
+                "norm_cfg": self.norm_cfg,
+                "act_cfg": self.act_cfg,
+            }
         )
         return MODELS.build(block_cfg)
 
@@ -84,17 +84,17 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         """
         block_cfg = copy.deepcopy(self.block_cfg)
         block_cfg.update(
-            dict(
-                in_channels=make_divisible((self.out_channels[idx] + self.out_channels[idx + 1]), self.widen_factor),
-                out_channels=make_divisible(self.out_channels[idx + 1], self.widen_factor),
-                guide_channels=self.guide_channels,
-                embed_channels=make_round(self.embed_channels[idx + 1], self.widen_factor),
-                num_heads=make_round(self.num_heads[idx + 1], self.widen_factor),
-                num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
-                add_identity=False,
-                norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg,
-            )
+            {
+                "in_channels": make_divisible((self.out_channels[idx] + self.out_channels[idx + 1]), self.widen_factor),
+                "out_channels": make_divisible(self.out_channels[idx + 1], self.widen_factor),
+                "guide_channels": self.guide_channels,
+                "embed_channels": make_round(self.embed_channels[idx + 1], self.widen_factor),
+                "num_heads": make_round(self.num_heads[idx + 1], self.widen_factor),
+                "num_blocks": make_round(self.num_csp_blocks, self.deepen_factor),
+                "add_identity": False,
+                "norm_cfg": self.norm_cfg,
+                "act_cfg": self.act_cfg,
+            }
         )
         return MODELS.build(block_cfg)
 
@@ -153,12 +153,15 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
         widen_factor: float = 1.0,
         num_csp_blocks: int = 3,
         freeze_all: bool = False,
-        text_enhancder: ConfigType = dict(
-            type="ImagePoolingAttentionModule", embed_channels=256, num_heads=8, pool_size=3
-        ),
-        block_cfg: ConfigType = dict(type="CSPLayerWithTwoConv"),
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        text_enhancder: ConfigType = {
+            "type": "ImagePoolingAttentionModule",
+            "embed_channels": 256,
+            "num_heads": 8,
+            "pool_size": 3,
+        },
+        block_cfg: ConfigType = {"type": "CSPLayerWithTwoConv"},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = None,
     ) -> None:
         super().__init__(
@@ -178,11 +181,11 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
         )
 
         text_enhancder.update(
-            dict(
-                image_channels=[int(x * widen_factor) for x in out_channels],
-                text_channels=guide_channels,
-                num_feats=len(out_channels),
-            )
+            {
+                "image_channels": [int(x * widen_factor) for x in out_channels],
+                "text_channels": guide_channels,
+                "num_feats": len(out_channels),
+            }
         )
         print(text_enhancder)
         self.text_enhancer = MODELS.build(text_enhancder)

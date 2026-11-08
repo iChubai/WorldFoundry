@@ -37,10 +37,7 @@ def resize_clip_pos_embed(state_dict, model, interpolation: str = "bicubic", seq
         align_corners=True,
     )
     pos_emb_img = pos_emb_img.permute(0, 2, 3, 1).reshape(1, grid_size[0] * grid_size[1], -1)[0]
-    if pos_emb_tok is not None:
-        new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0)
-    else:
-        new_pos_embed = pos_emb_img
+    new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0) if pos_emb_tok is not None else pos_emb_img
     state_dict["visual.positional_embedding"] = new_pos_embed
 
 
@@ -70,10 +67,7 @@ def resize_visual_pos_embed(state_dict, model, interpolation: str = "bicubic", s
         align_corners=True,
     )
     pos_emb_img = pos_emb_img.permute(0, 2, 3, 1).reshape(1, grid_size[0] * grid_size[1], -1)[0]
-    if pos_emb_tok is not None:
-        new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0)
-    else:
-        new_pos_embed = pos_emb_img
+    new_pos_embed = torch.cat([pos_emb_tok, pos_emb_img], dim=0) if pos_emb_tok is not None else pos_emb_img
     state_dict["positional_embedding"] = new_pos_embed
 
 
@@ -295,7 +289,10 @@ to_1tuple = _ntuple(1)
 to_2tuple = _ntuple(2)
 to_3tuple = _ntuple(3)
 to_4tuple = _ntuple(4)
-to_ntuple = lambda n, x: _ntuple(n)(x)
+
+
+def to_ntuple(n, x):
+    return _ntuple(n)(x)
 
 
 def is_logging(args):

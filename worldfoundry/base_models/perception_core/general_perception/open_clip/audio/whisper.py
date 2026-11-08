@@ -479,11 +479,11 @@ def create_whisper_model(audio_cfg, output_dim, **kwargs) -> WhisperEncoder:
     If audio_cfg.pretrained is True, loads OpenAI Whisper weights.
     """
     _WHISPER_CONFIGS = {
-        "tiny": dict(n_layer=4, width=384, heads=6),
-        "base": dict(n_layer=6, width=512, heads=8),
-        "small": dict(n_layer=12, width=768, heads=12),
-        "medium": dict(n_layer=24, width=1024, heads=16),
-        "large": dict(n_layer=32, width=1280, heads=20),
+        "tiny": {"n_layer": 4, "width": 384, "heads": 6},
+        "base": {"n_layer": 6, "width": 512, "heads": 8},
+        "small": {"n_layer": 12, "width": 768, "heads": 12},
+        "medium": {"n_layer": 24, "width": 1024, "heads": 16},
+        "large": {"n_layer": 32, "width": 1280, "heads": 20},
     }
 
     name = audio_cfg.model_name

@@ -201,11 +201,10 @@ class CrossAttention(nn.Module):
             key = self.reshape_heads_to_batch_dim(key)
             value = self.reshape_heads_to_batch_dim(value)
 
-        if attention_mask is not None:
-            if attention_mask.shape[-1] != query.shape[1]:
-                target_length = query.shape[1]
-                attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
-                attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
+        if attention_mask is not None and attention_mask.shape[-1] != query.shape[1]:
+            target_length = query.shape[1]
+            attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
+            attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
 
         # attention, what we cannot get enough of
         if XFORMERS_AVAILABLE and self._use_memory_efficient_attention_xformers:
@@ -363,10 +362,7 @@ class CrossAttention(nn.Module):
             query_batch = query[start_idx:end_idx]
             key_batch = key[start_idx:end_idx]
             value_batch = value[start_idx:end_idx]
-            if attention_mask is not None:
-                attention_mask_batch = attention_mask[start_idx:end_idx]
-            else:
-                attention_mask_batch = None
+            attention_mask_batch = attention_mask[start_idx:end_idx] if attention_mask is not None else None
             result = xformers.ops.memory_efficient_attention(
                 query_batch, key_batch, value_batch, attn_bias=attention_mask_batch
             )

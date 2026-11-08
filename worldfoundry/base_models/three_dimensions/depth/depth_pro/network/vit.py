@@ -40,10 +40,7 @@ def forward_features_eva_fixed(self, x):
     x = self.patch_embed(x)
     x, rot_pos_embed = self._pos_embed(x)
     for blk in self.blocks:
-        if self.grad_checkpointing:
-            x = checkpoint(blk, x, rot_pos_embed)
-        else:
-            x = blk(x, rot_pos_embed)
+        x = checkpoint(blk, x, rot_pos_embed) if self.grad_checkpointing else blk(x, rot_pos_embed)
     x = self.norm(x)
     return x
 
@@ -74,7 +71,7 @@ def resize_patch_embed(model: nn.Module, new_patch_size=(16, 16)) -> nn.Module:
         if new_patch_size[0] != old_patch_size[0] or new_patch_size[1] != old_patch_size[1]:
             patch_embed_proj = model.patch_embed.proj.weight
             patch_embed_proj_bias = model.patch_embed.proj.bias
-            use_bias = True if patch_embed_proj_bias is not None else False
+            use_bias = patch_embed_proj_bias is not None
             _, _, h, w = patch_embed_proj.shape
 
             new_patch_embed_proj = torch.nn.functional.interpolate(

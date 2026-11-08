@@ -91,10 +91,7 @@ class VisionParser:
 
     # set n_frames for each vision item.
     def set_n_frames(self, data_dict):
-        if isinstance(self.n_frames, int):
-            n_frames = self.n_frames
-        else:
-            n_frames = random.choice(self.n_frames)
+        n_frames = self.n_frames if isinstance(self.n_frames, int) else random.choice(self.n_frames)
 
         assert n_frames <= self.max_n_frames
 
@@ -169,12 +166,10 @@ class VisionParser:
         # check format
         if ("image_file" not in image_item) and ("video_file" not in image_item):
             raise KeyError("Key 'image_file' or 'video_file' not found in image_item")
-        if "image_file" in image_item:
-            if not isinstance(image_item["image_file"], str):
-                raise ValueError(f"{image_item['image_file']} is not a str!")
-        if "video_file" in image_item:
-            if not isinstance(image_item["frame_indices"], int):
-                raise ValueError(f"{image_item['frame_indices']} is not a int!")
+        if "image_file" in image_item and not isinstance(image_item["image_file"], str):
+            raise ValueError(f"{image_item['image_file']} is not a str!")
+        if "video_file" in image_item and not isinstance(image_item["frame_indices"], int):
+            raise ValueError(f"{image_item['frame_indices']} is not a int!")
 
         if "image_file" in image_item:
             image = read_image(image_item["image_file"])

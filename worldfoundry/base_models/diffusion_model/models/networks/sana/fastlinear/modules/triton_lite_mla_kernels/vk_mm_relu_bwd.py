@@ -171,8 +171,11 @@ def vk_mm_relu_bwd(
     assert k.stride() == v.stride() == k_relu_mask.stride()
 
     B, N, H, C = k.shape
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (B * H,)
+    def grid(META):
+        return (B * H,)
+
     vk_mm_relu_bwd_kernel[grid](
         grad_vk,
         k,

@@ -109,10 +109,7 @@ class WebFile:
         Returns:
             The return value.
         """
-        if n is None or n < 0:
-            n = self.available()
-        else:
-            n = min(n, self.available())
+        n = self.available() if n is None or n < 0 else min(n, self.available())
 
         if n == 0:
             return b""

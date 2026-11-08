@@ -63,7 +63,10 @@ class DDIMSampler:
         )
         alphas_cumprod = self.model.alphas_cumprod.to(torch.float32)
         assert alphas_cumprod.shape[0] == self.ddpm_num_timesteps, "alphas have to be defined for each timestep"
-        to_torch = lambda x: x.clone().detach().to(self.model.device).to(torch.float32)
+
+        def to_torch(x):
+            return x.clone().detach().to(self.model.device).to(torch.float32)
+
         self.use_scale = getattr(self.model, "use_scale", False)
 
         if getattr(self.model, "use_dynamic_rescale", False):
@@ -273,10 +276,7 @@ class DDIMSampler:
         """
         device = self.model.betas.device
         b = shape[0]
-        if x_T is None:
-            img = torch.randn(shape, device=device)
-        else:
-            img = x_T
+        img = torch.randn(shape, device=device) if x_T is None else x_T
         if precision is not None:
             if precision == 16:
                 img = img.to(dtype=torch.float16)
@@ -399,10 +399,7 @@ class DDIMSampler:
             guidance_rescale: The guidance rescale.
         """
         b, *_, device = *x.shape, x.device
-        if x.dim() == 5:
-            is_video = True
-        else:
-            is_video = False
+        is_video = x.dim() == 5
 
         if unconditional_conditioning is None or unconditional_guidance_scale == 1.0:
             model_output = self.model.apply_model(x, t, c, **kwargs)  # unet denoiser
@@ -492,10 +489,7 @@ class DDIMSampler:
         sigmas = self.ddim_sigmas_for_original_num_steps if use_original_steps else self.ddim_sigmas
         # select parameters corresponding to the currently considered timestep
 
-        if is_video:
-            size = (b, 1, 1, 1, 1)
-        else:
-            size = (b, 1, 1, 1)
+        size = (b, 1, 1, 1, 1) if is_video else (b, 1, 1, 1)
         a_t = torch.full(size, alphas[index], device=device, dtype=x.dtype)
         a_prev = torch.full(size, alphas_prev[index], device=device, dtype=x.dtype)
         sigma_t = torch.full(size, sigmas[index], device=device, dtype=x.dtype)

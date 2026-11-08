@@ -369,7 +369,7 @@ class MLP(nn.Module):
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, dim, heads, num_kv_tokens, cfg, rpe_bias=None, use_rpe=False):
-        super(MultiHeadAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.heads = heads
         self.num_kv_tokens = num_kv_tokens

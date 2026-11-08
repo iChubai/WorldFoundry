@@ -61,7 +61,7 @@ class MoGeModel_v2(nn.Module):
             remap_output: The remap output.
             num_tokens_range: The num tokens range.
         """
-        super(MoGeModel_v2, self).__init__()
+        super().__init__()
         if deprecated_kwargs:
             warnings.warn(f"The following deprecated/invalid arguments are ignored: {deprecated_kwargs}", stacklevel=1)
 
@@ -318,14 +318,11 @@ class MoGeModel_v2(nn.Module):
         points, normal, mask, metric_scale = (output.get(k, None) for k in ["points", "normal", "mask", "metric_scale"])
 
         # Always process the output in fp32 precision
-        points, normal, mask, metric_scale, fov_x = map(
-            lambda x: x.float() if isinstance(x, torch.Tensor) else x, [points, normal, mask, metric_scale, fov_x]
+        points, normal, mask, metric_scale, fov_x = (
+            x.float() if isinstance(x, torch.Tensor) else x for x in [points, normal, mask, metric_scale, fov_x]
         )
         with torch.autocast(device_type=self.device.type, dtype=torch.float32):
-            if mask is not None:
-                mask_binary = mask > 0.5
-            else:
-                mask_binary = None
+            mask_binary = mask > 0.5 if mask is not None else None
 
             if points is not None:
                 # Convert affine point map to camera-space. Recover depth and intrinsics from point map.

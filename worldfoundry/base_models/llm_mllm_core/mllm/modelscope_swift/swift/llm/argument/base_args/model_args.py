@@ -16,6 +16,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
     get_model_name,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_dist_setting, get_logger
+import contextlib
 
 logger = get_logger()
 
@@ -99,10 +100,8 @@ class ModelArguments:
 
     def _init_max_memory(self):
         if isinstance(self.max_memory, str):
-            try:
+            with contextlib.suppress(Exception):
                 self.max_memory = ast.literal_eval(self.max_memory)
-            except Exception:
-                pass
         self.max_memory = self.parse_to_dict(self.max_memory)
         # compat mp&ddp
         _, local_rank, _, local_world_size = get_dist_setting()

@@ -9,6 +9,7 @@ import yaml
 from .tarsier.dataset.utils import format_one_sample, get_visual_type
 from .tarsier.tasks.utils import load_model_and_processor
 from .vqa_model import VQAScoreModel
+import contextlib
 
 warnings.filterwarnings("ignore")
 
@@ -100,10 +101,8 @@ class TarsierModel(VQAScoreModel):
     def clean_temp_files(self):
         # Clean up tempfiles created:
         for file_path in self.tmp_files:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(file_path)
-            except OSError:
-                pass
         self.tmp_files.clear()
 
     def forward(

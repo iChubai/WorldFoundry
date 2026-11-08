@@ -246,15 +246,9 @@ class DenseDepthFlowTerm(SolverTerm):
         if active_group_names is None:
             active_group_names = self.group_names()
 
-        if self.intrinsics is None:
-            intrinsics = variables["intrinsics"]
-        else:
-            intrinsics = self.intrinsics
+        intrinsics = variables["intrinsics"] if self.intrinsics is None else self.intrinsics
         optimize_intrinsics = self.intrinsics is None and "intrinsics" in active_group_names
-        if self.rig is None:
-            rig = variables["rig"]
-        else:
-            rig = self.rig
+        rig = variables["rig"] if self.rig is None else self.rig
         optimize_rig = self.rig is None and "rig" in active_group_names
         optimize_pose_disp = "pose" in active_group_names or "dense_disp" in active_group_names
 
@@ -544,10 +538,7 @@ class TracksFlowTerm(SolverTerm):
         if active_group_names is None:
             active_group_names = self.group_names()
 
-        if self.intrinsics is None:
-            intrinsics = variables["intrinsics"]
-        else:
-            intrinsics = self.intrinsics
+        intrinsics = variables["intrinsics"] if self.intrinsics is None else self.intrinsics
         optimize_intrinsics = self.intrinsics is None and "intrinsics" in active_group_names
         optimize_pose_disp = "pose" in active_group_names or "tracks_disp" in active_group_names
 

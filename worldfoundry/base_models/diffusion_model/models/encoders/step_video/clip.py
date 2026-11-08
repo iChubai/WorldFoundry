@@ -63,7 +63,7 @@ class HunyuanClip(nn.Module):
             model_dir: The model dir.
             max_length: The max length.
         """
-        super(HunyuanClip, self).__init__()
+        super().__init__()
 
         self.max_length = max_length
         self.tokenizer = BertTokenizer.from_pretrained(os.path.join(model_dir, "tokenizer"))

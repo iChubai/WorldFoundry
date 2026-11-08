@@ -555,7 +555,7 @@ class VILAForCausalLM(VILAPretrainedModel):
                         media_config[name]["block_sizes"] = [block_sizes]
                 else:
                     images = process_images(media["image"], self.vision_tower.image_processor, self.config).half()
-                media[name] = [image for image in images]
+                media[name] = list(images)
             elif name == "video":
                 if self.config.image_aspect_ratio == "dynamic" and self.config.video_max_tiles > 1:
                     media[name] = [

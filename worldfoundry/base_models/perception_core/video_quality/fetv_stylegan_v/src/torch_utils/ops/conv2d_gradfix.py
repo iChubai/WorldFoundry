@@ -102,7 +102,7 @@ def _tuple_of_ints(xs, ndim):
 
 # ----------------------------------------------------------------------------
 
-_conv2d_gradfix_cache = dict()
+_conv2d_gradfix_cache = {}
 
 
 def _conv2d_gradfix(transpose, weight_shape, stride, padding, output_padding, dilation, groups):
@@ -131,7 +131,7 @@ def _conv2d_gradfix(transpose, weight_shape, stride, padding, output_padding, di
         assert all(0 <= output_padding[i] < max(stride[i], dilation[i]) for i in range(ndim))
 
     # Helpers.
-    common_kwargs = dict(stride=stride, padding=padding, dilation=dilation, groups=groups)
+    common_kwargs = {"stride": stride, "padding": padding, "dilation": dilation, "groups": groups}
 
     def calc_output_padding(input_shape, output_shape):
         if transpose:

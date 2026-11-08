@@ -21,6 +21,7 @@ from diff_gaussian_rasterization import (
 from einops import einsum, rearrange, repeat
 
 from .projection import get_fov, homogenize_points
+import contextlib
 
 
 def get_projection_matrix(
@@ -116,10 +117,8 @@ def render_cuda(
     for i in range(b):
         # Set up a tensor for the gradients of the screen-space means.
         mean_gradients = torch.zeros_like(gaussian_means[i], requires_grad=True)
-        try:
+        with contextlib.suppress(Exception):
             mean_gradients.retain_grad()
-        except Exception:
-            pass
 
         settings = GaussianRasterizationSettings(
             image_height=h,
@@ -226,10 +225,8 @@ def render_cuda_orthographic(
     for i in range(b):
         # Set up a tensor for the gradients of the screen-space means.
         mean_gradients = torch.zeros_like(gaussian_means[i], requires_grad=True)
-        try:
+        with contextlib.suppress(Exception):
             mean_gradients.retain_grad()
-        except Exception:
-            pass
 
         settings = GaussianRasterizationSettings(
             image_height=h,

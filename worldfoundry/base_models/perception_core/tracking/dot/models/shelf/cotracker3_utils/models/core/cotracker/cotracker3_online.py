@@ -55,7 +55,7 @@ class CoTrackerThreeBase(nn.Module):
         add_space_attn=True,
         linear_layer_for_vis_conf=True,
     ):
-        super(CoTrackerThreeBase, self).__init__()
+        super().__init__()
         self.window_len = window_len
         self.stride = stride
         self.corr_radius = corr_radius
@@ -146,7 +146,7 @@ class CoTrackerThreeBase(nn.Module):
 
 class CoTrackerThreeOnline(CoTrackerThreeBase):
     def __init__(self, **args):
-        super(CoTrackerThreeOnline, self).__init__(**args)
+        super().__init__(**args)
 
     def init_video_online_processing(self):
         self.online_ind = 0

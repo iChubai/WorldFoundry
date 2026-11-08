@@ -482,15 +482,20 @@ def connected_components_triton(input_tensor: torch.Tensor):
     )
 
     # --- Phase 2 ---
-    grid_local_prop = lambda meta: (
-        B,
-        triton.cdiv(H, meta["BLOCK_SIZE_H"]) * triton.cdiv(W, meta["BLOCK_SIZE_W"]),
-    )
+    def grid_local_prop(meta):
+        return (
+            B,
+            triton.cdiv(H, meta["BLOCK_SIZE_H"]) * triton.cdiv(W, meta["BLOCK_SIZE_W"]),
+        )
+
     _local_prop_kernel[grid_local_prop](labels, input_tensor, H, W)
 
     # --- Phase 3 ---
     BLOCK_SIZE = 256
-    grid_jump = lambda meta: (triton.cdiv(numel, meta["BLOCK_SIZE"]),)
+
+    def grid_jump(meta):
+        return (triton.cdiv(numel, meta["BLOCK_SIZE"]),)
+
     _pointer_jump_kernel[grid_jump](labels, output, numel, BLOCK_SIZE=BLOCK_SIZE)
 
     # --- Phase 4 ---

@@ -701,10 +701,7 @@ class PretrainInternVideo2(nn.Module):
         x = x + pos_embed
 
         # mask tokens, ~mask means visible
-        if mask is not None:
-            x = x[~mask].reshape(B, -1, C)
-        else:
-            x = x.reshape(B, -1, C)
+        x = x[~mask].reshape(B, -1, C) if mask is not None else x.reshape(B, -1, C)
 
         residual = None
         x_clip = []

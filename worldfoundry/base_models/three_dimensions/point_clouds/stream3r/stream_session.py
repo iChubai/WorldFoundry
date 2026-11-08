@@ -26,7 +26,7 @@ class StreamSession:
         self.clear()
 
     def _clear_predictions(self):
-        self.predictions = dict()
+        self.predictions = {}
 
     def _update_predictions(self, predictions):
         for k in ["pose_enc", "world_points", "world_points_conf", "depth", "depth_conf", "images"]:
@@ -74,7 +74,7 @@ class StreamSession:
         return self.predictions
 
     def get_last_prediction(self):
-        last_predictions = dict()
+        last_predictions = {}
         for k in ["pose_enc", "world_points", "world_points_conf", "depth", "depth_conf", "images"]:
             if k in self.predictions:
                 last_predictions[k] = self.predictions[k][:, -1:]

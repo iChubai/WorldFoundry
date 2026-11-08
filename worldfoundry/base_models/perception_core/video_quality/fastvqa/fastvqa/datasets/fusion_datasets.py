@@ -354,10 +354,7 @@ class SampleFrames:
             results (dict): The resulting dict to be modified and passed
                 to the next transform in pipeline.
         """
-        if train:
-            clip_offsets = self._get_train_clips(total_frames)
-        else:
-            clip_offsets = self._get_test_clips(total_frames)
+        clip_offsets = self._get_train_clips(total_frames) if train else self._get_test_clips(total_frames)
         frame_inds = clip_offsets[:, None] + np.arange(self.clip_len)[None, :] * self.frame_interval
         frame_inds = np.concatenate(frame_inds)
 
@@ -444,7 +441,7 @@ class SimpleDataset(torch.utils.data.Dataset):
                     filename, _, _, label = line_split
                     label = float(label)
                     filename = osp.join(self.data_prefix, filename)
-                    self.video_infos.append(dict(filename=filename, label=label))
+                    self.video_infos.append({"filename": filename, "label": label})
 
     def __getitem__(self, index):
         video_info = self.video_infos[index]
@@ -520,13 +517,13 @@ class FusionDataset(torch.utils.data.Dataset):
                         filename, _, _, label = line_split
                         label = float(label)
                         filename = osp.join(self.data_prefix, filename)
-                        self.video_infos.append(dict(filename=filename, label=label))
+                        self.video_infos.append({"filename": filename, "label": label})
             except BaseException:
                 #### No Label Testing
                 video_filenames = sorted(glob.glob(self.data_prefix + "/*.mp4"))
                 print(video_filenames)
                 for filename in video_filenames:
-                    self.video_infos.append(dict(filename=filename, label=-1))
+                    self.video_infos.append({"filename": filename, "label": -1})
 
     def refresh_hypers(self):
         if not hasattr(self, "initial_sample_types"):
@@ -627,13 +624,13 @@ class FusionDatasetK400(torch.utils.data.Dataset):
                         filename, _, _, label = line_split
                         label = int(label)
                         filename = osp.join(self.data_prefix, filename)
-                        self.video_infos.append(dict(filename=filename, label=label))
+                        self.video_infos.append({"filename": filename, "label": label})
             except BaseException:
                 #### No Label Testing
                 video_filenames = sorted(glob.glob(self.data_prefix + "/*.mp4"))
                 print(video_filenames)
                 for filename in video_filenames:
-                    self.video_infos.append(dict(filename=filename, label=-1))
+                    self.video_infos.append({"filename": filename, "label": -1})
 
     def refresh_hypers(self):
         if not hasattr(self, "initial_sample_types"):
@@ -740,7 +737,7 @@ class LSVQPatchDataset(torch.utils.data.Dataset):
                     coords = [int(e) for e in coords[2:-1].split(";")]
                     label = float(label)
                     filename = osp.join(self.data_prefix, filename)
-                    self.video_infos.append(dict(filename=filename, label=label, coords=coords))
+                    self.video_infos.append({"filename": filename, "label": label, "coords": coords})
 
     def refresh_hypers(self):
         if not hasattr(self, "initial_sample_types"):
@@ -821,7 +818,7 @@ if __name__ == "__main__":
     fusion_opt = {
         "anno_file": "./examplar_data_labels/KoNViD/labels.txt",
         "data_prefix": "../datasets/KoNViD",
-        "sample_types": {"fragments": dict(fragments_h=4, fragments_w=4), "resize": dict(size_h=128, size_w=128)},
+        "sample_types": {"fragments": {"fragments_h": 4, "fragments_w": 4}, "resize": {"size_h": 128, "size_w": 128}},
         "phase": "train",
         "clip_len": 32,
         "frame_interval": 2,

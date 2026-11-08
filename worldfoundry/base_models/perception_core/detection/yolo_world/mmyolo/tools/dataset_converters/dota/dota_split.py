@@ -25,18 +25,18 @@ try:
 except ImportError:
     raise ImportError('Please run "pip install shapely" to install shapely first.')
 
-PHASE_REQUIRE_SETS = dict(
-    trainval=["train", "val"],
-    train=[
+PHASE_REQUIRE_SETS = {
+    "trainval": ["train", "val"],
+    "train": [
         "train",
     ],
-    val=[
+    "val": [
         "val",
     ],
-    test=[
+    "test": [
         "test",
     ],
-)
+}
 
 
 def parse_args():
@@ -155,7 +155,7 @@ def _load_dota_single(imgfile: str, img_dir: str, ann_dir: str):
     txtfile = None if ann_dir is None else osp.join(ann_dir, img_id + ".txt")
     content = _load_dota_txt(txtfile)
 
-    content.update(dict(width=size[0], height=size[1], filename=imgfile, filepath=imgpath, id=img_id))
+    content.update({"width": size[0], "height": size[1], "filename": imgfile, "filepath": imgpath, "id": img_id})
     return content
 
 
@@ -195,8 +195,8 @@ def _load_dota_txt(txtfile):
 
     bboxes = np.array(bboxes, dtype=np.float32) if bboxes else np.zeros((0, 8), dtype=np.float32)
     diffs = np.array(diffs, dtype=np.int64) if diffs else np.zeros((0,), dtype=np.int64)
-    ann = dict(bboxes=bboxes, labels=labels, diffs=diffs)
-    return dict(gsd=gsd, annotations=ann)
+    ann = {"bboxes": bboxes, "labels": labels, "diffs": diffs}
+    return {"gsd": gsd, "annotations": ann}
 
 
 def poly2hbb(polys):
@@ -280,7 +280,7 @@ def get_window_annotation(info, windows, iof_thr):
         win_iofs = iofs[:, i]
         pos_inds = np.nonzero(win_iofs >= iof_thr)[0].tolist()
 
-        win_ann = dict()
+        win_ann = {}
         for k, v in info["annotations"].items():
             try:
                 win_ann[k] = v[pos_inds]
@@ -352,7 +352,7 @@ def crop_and_save_img(info, windows, window_anns, padding, padding_value, save_d
     img = cv2.imread(info["filepath"])
     patch_infos = []
     for window, ann in zip(windows, window_anns, strict=False):
-        patch_info = dict()
+        patch_info = {}
         for k, v in info.items():
             if k not in ["id", "filename", "filepath", "width", "height", "annotations"]:
                 patch_info[k] = v
@@ -486,7 +486,7 @@ def main():
         required_sets.extend(PHASE_REQUIRE_SETS[p])
     required_sets = set(required_sets)
 
-    loaded_data_set = dict()
+    loaded_data_set = {}
     for req_set in required_sets:
         logger.info(f"Starting loading DOTA {req_set} set information.")
         start_time = time.time()

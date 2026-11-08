@@ -191,7 +191,7 @@ class PackedCausalTransformerGenerator:
         )
 
         self.show_progress = cfg.show_progress
-        self.dtype = dict(fp32=torch.float32, bf16=torch.bfloat16)[cfg.dtype]
+        self.dtype = {"fp32": torch.float32, "bf16": torch.bfloat16}[cfg.dtype]
 
         self.prefill_doc_id, self.prefill_tok_id = None, None
         self.padded_doc_id, self.padded_tok_id = None, None
@@ -495,7 +495,7 @@ def load_consolidated_model_and_tokenizer(ckpt, cache_dir=None):
     model_args = dataclass_from_dict(LMTransformerArgs, config.model, strict=False)
     model = LMTransformer(model_args)
     load_consolidated_checkpoint(model, ckpt_path)
-    param_dtype = dict(fp32=torch.float32, fp16=torch.float16, bf16=torch.bfloat16)[config.distributed.model_dtype]
+    param_dtype = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bfloat16}[config.distributed.model_dtype]
     model = model.cuda().eval()
     for param in model.parameters():
         param.data = param.data.to(dtype=param_dtype)

@@ -33,9 +33,9 @@ class MidasNet_small(BaseModel):
         """
         print("Loading weights: ", path)
 
-        super(MidasNet_small, self).__init__()
+        super().__init__()
 
-        use_pretrained = False if path else True
+        use_pretrained = not path
 
         self.channels_last = channels_last
         self.blocks = blocks

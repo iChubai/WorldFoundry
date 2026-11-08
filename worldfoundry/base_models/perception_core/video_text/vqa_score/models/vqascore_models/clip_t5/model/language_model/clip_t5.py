@@ -47,7 +47,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
     config_class = CLIPT5Config
 
     def __init__(self, config):
-        super(CLIPT5ForConditionalGeneration, self).__init__(config)
+        super().__init__(config)
         self.embed_tokens = self.encoder.embed_tokens
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=False)
@@ -71,7 +71,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             raise NotImplementedError()
 
         if type(images) is list or images.ndim == 5:
-            concat_images = torch.cat([image for image in images], dim=0)
+            concat_images = torch.cat(list(images), dim=0)
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)
@@ -182,10 +182,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             else:
                 self.vision_tower = vision_tower
         else:
-            if fsdp is not None and len(fsdp) > 0:
-                vision_tower = self.vision_tower[0]
-            else:
-                vision_tower = self.vision_tower
+            vision_tower = self.vision_tower[0] if fsdp is not None and len(fsdp) > 0 else self.vision_tower
             if not vision_tower.is_loaded:
                 vision_tower.load_model()
 
@@ -235,7 +232,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             )
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
-        outputs = super(CLIPT5ForConditionalGeneration, self).forward(
+        outputs = super().forward(
             input_ids=None,  # will be None if inputs_embeds is not None
             attention_mask=attention_mask,
             decoder_attention_mask=decoder_attention_mask,
@@ -266,7 +263,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             inputs, attention_mask, None, None, None, images
         )
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
-        outputs = super(CLIPT5ForConditionalGeneration, self).generate(
+        outputs = super().generate(
             input_ids=None,  # will be None if inputs_embeds is not None
             attention_mask=attention_mask,
             inputs_embeds=inputs_embeds,

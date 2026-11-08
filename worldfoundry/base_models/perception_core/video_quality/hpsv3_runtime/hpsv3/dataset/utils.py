@@ -80,14 +80,11 @@ def smart_resize(
 
 
 def fetch_image(ele: dict[str, str | Image.Image], size_factor: int = IMAGE_FACTOR) -> Image.Image:
-    if "image" in ele:
-        image = ele["image"]
-    else:
-        image = ele["image_url"]
+    image = ele["image"] if "image" in ele else ele["image_url"]
     image_obj = None
-    if isinstance(image, Image.Image) or isinstance(image, torch.Tensor):
+    if isinstance(image, (Image.Image, torch.Tensor)):
         image_obj = image
-    elif image.startswith("http://") or image.startswith("https://"):
+    elif image.startswith(("http://", "https://")):
         image_obj = Image.open(requests.get(image, stream=True).raw)
     elif image.startswith("file://"):
         image_obj = Image.open(image[7:])

@@ -717,10 +717,7 @@ class AutoencoderKL(nn.Module):
             recon = self.decode_temporal(z)
 
         if self.use_3d_conv:
-            if frame_num is not None:
-                target_frames = frame_num
-            else:
-                target_frames = recon.shape[2]
+            target_frames = frame_num if frame_num is not None else recon.shape[2]
 
             recon = self.trim_output(recon, target_frames)
             if process_image:
@@ -788,7 +785,7 @@ class AutoencoderKL(nn.Module):
             image_tensor = self.processor._crop_to_align(image_tensor, new_h, new_w)
             prepared.append(image_tensor)
 
-        if len(prepared) > 1 and len(set(t.shape for t in prepared)) == 1:
+        if len(prepared) > 1 and len({t.shape for t in prepared}) == 1:
             stacked = torch.cat(prepared, dim=0)
             if verbose:
                 logger.info(f"batch encode input shape {tuple(stacked.shape)}")
@@ -946,7 +943,7 @@ class AutoencoderKL(nn.Module):
             video = self.processor._crop_to_align(video, new_h, new_w, is_video=True)
             prepared.append(video)
 
-        if len(prepared) > 1 and len(set(t.shape for t in prepared)) == 1:
+        if len(prepared) > 1 and len({t.shape for t in prepared}) == 1:
             stacked = torch.cat(prepared, dim=0)
             if verbose:
                 logger.info(f"batch encode input shape {tuple(stacked.shape)}")
@@ -1089,10 +1086,7 @@ class AutoencoderKLLegacy(AutoencoderKL):
         if self.use_3d_conv and input.ndim == 4:
             input = input.unsqueeze(2)
 
-        if process_image or not self.use_3d_conv:
-            moments = self._adaptive_encode(input)
-        else:
-            moments = self.encode_temporal(input)
+        moments = self._adaptive_encode(input) if process_image or not self.use_3d_conv else self.encode_temporal(input)
 
         z = DiagonalGaussianDistribution(moments).sample()
 

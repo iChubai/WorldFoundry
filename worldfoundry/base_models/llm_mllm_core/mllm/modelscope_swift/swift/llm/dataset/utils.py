@@ -197,9 +197,7 @@ class IndexedDatasetBuilder:
                 item_buffer = pickle.dumps(item)
                 bin_buffer.append(item_buffer)
                 self.idx_list.append(self.idx_list[-1] + len(item_buffer))
-                self.length_list.append(
-                    max([len(item[k]) for k in item.keys() if k.endswith("input_ids") or k.endswith("labels")])
-                )
+                self.length_list.append(max([len(item[k]) for k in item.keys() if k.endswith(("input_ids", "labels"))]))
             self.bin_file.write(b"".join(bin_buffer))
             offset = self.idx_list[-1] - self.shard_offset[-1]
             if offset >= self.CHUNK_SIZE:
@@ -397,10 +395,7 @@ class IterablePackingDataset(BasePackingDataset, IterableDataset):
     def _processor(self):
         while True:
             i, data = self._in_queue.get()
-            if data is None:
-                encoded_data = None
-            else:
-                encoded_data = self._encode_data(data)
+            encoded_data = None if data is None else self._encode_data(data)
             self._out_queue.put((i, encoded_data))
 
     def _put_data_in_queue(self, iterator):
@@ -438,10 +433,7 @@ class IterablePackingDataset(BasePackingDataset, IterableDataset):
         except StopIteration:
             return
 
-        if self.cyclic:
-            iterator = self.cyclic_iter(self.dataset)
-        else:
-            iterator = iter(self.dataset)
+        iterator = self.cyclic_iter(self.dataset) if self.cyclic else iter(self.dataset)
         data = []
         while True:
             finished = self._put_data_in_queue(iterator)

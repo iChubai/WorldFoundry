@@ -119,7 +119,7 @@ class LLaVAOneVisionModel(VQAScoreModel):
 
         processed_data = self.load_images(paths, num_frames)
 
-        prompts = [qs for qs in questions]
+        prompts = list(questions)
 
         lm_probs = []
         for data, prompt, answer in zip(processed_data, prompts, answers, strict=False):

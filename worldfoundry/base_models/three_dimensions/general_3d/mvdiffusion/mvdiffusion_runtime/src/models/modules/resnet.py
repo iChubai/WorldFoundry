@@ -15,7 +15,7 @@ class BasicResNetBlock(nn.Module):
             stride: The stride.
             zero_init: The zero init.
         """
-        super(BasicResNetBlock, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.GroupNorm(32, out_channels)
         self.relu = nn.ReLU(inplace=True)

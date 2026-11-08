@@ -34,7 +34,7 @@ class ConvBlock(nn.Module):
             out_channels: The out channels.
             kernel_size: The kernel size.
         """
-        super(ConvBlock, self).__init__()
+        super().__init__()
 
         if kernel_size == 3:
             self.conv = nn.Sequential(
@@ -68,7 +68,7 @@ class ConvBlock_double(nn.Module):
             out_channels: The out channels.
             kernel_size: The kernel size.
         """
-        super(ConvBlock_double, self).__init__()
+        super().__init__()
 
         if kernel_size == 3:
             self.conv = nn.Sequential(
@@ -105,7 +105,7 @@ class DecoderFeature(nn.Module):
             feat_channels: The feat channels.
             num_ch_dec: The num ch dec.
         """
-        super(DecoderFeature, self).__init__()
+        super().__init__()
         self.num_ch_dec = num_ch_dec
         self.feat_channels = feat_channels
 
@@ -165,7 +165,7 @@ class UNet(nn.Module):
             down_sample_times: The down sample times.
             channel_mode: The channel mode.
         """
-        super(UNet, self).__init__()
+        super().__init__()
         basic_block = ConvBnReLU
         num_depth = 128
 
@@ -249,7 +249,7 @@ class ConvBnReLU(nn.Module):
             stride: The stride.
             pad: The pad.
         """
-        super(ConvBnReLU, self).__init__()
+        super().__init__()
         self.conv = nn.Conv2d(
             in_channels,
             out_channels,
@@ -278,7 +278,7 @@ class HourglassDecoder(nn.Module):
         Args:
             cfg: The cfg.
         """
-        super(HourglassDecoder, self).__init__()
+        super().__init__()
         self.inchannels = cfg.model.decode_head.in_channels  #  [256, 512, 1024, 2048]
         self.decoder_channels = cfg.model.decode_head.decoder_channel  # [64, 64, 128, 256]
         self.min_val = cfg.data_basic.depth_normalize[0]
@@ -415,9 +415,9 @@ class HourglassDecoder(nn.Module):
         )
         confidence_map_mono = self.upsample(confidence_map_2, scale_factor=4)
 
-        outputs = dict(
-            prediction=depth_pred_mono,
-            confidence=confidence_map_mono,
-            pred_logit=None,
-        )
+        outputs = {
+            "prediction": depth_pred_mono,
+            "confidence": confidence_map_mono,
+            "pred_logit": None,
+        }
         return outputs

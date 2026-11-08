@@ -315,13 +315,13 @@ def read_pose_artifacts_benchmark(npz_file_path: Path) -> dict:
         The return value.
     """
     data = np.load(npz_file_path)
-    return dict(
-        ids=data["inds"],
-        trajectory=se3_matrix_to_se3(data["data"]),
-        runtime=data.get("runtime", None),
-        keyframe_ids=data.get("keyframe_ids", None),
-        frame_num=len(data["inds"]),
-    )
+    return {
+        "ids": data["inds"],
+        "trajectory": se3_matrix_to_se3(data["data"]),
+        "runtime": data.get("runtime", None),
+        "keyframe_ids": data.get("keyframe_ids", None),
+        "frame_num": len(data["inds"]),
+    }
 
 
 def save_intrinsics_artifacts(out_path: ArtifactPath, cached_final_stream: VideoStream, gt: bool = False) -> None:

@@ -24,6 +24,7 @@ so the scan can stay vectorized.
 """
 
 from typing import Any
+import itertools
 
 
 def is_chunk_causal_request(
@@ -245,7 +246,7 @@ def size1_chunk_position_indices(chunk_index: list[int]) -> list[int]:
         >>> size1_chunk_position_indices([0, 1, 2, 3, 4, 7])  # frame_causal, K=4, G=3
         [0, 1, 2, 3]
     """
-    return [s for s, e in zip(chunk_index[:-1], chunk_index[1:], strict=False) if e - s == 1]
+    return [s for s, e in itertools.pairwise(chunk_index) if e - s == 1]
 
 
 def is_uniform_chunking(

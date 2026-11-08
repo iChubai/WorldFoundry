@@ -16,6 +16,7 @@ from ...components import BuildPurpose, ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.cosmos2p5.model import Cosmos25Transfer3DModel, Cosmos25Transformer3DModel
+import contextlib
 
 _KEY_REPLACEMENTS = {
     "adaln_modulation_self_attn.1": "norm1.linear_1",
@@ -259,10 +260,8 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
             model.parallelize(parallel).to(device=context.policy.device)
     except BaseException:
         if owns_context:
-            try:
+            with contextlib.suppress(Exception):
                 parallel.close()
-            except Exception:
-                pass
         raise
     return Cosmos25Denoiser(model)
 

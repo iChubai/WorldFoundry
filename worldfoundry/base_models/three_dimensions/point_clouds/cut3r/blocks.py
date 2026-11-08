@@ -61,7 +61,7 @@ class DropPath(nn.Module):
             drop_prob: The drop prob.
             scale_by_keep: The scale by keep.
         """
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
         self.scale_by_keep = scale_by_keep
 

@@ -373,10 +373,7 @@ class SAM2ImagePredictor:
         if not self._is_image_set:
             raise RuntimeError("An image must be set with .set_image(...) before mask prediction.")
 
-        if point_coords is not None:
-            concat_points = (point_coords, point_labels)
-        else:
-            concat_points = None
+        concat_points = (point_coords, point_labels) if point_coords is not None else None
 
         # Embed prompts
         if boxes is not None:

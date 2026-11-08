@@ -43,20 +43,28 @@ class ResidualConvBlock(nn.Module):
         activation: Literal["relu", "leaky_relu", "silu", "elu"] = "relu",
         norm: Literal["group_norm", "layer_norm", "instance_norm", "none"] = "none",
     ):
-        super(ResidualConvBlock, self).__init__()
+        super().__init__()
         if out_channels is None:
             out_channels = in_channels
         if hidden_channels is None:
             hidden_channels = in_channels
 
         if activation == "relu":
-            activation_cls = lambda: nn.ReLU(inplace=False)
+
+            def activation_cls():
+                return nn.ReLU(inplace=False)
         elif activation == "leaky_relu":
-            activation_cls = lambda: nn.LeakyReLU(negative_slope=0.2, inplace=False)
+
+            def activation_cls():
+                return nn.LeakyReLU(negative_slope=0.2, inplace=False)
         elif activation == "silu":
-            activation_cls = lambda: nn.SiLU(inplace=False)
+
+            def activation_cls():
+                return nn.SiLU(inplace=False)
         elif activation == "elu":
-            activation_cls = lambda: nn.ELU(inplace=False)
+
+            def activation_cls():
+                return nn.ELU(inplace=False)
 
         self.layers = nn.Sequential(
             nn.GroupNorm(in_channels // 32, in_channels)
@@ -214,10 +222,7 @@ class ConvHead(nn.Module):
                 uv = uv.permute(2, 0, 1).unsqueeze(0).expand(x.shape[0], -1, -1, -1)
                 x = torch.cat([x, uv], dim=1)
             for layer in block:
-                if self.training:
-                    x = checkpoint(layer, x, use_reentrant=False)
-                else:
-                    x = layer(x)
+                x = checkpoint(layer, x, use_reentrant=False) if self.training else layer(x)
 
         x = F.interpolate(x, (img_h, img_w), mode="bilinear", align_corners=False)
 

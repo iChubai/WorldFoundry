@@ -552,10 +552,7 @@ class WanSelfAttention(nn.Module):
                 grid_sizes_mem = grid_sizes.clone()
                 grid_sizes_mem[:, 0] = memory_length
 
-                if memory_latent_idx is not None:
-                    mem_indices = memory_latent_idx
-                else:
-                    mem_indices = list(range(memory_length))
+                mem_indices = memory_latent_idx if memory_latent_idx is not None else list(range(memory_length))
 
                 q_memory = rope_apply_with_indices(q_memory, grid_sizes_mem, freqs, mem_indices)
                 k_memory = rope_apply_with_indices(k_memory, grid_sizes_mem, freqs, mem_indices)
@@ -1176,35 +1173,35 @@ class WanModel(nn.Module, NativeConfigMixin):
             )
 
         if self.use_memory:
-            kwargs = dict(
-                e=e0,
-                seq_lens=seq_lens,
-                grid_sizes=grid_sizes,
-                freqs=self.freqs,
-                context=context,
-                context_lens=context_lens,
-                mouse_cond=mouse_cond,
-                keyboard_cond=keyboard_cond,
-                plucker_emb=plucker_emb,
-                mouse_cond_memory=mouse_cond_memory,
-                keyboard_cond_memory=keyboard_cond_memory,
-                memory_length=memory_length,
-                memory_latent_idx=memory_latent_idx,
-                predict_latent_idx=predict_latent_idx,
-                fa_version=fa_version,
-            )
+            kwargs = {
+                "e": e0,
+                "seq_lens": seq_lens,
+                "grid_sizes": grid_sizes,
+                "freqs": self.freqs,
+                "context": context,
+                "context_lens": context_lens,
+                "mouse_cond": mouse_cond,
+                "keyboard_cond": keyboard_cond,
+                "plucker_emb": plucker_emb,
+                "mouse_cond_memory": mouse_cond_memory,
+                "keyboard_cond_memory": keyboard_cond_memory,
+                "memory_length": memory_length,
+                "memory_latent_idx": memory_latent_idx,
+                "predict_latent_idx": predict_latent_idx,
+                "fa_version": fa_version,
+            }
         else:
-            kwargs = dict(
-                e=e0,
-                seq_lens=seq_lens,
-                grid_sizes=grid_sizes,
-                freqs=self.freqs,
-                context=context,
-                context_lens=context_lens,
-                mouse_cond=mouse_cond,
-                keyboard_cond=keyboard_cond,
-                fa_version=fa_version,
-            )
+            kwargs = {
+                "e": e0,
+                "seq_lens": seq_lens,
+                "grid_sizes": grid_sizes,
+                "freqs": self.freqs,
+                "context": context,
+                "context_lens": context_lens,
+                "mouse_cond": mouse_cond,
+                "keyboard_cond": keyboard_cond,
+                "fa_version": fa_version,
+            }
 
         for block_index, block in enumerate(self.blocks):
             if isinstance(plucker_emb, dict):

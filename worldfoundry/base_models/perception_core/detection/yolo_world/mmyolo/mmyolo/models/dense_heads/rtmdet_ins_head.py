@@ -46,8 +46,8 @@ class MaskFeatModule(BaseModule):
         stacked_convs: int = 4,
         num_levels: int = 3,
         num_prototypes: int = 8,
-        act_cfg: ConfigType = dict(type="ReLU", inplace=True),
-        norm_cfg: ConfigType = dict(type="BN"),
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN"},
     ) -> None:
         super().__init__(init_cfg=None)
         self.num_levels = num_levels
@@ -301,11 +301,11 @@ class RTMDetInsSepBNHead(RTMDetHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(type="mmdet.MlvlPointGenerator", offset=0, strides=[8, 16, 32]),
-        bbox_coder: ConfigType = dict(type="DistancePointBBoxCoder"),
-        loss_cls: ConfigType = dict(type="mmdet.QualityFocalLoss", use_sigmoid=True, beta=2.0, loss_weight=1.0),
-        loss_bbox: ConfigType = dict(type="mmdet.GIoULoss", loss_weight=2.0),
-        loss_mask=dict(type="mmdet.DiceLoss", loss_weight=2.0, eps=5e-6, reduction="mean"),
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
+        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},
+        loss_bbox: ConfigType = {"type": "mmdet.GIoULoss", "loss_weight": 2.0},
+        loss_mask={"type": "mmdet.DiceLoss", "loss_weight": 2.0, "eps": 5e-6, "reduction": "mean"},
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,
@@ -430,10 +430,7 @@ class RTMDetInsSepBNHead(RTMDetHead):
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
-            if "pad_param" in img_meta:
-                pad_param = img_meta["pad_param"]
-            else:
-                pad_param = None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
 
             score_thr = cfg.get("score_thr", -1)
             if scores.shape[0] == 0:
@@ -453,14 +450,14 @@ class RTMDetInsSepBNHead(RTMDetHead):
                     scores,
                     score_thr,
                     nms_pre,
-                    results=dict(labels=labels[:, 0], kernel_pred=kernel_pred, priors=flatten_priors),
+                    results={"labels": labels[:, 0], "kernel_pred": kernel_pred, "priors": flatten_priors},
                 )
                 labels = results["labels"]
                 kernel_pred = results["kernel_pred"]
                 priors = results["priors"]
             else:
                 out = filter_scores_and_topk(
-                    scores, score_thr, nms_pre, results=dict(kernel_pred=kernel_pred, priors=flatten_priors)
+                    scores, score_thr, nms_pre, results={"kernel_pred": kernel_pred, "priors": flatten_priors}
                 )
                 scores, labels, keep_idxs, filtered_results = out
                 kernel_pred = filtered_results["kernel_pred"]

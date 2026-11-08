@@ -8,9 +8,9 @@ test_data_prefix = "test/images/"
 submission_dir = "./work_dirs/{{fileBasenameNoExtension}}/submission"
 
 # =======================Unmodified in most cases==================
-train_dataloader = dict(dataset=dict(data_root=data_root))
+train_dataloader = {"dataset": {"data_root": data_root}}
 
-val_dataloader = dict(dataset=dict(data_root=data_root))
+val_dataloader = {"dataset": {"data_root": data_root}}
 
 # Inference on val dataset
 test_dataloader = val_dataloader

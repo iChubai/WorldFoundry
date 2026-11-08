@@ -85,7 +85,7 @@ def _rescan_model_configs():
             if has_vision or has_audio:
                 _MODEL_CONFIGS[cf.stem] = model_cfg
 
-    _MODEL_CONFIGS = {k: v for k, v in sorted(_MODEL_CONFIGS.items(), key=lambda x: _natural_key(x[0]))}
+    _MODEL_CONFIGS = dict(sorted(_MODEL_CONFIGS.items(), key=lambda x: _natural_key(x[0])))
 
 
 _rescan_model_configs()  # initial populate of model config registry
@@ -207,10 +207,7 @@ def load_state_dict(
     else:
         checkpoint = load_torch_checkpoint(checkpoint_path, map_location=device, weights_only=weights_only)
 
-    if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
-        state_dict = checkpoint["state_dict"]
-    else:
-        state_dict = checkpoint
+    state_dict = checkpoint["state_dict"] if isinstance(checkpoint, dict) and "state_dict" in checkpoint else checkpoint
     if next(iter(state_dict.items()))[0].startswith("module"):
         state_dict = {k[7:]: v for k, v in state_dict.items()}
     return state_dict
@@ -565,13 +562,7 @@ def create_model(
         model_class = CLAP
     else:
         custom_text = model_cfg.pop("custom_text", False) or force_custom_text or is_hf_text_model
-        if custom_text:
-            if "multimodal_cfg" in model_cfg:
-                model_class = CoCa
-            else:
-                model_class = CustomTextCLIP
-        else:
-            model_class = CLIP
+        model_class = (CoCa if "multimodal_cfg" in model_cfg else CustomTextCLIP) if custom_text else CLIP
 
     # Strip removed legacy kwargs that external callers may still pass
     if "jit" in model_kwargs:

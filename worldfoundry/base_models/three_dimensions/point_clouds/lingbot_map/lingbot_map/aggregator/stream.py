@@ -116,16 +116,16 @@ class AggregatorStream(AggregatorBase):
         qk_norm: bool,
     ):
         """Build frame and global blocks for streaming causal mode."""
-        block_params = dict(
-            dim=embed_dim,
-            num_heads=num_heads,
-            mlp_ratio=mlp_ratio,
-            qkv_bias=qkv_bias,
-            proj_bias=proj_bias,
-            ffn_bias=ffn_bias,
-            init_values=init_values,
-            qk_norm=qk_norm,
-        )
+        block_params = {
+            "dim": embed_dim,
+            "num_heads": num_heads,
+            "mlp_ratio": mlp_ratio,
+            "qkv_bias": qkv_bias,
+            "proj_bias": proj_bias,
+            "ffn_bias": ffn_bias,
+            "init_values": init_values,
+            "qk_norm": qk_norm,
+        }
 
         # Frame blocks: Standard Block + RoPE
         self.frame_blocks = nn.ModuleList([block_fn(**block_params, rope=self.rope) for _ in range(depth)])

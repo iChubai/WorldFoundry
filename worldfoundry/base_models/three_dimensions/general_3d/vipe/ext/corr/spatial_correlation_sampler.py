@@ -140,7 +140,7 @@ class SpatialCorrelationSampler(nn.Module):
             dilation: The dilation.
             dilation_patch: The dilation patch.
         """
-        super(SpatialCorrelationSampler, self).__init__()
+        super().__init__()
         self.kernel_size = kernel_size
         self.patch_size = patch_size
         self.stride = stride

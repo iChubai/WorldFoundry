@@ -244,10 +244,7 @@ class GroundingDINO(nn.Module):
            - "aux_outputs": Optional, only returned when auxilary losses are activated. It is a list of
                             dictionnaries containing the two above keys for each decoder layer.
         """
-        if targets is None:
-            captions = kw["captions"]
-        else:
-            captions = [t["caption"] for t in targets]
+        captions = kw["captions"] if targets is None else [t["caption"] for t in targets]
 
         # encoder texts
         tokenized = self.tokenizer(captions, padding="longest", return_tensors="pt").to(samples.device)
@@ -309,10 +306,7 @@ class GroundingDINO(nn.Module):
         if self.num_feature_levels > len(srcs):
             _len_srcs = len(srcs)
             for l in range(_len_srcs, self.num_feature_levels):
-                if l == _len_srcs:
-                    src = self.input_proj[l](self.features[-1].tensors)
-                else:
-                    src = self.input_proj[l](srcs[-1])
+                src = self.input_proj[l](self.features[-1].tensors) if l == _len_srcs else self.input_proj[l](srcs[-1])
                 m = samples.mask
                 mask = F.interpolate(m[None].float(), size=src.shape[-2:]).to(torch.bool)[0]
                 pos_l = self.backbone[1](NestedTensor(src, mask)).to(src.dtype)

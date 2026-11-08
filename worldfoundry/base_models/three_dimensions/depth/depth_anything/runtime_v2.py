@@ -240,10 +240,7 @@ class DepthAnything2Representation:
 
         if np.issubdtype(array.dtype, np.floating):
             if array.min() >= -1.0 and array.max() <= 1.0:
-                if array.min() < 0.0:
-                    array = (array + 1.0) * 127.5
-                else:
-                    array = array * 255.0
+                array = (array + 1.0) * 127.5 if array.min() < 0.0 else array * 255.0
             array = np.clip(array, 0.0, 255.0).astype(np.uint8)
         elif array.dtype == np.uint8:
             array = np.ascontiguousarray(array)

@@ -113,13 +113,13 @@ class Processor:
 
             # process inputs
             if self.is_vision_tokenizer:
-                processor_kwargs = dict(
-                    text=[text],
-                    images=image_inputs,
-                    videos=video_inputs,
-                    padding=False,
-                    return_tensors=return_tensors,
-                )
+                processor_kwargs = {
+                    "text": [text],
+                    "images": image_inputs,
+                    "videos": video_inputs,
+                    "padding": False,
+                    "return_tensors": return_tensors,
+                }
                 # Recent Transformers releases reject an empty fps list for
                 # text-only prompts. Preserve the upstream list behavior when
                 # videos are present and omit the optional argument otherwise.

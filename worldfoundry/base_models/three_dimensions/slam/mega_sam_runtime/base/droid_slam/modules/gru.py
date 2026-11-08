@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class ConvGRU(nn.Module):
     def __init__(self, h_planes=128, i_planes=128):
-        super(ConvGRU, self).__init__()
+        super().__init__()
         self.do_checkpoint = False
         self.convz = nn.Conv2d(h_planes + i_planes, h_planes, 3, padding=1)
         self.convr = nn.Conv2d(h_planes + i_planes, h_planes, 3, padding=1)

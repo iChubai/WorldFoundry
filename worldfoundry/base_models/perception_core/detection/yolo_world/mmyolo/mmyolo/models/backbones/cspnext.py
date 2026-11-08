@@ -85,17 +85,17 @@ class CSPNeXt(BaseBackbone):
         arch_ovewrite: dict = None,
         channel_attention: bool = True,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = dict(type="BN"),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN"},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         norm_eval: bool = False,
-        init_cfg: OptMultiConfig = dict(
-            type="Kaiming",
-            layer="Conv2d",
-            a=math.sqrt(5),
-            distribution="uniform",
-            mode="fan_in",
-            nonlinearity="leaky_relu",
-        ),
+        init_cfg: OptMultiConfig = {
+            "type": "Kaiming",
+            "layer": "Conv2d",
+            "a": math.sqrt(5),
+            "distribution": "uniform",
+            "mode": "fan_in",
+            "nonlinearity": "leaky_relu",
+        },
     ) -> None:
         arch_setting = self.arch_settings[arch]
         if arch_ovewrite:

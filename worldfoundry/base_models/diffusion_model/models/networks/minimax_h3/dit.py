@@ -40,6 +40,7 @@ from .ops import (
     rope_cos_sin_cache,
     silu_mul,
 )
+import itertools
 
 _BF16 = torch.bfloat16
 _FP32 = torch.float32
@@ -150,7 +151,7 @@ def _varlen_attention(
     total, num_heads, head_dim = q.shape
     out = torch.empty_like(q)
     bounds = cu_seqlens.tolist()
-    for start, stop in zip(bounds[:-1], bounds[1:], strict=False):
+    for start, stop in itertools.pairwise(bounds):
         length = int(stop) - int(start)
         if length <= 0:
             continue

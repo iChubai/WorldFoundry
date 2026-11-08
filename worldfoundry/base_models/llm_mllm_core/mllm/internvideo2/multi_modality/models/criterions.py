@@ -226,7 +226,7 @@ class MLMLoss(nn.Module):
     """masked language modeling loss."""
 
     def __init__(self, masking_prob, tokenizer):
-        super(MLMLoss, self).__init__()
+        super().__init__()
         self.tokenizer = tokenizer
         self.masking_prob = masking_prob
 

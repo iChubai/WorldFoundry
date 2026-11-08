@@ -30,7 +30,7 @@ class LlavaGemmaModel(LlavaMetaModel, GemmaModel):
     config_class = LlavaGemmaConfig
 
     def __init__(self, config: GemmaConfig):
-        super(LlavaGemmaModel, self).__init__(config)
+        super().__init__(config)
 
 
 class LlavaGemmaForCausalLM(GemmaForCausalLM, LlavaMetaForCausalLM):

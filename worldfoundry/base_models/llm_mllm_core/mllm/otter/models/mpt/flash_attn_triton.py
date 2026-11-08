@@ -116,10 +116,7 @@ def _fwd_kernel(
     m_i = tl.zeros([BLOCK_M], dtype=tl.float32) - float("inf")
     acc_o = tl.zeros([BLOCK_M, BLOCK_HEADDIM], dtype=tl.float32)
     if EVEN_M & EVEN_N:
-        if EVEN_HEADDIM:
-            q = tl.load(q_ptrs)
-        else:
-            q = tl.load(q_ptrs, mask=offs_d[None, :] < headdim, other=0.0)
+        q = tl.load(q_ptrs) if EVEN_HEADDIM else tl.load(q_ptrs, mask=offs_d[None, :] < headdim, other=0.0)
     elif EVEN_HEADDIM:
         q = tl.load(q_ptrs, mask=offs_m[:, None] < seqlen_q, other=0.0)
     else:
@@ -432,10 +429,7 @@ def _bwd_kernel_one_col_block(
         if not EVEN_M & EVEN_HEADDIM:
             tl.debug_barrier()
         lse_i = tl.load(LSE + offs_m_curr)
-        if BIAS_TYPE == "none":
-            p = tl.exp(qk * softmax_scale - lse_i[:, None])
-        else:
-            p = tl.exp(qk - lse_i[:, None])
+        p = tl.exp(qk * softmax_scale - lse_i[:, None]) if BIAS_TYPE == "none" else tl.exp(qk - lse_i[:, None])
         if EVEN_M & EVEN_HEADDIM:
             do = tl.load(do_ptrs)
         else:
@@ -732,7 +726,10 @@ def _flash_attn_forward(q, k, v, bias=None, causal=False, softmax_scale=None):
     BLOCK_HEADDIM = max(triton.next_power_of_2(d), 16)
     BLOCK = 128
     num_warps = 4 if d <= 64 else 8
-    grid = lambda META: (triton.cdiv(seqlen_q, META["BLOCK_M"]), batch * nheads)
+
+    def grid(META):
+        return (triton.cdiv(seqlen_q, META["BLOCK_M"]), batch * nheads)
+
     _fwd_kernel[grid](
         q,
         k,
@@ -787,7 +784,10 @@ def _flash_attn_backward(do, q, k, v, o, lse, dq, dk, dv, bias=None, causal=Fals
     dq_accum = torch.empty_like(q, dtype=torch.float32)
     delta = torch.empty_like(lse)
     BLOCK_HEADDIM = max(triton.next_power_of_2(d), 16)
-    grid = lambda META: (triton.cdiv(seqlen_q, META["BLOCK_M"]), batch * nheads)
+
+    def grid(META):
+        return (triton.cdiv(seqlen_q, META["BLOCK_M"]), batch * nheads)
+
     _bwd_preprocess_do_o_dot[grid](
         o,
         do,
@@ -820,10 +820,13 @@ def _flash_attn_backward(do, q, k, v, o, lse, dq, dk, dv, bias=None, causal=Fals
             raise RuntimeError("Last 2 dimensions of bias must be (1, seqlen_k) or (seqlen_q, seqlen_k)")
         bias = bias.expand(batch, nheads, seqlen_q, seqlen_k)
     bias_strides = (bias.stride(0), bias.stride(1), bias.stride(2)) if has_bias else (0, 0, 0)
-    grid = lambda META: (
-        triton.cdiv(seqlen_k, META["BLOCK_N"]) if META["SEQUENCE_PARALLEL"] else 1,
-        batch * nheads,
-    )
+
+    def grid(META):
+        return (
+            triton.cdiv(seqlen_k, META["BLOCK_N"]) if META["SEQUENCE_PARALLEL"] else 1,
+            batch * nheads,
+        )
+
     _bwd_kernel[grid](
         q,
         k,

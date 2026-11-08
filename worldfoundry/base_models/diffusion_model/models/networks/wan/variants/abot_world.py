@@ -975,10 +975,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
         )
         modulation = self.time_projection(time_embedding).unflatten(1, (6, self.dim))
         modulation = modulation.unflatten(0, t.shape)
-        if torch.is_tensor(context):
-            context_values = list(context)
-        else:
-            context_values = context
+        context_values = list(context) if torch.is_tensor(context) else context
         padded_context = []
         for value in context_values:
             value = value[: self.text_len]

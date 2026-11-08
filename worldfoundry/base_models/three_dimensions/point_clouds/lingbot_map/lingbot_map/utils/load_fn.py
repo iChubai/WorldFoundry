@@ -95,10 +95,9 @@ def load_and_preprocess_images_square(image_path_list, target_size=1024):
     original_coords = torch.from_numpy(np.array(original_coords)).float()
 
     # Add additional dimension if single image to ensure correct shape
-    if len(image_path_list) == 1:
-        if images.dim() == 3:
-            images = images.unsqueeze(0)
-            original_coords = original_coords.unsqueeze(0)
+    if len(image_path_list) == 1 and images.dim() == 3:
+        images = images.unsqueeze(0)
+        original_coords = original_coords.unsqueeze(0)
 
     return images, original_coords
 
@@ -218,7 +217,7 @@ def load_and_preprocess_images(
                 fx[i], fy[i], cx[i], cy[i] = calib
 
     images = results
-    shapes = set((img.shape[1], img.shape[2]) for img in images)
+    shapes = {(img.shape[1], img.shape[2]) for img in images}
 
     # Check if we have different shapes
     # In theory our model can also work well with different shapes

@@ -237,10 +237,7 @@ class Blip2Vicuna(Blip2Base):
     ):
         self.llm_tokenizer.padding_side = "left"
 
-        if "prompt" in samples.keys():
-            prompt = samples["prompt"]
-        else:
-            prompt = self.prompt
+        prompt = samples["prompt"] if "prompt" in samples.keys() else self.prompt
 
         image = samples["image"]
 

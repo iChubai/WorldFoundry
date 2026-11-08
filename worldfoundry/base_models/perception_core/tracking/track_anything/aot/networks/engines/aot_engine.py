@@ -66,7 +66,7 @@ class AOTEngine(nn.Module):
         if self.losses is None:
             self._init_losses()
 
-        self.freeze_id = True if use_prev_pred else False
+        self.freeze_id = bool(use_prev_pred)
         aux_weight = self.aux_weight * max(self.aux_step - step, 0.0) / self.aux_step
 
         self.offline_encoder(all_frames, all_masks)

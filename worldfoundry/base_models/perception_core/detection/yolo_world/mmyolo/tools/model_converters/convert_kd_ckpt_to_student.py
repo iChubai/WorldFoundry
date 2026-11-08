@@ -19,7 +19,7 @@ def parse_args():
 def main():
     args = parse_args()
     checkpoint = CheckpointLoader.load_checkpoint(args.checkpoint, map_location="cpu")
-    new_state_dict = dict()
+    new_state_dict = {}
     new_meta = checkpoint["meta"]
 
     for key, value in checkpoint["state_dict"].items():
@@ -27,7 +27,7 @@ def main():
             new_key = key.replace("architecture.", "")
             new_state_dict[new_key] = value
 
-    checkpoint = dict()
+    checkpoint = {}
     checkpoint["meta"] = new_meta
     checkpoint["state_dict"] = new_state_dict
 
@@ -37,10 +37,7 @@ def main():
     else:
         ckpt_path = Path(args.checkpoint)
         ckpt_name = ckpt_path.stem
-        if args.out_path:
-            ckpt_dir = Path(args.out_path)
-        else:
-            ckpt_dir = ckpt_path.parent
+        ckpt_dir = Path(args.out_path) if args.out_path else ckpt_path.parent
         mkdir_or_exist(ckpt_dir)
         new_ckpt_path = osp.join(ckpt_dir, f"{ckpt_name}_student.pth")
         save_checkpoint(checkpoint, new_ckpt_path)

@@ -249,7 +249,7 @@ class DDPM(nn.Module):
         self.register_buffer("lvlb_weights", lvlb_weights, persistent=False)
         assert not torch.isnan(self.lvlb_weights).all()
 
-    def init_from_ckpt(self, path, ignore_keys=list(), only_model=False):
+    def init_from_ckpt(self, path, ignore_keys=[], only_model=False):
         """Init from ckpt.
 
         Args:
@@ -575,7 +575,7 @@ class DDPM(nn.Module):
             sample: The sample.
             return_keys: The return keys.
         """
-        log = dict()
+        log = {}
         x = self.get_input(batch, self.first_stage_key)
         N = min(x.shape[0], N)
         n_row = min(x.shape[0], n_row)
@@ -583,7 +583,7 @@ class DDPM(nn.Module):
         log["inputs"] = x
 
         # get diffusion row
-        diffusion_row = list()
+        diffusion_row = []
         x_start = x[:n_row]
 
         for t in range(self.num_timesteps):
@@ -713,7 +713,7 @@ class LatentDiffusion(DDPM):
         self.encoder_type = encoder_type
         assert encoder_type in ["2d", "3d"]
         self.uncond_prob = uncond_prob
-        self.classifier_free_guidance = True if uncond_prob > 0 else False
+        self.classifier_free_guidance = uncond_prob > 0
         assert uncond_type in ["zero_embed", "empty_seq"]
         self.uncond_type = uncond_type
 
@@ -980,7 +980,7 @@ class LatentDiffusion(DDPM):
             for i, ci in enumerate(cond):
                 if random.random() < self.uncond_prob:
                     cond[i] = ""
-        if isinstance(cond, dict) or isinstance(cond, list):
+        if isinstance(cond, (dict, list)):
             cond_emb = self.get_learned_conditioning(cond)
         else:
             cond_emb = self.get_learned_conditioning(cond.to(self.device))
@@ -1186,7 +1186,7 @@ class LatentDiffusion(DDPM):
         """log images for LatentDiffusion"""
         ## TBD: currently, classifier_free_guidance sampling is only supported by DDIM
         use_ddim = ddim_steps is not None
-        log = dict()
+        log = {}
         z, c, x, xrec, xc = self.get_batch_input(
             batch, random_uncond=False, return_first_stage_outputs=True, return_original_cond=True
         )
@@ -1348,10 +1348,7 @@ class LatentDiffusion(DDPM):
         device = self.betas.device
         b = shape[0]
         # sample an initial noise
-        if x_T is None:
-            img = torch.randn(shape, device=device)
-        else:
-            img = x_T
+        img = torch.randn(shape, device=device) if x_T is None else x_T
 
         intermediates = [img]
         if timesteps is None:
@@ -1426,7 +1423,7 @@ class LatentDiffusion(DDPM):
                 cond = {
                     key: cond[key][:batch_size]
                     if not isinstance(cond[key], list)
-                    else list(map(lambda x: x[:batch_size], cond[key]))
+                    else [x[:batch_size] for x in cond[key]]
                     for key in cond
                 }
             else:
@@ -1651,17 +1648,11 @@ class DiffusionWrapper(nn.Module):
             out = self.diffusion_model(xc, t, context=None, s=s, mask=mask)
         elif self.conditioning_key == "concat-adm-mask":
             # assert s is not None
-            if c_concat is not None:
-                xc = torch.cat([x] + c_concat, dim=1)
-            else:
-                xc = x
+            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x
             out = self.diffusion_model(xc, t, context=None, y=s, mask=mask)
         elif self.conditioning_key == "hybrid-adm-mask":
             cc = torch.cat(c_crossattn, 1)
-            if c_concat is not None:
-                xc = torch.cat([x] + c_concat, dim=1)
-            else:
-                xc = x
+            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x
             out = self.diffusion_model(xc, t, context=cc, y=s, mask=mask)
         elif self.conditioning_key == "hybrid-time-adm":  # adm means y, e.g., class index
             # assert s is not None

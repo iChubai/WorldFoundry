@@ -195,10 +195,7 @@ class SampleFrames:
             results (dict): The resulting dict to be modified and passed
                 to the next transform in pipeline.
         """
-        if train:
-            clip_offsets = self._get_train_clips(total_frames)
-        else:
-            clip_offsets = self._get_test_clips(total_frames)
+        clip_offsets = self._get_train_clips(total_frames) if train else self._get_test_clips(total_frames)
         frame_inds = clip_offsets[:, None] + np.arange(self.clip_len)[None, :] * self.frame_interval
         frame_inds = np.concatenate(frame_inds)
 
@@ -255,7 +252,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
                     filename, _, _, label = line_split
                     label = float(label)
                     filename = osp.join(self.data_prefix, filename)
-                    self.video_infos.append(dict(filename=filename, label=label))
+                    self.video_infos.append({"filename": filename, "label": label})
         if cache_in_memory:
             self.cache = {}
             for i in tqdm(range(len(self)), desc="Caching fragments"):
@@ -392,7 +389,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
                     filename, _, _, label = line_split
                     label = float(label)
                     filename = osp.join(self.data_prefix, filename)
-                    self.video_infos.append(dict(filename=filename, label=label))
+                    self.video_infos.append({"filename": filename, "label": label})
         if cache_in_memory:
             self.cache = {}
             for i in tqdm(range(len(self)), desc="Caching fragments"):
@@ -507,7 +504,7 @@ class ResizedVideoDataset(torch.utils.data.Dataset):
                     filename, _, _, label = line_split
                     label = float(label)
                     filename = osp.join(self.data_prefix, filename)
-                    self.video_infos.append(dict(filename=filename, label=label))
+                    self.video_infos.append({"filename": filename, "label": label})
         if cache_in_memory:
             self.cache = {}
             for i in tqdm(range(len(self)), desc="Caching resized videos"):
@@ -612,7 +609,7 @@ class FragmentImageDataset(torch.utils.data.Dataset):
                     filename, _, _, label = line_split
                     label = float(label)
                     filename = osp.join(self.data_prefix, filename)
-                    self.image_infos.append(dict(filename=filename, label=label))
+                    self.image_infos.append({"filename": filename, "label": label})
         if cache_in_memory:
             self.cache = {}
             for i in tqdm(range(len(self)), desc="Caching fragments"):
@@ -696,7 +693,7 @@ class ResizedImageDataset(torch.utils.data.Dataset):
                     filename, _, _, label = line_split
                     label = float(label)
                     filename = osp.join(self.data_prefix, filename)
-                    self.image_infos.append(dict(filename=filename, label=label))
+                    self.image_infos.append({"filename": filename, "label": label})
         if cache_in_memory:
             self.cache = {}
             for i in tqdm(range(len(self)), desc="Caching fragments"):

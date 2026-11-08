@@ -560,10 +560,7 @@ def proj(Xs, intrinsics, jacobian=False, return_depth=False):
 
     x = fx * (X * d) + cx
     y = fy * (Y * d) + cy
-    if return_depth:
-        coords = torch.stack([x, y, D * d], dim=-1)
-    else:
-        coords = torch.stack([x, y], dim=-1)
+    coords = torch.stack([x, y, D * d], dim=-1) if return_depth else torch.stack([x, y], dim=-1)
 
     if jacobian:
         B, N, H, W = d.shape

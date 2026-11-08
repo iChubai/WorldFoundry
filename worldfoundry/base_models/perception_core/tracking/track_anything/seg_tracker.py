@@ -86,7 +86,7 @@ class SegTracker:
         objs = set()
         for ref in self.reference_objs_list:
             objs.update(set(ref))
-        objs = sorted(list(objs))
+        objs = sorted(objs)
         objs = [i for i in objs if i != 0]
         return objs
 

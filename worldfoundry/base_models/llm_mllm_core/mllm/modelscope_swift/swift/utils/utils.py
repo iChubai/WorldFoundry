@@ -64,10 +64,7 @@ def check_json_format(obj: Any, token_safe: bool = True) -> Any:
 
 
 def _get_version(work_dir: str) -> int:
-    if os.path.isdir(work_dir):
-        fnames = os.listdir(work_dir)
-    else:
-        fnames = []
+    fnames = os.listdir(work_dir) if os.path.isdir(work_dir) else []
     v_list = [-1]
     for fname in fnames:
         m = re.match(r"v(\d+)", fname)
@@ -101,10 +98,7 @@ def deep_getattr(obj, attr: str, default=None):
     for a in attrs:
         if obj is None:
             break
-        if isinstance(obj, dict):
-            obj = obj.get(a, default)
-        else:
-            obj = getattr(obj, a, default)
+        obj = obj.get(a, default) if isinstance(obj, dict) else getattr(obj, a, default)
     return obj
 
 

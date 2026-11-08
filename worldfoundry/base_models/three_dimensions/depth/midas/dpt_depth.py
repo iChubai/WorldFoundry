@@ -60,7 +60,7 @@ class DPT(BaseModel):
             use_bn: The use bn.
         """
 
-        super(DPT, self).__init__()
+        super().__init__()
 
         self.channels_last = channels_last
 
@@ -81,12 +81,7 @@ class DPT(BaseModel):
             "vitl16_384": [5, 11, 17, 23],
         }[backbone]
 
-        if "next_vit" in backbone:
-            in_features = {
-                "next_vit_large_6m": [96, 256, 512, 1024],
-            }[backbone]
-        else:
-            in_features = None
+        in_features = {"next_vit_large_6m": [96, 256, 512, 1024]}[backbone] if "next_vit" in backbone else None
 
         # Instantiate backbone and reassemble blocks
         self.pretrained, self.scratch = _make_encoder(

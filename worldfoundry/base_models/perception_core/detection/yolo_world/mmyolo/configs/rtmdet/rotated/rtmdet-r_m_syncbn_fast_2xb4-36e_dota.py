@@ -10,11 +10,11 @@ widen_factor = 0.75
 submission_dir = "./work_dirs/{{fileBasenameNoExtension}}/submission"
 
 # =======================Unmodified in most cases==================
-model = dict(
-    backbone=dict(deepen_factor=deepen_factor, widen_factor=widen_factor, init_cfg=dict(checkpoint=checkpoint)),
-    neck=dict(deepen_factor=deepen_factor, widen_factor=widen_factor),
-    bbox_head=dict(head_module=dict(widen_factor=widen_factor)),
-)
+model = {
+    "backbone": {"deepen_factor": deepen_factor, "widen_factor": widen_factor, "init_cfg": {"checkpoint": checkpoint}},
+    "neck": {"deepen_factor": deepen_factor, "widen_factor": widen_factor},
+    "bbox_head": {"head_module": {"widen_factor": widen_factor}},
+}
 
 # Inference on test dataset and format the output results
 # for submission. Note: the test set has no annotation.

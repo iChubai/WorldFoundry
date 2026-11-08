@@ -490,10 +490,7 @@ class BasicLayer(nn.Module):
 
         for blk in self.blocks:
             blk.H, blk.W = H, W
-            if self.use_checkpoint:
-                x = checkpoint.checkpoint(blk, x, attn_mask)
-            else:
-                x = blk(x, attn_mask)
+            x = checkpoint.checkpoint(blk, x, attn_mask) if self.use_checkpoint else blk(x, attn_mask)
         if self.downsample is not None:
             x_down = self.downsample(x, H, W)
             Wh, Ww = (H + 1) // 2, (W + 1) // 2
@@ -833,7 +830,7 @@ class SwinTransformer(nn.Module):
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""
-        super(SwinTransformer, self).train(mode)
+        super().train(mode)
         self._freeze_stages()
 
 
@@ -853,11 +850,11 @@ def build_swin_transformer(modelname, pretrain_img_size, **kw):
     ]
 
     model_para_dict = {
-        "swin_T_224_1k": dict(embed_dim=96, depths=[2, 2, 6, 2], num_heads=[3, 6, 12, 24], window_size=7),
-        "swin_B_224_22k": dict(embed_dim=128, depths=[2, 2, 18, 2], num_heads=[4, 8, 16, 32], window_size=7),
-        "swin_B_384_22k": dict(embed_dim=128, depths=[2, 2, 18, 2], num_heads=[4, 8, 16, 32], window_size=12),
-        "swin_L_224_22k": dict(embed_dim=192, depths=[2, 2, 18, 2], num_heads=[6, 12, 24, 48], window_size=7),
-        "swin_L_384_22k": dict(embed_dim=192, depths=[2, 2, 18, 2], num_heads=[6, 12, 24, 48], window_size=12),
+        "swin_T_224_1k": {"embed_dim": 96, "depths": [2, 2, 6, 2], "num_heads": [3, 6, 12, 24], "window_size": 7},
+        "swin_B_224_22k": {"embed_dim": 128, "depths": [2, 2, 18, 2], "num_heads": [4, 8, 16, 32], "window_size": 7},
+        "swin_B_384_22k": {"embed_dim": 128, "depths": [2, 2, 18, 2], "num_heads": [4, 8, 16, 32], "window_size": 12},
+        "swin_L_224_22k": {"embed_dim": 192, "depths": [2, 2, 18, 2], "num_heads": [6, 12, 24, 48], "window_size": 7},
+        "swin_L_384_22k": {"embed_dim": 192, "depths": [2, 2, 18, 2], "num_heads": [6, 12, 24, 48], "window_size": 12},
     }
     kw_cgf = model_para_dict[modelname]
     kw_cgf.update(kw)

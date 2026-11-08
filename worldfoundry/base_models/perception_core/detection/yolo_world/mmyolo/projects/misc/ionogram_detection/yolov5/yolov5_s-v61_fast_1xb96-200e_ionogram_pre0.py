@@ -7,13 +7,14 @@ max_epochs = 200
 load_from = None
 logger_interval = 50
 
-train_cfg = dict(
-    max_epochs=max_epochs,
-)
+train_cfg = {
+    "max_epochs": max_epochs,
+}
 
 # ===================== Unmodified in most cases ==================
-optim_wrapper = dict(optimizer=dict(lr=base_lr))
+optim_wrapper = {"optimizer": {"lr": base_lr}}
 
-default_hooks = dict(
-    param_scheduler=dict(max_epochs=max_epochs), logger=dict(type="LoggerHook", interval=logger_interval)
-)
+default_hooks = {
+    "param_scheduler": {"max_epochs": max_epochs},
+    "logger": {"type": "LoggerHook", "interval": logger_interval},
+}

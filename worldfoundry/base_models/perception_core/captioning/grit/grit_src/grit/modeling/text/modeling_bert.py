@@ -67,7 +67,7 @@ LayerNormClass = torch.nn.LayerNorm
 
 class BertSelfAttention(nn.Module):
     def __init__(self, config):
-        super(BertSelfAttention, self).__init__()
+        super().__init__()
         if config.hidden_size % config.num_attention_heads != 0:
             raise ValueError(
                 "The hidden size (%d) is not a multiple of the number of attention "
@@ -133,7 +133,7 @@ class BertSelfAttention(nn.Module):
 
 class BertSelfOutput(nn.Module):
     def __init__(self, config):
-        super(BertSelfOutput, self).__init__()
+        super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
         self.pre_norm = hasattr(config, "pre_norm") and config.pre_norm
         if not self.pre_norm:
@@ -152,7 +152,7 @@ class BertSelfOutput(nn.Module):
 
 class BertAttention(nn.Module):
     def __init__(self, config):
-        super(BertAttention, self).__init__()
+        super().__init__()
         self.pre_norm = hasattr(config, "pre_norm") and config.pre_norm
         if self.pre_norm:
             self.LayerNorm = LayerNormClass(config.hidden_size, eps=config.layer_norm_eps)
@@ -176,7 +176,7 @@ class BertAttention(nn.Module):
 
 class BertIntermediate(nn.Module):
     def __init__(self, config):
-        super(BertIntermediate, self).__init__()
+        super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
         assert config.hidden_act == "gelu", "Please implement other activation functions"
         self.intermediate_act_fn = _gelu_python
@@ -189,7 +189,7 @@ class BertIntermediate(nn.Module):
 
 class BertOutput(nn.Module):
     def __init__(self, config):
-        super(BertOutput, self).__init__()
+        super().__init__()
         self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
         self.pre_norm = hasattr(config, "pre_norm") and config.pre_norm
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
@@ -226,7 +226,7 @@ class Mlp(nn.Module):
 
 class BertLayer(nn.Module):
     def __init__(self, config, use_act_checkpoint=True):
-        super(BertLayer, self).__init__()
+        super().__init__()
         self.pre_norm = hasattr(config, "pre_norm") and config.pre_norm
         self.use_mlp_wrapper = hasattr(config, "use_mlp_wrapper") and config.use_mlp_wrapper
         self.attention = BertAttention(config)
@@ -261,7 +261,7 @@ class BertLayer(nn.Module):
 
 class BertEncoder(nn.Module):
     def __init__(self, config, use_act_checkpoint=True):
-        super(BertEncoder, self).__init__()
+        super().__init__()
         self.output_attentions = config.output_attentions
         self.output_hidden_states = config.output_hidden_states
         self.layer = nn.ModuleList(
@@ -508,7 +508,7 @@ class BertConfig(PretrainedConfig):
         layer_norm_eps=1e-12,
         **kwargs,
     ):
-        super(BertConfig, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if isinstance(vocab_size_or_config_json_file, str):
             with builtins.open(vocab_size_or_config_json_file, encoding="utf-8") as reader:
                 json_config = json.loads(reader.read())

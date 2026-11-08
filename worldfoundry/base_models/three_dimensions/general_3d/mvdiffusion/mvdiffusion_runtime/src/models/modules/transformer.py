@@ -104,7 +104,7 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=h) for t in (q, k, v))
 
         sim = einsum("b i d, b j d -> b i j", q, k) * self.scale
 
@@ -264,15 +264,12 @@ class PosEmbedding(nn.Module):
         Defines a function that embeds x to (x, sin(2^k x), cos(2^k x), ...)
         in_channels: number of input channels (3 for both xyz and direction)
         """
-        super(PosEmbedding, self).__init__()
+        super().__init__()
         self.N_freqs = N_freqs
         self.in_channels = in_channels
         # self.funcs = [torch.sin, torch.cos]
         # self.out_channels = in_channels*(len(self.funcs)*N_freqs)
-        if N_freqs <= 80:
-            base = 2
-        else:
-            base = 5000 ** (1 / (N_freqs / 2.5))
+        base = 2 if N_freqs <= 80 else 5000 ** (1 / (N_freqs / 2.5))
         if logscale:
             freq_bands = base ** torch.linspace(0, N_freqs - 1, N_freqs)[None, None]
         else:

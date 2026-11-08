@@ -150,9 +150,8 @@ def conv2d_resample(x, w, f=None, up=1, down=1, padding=0, groups=1, flip_weight
         return x
 
     # Fast path: no up/downsampling, padding supported by the underlying implementation => use plain conv2d.
-    if up == 1 and down == 1:
-        if px0 == px1 and py0 == py1 and px0 >= 0 and py0 >= 0:
-            return _conv2d_wrapper(x=x, w=w, padding=[py0, px0], groups=groups, flip_weight=flip_weight)
+    if up == 1 and down == 1 and px0 == px1 and py0 == py1 and px0 >= 0 and py0 >= 0:
+        return _conv2d_wrapper(x=x, w=w, padding=[py0, px0], groups=groups, flip_weight=flip_weight)
 
     # Fallback: Generic reference implementation.
     x = upfirdn2d.upfirdn2d(

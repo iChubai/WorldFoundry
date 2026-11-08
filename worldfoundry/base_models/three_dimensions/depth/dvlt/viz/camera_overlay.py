@@ -132,10 +132,7 @@ def rainbow_colors(n: int, cmap: str = "turbo") -> np.ndarray:
         return np.zeros((0, 3), dtype=np.uint8)
     import matplotlib.cm as mpl_cm  # lazy
 
-    if n == 1:
-        ts = np.array([0.5])
-    else:
-        ts = np.linspace(0.0, 1.0, n)
+    ts = np.array([0.5]) if n == 1 else np.linspace(0.0, 1.0, n)
     rgba = getattr(mpl_cm, cmap)(ts)
     return (rgba[:, :3] * 255.0).astype(np.uint8)
 

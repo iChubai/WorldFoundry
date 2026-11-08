@@ -86,7 +86,7 @@ class DPTHead(nn.Module):
             use_clstoken: The use clstoken.
             encoder_cond_dim: The encoder cond dim.
         """
-        super(DPTHead, self).__init__()
+        super().__init__()
 
         self.use_clstoken = use_clstoken
         self.encoder_cond_dim = encoder_cond_dim
@@ -233,7 +233,7 @@ class DepthAnythingV2(nn.Module):
             use_clstoken: The use clstoken.
             encoder_cond_dim: The encoder cond dim.
         """
-        super(DepthAnythingV2, self).__init__()
+        super().__init__()
 
         self.intermediate_layer_idx = {
             "vits": [2, 5, 8, 11],

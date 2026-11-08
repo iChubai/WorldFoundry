@@ -11,6 +11,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.loger.utils.geometry
     depth_edge,
 )
 from worldfoundry.core.model_loading import load_torch_checkpoint
+import contextlib
 
 
 class LoGeRRepresentation:
@@ -100,13 +101,11 @@ class LoGeRRepresentation:
                         local_files_only=True,
                     )
                 except Exception:
-                    try:
+                    with contextlib.suppress(Exception):
                         config_path = hf_hub_download(
                             repo_id=pretrained_model_path,
                             filename=config_filename,
                         )
-                    except Exception:
-                        pass
 
         elif os.path.isfile(pretrained_model_path):
             ckpt_file = pretrained_model_path
@@ -282,17 +281,17 @@ class LoGeRRepresentation:
                 return self.inference_defaults[key]
             return fallback
 
-        forward_kwargs = dict(
-            window_size=int(_get("window_size", 32)),
-            overlap_size=int(_get("overlap_size", 3)),
-            num_iterations=int(_get("num_iterations", 1)),
-            sim3=bool(_get("sim3", False)),
-            se3=bool(_get("se3", False)),
-            reset_every=int(_get("reset_every", 0)),
-            turn_off_ttt=bool(_get("turn_off_ttt", False)),
-            turn_off_swa=bool(_get("turn_off_swa", False)),
-            sim3_scale_mode=str(_get("sim3_scale_mode", "median")),
-        )
+        forward_kwargs = {
+            "window_size": int(_get("window_size", 32)),
+            "overlap_size": int(_get("overlap_size", 3)),
+            "num_iterations": int(_get("num_iterations", 1)),
+            "sim3": bool(_get("sim3", False)),
+            "se3": bool(_get("se3", False)),
+            "reset_every": int(_get("reset_every", 0)),
+            "turn_off_ttt": bool(_get("turn_off_ttt", False)),
+            "turn_off_swa": bool(_get("turn_off_swa", False)),
+            "sim3_scale_mode": str(_get("sim3_scale_mode", "median")),
+        }
 
         conf_threshold = float(_get("conf_threshold", 0.1))
         edge_rtol = float(_get("edge_rtol", 0.03))

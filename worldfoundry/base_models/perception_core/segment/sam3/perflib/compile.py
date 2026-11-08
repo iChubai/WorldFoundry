@@ -36,10 +36,7 @@ def recursive_fn_factory(fn):
             return tuple(recursive_fn(t) for t in b)
         if isinstance(b, NestedTensor):
             tensors = fn(b.tensors)
-            if b.mask is None:
-                mask = None
-            else:
-                mask = fn(b.mask)
+            mask = None if b.mask is None else fn(b.mask)
             return NestedTensor(tensors=tensors, mask=mask)
         if isinstance(b, torch.Tensor):
             return fn(b)

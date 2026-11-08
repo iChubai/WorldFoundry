@@ -45,10 +45,7 @@ class LossScale:
         Returns:
             A tuple, list of context and list of loss_scales
         """
-        if context_type in {ContextType.RESPONSE, ContextType.SUFFIX}:
-            loss_scale = 1.0
-        else:
-            loss_scale = 0.0
+        loss_scale = 1.0 if context_type in {ContextType.RESPONSE, ContextType.SUFFIX} else 0.0
         return [context], [loss_scale]
 
     def __call__(

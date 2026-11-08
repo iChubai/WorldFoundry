@@ -148,7 +148,10 @@ class SanaMSBlock(nn.Module):
         self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
 
         if ffn_type == "dwmlp":
-            approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+            def approx_gelu():
+                return nn.GELU(approximate="tanh")
+
             self.mlp = DWMlp(
                 in_features=hidden_size, hidden_features=int(hidden_size * mlp_ratio), act_layer=approx_gelu, drop=0
             )
@@ -169,7 +172,10 @@ class SanaMSBlock(nn.Module):
                 act=mlp_acts,
             )
         elif ffn_type == "mlp":
-            approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+            def approx_gelu():
+                return nn.GELU(approximate="tanh")
+
             self.mlp = Mlp(
                 in_features=hidden_size, hidden_features=int(hidden_size * mlp_ratio), act_layer=approx_gelu, drop=0
             )
@@ -323,7 +329,10 @@ class SanaMS(Sana):
             **kwargs,
         )
         self.h = self.w = 0
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.t_block = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 6 * hidden_size, bias=True))
         self.pos_embed_ms = None
         self.cfg_embed_scale = cfg_embed_scale

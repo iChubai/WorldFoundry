@@ -47,10 +47,7 @@ class RAFT(nn.Module):
 
     def initialize_alpha(self, fmap, coarse_alpha):
         N, _, h, w = fmap.shape
-        if coarse_alpha is None:
-            alpha = torch.ones(N, 1, h, w, device=fmap.device)
-        else:
-            alpha = coarse_alpha[:, None]
+        alpha = torch.ones(N, 1, h, w, device=fmap.device) if coarse_alpha is None else coarse_alpha[:, None]
         return alpha.logit(eps=1e-5)
 
     def postprocess_alpha(self, alpha):

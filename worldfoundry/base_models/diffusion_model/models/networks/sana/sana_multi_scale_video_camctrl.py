@@ -340,7 +340,10 @@ class SanaVideoMSCamCtrlBlock(nn.Module):
                 t_kernel_size=t_kernel_size,
             )
         elif ffn_type == "mlp":
-            approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+            def approx_gelu():
+                return nn.GELU(approximate="tanh")
+
             self.mlp = Mlp(
                 in_features=hidden_size, hidden_features=int(hidden_size * mlp_ratio), act_layer=approx_gelu, drop=0
             )
@@ -846,7 +849,10 @@ class SanaMSVideoCamCtrl(Sana):
         self.chunk_split_strategy = chunk_split_strategy
         self.patch_size = patch_size
         self.h = self.w = 0
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.t_block = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 6 * hidden_size, bias=True))
         self.pos_embed_ms = None
         self.pack_latents = pack_latents

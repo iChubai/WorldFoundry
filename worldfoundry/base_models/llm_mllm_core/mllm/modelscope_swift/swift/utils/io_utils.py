@@ -59,10 +59,7 @@ class JsonlWriter:
             self._append(**item)
 
     def _append(self, obj: dict | list[dict], gather_obj: bool = False):
-        if isinstance(obj, (list, tuple)) and all(isinstance(item, dict) for item in obj):
-            obj_list = obj
-        else:
-            obj_list = [obj]
+        obj_list = obj if isinstance(obj, (list, tuple)) and all(isinstance(item, dict) for item in obj) else [obj]
         if gather_obj and dist.is_initialized():
             obj_list = gather_object(obj_list)
         if not is_master():

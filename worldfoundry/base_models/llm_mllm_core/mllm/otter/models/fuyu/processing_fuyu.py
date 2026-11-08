@@ -237,10 +237,7 @@ def _tokenize_prompts_with_image_and_batch(
 
     prompts_tokens = transformed_prompt_tokens
 
-    if add_BOS:
-        bos_token = tokenizer.vocab["<s>"]
-    else:
-        bos_token = tokenizer.vocab["|ENDOFTEXT|"]
+    bos_token = tokenizer.vocab["<s>"] if add_BOS else tokenizer.vocab["|ENDOFTEXT|"]
     prompts_tokens = [[[bos_token] + x for x in prompt_seq] for prompt_seq in prompts_tokens]
     if add_beginning_of_answer_token:
         boa = tokenizer.vocab[BEGINNING_OF_ANSWER_STRING]

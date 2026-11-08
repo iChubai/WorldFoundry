@@ -45,7 +45,7 @@ class ResidualConvBlock(nn.Module):
             in_norm: The in norm.
             hidden_norm: The hidden norm.
         """
-        super(ResidualConvBlock, self).__init__()
+        super().__init__()
         if out_channels is None:
             out_channels = in_channels
         if hidden_channels is None:
@@ -129,7 +129,7 @@ class DINOv2Encoder(nn.Module):
             intermediate_layers: The intermediate layers.
             dim_out: The dim out.
         """
-        super(DINOv2Encoder, self).__init__()
+        super().__init__()
 
         self.intermediate_layers = intermediate_layers
 
@@ -329,7 +329,7 @@ class MLP(nn.Sequential):
             *itertools.chain(
                 *[
                     (nn.Linear(dim_in, dim_out), nn.ReLU(inplace=True))
-                    for dim_in, dim_out in zip(dims[:-2], dims[1:-1], strict=False)
+                    for dim_in, dim_out in zip(dims[:-2], dims[1:-1], strict=False)  # noqa: RUF007 - The last pair is added below without ReLU.
                 ]
             ),
             nn.Linear(dims[-2], dims[-1]),

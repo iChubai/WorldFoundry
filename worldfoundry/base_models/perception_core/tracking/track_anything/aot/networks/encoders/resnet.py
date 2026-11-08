@@ -27,7 +27,7 @@ class Bottleneck(nn.Module):
             downsample: The downsample.
             BatchNorm: The batchnorm.
         """
-        super(Bottleneck, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = BatchNorm(planes)
         self.conv2 = nn.Conv2d(
@@ -89,7 +89,7 @@ class ResNet(nn.Module):
             freeze_at: The freeze at.
         """
         self.inplanes = 64
-        super(ResNet, self).__init__()
+        super().__init__()
 
         if output_stride == 16:
             strides = [1, 2, 2, 1]

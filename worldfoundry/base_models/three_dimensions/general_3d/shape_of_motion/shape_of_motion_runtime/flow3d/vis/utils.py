@@ -25,7 +25,7 @@ class Singleton(type):
     def __call__(cls, *args, **kwargs):
         """Call."""
         if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -564,10 +564,7 @@ def plot_correspondences(rgbs, kpts, query_id=0, masks=None, num_vis=1000000, ra
     for i in range(num_rgbs):
         rgbi = rgbs[i]
         kptsi = kpts[i]
-        if masks is not None:
-            maski = masks[i]
-        else:
-            maski = None
+        maski = masks[i] if masks is not None else None
         frame = drawMatches(
             rgbq,
             rgbi,

@@ -91,10 +91,7 @@ def _pil_from_input(image: Any) -> Image.Image:
             if array.size and array.max() <= 1.0:
                 array = array * 255.0
             array = np.clip(array, 0, 255).astype("uint8")
-        if array.ndim == 2:
-            pil = Image.fromarray(array, mode="L")
-        else:
-            pil = Image.fromarray(array[..., :3])
+        pil = Image.fromarray(array, mode="L") if array.ndim == 2 else Image.fromarray(array[..., :3])
     else:
         pil = Image.open(image)
     pil = ImageOps.exif_transpose(pil)

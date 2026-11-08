@@ -104,10 +104,7 @@ class SwiftInfer(SwiftPipeline):
     def run(self) -> list[dict[str, Any]]:
         args = self.args
         self.jsonl_writer = JsonlWriter(args.result_path) if args.result_path else None
-        if args.eval_human:
-            result = self.infer_cli()
-        else:
-            result = self.infer_dataset()
+        result = self.infer_cli() if args.eval_human else self.infer_dataset()
         if args.result_path:
             logger.info(f"The inference results have been saved to result_path: `{args.result_path}`.")
         return result

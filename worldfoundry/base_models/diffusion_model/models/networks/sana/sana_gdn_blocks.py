@@ -167,10 +167,7 @@ def torch_recurrent_sana_gdn(q, k, v, q_rot, k_rot, beta, decay, recall_gate, ep
     k_rot = to_frame_seq(k_rot)
 
     # beta: (B, H, T) -> (B, H, T, 1, 1) or (B, H, T, S) -> (B, H, T, 1, S)
-    if beta.ndim == 4:
-        beta = beta.unsqueeze(3)
-    else:
-        beta = beta.view(B, H, T, 1, 1)
+    beta = beta.unsqueeze(3) if beta.ndim == 4 else beta.view(B, H, T, 1, 1)
 
     decay = decay.view(B, H, T, 1, 1)
 
@@ -292,10 +289,7 @@ def torch_chunk_sana_gdn(
     q, k, v = to_frame_seq(q), to_frame_seq(k), to_frame_seq(v)
     q_rot, k_rot = to_frame_seq(q_rot), to_frame_seq(k_rot)
 
-    if beta.ndim == 4:
-        beta = beta.unsqueeze(3)
-    else:
-        beta = beta.view(B, H, T, 1, 1)
+    beta = beta.unsqueeze(3) if beta.ndim == 4 else beta.view(B, H, T, 1, 1)
 
     decay = decay.view(B, H, T, 1, 1)
 

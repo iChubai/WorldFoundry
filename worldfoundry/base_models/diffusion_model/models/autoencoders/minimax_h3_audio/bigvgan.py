@@ -44,7 +44,7 @@ class SnakeBeta(nn.Module):
     """Learned Snake activation with a beta frequency term."""
 
     def __init__(self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=False):
-        super(SnakeBeta, self).__init__()
+        super().__init__()
         self.in_features = in_features
 
         self.alpha_logscale = alpha_logscale
@@ -73,7 +73,7 @@ class AttrDict(dict):
     """Dict subclass that also exposes keys as attributes."""
 
     def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__dict__ = self
 
 

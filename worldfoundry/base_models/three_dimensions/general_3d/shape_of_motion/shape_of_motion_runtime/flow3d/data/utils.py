@@ -194,14 +194,8 @@ def _get_padding(x, k, stride, padding, same: bool):
     """
     if same:
         ih, iw = x.size()[2:]
-        if ih % stride[0] == 0:
-            ph = max(k[0] - stride[0], 0)
-        else:
-            ph = max(k[0] - (ih % stride[0]), 0)
-        if iw % stride[1] == 0:
-            pw = max(k[1] - stride[1], 0)
-        else:
-            pw = max(k[1] - (iw % stride[1]), 0)
+        ph = max(k[0] - stride[0], 0) if ih % stride[0] == 0 else max(k[0] - ih % stride[0], 0)
+        pw = max(k[1] - stride[1], 0) if iw % stride[1] == 0 else max(k[1] - iw % stride[1], 0)
         pl = pw // 2
         pr = pw - pl
         pt = ph // 2

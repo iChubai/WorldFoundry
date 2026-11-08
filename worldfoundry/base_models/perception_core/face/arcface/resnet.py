@@ -29,7 +29,7 @@ class BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
-        super(BasicBlock, self).__init__()
+        super().__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -61,7 +61,7 @@ class IRBlock(nn.Module):
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, use_se=True):
-        super(IRBlock, self).__init__()
+        super().__init__()
         self.bn0 = nn.BatchNorm2d(inplanes)
         self.conv1 = conv3x3(inplanes, inplanes)
         self.bn1 = nn.BatchNorm2d(inplanes)
@@ -99,7 +99,7 @@ class Bottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -135,7 +135,7 @@ class Bottleneck(nn.Module):
 
 class SEBlock(nn.Module):
     def __init__(self, channel, reduction=16):
-        super(SEBlock, self).__init__()
+        super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction), nn.PReLU(), nn.Linear(channel // reduction, channel), nn.Sigmoid()
@@ -152,7 +152,7 @@ class ResNetFace(nn.Module):
     def __init__(self, block, layers, use_se=True):
         self.inplanes = 64
         self.use_se = use_se
-        super(ResNetFace, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(1, 64, kernel_size=3, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.prelu = nn.PReLU()
@@ -169,7 +169,7 @@ class ResNetFace(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.xavier_normal_(m.weight)
-            elif isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.BatchNorm1d):
+            elif isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.Linear):
@@ -213,7 +213,7 @@ class ResNetFace(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, block, layers):
         self.inplanes = 64
-        super(ResNet, self).__init__()
+        super().__init__()
         # self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
         #                        bias=False)
         self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False)

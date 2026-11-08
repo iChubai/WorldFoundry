@@ -114,10 +114,7 @@ class Resize:
                 continue
             tmp = sample[elem]
 
-            if elem == "prev_img" or elem == "curr_img" or elem == "ref_img":
-                pad_value = (124, 116, 104)
-            else:
-                pad_value = 0
+            pad_value = (124, 116, 104) if elem == "prev_img" or elem == "curr_img" or elem == "ref_img" else 0
 
             if elem == "curr_img" or elem == "curr_label":
                 new_tmp = []
@@ -221,10 +218,7 @@ class BalancedRandomCrop:
                 if after_crop_pixels > self.min_obj_pixel_num:
                     new_all_obj.append(obj_id)
 
-            if len(new_all_obj) == 0:
-                is_contain_obj = False
-            else:
-                is_contain_obj = True
+            is_contain_obj = not len(new_all_obj) == 0
 
             if len(new_all_obj) > self.max_obj_num:
                 random.shuffle(new_all_obj)
@@ -467,17 +461,11 @@ class RestrictSize:
         h, w = image.shape[:2]
         # Align short edge
         if self.max_short_edge is not None:
-            if h > w:
-                short_edge = w
-            else:
-                short_edge = h
+            short_edge = w if h > w else h
             if short_edge < self.max_short_edge:
                 sc = float(self.max_short_edge) / short_edge
         else:
-            if h > w:
-                long_edge = h
-            else:
-                long_edge = w
+            long_edge = h if h > w else w
             if long_edge > self.max_long_edge:
                 sc = float(self.max_long_edge) / long_edge
 
@@ -497,10 +485,7 @@ class RestrictSize:
                 continue
             tmp = sample[elem]
 
-            if "label" in elem:
-                flagval = cv2.INTER_NEAREST
-            else:
-                flagval = cv2.INTER_CUBIC
+            flagval = cv2.INTER_NEAREST if "label" in elem else cv2.INTER_CUBIC
 
             tmp = cv2.resize(tmp, dsize=(new_w, new_h), interpolation=flagval)
 
@@ -770,10 +755,7 @@ class MultiRestrictSize:
             # restrict short edge
             sc = 1.0
             if self.max_short_edge is not None:
-                if h > w:
-                    short_edge = w
-                else:
-                    short_edge = h
+                short_edge = w if h > w else h
                 if short_edge > self.max_short_edge:
                     sc *= float(self.max_short_edge) / short_edge
             new_h, new_w = sc * h, sc * w
@@ -781,10 +763,7 @@ class MultiRestrictSize:
             # restrict long edge
             sc = 1.0
             if self.max_long_edge is not None:
-                if new_h > new_w:
-                    long_edge = new_h
-                else:
-                    long_edge = new_w
+                long_edge = new_h if new_h > new_w else new_w
                 if long_edge > self.max_long_edge:
                     sc *= float(self.max_long_edge) / long_edge
 

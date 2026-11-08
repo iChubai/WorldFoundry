@@ -174,10 +174,7 @@ def load_model_and_config(args, clip_model_path, device):
     cfg.model.vision_model = clip_model_path
     cfg.model.backbone.text_model.model_name = clip_model_path
 
-    if "runner_type" not in cfg:
-        runner = Runner.from_cfg(cfg)
-    else:
-        runner = RUNNERS.build(cfg)
+    runner = Runner.from_cfg(cfg) if "runner_type" not in cfg else RUNNERS.build(cfg)
 
     runner.call_hook("before_run")
     runner.load_or_resume()

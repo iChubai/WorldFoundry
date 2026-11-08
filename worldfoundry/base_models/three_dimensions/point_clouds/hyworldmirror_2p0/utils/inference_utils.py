@@ -111,7 +111,7 @@ def prepare_images_to_tensor(file_paths, resize_strategy="crop", target_size=518
 
         tensor_list.append(tensor_img)
 
-    shapes = set((t.shape[1], t.shape[2]) for t in tensor_list)
+    shapes = {(t.shape[1], t.shape[2]) for t in tensor_list}
     if len(shapes) > 1:
         raise ValueError(
             f"Inconsistent resolutions after preprocessing: {shapes}. All input images must have the same aspect ratio."
@@ -407,10 +407,7 @@ def create_filter_mask(
 
             if gs_depth_preds is not None:
                 gs_d_edges = depth_edge(gs_depth_preds[i, :, :, 0], rtol=edge_depth_threshold, mask=pre_edge_mask)
-                if n_edges is not None:
-                    gs_combined = gs_d_edges & n_edges
-                else:
-                    gs_combined = gs_d_edges
+                gs_combined = gs_d_edges & n_edges if n_edges is not None else gs_d_edges
                 gs_edge_mask = ~gs_combined
                 gs_frame_mask = gs_edge_mask if pre_edge_mask is None else pre_edge_mask & gs_edge_mask
 

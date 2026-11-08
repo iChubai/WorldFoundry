@@ -123,10 +123,7 @@ class Prompt(SwiftAdapter):
 
                 setattr(module, f"forward_origin_{adapter_name}", module.forward)
                 module.forward = types.MethodType(_forward, module)
-                if isinstance(config.dim, list):
-                    input_dim = config.dim[len(match_module_keys)]
-                else:
-                    input_dim = config.dim
+                input_dim = config.dim[len(match_module_keys)] if isinstance(config.dim, list) else config.dim
                 prompt_module = PromptModule(
                     input_dim,
                     int(module_key.rsplit(".")[-1]),
@@ -177,7 +174,7 @@ class PromptModule(nn.Module, ActivationMixin):
     def __init__(
         self, dim, layer_num, adapter_name, module_key, prompt_length=None, mask_values=0.0, attach_front=True
     ):
-        super(PromptModule, self).__init__()
+        super().__init__()
         super(nn.Module, self).__init__(module_key)
         self.dim = dim
         self.layer_num = layer_num
@@ -195,10 +192,7 @@ class PromptModule(nn.Module, ActivationMixin):
         prompt_token = self.prompt_token.expand(x.shape[0], -1, -1).to(x.device, x.dtype)
 
         if self.layer_num == 0:
-            if self.attach_front:
-                x = torch.cat((prompt_token, x), dim=1)
-            else:
-                x = torch.cat((x, prompt_token), dim=1)
+            x = torch.cat((prompt_token, x), dim=1) if self.attach_front else torch.cat((x, prompt_token), dim=1)
         else:
             if self.attach_front:
                 x = torch.cat((prompt_token, x[:, self.prompt_length :, :]), dim=1)

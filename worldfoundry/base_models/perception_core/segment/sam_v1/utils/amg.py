@@ -305,10 +305,7 @@ def batched_mask_to_box(masks: torch.Tensor) -> torch.Tensor:
     # Normalize shape to CxHxW
     shape = masks.shape
     h, w = shape[-2:]
-    if len(shape) > 2:
-        masks = masks.flatten(0, -3)
-    else:
-        masks = masks.unsqueeze(0)
+    masks = masks.flatten(0, -3) if len(shape) > 2 else masks.unsqueeze(0)
 
     # Get top and bottom edges
     in_height, _ = torch.max(masks, dim=-1)
@@ -331,9 +328,6 @@ def batched_mask_to_box(masks: torch.Tensor) -> torch.Tensor:
     out = out * (~empty_filter).unsqueeze(-1)
 
     # Return to original shape
-    if len(shape) > 2:
-        out = out.reshape(*shape[:-2], 4)
-    else:
-        out = out[0]
+    out = out.reshape(*shape[:-2], 4) if len(shape) > 2 else out[0]
 
     return out

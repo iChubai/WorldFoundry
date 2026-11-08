@@ -124,10 +124,7 @@ def save_scene_ply(
     colors = point_colors.detach().cpu().to(torch.uint8).numpy().reshape(-1, 3)
 
     # Filter out invalid points (NaN, Inf)
-    if valid_mask is None:
-        valid_mask = np.isfinite(pts).all(axis=1)
-    else:
-        valid_mask = valid_mask.detach().cpu().numpy().reshape(-1)
+    valid_mask = np.isfinite(pts).all(axis=1) if valid_mask is None else valid_mask.detach().cpu().numpy().reshape(-1)
     pts = pts[valid_mask]
     colors = colors[valid_mask]
 

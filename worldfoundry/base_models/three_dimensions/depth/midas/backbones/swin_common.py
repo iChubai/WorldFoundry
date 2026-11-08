@@ -35,10 +35,7 @@ def _make_swin_backbone(model, hooks=[1, 1, 17, 1], patch_grid=[96, 96]):
 
     pretrained.activations = activations
 
-    if hasattr(model, "patch_grid"):
-        used_patch_grid = model.patch_grid
-    else:
-        used_patch_grid = patch_grid
+    used_patch_grid = model.patch_grid if hasattr(model, "patch_grid") else patch_grid
 
     patch_grid_size = np.array(used_patch_grid, dtype=int)
 

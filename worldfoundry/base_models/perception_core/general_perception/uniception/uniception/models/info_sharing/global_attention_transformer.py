@@ -345,16 +345,14 @@ class MultiViewGlobalAttentionTransformer(UniCeptionInfoSharingBase):
         multi_view_features = self.proj_embed(multi_view_features)
 
         # Raise error if custom positional encoding is used with additional tokens
-        if self.custom_positional_encoding is not None:
-            if (
-                model_input.additional_input_tokens is not None
-                or model_input.additional_input_tokens_per_view is not None
-            ):
-                raise ValueError(
-                    "Custom positional encoding is not supported when additional_input_tokens or "
-                    "additional_input_tokens_per_view are provided. Please set custom_positional_encoding=None "
-                    "or remove additional tokens from the input."
-                )
+        if self.custom_positional_encoding is not None and (
+            model_input.additional_input_tokens is not None or model_input.additional_input_tokens_per_view is not None
+        ):
+            raise ValueError(
+                "Custom positional encoding is not supported when additional_input_tokens or "
+                "additional_input_tokens_per_view are provided. Please set custom_positional_encoding=None "
+                "or remove additional tokens from the input."
+            )
 
         # Create patch positions for each view if custom positional encoding is used
         if self.custom_positional_encoding is not None:
@@ -708,16 +706,14 @@ class MultiViewGlobalAttentionTransformerIFR(MultiViewGlobalAttentionTransformer
         multi_view_features = self.proj_embed(multi_view_features)
 
         # Raise error if custom positional encoding is used with additional tokens
-        if self.custom_positional_encoding is not None:
-            if (
-                model_input.additional_input_tokens is not None
-                or model_input.additional_input_tokens_per_view is not None
-            ):
-                raise ValueError(
-                    "Custom positional encoding is not supported when additional_input_tokens or "
-                    "additional_input_tokens_per_view are provided. Please set custom_positional_encoding=None "
-                    "or remove additional tokens from the input."
-                )
+        if self.custom_positional_encoding is not None and (
+            model_input.additional_input_tokens is not None or model_input.additional_input_tokens_per_view is not None
+        ):
+            raise ValueError(
+                "Custom positional encoding is not supported when additional_input_tokens or "
+                "additional_input_tokens_per_view are provided. Please set custom_positional_encoding=None "
+                "or remove additional tokens from the input."
+            )
 
         # Create patch positions for each view if custom positional encoding is used
         if self.custom_positional_encoding is not None:

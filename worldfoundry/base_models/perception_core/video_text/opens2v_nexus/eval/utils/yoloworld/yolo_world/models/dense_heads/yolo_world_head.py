@@ -577,11 +577,11 @@ class YOLOWorldHead(YOLOv8Head):
             _, world_size = get_dist_info()
         else:
             world_size = self.world_size
-        return dict(
-            loss_cls=loss_cls * num_imgs * world_size,
-            loss_bbox=loss_bbox * num_imgs * world_size,
-            loss_dfl=loss_dfl * num_imgs * world_size,
-        )
+        return {
+            "loss_cls": loss_cls * num_imgs * world_size,
+            "loss_bbox": loss_bbox * num_imgs * world_size,
+            "loss_dfl": loss_dfl * num_imgs * world_size,
+        }
 
     def predict_by_feat(
         self,
@@ -684,10 +684,7 @@ class YOLOWorldHead(YOLOv8Head):
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
-            if "pad_param" in img_meta:
-                pad_param = img_meta["pad_param"]
-            else:
-                pad_param = None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
 
             score_thr = cfg.get("score_thr", -1)
             # yolox_style does not require the following operations
@@ -713,7 +710,7 @@ class YOLOWorldHead(YOLOv8Head):
             if cfg.multi_label is False:
                 scores, labels = scores.max(1, keepdim=True)
                 scores, _, keep_idxs, results = filter_scores_and_topk(
-                    scores, score_thr, nms_pre, results=dict(labels=labels[:, 0])
+                    scores, score_thr, nms_pre, results={"labels": labels[:, 0]}
                 )
                 labels = results["labels"]
             else:

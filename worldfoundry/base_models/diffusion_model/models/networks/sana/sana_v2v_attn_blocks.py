@@ -443,10 +443,7 @@ class V2VBiGDNAttention(nn.Module):
             kv_cache[1] = state_z_final.detach().clone()
         num_bwd, den_bwd = None, None
 
-        if self.output_gate is not None:
-            gate_bnhd = self.output_gate(x).reshape(B, N, H, D)
-        else:
-            gate_bnhd = None
+        gate_bnhd = self.output_gate(x).reshape(B, N, H, D) if self.output_gate is not None else None
 
         out = fused_bidi_merge(num_fwd, num_bwd, den_fwd, den_bwd, self.eps, gate=gate_bnhd)
         out = out.reshape(B, N, C).to(x.dtype)

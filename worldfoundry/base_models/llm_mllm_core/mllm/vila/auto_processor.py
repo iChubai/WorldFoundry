@@ -35,14 +35,11 @@ def to_rgb(pil_image: PIL.Image.Image) -> PIL.Image.Image:
 
 
 def fetch_image(ele: dict[str, str | PIL.Image.Image], size_factor=None) -> PIL.Image.Image:
-    if "image" in ele:
-        image = ele["image"]
-    else:
-        image = ele["image_url"]
+    image = ele["image"] if "image" in ele else ele["image_url"]
     image_obj = None
     if isinstance(image, PIL.Image.Image):
         image_obj = image
-    elif image.startswith("http://") or image.startswith("https://"):
+    elif image.startswith(("http://", "https://")):
         response = requests.get(image, stream=True)
         image_obj = PIL.Image.open(BytesIO(response.content))
     elif image.startswith("file://"):
@@ -62,7 +59,7 @@ def fetch_image(ele: dict[str, str | PIL.Image.Image], size_factor=None) -> PIL.
 
 
 def fetch_image_url_or_fpath(url_or_fpath):
-    if url_or_fpath.startswith("http") or url_or_fpath.startswith("https"):
+    if url_or_fpath.startswith(("http", "https")):
         import tempfile
 
         import requests
@@ -361,7 +358,7 @@ class VILAProcessor(ProcessorMixin):
                         media_config[name]["block_sizes"] = [block_sizes]
                 else:
                     images = process_images(media["image"], self.image_processor, self.config).half()
-                media[name] = [image for image in images]
+                media[name] = list(images)
             elif name == "video":
                 media[name] = [
                     process_images(images, self.image_processor, self.config).half() for images in media[name]

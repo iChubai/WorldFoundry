@@ -40,7 +40,7 @@ def get_train_val_datasets(
                 else None
             )
             val_kpt_dataset = iPhoneDatasetKeypointView(train_dataset)
-    elif isinstance(data_cfg, DavisDataConfig) or isinstance(data_cfg, CustomDataConfig):
+    elif isinstance(data_cfg, (DavisDataConfig, CustomDataConfig)):
         train_dataset = CasualDataset(**asdict(data_cfg))
     elif isinstance(data_cfg, NvidiaDataConfig):
         train_dataset = NvidiaDataset(**asdict(data_cfg))

@@ -536,10 +536,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 x_in_for_layer = x_in
 
                 # Prepare position embeddings for current tokens
-                if pos is not None:
-                    pos_current = pos.reshape(B, N, hw, -1).reshape(B, N * hw, -1)
-                else:
-                    pos_current = None
+                pos_current = pos.reshape(B, N, hw, -1).reshape(B, N * hw, -1) if pos is not None else None
 
                 # Check if we have KV cache from history
                 use_kv_cache = history is not None and isinstance(history, dict) and "k" in history
@@ -786,13 +783,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                         "history": swa_history,
                     }
 
-                if ttt_state is None and attn_state is None:
-                    ttt_dict = None
-                else:
-                    ttt_dict = {
-                        "ttt": ttt_state,
-                        "attn": attn_state,
-                    }
+                ttt_dict = None if ttt_state is None and attn_state is None else {"ttt": ttt_state, "attn": attn_state}
                 hidden, pos, ttt_output_info, decode_avg_gate_scale, decode_avg_attn_gate_scale, _decode_gate_scales = (
                     self.decode(
                         hidden_input,
@@ -902,16 +893,16 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                     return None
                 return t if self.training or no_detach else t.detach().cpu()
 
-            pred_dict = dict(
-                points=maybe_detach(points, no_detach=no_detach),
-                local_points=maybe_detach(local_points, no_detach=no_detach),
-                conf=maybe_detach(conf, no_detach=no_detach),
-                camera_poses=maybe_detach(camera_poses, no_detach=no_detach),
-                local_camera_poses=maybe_detach(local_camera_poses, no_detach=no_detach),
-                camera_qvec=maybe_detach(camera_qvec, no_detach=no_detach),
-                local_camera_qvec=maybe_detach(local_camera_qvec, no_detach=no_detach),
-                metric=maybe_detach(metric, no_detach=no_detach),
-            )
+            pred_dict = {
+                "points": maybe_detach(points, no_detach=no_detach),
+                "local_points": maybe_detach(local_points, no_detach=no_detach),
+                "conf": maybe_detach(conf, no_detach=no_detach),
+                "camera_poses": maybe_detach(camera_poses, no_detach=no_detach),
+                "local_camera_poses": maybe_detach(local_camera_poses, no_detach=no_detach),
+                "camera_qvec": maybe_detach(camera_qvec, no_detach=no_detach),
+                "local_camera_qvec": maybe_detach(local_camera_qvec, no_detach=no_detach),
+                "metric": maybe_detach(metric, no_detach=no_detach),
+            }
             all_predictions.append(pred_dict)
 
         # Merge windowed predictions

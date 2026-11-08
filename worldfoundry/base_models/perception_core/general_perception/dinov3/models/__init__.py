@@ -23,28 +23,28 @@ def build_model(args, only_teacher=False, img_size=224, device=None):
         device: The device.
     """
     if "vit" in args.arch:
-        vit_kwargs = dict(
-            img_size=img_size,
-            patch_size=args.patch_size,
-            pos_embed_rope_base=args.pos_embed_rope_base,
-            pos_embed_rope_min_period=args.pos_embed_rope_min_period,
-            pos_embed_rope_max_period=args.pos_embed_rope_max_period,
-            pos_embed_rope_normalize_coords=args.pos_embed_rope_normalize_coords,
-            pos_embed_rope_shift_coords=args.pos_embed_rope_shift_coords,
-            pos_embed_rope_jitter_coords=args.pos_embed_rope_jitter_coords,
-            pos_embed_rope_rescale_coords=args.pos_embed_rope_rescale_coords,
-            qkv_bias=args.qkv_bias,
-            layerscale_init=args.layerscale,
-            norm_layer=args.norm_layer,
-            ffn_layer=args.ffn_layer,
-            ffn_bias=args.ffn_bias,
-            proj_bias=args.proj_bias,
-            n_storage_tokens=args.n_storage_tokens,
-            mask_k_bias=args.mask_k_bias,
-            untie_cls_and_patch_norms=args.untie_cls_and_patch_norms,
-            untie_global_and_local_cls_norm=args.untie_global_and_local_cls_norm,
-            device=device,
-        )
+        vit_kwargs = {
+            "img_size": img_size,
+            "patch_size": args.patch_size,
+            "pos_embed_rope_base": args.pos_embed_rope_base,
+            "pos_embed_rope_min_period": args.pos_embed_rope_min_period,
+            "pos_embed_rope_max_period": args.pos_embed_rope_max_period,
+            "pos_embed_rope_normalize_coords": args.pos_embed_rope_normalize_coords,
+            "pos_embed_rope_shift_coords": args.pos_embed_rope_shift_coords,
+            "pos_embed_rope_jitter_coords": args.pos_embed_rope_jitter_coords,
+            "pos_embed_rope_rescale_coords": args.pos_embed_rope_rescale_coords,
+            "qkv_bias": args.qkv_bias,
+            "layerscale_init": args.layerscale,
+            "norm_layer": args.norm_layer,
+            "ffn_layer": args.ffn_layer,
+            "ffn_bias": args.ffn_bias,
+            "proj_bias": args.proj_bias,
+            "n_storage_tokens": args.n_storage_tokens,
+            "mask_k_bias": args.mask_k_bias,
+            "untie_cls_and_patch_norms": args.untie_cls_and_patch_norms,
+            "untie_global_and_local_cls_norm": args.untie_global_and_local_cls_norm,
+            "device": device,
+        }
         teacher = vits.__dict__[args.arch](**vit_kwargs)
         if only_teacher:
             return teacher, teacher.embed_dim
@@ -55,7 +55,7 @@ def build_model(args, only_teacher=False, img_size=224, device=None):
         embed_dim = student.embed_dim
     elif "convnext" in args.arch:
         convnext_cls = convnext.get_convnext_arch(args.arch)
-        convnext_kwargs = dict(patch_size=args.patch_size)
+        convnext_kwargs = {"patch_size": args.patch_size}
         teacher = convnext_cls(**convnext_kwargs)
         if only_teacher:
             return teacher, teacher.embed_dim

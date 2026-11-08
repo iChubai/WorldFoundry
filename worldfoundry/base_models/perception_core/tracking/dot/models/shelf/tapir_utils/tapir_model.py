@@ -202,14 +202,14 @@ class TAPIR(nn.Module):
         )
 
         p = self.num_pips_iter
-        out = dict(
-            occlusion=torch.mean(torch.stack(trajectories["occlusion"][p::p]), dim=0),
-            tracks=torch.mean(torch.stack(trajectories["tracks"][p::p]), dim=0),
-            expected_dist=torch.mean(torch.stack(trajectories["expected_dist"][p::p]), dim=0),
-            unrefined_occlusion=trajectories["occlusion"][:-1],
-            unrefined_tracks=trajectories["tracks"][:-1],
-            unrefined_expected_dist=trajectories["expected_dist"][:-1],
-        )
+        out = {
+            "occlusion": torch.mean(torch.stack(trajectories["occlusion"][p::p]), dim=0),
+            "tracks": torch.mean(torch.stack(trajectories["tracks"][p::p]), dim=0),
+            "expected_dist": torch.mean(torch.stack(trajectories["expected_dist"][p::p]), dim=0),
+            "unrefined_occlusion": trajectories["occlusion"][:-1],
+            "unrefined_tracks": trajectories["tracks"][:-1],
+            "unrefined_expected_dist": trajectories["expected_dist"][:-1],
+        }
 
         return out
 
@@ -517,11 +517,11 @@ class TAPIR(nn.Module):
             points.append(torch.cat(pts_iters[i], dim=1)[:, inv_perm])
             expd.append(torch.cat(expd_iters[i], dim=1)[:, inv_perm])
 
-        out = dict(
-            occlusion=occlusion,
-            tracks=points,
-            expected_dist=expd,
-        )
+        out = {
+            "occlusion": occlusion,
+            "tracks": points,
+            "expected_dist": expd,
+        }
         return out
 
     def refine_pips(

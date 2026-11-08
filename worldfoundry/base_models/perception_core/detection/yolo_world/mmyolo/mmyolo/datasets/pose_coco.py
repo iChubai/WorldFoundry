@@ -13,7 +13,7 @@ from ..registry import DATASETS
 
 @DATASETS.register_module()
 class PoseCocoDataset(MMPoseCocoDataset):
-    METAINFO: dict = dict(from_file="configs/_base_/pose/coco.py")
+    METAINFO: dict = {"from_file": "configs/_base_/pose/coco.py"}
 
     def __init__(self, *args, **kwargs):
         if MMPoseCocoDataset is object:

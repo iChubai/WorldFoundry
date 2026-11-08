@@ -34,7 +34,7 @@ def normalize_coords(coords, h, w):
 
 class quater_upsampler(nn.Module):
     def __init__(self):
-        super(quater_upsampler, self).__init__()
+        super().__init__()
 
         hidden_dim = 64
 

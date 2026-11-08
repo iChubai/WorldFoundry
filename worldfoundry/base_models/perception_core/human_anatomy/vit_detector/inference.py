@@ -37,9 +37,9 @@ class Detector:
         self.test_pipeline = Compose(self.model_human.cfg.test_dataloader.dataset.pipeline)
 
     def inference_detector(self, model, image, texts, test_pipeline, score_thr=0.3):
-        data_info = dict(img_id=0, img=image, texts=texts)
+        data_info = {"img_id": 0, "img": image, "texts": texts}
         data_info = test_pipeline(data_info)
-        data_batch = dict(inputs=data_info["inputs"].unsqueeze(0), data_samples=[data_info["data_samples"]])
+        data_batch = {"inputs": data_info["inputs"].unsqueeze(0), "data_samples": [data_info["data_samples"]]}
 
         with torch.no_grad():
             output = model.test_step(data_batch)[0]
@@ -276,10 +276,9 @@ class Analyzer:
             is_abnormal = False
             for cat, cat_scores in scores.items():
                 for score, _ in cat_scores:
-                    if cat in self.class_threshold:
-                        if score[0] > self.class_threshold[cat]:
-                            is_abnormal = True
-                            break
+                    if cat in self.class_threshold and score[0] > self.class_threshold[cat]:
+                        is_abnormal = True
+                        break
                 if is_abnormal:
                     break
 

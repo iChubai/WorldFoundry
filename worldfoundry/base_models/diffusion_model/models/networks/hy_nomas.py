@@ -17,6 +17,7 @@ from torch.nn import functional as F
 
 from worldfoundry.core.attention import attention_forward
 from worldfoundry.core.nn import ConditioningProjection, DiTModulation, RMSNorm, TransformerMLP
+import itertools
 
 
 def _attention(
@@ -312,7 +313,7 @@ class HyNomasAttnProcessor:
                     groups.extend(
                         (
                             (video_length + min(start, text_length), video_length + min(end, text_length), index)
-                            for index, (start, end) in enumerate(zip(offsets[:-1], offsets[1:], strict=False))
+                            for index, (start, end) in enumerate(itertools.pairwise(offsets))
                         )
                     )
                 for start, end, action_index in groups:

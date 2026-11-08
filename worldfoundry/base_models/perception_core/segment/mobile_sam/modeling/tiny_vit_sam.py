@@ -281,10 +281,7 @@ class ConvLayer(nn.Module):
             x: The x.
         """
         for blk in self.blocks:
-            if self.use_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
-            else:
-                x = blk(x)
+            x = checkpoint.checkpoint(blk, x) if self.use_checkpoint else blk(x)
         if self.downsample is not None:
             x = self.downsample(x)
         return x
@@ -632,10 +629,7 @@ class BasicLayer(nn.Module):
             x: The x.
         """
         for blk in self.blocks:
-            if self.use_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
-            else:
-                x = blk(x)
+            x = checkpoint.checkpoint(blk, x) if self.use_checkpoint else blk(x)
         if self.downsample is not None:
             x = self.downsample(x)
         return x
@@ -709,21 +703,21 @@ class TinyViT(nn.Module):
         # build layers
         self.layers = nn.ModuleList()
         for i_layer in range(self.num_layers):
-            kwargs = dict(
-                dim=embed_dims[i_layer],
-                input_resolution=(
+            kwargs = {
+                "dim": embed_dims[i_layer],
+                "input_resolution": (
                     patches_resolution[0] // (2 ** (i_layer - 1 if i_layer == 3 else i_layer)),
                     patches_resolution[1] // (2 ** (i_layer - 1 if i_layer == 3 else i_layer)),
                 ),
                 #   input_resolution=(patches_resolution[0] // (2 ** i_layer),
                 #                     patches_resolution[1] // (2 ** i_layer)),
-                depth=depths[i_layer],
-                drop_path=dpr[sum(depths[:i_layer]) : sum(depths[: i_layer + 1])],
-                downsample=PatchMerging if (i_layer < self.num_layers - 1) else None,
-                use_checkpoint=use_checkpoint,
-                out_dim=embed_dims[min(i_layer + 1, len(embed_dims) - 1)],
-                activation=activation,
-            )
+                "depth": depths[i_layer],
+                "drop_path": dpr[sum(depths[:i_layer]) : sum(depths[: i_layer + 1])],
+                "downsample": PatchMerging if (i_layer < self.num_layers - 1) else None,
+                "use_checkpoint": use_checkpoint,
+                "out_dim": embed_dims[min(i_layer + 1, len(embed_dims) - 1)],
+                "activation": activation,
+            }
             if i_layer == 0:
                 layer = ConvLayer(
                     conv_expand_ratio=mbconv_expand_ratio,

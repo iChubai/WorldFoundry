@@ -62,15 +62,9 @@ class DatasetSyntax:
         """
         if s is None or len(s) == 0:
             return None, None
-        if split_mode == "left":
-            part = s.split(sep, 1)
-        else:
-            part = s.rsplit(sep, 1)
+        part = s.split(sep, 1) if split_mode == "left" else s.rsplit(sep, 1)
         if len(part) == 1:
-            if use_0:
-                part = part[0], None
-            else:
-                part = None, part[0]
+            part = (part[0], None) if use_0 else (None, part[0])
         else:
             assert len(part) == 2
         return part
@@ -530,7 +524,7 @@ def load_dataset(
     }
     use_hf_default = use_hf
     if use_hf_default is None:
-        use_hf_default = True if use_hf_hub() else False
+        use_hf_default = bool(use_hf_hub())
     for dataset in datasets:
         dataset_syntax = DatasetSyntax.parse(dataset)
         use_hf = dataset_syntax.use_hf or use_hf_default

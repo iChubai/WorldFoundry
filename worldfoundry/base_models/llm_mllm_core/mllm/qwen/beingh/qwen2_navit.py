@@ -1575,7 +1575,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
     def init_expert(self, expert_path):
         """initialize parameters of action expert using the pretrained llm ckpt"""
         safetensor_files = glob.glob(f"{expert_path}/*.safetensors")
-        expert_state_dict = dict()
+        expert_state_dict = {}
         for file_path in safetensor_files:
             with safe_open(file_path, framework="pt", device="cpu") as f:
                 for key in f.keys():

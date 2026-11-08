@@ -303,7 +303,7 @@ class ResidualBlock(nn.Module):
             norm_fn: The norm fn.
             stride: The stride.
         """
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
@@ -369,7 +369,7 @@ class BottleneckBlock(nn.Module):
             norm_fn: The norm fn.
             stride: The stride.
         """
-        super(BottleneckBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
         self.conv2 = nn.Conv2d(planes // 4, planes // 4, kernel_size=3, padding=1, stride=stride)
@@ -444,7 +444,7 @@ class BasicEncoder(nn.Module):
             dropout: The dropout.
             multidim: The multidim.
         """
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
         self.multidim = multidim
 
@@ -546,7 +546,7 @@ class ConvGRU(nn.Module):
             h_planes: The h planes.
             i_planes: The i planes.
         """
-        super(ConvGRU, self).__init__()
+        super().__init__()
         self.do_checkpoint = False
         self.convz = nn.Conv2d(h_planes + i_planes, h_planes, 3, padding=1)
         self.convr = nn.Conv2d(h_planes + i_planes, h_planes, 3, padding=1)
@@ -584,7 +584,7 @@ class GraphAgg(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(GraphAgg, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(128, 128, 3, padding=1)
         self.conv2 = nn.Conv2d(128, 128, 3, padding=1)
         self.relu = nn.ReLU(inplace=True)
@@ -622,7 +622,7 @@ class UpdateModule(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(UpdateModule, self).__init__()
+        super().__init__()
         cor_planes = 4 * (2 * 3 + 1) ** 2
 
         self.corr_encoder = nn.Sequential(
@@ -695,7 +695,7 @@ class DroidNet(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(DroidNet, self).__init__()
+        super().__init__()
         self.fnet = BasicEncoder(output_dim=128, norm_fn="instance")
         self.cnet = BasicEncoder(output_dim=256, norm_fn="none")
         self.update = UpdateModule()

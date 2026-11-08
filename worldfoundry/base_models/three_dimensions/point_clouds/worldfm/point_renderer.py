@@ -135,10 +135,7 @@ class TorchPointCloudRenderer:
             xyz = parts_xyz[0] if len(parts_xyz) == 1 else torch.cat(parts_xyz)
             rgb0 = parts_rgb[0] if len(parts_rgb) == 1 else torch.cat(parts_rgb)
 
-        if xyz.dtype == torch.float16 and R.dtype != torch.float16:
-            X = (xyz @ R.half().T) + t.half()
-        else:
-            X = (xyz @ R.T) + t
+        X = xyz @ R.half().T + t.half() if xyz.dtype == torch.float16 and R.dtype != torch.float16 else xyz @ R.T + t
         z = X[:, 2]
         valid = (z > self.near) & (z < self.far) & torch.isfinite(z)
         X, z, rgb_v = X[valid], z[valid], rgb0[valid]

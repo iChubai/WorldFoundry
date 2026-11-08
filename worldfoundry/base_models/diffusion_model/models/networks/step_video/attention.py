@@ -36,7 +36,7 @@ class Attention(nn.Module):
             n_heads = q.shape[2]
             attn_mask = attn_mask.unsqueeze(1).repeat(1, n_heads, 1, 1)
 
-        q, k, v = map(lambda x: rearrange(x, "b s h d -> b h s d"), (q, k, v))
+        q, k, v = (rearrange(x, "b s h d -> b h s d") for x in (q, k, v))
         x = _worldfoundry_scaled_dot_product_attention(
             q, k, v, attn_mask=attn_mask, dropout_p=drop_rate, is_causal=causal
         )

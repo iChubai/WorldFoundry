@@ -43,7 +43,7 @@ class BaseTrackerPredictor(nn.Module):
             max_scale: The max scale.
             predict_conf: The predict conf.
         """
-        super(BaseTrackerPredictor, self).__init__()
+        super().__init__()
         """
         The base template to create a track predictor
         

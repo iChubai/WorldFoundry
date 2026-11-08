@@ -234,23 +234,23 @@ class ResidentBranches:
                     self._apply(sign)
                 self.graphs[sign] = graph
             torch.cuda.synchronize()
-        self.report = dict(
-            shared_dense_bytes=shared_bytes,
-            delta_bytes=sum(p.encoded_bytes for p in self.plans),
-            base_parameter_tensors=len(self.plans),
-            independent_parameter_tensors=len(independent),
-            format_counts={
+        self.report = {
+            "shared_dense_bytes": shared_bytes,
+            "delta_bytes": sum(p.encoded_bytes for p in self.plans),
+            "base_parameter_tensors": len(self.plans),
+            "independent_parameter_tensors": len(independent),
+            "format_counts": {
                 mode: sum(p.mode == mode for p in self.plans) for mode in ["shared", "dense", "sparse", "bitmap"]
             },
-            gpu_allocated_before=before,
-            gpu_allocated_after=torch.cuda.memory_allocated(),
-            gpu_reserved_after=torch.cuda.memory_reserved(),
-            setup_seconds=time.perf_counter() - start,
-            gpu_only_switch=True,
-            lossless_bf16_bit_patterns=True,
-            cuda_graph=use_graph,
-            all_reconstructed_base_tensors_bitwise_verified=True,
-        )
+            "gpu_allocated_before": before,
+            "gpu_allocated_after": torch.cuda.memory_allocated(),
+            "gpu_reserved_after": torch.cuda.memory_reserved(),
+            "setup_seconds": time.perf_counter() - start,
+            "gpu_only_switch": True,
+            "lossless_bf16_bit_patterns": True,
+            "cuda_graph": use_graph,
+            "all_reconstructed_base_tensors_bitwise_verified": True,
+        }
         logger.info("Prepared resident branches in %.1fs", self.report["setup_seconds"])
 
     def _apply(self, sign):

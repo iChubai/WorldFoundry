@@ -29,6 +29,7 @@ from ..contracts import (
 from ..extensions import DiffusionRunContext
 from ..models.networks.sana.chunking import chunk_index_from_chunk_size
 from .base import NativeDiffusionRunner
+import itertools
 
 
 @dataclass(frozen=True, slots=True)
@@ -428,7 +429,7 @@ class PrefixRecomputeRunner(NativeDiffusionRunner):
             stage1_state = initial_noise.clone()
             refined_state = initial_noise.clone()
             anchor = initial_noise[:, :, : self.sink_frames].clone()
-            for _chunk_number, (start, end) in enumerate(zip(boundaries, boundaries[1:], strict=False)):
+            for _chunk_number, (start, end) in enumerate(itertools.pairwise(boundaries)):
                 absolute_active_start = self.sink_frames if start == 0 else start
                 window = prefix_recompute_window(
                     start=start,

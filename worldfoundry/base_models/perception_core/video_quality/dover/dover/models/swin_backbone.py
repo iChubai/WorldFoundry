@@ -447,10 +447,7 @@ class SwinTransformerBlock3D(nn.Module):
                 x = self.forward_part1(x, mask_matrix, resized_window_size)
             x = shortcut + self.drop_path(x)
 
-        if self.use_checkpoint:
-            x = x + checkpoint.checkpoint(self.forward_part2, x)
-        else:
-            x = x + self.forward_part2(x)
+        x = x + checkpoint.checkpoint(self.forward_part2, x) if self.use_checkpoint else x + self.forward_part2(x)
 
         return x
 
@@ -902,10 +899,9 @@ class SwinTransformer3D(nn.Module):
 
         ## Clean Mismatched Keys
         for key, value in model_state_dict.items():
-            if key in clean_dict:
-                if value.shape != clean_dict[key].shape:
-                    print(key)
-                    clean_dict.pop(key)
+            if key in clean_dict and value.shape != clean_dict[key].shape:
+                print(key)
+                clean_dict.pop(key)
 
         self.load_state_dict(clean_dict, strict=strict)
 
@@ -979,7 +975,7 @@ class SwinTransformer3D(nn.Module):
 
     def train(self, mode=True):
         """Convert the model into training mode while keep layers freezed."""
-        super(SwinTransformer3D, self).train(mode)
+        super().train(mode)
         self._freeze_stages()
 
 

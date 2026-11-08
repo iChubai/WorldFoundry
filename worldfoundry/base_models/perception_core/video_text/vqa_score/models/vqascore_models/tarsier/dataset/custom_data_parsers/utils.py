@@ -287,10 +287,7 @@ def sample_video(
     do_frame_disturb = video_sampling_strategy.get('do_frame_disturb', False)
 
     if isinstance(video_path, str):
-        if video_path.endswith('.gif'):
-            reader = GIFReader(video_path)
-        else:
-            reader = VideoReader(video_path)
+        reader = GIFReader(video_path) if video_path.endswith('.gif') else VideoReader(video_path)
     else:
         reader = ImageSeqReader(video_path)
     

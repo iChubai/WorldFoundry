@@ -205,7 +205,7 @@ class TemporalCrossAttention(nn.Module):
         v = self.to_v(context)
         # print(f'q ={q.shape},k={k.shape}')
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=nh), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=nh) for t in (q, k, v))
         sim = einsum("b i d, b j d -> b i j", q, k) * self.scale
 
         if self.use_relative_position:
@@ -323,13 +323,11 @@ class CrossAttention(nn.Module):
         v = self.to_v(context)
         if self.sa_shared_kv:
             if self.shared_type == "only_first":
-                k, v = map(
-                    lambda xx: rearrange(xx[0].unsqueeze(0), "b n c -> (b n) c").unsqueeze(0).repeat(b, 1, 1), (k, v)
-                )
+                k, v = (rearrange(xx[0].unsqueeze(0), "b n c -> (b n) c").unsqueeze(0).repeat(b, 1, 1) for xx in (k, v))
             else:
                 raise NotImplementedError
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=h) for t in (q, k, v))
 
         sim = einsum("b i d, b j d -> b i j", q, k) * self.scale
 
@@ -354,13 +352,13 @@ class CrossAttention(nn.Module):
         v = self.to_v(context)
 
         b, _, _ = q.shape
-        q, k, v = map(
-            lambda t: t.unsqueeze(3)
+        q, k, v = (
+            t.unsqueeze(3)
             .reshape(b, t.shape[1], self.heads, self.dim_head)
             .permute(0, 2, 1, 3)
             .reshape(b * self.heads, t.shape[1], self.dim_head)
-            .contiguous(),
-            (q, k, v),
+            .contiguous()
+            for t in (q, k, v)
         )
         # actually compute the attention, what we cannot get enough of
         out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=None)
@@ -504,10 +502,7 @@ class BasicTransformerBlockST(nn.Module):
             return checkpoint(self._forward_nocontext, (x), self.parameters(), self.checkpoint)
         else:
             # cross-attention models
-            if no_temporal_attn:
-                forward_func = self._forward_no_temporal_attn
-            else:
-                forward_func = self._forward
+            forward_func = self._forward_no_temporal_attn if no_temporal_attn else self._forward
             inputs = (x, context, temporal_context) if temporal_context is not None else (x, context)
             return checkpoint(forward_func, inputs, self.parameters(), self.checkpoint)
             # if attn_mask is not None:
@@ -976,10 +971,7 @@ class STAttentionBlock2(nn.Module):
 
         # spatial
         out = rearrange(x, "b c t h w -> (b t) c (h w)")
-        if self.attn_norm_type == "no_norm":
-            qkv = self.qkv_s(out)
-        else:
-            qkv = self.qkv_s(self.norm_s(out))
+        qkv = self.qkv_s(out) if self.attn_norm_type == "no_norm" else self.qkv_s(self.norm_s(out))
         out = self.attention_s(qkv)
         out = self.proj_out_s(out)
         out = rearrange(out, "(b t) c (h w) -> b c t h w", b=b, h=h)
@@ -987,10 +979,7 @@ class STAttentionBlock2(nn.Module):
 
         # temporal
         out = rearrange(x, "b c t h w -> (b h w) c t")
-        if self.attn_norm_type == "no_norm":
-            qkv = self.qkv_t(out)
-        else:
-            qkv = self.qkv_t(self.norm_t(out))
+        qkv = self.qkv_t(out) if self.attn_norm_type == "no_norm" else self.qkv_t(self.norm_t(out))
 
         # relative positional embedding
         if self.use_relative_position:

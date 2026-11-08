@@ -114,8 +114,11 @@ def read_obj(
     usemtl = {}
     usemtl_names, usemtl_offsets = [], []
 
-    int_ = lambda x: int(x) if x != "" else 0
-    pad = lambda l, n, x=0: l + [x] * (n - len(l))
+    def int_(x):
+        return int(x) if x != "" else 0
+
+    def pad(l, n, x=0):
+        return l + [x] * (n - len(l))
 
     # Read the lines
     for i, line in enumerate(lines):
@@ -177,10 +180,7 @@ def read_obj(
     else:
         vt = None
 
-    if len(vn) > 0:
-        vn = np.array(vn, dtype=np.float32)
-    else:
-        vn = None
+    vn = np.array(vn, dtype=np.float32) if len(vn) > 0 else None
 
     # Process face data
     if len(f) > 0:
@@ -326,10 +326,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
         obj: The obj.
         encoding: The encoding.
     """
-    if isinstance(file, (str, Path, os.PathLike)):
-        fp = Path(file).open("w", encoding=encoding)
-    else:
-        fp = file
+    fp = Path(file).open("w", encoding=encoding) if isinstance(file, (str, Path, os.PathLike)) else file
 
     with fp:
         # Write mtllib

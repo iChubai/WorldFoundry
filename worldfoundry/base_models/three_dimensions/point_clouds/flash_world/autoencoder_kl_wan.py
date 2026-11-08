@@ -28,6 +28,7 @@ from diffusers.utils import logging
 from diffusers.utils.accelerate_utils import apply_forward_hook
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+import itertools
 
 # Import base components from the canonical Wan autoencoder role.
 try:
@@ -473,47 +474,42 @@ class WanResample(nn.Module):
             feat_idx: The feat idx.
         """
         b, c, t, h, w = x.size()
-        if self.mode == "upsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = "Rep"
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -CACHE_T:, :, :].clone()
-                    if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
-                        # cache last frame of last two chunk
-                        cache_x = torch.cat(
-                            [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
-                        )
-                    if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
-                        cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
-                    if feat_cache[idx] == "Rep":
-                        x = self.time_conv(x)
-                    else:
-                        x = self.time_conv(x, feat_cache[idx])
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "upsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = "Rep"
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -CACHE_T:, :, :].clone()
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
+                    # cache last frame of last two chunk
+                    cache_x = torch.cat(
+                        [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
+                    )
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
+                    cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
+                x = self.time_conv(x) if feat_cache[idx] == "Rep" else self.time_conv(x, feat_cache[idx])
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
 
-                    x = x.reshape(b, 2, c, t, h, w)
-                    x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
-                    x = x.reshape(b, c, t * 2, h, w)
+                x = x.reshape(b, 2, c, t, h, w)
+                x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
+                x = x.reshape(b, c, t * 2, h, w)
         t = x.shape[2]
         x = x.permute(0, 2, 1, 3, 4).reshape(b * t, c, h, w)
         x = self.resample(x)
         x = x.view(b, t, x.size(1), x.size(2), x.size(3)).permute(0, 2, 1, 3, 4)
 
-        if self.mode == "downsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = x.clone()
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -1:, :, :].clone()
-                    x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "downsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = x.clone()
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -1:, :, :].clone()
+                x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
         return x
 
 
@@ -833,7 +829,7 @@ class WanEncoder3d(nn.Module):
 
         # downsample blocks
         self.down_blocks = nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if is_residual:
                 self.down_blocks.append(
@@ -891,10 +887,7 @@ class WanEncoder3d(nn.Module):
 
         ## downsamples
         for layer in self.down_blocks:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## middle
         x = self.mid_block(x, feat_cache, feat_idx)
@@ -998,16 +991,10 @@ class WanResidualUpBlock(nn.Module):
         x_copy = x.clone()
 
         for resnet in self.resnets:
-            if feat_cache is not None:
-                x = resnet(x, feat_cache, feat_idx)
-            else:
-                x = resnet(x)
+            x = resnet(x, feat_cache, feat_idx) if feat_cache is not None else resnet(x)
 
         if self.upsampler is not None:
-            if feat_cache is not None:
-                x = self.upsampler(x, feat_cache, feat_idx)
-            else:
-                x = self.upsampler(x)
+            x = self.upsampler(x, feat_cache, feat_idx) if feat_cache is not None else self.upsampler(x)
 
         if self.avg_shortcut is not None:
             # print(x.shape, x_copy.shape, self.avg_shortcut(x_copy, first_chunk=first_chunk).shape)
@@ -1082,16 +1069,10 @@ class WanUpBlock(nn.Module):
             torch.Tensor: Output tensor
         """
         for resnet in self.resnets:
-            if feat_cache is not None:
-                x = resnet(x, feat_cache, feat_idx)
-            else:
-                x = resnet(x)
+            x = resnet(x, feat_cache, feat_idx) if feat_cache is not None else resnet(x)
 
         if self.upsamplers is not None:
-            if feat_cache is not None:
-                x = self.upsamplers[0](x, feat_cache, feat_idx)
-            else:
-                x = self.upsamplers[0](x)
+            x = self.upsamplers[0](x, feat_cache, feat_idx) if feat_cache is not None else self.upsamplers[0](x)
         return x
 
 
@@ -1158,7 +1139,7 @@ class WanDecoder3d(nn.Module):
 
         # upsample blocks
         self.up_blocks = nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:], strict=False)):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if i > 0 and not is_residual:
                 # wan vae 2.1
@@ -1816,9 +1797,6 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         """
         x = sample
         posterior = self.encode(x).latent_dist
-        if sample_posterior:
-            z = posterior.sample(generator=generator)
-        else:
-            z = posterior.mode()
+        z = posterior.sample(generator=generator) if sample_posterior else posterior.mode()
         dec = self.decode(z, return_dict=return_dict)
         return dec

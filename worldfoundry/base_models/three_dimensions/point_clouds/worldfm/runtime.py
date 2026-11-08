@@ -106,10 +106,7 @@ def _to_rgb_pil_image(data: Any) -> Image.Image:
     if isinstance(data, (str, os.PathLike)):
         return Image.open(data).convert("RGB")
 
-    if isinstance(data, torch.Tensor):
-        array = data.detach().cpu().numpy()
-    else:
-        array = np.asarray(data)
+    array = data.detach().cpu().numpy() if isinstance(data, torch.Tensor) else np.asarray(data)
 
     if array.ndim == 4:
         array = array[0]
@@ -118,12 +115,8 @@ def _to_rgb_pil_image(data: Any) -> Image.Image:
     if array.shape[0] in (1, 3):
         array = np.transpose(array, (1, 2, 0))
     if array.dtype != np.uint8:
-        if np.issubdtype(array.dtype, np.floating):
-            if array.min() >= -1.0 and array.max() <= 1.0:
-                if array.min() < 0.0:
-                    array = (array + 1.0) * 127.5
-                else:
-                    array = array * 255.0
+        if np.issubdtype(array.dtype, np.floating) and array.min() >= -1.0 and array.max() <= 1.0:
+            array = (array + 1.0) * 127.5 if array.min() < 0.0 else array * 255.0
         array = np.clip(array, 0.0, 255.0).astype(np.uint8)
     if array.shape[-1] == 1:
         array = np.repeat(array, 3, axis=-1)

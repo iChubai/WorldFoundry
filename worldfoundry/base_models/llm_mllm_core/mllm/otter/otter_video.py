@@ -111,10 +111,7 @@ class OtterVideo(BaseModel):
 
         object_description = input_data["object_description"]
 
-        if object_description != "None":
-            context = f"Given context:{object_description}. "
-        else:
-            context = ""
+        context = f"Given context:{object_description}. " if object_description != "None" else ""
         prompts_input = context + input_data["question"]
 
         response = self.get_response(

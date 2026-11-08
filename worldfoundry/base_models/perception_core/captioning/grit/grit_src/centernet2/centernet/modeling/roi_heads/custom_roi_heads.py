@@ -48,7 +48,9 @@ class CustomROIHeads(StandardROIHeads):
             if self.debug:
                 from ..debug import debug_second_stage
 
-                denormalizer = lambda x: x * self.pixel_std + self.pixel_mean
+                def denormalizer(x):
+                    return x * self.pixel_std + self.pixel_mean
+
                 debug_second_stage(
                     [denormalizer(images[0].clone())],
                     pred_instances,
@@ -159,7 +161,9 @@ class CustomCascadeROIHeads(CascadeROIHeads):
             if self.debug:
                 from ..debug import debug_second_stage
 
-                denormalizer = lambda x: x * self.pixel_std + self.pixel_mean
+                def denormalizer(x):
+                    return x * self.pixel_std + self.pixel_mean
+
                 debug_second_stage(
                     [denormalizer(x.clone()) for x in images],
                     pred_instances,

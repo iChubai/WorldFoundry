@@ -116,7 +116,9 @@ def to_device(data, device):
 
 
 def get_alpha_consistency(bflow, fflow, thresh_1=0.01, thresh_2=0.5, thresh_mul=1):
-    norm = lambda x: x.pow(2).sum(dim=-1).sqrt()
+    def norm(x):
+        return x.pow(2).sum(dim=-1).sqrt()
+
     B, H, W, C = bflow.shape
 
     mag = norm(fflow) + norm(bflow)

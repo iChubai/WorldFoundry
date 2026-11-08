@@ -8,8 +8,12 @@ deepen_factor = 0.33
 widen_factor = 0.375
 
 # ============================== Unmodified in most cases ===================
-model = dict(
-    backbone=dict(deepen_factor=deepen_factor, widen_factor=widen_factor),
-    neck=dict(deepen_factor=deepen_factor, widen_factor=widen_factor),
-    bbox_head=dict(type="YOLOv6Head", head_module=dict(widen_factor=widen_factor), loss_bbox=dict(iou_mode="siou")),
-)
+model = {
+    "backbone": {"deepen_factor": deepen_factor, "widen_factor": widen_factor},
+    "neck": {"deepen_factor": deepen_factor, "widen_factor": widen_factor},
+    "bbox_head": {
+        "type": "YOLOv6Head",
+        "head_module": {"widen_factor": widen_factor},
+        "loss_bbox": {"iou_mode": "siou"},
+    },
+}

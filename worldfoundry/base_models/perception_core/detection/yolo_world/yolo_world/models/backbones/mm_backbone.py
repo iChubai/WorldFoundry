@@ -157,10 +157,7 @@ class PseudoLanguageBackbone(BaseModule):
         num_per_batch = [len(t) for t in text]
         assert max(num_per_batch) == min(num_per_batch), "number of sequences not equal in batch"
         text = list(itertools.chain(*text))
-        if self.training:
-            text_embed_dict = self.text_embed
-        else:
-            text_embed_dict = self.test_embed
+        text_embed_dict = self.text_embed if self.training else self.test_embed
         text_embeds = torch.stack([text_embed_dict[x.split("/")[0]] for x in text])
         # requires no grad and force to float
         text_embeds = text_embeds.to(self.buff.device).requires_grad_(False).float()

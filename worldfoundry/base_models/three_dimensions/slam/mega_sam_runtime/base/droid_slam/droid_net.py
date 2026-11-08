@@ -41,7 +41,7 @@ def upsample_disp(disp, mask):
 
 class GraphAgg(nn.Module):
     def __init__(self):
-        super(GraphAgg, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(128, 128, 3, padding=1)
         self.conv2 = nn.Conv2d(128, 128, 3, padding=1)
         self.relu = nn.ReLU(inplace=True)
@@ -106,7 +106,7 @@ class LayerNorm(nn.Module):
 
 class GraphAggMotion(nn.Module):  # OLD VERSION
     def __init__(self):
-        super(GraphAggMotion, self).__init__()
+        super().__init__()
         self.dim = 128
         self.conv0 = nn.Conv2d(256 + 2, self.dim, 3, padding=1)
         self.conv1 = nn.Conv2d(self.dim, self.dim, 3, padding=1)
@@ -204,7 +204,7 @@ class GraphAggMotion(nn.Module):  # OLD VERSION
 
 class UpdateModule(nn.Module):
     def __init__(self):
-        super(UpdateModule, self).__init__()
+        super().__init__()
         cor_planes = 4 * (2 * 3 + 1) ** 2
 
         self.corr_encoder = nn.Sequential(
@@ -293,7 +293,7 @@ class UpdateModule(nn.Module):
 
 class DroidNet(nn.Module):
     def __init__(self):
-        super(DroidNet, self).__init__()
+        super().__init__()
         self.fnet = BasicEncoder(output_dim=128, norm_fn="instance")
         self.cnet = BasicEncoder(output_dim=256, norm_fn="none")
         self.update = UpdateModule()

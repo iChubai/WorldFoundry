@@ -38,7 +38,7 @@ from .multimodal_resampler.builder import build_vision_resampler
 
 class LlavaMetaModel:
     def __init__(self, config):
-        super(LlavaMetaModel, self).__init__(config)
+        super().__init__(config)
 
         if hasattr(config, "mm_vision_tower"):
             delay_load = getattr(config, "delay_load", False)
@@ -97,10 +97,9 @@ class LlavaMetaModel:
         self.config.mm_vision_select_feature = mm_vision_select_feature
         self.config.mm_patch_merge_type = mm_patch_merge_type
 
-        if not hasattr(self.config, "add_faster_video"):
-            if model_args.add_faster_video:
-                embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
-                self.faster_token = nn.Parameter(torch.randn(self.config.hidden_size, dtype=self.dtype) * embed_std)
+        if not hasattr(self.config, "add_faster_video") and model_args.add_faster_video:
+            embed_std = 1 / torch.sqrt(torch.tensor(self.config.hidden_size, dtype=self.dtype))
+            self.faster_token = nn.Parameter(torch.randn(self.config.hidden_size, dtype=self.dtype) * embed_std)
 
         if getattr(self, "mm_projector", None) is None:
             self.mm_projector = build_vision_projector(self.config, vision_cfg=vision_tower.config)
@@ -303,7 +302,7 @@ class LlavaMetaForCausalLM(ABC):
                 else:
                     images_list.append(image.unsqueeze(0))
 
-            concat_images = torch.cat([image for image in images_list], dim=0)
+            concat_images = torch.cat(list(images_list), dim=0)
             split_sizes = [image.shape[0] for image in images_list]
             encoded_image_features = self.encode_images(concat_images)
             # image_features,all_faster_video_features = self.encode_multimodals(concat_images, video_idx_in_batch, split_sizes)
@@ -646,15 +645,9 @@ class LlavaMetaForCausalLM(ABC):
         new_input_embeds = torch.stack(new_input_embeds_padded, dim=0)
         # rank0_print("tokenizer padding")
 
-        if _labels is None:
-            new_labels = None
-        else:
-            new_labels = new_labels_padded
+        new_labels = None if _labels is None else new_labels_padded
 
-        if _attention_mask is None:
-            attention_mask = None
-        else:
-            attention_mask = attention_mask.to(dtype=_attention_mask.dtype)
+        attention_mask = None if _attention_mask is None else attention_mask.to(dtype=_attention_mask.dtype)
 
         if _position_ids is None:
             position_ids = None

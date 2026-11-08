@@ -81,8 +81,8 @@ class RTMDetRotatedSepBNHeadModule(RTMDetSepBNHeadModule):
         pred_kernel_size: int = 1,
         angle_out_dim: int = 1,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = dict(type="BN"),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN"},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         init_cfg: OptMultiConfig = None,
     ):
         self.angle_out_dim = angle_out_dim
@@ -261,13 +261,13 @@ class RTMDetRotatedHead(RTMDetHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(type="mmdet.MlvlPointGenerator", strides=[8, 16, 32], offset=0),
-        bbox_coder: ConfigType = dict(type="DistanceAnglePointCoder"),
-        loss_cls: ConfigType = dict(type="mmdet.QualityFocalLoss", use_sigmoid=True, beta=2.0, loss_weight=1.0),
-        loss_bbox: ConfigType = dict(type="mmrotate.RotatedIoULoss", mode="linear", loss_weight=2.0),
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "strides": [8, 16, 32], "offset": 0},
+        bbox_coder: ConfigType = {"type": "DistanceAnglePointCoder"},
+        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},
+        loss_bbox: ConfigType = {"type": "mmrotate.RotatedIoULoss", "mode": "linear", "loss_weight": 2.0},
         angle_version: str = "le90",
         use_hbbox_loss: bool = False,
-        angle_coder: ConfigType = dict(type="mmrotate.PseudoAngleCoder"),
+        angle_coder: ConfigType = {"type": "mmrotate.PseudoAngleCoder"},
         loss_angle: OptConfigType = None,
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
@@ -421,10 +421,7 @@ class RTMDetRotatedHead(RTMDetHead):
             flatten_decoded_bboxes, flatten_cls_scores, flatten_objectness, batch_img_metas, strict=False
         ):
             scale_factor = img_meta["scale_factor"]
-            if "pad_param" in img_meta:
-                pad_param = img_meta["pad_param"]
-            else:
-                pad_param = None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
 
             score_thr = cfg.get("score_thr", -1)
             # yolox_style does not require the following operations
@@ -450,7 +447,7 @@ class RTMDetRotatedHead(RTMDetHead):
             if cfg.multi_label is False:
                 scores, labels = scores.max(1, keepdim=True)
                 scores, _, keep_idxs, results = filter_scores_and_topk(
-                    scores, score_thr, nms_pre, results=dict(labels=labels[:, 0])
+                    scores, score_thr, nms_pre, results={"labels": labels[:, 0]}
                 )
                 labels = results["labels"]
             else:
@@ -590,7 +587,7 @@ class RTMDetRotatedHead(RTMDetHead):
             loss_bbox = bbox_preds.sum() * 0
             loss_angle = angle_preds.sum() * 0
 
-        losses = dict()
+        losses = {}
         losses["loss_cls"] = loss_cls
         losses["loss_bbox"] = loss_bbox
         if self.loss_angle is not None:

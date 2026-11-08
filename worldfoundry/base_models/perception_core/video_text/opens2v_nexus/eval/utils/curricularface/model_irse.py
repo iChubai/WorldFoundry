@@ -21,7 +21,7 @@ class BasicBlockIR(Module):
     """BasicBlock for IRNet"""
 
     def __init__(self, in_channel, depth, stride):
-        super(BasicBlockIR, self).__init__()
+        super().__init__()
         if in_channel == depth:
             self.shortcut_layer = MaxPool2d(1, stride)
         else:
@@ -49,7 +49,7 @@ class BottleneckIR(Module):
     """BasicBlock with bottleneck for IRNet"""
 
     def __init__(self, in_channel, depth, stride):
-        super(BottleneckIR, self).__init__()
+        super().__init__()
         reduction_channel = depth // 4
         if in_channel == depth:
             self.shortcut_layer = MaxPool2d(1, stride)
@@ -79,13 +79,13 @@ class BottleneckIR(Module):
 
 class BasicBlockIRSE(BasicBlockIR):
     def __init__(self, in_channel, depth, stride):
-        super(BasicBlockIRSE, self).__init__(in_channel, depth, stride)
+        super().__init__(in_channel, depth, stride)
         self.res_layer.add_module("se_block", SEModule(depth, 16))
 
 
 class BottleneckIRSE(BottleneckIR):
     def __init__(self, in_channel, depth, stride):
-        super(BottleneckIRSE, self).__init__(in_channel, depth, stride)
+        super().__init__(in_channel, depth, stride)
         self.res_layer.add_module("se_block", SEModule(depth, 16))
 
 
@@ -151,7 +151,7 @@ class Backbone(Module):
         num_layers: num_layers of backbone
         mode: support ir or irse
         """
-        super(Backbone, self).__init__()
+        super().__init__()
         assert input_size[0] in [112, 224], "input_size should be [112, 112] or [224, 224]"
         assert num_layers in [18, 34, 50, 100, 152, 200], "num_layers should be 18, 34, 50, 100 or 152"
         assert mode in ["ir", "ir_se"], "mode should be ir or ir_se"

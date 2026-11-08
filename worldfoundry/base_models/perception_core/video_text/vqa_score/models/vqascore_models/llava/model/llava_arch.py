@@ -29,7 +29,7 @@ IGNORE_INDEX = -100
 
 class LlavaMetaModel:
     def __init__(self, config):
-        super(LlavaMetaModel, self).__init__(config)
+        super().__init__(config)
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
             self.mm_projector = build_vision_projector(config)
@@ -57,10 +57,7 @@ class LlavaMetaModel:
             else:
                 self.vision_tower = vision_tower
         else:
-            if fsdp is not None and len(fsdp) > 0:
-                vision_tower = self.vision_tower[0]
-            else:
-                vision_tower = self.vision_tower
+            vision_tower = self.vision_tower[0] if fsdp is not None and len(fsdp) > 0 else self.vision_tower
             if not vision_tower.is_loaded:
                 vision_tower.load_model()
 
@@ -112,7 +109,7 @@ class LlavaMetaForCausalLM(ABC):
             return input_ids, attention_mask, past_key_values, None, labels
 
         if type(images) is list or images.ndim == 5:
-            concat_images = torch.cat([image for image in images], dim=0)
+            concat_images = torch.cat(list(images), dim=0)
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)

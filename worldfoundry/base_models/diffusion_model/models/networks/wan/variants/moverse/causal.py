@@ -945,14 +945,14 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             context = torch.concat([context_clip, context], dim=1)
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
 
         for block_index, block in enumerate(self.blocks):
             kwargs.update(

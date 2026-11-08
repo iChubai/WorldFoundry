@@ -60,6 +60,7 @@ from .preview_layers import (
     create_activation_func,
     create_linear,
 )
+import itertools
 
 _FP32 = torch.float32
 _BF16 = torch.bfloat16
@@ -182,7 +183,7 @@ def build_block_diag_mask(cu_seqlens: torch.Tensor, device: torch.device) -> tor
     bounds = cu_seqlens.tolist()
     total = int(bounds[-1])
     mask = torch.zeros(total, total, dtype=torch.bool, device=device)
-    for start, stop in zip(bounds[:-1], bounds[1:], strict=False):
+    for start, stop in itertools.pairwise(bounds):
         mask[int(start) : int(stop), int(start) : int(stop)] = True
     return mask
 

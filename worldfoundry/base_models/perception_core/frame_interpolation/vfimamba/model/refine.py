@@ -27,7 +27,7 @@ def deconv(in_planes, out_planes, kernel_size=4, stride=2, padding=1):
 
 class Conv2(nn.Module):
     def __init__(self, in_planes, out_planes, stride=2):
-        super(Conv2, self).__init__()
+        super().__init__()
         self.conv1 = conv(in_planes, out_planes, 3, stride, 1)
         self.conv2 = conv(out_planes, out_planes, 3, 1, 1)
 
@@ -39,7 +39,7 @@ class Conv2(nn.Module):
 
 class Unet(nn.Module):
     def __init__(self, c, M=False, out=3):
-        super(Unet, self).__init__()
+        super().__init__()
         self.down0 = Conv2(17 + c, 2 * c)
         self.down1 = Conv2(4 * c, 4 * c)
         self.down2 = Conv2(8 * c, 8 * c)

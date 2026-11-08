@@ -389,10 +389,7 @@ class VisionTransformer(nn.Module):
         x = self.patch_embedding(x).flatten(2).permute(0, 2, 1)
         if self.pool_type in ("token", "token_fc"):
             x = torch.cat([self.cls_embedding.expand(b, -1, -1), x], dim=1)
-        if interpolation:
-            e = pos_interpolate(self.pos_embedding, x.size(1))
-        else:
-            e = self.pos_embedding
+        e = pos_interpolate(self.pos_embedding, x.size(1)) if interpolation else self.pos_embedding
         x = self.dropout(x + e)
         if self.pre_norm is not None:
             x = self.pre_norm(x)
@@ -632,29 +629,29 @@ def clip_xlm_roberta_vit_h_14(pretrained=False, pretrained_name="open-clip-xlm-r
         pretrained: The pretrained.
         pretrained_name: The pretrained name.
     """
-    cfg = dict(
-        embed_dim=1024,
-        image_size=224,
-        patch_size=14,
-        vision_dim=1280,
-        vision_mlp_ratio=4,
-        vision_heads=16,
-        vision_layers=32,
-        vision_pool="token",
-        activation="gelu",
-        vocab_size=250002,
-        max_text_len=514,
-        type_size=1,
-        pad_id=1,
-        text_dim=1024,
-        text_heads=16,
-        text_layers=24,
-        text_post_norm=True,
-        text_dropout=0.1,
-        attn_dropout=0.0,
-        proj_dropout=0.0,
-        embedding_dropout=0.0,
-    )
+    cfg = {
+        "embed_dim": 1024,
+        "image_size": 224,
+        "patch_size": 14,
+        "vision_dim": 1280,
+        "vision_mlp_ratio": 4,
+        "vision_heads": 16,
+        "vision_layers": 32,
+        "vision_pool": "token",
+        "activation": "gelu",
+        "vocab_size": 250002,
+        "max_text_len": 514,
+        "type_size": 1,
+        "pad_id": 1,
+        "text_dim": 1024,
+        "text_heads": 16,
+        "text_layers": 24,
+        "text_post_norm": True,
+        "text_dropout": 0.1,
+        "attn_dropout": 0.0,
+        "proj_dropout": 0.0,
+        "embedding_dropout": 0.0,
+    }
     cfg.update(**kwargs)
     return _clip(pretrained, pretrained_name, XLMRobertaCLIP, **cfg)
 

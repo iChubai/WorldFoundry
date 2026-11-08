@@ -415,10 +415,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         # values, ceil(my_count / frames_chunk_size) may differ across ranks,
         # causing an NCCL deadlock. Padding all ranks to the same frame count
         # ensures identical iteration counts.
-        if sp_size <= S:
-            max_count = (S // sp_size) + (1 if S % sp_size else 0)
-        else:
-            max_count = 1 if S > 0 else 0
+        max_count = S // sp_size + (1 if S % sp_size else 0) if sp_size <= S else 1 if S > 0 else 0
         pad_count = max_count - my_count
 
         if has_frames:

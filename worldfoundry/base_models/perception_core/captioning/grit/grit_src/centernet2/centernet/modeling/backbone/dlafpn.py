@@ -30,7 +30,7 @@ def conv3x3(in_planes, out_planes, stride=1):
 
 class BasicBlock(nn.Module):
     def __init__(self, cfg, inplanes, planes, stride=1, dilation=1):
-        super(BasicBlock, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(
             inplanes, planes, kernel_size=3, stride=stride, padding=dilation, bias=False, dilation=dilation
         )
@@ -61,7 +61,7 @@ class Bottleneck(nn.Module):
     expansion = 2
 
     def __init__(self, cfg, inplanes, planes, stride=1, dilation=1):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         expansion = Bottleneck.expansion
         bottle_planes = planes // expansion
         self.conv1 = nn.Conv2d(inplanes, bottle_planes, kernel_size=1, bias=False)
@@ -98,7 +98,7 @@ class Bottleneck(nn.Module):
 
 class Root(nn.Module):
     def __init__(self, cfg, in_channels, out_channels, kernel_size, residual):
-        super(Root, self).__init__()
+        super().__init__()
         self.conv = nn.Conv2d(
             in_channels, out_channels, kernel_size, stride=1, bias=False, padding=(kernel_size - 1) // 2
         )
@@ -132,7 +132,7 @@ class Tree(nn.Module):
         dilation=1,
         root_residual=False,
     ):
-        super(Tree, self).__init__()
+        super().__init__()
         if root_dim == 0:
             root_dim = 2 * out_channels
         if level_root:
@@ -199,7 +199,7 @@ class Tree(nn.Module):
 
 class DLA(Backbone):
     def __init__(self, cfg, levels, channels, block=BasicBlock, residual_root=False):
-        super(DLA, self).__init__()
+        super().__init__()
         self.cfg = cfg
         self.channels = channels
 
@@ -292,7 +292,7 @@ def fill_up_weights(up):
 
 class Conv(nn.Module):
     def __init__(self, chi, cho, norm):
-        super(Conv, self).__init__()
+        super().__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(chi, cho, kernel_size=1, stride=1, bias=False), get_norm(norm, cho), nn.ReLU(inplace=True)
         )
@@ -303,7 +303,7 @@ class Conv(nn.Module):
 
 class DeformConv(nn.Module):
     def __init__(self, chi, cho, norm):
-        super(DeformConv, self).__init__()
+        super().__init__()
         self.actf = nn.Sequential(get_norm(norm, cho), nn.ReLU(inplace=True))
         self.offset = Conv2d(chi, 27, kernel_size=3, stride=1, padding=1, dilation=1)
         self.conv = ModulatedDeformConv(chi, cho, kernel_size=3, stride=1, padding=1, dilation=1, deformable_groups=1)
@@ -322,7 +322,7 @@ class DeformConv(nn.Module):
 
 class IDAUp(nn.Module):
     def __init__(self, o, channels, up_f, norm="FrozenBN", node_type=Conv):
-        super(IDAUp, self).__init__()
+        super().__init__()
         for i in range(1, len(channels)):
             c = channels[i]
             f = int(up_f[i])
@@ -353,7 +353,7 @@ DLAUP_NODE_MAP = {
 
 class DLAUP(Backbone):
     def __init__(self, bottom_up, in_features, norm, dlaup_node="conv"):
-        super(DLAUP, self).__init__()
+        super().__init__()
         assert isinstance(bottom_up, Backbone)
         self.bottom_up = bottom_up
         input_shapes = bottom_up.output_shape()

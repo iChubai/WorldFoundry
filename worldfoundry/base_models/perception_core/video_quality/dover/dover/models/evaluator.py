@@ -13,8 +13,8 @@ from .swin_backbone import swin_3d_small, swin_3d_tiny
 class BaseEvaluator(nn.Module):
     def __init__(
         self,
-        backbone=dict(),
-        vqa_head=dict(),
+        backbone={},
+        vqa_head={},
     ):
         super().__init__()
         self.backbone = VideoBackbone(**backbone)
@@ -48,9 +48,9 @@ class DOVER(nn.Module):
         backbone_preserve_keys="fragments,resize",
         multi=False,
         layer=-1,
-        backbone=dict(resize={"window_size": (4, 4, 4)}, fragments={"window_size": (4, 4, 4)}),
+        backbone={"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}},
         divide_head=False,
-        vqa_head=dict(in_channels=768),
+        vqa_head={"in_channels": 768},
         var=False,
     ):
         self.backbone_preserve_keys = backbone_preserve_keys.split(",")
@@ -61,10 +61,7 @@ class DOVER(nn.Module):
             print(backbone_size)
             if key not in self.backbone_preserve_keys:
                 continue
-            if backbone_size == "divided":
-                t_backbone_size = hypers["type"]
-            else:
-                t_backbone_size = backbone_size
+            t_backbone_size = hypers["type"] if backbone_size == "divided" else backbone_size
             if t_backbone_size == "swin_tiny":
                 b = swin_3d_tiny(**backbone[key])
             elif t_backbone_size == "swin_tiny_grpb":
@@ -134,10 +131,7 @@ class DOVER(nn.Module):
                     if return_raw_feats:
                         feats[key] = feat
                 if reduce_scores:
-                    if len(scores) > 1:
-                        scores = reduce(lambda x, y: x + y, scores)
-                    else:
-                        scores = scores[0]
+                    scores = reduce(lambda x, y: x + y, scores) if len(scores) > 1 else scores[0]
                     if pooled:
                         scores = torch.mean(scores, (1, 2, 3, 4))
             self.train()
@@ -159,10 +153,7 @@ class DOVER(nn.Module):
                 if return_pooled_feats:
                     feats[key] = feat.mean((-3, -2, -1))
             if reduce_scores:
-                if len(scores) > 1:
-                    scores = reduce(lambda x, y: x + y, scores)
-                else:
-                    scores = scores[0]
+                scores = reduce(lambda x, y: x + y, scores) if len(scores) > 1 else scores[0]
                 if pooled:
                     print(scores.shape)
                     scores = torch.mean(scores, (1, 2, 3, 4))
@@ -185,10 +176,7 @@ class DOVER(nn.Module):
                     else:
                         scores += [self.vqa_head(feat)]
                 if reduce_scores:
-                    if len(scores) > 1:
-                        scores = reduce(lambda x, y: x + y, scores)
-                    else:
-                        scores = scores[0]
+                    scores = reduce(lambda x, y: x + y, scores) if len(scores) > 1 else scores[0]
                     if pooled:
                         scores = torch.mean(scores, (1, 2, 3, 4))
             self.train()
@@ -208,10 +196,7 @@ class DOVER(nn.Module):
                 if return_pooled_feats:
                     feats[key] = feat
             if reduce_scores:
-                if len(scores) > 1:
-                    scores = reduce(lambda x, y: x + y, scores)
-                else:
-                    scores = scores[0]
+                scores = reduce(lambda x, y: x + y, scores) if len(scores) > 1 else scores[0]
                 if pooled:
                     print(scores.shape)
                     scores = torch.mean(scores, (1, 2, 3, 4))
@@ -244,8 +229,8 @@ class MinimumDOVER(nn.Module):
 class BaseImageEvaluator(nn.Module):
     def __init__(
         self,
-        backbone=dict(),
-        iqa_head=dict(),
+        backbone={},
+        iqa_head={},
     ):
         super().__init__()
         self.backbone = ImageBackbone(**backbone)

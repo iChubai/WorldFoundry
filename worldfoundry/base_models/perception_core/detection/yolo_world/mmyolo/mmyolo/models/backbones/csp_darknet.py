@@ -83,8 +83,8 @@ class YOLOv5CSPDarknet(BaseBackbone):
         input_channels: int = 3,
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         norm_eval: bool = False,
         init_cfg: OptMultiConfig = None,
     ):
@@ -228,8 +228,8 @@ class YOLOv8CSPDarknet(BaseBackbone):
         input_channels: int = 3,
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         norm_eval: bool = False,
         init_cfg: OptMultiConfig = None,
     ):
@@ -376,8 +376,8 @@ class YOLOXCSPDarknet(BaseBackbone):
         frozen_stages: int = -1,
         use_depthwise: bool = False,
         spp_kernal_sizes: tuple[int] = (5, 9, 13),
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         norm_eval: bool = False,
         init_cfg: OptMultiConfig = None,
     ):

@@ -543,9 +543,14 @@ class WanModel(nn.Module, NativeConfigMixin):
         )
 
         # arguments
-        kwargs = dict(
-            e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
 
         for block in self.blocks:
             x = block(x, **kwargs)

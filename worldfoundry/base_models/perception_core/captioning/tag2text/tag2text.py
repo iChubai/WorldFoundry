@@ -301,7 +301,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
                 f"Encoder module {encoder_pointer} does not match decoder module {decoder_pointer}"
             )
 
-            all_encoder_weights = set([module_name + "/" + sub_name for sub_name in encoder_modules.keys()])
+            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules.keys()}
             encoder_layer_pos = 0
             for name, _module in decoder_modules.items():
                 if name.isdigit():
@@ -431,9 +431,8 @@ def load_checkpoint(model, url_or_filename):
             state_dict["visual_encoder_m.pos_embed"], model.visual_encoder_m
         )
     for key in model.state_dict().keys():
-        if key in state_dict.keys():
-            if state_dict[key].shape != model.state_dict()[key].shape:
-                del state_dict[key]
+        if key in state_dict.keys() and state_dict[key].shape != model.state_dict()[key].shape:
+            del state_dict[key]
 
     msg = model.load_state_dict(state_dict, strict=False)
     # print('load checkpoint from %s'%url_or_filename)

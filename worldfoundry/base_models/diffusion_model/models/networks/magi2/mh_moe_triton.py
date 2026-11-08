@@ -196,10 +196,7 @@ def _scatter_back(
     head_id_values = torch.arange(num_flatten_experts, device=gather_ids.device) // num_experts_per_head
     head_ids = torch.repeat_interleave(head_id_values, expert_seqlens)
 
-    if num_heads == 1:
-        scatter_idx = gather_ids.long()
-    else:
-        scatter_idx = gather_ids.long() * num_heads + head_ids.long()
+    scatter_idx = gather_ids.long() if num_heads == 1 else gather_ids.long() * num_heads + head_ids.long()
 
     scatter_idx = scatter_idx.unsqueeze(-1).expand_as(y_sorted)
     y.scatter_add_(0, scatter_idx, y_sorted.to(y.dtype))
@@ -256,10 +253,7 @@ def mh_moe_fwd_func(
     assert d_head % BLOCK_DH == 0, f"d_head={d_head} must be divisible by {BLOCK_DH}"
     assert d_expert % BLOCK_DE == 0, f"d_expert={d_expert} must be divisible by {BLOCK_DE}"
 
-    if deterministic:
-        y = torch.empty(T, 1, d_head, device=x.device, dtype=x.dtype)
-    else:
-        y = torch.zeros_like(x)
+    y = torch.empty(T, 1, d_head, device=x.device, dtype=x.dtype) if deterministic else torch.zeros_like(x)
 
     num_flatten_experts = expert_offsets.size(0) - 1
     num_flatten_experts_log2 = max(1, math.ceil(math.log2(max(num_flatten_experts, 1) + 1)))

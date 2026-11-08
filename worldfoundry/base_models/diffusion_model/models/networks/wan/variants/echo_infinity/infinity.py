@@ -886,16 +886,16 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         if clip_fea is not None:
             context_clip = self.img_emb(clip_fea)
             context = torch.concat([context_clip, context], dim=1)
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-            sink_recache_after_switch=sink_recache_after_switch,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+            "sink_recache_after_switch": sink_recache_after_switch,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.
@@ -1025,15 +1025,15 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             e_clean = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, aug_t.flatten()).type_as(x))
             e0_clean = self.time_projection(e_clean).unflatten(1, (6, self.dim)).unflatten(dim=0, sizes=t.shape)
             e0 = torch.cat([e0_clean, e0], dim=1)
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            block_mask=self.block_mask,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "block_mask": self.block_mask,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

@@ -104,7 +104,7 @@ def main():
     dataset = DATASETS.build(dataset_cfg)
 
     # get collate_fn
-    collate_fn_cfg = cfg.get("train_dataloader").pop("collate_fn", dict(type="pseudo_collate"))
+    collate_fn_cfg = cfg.get("train_dataloader").pop("collate_fn", {"type": "pseudo_collate"})
     collate_fn_type = collate_fn_cfg.pop("type")
     collate_fn = COLLATE_FUNCTIONS.get(collate_fn_type)
 

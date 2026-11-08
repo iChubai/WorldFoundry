@@ -371,10 +371,7 @@ def _phase_a_kv_kernel(
         BLOCK_S: The block s.
         SKIP_RELU: The skip relu.
     """
-    if DOT_PRECISION >= 1:
-        dot_dtype = tl.float32
-    else:
-        dot_dtype = tl.bfloat16
+    dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
     pid = tl.program_id(0)
@@ -420,20 +417,14 @@ def _phase_a_kv_kernel(
 
         k_inv_rms = tl.load(k_inv_rms_ptr + pid_b * N + n_idx, mask=mask_s, other=1.0).to(tl.float32)
         K_normed = K_raw * k_inv_rms[:, None] * k_nw[None, :]
-        if SKIP_RELU:
-            K = K_normed * k_scale
-        else:
-            K = tl.where(K_normed > 0, K_normed, 0.0) * k_scale
+        K = K_normed * k_scale if SKIP_RELU else tl.where(K_normed > 0, K_normed, 0.0) * k_scale
 
         K_pair_raw = tl.reshape(
             tl.flip(tl.reshape(K_raw, (BLOCK_S, BLOCK_D // 2, 2)), dim=2),
             (BLOCK_S, BLOCK_D),
         )
         K_pair_normed = K_pair_raw * k_inv_rms[:, None] * k_nw_pair[None, :]
-        if SKIP_RELU:
-            K_pair = K_pair_normed * k_scale
-        else:
-            K_pair = tl.where(K_pair_normed > 0, K_pair_normed, 0.0) * k_scale
+        K_pair = K_pair_normed * k_scale if SKIP_RELU else tl.where(K_pair_normed > 0, K_pair_normed, 0.0) * k_scale
 
         rope_ptrs = n_idx[:, None] * D + offs_d[None, :]
         Cos = tl.load(rope_cos_ptr + rope_ptrs, mask=mask_sd, other=1.0).to(tl.float32)
@@ -484,10 +475,7 @@ def _phase_a_z_kernel(
 ):
     """Z stream: uses K (no RoPE). Cheaper than KV — no V load, no RoPE compute,
     no K_pair derivation."""
-    if DOT_PRECISION >= 1:
-        dot_dtype = tl.float32
-    else:
-        dot_dtype = tl.bfloat16
+    dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
     pid = tl.program_id(0)
@@ -728,10 +716,7 @@ def _phase_b_kernel(
         COMBINED_HISTORY: The combined history.
         SKIP_Z: The skip z.
     """
-    if DOT_PRECISION >= 1:
-        dot_dtype = tl.float32
-    else:
-        dot_dtype = tl.bfloat16
+    dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
     pid = tl.program_id(0)
@@ -908,8 +893,13 @@ def phase_b_triton(
 
     load_init = init_state_kv is not None
     dummy = torch.empty(1, device=device, dtype=fdtype)
-    full_M = lambda: torch.empty(BH, F, BLOCK_D, BLOCK_D, device=device, dtype=fdtype)
-    full_z = lambda: torch.empty(BH, F, BLOCK_D, device=device, dtype=fdtype)
+
+    def full_M():
+        return torch.empty(BH, F, BLOCK_D, BLOCK_D, device=device, dtype=fdtype)
+
+    def full_z():
+        return torch.empty(BH, F, BLOCK_D, device=device, dtype=fdtype)
+
     M_fwd = dummy if direction == 2 else full_M()
     z_fwd = dummy if (direction == 2 or skip_z) else full_z()
     # Combined-history mode reuses M_fwd/z_fwd as M_hist/z_hist; rev outputs
@@ -1060,10 +1050,7 @@ def _phase_b_dtile_kernel(
         COMBINED_HISTORY: The combined history.
         SKIP_Z: The skip z.
     """
-    if DOT_PRECISION >= 1:
-        dot_dtype = tl.float32
-    else:
-        dot_dtype = tl.bfloat16
+    dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
     pid_bh = tl.program_id(0)
@@ -1084,7 +1071,7 @@ def _phase_b_dtile_kernel(
             M = tl.zeros([BLOCK_D, D_TILE], dtype=tl.float32)
         if not SKIP_Z:
             z = tl.zeros([BLOCK_D], dtype=tl.float32)
-            if LOAD_INIT_STATE:
+            if LOAD_INIT_STATE:  # noqa: SIM102 - Triton prunes constexpr branches only as separate if statements.
                 if is_lead:
                     z = tl.load(init_state_z_ptr + bh * BLOCK_D + offs_d_full).to(tl.float32)
 
@@ -1108,7 +1095,7 @@ def _phase_b_dtile_kernel(
 
             tl.store(M_fwd_ptr + bh * F * BLOCK_D * BLOCK_D + f * BLOCK_D * BLOCK_D + offs_dd_tile, M)
 
-            if not SKIP_Z:
+            if not SKIP_Z:  # noqa: SIM102 - Triton prunes constexpr branches only as separate if statements.
                 if is_lead:
                     I_P_z_f = tl.load(I_P_z_ptr + bh * F * BLOCK_D * BLOCK_D + f * BLOCK_D * BLOCK_D + offs_dd_full)
                     B_f = tl.load(B_ptr + bh * F * BLOCK_D + f * BLOCK_D + offs_d_full)
@@ -1118,7 +1105,7 @@ def _phase_b_dtile_kernel(
 
         if SAVE_FINAL_STATE:
             tl.store(final_state_kv_ptr + bh * BLOCK_D * BLOCK_D + offs_dd_tile, M)
-            if not SKIP_Z:
+            if not SKIP_Z:  # noqa: SIM102 - Triton prunes constexpr branches only as separate if statements.
                 if is_lead:
                     tl.store(final_state_z_ptr + bh * BLOCK_D + offs_d_full, z)
 
@@ -1129,7 +1116,7 @@ def _phase_b_dtile_kernel(
 
         if not COMBINED_HISTORY:
             tl.store(M_rev_ptr + bh * F * BLOCK_D * BLOCK_D + (F - 1) * BLOCK_D * BLOCK_D + offs_dd_tile, M)
-            if not SKIP_Z:
+            if not SKIP_Z:  # noqa: SIM102 - Triton prunes constexpr branches only as separate if statements.
                 if is_lead:
                     tl.store(z_rev_ptr + bh * F * BLOCK_D + (F - 1) * BLOCK_D + offs_d_full, z)
 
@@ -1153,7 +1140,7 @@ def _phase_b_dtile_kernel(
                 M_temp = tl.dot(I_P_kv_f.to(dot_dtype), M.to(dot_dtype), out_dtype=tl.float32, input_precision=dot_ip)
                 M = g_f * M_temp + A_f
 
-            if not SKIP_Z:
+            if not SKIP_Z:  # noqa: SIM102 - Triton prunes constexpr branches only as separate if statements.
                 if is_lead:
                     I_P_z_f = tl.load(I_P_z_ptr + bh * F * BLOCK_D * BLOCK_D + f_src * BLOCK_D * BLOCK_D + offs_dd_full)
                     B_f = tl.load(B_ptr + bh * F * BLOCK_D + f_src * BLOCK_D + offs_d_full)
@@ -1163,13 +1150,13 @@ def _phase_b_dtile_kernel(
             if COMBINED_HISTORY:
                 M_addr = M_fwd_ptr + bh * F * BLOCK_D * BLOCK_D + f_dst * BLOCK_D * BLOCK_D + offs_dd_tile
                 tl.store(M_addr, tl.load(M_addr) + M)
-                if not SKIP_Z:
+                if not SKIP_Z:  # noqa: SIM102 - Triton prunes constexpr branches only as separate if statements.
                     if is_lead:
                         z_addr = z_fwd_ptr + bh * F * BLOCK_D + f_dst * BLOCK_D + offs_d_full
                         tl.store(z_addr, tl.load(z_addr) + z)
             else:
                 tl.store(M_rev_ptr + bh * F * BLOCK_D * BLOCK_D + f_dst * BLOCK_D * BLOCK_D + offs_dd_tile, M)
-                if not SKIP_Z:
+                if not SKIP_Z:  # noqa: SIM102 - Triton prunes constexpr branches only as separate if statements.
                     if is_lead:
                         tl.store(z_rev_ptr + bh * F * BLOCK_D + f_dst * BLOCK_D + offs_d_full, z)
 
@@ -1322,10 +1309,7 @@ def _phase_c_kernel(
         SKIP_RELU: The skip relu.
         NUM_ONLY: The num only.
     """
-    if DOT_PRECISION >= 1:
-        dot_dtype = tl.float32
-    else:
-        dot_dtype = tl.bfloat16
+    dot_dtype = tl.float32 if DOT_PRECISION >= 1 else tl.bfloat16
     dot_ip: tl.constexpr = "ieee" if DOT_PRECISION == 2 else "tf32"
 
     pid = tl.program_id(0)

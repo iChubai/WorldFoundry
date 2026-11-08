@@ -757,10 +757,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         _, _, height, width = views[0]["img"].shape
 
         # Decide to use randomly sampled sparse depth or dense depth
-        if torch.rand(1) < self.geometric_input_config["sparse_depth_prob"]:
-            use_sparse_depth = True
-        else:
-            use_sparse_depth = False
+        use_sparse_depth = bool(torch.rand(1) < self.geometric_input_config["sparse_depth_prob"])
 
         # Get the depths for all the views
         depth_list = []
@@ -1206,10 +1203,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
 
             # Compute the mini batch size and number of mini batches
             # Use provided minibatch_size if set, otherwise compute adaptively based on available memory
-            if minibatch_size is not None:
-                minibatch = minibatch_size
-            else:
-                minibatch = self._compute_adaptive_minibatch_size()
+            minibatch = minibatch_size if minibatch_size is not None else self._compute_adaptive_minibatch_size()
             num_batches = (batch_size + minibatch - 1) // minibatch
 
             # Run prediction for each mini-batch
@@ -1802,23 +1796,18 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
             ValueError: For invalid inputs, missing required keys, conflicting modalities, or constraint violations
         """
         # Determine the mixed precision floating point type
-        if use_amp:
-            amp_dtype = get_amp_dtype(self.device, amp_dtype)
-        else:
-            amp_dtype = torch.float32
+        amp_dtype = get_amp_dtype(self.device, amp_dtype) if use_amp else torch.float32
 
         # Validate the input views
         validated_views = validate_input_views_for_inference(views)
 
         # Transfer the views to the same device as the model
-        ignore_keys = set(
-            [
-                "instance",
-                "idx",
-                "true_shape",
-                "data_norm_type",
-            ]
-        )
+        ignore_keys = {
+            "instance",
+            "idx",
+            "true_shape",
+            "data_norm_type",
+        }
         for view in validated_views:
             for name in view.keys():
                 if name in ignore_keys:

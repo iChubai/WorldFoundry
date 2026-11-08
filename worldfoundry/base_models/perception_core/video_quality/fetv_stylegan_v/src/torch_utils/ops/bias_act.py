@@ -169,7 +169,7 @@ def _bias_act_ref(x, b=None, dim=1, act="linear", alpha=None, gain=None, clamp=N
 
 # ----------------------------------------------------------------------------
 
-_bias_act_cuda_cache = dict()
+_bias_act_cuda_cache = {}
 
 
 def _bias_act_cuda(dim=1, act="linear", alpha=None, gain=None, clamp=None):

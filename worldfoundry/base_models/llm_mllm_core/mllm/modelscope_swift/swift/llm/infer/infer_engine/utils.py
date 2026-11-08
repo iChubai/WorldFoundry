@@ -513,7 +513,7 @@ def patch_vllm_memory_leak():
                         virtual_engine, seq_group_metadata_list, scheduler_outputs, allow_async_output_proc
                     )
             else:
-                finished_requests_ids = list()
+                finished_requests_ids = []
 
             assert seq_group_metadata_list is not None
             assert scheduler_outputs is not None

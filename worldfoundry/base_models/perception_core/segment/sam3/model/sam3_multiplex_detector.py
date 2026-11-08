@@ -416,7 +416,7 @@ class Sam3MultiplexDetector(Sam3MultiplexImageBase):
         for k, (v, handle) in multigpu_buffer[frame_idx].items():
             if self.is_multiplex:
                 if (
-                    k.startswith("interactive_backbone_") or k.startswith("propagation_backbone_")
+                    k.startswith(("interactive_backbone_", "propagation_backbone_"))
                 ) and not return_sam2_backbone_feats:
                     continue
             else:

@@ -97,10 +97,7 @@ def _pick(values: dict, keys: Iterable[str]) -> list[tuple[str, Any]]:
 
 
 def json_to_compact_markdown(raw_json: str | dict[str, Any]) -> str:
-    if isinstance(raw_json, str):
-        obj = json.loads(raw_json.strip())
-    else:
-        obj = raw_json
+    obj = json.loads(raw_json.strip()) if isinstance(raw_json, str) else raw_json
 
     obj = strip_empty(obj)
     if not isinstance(obj, dict) or "global_layer" not in obj:

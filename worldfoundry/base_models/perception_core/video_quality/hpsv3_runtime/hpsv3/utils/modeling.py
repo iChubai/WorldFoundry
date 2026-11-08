@@ -39,12 +39,12 @@ def create_model_and_processor(
         else getattr(torch, model_config.torch_dtype)
     )
     quantization_config = get_quantization_config(model_config)
-    model_kwargs = dict(
-        revision=model_config.model_revision,
-        device_map=get_kbit_device_map() if quantization_config is not None else None,
-        quantization_config=quantization_config,
-        use_cache=False,
-    )
+    model_kwargs = {
+        "revision": model_config.model_revision,
+        "device_map": get_kbit_device_map() if quantization_config is not None else None,
+        "quantization_config": quantization_config,
+        "use_cache": False,
+    }
 
     processor = AutoProcessor.from_pretrained(
         model_config.model_name_or_path,

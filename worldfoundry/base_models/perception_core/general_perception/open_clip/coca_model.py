@@ -406,14 +406,14 @@ class CoCa(nn.Module):
             if generation_config is None:
                 # seq_len / min_seq_len are *total* sequence lengths (including
                 # the prompt) to match the original API semantics.
-                gen_kwargs = dict(
-                    max_length=seq_len,
-                    min_length=min_seq_len,
-                    repetition_penalty=repetition_penalty,
-                    eos_token_id=eos_token_id,
-                    pad_token_id=pad_token_id,
-                    use_cache=False,
-                )
+                gen_kwargs = {
+                    "max_length": seq_len,
+                    "min_length": min_seq_len,
+                    "repetition_penalty": repetition_penalty,
+                    "eos_token_id": eos_token_id,
+                    "pad_token_id": pad_token_id,
+                    "use_cache": False,
+                }
                 if generation_type == "beam_search":
                     if num_beam_groups > 1:
                         _logger.warning(

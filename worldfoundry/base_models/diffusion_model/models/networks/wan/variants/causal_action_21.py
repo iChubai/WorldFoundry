@@ -828,21 +828,21 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         context_lens = None
         context = self.img_emb(visual_context)
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            mouse_cond=mouse_cond,
-            context_lens=context_lens,
-            keyboard_cond=keyboard_cond,
-            block_mask=self.block_mask,
-            block_mask_mouse=self.block_mask_mouse,
-            block_mask_keyboard=self.block_mask_keyboard,
-            use_rope_keyboard=self.use_rope_keyboard,
-            num_frame_per_block=self.num_frame_per_block,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "mouse_cond": mouse_cond,
+            "context_lens": context_lens,
+            "keyboard_cond": keyboard_cond,
+            "block_mask": self.block_mask,
+            "block_mask_mouse": self.block_mask_mouse,
+            "block_mask_keyboard": self.block_mask_keyboard,
+            "use_rope_keyboard": self.use_rope_keyboard,
+            "num_frame_per_block": self.num_frame_per_block,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.
@@ -975,21 +975,21 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         context = self.img_emb(visual_context)
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            mouse_cond=mouse_cond,
-            context_lens=context_lens,
-            keyboard_cond=keyboard_cond,
-            block_mask=self.block_mask,
-            block_mask_mouse=self.block_mask_mouse,
-            block_mask_keyboard=self.block_mask_keyboard,
-            use_rope_keyboard=self.use_rope_keyboard,
-            num_frame_per_block=self.num_frame_per_block,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "mouse_cond": mouse_cond,
+            "context_lens": context_lens,
+            "keyboard_cond": keyboard_cond,
+            "block_mask": self.block_mask,
+            "block_mask_mouse": self.block_mask_mouse,
+            "block_mask_keyboard": self.block_mask_keyboard,
+            "use_rope_keyboard": self.use_rope_keyboard,
+            "num_frame_per_block": self.num_frame_per_block,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

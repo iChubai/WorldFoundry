@@ -212,8 +212,11 @@ def matmul(a: torch.Tensor, b: torch.Tensor, compute_dtype: torch.dtype, output_
         return a @ b
     # Allocates output.
     c = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=output_dtype)
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+    def grid(META):
+        return (triton.cdiv(M, META["BLOCK_SIZE_M"]) * triton.cdiv(N, META["BLOCK_SIZE_N"]),)
+
     matmul_kernel[grid](
         a,
         b,

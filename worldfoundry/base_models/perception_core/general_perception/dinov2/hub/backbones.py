@@ -43,16 +43,16 @@ def _make_dinov2_model(
             raise AssertionError(f"Unsupported weights: {weights}")
 
     model_base_name = _make_dinov2_model_name(arch_name, patch_size)
-    vit_kwargs = dict(
-        img_size=img_size,
-        patch_size=patch_size,
-        init_values=init_values,
-        ffn_layer=ffn_layer,
-        block_chunks=block_chunks,
-        num_register_tokens=num_register_tokens,
-        interpolate_antialias=interpolate_antialias,
-        interpolate_offset=interpolate_offset,
-    )
+    vit_kwargs = {
+        "img_size": img_size,
+        "patch_size": patch_size,
+        "init_values": init_values,
+        "ffn_layer": ffn_layer,
+        "block_chunks": block_chunks,
+        "num_register_tokens": num_register_tokens,
+        "interpolate_antialias": interpolate_antialias,
+        "interpolate_offset": interpolate_offset,
+    }
     vit_kwargs.update(**kwargs)
     model = vits.__dict__[arch_name](**vit_kwargs)
 

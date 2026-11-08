@@ -80,11 +80,11 @@ class BatchYOLOv7Assigner(nn.Module):
         if batch_targets_normed.shape[1] == 0:
             # empty gt of batch
             num_levels = len(pred_results)
-            return dict(
-                mlvl_positive_infos=[pred_results[0].new_empty((0, 4))] * num_levels,
-                mlvl_priors=[] * num_levels,
-                mlvl_targets_normed=[] * num_levels,
-            )
+            return {
+                "mlvl_positive_infos": [pred_results[0].new_empty((0, 4))] * num_levels,
+                "mlvl_priors": [] * num_levels,
+                "mlvl_targets_normed": [] * num_levels,
+            }
 
         # if near_neighbor_thr = 0.5 are mean the nearest
         # 3 neighbors are also considered positive samples.
@@ -103,9 +103,11 @@ class BatchYOLOv7Assigner(nn.Module):
             mlvl_positive_infos, mlvl_priors, mlvl_targets_normed, place_hold_var=place_hold_var
         )
 
-        return dict(
-            mlvl_positive_infos=mlvl_positive_infos, mlvl_priors=mlvl_priors, mlvl_targets_normed=mlvl_targets_normed
-        )
+        return {
+            "mlvl_positive_infos": mlvl_positive_infos,
+            "mlvl_priors": mlvl_priors,
+            "mlvl_targets_normed": mlvl_targets_normed,
+        }
 
     def yolov5_assigner(
         self, pred_results, batch_targets_normed, priors_base_sizes, grid_offset, near_neighbor_thr=0.5

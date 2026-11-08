@@ -41,10 +41,7 @@ def align_inv_depth_to_depth(
     source_mask = source_inv_depth > 0
     target_depth_mask = target_depth > 0
 
-    if target_mask is None:
-        target_mask = target_depth_mask
-    else:
-        target_mask = torch.logical_and(target_mask > 0, target_depth_mask)
+    target_mask = target_depth_mask if target_mask is None else torch.logical_and(target_mask > 0, target_depth_mask)
 
     # Remove outliers
     if quantile_masking:
@@ -91,10 +88,7 @@ def align_depth_to_depth(
     source_mask = source_depth > 0
     target_depth_mask = target_depth > 0
 
-    if target_mask is None:
-        target_mask = target_depth_mask
-    else:
-        target_mask = torch.logical_and(target_mask > 0, target_depth_mask)
+    target_mask = target_depth_mask if target_mask is None else torch.logical_and(target_mask > 0, target_depth_mask)
 
     # Remove outliers
     if quantile_masking:

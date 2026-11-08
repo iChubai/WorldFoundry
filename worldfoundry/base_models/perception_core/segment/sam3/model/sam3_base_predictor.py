@@ -123,11 +123,11 @@ class Sam3BasePredictor:
         offload_state_to_cpu=False,
     ):
         """Start a new inference session on a video directory or path."""
-        init_kwargs = dict(
-            resource_path=resource_path,
-            offload_video_to_cpu=offload_video_to_cpu,
-            offload_state_to_cpu=offload_state_to_cpu,
-        )
+        init_kwargs = {
+            "resource_path": resource_path,
+            "offload_video_to_cpu": offload_video_to_cpu,
+            "offload_state_to_cpu": offload_state_to_cpu,
+        }
         if hasattr(self, "async_loading_frames"):
             init_kwargs["async_loading_frames"] = self.async_loading_frames
         if hasattr(self, "video_loader_type"):
@@ -175,19 +175,19 @@ class Sam3BasePredictor:
         if bounding_box_labels is not None and not isinstance(bounding_box_labels, torch.Tensor):
             bounding_box_labels = torch.tensor(bounding_box_labels, dtype=torch.int32)
 
-        kwargs = dict(
-            inference_state=inference_state,
-            frame_idx=frame_idx,
-            text_str=text,
-            points=points,
-            point_labels=point_labels,
-            clear_old_points=clear_old_points,
-            boxes_xywh=bounding_boxes,
-            box_labels=bounding_box_labels,
-            clear_old_boxes=clear_old_boxes,
-            output_prob_thresh=output_prob_thresh,
-            rel_coordinates=rel_coordinates,
-        )
+        kwargs = {
+            "inference_state": inference_state,
+            "frame_idx": frame_idx,
+            "text_str": text,
+            "points": points,
+            "point_labels": point_labels,
+            "clear_old_points": clear_old_points,
+            "boxes_xywh": bounding_boxes,
+            "box_labels": bounding_box_labels,
+            "clear_old_boxes": clear_old_boxes,
+            "output_prob_thresh": output_prob_thresh,
+            "rel_coordinates": rel_coordinates,
+        }
         if obj_id is not None:
             kwargs["obj_id"] = obj_id
 
@@ -263,11 +263,11 @@ class Sam3BasePredictor:
             if propagation_direction not in ["both", "forward", "backward"]:
                 raise ValueError(f"invalid propagation direction: {propagation_direction}")
 
-            propagate_kwargs = dict(
-                inference_state=inference_state,
-                start_frame_idx=start_frame_idx,
-                max_frame_num_to_track=max_frame_num_to_track,
-            )
+            propagate_kwargs = {
+                "inference_state": inference_state,
+                "start_frame_idx": start_frame_idx,
+                "max_frame_num_to_track": max_frame_num_to_track,
+            }
             # Only pass output_prob_thresh / extra kwargs if the model supports them
             import inspect
 

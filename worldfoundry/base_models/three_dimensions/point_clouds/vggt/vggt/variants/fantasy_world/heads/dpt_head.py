@@ -71,7 +71,7 @@ class DPTHead_3D_Causal(nn.Module):
         Returns:
             The return value.
         """
-        super(DPTHead_3D_Causal, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
         self.activation = activation
         self.conf_activation = conf_activation
@@ -459,7 +459,7 @@ class FeatureFusionBlock(nn.Module):
         Args:
             features (int): number of features
         """
-        super(FeatureFusionBlock, self).__init__()
+        super().__init__()
 
         self.deconv = deconv
         self.align_corners = align_corners

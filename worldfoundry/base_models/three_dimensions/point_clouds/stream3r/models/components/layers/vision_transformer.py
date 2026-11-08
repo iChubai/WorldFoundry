@@ -241,10 +241,7 @@ class DinoVisionTransformer(nn.Module):
         x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list, strict=False)]
 
         for blk in self.blocks:
-            if self.use_checkpoint:
-                x = checkpoint(blk, x, use_reentrant=self.use_reentrant)
-            else:
-                x = blk(x)
+            x = checkpoint(blk, x, use_reentrant=self.use_reentrant) if self.use_checkpoint else blk(x)
 
         all_x = x
         output = []
@@ -268,10 +265,7 @@ class DinoVisionTransformer(nn.Module):
         x = self.prepare_tokens_with_masks(x, masks)
 
         for blk in self.blocks:
-            if self.use_checkpoint:
-                x = checkpoint(blk, x, use_reentrant=self.use_reentrant)
-            else:
-                x = blk(x)
+            x = checkpoint(blk, x, use_reentrant=self.use_reentrant) if self.use_checkpoint else blk(x)
 
         x_norm = self.norm(x)
         return {

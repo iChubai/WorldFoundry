@@ -428,14 +428,14 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         )
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            freqs_x=freqs_x,
-            context=context,
-            context_lens=None,
-            kv_size=kv_size,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "freqs_x": freqs_x,
+            "context": context,
+            "context_lens": None,
+            "kv_size": kv_size,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

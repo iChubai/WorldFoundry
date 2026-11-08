@@ -119,13 +119,13 @@ def max_neg_value(tensor):
 
 def pick_and_pop(keys, d):
     """Pop ``keys`` from ``d`` and return them as a new dict (x-transformers kwargs)."""
-    values = list(map(lambda key: d.pop(key), keys))
+    values = [d.pop(key) for key in keys]
     return dict(zip(keys, values, strict=False))
 
 
 def group_dict_by_key(cond, d):
     """Split ``d`` into ``(matches, rest)`` using predicate ``cond(key)``."""
-    return_val = [dict(), dict()]
+    return_val = [{}, {}]
     for key in d.keys():
         match = bool(cond(key))
         ind = int(not match)
@@ -146,7 +146,7 @@ def group_by_key_prefix(prefix, d):
 def groupby_prefix_and_trim(prefix, d):
     """Like ``group_by_key_prefix`` but strip ``prefix`` from the matching keys."""
     kwargs_with_prefix, kwargs = group_dict_by_key(partial(string_begins_with, prefix), d)
-    kwargs_without_prefix = dict(map(lambda x: (x[0][len(prefix) :], x[1]), tuple(kwargs_with_prefix.items())))
+    kwargs_without_prefix = {x[0][len(prefix) :]: x[1] for x in tuple(kwargs_with_prefix.items())}
     return kwargs_without_prefix, kwargs
 
 
@@ -352,7 +352,7 @@ class Attention(nn.Module):
         k = self.to_k(k_input)
         v = self.to_v(v_input)
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=h), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> b h n d", h=h) for t in (q, k, v))
 
         input_mask = None
         if any(map(exists, (mask, context_mask))):
@@ -364,7 +364,7 @@ class Attention(nn.Module):
             input_mask = q_mask * k_mask
 
         if self.num_mem_kv > 0:
-            mem_k, mem_v = map(lambda t: repeat(t, "h n d -> b h n d", b=b), (self.mem_k, self.mem_v))
+            mem_k, mem_v = (repeat(t, "h n d -> b h n d", b=b) for t in (self.mem_k, self.mem_v))
             k = torch.cat((mem_k, k), dim=-2)
             v = torch.cat((mem_v, v), dim=-2)
             if exists(input_mask):
@@ -524,10 +524,7 @@ class AttentionLayers(nn.Module):
             if isinstance(layer, Attention) and exists(branch_fn):
                 layer = branch_fn(layer)
 
-            if gate_residual:
-                residual_fn = GRUGating(dim)
-            else:
-                residual_fn = Residual()
+            residual_fn = GRUGating(dim) if gate_residual else Residual()
 
             self.layers.append(nn.ModuleList([norm_fn(), layer, residual_fn]))
 
@@ -682,15 +679,13 @@ class TransformerWrapper(nn.Module):
         if return_mems:
             hiddens = intermediates.hiddens
             new_mems = (
-                list(map(lambda pair: torch.cat(pair, dim=-2), zip(mems, hiddens, strict=False)))
-                if exists(mems)
-                else hiddens
+                [torch.cat(pair, dim=-2) for pair in zip(mems, hiddens, strict=False)] if exists(mems) else hiddens
             )
-            new_mems = list(map(lambda t: t[..., -self.max_mem_len :, :].detach(), new_mems))
+            new_mems = [t[..., -self.max_mem_len :, :].detach() for t in new_mems]
             return out, new_mems
 
         if return_attn:
-            attn_maps = list(map(lambda t: t.post_softmax_attn, intermediates.attn_intermediates))
+            attn_maps = [t.post_softmax_attn for t in intermediates.attn_intermediates]
             return out, attn_maps
 
         return out

@@ -53,9 +53,8 @@ class BlipBase(BaseModel):
             )
 
         for key in self.state_dict().keys():
-            if key in state_dict.keys():
-                if state_dict[key].shape != self.state_dict()[key].shape:
-                    del state_dict[key]
+            if key in state_dict.keys() and state_dict[key].shape != self.state_dict()[key].shape:
+                del state_dict[key]
 
         msg = self.load_state_dict(state_dict, strict=False)
 

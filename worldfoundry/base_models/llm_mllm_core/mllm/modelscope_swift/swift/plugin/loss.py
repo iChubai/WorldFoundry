@@ -87,10 +87,7 @@ def loss_scale_func(outputs, labels, loss_scale=None, num_items_in_batch=None) -
 
 
 def _parse_pair_sentence(outputs):
-    if isinstance(outputs, dict):
-        last_hidden_state = outputs["last_hidden_state"]
-    else:
-        last_hidden_state = outputs
+    last_hidden_state = outputs["last_hidden_state"] if isinstance(outputs, dict) else outputs
     batch_size = last_hidden_state.shape[0]
     shape_len = len(last_hidden_state.shape)
     first_sentence = list(range(0, batch_size, 2))
@@ -173,7 +170,7 @@ def calculate_infonce_metrics(embeddings, labels):
     split_tensors = _parse_multi_negative_sentences(torch.tensor(embeddings), torch.tensor(labels), hard_negatives)
     split_tensors = [t.numpy() for t in split_tensors]
     can_batched = hard_negatives is not None
-    if hard_negatives is None and len(set([s.shape[0] for s in split_tensors])) == 1:
+    if hard_negatives is None and len({s.shape[0] for s in split_tensors}) == 1:
         can_batched = True
     all_similarity_matrix = []
     all_labels = []
@@ -299,7 +296,7 @@ def infonce_loss(outputs, labels, loss_scale=None, num_items_in_batch=None) -> t
     split_tensors = _parse_multi_negative_sentences(sentences, labels, hard_negatives)
     loss = 0
     can_batched = hard_negatives is not None
-    if hard_negatives is None and len(set([s.shape[0] for s in split_tensors])) == 1:
+    if hard_negatives is None and len({s.shape[0] for s in split_tensors}) == 1:
         # all tensors have the same batch size
         can_batched = True
     if not use_batch:

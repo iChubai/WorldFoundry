@@ -64,7 +64,7 @@ class VideoDepthAnything(nn.Module):
             num_frames: The num frames.
             pe: The pe.
         """
-        super(VideoDepthAnything, self).__init__()
+        super().__init__()
 
         self.intermediate_layer_idx = {"vits": [2, 5, 8, 11], "vitl": [4, 11, 17, 23]}
 

@@ -10,10 +10,7 @@ from pycocotools.coco import COCO
 
 
 def show_coco_json(args):
-    if args.data_root is not None:
-        coco = COCO(osp.join(args.data_root, args.ann_file))
-    else:
-        coco = COCO(args.ann_file)
+    coco = COCO(osp.join(args.data_root, args.ann_file)) if args.data_root is not None else COCO(args.ann_file)
     print(f"Total number of images：{len(coco.getImgIds())}")
     categories = coco.loadCats(coco.getCatIds())
     category_names = [category["name"] for category in categories]
@@ -69,7 +66,7 @@ def show_bbox_only(coco, anns, show_label_bbox=True, is_filling=True):
     ax = plt.gca()
     ax.set_autoscale_on(False)
 
-    image2color = dict()
+    image2color = {}
     for cat in coco.getCatIds():
         image2color[cat] = (np.random.random((1, 3)) * 0.7 + 0.3).tolist()[0]
 
@@ -88,10 +85,7 @@ def show_bbox_only(coco, anns, show_label_bbox=True, is_filling=True):
         polygons.append(Polygon(np.array(poly).reshape((4, 2))))
         colors.append(color)
 
-        if show_label_bbox:
-            label_bbox = dict(facecolor=color)
-        else:
-            label_bbox = None
+        label_bbox = {"facecolor": color} if show_label_bbox else None
 
         ax.text(bbox_x, bbox_y, "%s" % (coco.loadCats(ann["category_id"])[0]["name"]), color="white", bbox=label_bbox)
 

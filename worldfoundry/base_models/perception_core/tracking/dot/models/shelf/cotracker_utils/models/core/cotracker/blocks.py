@@ -13,7 +13,7 @@ from timm.models.vision_transformer import Attention, Mlp
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(
             in_planes,
@@ -71,7 +71,7 @@ class ResidualBlock(nn.Module):
 
 class BasicEncoder(nn.Module):
     def __init__(self, input_dim=3, output_dim=128, stride=8, norm_fn="batch", dropout=0.0):
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.stride = stride
         self.norm_fn = norm_fn
         self.in_planes = 64
@@ -225,7 +225,10 @@ class AttnBlock(nn.Module):
 
         self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         mlp_hidden_dim = int(hidden_size * mlp_ratio)
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.mlp = Mlp(
             in_features=hidden_size,
             hidden_features=mlp_hidden_dim,

@@ -27,7 +27,7 @@ class EvaluationPredictor(torch.nn.Module):
         single_point: bool = True,
         n_iters: int = 6,
     ) -> None:
-        super(EvaluationPredictor, self).__init__()
+        super().__init__()
         self.grid_size = grid_size
         self.local_grid_size = local_grid_size
         self.single_point = single_point

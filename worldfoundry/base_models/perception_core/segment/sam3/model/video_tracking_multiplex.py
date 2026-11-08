@@ -1653,9 +1653,9 @@ class VideoTrackingMultiplex(nn.Module):
             # figure out the set of objects that are "conditional" on this frame
             if conditioning_objects is None:
                 conditioning_objects = []
-                unconditioning_objects = sorted(list(multiplex_state.get_all_valid_object_idx()))
+                unconditioning_objects = sorted(multiplex_state.get_all_valid_object_idx())
             else:
-                conditioning_objects = sorted(list(conditioning_objects))
+                conditioning_objects = sorted(conditioning_objects)
                 all_objects_idx = multiplex_state.get_all_valid_object_idx()
                 unconditioning_objects = sorted([i for i in all_objects_idx if i not in conditioning_objects])
 
@@ -2398,11 +2398,11 @@ class VideoTrackingMultiplex(nn.Module):
             past_frame_idx = frame_idx - r * self.num_maskmem
             past_out = output_dict["non_cond_frame_outputs"].get(past_frame_idx, None)
 
-            if past_out is not None:
-                if (
-                    self.use_memory_selection and past_out.get("eff_iou_score", 0) < self.mf_threshold
-                ) or not self.use_memory_selection:
-                    output_dict["non_cond_frame_outputs"][past_frame_idx] = _trim_past_out(past_out, current_out)
+            if past_out is not None and (
+                (self.use_memory_selection and past_out.get("eff_iou_score", 0) < self.mf_threshold)
+                or not self.use_memory_selection
+            ):
+                output_dict["non_cond_frame_outputs"][past_frame_idx] = _trim_past_out(past_out, current_out)
 
             if (
                 self.use_memory_selection and not self.offload_output_to_cpu_for_eval
@@ -2885,7 +2885,7 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
             transition_points: list[int] = []
             stage_to_new_objects: dict[int, list[int]] = defaultdict(list)
             for stage_id in range(start_frame_idx, num_frames):
-                visible_objects = sorted(list(visible_objects_per_frame[stage_id]))
+                visible_objects = sorted(visible_objects_per_frame[stage_id])
                 for obj_id in visible_objects:
                     if obj_id in object_appear_at_stage:
                         continue  # skip seen objects
@@ -2925,7 +2925,7 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
         else:
             # Use no transition points when dynamic training is disabled
             transition_points = []
-            visible_objects_on_first_frame = sorted(list(visible_objects_per_frame[start_frame_idx]))
+            visible_objects_on_first_frame = sorted(visible_objects_per_frame[start_frame_idx])
             # Since visible_objects_on_first_frame might not be consecutive
             object_orderings = list(range(len(visible_objects_on_first_frame)))
             # Use the original order for evaluation

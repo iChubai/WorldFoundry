@@ -57,11 +57,11 @@ class FlowAdaptor(UniCeptionAdaptorBase):
         flow_std = list(flow_std)
 
         # Handle the case where flow_mean and flow_std are passed as tuples
-        if isinstance(flow_mean, tuple) or isinstance(flow_mean, list):
+        if isinstance(flow_mean, (tuple, list)):
             flow_mean = torch.tensor(flow_mean, dtype=torch.float32)
             assert flow_mean.shape == (2,), f"Flow mean must be a 2D tensor, got {flow_mean.shape}"
 
-        if isinstance(flow_std, tuple) or isinstance(flow_std, list):
+        if isinstance(flow_std, (tuple, list)):
             flow_std = torch.tensor(flow_std, dtype=torch.float32)
             assert flow_std.shape == (2,), f"Flow std must be a 2D tensor, got {flow_std.shape}"
 

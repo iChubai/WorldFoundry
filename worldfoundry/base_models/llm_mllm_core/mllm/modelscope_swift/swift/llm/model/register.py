@@ -174,10 +174,7 @@ def load_by_unsloth(args):
         load_in_4bit=args.quant_bits == 4,
         load_in_8bit=args.quant_bits == 8,
     )
-    if isinstance(model, PeftModel):
-        base_model = model.model
-    else:
-        base_model = model
+    base_model = model.model if isinstance(model, PeftModel) else model
     base_model.model_dir = args.model_dir
     base_model.model_info = model_info
     base_model.model_meta = model_meta
@@ -531,10 +528,7 @@ def get_model_info_meta(
     if task_type is None:
         if model_meta.is_reward:
             num_labels = 1
-        if num_labels is None:
-            task_type = "causal_lm"
-        else:
-            task_type = "seq_cls"
+        task_type = "causal_lm" if num_labels is None else "seq_cls"
         if task_type == "seq_cls":
             assert num_labels is not None, "Please pass the parameter `num_labels`."
         if model_meta.task_type is not None:

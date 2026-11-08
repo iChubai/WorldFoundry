@@ -747,7 +747,7 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
             return
         assert 1 == 0
         safetensor_files = glob.glob(f"{expert_path}/*.safetensors")
-        expert_state_dict = dict()
+        expert_state_dict = {}
         for file_path in safetensor_files:
             with safe_open(file_path, framework="pt", device="cpu") as f:
                 for key in f.keys():

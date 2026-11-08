@@ -8,10 +8,7 @@ from lietorch import SE3
 
 from worldfoundry.base_models.three_dimensions.slam.droid_slam.factor_graph import FactorGraph
 
-if torch.__version__.startswith("2"):
-    autocast = partial(torch.autocast, device_type="cuda")
-else:
-    autocast = torch.cuda.amp.autocast
+autocast = partial(torch.autocast, device_type="cuda") if torch.__version__.startswith("2") else torch.cuda.amp.autocast
 
 
 class PoseTrajectoryFiller:

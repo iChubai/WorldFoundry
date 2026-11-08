@@ -891,7 +891,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         # freqs = torch.cat([freqs_x, freqs_image], dim=0)
 
         # arguments
-        kwargs = dict(e=e0, seq_lens=seq_lens, freqs=freqs_x, context=context, context_lens=context_lens)
+        kwargs = {"e": e0, "seq_lens": seq_lens, "freqs": freqs_x, "context": context, "context_lens": context_lens}
 
         def create_custom_forward(module):
             """Create custom forward.

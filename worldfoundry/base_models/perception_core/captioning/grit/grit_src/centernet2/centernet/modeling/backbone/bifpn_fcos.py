@@ -25,7 +25,7 @@ def split_name(name):
 
 class FeatureMapResampler(nn.Module):
     def __init__(self, in_channels, out_channels, stride, norm=""):
-        super(FeatureMapResampler, self).__init__()
+        super().__init__()
         if in_channels != out_channels:
             self.reduction = Conv2d(
                 in_channels,
@@ -56,7 +56,7 @@ class FeatureMapResampler(nn.Module):
 
 class BackboneWithTopLevels(Backbone):
     def __init__(self, backbone, out_channels, num_top_levels, norm=""):
-        super(BackboneWithTopLevels, self).__init__()
+        super().__init__()
         self.backbone = backbone
         backbone_output_shape = backbone.output_shape()
 
@@ -116,7 +116,7 @@ class SingleBiFPN(Backbone):
             out_channels (int): number of channels in the output feature maps.
             norm (str): the normalization to use.
         """
-        super(SingleBiFPN, self).__init__()
+        super().__init__()
 
         self.out_channels = out_channels
         # build 5-levels bifpn
@@ -141,7 +141,7 @@ class SingleBiFPN(Backbone):
         else:
             raise NotImplementedError
 
-        node_info = [_ for _ in in_channels_list]
+        node_info = list(in_channels_list)
 
         num_output_connections = [0 for _ in in_channels_list]
         for fnode in self.nodes:
@@ -190,7 +190,7 @@ class SingleBiFPN(Backbone):
                 paper convention: "p<stage>", where stage has stride = 2 ** stage e.g.,
                 ["n2", "n3", ..., "n6"].
         """
-        feats = [_ for _ in feats]
+        feats = list(feats)
         num_levels = len(feats)
         num_output_connections = [0 for _ in feats]
         for fnode in self.nodes:
@@ -274,7 +274,7 @@ class BiFPN(Backbone):
             num_repeats (int): the number of repeats of BiFPN.
             norm (str): the normalization to use.
         """
-        super(BiFPN, self).__init__()
+        super().__init__()
         assert isinstance(bottom_up, Backbone)
 
         # add extra feature levels (i.e., 6 and 7)

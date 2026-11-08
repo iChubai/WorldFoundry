@@ -44,10 +44,7 @@ def kaiser_sinc_filter1d(cutoff, half_width, kernel_size):  # return filter [1,1
     window = torch.kaiser_window(kernel_size, beta=beta, periodic=False)
 
     # ratio = 0.5/cutoff -> 2 * cutoff = 1 / ratio
-    if even:
-        time = torch.arange(-half_size, half_size) + 0.5
-    else:
-        time = torch.arange(kernel_size) - half_size
+    time = torch.arange(-half_size, half_size) + 0.5 if even else torch.arange(kernel_size) - half_size
     if cutoff == 0:
         filter_ = torch.zeros_like(time)
     else:

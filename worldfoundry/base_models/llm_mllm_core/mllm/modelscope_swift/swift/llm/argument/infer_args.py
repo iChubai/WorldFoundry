@@ -180,9 +180,6 @@ class InferArguments(MergeArguments, VllmArguments, LmdeployArguments, BaseArgum
         self._init_ddp()
 
     def _init_eval_human(self):
-        if len(self.dataset) == 0 and len(self.val_dataset) == 0:
-            eval_human = True
-        else:
-            eval_human = False
+        eval_human = bool(len(self.dataset) == 0 and len(self.val_dataset) == 0)
         self.eval_human = eval_human
         logger.info(f"Setting args.eval_human: {self.eval_human}")

@@ -172,8 +172,11 @@ def pad_vk_mm_fwd(a, b, compute_dtype: torch.dtype, output_dtype: torch.dtype):
     B, N, H, C = a.shape
     # Allocates output.
     c = torch.empty((B, H, C + 1, C), device=a.device, dtype=output_dtype)
+
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (B * H * triton.cdiv(C, META["BLOCK_SIZE_C"]),)
+    def grid(META):
+        return (B * H * triton.cdiv(C, META["BLOCK_SIZE_C"]),)
+
     if compute_dtype == torch.float and output_dtype == torch.float:
         pad_vk_mm_fwd_kernel_fp32_fp32[grid](
             a,

@@ -38,7 +38,7 @@ class ResidualConvBlock(nn.Module):
         activation: Literal["relu", "leaky_relu", "silu", "elu"] = "relu",
         norm: Literal["group_norm", "layer_norm"] = "group_norm",
     ):
-        super(ResidualConvBlock, self).__init__()
+        super().__init__()
         if out_channels is None:
             out_channels = in_channels
         if hidden_channels is None:

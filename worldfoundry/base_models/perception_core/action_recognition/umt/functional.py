@@ -32,10 +32,7 @@ def resize_clip(clip, size, interpolation="bilinear"):
             size = (new_w, new_h)
         else:
             size = size[0], size[1]
-        if interpolation == "bilinear":
-            np_inter = cv2.INTER_LINEAR
-        else:
-            np_inter = cv2.INTER_NEAREST
+        np_inter = cv2.INTER_LINEAR if interpolation == "bilinear" else cv2.INTER_NEAREST
         scaled = [cv2.resize(img, size, interpolation=np_inter) for img in clip]
     elif isinstance(clip[0], PIL.Image.Image):
         if isinstance(size, numbers.Number):
@@ -47,10 +44,7 @@ def resize_clip(clip, size, interpolation="bilinear"):
             size = (new_w, new_h)
         else:
             size = size[1], size[0]
-        if interpolation == "bilinear":
-            pil_inter = PIL.Image.BILINEAR
-        else:
-            pil_inter = PIL.Image.NEAREST
+        pil_inter = PIL.Image.BILINEAR if interpolation == "bilinear" else PIL.Image.NEAREST
         scaled = [img.resize(size, pil_inter) for img in clip]
     else:
         raise TypeError("Expected numpy.ndarray or PIL.Image" + f"but got list of {type(clip[0])}")

@@ -8,7 +8,7 @@ from timm.models.layers import trunc_normal_
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
@@ -59,7 +59,7 @@ class ResidualBlock(nn.Module):
 
 class BottleneckBlock(nn.Module):
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super(BottleneckBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
         self.conv2 = nn.Conv2d(planes // 4, planes // 4, kernel_size=3, padding=1, stride=stride)
@@ -116,7 +116,7 @@ class BottleneckBlock(nn.Module):
 
 class BasicEncoder(nn.Module):
     def __init__(self, input_dim=3, output_dim=128, norm_fn="batch", dropout=0.0):
-        super(BasicEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
         mul = input_dim // 3
 
@@ -166,7 +166,7 @@ class BasicEncoder(nn.Module):
 
     def forward(self, x):
         # if input is list, combine batch dimension
-        is_list = isinstance(x, tuple) or isinstance(x, list)
+        is_list = isinstance(x, (tuple, list))
         if is_list:
             batch_dim = x[0].shape[0]
             x = torch.cat(x, dim=0)
@@ -192,7 +192,7 @@ class BasicEncoder(nn.Module):
 
 class SmallEncoder(nn.Module):
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0):
-        super(SmallEncoder, self).__init__()
+        super().__init__()
         self.norm_fn = norm_fn
 
         if self.norm_fn == "group":
@@ -240,7 +240,7 @@ class SmallEncoder(nn.Module):
 
     def forward(self, x):
         # if input is list, combine batch dimension
-        is_list = isinstance(x, tuple) or isinstance(x, list)
+        is_list = isinstance(x, (tuple, list))
         if is_list:
             batch_dim = x[0].shape[0]
             x = torch.cat(x, dim=0)
@@ -265,7 +265,7 @@ class SmallEncoder(nn.Module):
 
 class ConvNets(nn.Module):
     def __init__(self, in_dim, out_dim, inter_dim, depth, stride=1):
-        super(ConvNets, self).__init__()
+        super().__init__()
 
         self.conv_first = nn.Conv2d(in_dim, inter_dim, kernel_size=3, padding=1, stride=stride)
         self.conv_last = nn.Conv2d(inter_dim, out_dim, kernel_size=3, padding=1, stride=stride)
@@ -284,7 +284,7 @@ class ConvNets(nn.Module):
 
 class FlowHead(nn.Module):
     def __init__(self, input_dim=128, hidden_dim=256):
-        super(FlowHead, self).__init__()
+        super().__init__()
         self.conv1 = nn.Conv2d(input_dim, hidden_dim, 3, padding=1)
         self.conv2 = nn.Conv2d(hidden_dim, 2, 3, padding=1)
         self.relu = nn.ReLU(inplace=True)
@@ -295,7 +295,7 @@ class FlowHead(nn.Module):
 
 class ConvGRU(nn.Module):
     def __init__(self, hidden_dim=128, input_dim=192 + 128):
-        super(ConvGRU, self).__init__()
+        super().__init__()
         self.convz = nn.Conv2d(hidden_dim + input_dim, hidden_dim, 3, padding=1)
         self.convr = nn.Conv2d(hidden_dim + input_dim, hidden_dim, 3, padding=1)
         self.convq = nn.Conv2d(hidden_dim + input_dim, hidden_dim, 3, padding=1)
@@ -313,7 +313,7 @@ class ConvGRU(nn.Module):
 
 class SepConvGRU(nn.Module):
     def __init__(self, hidden_dim=128, input_dim=192 + 128):
-        super(SepConvGRU, self).__init__()
+        super().__init__()
         self.convz1 = nn.Conv2d(hidden_dim + input_dim, hidden_dim, (1, 5), padding=(0, 2))
         self.convr1 = nn.Conv2d(hidden_dim + input_dim, hidden_dim, (1, 5), padding=(0, 2))
         self.convq1 = nn.Conv2d(hidden_dim + input_dim, hidden_dim, (1, 5), padding=(0, 2))
@@ -342,7 +342,7 @@ class SepConvGRU(nn.Module):
 
 class BasicMotionEncoder(nn.Module):
     def __init__(self, args):
-        super(BasicMotionEncoder, self).__init__()
+        super().__init__()
         cor_planes = args.motion_feature_dim
         self.convc1 = nn.Conv2d(cor_planes, 256, 1, padding=0)
         self.convc2 = nn.Conv2d(256, 192, 3, padding=1)
@@ -363,7 +363,7 @@ class BasicMotionEncoder(nn.Module):
 
 class BasicFuseMotion(nn.Module):
     def __init__(self, args):
-        super(BasicFuseMotion, self).__init__()
+        super().__init__()
         cor_planes = args.motion_feature_dim
         out_planes = args.query_latent_dim
 
@@ -404,7 +404,7 @@ class BasicFuseMotion(nn.Module):
 
 class BasicUpdateBlock(nn.Module):
     def __init__(self, args, hidden_dim=128, input_dim=128):
-        super(BasicUpdateBlock, self).__init__()
+        super().__init__()
         self.args = args
         self.encoder = BasicMotionEncoder(args)
         self.gru = SepConvGRU(hidden_dim=hidden_dim, input_dim=128 + hidden_dim)
@@ -428,7 +428,7 @@ class BasicUpdateBlock(nn.Module):
 
 class DirectMeanMaskPredictor(nn.Module):
     def __init__(self, args):
-        super(DirectMeanMaskPredictor, self).__init__()
+        super().__init__()
         self.flow_head = FlowHead(args.predictor_dim, hidden_dim=256)
         self.mask = nn.Sequential(
             nn.Conv2d(args.predictor_dim, 256, 3, padding=1),
@@ -445,7 +445,7 @@ class DirectMeanMaskPredictor(nn.Module):
 
 class BaiscMeanPredictor(nn.Module):
     def __init__(self, args, hidden_dim=128):
-        super(BaiscMeanPredictor, self).__init__()
+        super().__init__()
         self.args = args
         self.encoder = BasicMotionEncoder(args)
         self.flow_head = FlowHead(hidden_dim, hidden_dim=256)
@@ -464,7 +464,7 @@ class BaiscMeanPredictor(nn.Module):
 
 class BasicRPEEncoder(nn.Module):
     def __init__(self, args):
-        super(BasicRPEEncoder, self).__init__()
+        super().__init__()
         self.args = args
         dim = args.query_latent_dim
         self.encoder = nn.Sequential(
@@ -484,7 +484,7 @@ from .twins import Block, CrossBlock
 
 class TwinsSelfAttentionLayer(nn.Module):
     def __init__(self, args):
-        super(TwinsSelfAttentionLayer, self).__init__()
+        super().__init__()
         self.args = args
         embed_dim = 256
         num_heads = 8
@@ -549,7 +549,7 @@ class TwinsSelfAttentionLayer(nn.Module):
 
 class TwinsCrossAttentionLayer(nn.Module):
     def __init__(self, args):
-        super(TwinsCrossAttentionLayer, self).__init__()
+        super().__init__()
         self.args = args
         embed_dim = 256
         num_heads = 8

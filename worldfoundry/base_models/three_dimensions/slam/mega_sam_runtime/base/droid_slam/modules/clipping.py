@@ -19,7 +19,7 @@ class GradClip(torch.autograd.Function):
 
 class GradientClip(nn.Module):
     def __init__(self):
-        super(GradientClip, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         return GradClip.apply(x)

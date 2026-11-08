@@ -67,15 +67,15 @@ def create_byt5(args, device):
         tuple: (byt5_tokenizer, byt5_model, byt5_max_length)
     """
     byt5_max_length = args["byt5_max_length"]
-    byt5_config = dict(
-        byt5_name=args["byT5_google_path"],
-        special_token=True,
-        color_special_token=True,
-        font_special_token=True,
-        color_ann_path=args["multilingual_prompt_format_color_path"],
-        font_ann_path=args["multilingual_prompt_format_font_path"],
-        multilingual=True,
-    )
+    byt5_config = {
+        "byt5_name": args["byT5_google_path"],
+        "special_token": True,
+        "color_special_token": True,
+        "font_special_token": True,
+        "color_ann_path": args["multilingual_prompt_format_color_path"],
+        "font_ann_path": args["multilingual_prompt_format_font_path"],
+        "multilingual": True,
+    }
     huggingface_cache_dir = None
     byt5_model, byt5_tokenizer = load_byt5_and_byt5_tokenizer(
         **byt5_config,
@@ -182,10 +182,7 @@ def load_byt5_and_byt5_tokenizer(
         cache_dir=huggingface_cache_dir,
     ).get_encoder()
 
-    if "cuda" not in str(device):
-        device = torch.device(device)
-    else:
-        device = torch.device(device)
+    device = torch.device(device) if "cuda" not in str(device) else torch.device(device)
     byt5_text_encoder = byt5_text_encoder.to(device)
 
     if special_token:

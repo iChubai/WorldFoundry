@@ -257,7 +257,7 @@ class TemporalConvBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels=None, dropout=0.0, spatial_aware=False, causal=False):
         """3D conv mixer along time (optionally spatially aware kernels)."""
-        super(TemporalConvBlock, self).__init__()
+        super().__init__()
         if out_channels is None:
             out_channels = in_channels
         self.in_channels = in_channels
@@ -373,7 +373,7 @@ class UNetModel(nn.Module):
         action_dim=13,
     ):
         """Build the 3D UNet encoder/decoder with spatial and optional temporal attn."""
-        super(UNetModel, self).__init__()
+        super().__init__()
         if num_heads == -1:
             assert num_head_channels != -1, "Either num_heads or num_head_channels has to be set"
         if num_head_channels == -1:

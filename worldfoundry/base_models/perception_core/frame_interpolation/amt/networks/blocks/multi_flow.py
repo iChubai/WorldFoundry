@@ -47,7 +47,7 @@ def multi_flow_combine(comb_block, img0, img1, flow0, flow1, mask=None, img_res=
 
 class MultiFlowDecoder(nn.Module):
     def __init__(self, in_ch, skip_ch, num_flows=3):
-        super(MultiFlowDecoder, self).__init__()
+        super().__init__()
         self.num_flows = num_flows
         self.convblock = nn.Sequential(
             convrelu(in_ch * 3 + 4, in_ch * 3),

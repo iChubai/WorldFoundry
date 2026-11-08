@@ -69,10 +69,7 @@ def normal_weight_from_xyz(xyz: torch.Tensor, robust: bool = True) -> torch.Tens
     from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext import _C
 
     assert xyz.size(0) == 1, "Batch size must be 1."
-    if robust:
-        normal_weight = _C.compute_normal_weight_robust(xyz[0])
-    else:
-        normal_weight = _C.compute_normal_weight(xyz[0])
+    normal_weight = _C.compute_normal_weight_robust(xyz[0]) if robust else _C.compute_normal_weight(xyz[0])
     normal_weight = normal_weight.unsqueeze(0)
 
     return normal_weight if batch_dim else normal_weight.squeeze(0)

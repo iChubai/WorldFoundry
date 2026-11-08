@@ -8,11 +8,10 @@ from typing import TYPE_CHECKING
 
 from .helpers import lazy_import
 from .helpers import lazy_import_from as lazy_import_from
+import contextlib
 
-try:
+with contextlib.suppress(ImportError):
     from .interface import *
-except ImportError:
-    pass
 
 __all__ = ["np", "numpy", "pt", "torch"]
 

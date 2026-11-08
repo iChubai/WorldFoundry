@@ -125,7 +125,7 @@ class Adapter(nn.Module):
             sk: The sk.
             use_conv: The use conv.
         """
-        super(Adapter, self).__init__()
+        super().__init__()
         self.unshuffle = nn.PixelUnshuffle(8)
         self.channels = channels
         self.nums_rb = nums_rb

@@ -59,7 +59,7 @@ class FrameDirStream(VideoStream):
             self.frame_files.extend(sorted(path.glob(f"*{ext}")))
             self.frame_files.extend(sorted(path.glob(f"*{ext.upper()}")))
 
-        self.frame_files = sorted(list(set(self.frame_files)))
+        self.frame_files = sorted(set(self.frame_files))
 
         if not self.frame_files:
             raise ValueError(f"No image files found in directory: {path}")

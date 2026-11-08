@@ -35,7 +35,7 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob=None):
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
@@ -397,10 +397,7 @@ class VisionTransformer(nn.Module):
 
         rel_pos_bias = self.rel_pos_bias() if self.rel_pos_bias is not None else None
         for blk in self.blocks:
-            if self.use_checkpoint:
-                x = checkpoint.checkpoint(blk, x, rel_pos_bias)
-            else:
-                x = blk(x, rel_pos_bias)
+            x = checkpoint.checkpoint(blk, x, rel_pos_bias) if self.use_checkpoint else blk(x, rel_pos_bias)
         return x
 
     #         x = self.norm(x)

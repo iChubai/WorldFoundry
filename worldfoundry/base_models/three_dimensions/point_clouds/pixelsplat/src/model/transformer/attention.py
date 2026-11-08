@@ -73,7 +73,7 @@ class Attention(nn.Module):
             k, v = self.to_kv(z).chunk(2, dim=-1)
             qkv = (q, k, v)
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=self.heads), qkv)
+        q, k, v = (rearrange(t, "b n (h d) -> b h n d", h=self.heads) for t in qkv)
 
         dots = torch.matmul(q, k.transpose(-1, -2)) * self.scale
 

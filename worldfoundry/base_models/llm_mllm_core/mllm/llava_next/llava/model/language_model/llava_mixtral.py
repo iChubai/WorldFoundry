@@ -36,7 +36,7 @@ class LlavaMixtralModel(LlavaMetaModel, MixtralModel):
     config_class = LlavaMixtralConfig
 
     def __init__(self, config: MixtralConfig):
-        super(LlavaMixtralModel, self).__init__(config)
+        super().__init__(config)
 
 
 class LlavaMixtralForCausalLM(MixtralForCausalLM, LlavaMetaForCausalLM):

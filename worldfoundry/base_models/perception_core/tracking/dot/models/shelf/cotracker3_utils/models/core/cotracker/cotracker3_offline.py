@@ -14,7 +14,7 @@ torch.manual_seed(0)
 
 class CoTrackerThreeOffline(CoTrackerThreeBase):
     def __init__(self, **args):
-        super(CoTrackerThreeOffline, self).__init__(**args)
+        super().__init__(**args)
 
     def forward(
         self,

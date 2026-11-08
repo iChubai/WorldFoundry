@@ -81,7 +81,7 @@ class DPTHead(nn.Module):
             out_channels: The out channels.
             use_clstoken: The use clstoken.
         """
-        super(DPTHead, self).__init__()
+        super().__init__()
 
         self.use_clstoken = use_clstoken
 

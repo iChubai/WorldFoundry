@@ -556,10 +556,7 @@ class WanTransformer3DModel(
 
         # blocks
         if cross_attn_type is None:
-            if model_type == "t2v":
-                cross_attn_type = "t2v_cross_attn"
-            else:
-                cross_attn_type = "i2v_cross_attn"
+            cross_attn_type = "t2v_cross_attn" if model_type == "t2v" else "i2v_cross_attn"
             # else:
             # cross_attn_type = "cross_attn"
 
@@ -749,18 +746,18 @@ class WanTransformer3DModel(
         cam_emb = None
         if cam_viewmats is not None:
             cam_emb = {"viewmats": cam_viewmats, "K": cam_K}
-        block_kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            dtype=dtype,
-            t=t,
-            group=self.sp_group,
-            cam_emb=cam_emb,
-        )
+        block_kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "dtype": dtype,
+            "t": t,
+            "group": self.sp_group,
+            "cam_emb": cam_emb,
+        }
         for block in self.blocks:
             x = block(x, **block_kwargs)
 

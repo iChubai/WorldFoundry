@@ -29,7 +29,7 @@ class BasicEncoder(nn.Module):
             output_dim: The output dim.
             stride: The stride.
         """
-        super(BasicEncoder, self).__init__()
+        super().__init__()
 
         self.stride = stride
         self.norm_fn = "instance"
@@ -115,7 +115,7 @@ class ShallowEncoder(nn.Module):
             stride: The stride.
             norm_fn: The norm fn.
         """
-        super(ShallowEncoder, self).__init__()
+        super().__init__()
         self.stride = stride
         self.norm_fn = norm_fn
         self.in_planes = output_dim

@@ -118,10 +118,7 @@ def resolve_inheritance(config: DictConfig | ListConfig) -> Any:
                     else OmegaConf.merge(parent_config, load_config(parent_path))
                 )
 
-            if len(config.keys()) > 0:
-                config = OmegaConf.merge(parent_config, config)
-            else:
-                config = parent_config
+            config = OmegaConf.merge(parent_config, config) if len(config.keys()) > 0 else parent_config
     return config
 
 

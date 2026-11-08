@@ -78,10 +78,7 @@ def read_image(path: Union[str, os.PathLike, IO]) -> np.ndarray:
     """
     Read a image, return uint8 RGB array of shape (H, W, 3).
     """
-    if isinstance(path, (str, os.PathLike)):
-        data = Path(path).read_bytes()
-    else:
-        data = path.read()
+    data = Path(path).read_bytes() if isinstance(path, (str, os.PathLike)) else path.read()
     image = cv2.cvtColor(cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
     return image
 
@@ -103,10 +100,7 @@ def read_depth(path: Union[str, os.PathLike, IO]) -> np.ndarray:
     """
     Read a depth image, return float32 depth array of shape (H, W).
     """
-    if isinstance(path, (str, os.PathLike)):
-        data = Path(path).read_bytes()
-    else:
-        data = path.read()
+    data = Path(path).read_bytes() if isinstance(path, (str, os.PathLike)) else path.read()
     pil_image = Image.open(io.BytesIO(data))
     near = float(pil_image.info.get("near"))
     far = float(pil_image.info.get("far"))
@@ -177,10 +171,7 @@ def read_segmentation(path: Union[str, os.PathLike, IO]) -> Tuple[np.ndarray, Di
         - `mask`: uint8 or uint16 numpy.ndarray of shape (H, W).
         - `labels`: Dict[str, int]. The label mapping, a dictionary of {label_name: label_id}.
     """
-    if isinstance(path, (str, os.PathLike)):
-        data = Path(path).read_bytes()
-    else:
-        data = path.read()
+    data = Path(path).read_bytes() if isinstance(path, (str, os.PathLike)) else path.read()
     pil_image = Image.open(io.BytesIO(data))
     labels = json.loads(pil_image.info["labels"]) if "labels" in pil_image.info else None
     mask = np.array(pil_image)
@@ -215,10 +206,7 @@ def read_normal(path: Union[str, os.PathLike, IO]) -> np.ndarray:
     """
     Read a normal image, return float32 normal array of shape (H, W, 3).
     """
-    if isinstance(path, (str, os.PathLike)):
-        data = Path(path).read_bytes()
-    else:
-        data = path.read()
+    data = Path(path).read_bytes() if isinstance(path, (str, os.PathLike)) else path.read()
     normal = cv2.cvtColor(cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB)
     mask_nan = np.all(normal == 0, axis=-1)
     normal = (normal.astype(np.float32) / 65535 - 0.5) * [2.0, -2.0, -2.0]
@@ -249,10 +237,7 @@ def read_mask(path: Union[str, os.PathLike, IO[bytes]]) -> np.ndarray:
     """
     Read a binary mask, return bool array of shape (H, W).
     """
-    if isinstance(path, (str, os.PathLike)):
-        data = Path(path).read_bytes()
-    else:
-        data = path.read()
+    data = Path(path).read_bytes() if isinstance(path, (str, os.PathLike)) else path.read()
     mask = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_UNCHANGED)
     if len(mask.shape) == 3:
         mask = mask[..., 0]
@@ -284,10 +269,7 @@ def read_json(path: Union[str, os.PathLike, IO[str]]) -> JSON_TYPE:
     Returns:
         The return value.
     """
-    if isinstance(path, (str, os.PathLike)):
-        text = Path(path).read_text()
-    else:
-        text = path.read()
+    text = Path(path).read_text() if isinstance(path, (str, os.PathLike)) else path.read()
     return json.loads(text)
 
 

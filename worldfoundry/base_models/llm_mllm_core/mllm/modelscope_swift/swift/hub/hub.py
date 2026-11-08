@@ -489,5 +489,5 @@ class HFHub(HubOperation):
 
 def get_hub(use_hf: bool | None = None):
     if use_hf is None:
-        use_hf = True if use_hf_hub() else False
+        use_hf = bool(use_hf_hub())
     return {True: HFHub, False: MSHub}[use_hf]

@@ -16,7 +16,7 @@ def graph_to_edge_list(graph):
 
 
 def keyframe_indicies(graph):
-    return torch.as_tensor([u for u in graph])
+    return torch.as_tensor(list(graph))
 
 
 def meshgrid(m, n, device="cuda"):

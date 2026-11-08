@@ -1012,10 +1012,7 @@ class AutoencoderKLHunyuanVideo(ModelMixin, ConfigMixin):
         """
         x = sample
         posterior = self.encode(x).latent_dist
-        if sample_posterior:
-            z = posterior.sample(generator=generator)
-        else:
-            z = posterior.mode()
+        z = posterior.sample(generator=generator) if sample_posterior else posterior.mode()
         dec = self.decode(z, return_dict=return_dict)
         return dec
 

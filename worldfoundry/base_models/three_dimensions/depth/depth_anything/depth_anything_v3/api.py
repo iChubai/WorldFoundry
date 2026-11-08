@@ -288,15 +288,17 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         # autoregressive spatial-memory updates.
         use_autocast = image.device.type == "cuda"
         autocast_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-        with torch.no_grad():
-            with torch.autocast(
+        with (
+            torch.no_grad(),
+            torch.autocast(
                 device_type=image.device.type,
                 dtype=autocast_dtype,
                 enabled=use_autocast,
-            ):
-                return self.model(
-                    image, extrinsics, intrinsics, export_feat_layers, infer_gs, use_ray_pose, ref_view_strategy
-                )
+            ),
+        ):
+            return self.model(
+                image, extrinsics, intrinsics, export_feat_layers, infer_gs, use_ray_pose, ref_view_strategy
+            )
 
     def inference(
         self,

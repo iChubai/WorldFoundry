@@ -379,7 +379,7 @@ class STEP1TextEncoder(torch.nn.Module):
             model_dir: The model dir.
             max_length: The max length.
         """
-        super(STEP1TextEncoder, self).__init__()
+        super().__init__()
         self.max_length = max_length
         self.text_tokenizer = Wrapped_StepChatTokenizer(os.path.join(model_dir, "step1_chat_tokenizer.model"))
         text_encoder = Step1Model.from_pretrained(model_dir)

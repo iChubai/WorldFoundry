@@ -23,10 +23,7 @@ def pairwise_iou(pred_masks, gt_masks, eps=1e-6):
     area_gt = gt_flat.sum(dim=1, keepdim=True)  # (M, 1)
     # Union: (N, M)
     union = area_pred + area_gt.t() - intersection
-    if eps is None:
-        iou = intersection / union.clamp(min=1)
-    else:
-        iou = intersection / (union + eps)
+    iou = intersection / union.clamp(min=1) if eps is None else intersection / (union + eps)
     return iou  # shape: (N, M)
 
 

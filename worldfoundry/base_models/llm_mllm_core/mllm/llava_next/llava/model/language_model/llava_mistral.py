@@ -40,7 +40,7 @@ class LlavaMistralModel(LlavaMetaModel, MistralModel):
     config_class = LlavaMistralConfig
 
     def __init__(self, config: MistralConfig):
-        super(LlavaMistralModel, self).__init__(config)
+        super().__init__(config)
 
 
 class LlavaMistralForCausalLM(MistralForCausalLM, LlavaMetaForCausalLM):

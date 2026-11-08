@@ -71,7 +71,7 @@ def get_model_parameter_info(model: nn.Module, name: str | None = None) -> str:
 
 
 def find_sub_module(module: torch.nn.Module, module_name: str) -> list[torch.nn.Module]:
-    _modules = list()
+    _modules = []
     for name, sub_module in module.named_modules():
         if not name:
             continue
@@ -206,10 +206,7 @@ def find_layers(
 ) -> list[str]:
     # The content of target_module_names cannot exist in inner_nodes.
     sub_module_str = sub_module
-    if sub_module is None:
-        sub_module = model
-    else:
-        sub_module = deep_getattr(model, sub_module)
+    sub_module = model if sub_module is None else deep_getattr(model, sub_module)
     inner_nodes = set()
     for name, module in model.named_modules():
         name = re.sub(r"\d+\.", "{}.", name)

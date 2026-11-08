@@ -44,7 +44,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
                 f"Encoder module {encoder_pointer} does not match decoder module {decoder_pointer}"
             )
 
-            all_encoder_weights = set([module_name + "/" + sub_name for sub_name in encoder_modules.keys()])
+            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules.keys()}
             encoder_layer_pos = 0
             for name, _module in decoder_modules.items():
                 if name.isdigit():

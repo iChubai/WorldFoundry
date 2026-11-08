@@ -216,7 +216,7 @@ class RandomAffine:
                 if len(shear) == 2:
                     self.shear = [shear[0], shear[1], 0.0, 0.0]
                 elif len(shear) == 4:
-                    self.shear = [s for s in shear]
+                    self.shear = list(shear)
         else:
             self.shear = shear
 
@@ -241,10 +241,7 @@ class RandomAffine:
         else:
             translations = (0, 0)
 
-        if scale_ranges is not None:
-            scale = random.uniform(scale_ranges[0], scale_ranges[1])
-        else:
-            scale = 1.0
+        scale = random.uniform(scale_ranges[0], scale_ranges[1]) if scale_ranges is not None else 1.0
 
         if shears is not None:
             if len(shears) == 2:
@@ -532,7 +529,7 @@ class ToOnehot:
         new_mask = np.zeros((self.max_obj_n + 1, *mask.shape), np.uint8)
 
         if not obj_list:
-            obj_list = list()
+            obj_list = []
             obj_max = mask.max() + 1
             for i in range(1, obj_max):
                 tmp = (mask == i).astype(np.uint8)

@@ -52,7 +52,7 @@ class Attention(nn.Module):
 
         q, k = self.to_qk(fmap).chunk(2, dim=1)
 
-        q, k = map(lambda t: rearrange(t, "b (h d) x y -> b h x y d", h=heads), (q, k))
+        q, k = (rearrange(t, "b (h d) x y -> b h x y d", h=heads) for t in (q, k))
         q = self.scale * q
 
         # if self.args.position_only:

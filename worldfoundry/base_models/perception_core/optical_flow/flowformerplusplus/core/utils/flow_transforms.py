@@ -133,10 +133,7 @@ class SpatialAug:
             # im0
             self.to_identity()
             # TODO add mirror
-            if np.random.binomial(1, 0.5):
-                mirror = True
-            else:
-                mirror = False
+            mirror = bool(np.random.binomial(1, 0.5))
             ##TODO
             # mirror = False
             if mirror:

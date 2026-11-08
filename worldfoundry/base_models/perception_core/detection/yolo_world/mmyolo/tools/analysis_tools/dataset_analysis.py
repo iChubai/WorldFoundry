@@ -353,7 +353,7 @@ def main():
     # Call the category name and save address
     if args.class_name is None:
         classes = dataset.metainfo["classes"]
-        classes_idx = [i for i in range(len(classes))]
+        classes_idx = list(range(len(classes)))
         fig_set = fig_all_set
     elif args.class_name in dataset.metainfo["classes"]:
         classes = [args.class_name]

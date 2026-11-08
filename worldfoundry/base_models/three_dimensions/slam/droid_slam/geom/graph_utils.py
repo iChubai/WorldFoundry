@@ -36,7 +36,7 @@ def keyframe_indicies(graph):
     Args:
         graph: The graph.
     """
-    return torch.as_tensor([u for u in graph])
+    return torch.as_tensor(list(graph))
 
 
 def meshgrid(m, n, device="cuda"):

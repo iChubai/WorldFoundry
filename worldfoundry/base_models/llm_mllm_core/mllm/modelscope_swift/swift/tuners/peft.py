@@ -90,7 +90,7 @@ class LoraConfig(peft.LoraConfig):
         if hasattr(PeftConfigMixin, "from_pretrained_origin"):
             self = PeftConfigMixin.from_pretrained_origin(pretrained_model_name_or_path, subfolder, **kwargs)
         else:
-            self = super(LoraConfig, cls).from_pretrained(pretrained_model_name_or_path, subfolder, **kwargs)
+            self = super(LoraConfig, cls).from_pretrained(pretrained_model_name_or_path, subfolder, **kwargs)  # noqa: UP008 - LoraConfig is rebound to its wrap_module wrapper at import time.
 
         if type(self) is peft.LoraConfig:
             self = LoraConfig(**self.to_dict())
@@ -226,10 +226,7 @@ def adalora_forward(self, *args, **kwargs):
                 if isinstance(regu_loss, torch.Tensor):
                     regu_loss = regu_loss.to(para_cov.device)
                 regu_loss += torch.norm(para_cov - I, p="fro")
-        if num_param > 0:
-            regu_loss = regu_loss / num_param
-        else:
-            regu_loss = 0
+        regu_loss = regu_loss / num_param if num_param > 0 else 0
         if isinstance(regu_loss, torch.Tensor) and isinstance(outputs.loss, torch.Tensor):
             regu_loss = regu_loss.to(outputs.loss.device)
         outputs.loss += orth_reg_weight * regu_loss

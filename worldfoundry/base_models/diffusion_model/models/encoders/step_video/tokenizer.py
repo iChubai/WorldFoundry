@@ -275,7 +275,7 @@ class Wrapped_StepChatTokenizer(StepChatTokenizer):
 
         # padding y based on tp size
         padded_len = 0
-        padded_flag = True if padded_len > 0 else False
+        padded_flag = padded_len > 0
         if padded_flag:
             pad_tokens = torch.tensor([[self.PAD] * max_length], device=out_tokens.device)
             pad_attn_mask = torch.tensor([[1] * padded_len + [0] * (max_length - padded_len)], device=attn_mask.device)

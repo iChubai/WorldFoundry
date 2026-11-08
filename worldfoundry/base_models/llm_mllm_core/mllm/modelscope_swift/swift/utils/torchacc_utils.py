@@ -274,10 +274,7 @@ def save_ta_fsdp_checkpoint(self_model, tokenizer, args, output_dir):
 
     # rank 0 consolidates and saves the whole checkpoint.
     if xm.is_master_ordinal(local=False):
-        if isinstance(model, PeftModel):
-            ckpt_suffix = "rank*-of-*-adapter_model.bin"
-        else:
-            ckpt_suffix = "rank*-of-*-pytorch_model.bin"
+        ckpt_suffix = "rank*-of-*-adapter_model.bin" if isinstance(model, PeftModel) else "rank*-of-*-pytorch_model.bin"
         full_state_dict, _ = consolidate_sharded_model_checkpoints(
             ckpt_prefix=os.path.join(output_dir, ""), ckpt_suffix=ckpt_suffix, save_model=False
         )
@@ -510,10 +507,7 @@ def patah_chatglm_model(model):
             cache_k, cache_v = kv_cache
             key_layer = torch.cat((cache_k, key_layer), dim=0)
             value_layer = torch.cat((cache_v, value_layer), dim=0)
-        if use_cache:
-            kv_cache = (key_layer, value_layer)
-        else:
-            kv_cache = None
+        kv_cache = (key_layer, value_layer) if use_cache else None
 
         if self.multi_query_attention:
             key_layer = key_layer.unsqueeze(-2)
@@ -747,9 +741,8 @@ def patch_qwen2_model(model):
         else:
             raise ValueError("You have to specify either decoder_input_ids or decoder_inputs_embeds")
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                use_cache = False
+        if self.gradient_checkpointing and self.training and use_cache:
+            use_cache = False
 
         past_key_values_length = 0
 
@@ -873,9 +866,9 @@ def patch_clip_grad_norm(accelerator):
         """
         if self.distributed_type == DistributedType.FSDP:
             self.unscale_gradients()
-            parameters = [p for p in parameters]
+            parameters = list(parameters)
             for model in self._models:
-                if parameters == [p for p in model.parameters()]:
+                if parameters == list(model.parameters()):
                     return model.clip_grad_norm_(max_norm, norm_type)
         elif self.distributed_type == DistributedType.DEEPSPEED:
             # `accelerator.backward(loss)` is doing that automatically. Therefore, its implementation is not needed
@@ -896,9 +889,9 @@ def patch_clip_grad_norm(accelerator):
                     acc_opt.gradient_state.is_xla_gradients_synced = True
             if os.environ.get("ACCELERATE_USE_FSDP", "false") == "true":
                 self.unscale_gradients()
-                parameters = [p for p in parameters]
+                parameters = list(parameters)
                 for model in self._models:
-                    if parameters == [p for p in model.parameters()]:
+                    if parameters == list(model.parameters()):
                         return model._get_underlay_model().clip_grad_norm_(max_norm, norm_type)
         self.unscale_gradients()
         return torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type)

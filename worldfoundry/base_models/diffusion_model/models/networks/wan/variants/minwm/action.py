@@ -185,10 +185,7 @@ class WanSelfAttention(nn.Module):
         q, k, v = qkv_fn(x)
 
         # SP: scatter heads, gather sequence for attention
-        if _HAS_SP_INFRA:
-            sp_enabled = get_parallel_state().sp_enabled
-        else:
-            sp_enabled = False
+        sp_enabled = get_parallel_state().sp_enabled if _HAS_SP_INFRA else False
 
         # PRoPE: apply projective encoding BEFORE SP all-to-all (if viewmats provided)
         if viewmats is not None:
@@ -900,9 +897,14 @@ class WanModel(nn.Module, NativeConfigMixin):
         # NOTE: seq_lens stays as the original full lengths — after all-to-all
         # inside self-attention, q/k/v are full-length and need the original
         # seq_lens for flash_attention's varlen masking.
-        kwargs = dict(
-            e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
         if viewmats is not None:
             kwargs["viewmats"] = viewmats
             kwargs["Ks"] = Ks
@@ -1037,9 +1039,14 @@ class WanModel(nn.Module, NativeConfigMixin):
             context = torch.concat([context_clip, context], dim=1)
 
         # arguments
-        kwargs = dict(
-            e=e0, seq_lens=seq_lens, grid_sizes=grid_sizes, freqs=self.freqs, context=context, context_lens=context_lens
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

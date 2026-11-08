@@ -408,10 +408,7 @@ def create_square_mesh(tri: bool = False) -> Tuple[ndarray, ndarray]:
         ],
         dtype=np.float32,
     )
-    if tri:
-        faces = np.array([[0, 1, 2], [0, 2, 3]], dtype=np.int32)
-    else:
-        faces = np.array([[0, 1, 2, 3]], dtype=np.int32)
+    faces = np.array([[0, 1, 2], [0, 2, 3]], dtype=np.int32) if tri else np.array([[0, 1, 2, 3]], dtype=np.int32)
     return vertices, faces
 
 

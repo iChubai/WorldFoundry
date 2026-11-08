@@ -8,20 +8,18 @@ from torch import nn
 
 def broadcat(tensors, dim=-1):
     num_tensors = len(tensors)
-    shape_lens = set(list(map(lambda t: len(t.shape), tensors)))
+    shape_lens = {len(t.shape) for t in tensors}
     assert len(shape_lens) == 1, "tensors must all have the same number of dimensions"
     shape_len = list(shape_lens)[0]
     dim = (dim + shape_len) if dim < 0 else dim
-    dims = list(zip(*map(lambda t: list(t.shape), tensors), strict=False))
+    dims = list(zip(*(list(t.shape) for t in tensors), strict=False))
     expandable_dims = [(i, val) for i, val in enumerate(dims) if i != dim]
-    assert all([*map(lambda t: len(set(t[1])) <= 2, expandable_dims)]), (
-        "invalid dimensions for broadcastable concatentation"
-    )
-    max_dims = list(map(lambda t: (t[0], max(t[1])), expandable_dims))
-    expanded_dims = list(map(lambda t: (t[0], (t[1],) * num_tensors), max_dims))
+    assert all([*(len(set(t[1])) <= 2 for t in expandable_dims)]), "invalid dimensions for broadcastable concatentation"
+    max_dims = [(t[0], max(t[1])) for t in expandable_dims]
+    expanded_dims = [(t[0], (t[1],) * num_tensors) for t in max_dims]
     expanded_dims.insert(dim, (dim, dims[dim]))
-    expandable_shapes = list(zip(*map(lambda t: t[1], expanded_dims), strict=False))
-    tensors = list(map(lambda t: t[0].expand(*t[1]), zip(tensors, expandable_shapes, strict=False)))
+    expandable_shapes = list(zip(*(t[1] for t in expanded_dims), strict=False))
+    tensors = [t[0].expand(*t[1]) for t in zip(tensors, expandable_shapes, strict=False)]
     return torch.cat(tensors, dim=dim)
 
 

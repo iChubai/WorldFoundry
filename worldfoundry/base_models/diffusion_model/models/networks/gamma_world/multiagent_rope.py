@@ -144,10 +144,7 @@ def build_multi_agent_freqs(
 
         all_freqs = []
         for agent_id in range(num_agents):
-            if agent_encoding == "simplex":
-                agent_idx = agent_pool_indices[agent_id]
-            else:
-                agent_idx = agent_id + agent_id_offset
+            agent_idx = agent_pool_indices[agent_id] if agent_encoding == "simplex" else agent_id + agent_id_offset
 
             agent_freqs = torch.cat(
                 [

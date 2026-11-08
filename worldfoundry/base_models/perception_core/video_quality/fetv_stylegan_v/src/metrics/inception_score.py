@@ -20,18 +20,18 @@ from . import metric_utils
 def compute_is(opts, num_gen, num_splits):
     # Direct TorchScript translation of http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
     detector_url = "https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/metrics/inception-2015-12-05.pt"
-    detector_kwargs = dict(
-        no_output_bias=True
-    )  # Match the original implementation by not applying bias in the softmax layer.
+    detector_kwargs = {
+        "no_output_bias": True
+    }  # Match the original implementation by not applying bias in the softmax layer.
 
     if opts.generator_as_dataset:
         compute_gen_stats_fn = metric_utils.compute_feature_stats_for_dataset
         gen_opts = metric_utils.rewrite_opts_for_gen_dataset(opts)
-        gen_kwargs = dict(use_image_dataset=True)
+        gen_kwargs = {"use_image_dataset": True}
     else:
         compute_gen_stats_fn = metric_utils.compute_feature_stats_for_generator
         gen_opts = opts
-        gen_kwargs = dict()
+        gen_kwargs = {}
 
     gen_probs = compute_gen_stats_fn(
         opts=gen_opts,

@@ -42,10 +42,7 @@ class BaseModel(nn.Module):
         else:
             raise RuntimeError("checkpoint url or path is invalid")
 
-        if "model" in checkpoint.keys():
-            state_dict = checkpoint["model"]
-        else:
-            state_dict = checkpoint
+        state_dict = checkpoint["model"] if "model" in checkpoint.keys() else checkpoint
 
         msg = self.load_state_dict(state_dict, strict=False)
 

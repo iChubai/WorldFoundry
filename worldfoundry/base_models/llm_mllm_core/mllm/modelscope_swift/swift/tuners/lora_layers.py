@@ -88,17 +88,14 @@ if is_bnb_available():
             module_key: str,
             **kwargs,
         ):
-            super(Linear8bitLt, self).__init__(module_key)
+            super().__init__(module_key)
             self.set_activation(args[1], True)
             super(ActivationMixin, self).__init__(*args, **kwargs)
 
     def dispatch_bnb_8bit(target: torch.nn.Module, adapter_name: str, module_key: str, **kwargs):
         new_module = None
 
-        if isinstance(target, BaseTunerLayer):
-            target_base_layer = target.get_base_layer()
-        else:
-            target_base_layer = target
+        target_base_layer = target.get_base_layer() if isinstance(target, BaseTunerLayer) else target
 
         loaded_in_8bit = kwargs.get("loaded_in_8bit", False)
         if loaded_in_8bit and isinstance(target_base_layer, bnb.nn.Linear8bitLt):
@@ -126,17 +123,14 @@ if is_bnb_4bit_available():
             module_key: str,
             **kwargs,
         ):
-            super(Linear4bit, self).__init__(module_key)
+            super().__init__(module_key)
             self.set_activation(args[1], True)
             super(ActivationMixin, self).__init__(*args, **kwargs)
 
     def dispatch_bnb_4bit(target: torch.nn.Module, adapter_name: str, module_key: str, **kwargs):
         new_module = None
 
-        if isinstance(target, BaseTunerLayer):
-            target_base_layer = target.get_base_layer()
-        else:
-            target_base_layer = target
+        target_base_layer = target.get_base_layer() if isinstance(target, BaseTunerLayer) else target
 
         loaded_in_4bit = kwargs.get("loaded_in_4bit", False)
         if loaded_in_4bit and is_bnb_4bit_available() and isinstance(target_base_layer, bnb.nn.Linear4bit):
@@ -164,10 +158,7 @@ def dispatch_default(
 ) -> torch.nn.Module | None:
     new_module = None
 
-    if isinstance(target, BaseTunerLayer):
-        target_base_layer = target.get_base_layer()
-    else:
-        target_base_layer = target
+    target_base_layer = target.get_base_layer() if isinstance(target, BaseTunerLayer) else target
 
     if isinstance(target_base_layer, torch.nn.Embedding):
         embedding_kwargs = kwargs.copy()
@@ -213,28 +204,28 @@ class Embedding(LoRAActivationMixin, _Embedding):
         module_key: str,
         **kwargs,
     ) -> None:
-        super(Embedding, self).__init__(module_key)
+        super().__init__(module_key)
         self.set_activation(args[1], True)
         super(ActivationMixin, self).__init__(*args, **kwargs)
 
 
 class Linear(LoRAActivationMixin, _Linear):
     def __init__(self, *args, module_key: str, **kwargs):
-        super(Linear, self).__init__(module_key)
+        super().__init__(module_key)
         self.set_activation(args[1], True)
         super(ActivationMixin, self).__init__(*args, **kwargs)
 
 
 class Conv2d(LoRAActivationMixin, _Conv2d):
     def __init__(self, *args, module_key: str, **kwargs):
-        super(Conv2d, self).__init__(module_key)
+        super().__init__(module_key)
         self.set_activation(args[1], True)
         super(ActivationMixin, self).__init__(*args, **kwargs)
 
 
 class LoraParallelLinear(LoRAActivationMixin, _LoraParallelLinear):
     def __init__(self, *args, module_key: str, **kwargs):
-        super(LoraParallelLinear, self).__init__(module_key)
+        super().__init__(module_key)
         self.set_activation(args[1], True)
         super(ActivationMixin, self).__init__(*args, **kwargs)
 

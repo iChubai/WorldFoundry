@@ -129,10 +129,7 @@ class QwenVLEmbedder:
         attn_mask_list = [torch.ones(e.size(0), dtype=torch.long, device=e.device) for e in prompt_only_states]
 
         # 7. Pad the sequences back into a single tensor for batch processing
-        if max_length is None:
-            max_seq_len = max([e.size(0) for e in prompt_only_states])
-        else:
-            max_seq_len = max_length
+        max_seq_len = max([e.size(0) for e in prompt_only_states]) if max_length is None else max_length
 
         prompt_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(max_seq_len - u.size(0), u.size(1))]) for u in prompt_only_states]
@@ -192,10 +189,7 @@ class QwenVLEmbedder:
         split_hidden_states = self._extract_masked_hidden(hidden_states, model_inputs.attention_mask)
         split_hidden_states = [e[drop_idx:] for e in split_hidden_states]
         attn_mask_list = [torch.ones(e.size(0), dtype=torch.long, device=e.device) for e in split_hidden_states]
-        if max_length is None:
-            max_seq_len = max([e.size(0) for e in split_hidden_states])
-        else:
-            max_seq_len = max_length
+        max_seq_len = max([e.size(0) for e in split_hidden_states]) if max_length is None else max_length
 
         prompt_embeds = torch.stack(
             [torch.nn.functional.pad(u, (0, 0, 0, max_seq_len - u.size(0))) for u in split_hidden_states]

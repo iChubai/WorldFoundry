@@ -37,7 +37,7 @@ class CrossAttentionLayer(nn.Module):
         pe="linear",
         no_sc=False,
     ):
-        super(CrossAttentionLayer, self).__init__()
+        super().__init__()
 
         head_dim = qk_dim // num_heads
         self.scale = head_dim**-0.5
@@ -123,7 +123,7 @@ class CrossAttentionLayer(nn.Module):
 
 class MemoryDecoderLayer(nn.Module):
     def __init__(self, dim, cfg):
-        super(MemoryDecoderLayer, self).__init__()
+        super().__init__()
         self.cfg = cfg
         self.patch_size = cfg.patch_size  # for converting coords into H2', W2' space
 
@@ -160,7 +160,7 @@ class MemoryDecoderLayer(nn.Module):
 
 class MemoryDecoder(nn.Module):
     def __init__(self, cfg):
-        super(MemoryDecoder, self).__init__()
+        super().__init__()
         dim = self.dim = cfg.query_latent_dim
         self.cfg = cfg
 
@@ -337,10 +337,7 @@ class MemoryDecoder(nn.Module):
                     query = self.flow_token_encoder(cost_forward)
             query = query.permute(0, 2, 3, 1).contiguous().view(size[0] * size[2] * size[3], 1, self.dim)
 
-            if self.cfg.use_rpe:
-                query_coord = coords1 - coords0
-            else:
-                query_coord = coords1
+            query_coord = coords1 - coords0 if self.cfg.use_rpe else coords1
             cost_global, key, value = self.decoder_layer(
                 query, key, value, cost_memory, query_coord, size, data["H3W3"]
             )

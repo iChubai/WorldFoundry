@@ -372,10 +372,7 @@ class AutoRegressiveBeamSearch:
         self.per_node_beam_size = per_node_beam_size or beam_size
 
     def search(self, begin_tokens, step):
-        if self.beam_size > 1 and self.objectdet:
-            only_return_best = False
-        else:
-            only_return_best = True
+        only_return_best = not (self.beam_size > 1 and self.objectdet)
 
         batch_size = begin_tokens.size()[0]
 

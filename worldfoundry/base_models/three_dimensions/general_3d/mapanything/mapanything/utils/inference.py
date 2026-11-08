@@ -355,10 +355,7 @@ def postprocess_model_outputs_for_inference(
                 conf_mask = confidences > percentile_threshold
                 conf_mask = conf_mask.numpy()
 
-                if final_mask is not None:
-                    final_mask = final_mask & conf_mask
-                else:
-                    final_mask = conf_mask
+                final_mask = final_mask & conf_mask if final_mask is not None else conf_mask
 
             # Apply edge mask if requested and we have the required data
             if mask_edges and final_mask is not None and "pts3d" in processed_output:

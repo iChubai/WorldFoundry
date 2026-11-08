@@ -212,10 +212,7 @@ class Visualizer:
                     tracks[query_frame, :, 1].max(),
                 )
                 for n in range(N):
-                    if isinstance(query_frame, torch.Tensor):
-                        query_frame_ = query_frame[n]
-                    else:
-                        query_frame_ = query_frame
+                    query_frame_ = query_frame[n] if isinstance(query_frame, torch.Tensor) else query_frame
                     color = self.color_map(_normalize(tracks[query_frame_, n, 1], y_min, y_max))
                     color = np.array(color[:3])[None] * 255
                     vector_colors[:, n] = np.repeat(color, T, axis=0)

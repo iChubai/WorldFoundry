@@ -38,11 +38,11 @@ def compact_ucpe(model):
         p.data = p.data.bfloat16()
     for layer in modules:
         layer.forward = types.MethodType(_forward, layer)
-    return dict(
-        modules=len(modules),
-        tensors=len(parameters),
-        bytes_saved=saved,
-        storage_dtype="bfloat16",
-        linear_weight_compute_dtype="float32",
-        all_weights_exact=True,
-    )
+    return {
+        "modules": len(modules),
+        "tensors": len(parameters),
+        "bytes_saved": saved,
+        "storage_dtype": "bfloat16",
+        "linear_weight_compute_dtype": "float32",
+        "all_weights_exact": True,
+    }

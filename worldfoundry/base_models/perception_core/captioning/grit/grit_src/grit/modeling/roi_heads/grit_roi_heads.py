@@ -445,10 +445,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
         # R' x 2. First column contains indices of the R predictions;
         # Second column contains indices of classes.
         filter_inds = filter_mask.nonzero()
-        if num_bbox_reg_classes == 1:
-            boxes = boxes[filter_inds[:, 0], 0]
-        else:
-            boxes = boxes[filter_mask]
+        boxes = boxes[filter_inds[:, 0], 0] if num_bbox_reg_classes == 1 else boxes[filter_mask]
         scores = scores[filter_mask]
         logits = logits[filter_mask]
 

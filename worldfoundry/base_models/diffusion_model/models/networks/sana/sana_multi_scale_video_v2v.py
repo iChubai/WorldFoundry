@@ -237,7 +237,10 @@ class SanaMSVideoV2V(SanaMSVideo):
         )
         self.patch_size = patch_size
         self.h = self.w = 0
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.t_block = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 6 * hidden_size, bias=True))
         self.pos_embed_ms = None
         self.pack_latents = pack_latents
@@ -362,10 +365,7 @@ class SanaMSVideoV2V(SanaMSVideo):
         f, h, w = THW
         BLOCK_SIZE = 128
         chunk_id_map = torch.zeros(f, h, w, dtype=torch.long, device=x.device)
-        if chunk_index is None:
-            chunk_indices = range(f)
-        else:
-            chunk_indices = chunk_index
+        chunk_indices = range(f) if chunk_index is None else chunk_index
 
         for i, start_idx in enumerate(chunk_indices):
             chunk_id_map[start_idx:] = i

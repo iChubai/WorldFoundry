@@ -92,10 +92,7 @@ class Transformer(nn.Module):
 
     def forward(self, x):
         for idx, blk in enumerate(self.resblocks):
-            if idx < self.checkpoint_num:
-                x = checkpoint.checkpoint(blk, x)
-            else:
-                x = blk(x)
+            x = checkpoint.checkpoint(blk, x) if idx < self.checkpoint_num else blk(x)
         return x
 
 
@@ -304,10 +301,7 @@ def clip_joint_l14(
         dropout=dropout,
     )
     if pretrained:
-        if isinstance(pretrained, str):
-            model_name = pretrained
-        else:
-            model_name = "ViT-L/14"
+        model_name = pretrained if isinstance(pretrained, str) else "ViT-L/14"
         logger.info("load pretrained weights")
         state_dict = torch.load(_MODELS[model_name], map_location="cpu")
         load_state_dict(model, state_dict, input_resolution=input_resolution, patch_size=14, center=center)

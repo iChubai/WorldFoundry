@@ -761,16 +761,16 @@ class WanModel(nn.Module, NativeConfigMixin):
         #     freqs=self.freqs,
         #     context=context,
         #     context_lens=context_lens)
-        kwargs = dict(
-            e=e0,
-            grid_sizes=grid_sizes,
-            seq_lens=seq_lens,
-            freqs=self.freqs,
-            context=context,
-            mouse_cond=mouse_cond,
+        kwargs = {
+            "e": e0,
+            "grid_sizes": grid_sizes,
+            "seq_lens": seq_lens,
+            "freqs": self.freqs,
+            "context": context,
+            "mouse_cond": mouse_cond,
             # context_lens=context_lens,
-            keyboard_cond=keyboard_cond,
-        )
+            "keyboard_cond": keyboard_cond,
+        }
 
         def create_custom_forward(module):
             """Create custom forward.

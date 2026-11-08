@@ -61,17 +61,20 @@ def _download(url: str, root: str):
                 stacklevel=1,
             )
 
-    with urllib.request.urlopen(url) as source, open(download_target, "wb") as output:
-        with tqdm(
+    with (
+        urllib.request.urlopen(url) as source,
+        open(download_target, "wb") as output,
+        tqdm(
             total=int(source.info().get("Content-Length")), ncols=80, unit="iB", unit_scale=True, unit_divisor=1024
-        ) as loop:
-            while True:
-                buffer = source.read(8192)
-                if not buffer:
-                    break
+        ) as loop,
+    ):
+        while True:
+            buffer = source.read(8192)
+            if not buffer:
+                break
 
-                output.write(buffer)
-                loop.update(len(buffer))
+            output.write(buffer)
+            loop.update(len(buffer))
 
     if file_sha256(download_target) != expected_sha256:
         raise RuntimeError("Model has been downloaded but the SHA256 checksum does not not match")

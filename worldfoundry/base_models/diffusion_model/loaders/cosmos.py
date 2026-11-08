@@ -113,9 +113,12 @@ class CheckpointFileHf(_CheckpointHf):
     @override
     def _download(self) -> str:
         """Download checkpoint and return the local path."""
-        download_kwargs = dict(
-            repo_id=self.repository, repo_type="model", revision=self.revision, filename=self.filename
-        )
+        download_kwargs = {
+            "repo_id": self.repository,
+            "repo_type": "model",
+            "revision": self.revision,
+            "filename": self.filename,
+        }
         log.info(f"Downloading checkpoint file from Hugging Face with {download_kwargs}")
         path = hf_hub_download(**download_kwargs)
         assert os.path.exists(path), path
@@ -150,7 +153,7 @@ class CheckpointDirHf(_CheckpointHf):
             patterns["ignore_patterns"] = list(self.exclude)
         if self.subdirectory:
             patterns = {key: [os.path.join(self.subdirectory, x) for x in val] for key, val in patterns.items()}
-        download_kwargs = dict(repo_id=self.repository, repo_type="model", revision=self.revision) | patterns
+        download_kwargs = {"repo_id": self.repository, "repo_type": "model", "revision": self.revision} | patterns
         log.info(f"Downloading checkpoint from Hugging Face with {download_kwargs}")
         path = snapshot_download(**download_kwargs)
         if self.subdirectory:

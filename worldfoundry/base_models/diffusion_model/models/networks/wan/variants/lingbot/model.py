@@ -574,15 +574,15 @@ class WanModel(nn.Module, NativeConfigMixin):
             dit_cond_dict["c2ws_plucker_emb"] = embed_wan_camera_condition(self, dit_cond_dict["c2ws_plucker_emb"])
 
         # arguments
-        kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            dit_cond_dict=dit_cond_dict,
-        )
+        kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "dit_cond_dict": dit_cond_dict,
+        }
 
         for block_index, block in enumerate(self.blocks):
             kwargs["dit_cond_dict"] = camera_condition_for_block(dit_cond_dict, block_index)

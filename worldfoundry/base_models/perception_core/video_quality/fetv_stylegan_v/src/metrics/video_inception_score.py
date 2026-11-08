@@ -31,11 +31,11 @@ def compute_isv(opts, num_gen: int, num_splits: int, backbone: str):
         gen_opts.dataset_kwargs.load_n_consecutive = num_frames
         gen_opts.dataset_kwargs.load_n_consecutive_random_offset = False
         gen_opts.dataset_kwargs.subsample_factor = 1
-        gen_kwargs = dict()
+        gen_kwargs = {}
     else:
         compute_gen_stats_fn = metric_utils.compute_feature_stats_for_generator
         gen_opts = opts
-        gen_kwargs = dict(num_video_frames=num_frames, subsample_factor=1)
+        gen_kwargs = {"num_video_frames": num_frames, "subsample_factor": 1}
 
     gen_probs = compute_gen_stats_fn(
         opts=gen_opts,

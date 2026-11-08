@@ -282,10 +282,7 @@ class Attention(nn.Module):
 
         _, kv_length, _ = key_layer.shape
 
-        if use_cache is True:
-            present = (key_layer, value_layer)
-        else:
-            present = None
+        present = (key_layer, value_layer) if use_cache is True else None
 
         if alibi is None:
             query_layer_ = query_layer.reshape(batch_size, self.num_heads, -1, self.head_dim)
@@ -429,10 +426,7 @@ class DecoderLayer(nn.Module):
 
         output = dropout_add(mlp_output, residual, self.config.hidden_dropout, training=self.training)
 
-        if use_cache:
-            outputs = (output,) + outputs
-        else:
-            outputs = (output,) + outputs[1:]
+        outputs = (output,) + outputs if use_cache else (output,) + outputs[1:]
 
         return outputs  # hidden_states, present, attentions
 
@@ -457,7 +451,7 @@ class RWPreTrainedModel(PreTrainedModel):
 
     def _init_weights(self, module: nn.Module):
         """Initialize the weights."""
-        if isinstance(module, nn.Linear) or isinstance(module, Linear):
+        if isinstance(module, (nn.Linear, Linear)):
             # Slightly different from the TF version which uses truncated_normal for initialization
             # cf https://github.com/pytorch/pytorch/pull/5617
             module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
@@ -636,10 +630,7 @@ class RWModel(RWPreTrainedModel):
         else:
             attention_mask = attention_mask.to(hidden_states.device)
 
-        if self.alibi:
-            alibi = build_alibi_tensor(attention_mask, self.num_heads, dtype=hidden_states.dtype)
-        else:
-            alibi = None
+        alibi = build_alibi_tensor(attention_mask, self.num_heads, dtype=hidden_states.dtype) if self.alibi else None
 
         causal_mask = self._prepare_attn_mask(
             attention_mask,
@@ -926,10 +917,7 @@ class RWForSequenceClassification(RWPreTrainedModel):
         hidden_states = transformer_outputs[0]
         logits = self.score(hidden_states)
 
-        if input_ids is not None:
-            batch_size = input_ids.shape[0]
-        else:
-            batch_size = inputs_embeds.shape[0]
+        batch_size = input_ids.shape[0] if input_ids is not None else inputs_embeds.shape[0]
 
         if self.config.pad_token_id is None and batch_size != 1:
             raise ValueError("Cannot handle batch sizes > 1 if no padding token is defined.")

@@ -49,7 +49,7 @@ class ConfigDict(Dict):
             name: The name.
         """
         try:
-            value = super(ConfigDict, self).__getattr__(name)
+            value = super().__getattr__(name)
         except KeyError:
             ex = AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
         except Exception as e:
@@ -141,14 +141,14 @@ class SLConfig:
             base_filename = cfg_dict.pop(BASE_KEY)
             base_filename = base_filename if isinstance(base_filename, list) else [base_filename]
 
-            cfg_dict_list = list()
-            cfg_text_list = list()
+            cfg_dict_list = []
+            cfg_text_list = []
             for f in base_filename:
                 _cfg_dict, _cfg_text = SLConfig._file2dict(osp.join(cfg_dir, f))
                 cfg_dict_list.append(_cfg_dict)
                 cfg_text_list.append(_cfg_text)
 
-            base_cfg_dict = dict()
+            base_cfg_dict = {}
             for c in cfg_dict_list:
                 if len(base_cfg_dict.keys() & c.keys()) > 0:
                     raise KeyError("Duplicate key is not allowed among bases")
@@ -224,15 +224,15 @@ class SLConfig:
             filename: The filename.
         """
         if cfg_dict is None:
-            cfg_dict = dict()
+            cfg_dict = {}
         elif not isinstance(cfg_dict, dict):
             raise TypeError(f"cfg_dict must be a dict, but got {type(cfg_dict)}")
         for key in cfg_dict:
             if key in RESERVED_KEYS:
                 raise KeyError(f"{key} is reserved for config file")
 
-        super(SLConfig, self).__setattr__("_cfg_dict", ConfigDict(cfg_dict))
-        super(SLConfig, self).__setattr__("_filename", filename)
+        super().__setattr__("_cfg_dict", ConfigDict(cfg_dict))
+        super().__setattr__("_filename", filename)
         if cfg_text:
             text = cfg_text
         elif filename:
@@ -240,7 +240,7 @@ class SLConfig:
                 text = f.read()
         else:
             text = ""
-        super(SLConfig, self).__setattr__("_text", text)
+        super().__setattr__("_text", text)
 
     @property
     def filename(self):
@@ -282,10 +282,7 @@ class SLConfig:
                 v: The v.
                 use_mapping: The use mapping.
             """
-            if isinstance(v, str):
-                v_str = f"'{v}'"
-            else:
-                v_str = str(v)
+            v_str = f"'{v}'" if isinstance(v, str) else str(v)
 
             if use_mapping:
                 k_str = f"'{k}'" if isinstance(k, str) else str(k)
@@ -367,11 +364,11 @@ class SLConfig:
         cfg_dict = self._cfg_dict.to_dict()
         text = _format_dict(cfg_dict, outest_level=True)
         # copied from setup.cfg
-        yapf_style = dict(
-            based_on_style="pep8",
-            blank_line_before_nested_class_or_def=True,
-            split_before_expression_after_opening_paren=True,
-        )
+        yapf_style = {
+            "based_on_style": "pep8",
+            "blank_line_before_nested_class_or_def": True,
+            "split_before_expression_after_opening_paren": True,
+        }
         text, _ = FormatCode(text, style_config=yapf_style, verify=True)
 
         return text
@@ -476,8 +473,8 @@ class SLConfig:
             subkey = key_list[-1]
             d[subkey] = v
 
-        cfg_dict = super(SLConfig, self).__getattribute__("_cfg_dict")
-        super(SLConfig, self).__setattr__("_cfg_dict", SLConfig._merge_a_into_b(option_cfg_dict, cfg_dict))
+        cfg_dict = super().__getattribute__("_cfg_dict")
+        super().__setattr__("_cfg_dict", SLConfig._merge_a_into_b(option_cfg_dict, cfg_dict))
 
     # for multiprocess
     def __setstate__(self, state):
@@ -520,7 +517,7 @@ class DictAction(Action):
         except ValueError:
             pass
         if val.lower() in ["true", "false"]:
-            return True if val.lower() == "true" else False
+            return val.lower() == "true"
         if val.lower() in ["none", "null"]:
             return None
         return val

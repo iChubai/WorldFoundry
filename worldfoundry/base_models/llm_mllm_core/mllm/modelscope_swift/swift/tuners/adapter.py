@@ -157,7 +157,7 @@ class AdapterModule(nn.Module, ActivationMixin):
         adapter_length=None,
         act_layer=nn.GELU,
     ):
-        super(AdapterModule, self).__init__()
+        super().__init__()
         super(nn.Module, self).__init__(module_key)
         self.dim = dim
         self.adapter_name = adapter_name

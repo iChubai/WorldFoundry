@@ -218,9 +218,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             # unproject local points using camera poses
             points = torch.einsum("bnij, bnhwj -> bnhwi", camera_poses, homogenize_points(local_points))[..., :3]
 
-        return dict(
-            points=points,
-            local_points=local_points,
-            conf=conf,
-            camera_poses=camera_poses,
-        )
+        return {
+            "points": points,
+            "local_points": local_points,
+            "conf": conf,
+            "camera_poses": camera_poses,
+        }

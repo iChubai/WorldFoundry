@@ -1476,10 +1476,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         if self.generation_config.cache_implementation == "static":
             # generation with static cache
             cache_position = kwargs.get("cache_position")
-            if cache_position is None:
-                past_length = 0
-            else:
-                past_length = cache_position[-1] + 1
+            past_length = 0 if cache_position is None else cache_position[-1] + 1
             input_ids = input_ids[:, past_length:]
             position_ids = position_ids[:, past_length:]
 
@@ -1586,10 +1583,7 @@ class LlamaForSequenceClassification(LlamaPreTrainedModel):
         hidden_states = transformer_outputs[0]
         logits = self.score(hidden_states)
 
-        if input_ids is not None:
-            batch_size = input_ids.shape[0]
-        else:
-            batch_size = inputs_embeds.shape[0]
+        batch_size = input_ids.shape[0] if input_ids is not None else inputs_embeds.shape[0]
 
         if self.config.pad_token_id is None and batch_size != 1:
             raise ValueError("Cannot handle batch sizes > 1 if no padding token is defined.")

@@ -89,10 +89,7 @@ class SmoothedValue:
     @property
     def global_avg(self):
         """Global avg."""
-        if os.environ.get("SHILONG_AMP", None) == "1":
-            eps = 1e-4
-        else:
-            eps = 1e-6
+        eps = 0.0001 if os.environ.get("SHILONG_AMP", None) == "1" else 1e-06
         return self.total / (self.count + eps)
 
     @property
@@ -257,7 +254,7 @@ def reduce_dict(input_dict, average=True):
         dist.all_reduce(values)
         if average:
             values /= world_size
-        reduced_dict = {k: v for k, v in zip(names, values, strict=False)}
+        reduced_dict = dict(zip(names, values, strict=False))
     return reduced_dict
 
 
@@ -326,10 +323,7 @@ class MetricLogger:
             header: The header.
             logger: The logger.
         """
-        if logger is None:
-            print_func = print
-        else:
-            print_func = logger.info
+        print_func = print if logger is None else logger.info
 
         i = 0
         if not header:

@@ -389,10 +389,7 @@ class MosaicGPT(PreTrainedModel):
         if attention_mask[:, -1].sum() != attention_mask.shape[0]:
             raise NotImplementedError("MosaicGPT does not support generation with right padding.")
 
-        if self.attn_uses_sequence_id and self.training:
-            sequence_id = torch.zeros_like(input_ids[:1])
-        else:
-            sequence_id = None
+        sequence_id = torch.zeros_like(input_ids[:1]) if self.attn_uses_sequence_id and self.training else None
 
         if past_key_values is not None:
             input_ids = input_ids[:, -1].unsqueeze(-1)

@@ -710,7 +710,7 @@ class AttnBlock(nn.Module):
         v = self.v(x, is_init)
 
         b, t, h, w, c = q.shape
-        q, k, v = map(lambda x: rearrange(x, "b t h w c -> b 1 (t h w) c"), (q, k, v))
+        q, k, v = (rearrange(x, "b t h w c -> b 1 (t h w) c") for x in (q, k, v))
         x = _worldfoundry_scaled_dot_product_attention(q, k, v, is_causal=True)
         x = rearrange(x, "b 1 (t h w) c -> b t h w c", t=t, h=h, w=w)
 
@@ -817,10 +817,7 @@ class Downsample3D(nn.Module):
             x: The x.
             is_init: The is init.
         """
-        if self.with_conv:
-            x = self.conv(x, is_init)
-        else:
-            x = nn.functional.avg_pool3d(x, kernel_size=2, stride=2)
+        x = self.conv(x, is_init) if self.with_conv else nn.functional.avg_pool3d(x, kernel_size=2, stride=2)
         return x
 
 
@@ -1290,7 +1287,7 @@ class AutoencoderKL(nn.Module):
         self.frame_len = 17
         self.latent_len = 3 if version == 2 else 5
 
-        base_group_norm.spatial = True if version == 2 else False
+        base_group_norm.spatial = version == 2
 
         self.encoder = VideoEncoder(
             in_channels=in_channels,

@@ -47,20 +47,28 @@ class ResidualConvBlock(nn.Module):
             activation: The activation.
             norm: The norm.
         """
-        super(ResidualConvBlock, self).__init__()
+        super().__init__()
         if out_channels is None:
             out_channels = in_channels
         if hidden_channels is None:
             hidden_channels = in_channels
 
         if activation == "relu":
-            activation_cls = lambda: nn.ReLU(inplace=True)
+
+            def activation_cls():
+                return nn.ReLU(inplace=True)
         elif activation == "leaky_relu":
-            activation_cls = lambda: nn.LeakyReLU(negative_slope=0.2, inplace=True)
+
+            def activation_cls():
+                return nn.LeakyReLU(negative_slope=0.2, inplace=True)
         elif activation == "silu":
-            activation_cls = lambda: nn.SiLU(inplace=True)
+
+            def activation_cls():
+                return nn.SiLU(inplace=True)
         elif activation == "elu":
-            activation_cls = lambda: nn.ELU(inplace=True)
+
+            def activation_cls():
+                return nn.ELU(inplace=True)
         else:
             raise ValueError(f"Unsupported activation function: {activation}")
 
@@ -313,7 +321,7 @@ class MoGeModel(nn.Module):
             last_conv_size: The last conv size.
             mask_threshold: The mask threshold.
         """
-        super(MoGeModel, self).__init__()
+        super().__init__()
 
         if deprecated_kwargs:
             # Process legacy arguments
@@ -556,7 +564,7 @@ class MoGeModel(nn.Module):
 
         # Always process the output in fp32 precision
         with torch.autocast(device_type=self.device.type, dtype=torch.float32):
-            points, mask, fov_x = map(lambda x: x.float() if isinstance(x, torch.Tensor) else x, [points, mask, fov_x])
+            points, mask, fov_x = (x.float() if isinstance(x, torch.Tensor) else x for x in [points, mask, fov_x])
 
             mask_binary = mask > self.mask_threshold
 

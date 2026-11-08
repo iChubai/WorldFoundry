@@ -35,7 +35,7 @@ class PackDetInputs(MMDET_PackDetInputs):
             - 'data_sample' (obj:`DetDataSample`): The annotation info of the
                 sample.
         """
-        packed_results = dict()
+        packed_results = {}
         if "img" in results:
             img = results["img"]
             if len(img.shape) < 3:
@@ -85,7 +85,7 @@ class PackDetInputs(MMDET_PackDetInputs):
         data_sample.ignored_instances = ignore_instance_data
 
         if "gt_seg_map" in results:
-            gt_sem_seg_data = dict(sem_seg=to_tensor(results["gt_seg_map"][None, ...].copy()))
+            gt_sem_seg_data = {"sem_seg": to_tensor(results["gt_seg_map"][None, ...].copy())}
             data_sample.gt_sem_seg = PixelData(**gt_sem_seg_data)
 
         # In order to unify the support for the overlap mask annotations

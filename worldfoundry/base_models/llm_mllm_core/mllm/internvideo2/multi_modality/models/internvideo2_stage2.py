@@ -22,7 +22,7 @@ class InternVideo2_Stage2(nn.Module):
     """docstring for InternVideo2_Stage2"""
 
     def __init__(self, config, tokenizer, is_pretrain=True):
-        super(InternVideo2_Stage2, self).__init__()
+        super().__init__()
 
         self.config = config
         self.tokenizer = tokenizer
@@ -95,7 +95,7 @@ class InternVideo2_Stage2(nn.Module):
 
         self.clip_contrastive_temperature()
         T = image.shape[1]
-        use_image = True if T == 1 else False
+        use_image = T == 1
 
         (
             vision_embeds,
@@ -152,12 +152,12 @@ class InternVideo2_Stage2(nn.Module):
         else:
             loss_mlm = torch.tensor(0)
 
-        return dict(
-            loss_uta=loss_uta * self.loss_weight.uta,
-            loss_vtc=loss_vtc * self.loss_weight.vtc,
-            loss_vtm=loss_vtm * self.loss_weight.vtm,
-            loss_mlm=loss_mlm * self.loss_weight.mlm,
-        )
+        return {
+            "loss_uta": loss_uta * self.loss_weight.uta,
+            "loss_vtc": loss_vtc * self.loss_weight.vtc,
+            "loss_vtm": loss_vtm * self.loss_weight.vtm,
+            "loss_mlm": loss_mlm * self.loss_weight.mlm,
+        }
 
     def encode_teacher(self, image):
         """encode image / videos as features.
@@ -257,7 +257,7 @@ class InternVideo2_Stage2(nn.Module):
         """
 
         T = image.shape[1]
-        use_image = True if T == 1 else False
+        use_image = T == 1
         image = image.permute(0, 2, 1, 3, 4)  # [B,T,C,H,W] -> [B,C,T,H,W]
         # whether save temporal dimension
         # keep_temporal=self.config.model.vision_encoder.keep_temporal

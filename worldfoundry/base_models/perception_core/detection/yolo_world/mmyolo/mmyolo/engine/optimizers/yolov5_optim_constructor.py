@@ -117,5 +117,5 @@ class YOLOv5OptimizerConstructor:
         del params_groups
 
         optimizer = OPTIMIZERS.build(optimizer_cfg)
-        optim_wrapper = OPTIM_WRAPPERS.build(self.optim_wrapper_cfg, default_args=dict(optimizer=optimizer))
+        optim_wrapper = OPTIM_WRAPPERS.build(self.optim_wrapper_cfg, default_args={"optimizer": optimizer})
         return optim_wrapper

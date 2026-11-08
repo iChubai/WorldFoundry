@@ -89,7 +89,7 @@ def merge_video_audio(video_path: str, audio_path: str):
 
         # execute the command
         logger.info("Start merging video and audio...")
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result = subprocess.run(command, capture_output=True, text=True)
 
         # check result
         if result.returncode != 0:

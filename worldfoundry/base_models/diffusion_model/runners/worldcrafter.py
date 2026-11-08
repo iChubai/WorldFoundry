@@ -484,10 +484,9 @@ class WorldCrafterPipeline(HeliosPipeline):
                 raise ValueError("stop_after_chunk is outside this inference interval")
 
         # 6. Denoising loop
-        if use_interpolate_prompt:
-            if num_latent_chunk < max(interpolate_cumulative_list):
-                num_latent_chunk = sum(interpolate_cumulative_list)
-                print(f"Update num_latent_chunk to: {num_latent_chunk}")
+        if use_interpolate_prompt and num_latent_chunk < max(interpolate_cumulative_list):
+            num_latent_chunk = sum(interpolate_cumulative_list)
+            print(f"Update num_latent_chunk to: {num_latent_chunk}")
 
         if not is_enable_stage2:
             patch_size = self.transformer.config.patch_size

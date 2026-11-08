@@ -37,17 +37,17 @@ class ViGeo(nn.Module):
             rope=rope,
         )
 
-        conv_kwargs = dict(
-            projects=nn.Identity(),
-            dim_proj=1024,
-            dim_upsample=[256, 128, 64],
-            dim_times_res_block_hidden=2,
-            num_res_blocks=2,
-            last_res_blocks=0,
-            last_conv_channels=32,
-            last_conv_size=1,
-            using_uv=True,
-        )
+        conv_kwargs = {
+            "projects": nn.Identity(),
+            "dim_proj": 1024,
+            "dim_upsample": [256, 128, 64],
+            "dim_times_res_block_hidden": 2,
+            "num_res_blocks": 2,
+            "last_res_blocks": 0,
+            "last_conv_channels": 32,
+            "last_conv_size": 1,
+            "using_uv": True,
+        }
 
         self.point_head = ConvHead(dim_out=3, **conv_kwargs)
         # Kept so released checkpoints with ray_head weights load strictly.

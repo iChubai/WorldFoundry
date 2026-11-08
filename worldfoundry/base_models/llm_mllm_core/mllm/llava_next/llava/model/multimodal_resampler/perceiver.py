@@ -4,11 +4,10 @@ Taken from https://github.com/lucidrains/flamingo-pytorch
 
 import torch
 from einops import rearrange, repeat
+import contextlib
 
-try:
+with contextlib.suppress(BaseException):
     from einops_exts import rearrange_many
-except BaseException:
-    pass
 
 from torch import einsum, nn
 

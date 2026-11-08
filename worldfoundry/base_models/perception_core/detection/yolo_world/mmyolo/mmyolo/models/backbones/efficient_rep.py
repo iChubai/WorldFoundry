@@ -72,10 +72,10 @@ class YOLOv6EfficientRep(BaseBackbone):
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         use_cspsppf: bool = False,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="ReLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
         norm_eval: bool = False,
-        block_cfg: ConfigType = dict(type="RepVGGBlock"),
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},
         init_cfg: OptMultiConfig = None,
     ):
         self.block_cfg = block_cfg
@@ -99,12 +99,12 @@ class YOLOv6EfficientRep(BaseBackbone):
 
         block_cfg = self.block_cfg.copy()
         block_cfg.update(
-            dict(
-                in_channels=self.input_channels,
-                out_channels=int(self.arch_setting[0][0] * self.widen_factor),
-                kernel_size=3,
-                stride=2,
-            )
+            {
+                "in_channels": self.input_channels,
+                "out_channels": int(self.arch_setting[0][0] * self.widen_factor),
+                "kernel_size": 3,
+                "stride": 2,
+            }
         )
         return MODELS.build(block_cfg)
 
@@ -129,7 +129,7 @@ class YOLOv6EfficientRep(BaseBackbone):
         )
 
         block_cfg = self.block_cfg.copy()
-        block_cfg.update(dict(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=2))
+        block_cfg.update({"in_channels": in_channels, "out_channels": out_channels, "kernel_size": 3, "stride": 2})
         stage = []
 
         ef_block = nn.Sequential(MODELS.build(block_cfg), rep_stage_block)
@@ -229,10 +229,10 @@ class YOLOv6CSPBep(YOLOv6EfficientRep):
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         use_cspsppf: bool = False,
-        norm_cfg: ConfigType = dict(type="BN", momentum=0.03, eps=0.001),
-        act_cfg: ConfigType = dict(type="SiLU", inplace=True),
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
         norm_eval: bool = False,
-        block_cfg: ConfigType = dict(type="ConvWrapper"),
+        block_cfg: ConfigType = {"type": "ConvWrapper"},
         init_cfg: OptMultiConfig = None,
     ):
         self.hidden_ratio = hidden_ratio
@@ -274,7 +274,7 @@ class YOLOv6CSPBep(YOLOv6EfficientRep):
             act_cfg=self.act_cfg,
         )
         block_cfg = self.block_cfg.copy()
-        block_cfg.update(dict(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=2))
+        block_cfg.update({"in_channels": in_channels, "out_channels": out_channels, "kernel_size": 3, "stride": 2})
         stage = []
 
         ef_block = nn.Sequential(MODELS.build(block_cfg), rep_stage_block)

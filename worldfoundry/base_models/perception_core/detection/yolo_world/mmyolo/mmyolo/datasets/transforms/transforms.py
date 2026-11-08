@@ -155,7 +155,7 @@ class LetterResize(MMDET_Resize):
     def __init__(
         self,
         scale: int | tuple[int, int],
-        pad_val: dict = dict(img=0, mask=0, seg=255),
+        pad_val: dict = {"img": 0, "mask": 0, "seg": 255},
         use_mini_pad: bool = False,
         stretch_only: bool = False,
         allow_scale_up: bool = True,
@@ -166,7 +166,7 @@ class LetterResize(MMDET_Resize):
 
         self.pad_val = pad_val
         if isinstance(pad_val, (int, float)):
-            pad_val = dict(img=pad_val, seg=255)
+            pad_val = {"img": pad_val, "seg": 255}
         assert isinstance(pad_val, dict), f"pad_val must be dict, but got {type(pad_val)}"
 
         self.use_mini_pad = use_mini_pad
@@ -503,7 +503,7 @@ class LoadAnnotations(MMDET_LoadAnnotations):
         results["gt_ignore_flags"] = np.array(gt_ignore_flags, dtype=bool)
 
         h, w = results["ori_shape"]
-        gt_masks = PolygonMasks([mask for mask in gt_masks], h, w)
+        gt_masks = PolygonMasks(list(gt_masks), h, w)
         results["gt_masks"] = gt_masks
 
     def merge_multi_segment(self, gt_masks: list[np.ndarray]) -> list[np.ndarray]:
@@ -813,10 +813,7 @@ class YOLOv5RandomAffine(BaseTransform):
 
                 xy_min = np.minimum(xy_min, np.min(xy, axis=0))
                 xy_max = np.maximum(xy_max, np.max(xy, axis=0))
-            if xy_max[0] == -1:
-                bbox = np.zeros(4, dtype=np.float32)
-            else:
-                bbox = np.concatenate([xy_min, xy_max], axis=0)
+            bbox = np.zeros(4, dtype=np.float32) if xy_max[0] == -1 else np.concatenate([xy_min, xy_max], axis=0)
             bboxes.append(bbox)
 
         return HorizontalBoxes(np.stack(bboxes, axis=0))
@@ -1080,10 +1077,10 @@ class PPYOLOERandomDistort(BaseTransform):
 
     def __init__(
         self,
-        hue_cfg: dict = dict(min=-18, max=18, prob=0.5),
-        saturation_cfg: dict = dict(min=0.5, max=1.5, prob=0.5),
-        contrast_cfg: dict = dict(min=0.5, max=1.5, prob=0.5),
-        brightness_cfg: dict = dict(min=0.5, max=1.5, prob=0.5),
+        hue_cfg: dict = {"min": -18, "max": 18, "prob": 0.5},
+        saturation_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},
+        contrast_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},
+        brightness_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},
         num_distort_func: int = 4,
     ):
         self.hue_cfg = hue_cfg
@@ -1307,9 +1304,8 @@ class PPYOLOERandomCrop(BaseTransform):
             found = False
             for _i in range(self.num_attempts):
                 crop_h, crop_w = self._get_crop_size((orig_img_h, orig_img_w))
-                if self.aspect_ratio is None:
-                    if crop_h / crop_w < 0.5 or crop_h / crop_w > 2.0:
-                        continue
+                if self.aspect_ratio is None and (crop_h / crop_w < 0.5 or crop_h / crop_w > 2.0):
+                    continue
 
                 # get image crop_box
                 margin_h = max(orig_img_h - crop_h, 0)
@@ -1836,9 +1832,8 @@ class FilterAnnotations(FilterDetAnnotations):
         for t in tests[1:]:
             keep = keep & t
 
-        if not keep.any():
-            if self.keep_empty:
-                return None
+        if not keep.any() and self.keep_empty:
+            return None
 
         keys = ("gt_bboxes", "gt_bboxes_labels", "gt_masks", "gt_ignore_flags", "gt_keypoints")
         for key in keys:

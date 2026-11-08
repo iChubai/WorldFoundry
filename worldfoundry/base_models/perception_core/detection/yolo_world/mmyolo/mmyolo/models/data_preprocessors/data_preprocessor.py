@@ -254,10 +254,7 @@ class PPYOLOEBatchRandomResize(BatchSyncRandomResize):
                 scale_y = self._input_size[0] / h
                 scale_x = self._input_size[1] / w
                 if scale_x != 1.0 or scale_y != 1.0:
-                    if self.interp_mode in ("nearest", "area"):
-                        align_corners = None
-                    else:
-                        align_corners = False
+                    align_corners = None if self.interp_mode in ("nearest", "area") else False
                     _batch_input = F.interpolate(
                         _batch_input.unsqueeze(0),
                         size=self._input_size,

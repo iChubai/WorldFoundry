@@ -27,7 +27,7 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob=None):
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
@@ -285,10 +285,7 @@ class VisionTransformer(nn.Module):
             self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, embed_dim))
         else:
             # sine-cosine positional embeddings is on the way
-            if patch_size == 14:
-                pre_n_position = 2048
-            else:
-                pre_n_position = 1568
+            pre_n_position = 2048 if patch_size == 14 else 1568
             self.pos_embed = get_sinusoid_encoding_table(
                 num_patches, embed_dim, all_frames // tubelet_size, pre_n_position=pre_n_position
             )
@@ -359,10 +356,7 @@ class VisionTransformer(nn.Module):
         x = self.pos_drop(x)
 
         for idx, blk in enumerate(self.blocks):
-            if self.use_checkpoint and idx < self.checkpoint_num:
-                x = checkpoint.checkpoint(blk, x)
-            else:
-                x = blk(x)
+            x = checkpoint.checkpoint(blk, x) if self.use_checkpoint and idx < self.checkpoint_num else blk(x)
 
         x = self.norm(x)
         if self.fc_norm is not None:

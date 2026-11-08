@@ -219,7 +219,7 @@ class SCETunerModule(nn.Module, ActivationMixin):
         zero_init_last=True,
         use_bias=True,
     ):
-        super(SCETunerModule, self).__init__()
+        super().__init__()
         super(nn.Module, self).__init__(module_key)
         self.name = name
         self.adapter_name = adapter_name

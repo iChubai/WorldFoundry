@@ -234,7 +234,7 @@ def render_interpolated_video(
         return exts, ints
 
     if s > 1:
-        all_ext, all_int = build_interpolated_traj([i for i in range(s)], interp_per_pair)
+        all_ext, all_int = build_interpolated_traj(list(range(s)), interp_per_pair)
     else:
         means = splats["means"][0]
         center = means.median(dim=0).values
@@ -278,10 +278,7 @@ def render_interpolated_video(
         import matplotlib.pyplot as plt
 
         valid = d > 0
-        if valid.any():
-            near = d[valid].float().quantile(0.01).log()
-        else:
-            near = torch.tensor(0.0, device=d.device)
+        near = d[valid].float().quantile(0.01).log() if valid.any() else torch.tensor(0.0, device=d.device)
         far = d.flatten().float().quantile(0.99).log()
         x = d.float().clamp(min=1e-9).log()
         x = 1.0 - (x - near) / (far - near + 1e-9)

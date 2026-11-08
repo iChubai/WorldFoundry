@@ -265,10 +265,7 @@ class CausalSelfAttention(nn.Module):
                 flex_attention_fn=flex_attention,
             )
 
-            if padded_length > 0:
-                out = out[:, :, :-padded_length].transpose(2, 1)
-            else:
-                out = out.transpose(2, 1)
+            out = out[:, :, :-padded_length].transpose(2, 1) if padded_length > 0 else out.transpose(2, 1)
 
         elif disable_kv_cache:
             roped_q, roped_k = apply_rope_if_needed()

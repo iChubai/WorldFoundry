@@ -65,7 +65,7 @@ class DPTHead(nn.Module):
             out_channels: The out channels.
             use_clstoken: The use clstoken.
         """
-        super(DPTHead, self).__init__()
+        super().__init__()
 
         self.nclass = nclass
         self.use_clstoken = use_clstoken
@@ -204,7 +204,7 @@ class DPT_DINOv2(nn.Module):
             use_clstoken: The use clstoken.
             localhub: The localhub.
         """
-        super(DPT_DINOv2, self).__init__()
+        super().__init__()
 
         assert encoder in ["vits", "vitb", "vitl"]
         self.pretrained = _load_in_tree_dinov2(encoder)

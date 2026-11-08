@@ -159,5 +159,5 @@ class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
             self.add_params(params, model)
             optimizer_cfg["params"] = params
             optimizer = OPTIMIZERS.build(optimizer_cfg)
-        optim_wrapper = OPTIM_WRAPPERS.build(optim_wrapper_cfg, default_args=dict(optimizer=optimizer))
+        optim_wrapper = OPTIM_WRAPPERS.build(optim_wrapper_cfg, default_args={"optimizer": optimizer})
         return optim_wrapper

@@ -21,7 +21,7 @@ class DepthModel(BaseDepthModel):
         Args:
             cfg: The cfg.
         """
-        super(DepthModel, self).__init__(cfg)
+        super().__init__(cfg)
 
     def inference(self, data):
         """Inference.

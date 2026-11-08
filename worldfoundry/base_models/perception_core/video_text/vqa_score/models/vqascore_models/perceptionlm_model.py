@@ -22,6 +22,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.generate 
     PackedCausalTransformerGeneratorArgs,
     load_consolidated_model_and_tokenizer,
 )
+import contextlib
 
 PERCEPTION_LM_MODELS = {
     "perception-lm-1b": {
@@ -146,10 +147,8 @@ class PerceptionLMModel:
 
     def clear_temp_files(self):
         for file_name in self.tmp_files:
-            try:
+            with contextlib.suppress(OSError):
                 os.remove(file_name)
-            except OSError:
-                pass
         self.tmp_files.clear()
 
     def forward(

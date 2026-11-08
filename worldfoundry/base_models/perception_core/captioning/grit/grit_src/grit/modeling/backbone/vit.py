@@ -356,17 +356,14 @@ class ViT(Backbone):
             x = x + get_abs_pos(self.pos_embed, self.pretrain_use_cls_token, (x.shape[1], x.shape[2]))
 
         for blk in self.blocks:
-            if self.use_act_checkpoint:
-                x = checkpoint.checkpoint(blk, x)
-            else:
-                x = blk(x)
+            x = checkpoint.checkpoint(blk, x) if self.use_act_checkpoint else blk(x)
 
         return x.permute(0, 3, 1, 2)
 
 
 class ViT_FPN(Backbone):
     def __init__(self, bottom_up=None, top_block=None, out_channels=None, strides=None, vit_out_dim=None):
-        super(ViT_FPN, self).__init__()
+        super().__init__()
         assert isinstance(bottom_up, Backbone)
         self.bottom_up = bottom_up
         self.top_block = top_block
@@ -436,7 +433,7 @@ class ViT_FPN(Backbone):
         results.extend(self.top_block(stride32_feature))
 
         assert len(self._out_features) == len(results)
-        fpn_out = {f: res for f, res in zip(self._out_features, results, strict=False)}
+        fpn_out = dict(zip(self._out_features, results, strict=False))
 
         return fpn_out
 

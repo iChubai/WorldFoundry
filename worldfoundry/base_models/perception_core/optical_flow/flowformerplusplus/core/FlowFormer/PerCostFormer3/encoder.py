@@ -67,9 +67,8 @@ class PatchEmbed(nn.Module):
 
         masks = [mask_for_patch1, mask_for_patch2, mask_for_patch3]
         for idx, layer in enumerate(self.proj):
-            if idx % 2 == 0:
-                if masks[idx // 2] is not None:
-                    x = x * (1 - masks[idx // 2])
+            if idx % 2 == 0 and masks[idx // 2] is not None:
+                x = x * (1 - masks[idx // 2])
             x = layer(x)
 
         out_size = x.shape[2:]
@@ -102,7 +101,7 @@ from .twins import Block
 
 class VerticalSelfAttentionLayer(nn.Module):
     def __init__(self, dim, cfg, num_heads=8, attn_drop=0.0, proj_drop=0.0, drop_path=0.0, dropout=0.0):
-        super(VerticalSelfAttentionLayer, self).__init__()
+        super().__init__()
         self.cfg = cfg
         self.dim = dim
         self.num_heads = num_heads
@@ -153,7 +152,7 @@ class VerticalSelfAttentionLayer(nn.Module):
 
 class SelfAttentionLayer(nn.Module):
     def __init__(self, dim, cfg, num_heads=8, attn_drop=0.0, proj_drop=0.0, drop_path=0.0, dropout=0.0):
-        super(SelfAttentionLayer, self).__init__()
+        super().__init__()
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
 
         proj_drop = drop_path = cfg.droppath
@@ -201,7 +200,7 @@ class SelfAttentionLayer(nn.Module):
 
 class CostPerceiverEncoder(nn.Module):
     def __init__(self, cfg):
-        super(CostPerceiverEncoder, self).__init__()
+        super().__init__()
         self.cfg = cfg
         self.patch_size = cfg.patch_size
         self.patch_embed = PatchEmbed(
@@ -429,7 +428,7 @@ class CostPerceiverEncoder(nn.Module):
 
 class MemoryEncoder(nn.Module):
     def __init__(self, cfg):
-        super(MemoryEncoder, self).__init__()
+        super().__init__()
         self.cfg = cfg
 
         if cfg.fnet == "twins":

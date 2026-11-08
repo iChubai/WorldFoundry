@@ -97,10 +97,7 @@ class BasicBlock(CNNBlockBase):
         out = F.relu_(out)
         out = self.conv2(out)
 
-        if self.shortcut is not None:
-            shortcut = self.shortcut(x)
-        else:
-            shortcut = x
+        shortcut = self.shortcut(x) if self.shortcut is not None else x
 
         out += shortcut
         out = F.relu_(out)
@@ -236,16 +233,10 @@ class BottleneckBlock(CNNBlockBase):
 
         spx = torch.split(out, self.width, 1)
         for i in range(self.nums):
-            if i == 0 or self.in_channels != self.out_channels:
-                sp = spx[i]
-            else:
-                sp = sp + spx[i]
+            sp = spx[i] if i == 0 or self.in_channels != self.out_channels else sp + spx[i]
             sp = self.convs[i](sp)
             sp = F.relu_(self.bns[i](sp))
-            if i == 0:
-                out = sp
-            else:
-                out = torch.cat((out, sp), 1)
+            out = sp if i == 0 else torch.cat((out, sp), 1)
         if self.scale != 1 and self.stride_3x3 == 1:
             out = torch.cat((out, spx[self.nums]), 1)
         elif self.scale != 1 and self.stride_3x3 == 2:
@@ -253,10 +244,7 @@ class BottleneckBlock(CNNBlockBase):
 
         out = self.conv3(out)
 
-        if self.shortcut is not None:
-            shortcut = self.shortcut(x)
-        else:
-            shortcut = x
+        shortcut = self.shortcut(x) if self.shortcut is not None else x
 
         out += shortcut
         out = F.relu_(out)
@@ -446,10 +434,7 @@ class DeformBottleneckBlock(ResNetBlockBase):
 
         spx = torch.split(out, self.width, 1)
         for i in range(self.nums):
-            if i == 0 or self.in_channels != self.out_channels:
-                sp = spx[i].contiguous()
-            else:
-                sp = sp + spx[i].contiguous()
+            sp = spx[i].contiguous() if i == 0 or self.in_channels != self.out_channels else sp + spx[i].contiguous()
 
             # sp = self.convs[i](sp)
             if self.deform_modulated:
@@ -462,10 +447,7 @@ class DeformBottleneckBlock(ResNetBlockBase):
                 offset = self.conv2_offsets[i](sp)
                 sp = self.convs[i](sp, offset)
             sp = F.relu_(self.bns[i](sp))
-            if i == 0:
-                out = sp
-            else:
-                out = torch.cat((out, sp), 1)
+            out = sp if i == 0 else torch.cat((out, sp), 1)
         if self.scale != 1 and self.stride_3x3 == 1:
             out = torch.cat((out, spx[self.nums]), 1)
         elif self.scale != 1 and self.stride_3x3 == 2:
@@ -473,10 +455,7 @@ class DeformBottleneckBlock(ResNetBlockBase):
 
         out = self.conv3(out)
 
-        if self.shortcut is not None:
-            shortcut = self.shortcut(x)
-        else:
-            shortcut = x
+        shortcut = self.shortcut(x) if self.shortcut is not None else x
 
         out += shortcut
         out = F.relu_(out)
@@ -581,7 +560,7 @@ class ResNet(Backbone):
                 be returned in forward. Can be anything in "stem", "linear", or "res2" ...
                 If None, will return the output of the last layer.
         """
-        super(ResNet, self).__init__()
+        super().__init__()
         self.stem = stem
         self.num_classes = num_classes
 

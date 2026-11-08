@@ -246,7 +246,7 @@ class SO3(LieGroup):
         if isinstance(data, SE3):
             data = data.data[..., 3:7]
 
-        super(SO3, self).__init__(data)
+        super().__init__(data)
 
 
 class RxSO3(LieGroup):
@@ -262,7 +262,7 @@ class RxSO3(LieGroup):
         if isinstance(data, Sim3):
             data = data.data[..., 3:8]
 
-        super(RxSO3, self).__init__(data)
+        super().__init__(data)
 
 
 class SE3(LieGroup):
@@ -279,7 +279,7 @@ class SE3(LieGroup):
             translation = torch.zeros_like(data.data[..., :3])
             data = torch.cat([translation, data.data], -1)
 
-        super(SE3, self).__init__(data)
+        super().__init__(data)
 
     def scale(self, s):
         t, q = self.data.split([3, 4], -1)
@@ -309,7 +309,7 @@ class Sim3(LieGroup):
         elif isinstance(data, Sim3):
             data = data.data
 
-        super(Sim3, self).__init__(data)
+        super().__init__(data)
 
 
 def cat(group_list, dim):

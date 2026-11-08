@@ -416,12 +416,11 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
 
         # If multiplex state became empty, reset it so downstream code can reinitialize
         updated_multiplex_state = source_state.get("multiplex_state")
-        if updated_multiplex_state is not None:
-            if (
-                getattr(updated_multiplex_state, "assignments", None) is None
-                or updated_multiplex_state.total_valid_entries == 0
-            ):
-                source_state["multiplex_state"] = None
+        if updated_multiplex_state is not None and (
+            getattr(updated_multiplex_state, "assignments", None) is None
+            or updated_multiplex_state.total_valid_entries == 0
+        ):
+            source_state["multiplex_state"] = None
 
         # Step 3: Create new singleton inference state
         singleton_state = self.init_state(
@@ -690,7 +689,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                             "image_pos_enc": singleton_frame_out.get("image_pos_enc"),
                             "local_obj_id_to_idx": {obj_id: new_obj_idx},
                             "conditioning_objects": (
-                                set([new_obj_idx])
+                                {new_obj_idx}
                                 if singleton_obj_idx in singleton_frame_out.get("conditioning_objects", set())
                                 else set()
                             ),
@@ -1075,10 +1074,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         points = points.to(inference_state["device"])
         labels = labels.to(inference_state["device"])
 
-        if not clear_old_points:
-            old_point_inputs = point_inputs_per_frame.get(frame_idx, None)
-        else:
-            old_point_inputs = None
+        old_point_inputs = point_inputs_per_frame.get(frame_idx, None) if not clear_old_points else None
 
         point_inputs = concat_points(old_point_inputs, points, labels)
         point_inputs_per_frame[frame_idx] = point_inputs
@@ -1439,10 +1435,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         # the input points will be used to correct the already tracked masks.
         is_init_cond_frame = frame_idx not in inference_state["frames_already_tracked"]
         # whether to track in reverse time order
-        if is_init_cond_frame:
-            reverse = False
-        else:
-            reverse = inference_state["frames_already_tracked"][frame_idx]["reverse"]
+        reverse = False if is_init_cond_frame else inference_state["frames_already_tracked"][frame_idx]["reverse"]
         obj_output_dicts = [inference_state["output_dict_per_obj"][obj_idx] for obj_idx in obj_idxs]
         obj_temp_output_dicts = [inference_state["temp_output_dict_per_obj"][obj_idx] for obj_idx in obj_idxs]
         # Add a frame to conditioning output if it's an initial conditioning frame or

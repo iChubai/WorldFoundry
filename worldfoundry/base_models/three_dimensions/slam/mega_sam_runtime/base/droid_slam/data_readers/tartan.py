@@ -21,7 +21,7 @@ class TartanAir(RGBDDataset):
     def __init__(self, mode="training", **kwargs):
         self.mode = mode
         self.n_frames = 2
-        super(TartanAir, self).__init__(name="TartanAir", **kwargs)
+        super().__init__(name="TartanAir", **kwargs)
 
     @staticmethod
     def is_test_scene(scene):
@@ -76,7 +76,7 @@ class TartanAir(RGBDDataset):
 
 class TartanAirStream(RGBDStream):
     def __init__(self, datapath, **kwargs):
-        super(TartanAirStream, self).__init__(datapath=datapath, **kwargs)
+        super().__init__(datapath=datapath, **kwargs)
 
     def _build_dataset_index(self):
         """build list of images, poses, depths, and intrinsics"""
@@ -111,7 +111,7 @@ class TartanAirStream(RGBDStream):
 
 class TartanAirTestStream(RGBDStream):
     def __init__(self, datapath, **kwargs):
-        super(TartanAirTestStream, self).__init__(datapath=datapath, **kwargs)
+        super().__init__(datapath=datapath, **kwargs)
 
     def _build_dataset_index(self):
         """build list of images, poses, depths, and intrinsics"""

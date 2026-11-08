@@ -4,7 +4,7 @@ from torch import nn
 
 class IOULoss(nn.Module):
     def __init__(self, loc_loss_type="iou"):
-        super(IOULoss, self).__init__()
+        super().__init__()
         self.loc_loss_type = loc_loss_type
 
     def forward(self, pred, target, weight=None, reduction="sum"):
@@ -42,10 +42,7 @@ class IOULoss(nn.Module):
         else:
             raise NotImplementedError
 
-        if weight is not None:
-            losses = losses * weight
-        else:
-            losses = losses
+        losses = losses * weight if weight is not None else losses
 
         if reduction == "sum":
             return losses.sum()

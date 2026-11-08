@@ -31,7 +31,7 @@ class LlavaMptModel(LlavaMetaModel, MptModel):
 
     def __init__(self, config: MptConfig):
         config.hidden_size = config.d_model
-        super(LlavaMptModel, self).__init__(config)
+        super().__init__(config)
 
     def embed_tokens(self, x):
         return self.wte(x)

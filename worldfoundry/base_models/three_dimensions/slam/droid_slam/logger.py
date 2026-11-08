@@ -25,7 +25,7 @@ class Logger:
         """Helper function to print training status."""
         if self.writer is None:
             self.writer = SummaryWriter("runs/%s" % self.name)
-            print([k for k in self.running_loss])
+            print(list(self.running_loss))
 
         lr = self.scheduler.get_lr().pop()
         metrics_data = [self.running_loss[k] / SUM_FREQ for k in self.running_loss.keys()]

@@ -18,6 +18,7 @@ from omegaconf import DictConfig, OmegaConf
 from src import dnnlib
 from src.dataset_support.layers import sample_frames
 from torchvision import transforms
+import contextlib
 
 try:
     import pyspng
@@ -89,10 +90,8 @@ class Dataset(torch.utils.data.Dataset):
         return dict(self.__dict__, _raw_labels=None)
 
     def __del__(self):
-        try:
+        with contextlib.suppress(BaseException):
             self.close()
-        except BaseException:
-            pass
 
     def __len__(self):
         return self._raw_idx.size
@@ -302,7 +301,9 @@ class VideoFramesFolderDataset(Dataset):
         if self.subsample_factor > 1 and self.load_n_consecutive is None:
             raise NotImplementedError("Can do subsampling only when loading consecutive frames.")
 
-        listdir_full_paths = lambda d: sorted([os.path.join(d, x) for x in os.listdir(d)])
+        def listdir_full_paths(d):
+            return sorted([os.path.join(d, x) for x in os.listdir(d)])
+
         name = os.path.splitext(os.path.basename(self._path))[0]
 
         if os.path.isdir(self._path):
@@ -324,7 +325,7 @@ class VideoFramesFolderDataset(Dataset):
 
         PIL.Image.init()
         self._video_dir2frames = {}
-        objects = sorted([d for d in self._all_objects])
+        objects = sorted(self._all_objects)
         root_path_depth = len(os.path.normpath(objects[0]).split(os.path.sep))
         curr_d = objects[1]  # Root path is the first element
 
@@ -356,7 +357,7 @@ class VideoFramesFolderDataset(Dataset):
                 if len(fs) >= self.load_n_consecutive * self.subsample_factor
             }
 
-        self._video_idx2frames = [frames for frames in self._video_dir2frames.values()]
+        self._video_idx2frames = list(self._video_dir2frames.values())
 
         if len(self._video_idx2frames) == 0:
             raise OSError("No videos found in the specified archive")

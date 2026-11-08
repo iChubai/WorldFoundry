@@ -106,10 +106,7 @@ class mPlugOwl3Template(Template):
 
             def _get_new_tokens(i):
                 cut_shape = cut_shapes[2 * i]
-                if cut_shape:
-                    token_list = self._get_image_token_list(cut_shape)
-                else:
-                    token_list = image_token_list
+                token_list = self._get_image_token_list(cut_shape) if cut_shape else image_token_list
                 return token_list
 
             input_ids, labels = self._extend_tokens(input_ids, labels, idx_list, _get_new_tokens)

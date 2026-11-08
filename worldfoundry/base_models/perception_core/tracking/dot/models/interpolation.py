@@ -7,10 +7,7 @@ try:
 except ModuleNotFoundError:
     torch3d = None
 
-if torch3d:
-    TORCH3D_AVAILABLE = True
-else:
-    TORCH3D_AVAILABLE = False
+TORCH3D_AVAILABLE = bool(torch3d)
 
 
 def interpolate(src_points, tgt_points, grid, version="torch3d"):

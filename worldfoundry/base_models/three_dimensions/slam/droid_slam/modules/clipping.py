@@ -38,7 +38,7 @@ class GradientClip(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(GradientClip, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         """Forward.

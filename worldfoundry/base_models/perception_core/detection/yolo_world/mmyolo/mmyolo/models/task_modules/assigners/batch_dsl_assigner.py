@@ -106,7 +106,7 @@ class BatchDynamicSoftLabelAssigner(nn.Module):
         soft_center_radius: float = 3.0,
         topk: int = 13,
         iou_weight: float = 3.0,
-        iou_calculator: ConfigType = dict(type="mmdet.BboxOverlaps2D"),
+        iou_calculator: ConfigType = {"type": "mmdet.BboxOverlaps2D"},
         batch_iou: bool = True,
     ) -> None:
         super().__init__()
@@ -211,12 +211,12 @@ class BatchDynamicSoftLabelAssigner(nn.Module):
         assign_metrics = gt_bboxes.new_full(pred_scores[..., 0].shape, 0)
         assign_metrics[fg_mask_inboxes] = matched_pred_ious
 
-        return dict(
-            assigned_labels=assigned_labels,
-            assigned_labels_weights=assigned_labels_weights,
-            assigned_bboxes=assigned_bboxes,
-            assign_metrics=assign_metrics,
-        )
+        return {
+            "assigned_labels": assigned_labels,
+            "assigned_labels_weights": assigned_labels_weights,
+            "assigned_bboxes": assigned_bboxes,
+            "assign_metrics": assign_metrics,
+        }
 
     def dynamic_k_matching(
         self, cost_matrix: Tensor, pairwise_ious: Tensor, pad_bbox_flag: int

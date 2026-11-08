@@ -384,10 +384,7 @@ class Attention(nn.Module):
         context = x if context is None else context
         k = self.k_proj(context)
         v = self.v_proj(context)
-        q, k, v = map(
-            lambda t: rearrange(t, "b ... (h d) -> b ... h d", h=self.n_heads, d=self.head_dim),
-            (q, k, v),
-        )
+        q, k, v = (rearrange(t, "b ... (h d) -> b ... h d", h=self.n_heads, d=self.head_dim) for t in (q, k, v))
 
         def apply_norm_and_rotary_pos_emb(q, k, v, rope_emb):
             v = self.v_norm(v)
@@ -486,9 +483,8 @@ class I2VCrossAttention(Attention):
         k_img = self.k_img(img_context)
         v_img = self.v_img(img_context)
         # Rearrange k_img, v_img
-        k_img, v_img = map(
-            lambda t: rearrange(t, "b ... (h d) -> b ... h d", h=self.n_heads, d=self.head_dim),
-            (k_img, v_img),
+        k_img, v_img = (
+            rearrange(t, "b ... (h d) -> b ... h d", h=self.n_heads, d=self.head_dim) for t in (k_img, v_img)
         )
 
         return q, k, v, self.k_img_norm(k_img), v_img
@@ -1510,21 +1506,21 @@ class MinimalDiT(nn.Module):
             raise ValueError(f"Unknown pos_emb_cls {self.pos_emb_cls}")
 
         log.debug(f"Building positional embedding with {self.pos_emb_cls} class, impl {cls_type}")
-        kwargs = dict(
-            model_channels=self.model_channels,
-            len_h=self.max_img_h // self.patch_spatial,
-            len_w=self.max_img_w // self.patch_spatial,
-            len_t=self.max_frames // self.patch_temporal,
-            max_fps=self.max_fps,
-            min_fps=self.min_fps,
-            is_learnable=self.pos_emb_learnable,
-            interpolation=self.pos_emb_interpolation,
-            head_dim=self.model_channels // self.num_heads,
-            h_extrapolation_ratio=self.rope_h_extrapolation_ratio,
-            w_extrapolation_ratio=self.rope_w_extrapolation_ratio,
-            t_extrapolation_ratio=self.rope_t_extrapolation_ratio,
-            enable_fps_modulation=self.rope_enable_fps_modulation,
-        )
+        kwargs = {
+            "model_channels": self.model_channels,
+            "len_h": self.max_img_h // self.patch_spatial,
+            "len_w": self.max_img_w // self.patch_spatial,
+            "len_t": self.max_frames // self.patch_temporal,
+            "max_fps": self.max_fps,
+            "min_fps": self.min_fps,
+            "is_learnable": self.pos_emb_learnable,
+            "interpolation": self.pos_emb_interpolation,
+            "head_dim": self.model_channels // self.num_heads,
+            "h_extrapolation_ratio": self.rope_h_extrapolation_ratio,
+            "w_extrapolation_ratio": self.rope_w_extrapolation_ratio,
+            "t_extrapolation_ratio": self.rope_t_extrapolation_ratio,
+            "enable_fps_modulation": self.rope_enable_fps_modulation,
+        }
         self.pos_embedder = cls_type(
             **kwargs,
         )
@@ -1578,10 +1574,7 @@ class MinimalDiT(nn.Module):
             )
         x_B_T_H_W_D = self.x_embedder(x_B_C_T_H_W)
 
-        if self.extra_per_block_abs_pos_emb:
-            extra_pos_emb = self.extra_pos_embedder(x_B_T_H_W_D, fps=fps)
-        else:
-            extra_pos_emb = None
+        extra_pos_emb = self.extra_pos_embedder(x_B_T_H_W_D, fps=fps) if self.extra_per_block_abs_pos_emb else None
 
         if "rope" in self.pos_emb_cls.lower():
             return x_B_T_H_W_D, self.pos_embedder(x_B_T_H_W_D, fps=fps), extra_pos_emb
@@ -1797,7 +1790,7 @@ def replace_selfattn_op_with_sparse_attn_op(
     for i, block in enumerate(model.blocks):
         natten_params = natten_parameters_list[i]
         if natten_params is not None:
-            natten_parameters_layer = {k: v for k, v in natten_params.items()}
+            natten_parameters_layer = dict(natten_params.items())
             natten_parameters_layer["layer_id"] = i
             if block.self_attn.backend == "minimal_a2a":
                 sparse_attn_op = NattenA2AAttnOp(natten_parameters=natten_parameters_layer)

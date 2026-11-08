@@ -86,10 +86,7 @@ class PatchEmbed(nn.Module):
         # Only support concat mode (multitask mask training)
         orig_in_chans = in_chans
         if concat_condition:
-            if is_reshape_temporal_channels:
-                in_chans = in_chans + in_chans // 2 + 1
-            else:
-                in_chans = in_chans * 2 + 1
+            in_chans = in_chans + in_chans // 2 + 1 if is_reshape_temporal_channels else in_chans * 2 + 1
 
         self.proj = nn.Conv3d(
             in_chans,

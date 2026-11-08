@@ -69,10 +69,7 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
         Prefix LM attention masking.
         """
         attn_modules = []
-        if isinstance(model, GPTNeoXForCausalLM):
-            blocks = model.gpt_neox.layers
-        else:
-            blocks = model.transformer.h
+        blocks = model.gpt_neox.layers if isinstance(model, GPTNeoXForCausalLM) else model.transformer.h
         for block in blocks:
             if isinstance(model, GPTNeoForCausalLM):
                 if block.attn.attention_type != "global":

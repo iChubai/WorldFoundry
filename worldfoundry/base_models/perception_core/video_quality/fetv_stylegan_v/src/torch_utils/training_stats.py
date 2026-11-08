@@ -27,8 +27,8 @@ _counter_dtype = torch.float64  # Data type to use for the internal counters.
 _rank = 0  # Rank of the current process.
 _sync_device = None  # Device to use for multiprocess communication. None = single-process.
 _sync_called = False  # Has _sync() been called yet?
-_counters = dict()  # Running counters on each device, updated by report(): name => device => torch.Tensor
-_cumulative = dict()  # Cumulative counters on the CPU, updated by _sync(): name => torch.Tensor
+_counters = {}  # Running counters on each device, updated by report(): name => device => torch.Tensor
+_cumulative = {}  # Cumulative counters on the CPU, updated by _sync(): name => torch.Tensor
 
 # ----------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ def report(name, value):
         The same `value` that was passed in.
     """
     if name not in _counters:
-        _counters[name] = dict()
+        _counters[name] = {}
 
     elems = torch.as_tensor(value)
     if elems.numel() == 0:
@@ -144,8 +144,8 @@ class Collector:
     def __init__(self, regex=".*", keep_previous=True):
         self._regex = re.compile(regex)
         self._keep_previous = keep_previous
-        self._cumulative = dict()
-        self._moments = dict()
+        self._cumulative = {}
+        self._moments = {}
         self.update()
         self._moments.clear()
 

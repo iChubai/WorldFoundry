@@ -127,7 +127,7 @@ class CrossAttention(nn.Module):
             k = self.to_k(context)
             v = self.to_v(context)
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=h) for t in (q, k, v))
 
         sim = torch.einsum("b i d, b j d -> b i j", q, k) * self.scale
         if self.relative_position:
@@ -155,7 +155,7 @@ class CrossAttention(nn.Module):
 
         ## for image cross-attention
         if k_ip is not None:
-            k_ip, v_ip = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (k_ip, v_ip))
+            k_ip, v_ip = (rearrange(t, "b n (h d) -> (b h) n d", h=h) for t in (k_ip, v_ip))
             sim_ip = torch.einsum("b i d, b j d -> b i j", q, k_ip) * self.scale
             del k_ip
             sim_ip = sim_ip.softmax(dim=-1)
@@ -191,26 +191,26 @@ class CrossAttention(nn.Module):
             v = self.to_v(context)
 
         b, _, _ = q.shape
-        q, k, v = map(
-            lambda t: t.unsqueeze(3)
+        q, k, v = (
+            t.unsqueeze(3)
             .reshape(b, t.shape[1], self.heads, self.dim_head)
             .permute(0, 2, 1, 3)
             .reshape(b * self.heads, t.shape[1], self.dim_head)
-            .contiguous(),
-            (q, k, v),
+            .contiguous()
+            for t in (q, k, v)
         )
         # actually compute the attention, what we cannot get enough of
         out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=None)
 
         ## for image cross-attention
         if k_ip is not None:
-            k_ip, v_ip = map(
-                lambda t: t.unsqueeze(3)
+            k_ip, v_ip = (
+                t.unsqueeze(3)
                 .reshape(b, t.shape[1], self.heads, self.dim_head)
                 .permute(0, 2, 1, 3)
                 .reshape(b * self.heads, t.shape[1], self.dim_head)
-                .contiguous(),
-                (k_ip, v_ip),
+                .contiguous()
+                for t in (k_ip, v_ip)
             )
             out_ip = xformers.ops.memory_efficient_attention(q, k_ip, v_ip, attn_bias=None, op=None)
             out_ip = (

@@ -110,10 +110,7 @@ class CameraHead(nn.Module):
             proc_feat = self.refine_net(mod_cam_feat)
             param_delta = self.param_predictor(self.out_norm(proc_feat))
 
-            if curr_pred is None:
-                curr_pred = param_delta
-            else:
-                curr_pred = curr_pred + param_delta
+            curr_pred = param_delta if curr_pred is None else curr_pred + param_delta
 
             # Apply final activation functions for translation, quaternion, and field-of-view
             activated_params = self.apply_camera_parameter_activation(curr_pred)

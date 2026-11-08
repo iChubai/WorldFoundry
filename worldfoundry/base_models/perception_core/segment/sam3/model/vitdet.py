@@ -71,10 +71,7 @@ class Mlp(nn.Module):
         hidden_features = hidden_features or in_features
         if isinstance(bias, bool):
             bias = (bias, bias)
-        if isinstance(drop, (int, float)):
-            drop_probs = (drop, drop)
-        else:
-            drop_probs = drop
+        drop_probs = (drop, drop) if isinstance(drop, (int, float)) else drop
         linear_layer = partial(nn.Conv2d, kernel_size=1) if use_conv else nn.Linear
 
         self.fc1 = linear_layer(in_features, hidden_features, bias=bias[0])

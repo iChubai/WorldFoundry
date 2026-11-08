@@ -30,7 +30,7 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob=None):
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
@@ -720,10 +720,7 @@ class XCLIP(CLIP):
         video_features, img_features = self.encode_video(image)
         img_features = img_features.mean(dim=1, keepdim=False)
 
-        if self.use_cache:
-            text_features = self.cache_text(text)
-        else:
-            text_features = self.encode_text(text)
+        text_features = self.cache_text(text) if self.use_cache else self.encode_text(text)
 
         text_features = text_features.unsqueeze(0).expand(b, -1, -1)
         text_features = text_features + self.prompts_generator(text_features, img_features)
@@ -762,7 +759,7 @@ def build_x_clip_model(
         image_resolution = vision_patch_size * grid_size
     else:
         counts: list = [
-            len(set(k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}"))) for b in [1, 2, 3, 4]
+            len({k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}")}) for b in [1, 2, 3, 4]
         ]
         vision_layers = tuple(counts)
 
@@ -777,7 +774,7 @@ def build_x_clip_model(
     vocab_size = state_dict["token_embedding.weight"].shape[0]
     transformer_width = state_dict["ln_final.weight"].shape[0]
     transformer_heads = transformer_width // 64
-    transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith("transformer.resblocks")))
+    transformer_layers = len({k.split(".")[2] for k in state_dict if k.startswith("transformer.resblocks")})
 
     model = XCLIP(
         embed_dim,

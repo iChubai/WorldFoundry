@@ -19,6 +19,7 @@ from torch.nn import functional as F
 from worldfoundry.core.nn import RMSNorm
 
 from ..networks.hy_nomas import _attention
+import itertools
 
 TUBELET = (4, 16, 16)
 TUBE_DIM = TUBELET[0] * TUBELET[1] * TUBELET[2] * 3
@@ -489,7 +490,7 @@ class PixelUMMDecoder(nn.Module):
             raise ValueError("tail_hold_latents must be nonnegative")
         if not denoising_step_list or any(not 0 < value <= 1 for value in denoising_step_list):
             raise ValueError("denoising_step_list must contain values in (0, 1]")
-        if any((first <= second for first, second in zip(denoising_step_list, denoising_step_list[1:], strict=False))):
+        if any((first <= second for first, second in itertools.pairwise(denoising_step_list))):
             raise ValueError("denoising_step_list must be strictly decreasing")
         if not 1 <= num_steps <= len(denoising_step_list):
             raise ValueError("num_steps must be between 1 and the distilled schedule length")

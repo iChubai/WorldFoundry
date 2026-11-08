@@ -236,7 +236,7 @@ class DropPath(nn.Module):
         Args:
             drop_prob: The drop prob.
         """
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
@@ -1107,10 +1107,7 @@ class BlockChunk(nn.ModuleList):
             others: The others.
         """
         for b in self:
-            if others is None:
-                x = b(x)
-            else:
-                x = b(x, others)
+            x = b(x) if others is None else b(x, others)
         return x
 
 
@@ -1567,10 +1564,7 @@ def load_ckpt_dino(checkpoint, model):
         except Exception:
             new_state_dict = {}
             for key, value in state_dict.items():
-                if "blocks" in key:
-                    key_new = "blocks.0" + key[len("blocks") :]
-                else:
-                    key_new = key
+                key_new = "blocks.0" + key[len("blocks") :] if "blocks" in key else key
                 new_state_dict[key_new] = value
 
             model.load_state_dict(new_state_dict, strict=True)
@@ -1652,10 +1646,7 @@ def vit_large(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
         except Exception:
             new_state_dict = {}
             for key, value in state_dict.items():
-                if "blocks" in key:
-                    key_new = "blocks.0" + key[len("blocks") :]
-                else:
-                    key_new = key
+                key_new = "blocks.0" + key[len("blocks") :] if "blocks" in key else key
                 new_state_dict[key_new] = value
 
             model.load_state_dict(new_state_dict, strict=True)

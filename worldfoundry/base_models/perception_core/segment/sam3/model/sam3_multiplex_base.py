@@ -2335,15 +2335,15 @@ class Sam3MultiplexBase(Sam3VideoBase):
         for (first_obj_id, obj_id), frame_indices in overlap_pair_to_frame_inds.items():
             if obj_id in removed_obj_ids or obj_id in obj_ids_newly_removed:
                 continue  # skip if the object is already removed
-            if (obj_first_frame_idx[obj_id] > hotstart_diff and not reverse) or (
-                obj_first_frame_idx[obj_id] < hotstart_diff and reverse
-            ):
-                if len(frame_indices) >= self.hotstart_dup_thresh:
-                    obj_ids_newly_removed.add(obj_id)
-                    logger.info(
-                        f"Removing object {obj_id} at frame {frame_idx} "
-                        f"since it overlaps with another track {first_obj_id} at frames: {frame_indices}"
-                    )
+            if (
+                (obj_first_frame_idx[obj_id] > hotstart_diff and not reverse)
+                or (obj_first_frame_idx[obj_id] < hotstart_diff and reverse)
+            ) and len(frame_indices) >= self.hotstart_dup_thresh:
+                obj_ids_newly_removed.add(obj_id)
+                logger.info(
+                    f"Removing object {obj_id} at frame {frame_idx} "
+                    f"since it overlaps with another track {first_obj_id} at frames: {frame_indices}"
+                )
 
         removed_obj_ids.update(obj_ids_newly_removed)
         return obj_ids_newly_removed, rank0_metadata
@@ -2444,7 +2444,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
                 if frame_idx not in output_dict[storage_key]:
                     continue
                 output_dict[storage_key][frame_idx]["maskmem_features"] = local_maskmem_features
-                output_dict[storage_key][frame_idx]["maskmem_pos_enc"] = [pos for pos in local_maskmem_pos_enc]
+                output_dict[storage_key][frame_idx]["maskmem_pos_enc"] = list(local_maskmem_pos_enc)
                 if self.is_multiplex:
                     output_dict[storage_key][frame_idx]["image_features"] = local_image_features
                     output_dict[storage_key][frame_idx]["image_pos_enc"] = local_image_pos_enc

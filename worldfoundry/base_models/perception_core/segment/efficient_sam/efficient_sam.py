@@ -244,10 +244,7 @@ def build_efficient_sam(encoder_patch_embed_dim, encoder_num_heads, checkpoint=N
     normalize_before_activation = False
 
     assert activation == "relu" or activation == "gelu"
-    if activation == "relu":
-        activation_fn = nn.ReLU
-    else:
-        activation_fn = nn.GELU
+    activation_fn = nn.ReLU if activation == "relu" else nn.GELU
 
     image_encoder = ImageEncoderViT(
         img_size=img_size,

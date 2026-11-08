@@ -317,7 +317,7 @@ class MinimalV1LVGDiT(MinimalDiT):
 
     def init_weights(self) -> None:
         for m in self.modules():
-            if isinstance(m, nn.Linear) or isinstance(m, nn.Conv1d):
+            if isinstance(m, (nn.Linear, nn.Conv1d)):
                 nn.init.xavier_uniform_(m.weight)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)

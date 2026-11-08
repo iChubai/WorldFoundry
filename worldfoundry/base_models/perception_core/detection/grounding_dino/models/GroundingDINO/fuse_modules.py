@@ -125,7 +125,7 @@ class BiMultiHeadAttention(nn.Module):
             dropout: The dropout.
             cfg: The cfg.
         """
-        super(BiMultiHeadAttention, self).__init__()
+        super().__init__()
 
         self.embed_dim = embed_dim
         self.num_heads = num_heads
@@ -302,7 +302,7 @@ class BiAttentionBlock(nn.Module):
             num_heads - Number of heads to use in the Multi-Head Attention block
             dropout - Amount of dropout to apply in the feed-forward network
         """
-        super(BiAttentionBlock, self).__init__()
+        super().__init__()
 
         # pre layer norm
         self.layer_norm_v = nn.LayerNorm(v_dim)

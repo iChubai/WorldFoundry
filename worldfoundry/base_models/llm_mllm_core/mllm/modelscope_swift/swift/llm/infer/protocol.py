@@ -134,9 +134,7 @@ class ChatCompletionRequest(RequestConfig, MultiModalRequestMixin, ChatCompletio
                 if isinstance(value, dict):
                     is_dict = True
                     value = value["url"]
-                if isinstance(value, str) and (
-                    value.startswith("data:") or value.startswith("http") or len(value) > 200
-                ):
+                if isinstance(value, str) and (value.startswith(("data:", "http")) or len(value) > 200):
                     continue
 
                 # local_path / PIL.Image
@@ -156,7 +154,7 @@ class ChatCompletionRequest(RequestConfig, MultiModalRequestMixin, ChatCompletio
         data = asdict(self)
         res = []
         for cls_type in [InferRequest, RequestConfig]:
-            parameters = set(f.name for f in fields(cls_type))
+            parameters = {f.name for f in fields(cls_type)}
             _data = {k: v for k, v in data.items() if k in parameters}
             res.append(cls_type(**_data))
         return tuple(res)

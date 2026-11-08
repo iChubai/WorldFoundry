@@ -70,10 +70,7 @@ class DataArguments:
         self.columns = self.parse_to_dict(self.columns)
         if len(self.val_dataset) > 0 or self.streaming:
             self.split_dataset_ratio = 0.0
-            if len(self.val_dataset) > 0:
-                msg = "len(args.val_dataset) > 0"
-            else:
-                msg = "args.streaming is True"
+            msg = "len(args.val_dataset) > 0" if len(self.val_dataset) > 0 else "args.streaming is True"
             logger.info(f"Because {msg}, setting split_dataset_ratio: {self.split_dataset_ratio}")
         self._init_custom_dataset_info()
 

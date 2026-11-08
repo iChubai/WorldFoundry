@@ -1155,22 +1155,24 @@ class MatrixGame35Denoiser:
             conditioning = _negative_no_context_inputs_shared(conditioning)
         compute_dtype = next(self.model.parameters()).dtype
         autocast_enabled = compute_dtype in {torch.float16, torch.bfloat16}
-        with self._temporary_no_prope(model_input.branch == "negative" and negative_no_prope):
-            with torch.autocast(
+        with (
+            self._temporary_no_prope(model_input.branch == "negative" and negative_no_prope),
+            torch.autocast(
                 device_type=model_input.latents.device.type,
                 dtype=compute_dtype,
                 enabled=autocast_enabled,
-            ):
-                sample = matrix_game_35_forward(
-                    dit=self.model,
-                    latents=model_input.latents,
-                    timestep=model_input.timestep.to(
-                        device=model_input.latents.device,
-                        dtype=compute_dtype,
-                    ),
-                    context=context,
-                    **conditioning,
-                )
+            ),
+        ):
+            sample = matrix_game_35_forward(
+                dit=self.model,
+                latents=model_input.latents,
+                timestep=model_input.timestep.to(
+                    device=model_input.latents.device,
+                    dtype=compute_dtype,
+                ),
+                context=context,
+                **conditioning,
+            )
         return DenoiserOutput(sample=sample)
 
 

@@ -8,7 +8,7 @@ from .encoder import MemoryEncoder
 
 class FlowFormer(nn.Module):
     def __init__(self, cfg):
-        super(FlowFormer, self).__init__()
+        super().__init__()
 
         H1, W1, H2, W2 = cfg.pic_size
         H_offset = (H1 - H2) // 2

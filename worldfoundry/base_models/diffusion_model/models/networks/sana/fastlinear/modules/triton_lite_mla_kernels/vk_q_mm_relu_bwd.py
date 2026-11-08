@@ -179,7 +179,9 @@ def vk_q_mm_relu_bwd(
     grad_vk = torch.empty_like(vk)
 
     # 1D launch kernel where each block gets its own program.
-    grid = lambda META: (B * H,)
+    def grid(META):
+        return (B * H,)
+
     vk_q_mm_relu_bwd_kernel[grid](
         grad_vk_q,
         vk,

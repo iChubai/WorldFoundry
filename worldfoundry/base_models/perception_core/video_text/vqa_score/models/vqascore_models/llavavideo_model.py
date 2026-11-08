@@ -70,7 +70,7 @@ class LLaVAVideoModel(VQAScoreModel):
         total_frame_num = len(vr)
         video_time = total_frame_num / vr.get_avg_fps()
         fps = round(vr.get_avg_fps() / fps)
-        frame_idx = [i for i in range(0, len(vr), fps)]
+        frame_idx = list(range(0, len(vr), fps))
         frame_time = [i / fps for i in frame_idx]
         if len(frame_idx) > max_frames_num or force_sample:
             sample_fps = max_frames_num

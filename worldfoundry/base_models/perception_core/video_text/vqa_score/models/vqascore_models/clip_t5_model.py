@@ -329,7 +329,7 @@ class CLIPT5Model(VQAScoreModel):
             "inputs": input_ids,
             "images": images,
             "attention_mask": attention_mask,
-            "do_sample": True if temperature > 0 else False,
+            "do_sample": temperature > 0,
             "temperature": temperature,
             "top_p": None,
             "num_beams": 1,

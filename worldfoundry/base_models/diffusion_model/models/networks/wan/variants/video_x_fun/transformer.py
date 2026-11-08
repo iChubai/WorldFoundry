@@ -968,17 +968,17 @@ class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigM
                 e0 = torch.chunk(e0, self.sp_world_size, dim=1)[self.sp_world_rank]
                 e = torch.chunk(e, self.sp_world_size, dim=1)[self.sp_world_rank]
 
-        block_kwargs = dict(
-            e=e0,
-            seq_lens=seq_lens,
-            grid_sizes=grid_sizes,
-            freqs=self.freqs,
-            context=context,
-            context_lens=context_lens,
-            dtype=dtype,
-            t=t,
-            condition_store=condition_store,
-        )
+        block_kwargs = {
+            "e": e0,
+            "seq_lens": seq_lens,
+            "grid_sizes": grid_sizes,
+            "freqs": self.freqs,
+            "context": context,
+            "context_lens": context_lens,
+            "dtype": dtype,
+            "t": t,
+            "condition_store": condition_store,
+        }
 
         # TeaCache: skip computation when change is small
         if self.teacache is not None:

@@ -125,10 +125,7 @@ def add_file_handler_if_needed(logger, log_file, file_mode, log_level):
         if isinstance(handler, logging.FileHandler):
             return
 
-    if importlib.util.find_spec("torch") is not None:
-        is_worker0 = int(os.getenv("LOCAL_RANK", -1)) in {-1, 0}
-    else:
-        is_worker0 = True
+    is_worker0 = int(os.getenv("LOCAL_RANK", -1)) in {-1, 0} if importlib.util.find_spec("torch") is not None else True
 
     if is_worker0 and log_file is not None:
         file_handler = logging.FileHandler(log_file, file_mode)

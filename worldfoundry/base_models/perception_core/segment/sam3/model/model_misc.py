@@ -367,10 +367,7 @@ def multi_head_attention_forward(
     #
 
     if attn_mask is not None:
-        if attn_mask.size(0) == 1:
-            attn_mask = attn_mask.unsqueeze(0)
-        else:
-            attn_mask = attn_mask.view(bsz, num_heads, -1, src_len)
+        attn_mask = attn_mask.unsqueeze(0) if attn_mask.size(0) == 1 else attn_mask.view(bsz, num_heads, -1, src_len)
 
     if attn_bias is not None:
         assert attn_bias.shape == (
@@ -379,10 +376,7 @@ def multi_head_attention_forward(
             tgt_len,
             src_len,
         ), f"expecting attn_bias shape of {(bsz, num_heads, tgt_len, src_len)}, but got {attn_bias.shape}"
-        if attn_mask is None:
-            attn_mask = attn_bias
-        else:
-            attn_mask = attn_mask + attn_bias
+        attn_mask = attn_bias if attn_mask is None else attn_mask + attn_bias
 
     q = q.view(bsz, num_heads, tgt_len, head_dim)
     k = k.view(bsz, num_heads, src_len, head_dim)
@@ -493,7 +487,7 @@ class MultiheadAttention(nn.Module):
             The return value.
         """
         factory_kwargs = {"device": device, "dtype": dtype}
-        super(MultiheadAttention, self).__init__()
+        super().__init__()
         self.embed_dim = embed_dim
         self.kdim = kdim if kdim is not None else embed_dim
         self.vdim = vdim if vdim is not None else embed_dim
@@ -567,7 +561,7 @@ class MultiheadAttention(nn.Module):
         if "_qkv_same_embed_dim" not in state:
             state["_qkv_same_embed_dim"] = True
 
-        super(MultiheadAttention, self).__setstate__(state)
+        super().__setstate__(state)
 
     def forward(
         self,

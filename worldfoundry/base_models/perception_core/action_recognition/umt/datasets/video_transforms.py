@@ -157,10 +157,7 @@ def horizontal_flip(prob, images, boxes=None):
         flipped_boxes (ndarray or None): the flipped boxes with dimension of
             `num boxes` x 4.
     """
-    if boxes is None:
-        flipped_boxes = None
-    else:
-        flipped_boxes = boxes.copy()
+    flipped_boxes = None if boxes is None else boxes.copy()
 
     if np.random.uniform() < prob:
         images = images.flip(-1)
@@ -598,17 +595,11 @@ def create_random_augment(
             of operations to apply).
         interpolation: Interpolation method.
     """
-    if isinstance(input_size, tuple):
-        img_size = input_size[-2:]
-    else:
-        img_size = input_size
+    img_size = input_size[-2:] if isinstance(input_size, tuple) else input_size
 
     if auto_augment:
         assert isinstance(auto_augment, str)
-        if isinstance(img_size, tuple):
-            img_size_min = min(img_size)
-        else:
-            img_size_min = img_size
+        img_size_min = min(img_size) if isinstance(img_size, tuple) else img_size
         aa_params = {"translate_const": int(img_size_min * 0.45)}
         if interpolation and interpolation != "random":
             aa_params["interpolation"] = _pil_interp(interpolation)
@@ -776,10 +767,7 @@ def transforms_imagenet_train(
      * a portion of the data through the secondary transform
      * normalizes and converts the branches above with the third, final transform
     """
-    if isinstance(img_size, tuple):
-        img_size = img_size[-2:]
-    else:
-        img_size = img_size
+    img_size = img_size[-2:] if isinstance(img_size, tuple) else img_size
 
     scale = tuple(scale or (0.08, 1.0))  # default imagenet scale range
     ratio = tuple(ratio or (3.0 / 4.0, 4.0 / 3.0))  # default imagenet ratio range
@@ -792,14 +780,11 @@ def transforms_imagenet_train(
     secondary_tfl = []
     if auto_augment:
         assert isinstance(auto_augment, str)
-        if isinstance(img_size, tuple):
-            img_size_min = min(img_size)
-        else:
-            img_size_min = img_size
-        aa_params = dict(
-            translate_const=int(img_size_min * 0.45),
-            img_mean=tuple([min(255, round(255 * x)) for x in mean]),
-        )
+        img_size_min = min(img_size) if isinstance(img_size, tuple) else img_size
+        aa_params = {
+            "translate_const": int(img_size_min * 0.45),
+            "img_mean": tuple([min(255, round(255 * x)) for x in mean]),
+        }
         if interpolation and interpolation != "random":
             aa_params["interpolation"] = _pil_interp(interpolation)
         if auto_augment.startswith("rand"):
@@ -1130,25 +1115,13 @@ class ColorJitter:
         self.hue = hue
 
     def get_params(self, brightness, contrast, saturation, hue):
-        if brightness > 0:
-            brightness_factor = random.uniform(max(0, 1 - brightness), 1 + brightness)
-        else:
-            brightness_factor = None
+        brightness_factor = random.uniform(max(0, 1 - brightness), 1 + brightness) if brightness > 0 else None
 
-        if contrast > 0:
-            contrast_factor = random.uniform(max(0, 1 - contrast), 1 + contrast)
-        else:
-            contrast_factor = None
+        contrast_factor = random.uniform(max(0, 1 - contrast), 1 + contrast) if contrast > 0 else None
 
-        if saturation > 0:
-            saturation_factor = random.uniform(max(0, 1 - saturation), 1 + saturation)
-        else:
-            saturation_factor = None
+        saturation_factor = random.uniform(max(0, 1 - saturation), 1 + saturation) if saturation > 0 else None
 
-        if hue > 0:
-            hue_factor = random.uniform(-hue, hue)
-        else:
-            hue_factor = None
+        hue_factor = random.uniform(-hue, hue) if hue > 0 else None
         return brightness_factor, contrast_factor, saturation_factor, hue_factor
 
     def __call__(self, clip):

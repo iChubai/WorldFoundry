@@ -23,9 +23,11 @@ def compute_fvd(opts, max_real: int, num_gen: int, num_frames: int, subsample_fa
     # https://github.com/google-research/google-research/blob/master/frechet_video_distance/frechet_video_distance.py
     # Note that the weights on tf.hub (used in the script above) differ from the original released weights
     detector_url = "https://www.dropbox.com/s/ge9e5ujwgetktms/i3d_torchscript.pt?dl=1"
-    detector_kwargs = dict(
-        rescale=True, resize=True, return_features=True
-    )  # Return raw features before the softmax layer.
+    detector_kwargs = {
+        "rescale": True,
+        "resize": True,
+        "return_features": True,
+    }  # Return raw features before the softmax layer.
 
     opts = copy.deepcopy(opts)
     opts.dataset_kwargs.load_n_consecutive = num_frames
@@ -52,11 +54,11 @@ def compute_fvd(opts, max_real: int, num_gen: int, num_frames: int, subsample_fa
         gen_opts.dataset_kwargs.load_n_consecutive = num_frames
         gen_opts.dataset_kwargs.load_n_consecutive_random_offset = False
         gen_opts.dataset_kwargs.subsample_factor = subsample_factor
-        gen_kwargs = dict()
+        gen_kwargs = {}
     else:
         compute_gen_stats_fn = metric_utils.compute_feature_stats_for_generator
         gen_opts = opts
-        gen_kwargs = dict(num_video_frames=num_frames, subsample_factor=subsample_factor)
+        gen_kwargs = {"num_video_frames": num_frames, "subsample_factor": subsample_factor}
 
     mu_gen, sigma_gen = compute_gen_stats_fn(
         opts=gen_opts,

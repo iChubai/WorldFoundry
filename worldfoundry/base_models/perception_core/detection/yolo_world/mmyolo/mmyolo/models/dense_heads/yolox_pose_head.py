@@ -193,7 +193,7 @@ class YOLOXPoseHead(YOLOXHead):
             loss_kpt = kpt_preds.sum() * 0
             loss_vis = vis_preds.sum() * 0
 
-        losses.update(dict(loss_kpt=loss_kpt, loss_vis=loss_vis))
+        losses.update({"loss_kpt": loss_kpt, "loss_vis": loss_vis})
 
         self._clear()
         return losses

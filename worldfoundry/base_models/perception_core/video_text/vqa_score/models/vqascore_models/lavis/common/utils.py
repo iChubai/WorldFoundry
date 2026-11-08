@@ -82,12 +82,11 @@ def get_redirected_url(url: str):
     """
     import requests
 
-    with requests.Session() as session:
-        with session.get(url, stream=True, allow_redirects=True) as response:
-            if response.history:
-                return response.url
-            else:
-                return url
+    with requests.Session() as session, session.get(url, stream=True, allow_redirects=True) as response:
+        if response.history:
+            return response.url
+        else:
+            return url
 
 
 def to_google_drive_download_url(view_url: str) -> str:

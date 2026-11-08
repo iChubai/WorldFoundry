@@ -166,7 +166,7 @@ def normalize_echo_state_dict(state_dict: Mapping[str, Any]) -> dict[str, Any]:
     for original, key in zip(keys, normalized_keys, strict=False):
         if key == "spatial_memory_module.mix":
             key = "memory_adapter.spatial_memory_module.spatial_to_tokens"
-        elif key.startswith("spatial_memory_module.") or key.startswith("spatial_memory_readout_module."):
+        elif key.startswith(("spatial_memory_module.", "spatial_memory_readout_module.")):
             key = "memory_adapter." + key
         if key in result:
             raise EchoCheckpointError(

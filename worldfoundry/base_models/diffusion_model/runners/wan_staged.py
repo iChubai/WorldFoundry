@@ -108,14 +108,14 @@ class WanStagedPipeline(StagedDiffusionPipeline):
                 T5RelativeEmbedding: AutoWrappedModule,
                 T5LayerNorm: AutoWrappedModule,
             },
-            vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device="cpu",
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": "cpu",
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
         )
         dtype = next(iter(self.dit.parameters())).dtype
         enable_vram_management(
@@ -127,23 +127,23 @@ class WanStagedPipeline(StagedDiffusionPipeline):
                 RMSNorm: AutoWrappedModule,
                 torch.nn.Conv2d: AutoWrappedModule,
             },
-            vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device=self.device,
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": self.device,
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
             max_num_param=num_persistent_param_in_dit,
-            overflow_vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device="cpu",
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            overflow_vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": "cpu",
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
         )
         dtype = next(iter(self.vae.parameters())).dtype
         enable_vram_management(
@@ -157,14 +157,14 @@ class WanStagedPipeline(StagedDiffusionPipeline):
                 torch.nn.SiLU: AutoWrappedModule,
                 torch.nn.Dropout: AutoWrappedModule,
             },
-            vram_config=dict(
-                offload_dtype=dtype,
-                offload_device="cpu",
-                onload_dtype=dtype,
-                onload_device=self.device,
-                computation_dtype=self.torch_dtype,
-                computation_device=self.device,
-            ),
+            vram_config={
+                "offload_dtype": dtype,
+                "offload_device": "cpu",
+                "onload_dtype": dtype,
+                "onload_device": self.device,
+                "computation_dtype": self.torch_dtype,
+                "computation_device": self.device,
+            },
         )
         if self.image_encoder is not None:
             dtype = next(iter(self.image_encoder.parameters())).dtype
@@ -175,14 +175,14 @@ class WanStagedPipeline(StagedDiffusionPipeline):
                     torch.nn.Conv2d: AutoWrappedModule,
                     torch.nn.LayerNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.motion_controller is not None:
             dtype = next(iter(self.motion_controller.parameters())).dtype
@@ -191,14 +191,14 @@ class WanStagedPipeline(StagedDiffusionPipeline):
                 module_map={
                     torch.nn.Linear: AutoWrappedLinear,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device="cpu",
-                    computation_dtype=dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": "cpu",
+                    "computation_dtype": dtype,
+                    "computation_device": self.device,
+                },
             )
         if self.vace is not None:
             enable_vram_management(
@@ -209,14 +209,14 @@ class WanStagedPipeline(StagedDiffusionPipeline):
                     torch.nn.LayerNorm: AutoWrappedModule,
                     RMSNorm: AutoWrappedModule,
                 },
-                vram_config=dict(
-                    offload_dtype=dtype,
-                    offload_device="cpu",
-                    onload_dtype=dtype,
-                    onload_device=self.device,
-                    computation_dtype=self.torch_dtype,
-                    computation_device=self.device,
-                ),
+                vram_config={
+                    "offload_dtype": dtype,
+                    "offload_device": "cpu",
+                    "onload_dtype": dtype,
+                    "onload_device": self.device,
+                    "computation_dtype": self.torch_dtype,
+                    "computation_device": self.device,
+                },
             )
         self.enable_cpu_offload()
 
@@ -823,7 +823,7 @@ class TeaCache:
             "Wan2.1-I2V-14B-720P": [8.10705460e03, 2.13393892e03, -3.72934672e02, 1.66203073e01, -4.17769401e-02],
         }
         if model_id not in self.coefficients_dict:
-            supported_model_ids = ", ".join([i for i in self.coefficients_dict])
+            supported_model_ids = ", ".join(list(self.coefficients_dict))
             raise ValueError(
                 f"{model_id} is not a supported TeaCache model id. Please choose a valid model id in ({supported_model_ids})."
             )
@@ -941,24 +941,19 @@ def model_fn_wan_video(
     )
 
     # TeaCache
-    if tea_cache is not None:
-        tea_cache_update = tea_cache.check(dit, x, t_mod)
-    else:
-        tea_cache_update = False
+    tea_cache_update = tea_cache.check(dit, x, t_mod) if tea_cache is not None else False
 
     if vace_context is not None:
         vace_hints = vace(x, vace_context, context, t_mod, freqs)
 
     # blocks
-    if use_unified_sequence_parallel:
-        if dist.is_initialized() and dist.get_world_size() > 1:
-            chunks = torch.chunk(x, get_sequence_parallel_world_size(), dim=1)
-            pad_shape = chunks[0].shape[1] - chunks[-1].shape[1]
-            chunks = [
-                torch.nn.functional.pad(chunk, (0, 0, 0, chunks[0].shape[1] - chunk.shape[1]), value=0)
-                for chunk in chunks
-            ]
-            x = chunks[get_sequence_parallel_rank()]
+    if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
+        chunks = torch.chunk(x, get_sequence_parallel_world_size(), dim=1)
+        pad_shape = chunks[0].shape[1] - chunks[-1].shape[1]
+        chunks = [
+            torch.nn.functional.pad(chunk, (0, 0, 0, chunks[0].shape[1] - chunk.shape[1]), value=0) for chunk in chunks
+        ]
+        x = chunks[get_sequence_parallel_rank()]
 
     if tea_cache_update:
         x = tea_cache.update(x)
@@ -979,10 +974,9 @@ def model_fn_wan_video(
             tea_cache.store(x)
 
     x = dit.head(x, t)
-    if use_unified_sequence_parallel:
-        if dist.is_initialized() and dist.get_world_size() > 1:
-            x = get_sp_group().all_gather(x, dim=1)
-            x = x[:, :-pad_shape] if pad_shape > 0 else x
+    if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
+        x = get_sp_group().all_gather(x, dim=1)
+        x = x[:, :-pad_shape] if pad_shape > 0 else x
     # Remove reference latents
     if reference_latents is not None:
         x = x[:, reference_latents.shape[1] :]

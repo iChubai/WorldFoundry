@@ -399,12 +399,12 @@ class TextEncoder(nn.Module):
             # First pass: tokenize with arbitrary max_length to find crop_start
             if crop_start == -1:
                 # Use temporary max_length for the first pass (large enough)
-                temp_kwargs = dict(
-                    truncation=True,
-                    max_length=256,  # Temporary large value
-                    padding="max_length",
-                    return_tensors="pt",
-                )
+                temp_kwargs = {
+                    "truncation": True,
+                    "max_length": 256,  # Temporary large value
+                    "padding": "max_length",
+                    "return_tensors": "pt",
+                }
 
                 # First tokenization pass to calculate crop_start
                 if tokenize_input_type == "str":
@@ -436,12 +436,12 @@ class TextEncoder(nn.Module):
             crop_start = 0
 
         # Second pass: tokenize with the proper max_length using the found crop_start
-        kwargs = dict(
-            truncation=True,
-            max_length=max_length + (crop_start if crop_start > 0 else 0),
-            padding="max_length",
-            return_tensors="pt",
-        )
+        kwargs = {
+            "truncation": True,
+            "max_length": max_length + (crop_start if crop_start > 0 else 0),
+            "padding": "max_length",
+            "return_tensors": "pt",
+        }
 
         if tokenize_input_type == "str":
             tokenized_output = self.tokenizer(

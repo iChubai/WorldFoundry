@@ -15,153 +15,155 @@ except ImportError:
 
 
 def _pcfg(url="", hf_hub="", filename="", mean=None, std=None):
-    return dict(
-        url=url,
-        hf_hub=hf_hub,
-        mean=mean,
-        std=std,
-    )
+    return {
+        "url": url,
+        "hf_hub": hf_hub,
+        "mean": mean,
+        "std": std,
+    }
 
 
-_VITB32 = dict(
-    openai=_pcfg(
+_VITB32 = {
+    "openai": _pcfg(
         "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt"
     ),
-    laion400m_e31=_pcfg(
+    "laion400m_e31": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_e31-d867053b.pt"
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_e32-46683a32.pt"
     ),
-    laion2b_e16=_pcfg(
+    "laion2b_e16": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-laion2b_e16-af8dbd0c.pth"
     ),
-    laion2b_s34b_b79k=_pcfg(hf_hub="laion/CLIP-ViT-B-32-laion2B-s34B-b79K/"),
-)
+    "laion2b_s34b_b79k": _pcfg(hf_hub="laion/CLIP-ViT-B-32-laion2B-s34B-b79K/"),
+}
 
-_VITB32_quickgelu = dict(
-    openai=_pcfg(
+_VITB32_quickgelu = {
+    "openai": _pcfg(
         "https://openaipublic.azureedge.net/clip/models/40d365715913c9da98579312b702a82c18be219cc2a73407c4526f58eba950af/ViT-B-32.pt"
     ),
-    laion400m_e31=_pcfg(
+    "laion400m_e31": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_e31-d867053b.pt"
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_e32-46683a32.pt"
     ),
-)
+}
 
-_VITB16 = dict(
-    openai=_pcfg(
+_VITB16 = {
+    "openai": _pcfg(
         "https://openaipublic.azureedge.net/clip/models/5806e77cd80f8b59890b7e101eabd078d9fb84e6937f9e85e4ecb61988df416f/ViT-B-16.pt"
     ),
-    laion400m_e31=_pcfg(
+    "laion400m_e31": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16-laion400m_e31-00efa78f.pt"
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16-laion400m_e32-55e67d44.pt"
     ),
-    laion2b_s34b_b88k=_pcfg(hf_hub="laion/CLIP-ViT-B-16-laion2B-s34B-b88K/"),
-)
+    "laion2b_s34b_b88k": _pcfg(hf_hub="laion/CLIP-ViT-B-16-laion2B-s34B-b88K/"),
+}
 
-_EVAB16 = dict(
-    eva=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_B_psz14to16.pt"),
-    eva02=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_B_psz14to16.pt"),
-    eva_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_B_psz16_s8B.pt"),
-    eva02_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_B_psz16_s8B.pt"),
-)
+_EVAB16 = {
+    "eva": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_B_psz14to16.pt"),
+    "eva02": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_B_psz14to16.pt"),
+    "eva_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_B_psz16_s8B.pt"),
+    "eva02_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_B_psz16_s8B.pt"),
+}
 
-_VITB16_PLUS_240 = dict(
-    laion400m_e31=_pcfg(
+_VITB16_PLUS_240 = {
+    "laion400m_e31": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16_plus_240-laion400m_e31-8fb26589.pt"
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_16_plus_240-laion400m_e32-699c4b84.pt"
     ),
-)
+}
 
-_VITL14 = dict(
-    openai=_pcfg(
+_VITL14 = {
+    "openai": _pcfg(
         "https://openaipublic.azureedge.net/clip/models/b8cca3fd41ae0c99ba7e8951adf17d267cdb84cd88be6f7c2e0eca1737a03836/ViT-L-14.pt"
     ),
-    laion400m_e31=_pcfg(
+    "laion400m_e31": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_l_14-laion400m_e31-69988bb6.pt"
     ),
-    laion400m_e32=_pcfg(
+    "laion400m_e32": _pcfg(
         "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_l_14-laion400m_e32-3d133497.pt"
     ),
-    laion2b_s32b_b82k=_pcfg(hf_hub="laion/CLIP-ViT-L-14-laion2B-s32B-b82K/", mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
-)
+    "laion2b_s32b_b82k": _pcfg(
+        hf_hub="laion/CLIP-ViT-L-14-laion2B-s32B-b82K/", mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)
+    ),
+}
 
-_EVAL14 = dict(
-    eva=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_L_psz14.pt"),
-    eva02=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_L_psz14.pt"),
-    eva_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_s4B.pt"),
-    eva02_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_s4B.pt"),
-)
+_EVAL14 = {
+    "eva": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_L_psz14.pt"),
+    "eva02": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_L_psz14.pt"),
+    "eva_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_s4B.pt"),
+    "eva02_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_s4B.pt"),
+}
 
-_VITL14_336 = dict(
-    openai=_pcfg(
+_VITL14_336 = {
+    "openai": _pcfg(
         "https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt"
     ),
-)
+}
 
-_EVAL14_336 = dict(
-    eva_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_336_psz14_s6B.pt"),
-    eva02_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_336_psz14_s6B.pt"),
-    eva_clip_224to336=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_224to336.pt"),
-    eva02_clip_224to336=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_224to336.pt"),
-)
+_EVAL14_336 = {
+    "eva_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_336_psz14_s6B.pt"),
+    "eva02_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_336_psz14_s6B.pt"),
+    "eva_clip_224to336": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_224to336.pt"),
+    "eva02_clip_224to336": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_L_psz14_224to336.pt"),
+}
 
-_VITH14 = dict(
-    laion2b_s32b_b79k=_pcfg(hf_hub="laion/CLIP-ViT-H-14-laion2B-s32B-b79K/"),
-)
+_VITH14 = {
+    "laion2b_s32b_b79k": _pcfg(hf_hub="laion/CLIP-ViT-H-14-laion2B-s32B-b79K/"),
+}
 
-_VITg14 = dict(
-    laion2b_s12b_b42k=_pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s12B-b42K/"),
-    laion2b_s34b_b88k=_pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s34B-b88K/"),
-)
+_VITg14 = {
+    "laion2b_s12b_b42k": _pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s12B-b42K/"),
+    "laion2b_s34b_b88k": _pcfg(hf_hub="laion/CLIP-ViT-g-14-laion2B-s34B-b88K/"),
+}
 
-_EVAg14 = dict(
-    eva=_pcfg(hf_hub="QuanSun/EVA-CLIP/"),
-    eva01=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_g_psz14.pt"),
-    eva_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_psz14_s11B.pt"),
-    eva01_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_psz14_s11B.pt"),
-)
+_EVAg14 = {
+    "eva": _pcfg(hf_hub="QuanSun/EVA-CLIP/"),
+    "eva01": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_g_psz14.pt"),
+    "eva_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_psz14_s11B.pt"),
+    "eva01_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_psz14_s11B.pt"),
+}
 
-_EVAg14_PLUS = dict(
-    eva=_pcfg(hf_hub="QuanSun/EVA-CLIP/"),
-    eva01=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_g_psz14.pt"),
-    eva_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_plus_psz14_s11B.pt"),
-    eva01_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_plus_psz14_s11B.pt"),
-)
+_EVAg14_PLUS = {
+    "eva": _pcfg(hf_hub="QuanSun/EVA-CLIP/"),
+    "eva01": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_g_psz14.pt"),
+    "eva_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_plus_psz14_s11B.pt"),
+    "eva01_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA01_CLIP_g_14_plus_psz14_s11B.pt"),
+}
 
-_VITbigG14 = dict(
-    laion2b_s39b_b160k=_pcfg(hf_hub="laion/CLIP-ViT-bigG-14-laion2B-39B-b160k/"),
-)
+_VITbigG14 = {
+    "laion2b_s39b_b160k": _pcfg(hf_hub="laion/CLIP-ViT-bigG-14-laion2B-39B-b160k/"),
+}
 
-_EVAbigE14 = dict(
-    eva=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
-    eva02=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
-    eva_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_s4B.pt"),
-    eva02_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_s4B.pt"),
-)
+_EVAbigE14 = {
+    "eva": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
+    "eva02": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
+    "eva_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_s4B.pt"),
+    "eva02_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_s4B.pt"),
+}
 
-_EVAbigE14_PLUS = dict(
-    eva=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
-    eva02=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
-    eva_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_plus_s9B.pt"),
-    eva02_clip=_pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_plus_s9B.pt"),
-)
+_EVAbigE14_PLUS = {
+    "eva": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
+    "eva02": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_E_psz14.pt"),
+    "eva_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_plus_s9B.pt"),
+    "eva02_clip": _pcfg(hf_hub="QuanSun/EVA-CLIP/EVA02_CLIP_E_psz14_plus_s9B.pt"),
+}
 
-_EVA_8B = dict(
-    eva=_pcfg(hf_hub="BAAI/EVA-CLIP-8B/EVA_8B_psz14.bin"),
-    eva_clip=_pcfg(hf_hub="BAAI/EVA-CLIP-8B/EVA_CLIP_8B_psz14_s9B.pt"),
-)
+_EVA_8B = {
+    "eva": _pcfg(hf_hub="BAAI/EVA-CLIP-8B/EVA_8B_psz14.bin"),
+    "eva_clip": _pcfg(hf_hub="BAAI/EVA-CLIP-8B/EVA_CLIP_8B_psz14_s9B.pt"),
+}
 
-_EVA_8B_PLUS = dict(
-    eva_clip=_pcfg(hf_hub="BAAI/EVA-CLIP-8B-448/EVA_CLIP_8B_psz14_plus_s0.6B.pt"),
-)
+_EVA_8B_PLUS = {
+    "eva_clip": _pcfg(hf_hub="BAAI/EVA-CLIP-8B-448/EVA_CLIP_8B_psz14_plus_s0.6B.pt"),
+}
 
 
 _PRETRAINED = {

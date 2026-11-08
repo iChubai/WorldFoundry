@@ -247,10 +247,7 @@ def _convert_naflex_native_vit_state_dict(
         k: v
         for k, v in state_dict.items()
         if not (
-            k.startswith("visual.conv1.")
-            or k.startswith("visual.ln_pre.")
-            or k.startswith("visual.transformer.resblocks.")
-            or k.startswith("visual.ln_post.")
+            k.startswith(("visual.conv1.", "visual.ln_pre.", "visual.transformer.resblocks.", "visual.ln_post."))
             or k in ("visual.class_embedding", "visual.positional_embedding", "visual.proj")
         )
     }

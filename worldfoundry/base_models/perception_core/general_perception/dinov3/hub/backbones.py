@@ -116,32 +116,32 @@ def _make_dinov3_vit(
     """Helper function to make dinov3 vit."""
     from ..models.vision_transformer import DinoVisionTransformer
 
-    vit_kwargs = dict(
-        img_size=img_size,
-        patch_size=patch_size,
-        in_chans=in_chans,
-        pos_embed_rope_base=pos_embed_rope_base,
-        pos_embed_rope_min_period=pos_embed_rope_min_period,
-        pos_embed_rope_max_period=pos_embed_rope_max_period,
-        pos_embed_rope_normalize_coords=pos_embed_rope_normalize_coords,
-        pos_embed_rope_shift_coords=pos_embed_rope_shift_coords,
-        pos_embed_rope_jitter_coords=pos_embed_rope_jitter_coords,
-        pos_embed_rope_rescale_coords=pos_embed_rope_rescale_coords,
-        pos_embed_rope_dtype=pos_embed_rope_dtype,
-        embed_dim=embed_dim,
-        depth=depth,
-        num_heads=num_heads,
-        ffn_ratio=ffn_ratio,
-        qkv_bias=qkv_bias,
-        drop_path_rate=drop_path_rate,
-        layerscale_init=layerscale_init,
-        norm_layer=norm_layer,
-        ffn_layer=ffn_layer,
-        ffn_bias=ffn_bias,
-        proj_bias=proj_bias,
-        n_storage_tokens=n_storage_tokens,
-        mask_k_bias=mask_k_bias,
-    )
+    vit_kwargs = {
+        "img_size": img_size,
+        "patch_size": patch_size,
+        "in_chans": in_chans,
+        "pos_embed_rope_base": pos_embed_rope_base,
+        "pos_embed_rope_min_period": pos_embed_rope_min_period,
+        "pos_embed_rope_max_period": pos_embed_rope_max_period,
+        "pos_embed_rope_normalize_coords": pos_embed_rope_normalize_coords,
+        "pos_embed_rope_shift_coords": pos_embed_rope_shift_coords,
+        "pos_embed_rope_jitter_coords": pos_embed_rope_jitter_coords,
+        "pos_embed_rope_rescale_coords": pos_embed_rope_rescale_coords,
+        "pos_embed_rope_dtype": pos_embed_rope_dtype,
+        "embed_dim": embed_dim,
+        "depth": depth,
+        "num_heads": num_heads,
+        "ffn_ratio": ffn_ratio,
+        "qkv_bias": qkv_bias,
+        "drop_path_rate": drop_path_rate,
+        "layerscale_init": layerscale_init,
+        "norm_layer": norm_layer,
+        "ffn_layer": ffn_layer,
+        "ffn_bias": ffn_bias,
+        "proj_bias": proj_bias,
+        "n_storage_tokens": n_storage_tokens,
+        "mask_k_bias": mask_k_bias,
+    }
     vit_kwargs.update(**kwargs)
     model = DinoVisionTransformer(**vit_kwargs)
     if pretrained:
@@ -206,13 +206,13 @@ def _make_dinov3_convnext(
     """
     from ..models.convnext import ConvNeXt
 
-    model_kwargs = dict(
-        in_chans=in_chans,
-        depths=depths,
-        dims=dims,
-        drop_path_rate=drop_path_rate,
-        layer_scale_init_value=layer_scale_init_value,
-    )
+    model_kwargs = {
+        "in_chans": in_chans,
+        "depths": depths,
+        "dims": dims,
+        "drop_path_rate": drop_path_rate,
+        "layer_scale_init_value": layer_scale_init_value,
+    }
     model_kwargs.update(**kwargs)
     model = ConvNeXt(**model_kwargs)
     if pretrained:
@@ -500,9 +500,8 @@ def dinov3_vit7b16(
     if weights == Weights.LVD1689M:
         if "hash" not in kwargs:
             kwargs["hash"] = "a955f4ea"
-    elif weights == Weights.SAT493M:
-        if "hash" not in kwargs:
-            kwargs["hash"] = "a6675841"
+    elif weights == Weights.SAT493M and "hash" not in kwargs:
+        kwargs["hash"] = "a6675841"
     kwargs["version"] = None
     untie_global_and_local_cls_norm = True
     return _make_dinov3_vit(
@@ -680,7 +679,7 @@ def DINOv3(model_name: str):
         "vit_7b": {"embed_dim": 4096, "depth": 40, "num_heads": 32, "ffn_ratio": 3},
     }
     vit_cfg = vit_configs[arch_name]
-    qkv_bias = True if arch_name != "vit_7b" else False
+    qkv_bias = arch_name != "vit_7b"
 
     return _make_dinov3_vit(
         ffn_layer=ffn_layer,

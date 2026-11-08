@@ -308,10 +308,7 @@ def merge_qwen_config(policy_config, qwen_config):
         policy_config: The policy config.
         qwen_config: The qwen config.
     """
-    if hasattr(qwen_config, "to_dict"):
-        config_dict = qwen_config.to_dict()
-    else:
-        config_dict = qwen_config
+    config_dict = qwen_config.to_dict() if hasattr(qwen_config, "to_dict") else qwen_config
 
     text_keys = {
         "hidden_size",
@@ -484,7 +481,7 @@ class QwenPiServer:
         #            the original height and width by sqrt(0.9) -- not 0.9!
         if observation.get("reset"):
             self.reset()
-            return dict(action=None)
+            return {"action": None}
 
         unnorm_state = observation["state"]
         observation["state"] = self.state_normalizer(observation["state"])
@@ -505,7 +502,7 @@ class QwenPiServer:
 
         self.global_step += 1
 
-        return dict(action=action)
+        return {"action": action}
 
 
 if __name__ == "__main__":

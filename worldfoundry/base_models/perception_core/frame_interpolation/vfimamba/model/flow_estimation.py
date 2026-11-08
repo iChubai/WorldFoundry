@@ -17,7 +17,7 @@ def conv(in_planes, out_planes, kernel_size=3, stride=1, padding=1, dilation=1):
 
 class Head(nn.Module):
     def __init__(self, in_planes, scale, c, in_else=17):
-        super(Head, self).__init__()
+        super().__init__()
         self.upsample = nn.Sequential(nn.PixelShuffle(2), nn.PixelShuffle(2))
         self.scale = scale
         self.conv = nn.Sequential(
@@ -50,7 +50,7 @@ class Head(nn.Module):
 
 class IFBlock(nn.Module):
     def __init__(self, in_planes, c, scale):
-        super(IFBlock, self).__init__()
+        super().__init__()
         self.conv0 = nn.Sequential(
             conv(in_planes, c // 2, 3, 2, 1),
             conv(c // 2, c, 3, 2, 1),
@@ -85,7 +85,7 @@ class IFBlock(nn.Module):
 
 class MultiScaleFlow(nn.Module):
     def __init__(self, backbone, **kargs):
-        super(MultiScaleFlow, self).__init__()
+        super().__init__()
         self.flow_num_stage = len(kargs["hidden_dims"])
         self.local_num = kargs["local_num"]
         self.feature_bone = backbone

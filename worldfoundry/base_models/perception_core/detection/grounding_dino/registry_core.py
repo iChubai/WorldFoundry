@@ -22,6 +22,7 @@ from typing import Any, Callable
 
 class Registry:
     """Registry implementation."""
+
     def __init__(self, name: str) -> None:
         """Init.
 

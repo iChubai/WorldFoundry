@@ -137,11 +137,7 @@ def main():
     # -------------------------------------------------------------------------
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # bfloat16 requires Ampere+ GPUs (Compute Capability 8.0+), fall back to float16
-    dtype = (
-        torch.bfloat16
-        if device == "cuda" and torch.cuda.get_device_capability()[0] >= 8
-        else torch.float16
-    )
+    dtype = torch.bfloat16 if device == "cuda" and torch.cuda.get_device_capability()[0] >= 8 else torch.float16
     print(f"Device: {device}, dtype: {dtype}")
 
     # -------------------------------------------------------------------------
@@ -154,9 +150,7 @@ def main():
     image_names = args.images
     num_cond_views = len(image_names)
 
-    images = load_and_preprocess_images_compat(
-        image_names, mode=args.mode, target_size=args.target_size, patch_size=8
-    )
+    images = load_and_preprocess_images_compat(image_names, mode=args.mode, target_size=args.target_size, patch_size=8)
     # Add batch dimension: (num_views, 3, H, W) -> (1, num_views, 3, H, W)
     images = images.to(device).unsqueeze(0)
     image_size_hw = (images.shape[-2], images.shape[-1])

@@ -29,6 +29,7 @@ from .attention import Attention
 
 logger = logging.getLogger("dinov2")
 
+
 def named_apply(fn: Callable, module: nn.Module, name="", depth_first=True, include_root=False) -> nn.Module:
     if not depth_first and include_root:
         fn(module=module, name=name)
@@ -39,6 +40,7 @@ def named_apply(fn: Callable, module: nn.Module, name="", depth_first=True, incl
         fn(module=module, name=name)
     return module
 
+
 def init_weights_vit_timm(module: nn.Module, name: str = ""):
     """ViT weight initialization, original timm impl (for reproducibility)"""
     if isinstance(module, nn.Linear):
@@ -46,11 +48,13 @@ def init_weights_vit_timm(module: nn.Module, name: str = ""):
         if module.bias is not None:
             nn.init.zeros_(module.bias)
 
+
 class BlockChunk(nn.ModuleList):
     def forward(self, x):
         for b in self:
             x = b(x)
         return x
+
 
 class DinoVisionTransformer(nn.Module):
     def __init__(
@@ -124,8 +128,7 @@ class DinoVisionTransformer(nn.Module):
         self.interpolate_offset = interpolate_offset
         self.use_reentrant = False
 
-        self.patch_embed = embed_layer(
-            img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
+        self.patch_embed = embed_layer(img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
         num_patches = self.patch_embed.num_patches
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
@@ -136,9 +139,7 @@ class DinoVisionTransformer(nn.Module):
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + self.num_tokens, embed_dim))
         assert num_register_tokens >= 0
         self.register_tokens = (
-            nn.Parameter(torch.zeros(1, num_register_tokens, embed_dim))
-            if num_register_tokens
-            else None
+            nn.Parameter(torch.zeros(1, num_register_tokens, embed_dim)) if num_register_tokens else None
         )
 
         if drop_path_uniform is True:
@@ -175,7 +176,7 @@ class DinoVisionTransformer(nn.Module):
                 act_layer=act_layer,
                 ffn_layer=ffn_layer,
                 init_values=init_values,
-                qk_norm= i >= alt_start if alt_start != -1 else False,
+                qk_norm=i >= alt_start if alt_start != -1 else False,
                 rope=rope if i >= alt_start and alt_start != -1 else None,
             )
             for i in range(depth)
@@ -271,9 +272,19 @@ class DinoVisionTransformer(nn.Module):
             budgets = proportions * total_budget
         return budgets.int().tolist()
 
-    def process_attention(self, x, block, attn_type: Literal["global", "local"]="local", pos=None,
-        segment_lengths=None, attn_mask=None, use_cache=False, past_key_value=None,
-        cache_budget=None, tokens_per_frame=None):
+    def process_attention(
+        self,
+        x,
+        block,
+        attn_type: Literal["global", "local"] = "local",
+        pos=None,
+        segment_lengths=None,
+        attn_mask=None,
+        use_cache=False,
+        past_key_value=None,
+        cache_budget=None,
+        tokens_per_frame=None,
+    ):
         b, s, n = x.shape[:3]
         if attn_type == "local":
             segment_lengths = None
@@ -287,8 +298,12 @@ class DinoVisionTransformer(nn.Module):
 
         if use_cache:
             x, current_kv, scores = block(
-                x, pos=pos, use_cache=True, past_key_value=past_key_value,
-                cache_budget=cache_budget, tokens_per_frame=tokens_per_frame
+                x,
+                pos=pos,
+                use_cache=True,
+                past_key_value=past_key_value,
+                cache_budget=cache_budget,
+                tokens_per_frame=tokens_per_frame,
             )
         else:
             if self.use_checkpoint and self.training:
@@ -336,24 +351,30 @@ class DinoVisionTransformer(nn.Module):
         global_block_idx = 0
         for i, blk in enumerate(self.blocks):
             if self.alt_start != -1 and i == self.alt_start:
-                is_cont = (use_cache and past_key_values is not None and past_key_values[0] is not None)
+                is_cont = use_cache and past_key_values is not None and past_key_values[0] is not None
                 cam = self.camera_token[:, 1:2] if is_cont else self.camera_token[:, 0:1]
                 if not is_cont and S > 1:
-                    cam = torch.cat([cam, self.camera_token[:, 1:2].expand(-1, S-1, -1)], dim=1)
+                    cam = torch.cat([cam, self.camera_token[:, 1:2].expand(-1, S - 1, -1)], dim=1)
                 else:
                     cam = cam.expand(-1, S, -1)
                 cam = cam.expand(B, -1, -1)
                 x = torch.cat((x[:, :, :1], cam.unsqueeze(2), x[:, :, 1:]), dim=2)
 
             tokens_per_frame = x.shape[2]
-            is_global = (self.alt_start != -1 and i >= self.alt_start and i % 2 == 1)
+            is_global = self.alt_start != -1 and i >= self.alt_start and i % 2 == 1
 
             if use_cache and is_global:
                 prev_kv = past_key_values[global_block_idx] if past_key_values else None
                 current_budget = current_budgets[global_block_idx] if current_budgets else None
                 x, current_kv, layer_scores = self.process_attention(
-                    x, blk, "global", pos=pos, use_cache=True, past_key_value=prev_kv,
-                    cache_budget=current_budget, tokens_per_frame=tokens_per_frame
+                    x,
+                    blk,
+                    "global",
+                    pos=pos,
+                    use_cache=True,
+                    past_key_value=prev_kv,
+                    cache_budget=current_budget,
+                    tokens_per_frame=tokens_per_frame,
                 )
                 new_kv_caches.append(current_kv)
                 if layer_scores is not None:
@@ -365,22 +386,27 @@ class DinoVisionTransformer(nn.Module):
                 attn_type = "global" if (is_global and not use_cache) else "local"
                 x = self.process_attention(x, blk, attn_type, pos=pos, segment_lengths=segment_lengths)
 
-            if i+1 in [len(self.blocks)-1, len(self.blocks)]:
-                final_output.append(x) # [b s n c]
+            if i + 1 in [len(self.blocks) - 1, len(self.blocks)]:
+                final_output.append(x)  # [b s n c]
 
         if use_cache and hasattr(self, "last_scores") and len(new_scores) > 0:
-            self.last_scores.copy_(torch.tensor(new_scores, device=self.last_scores.device, dtype=self.last_scores.dtype))
+            self.last_scores.copy_(
+                torch.tensor(new_scores, device=self.last_scores.device, dtype=self.last_scores.dtype)
+            )
 
         final_output = torch.cat(final_output, dim=-1)
         camera_tokens = final_output[:, :, 1] if self.alt_start != -1 else None
 
         x_norm = torch.cat(
-            [self.norm(final_output[..., : self.embed_dim]), self.norm(final_output[..., self.embed_dim :])], dim=-1)
+            [self.norm(final_output[..., : self.embed_dim]), self.norm(final_output[..., self.embed_dim :])], dim=-1
+        )
 
         output = {
             "x_norm_clstoken": x_norm[:, :, 0:1],
-            "x_norm_patchtokens": x_norm[:, :, self.patch_start_idx:],
-            "x_norm_regtokens": x_norm[:, :, self.patch_start_idx - self.num_register_tokens : self.patch_start_idx + 1],
+            "x_norm_patchtokens": x_norm[:, :, self.patch_start_idx :],
+            "x_norm_regtokens": x_norm[
+                :, :, self.patch_start_idx - self.num_register_tokens : self.patch_start_idx + 1
+            ],
             "x_norm": x_norm,
             "camera_tokens": camera_tokens,
         }
@@ -388,6 +414,7 @@ class DinoVisionTransformer(nn.Module):
             output["new_kv_caches"] = new_kv_caches
 
         return output
+
 
 def vit_small(patch_size=14, num_register_tokens=0, **kwargs):
     model = DinoVisionTransformer(
@@ -451,13 +478,9 @@ def vit_giant2(patch_size=14, num_register_tokens=0, alt_start=13, **kwargs):
     )
     return model
 
+
 def DINOv2(model_name, patch_size=14, num_register_tokens=4, **kwargs):
-    model_zoo = {
-        "vits": vit_small,
-        "vitb": vit_base,
-        "vitl": vit_large,
-        "vitg": vit_giant2
-    }
+    model_zoo = {"vits": vit_small, "vitb": vit_base, "vitl": vit_large, "vitg": vit_giant2}
 
     return model_zoo[model_name](
         img_size=518,
@@ -468,5 +491,5 @@ def DINOv2(model_name, patch_size=14, num_register_tokens=4, **kwargs):
         num_register_tokens=num_register_tokens,
         interpolate_antialias=True,
         interpolate_offset=0.1,
-        **kwargs
+        **kwargs,
     )

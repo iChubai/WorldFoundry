@@ -17,11 +17,13 @@ from .decoder import Decoder, DecoderOutput
 @dataclass
 class DecoderSplattingCUDACfg:
     """Decoder splatting cuda cfg implementation."""
+
     name: Literal["splatting_cuda"]
 
 
 class DecoderSplattingCUDA(Decoder[DecoderSplattingCUDACfg]):
     """Decoder splatting cuda implementation."""
+
     background_color: Float[Tensor, "3"]
 
     def __init__(
@@ -88,9 +90,7 @@ class DecoderSplattingCUDA(Decoder[DecoderSplattingCUDACfg]):
             color,
             None
             if depth_mode is None
-            else self.render_depth(
-                gaussians, extrinsics, intrinsics, near, far, image_shape, depth_mode
-            ),
+            else self.render_depth(gaussians, extrinsics, intrinsics, near, far, image_shape, depth_mode),
         )
 
     def render_depth(

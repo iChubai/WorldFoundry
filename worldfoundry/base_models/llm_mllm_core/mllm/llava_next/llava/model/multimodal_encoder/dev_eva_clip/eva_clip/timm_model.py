@@ -1,4 +1,4 @@
-""" timm model adapter
+"""timm model adapter
 
 Wraps timm (https://github.com/rwightman/pytorch-image-models) models for use as a vision tower in CLIP model.
 """
@@ -32,7 +32,17 @@ class TimmModel(nn.Module):
     # FIXME this adapter is a work in progress, may change in ways that break weight compat
     """
 
-    def __init__(self, model_name, embed_dim, image_size=224, pool="avg", proj="linear", proj_bias=False, drop=0.0, pretrained=False):
+    def __init__(
+        self,
+        model_name,
+        embed_dim,
+        image_size=224,
+        pool="avg",
+        proj="linear",
+        proj_bias=False,
+        drop=0.0,
+        pretrained=False,
+    ):
         super().__init__()
         if timm is None:
             raise RuntimeError("Please `pip install timm` to use timm models.")

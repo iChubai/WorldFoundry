@@ -116,9 +116,7 @@ class RopePositionEmbedding(nn.Module):
         device = self.periods.device
         dtype = self.dtype
         if self.base is not None:
-            periods = self.base ** (
-                2 * torch.arange(self.D_head // 4, device=device, dtype=dtype) / (self.D_head // 2)
-            )
+            periods = self.base ** (2 * torch.arange(self.D_head // 4, device=device, dtype=dtype) / (self.D_head // 2))
         else:
             base = self.max_period / self.min_period
             exponents = torch.linspace(0, 1, self.D_head // 4, device=device, dtype=dtype)

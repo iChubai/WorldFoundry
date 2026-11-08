@@ -56,6 +56,7 @@ def rope_apply(x: Tensor, sin: Tensor, cos: Tensor) -> Tensor:
 
 class LinearKMaskedBias(nn.Linear):
     """Linear k masked bias implementation."""
+
     def __init__(self, *args, **kwargs):
         """Init."""
         super().__init__(*args, **kwargs)
@@ -79,6 +80,7 @@ class LinearKMaskedBias(nn.Linear):
 
 class SelfAttention(nn.Module):
     """Self attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -227,6 +229,7 @@ class SelfAttention(nn.Module):
 
 class CausalSelfAttention(nn.Module):
     """Causal self attention implementation."""
+
     def __init__(
         self,
         dim: int,

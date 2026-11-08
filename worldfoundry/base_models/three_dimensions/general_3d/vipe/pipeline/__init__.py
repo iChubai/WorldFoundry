@@ -31,6 +31,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base impo
 @dataclass(kw_only=True, slots=True)
 class AnnotationPipelineOutput:
     """Annotation pipeline output implementation."""
+
     # Eager return of the payload values that comes from early stages of the pipeline.
     payload: Any | None = None
     output_streams: Sequence[VideoStream] | None = None
@@ -38,6 +39,7 @@ class AnnotationPipelineOutput:
 
 class Pipeline(ABC):
     """Pipeline implementation."""
+
     def __init__(self) -> None:
         """Init.
 

@@ -7,8 +7,7 @@ from mmengine.structures import BaseDataElement
 
 from mmyolo.registry import MODELS
 
-CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str,
-                 None]
+CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str, None]
 
 
 @MODELS.register_module()
@@ -36,8 +35,8 @@ class YOLOWDetDataPreprocessor(DetDataPreprocessor):
             return super().forward(data, training)
 
         data = self.cast_data(data)
-        inputs, data_samples = data['inputs'], data['data_samples']
-        assert isinstance(data['data_samples'], dict)
+        inputs, data_samples = data["inputs"], data["data_samples"]
+        assert isinstance(data["data_samples"], dict)
 
         # TODO: Supports multi-scale training
         if self._channel_conversion and inputs.shape[1] == 3:
@@ -49,15 +48,15 @@ class YOLOWDetDataPreprocessor(DetDataPreprocessor):
             for batch_aug in self.batch_augments:
                 inputs, data_samples = batch_aug(inputs, data_samples)
 
-        img_metas = [{'batch_input_shape': inputs.shape[2:]}] * len(inputs)
+        img_metas = [{"batch_input_shape": inputs.shape[2:]}] * len(inputs)
         data_samples_output = {
-            'bboxes_labels': data_samples['bboxes_labels'],
-            'texts': data_samples['texts'],
-            'img_metas': img_metas
+            "bboxes_labels": data_samples["bboxes_labels"],
+            "texts": data_samples["texts"],
+            "img_metas": img_metas,
         }
-        if 'masks' in data_samples:
-            data_samples_output['masks'] = data_samples['masks']
-        if 'is_detection' in data_samples:
-            data_samples_output['is_detection'] = data_samples['is_detection']
+        if "masks" in data_samples:
+            data_samples_output["masks"] = data_samples["masks"]
+        if "is_detection" in data_samples:
+            data_samples_output["is_detection"] = data_samples["is_detection"]
 
-        return {'inputs': inputs, 'data_samples': data_samples_output}
+        return {"inputs": inputs, "data_samples": data_samples_output}

@@ -1,4 +1,4 @@
-""" CLIP tokenizer
+"""CLIP tokenizer
 
 Copied from https://github.com/openai/CLIP. Originally MIT License, Copyright (c) 2021 OpenAI.
 """
@@ -92,7 +92,9 @@ class SimpleTokenizer(object):
         self.bpe_ranks = dict(zip(merges, range(len(merges))))
         self.cache = {t: t for t in special_tokens}
         special = "|".join(special_tokens)
-        self.pat = re.compile(special + r"""|'s|'t|'re|'ve|'m|'ll|'d|[\p{L}]+|[\p{N}]|[^\s\p{L}\p{N}]+""", re.IGNORECASE)
+        self.pat = re.compile(
+            special + r"""|'s|'t|'re|'ve|'m|'ll|'d|[\p{L}]+|[\p{N}]|[^\s\p{L}\p{N}]+""", re.IGNORECASE
+        )
 
         self.vocab_size = len(self.encoder)
         self.all_special_ids = [self.encoder[t] for t in special_tokens]
@@ -201,5 +203,7 @@ class HFTokenizer:
         if isinstance(texts, str):
             texts = [texts]
         texts = [whitespace_clean(basic_clean(text)) for text in texts]
-        input_ids = self.tokenizer(texts, return_tensors="pt", max_length=context_length, padding="max_length", truncation=True).input_ids
+        input_ids = self.tokenizer(
+            texts, return_tensors="pt", max_length=context_length, padding="max_length", truncation=True
+        ).input_ids
         return input_ids

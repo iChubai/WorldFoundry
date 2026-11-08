@@ -40,6 +40,7 @@ class Metric3DDepthModel(DepthEstimationModel):
     @dataclass
     class PadInfo:
         """Pad info implementation."""
+
         pad_up: int
         pad_down: int
         pad_left: int

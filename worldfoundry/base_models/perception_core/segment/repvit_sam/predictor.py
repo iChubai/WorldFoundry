@@ -18,6 +18,7 @@ from worldfoundry.base_models.perception_core.segment.sam_v1.utils.transforms im
 
 class SamPredictor(torch.nn.Module):
     """Sam predictor implementation."""
+
     def __init__(
         self,
         sam_model: Sam,
@@ -88,7 +89,7 @@ class SamPredictor(torch.nn.Module):
 
         self.original_size = original_image_size
         self.input_size = tuple(transformed_image.shape[-2:])
-        #import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         input_image = self.model.preprocess(transformed_image)
         self.features = self.model.image_encoder(input_image)
         self.is_image_set = True
@@ -140,9 +141,7 @@ class SamPredictor(torch.nn.Module):
         # Transform input prompts
         coords_torch, labels_torch, box_torch, mask_input_torch = None, None, None, None
         if point_coords is not None:
-            assert (
-                point_labels is not None
-            ), "point_labels must be supplied if point_coords is supplied."
+            assert point_labels is not None, "point_labels must be supplied if point_coords is supplied."
             point_coords = self.transform.apply_coords(point_coords, self.original_size)
             coords_torch = torch.as_tensor(point_coords, dtype=torch.float, device=self.device)
             labels_torch = torch.as_tensor(point_labels, dtype=torch.int, device=self.device)
@@ -253,9 +252,7 @@ class SamPredictor(torch.nn.Module):
         the embedding spatial dimension of SAM (typically C=256, H=W=64).
         """
         if not self.is_image_set:
-            raise RuntimeError(
-                "An image must be set with .set_image(...) to generate an embedding."
-            )
+            raise RuntimeError("An image must be set with .set_image(...) to generate an embedding.")
         assert self.features is not None, "Features must exist if an image has been set."
         return self.features
 

@@ -26,6 +26,7 @@ def to_2tuple(value: PatchSize) -> Tuple[int, int]:
 @dataclass(frozen=True)
 class NaFlexDataConfig:
     """Na flex data config implementation."""
+
     train_patch_sizes: Tuple[Tuple[int, int], ...] = ((16, 16),)
     train_patch_size_probs: Optional[Tuple[float, ...]] = None
     train_seq_lens: Tuple[int, ...] = (128, 256, 576, 784, 1024)
@@ -37,16 +38,16 @@ class NaFlexDataConfig:
 
     @classmethod
     def resolve(
-            cls,
-            patch_sizes: Optional[Sequence[PatchSize]] = None,
-            patch_size_probs: Optional[Sequence[float]] = None,
-            seq_lens: Optional[Sequence[int]] = None,
-            train_num_image_tokens: Optional[int] = None,
-            max_tokens_per_batch: int = 4096 * 4,
-            batch_divisor: int = 8,
-            eval_patch_size: Optional[PatchSize] = None,
-            eval_seq_len: Optional[int] = None,
-    ) -> 'NaFlexDataConfig':
+        cls,
+        patch_sizes: Optional[Sequence[PatchSize]] = None,
+        patch_size_probs: Optional[Sequence[float]] = None,
+        seq_lens: Optional[Sequence[int]] = None,
+        train_num_image_tokens: Optional[int] = None,
+        max_tokens_per_batch: int = 4096 * 4,
+        batch_divisor: int = 8,
+        eval_patch_size: Optional[PatchSize] = None,
+        eval_seq_len: Optional[int] = None,
+    ) -> "NaFlexDataConfig":
         """Resolve.
 
         Args:
@@ -87,9 +88,7 @@ class NaFlexDataConfig:
                 raise ValueError("NaFlex patch size probabilities must sum to a positive value.")
             train_patch_size_probs = tuple(float(prob) / prob_sum for prob in patch_size_probs)
 
-        train_num_image_tokens = (
-            int(train_num_image_tokens) if train_num_image_tokens is not None else None
-        )
+        train_num_image_tokens = int(train_num_image_tokens) if train_num_image_tokens is not None else None
         if train_num_image_tokens is not None and train_num_image_tokens <= 0:
             raise ValueError("NaFlex train image token count must be positive.")
 

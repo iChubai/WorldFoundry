@@ -6,6 +6,7 @@ import time
 
 class TimeCounter:
     """Time counter implementation."""
+
     def __init__(self) -> None:
         """Init.
 
@@ -32,6 +33,7 @@ class TimeCounter:
 
 class TimeHolder:
     """Time holder implementation."""
+
     def __init__(self) -> None:
         """Init.
 

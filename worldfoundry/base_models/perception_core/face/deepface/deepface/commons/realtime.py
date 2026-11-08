@@ -108,16 +108,11 @@ def analysis(
         face_index = 0
         for x, y, w, h in faces:
             if w > 130:  # discard small detected faces
-
                 face_detected = True
                 if face_index == 0:
-                    face_included_frames = (
-                        face_included_frames + 1
-                    )  # increase frame for a single face
+                    face_included_frames = face_included_frames + 1  # increase frame for a single face
 
-                cv2.rectangle(
-                    img, (x, y), (x + w, y + h), (67, 67, 67), 1
-                )  # draw rectangle to main image
+                cv2.rectangle(img, (x, y), (x + w, y + h), (67, 67, 67), 1)  # draw rectangle to main image
 
                 cv2.putText(
                     img,
@@ -146,10 +141,8 @@ def analysis(
             tic = time.time()
 
         if freeze == True:
-
             toc = time.time()
             if (toc - tic) < time_threshold:
-
                 if freezed_frame == 0:
                     freeze_img = base_img.copy()
                     # here, np.uint8 handles showing white area issue
@@ -172,7 +165,6 @@ def analysis(
                         # facial attribute analysis
 
                         if enable_face_analysis == True:
-
                             demographies = DeepFace.analyze(
                                 img_path=custom_face,
                                 detector_backend=detector_backend,
@@ -186,12 +178,10 @@ def analysis(
 
                                 if enable_emotion:
                                     emotion = demography["emotion"]
-                                    emotion_df = pd.DataFrame(
-                                        emotion.items(), columns=["emotion", "score"]
+                                    emotion_df = pd.DataFrame(emotion.items(), columns=["emotion", "score"])
+                                    emotion_df = emotion_df.sort_values(by=["score"], ascending=False).reset_index(
+                                        drop=True
                                     )
-                                    emotion_df = emotion_df.sort_values(
-                                        by=["score"], ascending=False
-                                    ).reset_index(drop=True)
 
                                     # background of mood box
 
@@ -202,34 +192,28 @@ def analysis(
                                     if x + w + pivot_img_size < resolution_x:
                                         # right
                                         cv2.rectangle(
-                                            freeze_img
+                                            freeze_img,
                                             # , (x+w,y+20)
-                                            ,
                                             (x + w, y),
                                             (x + w + pivot_img_size, y + h),
                                             (64, 64, 64),
                                             cv2.FILLED,
                                         )
 
-                                        cv2.addWeighted(
-                                            overlay, opacity, freeze_img, 1 - opacity, 0, freeze_img
-                                        )
+                                        cv2.addWeighted(overlay, opacity, freeze_img, 1 - opacity, 0, freeze_img)
 
                                     elif x - pivot_img_size > 0:
                                         # left
                                         cv2.rectangle(
-                                            freeze_img
+                                            freeze_img,
                                             # , (x-pivot_img_size,y+20)
-                                            ,
                                             (x - pivot_img_size, y),
                                             (x, y + h),
                                             (64, 64, 64),
                                             cv2.FILLED,
                                         )
 
-                                        cv2.addWeighted(
-                                            overlay, opacity, freeze_img, 1 - opacity, 0, freeze_img
-                                        )
+                                        cv2.addWeighted(overlay, opacity, freeze_img, 1 - opacity, 0, freeze_img)
 
                                     for index, instance in emotion_df.iterrows():
                                         current_emotion = instance["emotion"]
@@ -240,7 +224,6 @@ def analysis(
                                         bar_x = int(bar_x * emotion_score)
 
                                         if x + w + pivot_img_size < resolution_x:
-
                                             text_location_y = y + 20 + (index + 1) * 20
                                             text_location_x = x + w
 
@@ -267,7 +250,6 @@ def analysis(
                                                 )
 
                                         elif x - pivot_img_size > 0:
-
                                             text_location_y = y + 20 + (index + 1) * 20
                                             text_location_x = x - pivot_img_size
 
@@ -309,7 +291,6 @@ def analysis(
 
                                     # top
                                     if y - pivot_img_size + int(pivot_img_size / 5) > 0:
-
                                         triangle_coordinates = np.array(
                                             [
                                                 (x + int(w / 2), y),
@@ -354,11 +335,7 @@ def analysis(
                                         )
 
                                     # bottom
-                                    elif (
-                                        y + h + pivot_img_size - int(pivot_img_size / 5)
-                                        < resolution_y
-                                    ):
-
+                                    elif y + h + pivot_img_size - int(pivot_img_size / 5) < resolution_y:
                                         triangle_coordinates = np.array(
                                             [
                                                 (x + int(w / 2), y + h),
@@ -445,10 +422,7 @@ def analysis(
                                 label = label.split("/")[-1]
 
                                 try:
-                                    if (
-                                        y - pivot_img_size > 0
-                                        and x + w + pivot_img_size < resolution_x
-                                    ):
+                                    if y - pivot_img_size > 0 and x + w + pivot_img_size < resolution_x:
                                         # top right
                                         freeze_img[
                                             y - pivot_img_size : y,
@@ -499,10 +473,7 @@ def analysis(
                                             1,
                                         )
 
-                                    elif (
-                                        y + h + pivot_img_size < resolution_y
-                                        and x - pivot_img_size > 0
-                                    ):
+                                    elif y + h + pivot_img_size < resolution_y and x - pivot_img_size > 0:
                                         # bottom left
                                         freeze_img[
                                             y + h : y + h + pivot_img_size,
@@ -561,9 +532,7 @@ def analysis(
 
                                     elif y - pivot_img_size > 0 and x - pivot_img_size > 0:
                                         # top left
-                                        freeze_img[
-                                            y - pivot_img_size : y, x - pivot_img_size : x
-                                        ] = display_img
+                                        freeze_img[y - pivot_img_size : y, x - pivot_img_size : x] = display_img
 
                                         overlay = freeze_img.copy()
                                         opacity = 0.4
@@ -616,8 +585,7 @@ def analysis(
                                         )
 
                                     elif (
-                                        x + w + pivot_img_size < resolution_x
-                                        and y + h + pivot_img_size < resolution_y
+                                        x + w + pivot_img_size < resolution_x and y + h + pivot_img_size < resolution_y
                                     ):
                                         # bottom righ
                                         freeze_img[

@@ -34,6 +34,7 @@ def get_func(func_name):
 
 class DensePredModel(nn.Module):
     """Dense pred model implementation."""
+
     def __init__(self, cfg) -> None:
         """Init.
 
@@ -46,10 +47,14 @@ class DensePredModel(nn.Module):
         super(DensePredModel, self).__init__()
 
         self.encoder = get_func(
-            "worldfoundry.base_models.three_dimensions.depth.metric3d.model." + cfg.model.backbone.prefix + cfg.model.backbone.type
+            "worldfoundry.base_models.three_dimensions.depth.metric3d.model."
+            + cfg.model.backbone.prefix
+            + cfg.model.backbone.type
         )(**cfg.model.backbone)
         self.decoder = get_func(
-            "worldfoundry.base_models.three_dimensions.depth.metric3d.model." + cfg.model.decode_head.prefix + cfg.model.decode_head.type
+            "worldfoundry.base_models.three_dimensions.depth.metric3d.model."
+            + cfg.model.decode_head.prefix
+            + cfg.model.decode_head.type
         )(cfg)
 
     def forward(self, input, **kwargs):
@@ -66,6 +71,7 @@ class DensePredModel(nn.Module):
 
 class BaseDepthModel(nn.Module):
     """Base depth model implementation."""
+
     def __init__(self, cfg, **kwargs) -> None:
         """Init.
 

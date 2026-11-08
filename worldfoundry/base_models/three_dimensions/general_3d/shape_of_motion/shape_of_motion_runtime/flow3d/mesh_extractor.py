@@ -13,6 +13,7 @@ from torch import Tensor
 
 from tqdm import tqdm
 
+
 def focus_point_fn(
     poses: np.ndarray,
 ) -> np.ndarray:
@@ -24,6 +25,7 @@ def focus_point_fn(
     mt_m = np.transpose(m, [0, 2, 1]) @ m
     focus_pt = np.linalg.inv(mt_m.mean(0)) @ (mt_m @ origins).mean(0)[:, 0]
     return focus_pt
+
 
 def transform_poses_pca(
     poses: np.ndarray,
@@ -49,7 +51,7 @@ def transform_poses_pca(
     rot = eigvec.T
     if np.linalg.det(rot) < 0:
         rot = np.diag(np.array([1, 1, -1])) @ rot
-    
+
     transform = np.concatenate([rot, rot @ -t_mean[:, None]], -1)
 
     # Flip coordinate system if z component of y-axis is negative
@@ -58,6 +60,7 @@ def transform_poses_pca(
         transform = np.diag(np.array([1, -1, -1, 1])) @ transform
 
     return poses_recentered, transform
+
 
 def to_cam_open3d(viewpoint_stack, Ks, W, H):
     """To cam open3d.
@@ -70,18 +73,17 @@ def to_cam_open3d(viewpoint_stack, Ks, W, H):
     """
     camera_traj = []
     for i, (extrinsic, intrins) in enumerate(zip(viewpoint_stack, Ks)):
-
         intrinsic = o3d.camera.PinholeCameraIntrinsic(
             width=H,
             height=W,
-            cx = intrins[0,2].item(),
-            cy = intrins[1,2].item(), 
-            fx = intrins[0,0].item(), 
-            fy = intrins[1,1].item()
+            cx=intrins[0, 2].item(),
+            cy=intrins[1, 2].item(),
+            fx=intrins[0, 0].item(),
+            fy=intrins[1, 1].item(),
         )
 
         extrinsic = extrinsic.cpu().numpy()
-        
+
         extrinsic = np.linalg.inv(extrinsic)
 
         camera = o3d.camera.PinholeCameraParameters()
@@ -91,18 +93,19 @@ def to_cam_open3d(viewpoint_stack, Ks, W, H):
 
     return camera_traj
 
+
 class MeshExtractor(object):
     """Mesh extractor implementation."""
 
     def __init__(
-        self, 
-        #TODO (WZ): parse Gaussian model in gsplat 
+        self,
+        # TODO (WZ): parse Gaussian model in gsplat
         # voxel_size: float,
         # depth_trunc: float,
         # sdf_trunc: float,
         # num_cluster: float,
-        # mesh_res: int,   
-        bg_color: Tensor=None,
+        # mesh_res: int,
+        bg_color: Tensor = None,
     ):
         """
         Mesh extraction class for gsplat Gaussians model
@@ -110,7 +113,7 @@ class MeshExtractor(object):
         TODO (WZ): docstring...
         """
         if bg_color is None:
-            bg_color = [0., 0., 0.]
+            bg_color = [0.0, 0.0, 0.0]
         background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 
         self.clean()
@@ -212,15 +215,14 @@ class MeshExtractor(object):
         torch.cuda.empty_cache()
 
         c2ws = np.array([np.asarray((camtoworld).cpu().numpy()) for camtoworld in self.viewpoint_stack])
-        poses = c2ws[:, :3, :] @ np.diag([1, -1, -1, 1]) # opengl to opencv?
-        center = (focus_point_fn(poses))
+        poses = c2ws[:, :3, :] @ np.diag([1, -1, -1, 1])  # opengl to opencv?
+        center = focus_point_fn(poses)
         self.radius = np.linalg.norm(c2ws[:, :3, 3] - center, axis=-1).min()
         self.center = torch.from_numpy(center).float().cuda()
 
         print(f"The estimated bounding radius is: {self.radius:.2f}")
         print(f"Use at least {2.0 * self.radius:.2f} for depth_trunc")
 
-    
     @torch.no_grad()
     def extract_mesh_bounded(self, voxel_size=0.004, sdf_trunc=0.02, depth_trunc=3, mask_background=True):
         """
@@ -239,32 +241,33 @@ class MeshExtractor(object):
         print(f"depth_trunc: {depth_trunc}")
 
         volume = o3d.pipelines.integration.ScalableTSDFVolume(
-            voxel_length=voxel_size,
-            sdf_trunc=sdf_trunc,
-            color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8
+            voxel_length=voxel_size, sdf_trunc=sdf_trunc, color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8
         )
 
         W, H = self.rgbmaps.shape[1:3]
 
-
-        for i, cam_o3d in tqdm(enumerate(to_cam_open3d(self.viewpoint_stack, self.Ks, W, H)), desc="TSDF integration progress"):
-    
+        for i, cam_o3d in tqdm(
+            enumerate(to_cam_open3d(self.viewpoint_stack, self.Ks, W, H)), desc="TSDF integration progress"
+        ):
             rgb = self.rgbmaps[i]
             depth = self.depthmaps[i]
 
             import imageio
 
             surf_norm_save = rgb.detach().cpu()
-            surf_norm_save = (surf_norm_save * 0.5 + 0.5)
-            surf_norm_save = (surf_norm_save - torch.min(surf_norm_save)) / (torch.max(surf_norm_save) - torch.min(surf_norm_save))
+            surf_norm_save = surf_norm_save * 0.5 + 0.5
+            surf_norm_save = (surf_norm_save - torch.min(surf_norm_save)) / (
+                torch.max(surf_norm_save) - torch.min(surf_norm_save)
+            )
             imageio.imwrite(f"./tmp.png", (surf_norm_save * 255).numpy().astype(np.uint8))
 
             surf_norm_save = depth.detach().cpu().repeat(1, 1, 3)
-            surf_norm_save = (surf_norm_save * 0.5 + 0.5)
-            surf_norm_save = (surf_norm_save - torch.min(surf_norm_save)) / (torch.max(surf_norm_save) - torch.min(surf_norm_save))
+            surf_norm_save = surf_norm_save * 0.5 + 0.5
+            surf_norm_save = (surf_norm_save - torch.min(surf_norm_save)) / (
+                torch.max(surf_norm_save) - torch.min(surf_norm_save)
+            )
             imageio.imwrite(f"./tmp_depth.png", (surf_norm_save * 255).numpy().astype(np.uint8))
-        
-            
+
             # make open3d rgbd
 
             rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
@@ -272,10 +275,10 @@ class MeshExtractor(object):
                 o3d.geometry.Image(np.asarray(depth.cpu().numpy(), order="C")),
                 depth_trunc=depth_trunc,
                 convert_rgb_to_intensity=False,
-                depth_scale=1.0
+                depth_scale=1.0,
             )
-            
+
             volume.integrate(rgbd, intrinsic=cam_o3d.intrinsic, extrinsic=cam_o3d.extrinsic)
-        
+
         mesh = volume.extract_triangle_mesh()
         return mesh

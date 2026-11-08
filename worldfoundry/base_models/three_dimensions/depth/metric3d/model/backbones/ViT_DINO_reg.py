@@ -23,7 +23,11 @@ import torch.utils.checkpoint
 from torch import Tensor
 from torch.nn.init import trunc_normal_
 
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import index_select_cat, memory_efficient_attention, scaled_index_add
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import (
+    index_select_cat,
+    memory_efficient_attention,
+    scaled_index_add,
+)
 from worldfoundry.core.nn.blocks.module_utils import named_apply
 
 logger = logging.getLogger(__name__)
@@ -65,6 +69,7 @@ def ssf_ada(x, scale, shift):
 # LoRA finetuning originally by edwardjhu
 class LoRALayer:
     """Lo ra layer implementation."""
+
     def __init__(
         self,
         r: int,
@@ -94,6 +99,7 @@ class LoRALayer:
 
 class LoRALinear(nn.Linear, LoRALayer):
     """Lo ra linear implementation."""
+
     # LoRA implemented in a dense layer
     def __init__(
         self,
@@ -170,6 +176,7 @@ class LoRALinear(nn.Linear, LoRALayer):
         Args:
             x: The x.
         """
+
         def T(w):
             """T.
 
@@ -242,6 +249,7 @@ class DropPath(nn.Module):
 
 class LayerScale(nn.Module):
     """Layer scale implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -382,6 +390,7 @@ class PatchEmbed(nn.Module):
 
 class Mlp(nn.Module):
     """Mlp implementation."""
+
     def __init__(
         self,
         in_features: int,
@@ -450,6 +459,7 @@ class Mlp(nn.Module):
 
 class SwiGLUFFN(nn.Module):
     """Swi gluffn implementation."""
+
     def __init__(
         self,
         in_features: int,
@@ -520,6 +530,7 @@ XFORMERS_AVAILABLE = False
 
 class SwiGLUFFNFused(SwiGLUFFN):
     """Swi gluffn fused implementation."""
+
     def __init__(
         self,
         in_features: int,
@@ -555,6 +566,7 @@ class SwiGLUFFNFused(SwiGLUFFN):
 
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -658,6 +670,7 @@ class Attention(nn.Module):
 
 class MemEffAttention(Attention):
     """Mem eff attention implementation."""
+
     def forward(self, x: Tensor, attn_bias=None) -> Tensor:
         """Forward.
 
@@ -698,6 +711,7 @@ class MemEffAttention(Attention):
 
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -789,6 +803,7 @@ class Block(nn.Module):
         Returns:
             The return value.
         """
+
         def attn_residual_func(x: Tensor, attn_bias) -> Tensor:
             """Attn residual func.
 
@@ -986,6 +1001,7 @@ def drop_add_residual_stochastic_depth_list(
 
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
+
     def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
@@ -1079,6 +1095,7 @@ class NestedTensorBlock(Block):
 
 class BlockChunk(nn.ModuleList):
     """Block chunk implementation."""
+
     def forward(self, x, others=None):
         """Forward.
 
@@ -1096,6 +1113,7 @@ class BlockChunk(nn.ModuleList):
 
 class DinoVisionTransformer(nn.Module):
     """Dino vision transformer implementation."""
+
     def __init__(
         self,
         img_size=518,

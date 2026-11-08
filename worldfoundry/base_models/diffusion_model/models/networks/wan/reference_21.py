@@ -113,8 +113,8 @@ class WanRMSNorm(nn.Module):
 
     def __init__(self, dim, eps=1e-5):
         """Args:
-            dim: Channel width of the last dimension.
-            eps: Stabilizer added inside the rsqrt.
+        dim: Channel width of the last dimension.
+        eps: Stabilizer added inside the rsqrt.
         """
         super().__init__()
         self.dim = dim
@@ -138,9 +138,9 @@ class WanLayerNorm(nn.LayerNorm):
 
     def __init__(self, dim, eps=1e-6, elementwise_affine=False):
         """Args:
-            dim: Normalized width.
-            eps: LayerNorm epsilon.
-            elementwise_affine: Official Wan uses affine only on some norms.
+        dim: Normalized width.
+        eps: LayerNorm epsilon.
+        elementwise_affine: Official Wan uses affine only on some norms.
         """
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
@@ -157,11 +157,11 @@ class WanSelfAttention(nn.Module):
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
         """Args:
-            dim: Hidden size (must be divisible by ``num_heads``).
-            num_heads: Attention heads.
-            window_size: Flash-attention local window; ``(-1, -1)`` is global.
-            qk_norm: If true, RMSNorm query and key before RoPE.
-            eps: RMSNorm epsilon.
+        dim: Hidden size (must be divisible by ``num_heads``).
+        num_heads: Attention heads.
+        window_size: Flash-attention local window; ``(-1, -1)`` is global.
+        qk_norm: If true, RMSNorm query and key before RoPE.
+        eps: RMSNorm epsilon.
         """
         assert dim % num_heads == 0
         super().__init__()
@@ -340,14 +340,14 @@ class WanAttentionBlock(nn.Module):
         eps=1e-6,
     ):
         """Args:
-            cross_attn_type: Key into ``WAN_CROSSATTENTION_CLASSES``.
-            dim: Hidden size.
-            ffn_dim: Feed-forward inner width.
-            num_heads: Attention heads.
-            window_size: Local window for self-attention.
-            qk_norm: RMSNorm Q/K in both attentions.
-            cross_attn_norm: If true, affine LayerNorm before cross-attn.
-            eps: Norm epsilon.
+        cross_attn_type: Key into ``WAN_CROSSATTENTION_CLASSES``.
+        dim: Hidden size.
+        ffn_dim: Feed-forward inner width.
+        num_heads: Attention heads.
+        window_size: Local window for self-attention.
+        qk_norm: RMSNorm Q/K in both attentions.
+        cross_attn_norm: If true, affine LayerNorm before cross-attn.
+        eps: Norm epsilon.
         """
         super().__init__()
         self.dim = dim
@@ -419,10 +419,10 @@ class Head(nn.Module):
 
     def __init__(self, dim, out_dim, patch_size, eps=1e-6):
         """Args:
-            dim: Hidden size.
-            out_dim: VAE latent channels after unpatchify.
-            patch_size: ``(t, h, w)`` used to expand each token.
-            eps: LayerNorm epsilon.
+        dim: Hidden size.
+        out_dim: VAE latent channels after unpatchify.
+        patch_size: ``(t, h, w)`` used to expand each token.
+        eps: LayerNorm epsilon.
         """
         super().__init__()
         self.dim = dim
@@ -456,9 +456,9 @@ class MLPProj(torch.nn.Module):
 
     def __init__(self, in_dim, out_dim, flf_pos_emb=False):
         """Args:
-            in_dim: CLIP width (officially 1280).
-            out_dim: DiT hidden size.
-            flf_pos_emb: Add the 514-token first/last-frame position table.
+        in_dim: CLIP width (officially 1280).
+        out_dim: DiT hidden size.
+        flf_pos_emb: Add the 514-token first/last-frame position table.
         """
         super().__init__()
 

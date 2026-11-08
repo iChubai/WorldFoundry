@@ -32,26 +32,27 @@ class TemplateMeta:
         <|im_start|>assistant
         {{RESPONSE}}<|im_end|>  # suffix
     """
+
     template_type: str
     prefix: Prompt
     prompt: Prompt
     chat_sep: Optional[Prompt]
-    suffix: Prompt = field(default_factory=lambda: [['eos_token_id']])
+    suffix: Prompt = field(default_factory=lambda: [["eos_token_id"]])
     template_cls: Type[Template] = Template
     system_prefix: Optional[Prompt] = None
     default_system: Optional[str] = None
-    response_prefix: str = ''
+    response_prefix: str = ""
 
     auto_add_bos: bool = False
     stop_words: List[Word] = field(default_factory=list)
-    agent_template: str = 'react_en'
+    agent_template: str = "react_en"
 
-    def to_generate_template_meta(self) -> 'TemplateMeta':
+    def to_generate_template_meta(self) -> "TemplateMeta":
         self = deepcopy(self)
         return TemplateMeta(
             self.template_type,
             prefix=[],
-            prompt=['{{QUERY}}'],
+            prompt=["{{QUERY}}"],
             chat_sep=None,
             template_cls=self.template_cls,
             auto_add_bos=True,
@@ -60,11 +61,11 @@ class TemplateMeta:
 
     @staticmethod
     def _has_system(prefix_or_prompt: Prompt) -> bool:
-        return any(['{{SYSTEM}}' in p for p in prefix_or_prompt])
+        return any(["{{SYSTEM}}" in p for p in prefix_or_prompt])
 
     @staticmethod
     def _replace_system(prefix: Prompt) -> Prompt:
-        return [p.replace('{{SYSTEM}}', '') for p in prefix if isinstance(p, str)]
+        return [p.replace("{{SYSTEM}}", "") for p in prefix if isinstance(p, str)]
 
     def _check_template_meta(self):
         # check
@@ -76,13 +77,13 @@ class TemplateMeta:
     def __post_init__(self):
         # system
         if self._has_system(self.prefix):
-            assert self.system_prefix is None, 'The prefix already contains {{SYSTEM}}.'
+            assert self.system_prefix is None, "The prefix already contains {{SYSTEM}}."
             self.system_prefix = self.prefix
             self.prefix = self._replace_system(self.prefix)
 
         self.is_post_system = self._has_system(self.prompt)  # mistral_nemo
         if self.is_post_system:
-            self.prompt = [context for context in self.prompt if '{{SYSTEM}}' not in context]
+            self.prompt = [context for context in self.prompt if "{{SYSTEM}}" not in context]
             self.system_prompt = self.prompt
 
         if self.system_prefix is None and not self.is_post_system:
@@ -109,7 +110,7 @@ class TemplateMeta:
         return res_value
 
     def init(self, tokenizer: PreTrainedTokenizerBase) -> None:
-        for key in ['prefix', 'prompt', 'chat_sep', 'suffix', 'system_prefix']:
+        for key in ["prefix", "prompt", "chat_sep", "suffix", "system_prefix"]:
             value = getattr(self, key)
             value = self._token_attr_to_id(tokenizer, value)
             setattr(self, key, value)
@@ -134,4 +135,5 @@ class TemplateMeta:
     def check_system(self, system: Optional[str]) -> None:
         if system is not None:
             assert self.support_system, (
-                f'The template does not support `system`, template_type: {self.template_type}, system: {system}')
+                f"The template does not support `system`, template_type: {self.template_type}, system: {system}"
+            )

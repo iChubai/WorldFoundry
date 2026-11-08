@@ -57,9 +57,7 @@ def get_activation(act_fn: str) -> nn.Module:
     if act_fn in ACT2CLS:
         return ACT2CLS[act_fn]()
     else:
-        raise ValueError(
-            f"activation function {act_fn} not found in ACT2CLS mapping {list(ACT2CLS.keys())}"
-        )
+        raise ValueError(f"activation function {act_fn} not found in ACT2CLS mapping {list(ACT2CLS.keys())}")
 
 
 def _turbo_unpatchify(x, patch_size):
@@ -92,9 +90,7 @@ def _turbo_unpatchify(x, patch_size):
 class RMSNorm(nn.Module):
     r"""RMS Norm (https://huggingface.co/papers/1910.07467)."""
 
-    def __init__(
-        self, dim, eps: float, elementwise_affine: bool = True, bias: bool = False
-    ):
+    def __init__(self, dim, eps: float, elementwise_affine: bool = True, bias: bool = False):
         super().__init__()
 
         self.eps = eps
@@ -143,11 +139,7 @@ class TurboVAEDConv2dSplitUpsampler(nn.Module):
 
         out_channels = in_channels
 
-        self.kernel_size = (
-            kernel_size
-            if isinstance(kernel_size, tuple)
-            else (kernel_size, kernel_size)
-        )
+        self.kernel_size = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size)
 
         height_pad = self.kernel_size[0] // 2
         width_pad = self.kernel_size[1] // 2
@@ -187,11 +179,7 @@ class TurboVAEDCausalConv3d(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.is_causal = is_causal
-        self.kernel_size = (
-            kernel_size
-            if isinstance(kernel_size, tuple)
-            else (kernel_size, kernel_size, kernel_size)
-        )
+        self.kernel_size = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size, kernel_size)
 
         dilation = dilation if isinstance(dilation, tuple) else (dilation, 1, 1)
         stride = stride if isinstance(stride, tuple) else (stride, stride, stride)
@@ -214,12 +202,8 @@ class TurboVAEDCausalConv3d(nn.Module):
         time_kernel_size = self.kernel_size[0]
 
         if time_kernel_size > 1:
-            pad_left = hidden_states[:, :, :1, :, :].repeat(
-                (1, 1, (time_kernel_size - 1) // 2, 1, 1)
-            )
-            pad_right = hidden_states[:, :, -1:, :, :].repeat(
-                (1, 1, (time_kernel_size - 1) // 2, 1, 1)
-            )
+            pad_left = hidden_states[:, :, :1, :, :].repeat((1, 1, (time_kernel_size - 1) // 2, 1, 1))
+            pad_right = hidden_states[:, :, -1:, :, :].repeat((1, 1, (time_kernel_size - 1) // 2, 1, 1))
             hidden_states = torch.cat([pad_left, hidden_states, pad_right], dim=2)
 
         hidden_states = self.conv(hidden_states)
@@ -242,11 +226,7 @@ class TurboVAEDCausalDepthwiseSeparableConv3d(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.is_causal = is_causal
-        self.kernel_size = (
-            kernel_size
-            if isinstance(kernel_size, tuple)
-            else (kernel_size, kernel_size, kernel_size)
-        )
+        self.kernel_size = kernel_size if isinstance(kernel_size, tuple) else (kernel_size, kernel_size, kernel_size)
         self.stride = stride if isinstance(stride, tuple) else (stride, stride, stride)
         self.dilation = dilation if isinstance(dilation, tuple) else (dilation, 1, 1)
 
@@ -268,9 +248,7 @@ class TurboVAEDCausalDepthwiseSeparableConv3d(nn.Module):
         )
 
         # Pointwise Convolution
-        self.pointwise_conv = nn.Conv3d(
-            in_channels, out_channels, kernel_size=1
-        )  # 1x1x1 convolution to mix channels
+        self.pointwise_conv = nn.Conv3d(in_channels, out_channels, kernel_size=1)  # 1x1x1 convolution to mix channels
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         time_kernel_size = self.kernel_size[0]
@@ -309,19 +287,13 @@ class TurboVAEDResNetBlock3d(nn.Module):
 
         self.nonlinearity = get_activation(non_linearity)
 
-        self.conv_operation = (
-            TurboVAEDCausalConv3d
-            if not is_dw_conv
-            else TurboVAEDCausalDepthwiseSeparableConv3d
-        )
+        self.conv_operation = TurboVAEDCausalConv3d if not is_dw_conv else TurboVAEDCausalDepthwiseSeparableConv3d
         self.kernel_size = 3 if not is_dw_conv else dw_kernel_size
 
         self.is_upsampler_modified = is_upsampler_modified
         self.replace_nonlinearity = get_activation("relu")
 
-        self.norm1 = RMSNorm(
-            in_channels, eps=1e-8, elementwise_affine=elementwise_affine
-        )
+        self.norm1 = RMSNorm(in_channels, eps=1e-8, elementwise_affine=elementwise_affine)
         self.conv1 = self.conv_operation(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -329,9 +301,7 @@ class TurboVAEDResNetBlock3d(nn.Module):
             is_causal=is_causal,
         )
 
-        self.norm2 = RMSNorm(
-            out_channels, eps=1e-8, elementwise_affine=elementwise_affine
-        )
+        self.norm2 = RMSNorm(out_channels, eps=1e-8, elementwise_affine=elementwise_affine)
         self.conv2 = self.conv_operation(
             in_channels=out_channels,
             out_channels=out_channels,
@@ -342,9 +312,7 @@ class TurboVAEDResNetBlock3d(nn.Module):
         self.norm3 = None
         self.conv_shortcut = None
         if in_channels != out_channels:
-            self.norm3 = RMSNorm(
-                in_channels, eps=eps, elementwise_affine=elementwise_affine
-            )
+            self.norm3 = RMSNorm(in_channels, eps=eps, elementwise_affine=elementwise_affine)
             self.conv_shortcut = self.conv_operation(
                 in_channels=in_channels,
                 out_channels=out_channels,
@@ -420,9 +388,7 @@ class WanResample(nn.Module):
         if self.mode == "upsample3d":
             x = self.time_conv(x)
             x = rearrange(x, "b (n_split c) t h w -> b c (t n_split) h w", n_split=2)
-            assert x.shape == (b, c, t * 2, h, w), "x.shape: {}, expected: {}".format(
-                x.shape, (b, c, t * 2, h, w)
-            )
+            assert x.shape == (b, c, t * 2, h, w), "x.shape: {}, expected: {}".format(x.shape, (b, c, t * 2, h, w))
             if is_first_chunk:
                 x = x[:, :, 1:]
 
@@ -530,9 +496,7 @@ class TurboVAEDUpBlock3d(nn.Module):
             )
         self.resnets = nn.ModuleList(resnets)
 
-    def forward(
-        self, hidden_states: torch.Tensor, is_first_chunk: bool
-    ) -> torch.Tensor:
+    def forward(self, hidden_states: torch.Tensor, is_first_chunk: bool) -> torch.Tensor:
         if self.conv_in is not None:
             hidden_states = self.conv_in(hidden_states)
 
@@ -624,9 +588,7 @@ class TurboVAEDDecoder3d(nn.Module):
         assert self.patch_size == 2
         if not self.use_unpatchify:
             self.norm_up_1 = RMSNorm(output_channel, eps=1e-8, elementwise_affine=False)
-            self.upsampler2d_1 = TurboVAEDConv2dSplitUpsampler(
-                in_channels=output_channel, kernel_size=3, stride=(2, 2)
-            )
+            self.upsampler2d_1 = TurboVAEDConv2dSplitUpsampler(in_channels=output_channel, kernel_size=3, stride=(2, 2))
             output_channel = output_channel // (2 * 2)
 
         self.conv_act = nn.SiLU()
@@ -645,9 +607,7 @@ class TurboVAEDDecoder3d(nn.Module):
             is_causal=is_causal,
         )
 
-    def forward(
-        self, hidden_states: torch.Tensor, is_first_chunk: bool
-    ) -> torch.Tensor:
+    def forward(self, hidden_states: torch.Tensor, is_first_chunk: bool) -> torch.Tensor:
         hidden_states = self.conv_in(hidden_states)
 
         hidden_states = self.mid_block(hidden_states)
@@ -731,9 +691,7 @@ class TurboVAED(ModelMixin, ConfigMixin):
 
         self.first_chunk_size = first_chunk_size
         self.step_size = step_size
-        print(
-            f"[Turbo VAE Decoder] init with first_chunk_size: {first_chunk_size}, step_size: {step_size}"
-        )
+        print(f"[Turbo VAE Decoder] init with first_chunk_size: {first_chunk_size}, step_size: {step_size}")
 
         self.spatial_compression_ratio = spatial_compression_ratio
         self.temporal_compression_ratio = temporal_compression_ratio
@@ -743,12 +701,8 @@ class TurboVAED(ModelMixin, ConfigMixin):
         # hardcodes device="cuda"; we default to cuda when available so this stays
         # importable / usable on CPU. Move with `.set_scale_device()` if needed.
         stats_device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.mean = torch.tensor(
-            WAN22_LATENTS_MEAN, dtype=torch.float32, device=stats_device
-        )
-        self.std = torch.tensor(
-            WAN22_LATENTS_STD, dtype=torch.float32, device=stats_device
-        )
+        self.mean = torch.tensor(WAN22_LATENTS_MEAN, dtype=torch.float32, device=stats_device)
+        self.std = torch.tensor(WAN22_LATENTS_STD, dtype=torch.float32, device=stats_device)
         self.scale = [self.mean, 1.0 / self.std]
 
     def set_scale_device(self, device, dtype=None):
@@ -766,9 +720,7 @@ class TurboVAED(ModelMixin, ConfigMixin):
         z_dtype = z.dtype
         scale = self.scale
         assert isinstance(scale[0], torch.Tensor), "scale[0] must be a tensor"
-        z = z / scale[1].view(1, self.z_dim, 1, 1, 1) + scale[0].view(
-            1, self.z_dim, 1, 1, 1
-        )
+        z = z / scale[1].view(1, self.z_dim, 1, 1, 1) + scale[0].view(1, self.z_dim, 1, 1, 1)
         z = z.to(z_dtype)
 
         first_chunk_size = self.first_chunk_size
@@ -791,9 +743,7 @@ class TurboVAED(ModelMixin, ConfigMixin):
             num_padding_frames = step - (num_frames - first_chunk_size) % step
 
         if num_padding_frames > 0:
-            z = torch.cat(
-                [z, z[:, :, -1:].repeat(1, 1, num_padding_frames, 1, 1)], dim=2
-            )
+            z = torch.cat([z, z[:, :, -1:].repeat(1, 1, num_padding_frames, 1, 1)], dim=2)
             num_frames = num_frames + num_padding_frames
 
         # 2. Decode with overlapping windows
@@ -807,9 +757,7 @@ class TurboVAED(ModelMixin, ConfigMixin):
             del out
         else:
             # first chunk: attach the right frame
-            out = self.decoder(
-                z[:, :, 0 : first_chunk_size + 1, :, :], is_first_chunk=True
-            )
+            out = self.decoder(z[:, :, 0 : first_chunk_size + 1, :, :], is_first_chunk=True)
             out = out[:, :, :-num_overlap_pixel_frames]
             out_chunks.append(out.cpu() if output_offload else out)
             del out
@@ -821,18 +769,14 @@ class TurboVAED(ModelMixin, ConfigMixin):
                 left = i - 1
                 right = i + step + 1 if not is_last_chunk else i + step
 
-                assert left >= 0 and right <= num_frames, (
-                    f"left: {left}, right: {right}, num_frames: {num_frames}"
-                )
+                assert left >= 0 and right <= num_frames, f"left: {left}, right: {right}, num_frames: {num_frames}"
 
                 out_ = self.decoder(z[:, :, left:right, :, :], is_first_chunk=False)
 
                 if is_last_chunk:
                     out_ = out_[:, :, num_overlap_pixel_frames:]
                 else:
-                    out_ = out_[
-                        :, :, num_overlap_pixel_frames:-num_overlap_pixel_frames
-                    ]
+                    out_ = out_[:, :, num_overlap_pixel_frames:-num_overlap_pixel_frames]
 
                 out_chunks.append(out_.cpu() if output_offload else out_)
                 del out_
@@ -856,9 +800,7 @@ class TurboVAED(ModelMixin, ConfigMixin):
 Magi2TurboDecoder = TurboVAED
 
 
-def get_turbo_vaed(
-    config_path, ckpt_path, device="cuda", weight_dtype=torch.float32
-) -> TurboVAED:
+def get_turbo_vaed(config_path, ckpt_path, device="cuda", weight_dtype=torch.float32) -> TurboVAED:
     with open(config_path, "r", encoding="utf-8") as f:
         config = json.load(f)
     student = TurboVAED.from_config(config)
@@ -882,9 +824,7 @@ def get_turbo_vaed(
     missing, unexpected = student.load_state_dict(state_dict, strict=False)
     if len(missing) > 0:
         sample_key = next(iter(state_dict.keys()))
-        if not sample_key.startswith("decoder.") and not sample_key.startswith(
-            "encoder."
-        ):
+        if not sample_key.startswith("decoder.") and not sample_key.startswith("encoder."):
             print("Attempting to load state_dict directly into student.decoder...")
             student.decoder.load_state_dict(state_dict, strict=False)
 

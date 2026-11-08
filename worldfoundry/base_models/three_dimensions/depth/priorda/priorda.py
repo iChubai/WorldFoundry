@@ -44,6 +44,7 @@ def resolve_priorda_file(filename: str, explicit_dir: str | None = None) -> str:
 
 class PriorDepthAnything(nn.Module):
     """Prior depth anything implementation."""
+
     def __init__(
         self,
         device="cuda:0",

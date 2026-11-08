@@ -33,6 +33,7 @@ def check_file_exist(filename, msg_tmpl='file "{}" does not exist'):
 
 class ConfigDict(Dict):
     """Config dict implementation."""
+
     def __missing__(self, name):
         """Missing.
 
@@ -50,7 +51,7 @@ class ConfigDict(Dict):
         try:
             value = super(ConfigDict, self).__getattr__(name)
         except KeyError:
-            ex = AttributeError(f"'{self.__class__.__name__}' object has no " f"attribute '{name}'")
+            ex = AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
         except Exception as e:
             ex = e
         else:
@@ -95,7 +96,7 @@ class SLConfig(object):
         try:
             ast.parse(content)
         except SyntaxError:
-            raise SyntaxError("There are syntax errors in config " f"file {filename}")
+            raise SyntaxError(f"There are syntax errors in config file {filename}")
 
     @staticmethod
     def _file2dict(filename):
@@ -110,7 +111,7 @@ class SLConfig(object):
             with tempfile.TemporaryDirectory() as temp_config_dir:
                 temp_config_file = tempfile.NamedTemporaryFile(dir=temp_config_dir, suffix=".py")
                 temp_config_name = osp.basename(temp_config_file.name)
-                if os.name == 'nt':
+                if os.name == "nt":
                     temp_config_file.close()
                 shutil.copyfile(filename, osp.join(temp_config_dir, temp_config_name))
                 temp_module_name = osp.splitext(temp_config_name)[0]
@@ -118,9 +119,7 @@ class SLConfig(object):
                 SLConfig._validate_py_syntax(filename)
                 mod = import_module(temp_module_name)
                 sys.path.pop(0)
-                cfg_dict = {
-                    name: value for name, value in mod.__dict__.items() if not name.startswith("__")
-                }
+                cfg_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
                 # delete imported module
                 del sys.modules[temp_module_name]
                 # close temp file
@@ -185,7 +184,6 @@ class SLConfig(object):
         b = b.copy()
         for k, v in a.items():
             if isinstance(v, dict) and k in b and not v.pop(DELETE_KEY, False):
-
                 if not isinstance(b[k], dict) and not isinstance(b[k], list):
                     # if :
                     # import ipdb; ipdb.set_trace()
@@ -200,9 +198,7 @@ class SLConfig(object):
                 try:
                     _ = int(k)
                 except:
-                    raise TypeError(
-                        f"b is a list, " f"index {k} should be an int when input but {type(k)}"
-                    )
+                    raise TypeError(f"b is a list, index {k} should be an int when input but {type(k)}")
                 b[int(k)] = SLConfig._merge_a_into_b(v, b[int(k)])
             else:
                 b[k] = v
@@ -230,7 +226,7 @@ class SLConfig(object):
         if cfg_dict is None:
             cfg_dict = dict()
         elif not isinstance(cfg_dict, dict):
-            raise TypeError("cfg_dict must be a dict, but " f"got {type(cfg_dict)}")
+            raise TypeError(f"cfg_dict must be a dict, but got {type(cfg_dict)}")
         for key in cfg_dict:
             if key in RESERVED_KEYS:
                 raise KeyError(f"{key} is reserved for config file")
@@ -311,9 +307,7 @@ class SLConfig(object):
             # check if all items in the list are dict
             if all(isinstance(_, dict) for _ in v):
                 v_str = "[\n"
-                v_str += "\n".join(
-                    f"dict({_indent(_format_dict(v_), indent)})," for v_ in v
-                ).rstrip(",")
+                v_str += "\n".join(f"dict({_indent(_format_dict(v_), indent)})," for v_ in v).rstrip(",")
                 if use_mapping:
                     k_str = f"'{k}'" if isinstance(k, str) else str(k)
                     attr_str = f"{k_str}: {v_str}"
@@ -483,9 +477,7 @@ class SLConfig(object):
             d[subkey] = v
 
         cfg_dict = super(SLConfig, self).__getattribute__("_cfg_dict")
-        super(SLConfig, self).__setattr__(
-            "_cfg_dict", SLConfig._merge_a_into_b(option_cfg_dict, cfg_dict)
-        )
+        super(SLConfig, self).__setattr__("_cfg_dict", SLConfig._merge_a_into_b(option_cfg_dict, cfg_dict))
 
     # for multiprocess
     def __setstate__(self, state):

@@ -113,6 +113,7 @@ def func_attention(query, context, smooth=1, raw_feature_norm="softmax", eps=1e-
 
 class BiMultiHeadAttention(nn.Module):
     """Bi multi head attention implementation."""
+
     def __init__(self, v_dim, l_dim, embed_dim, num_heads, dropout=0.1, cfg=None):
         """Init.
 
@@ -132,9 +133,9 @@ class BiMultiHeadAttention(nn.Module):
         self.v_dim = v_dim
         self.l_dim = l_dim
 
-        assert (
-            self.head_dim * self.num_heads == self.embed_dim
-        ), f"embed_dim must be divisible by num_heads (got `embed_dim`: {self.embed_dim} and `num_heads`: {self.num_heads})."
+        assert self.head_dim * self.num_heads == self.embed_dim, (
+            f"embed_dim must be divisible by num_heads (got `embed_dim`: {self.embed_dim} and `num_heads`: {self.num_heads})."
+        )
         self.scale = self.head_dim ** (-0.5)
         self.dropout = dropout
 
@@ -237,18 +238,14 @@ class BiMultiHeadAttention(nn.Module):
 
         # mask vison for language
         if attention_mask_v is not None:
-            attention_mask_v = (
-                attention_mask_v[:, None, None, :].repeat(1, self.num_heads, 1, 1).flatten(0, 1)
-            )
+            attention_mask_v = attention_mask_v[:, None, None, :].repeat(1, self.num_heads, 1, 1).flatten(0, 1)
             attn_weights_l.masked_fill_(attention_mask_v, float("-inf"))
 
         attn_weights_l = attn_weights_l.softmax(dim=-1)
 
         # mask language for vision
         if attention_mask_l is not None:
-            attention_mask_l = (
-                attention_mask_l[:, None, None, :].repeat(1, self.num_heads, 1, 1).flatten(0, 1)
-            )
+            attention_mask_l = attention_mask_l[:, None, None, :].repeat(1, self.num_heads, 1, 1).flatten(0, 1)
             attn_weights.masked_fill_(attention_mask_l, float("-inf"))
         attn_weights_v = attn_weights.softmax(dim=-1)
 
@@ -285,6 +282,7 @@ class BiMultiHeadAttention(nn.Module):
 # Bi-Direction MHA (text->image, image->text)
 class BiAttentionBlock(nn.Module):
     """Bi attention block implementation."""
+
     def __init__(
         self,
         v_dim,
@@ -329,9 +327,7 @@ class BiAttentionBlock(nn.Module):
         """
         v = self.layer_norm_v(v)
         l = self.layer_norm_l(l)
-        delta_v, delta_l = self.attn(
-            v, l, attention_mask_v=attention_mask_v, attention_mask_l=attention_mask_l
-        )
+        delta_v, delta_l = self.attn(v, l, attention_mask_v=attention_mask_v, attention_mask_l=attention_mask_l)
         # v, l = v + delta_v, l + delta_l
         v = v + self.drop_path(self.gamma_v * delta_v)
         l = l + self.drop_path(self.gamma_l * delta_l)

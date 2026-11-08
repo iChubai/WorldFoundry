@@ -36,6 +36,7 @@ from flow3d.transforms import rt_to_mat4
 @dataclass
 class DavisDataConfig:
     """Davis data config implementation."""
+
     data_dir: str
     start: int = 0
     end: int = -1
@@ -60,6 +61,7 @@ class DavisDataConfig:
 @dataclass
 class CustomDataConfig:
     """Custom data config implementation."""
+
     data_dir: str
     start: int = 0
     end: int = -1
@@ -83,6 +85,7 @@ class CustomDataConfig:
 
 class CasualDataset(BaseDataset):
     """Casual dataset implementation."""
+
     def __init__(
         self,
         data_dir: str,
@@ -158,27 +161,23 @@ class CasualDataset(BaseDataset):
         if camera_type == "droid_recon":
             img = self.get_image(0)
             H, W = img.shape[:2]
-            w2cs, Ks, tstamps = load_cameras(
-                f"{data_dir}/{camera_type}.npy", H, W
-            )
-            
+            w2cs, Ks, tstamps = load_cameras(f"{data_dir}/{camera_type}.npy", H, W)
+
         elif camera_type == "megasam":
             data_name = data_dir.split("/")[-1]
             cam_path = Path(data_dir) / f"{data_name}.npz"
             cams = np.load(cam_path)
-            c2ws = cams["cam_c2w"][:self.end]
+            c2ws = cams["cam_c2w"][: self.end]
             K = cams["intrinsic"]
-                
+
             c2ws = torch.from_numpy(c2ws)
             w2cs = torch.linalg.inv(c2ws)
             Ks = torch.from_numpy(K).unsqueeze(0).repeat((c2ws.shape[0], 1, 1))
-                
+
         else:
             raise ValueError(f"Unknown camera type: {camera_type}")
 
-        assert (
-            len(self.frame_names) == len(w2cs) == len(Ks)
-        ), f"{len(self.frame_names)}, {len(w2cs)}, {len(Ks)}"
+        assert len(self.frame_names) == len(w2cs) == len(Ks), f"{len(self.frame_names)}, {len(w2cs)}, {len(Ks)}"
 
         self.w2cs = w2cs[start:end]
         self.Ks = Ks[start:end]
@@ -188,14 +187,10 @@ class CasualDataset(BaseDataset):
         self.scale = 1
 
         if scene_norm_dict is None:
-            cached_scene_norm_dict_path = os.path.join(
-                self.cache_dir, "scene_norm_dict.pth"
-            )
+            cached_scene_norm_dict_path = os.path.join(self.cache_dir, "scene_norm_dict.pth")
             if os.path.exists(cached_scene_norm_dict_path) and self.load_from_cache:
                 guru.info("loading cached scene norm dict...")
-                scene_norm_dict = torch.load(
-                    os.path.join(self.cache_dir, "scene_norm_dict.pth")
-                )
+                scene_norm_dict = torch.load(os.path.join(self.cache_dir, "scene_norm_dict.pth"))
             else:
                 tracks_3d = self.get_tracks_3d(5000, step=self.num_frames // 10)[0]
                 scale, transfm = compute_scene_norm(tracks_3d, self.w2cs)
@@ -302,8 +297,7 @@ class CasualDataset(BaseDataset):
                 depth_path = Path(self.data_dir) / f"{data_name}.npz"
                 depths = np.load(depth_path)
                 self.depths[index] = torch.tensor(depths["depths"][index]).float()
-               
-                
+
         return self.depths[index] / self.scale
 
     def load_image(self, index) -> torch.Tensor:
@@ -336,12 +330,8 @@ class CasualDataset(BaseDataset):
             mask = imageio.imread(path)
         fg_mask = mask.reshape((*mask.shape[:2], -1)).max(axis=-1) > 0
         bg_mask = ~fg_mask
-        fg_mask_erode = cv2.erode(
-            fg_mask.astype(np.uint8), np.ones((r, r), np.uint8), iterations=1
-        )
-        bg_mask_erode = cv2.erode(
-            bg_mask.astype(np.uint8), np.ones((r, r), np.uint8), iterations=1
-        )
+        fg_mask_erode = cv2.erode(fg_mask.astype(np.uint8), np.ones((r, r), np.uint8), iterations=1)
+        bg_mask_erode = cv2.erode(bg_mask.astype(np.uint8), np.ones((r, r), np.uint8), iterations=1)
         out_mask = np.zeros_like(fg_mask, dtype=np.float32)
         out_mask[bg_mask_erode > 0] = -1
         out_mask[fg_mask_erode > 0] = 1
@@ -363,9 +353,7 @@ class CasualDataset(BaseDataset):
         depth = median_filter_2d(depth[None, None], 11, 1)[0, 0]
         return depth
 
-    def load_target_tracks(
-        self, query_index: int, target_indices: list[int], dim: int = 1
-    ):
+    def load_target_tracks(self, query_index: int, target_indices: list[int], dim: int = 1):
         """
         tracks are 2d, occs and uncertainties
         :param dim (int), default 1: dimension to stack the time axis
@@ -412,9 +400,7 @@ class CasualDataset(BaseDataset):
         for q_idx in query_idcs:
             # (N, T, 4)
             tracks_2d = self.load_target_tracks(q_idx, target_idcs)
-            num_sel = int(
-                min(num_per_query_frame, num_samples - cur_num, len(tracks_2d))
-            )
+            num_sel = int(min(num_per_query_frame, num_samples - cur_num, len(tracks_2d)))
 
             if num_sel < len(tracks_2d):
                 num_sel = num_per_query_frame
@@ -423,13 +409,9 @@ class CasualDataset(BaseDataset):
             cur_num += tracks_2d.shape[0]
             img = self.get_image(q_idx)
             tidx = target_idcs.index(q_idx)
-            tracks_tuple = get_tracks_3d_for_query_frame(
-                tidx, img, tracks_2d, depths, fg_masks, inv_Ks, c2ws
-            )
+            tracks_tuple = get_tracks_3d_for_query_frame(tidx, img, tracks_2d, depths, fg_masks, inv_Ks, c2ws)
             tracks_all_queries.append(tracks_tuple)
-        tracks_3d, colors, visibles, invisibles, confidences = map(
-            partial(torch.cat, dim=0), zip(*tracks_all_queries)
-        )
+        tracks_3d, colors, visibles, invisibles, confidences = map(partial(torch.cat, dim=0), zip(*tracks_all_queries))
 
         return tracks_3d, visibles, invisibles, confidences, colors
 
@@ -473,7 +455,6 @@ class CasualDataset(BaseDataset):
             query_endpts = torch.linspace(start, end, num_query_frames + 1)
             query_idcs = ((query_endpts[:-1] + query_endpts[1:]) / 2).long().tolist()
 
-
         bg_geometry = []
         print(f"{query_idcs=}")
         for query_idx in tqdm(query_idcs, desc="Loading bkgd points", leave=False):
@@ -484,7 +465,6 @@ class CasualDataset(BaseDataset):
             w2c = self.w2cs[query_idx]
             K = self.Ks[query_idx]
 
-
             # get the bounding box of previous points that reproject into frame
             # inefficient but works for now
             bmax_x, bmax_y, bmin_x, bmin_y = 0, 0, W, H
@@ -492,9 +472,7 @@ class CasualDataset(BaseDataset):
                 if len(p3d) < 1:
                     continue
                 # reproject into current frame
-                p2d = torch.einsum(
-                    "ij,jk,pk->pi", K, w2c[:3], F.pad(p3d, (0, 1), value=1.0)
-                )
+                p2d = torch.einsum("ij,jk,pk->pi", K, w2c[:3], F.pad(p3d, (0, 1), value=1.0))
                 p2d = p2d[:, :2] / p2d[:, 2:].clamp(min=1e-6)
                 xmin, xmax = p2d[:, 0].min().item(), p2d[:, 0].max().item()
                 ymin, ymax = p2d[:, 1].min().item(), p2d[:, 1].max().item()
@@ -525,12 +503,9 @@ class CasualDataset(BaseDataset):
                 )
                 * depth[bool_mask][:, None]
             )
-            points = torch.einsum(
-                "ij,pj->pi", torch.linalg.inv(w2c)[:3], F.pad(points, (0, 1), value=1.0)
-            )
+            points = torch.einsum("ij,pj->pi", torch.linalg.inv(w2c)[:3], F.pad(points, (0, 1), value=1.0))
             point_normals = normal_from_depth_image(depth, K, w2c)[bool_mask]
             point_colors = img[bool_mask]
-
 
             # points = bg_pts_3d[bool_mask]
 
@@ -542,16 +517,13 @@ class CasualDataset(BaseDataset):
             guru.debug(f"{query_idx=} {points.shape=}")
             bg_geometry.append((points, point_normals, point_colors))
 
-        bg_points, bg_normals, bg_colors = map(
-            partial(torch.cat, dim=0), zip(*bg_geometry)
-        )
+        bg_points, bg_normals, bg_colors = map(partial(torch.cat, dim=0), zip(*bg_geometry))
 
         if len(bg_points) > num_samples:
             sel_idcs = np.random.choice(len(bg_points), num_samples, replace=False)
             bg_points = bg_points[sel_idcs]
             bg_normals = bg_normals[sel_idcs]
             bg_colors = bg_colors[sel_idcs]
-        
 
         return bg_points, bg_normals, bg_colors
 
@@ -585,11 +557,7 @@ class CasualDataset(BaseDataset):
 
         # (P, 2)
         query_tracks = self.load_target_tracks(index, [index])[:, 0, :2]
-        target_inds = torch.from_numpy(
-            np.random.choice(
-                self.num_frames, (self.num_targets_per_frame,), replace=False
-            )
-        )
+        target_inds = torch.from_numpy(np.random.choice(self.num_frames, (self.num_targets_per_frame,), replace=False))
         # (N, P, 4)
         target_tracks = self.load_target_tracks(index, target_inds.tolist(), dim=0)
         data["query_tracks_2d"] = query_tracks
@@ -615,9 +583,7 @@ class CasualDataset(BaseDataset):
         return data
 
 
-def load_cameras(
-    path: str, H: int, W: int
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+def load_cameras(path: str, H: int, W: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Load cameras.
 
     Args:
@@ -646,9 +612,7 @@ def load_cameras(
     )
 
 
-def compute_scene_norm(
-    X: torch.Tensor, w2cs: torch.Tensor
-) -> tuple[float, torch.Tensor]:
+def compute_scene_norm(X: torch.Tensor, w2cs: torch.Tensor) -> tuple[float, torch.Tensor]:
     """
     :param X: [N*T, 3]
     :param w2cs: [N, 4, 4]
@@ -661,10 +625,7 @@ def compute_scene_norm(
     scale = (max_scale - min_scale).max().item() / 2.0
     original_up = -F.normalize(w2cs[:, 1, :3].mean(0), dim=-1)
     target_up = original_up.new_tensor([0.0, 0.0, 1.0])
-    R = roma.rotvec_to_rotmat(
-        F.normalize(original_up.cross(target_up), dim=-1)
-        * original_up.dot(target_up).acos_()
-    )
+    R = roma.rotvec_to_rotmat(F.normalize(original_up.cross(target_up), dim=-1) * original_up.dot(target_up).acos_())
     transfm = rt_to_mat4(R, torch.einsum("ij,j->i", -R, scene_center))
     return scale, transfm
 

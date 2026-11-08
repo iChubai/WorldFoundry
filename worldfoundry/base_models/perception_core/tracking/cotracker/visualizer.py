@@ -249,18 +249,13 @@ class Visualizer:
         #  draw tracks
         if self.tracks_leave_trace != 0:
             for t in range(query_frame + 1, T):
-                first_ind = (
-                    max(0, t - self.tracks_leave_trace)
-                    if self.tracks_leave_trace >= 0
-                    else 0
-                )
+                first_ind = max(0, t - self.tracks_leave_trace) if self.tracks_leave_trace >= 0 else 0
                 curr_tracks = tracks[first_ind : t + 1]
                 curr_colors = vector_colors[first_ind : t + 1]
                 if compensate_for_camera_motion:
-                    diff = (
-                        tracks[first_ind : t + 1, segm_mask <= 0]
-                        - tracks[t : t + 1, segm_mask <= 0]
-                    ).mean(1)[:, None]
+                    diff = (tracks[first_ind : t + 1, segm_mask <= 0] - tracks[t : t + 1, segm_mask <= 0]).mean(1)[
+                        :, None
+                    ]
 
                     curr_tracks = curr_tracks - diff
                     curr_tracks = curr_tracks[:, segm_mask > 0]
@@ -272,9 +267,7 @@ class Visualizer:
                     curr_colors,
                 )
                 if gt_tracks is not None:
-                    res_video[t] = self._draw_gt_tracks(
-                        res_video[t], gt_tracks[first_ind : t + 1]
-                    )
+                    res_video[t] = self._draw_gt_tracks(res_video[t], gt_tracks[first_ind : t + 1])
 
         #  draw points
         for t in range(T):
@@ -285,9 +278,7 @@ class Visualizer:
                 if visibility is not None:
                     visibile = visibility[0, t, i]
                 if coord[0] != 0 and coord[1] != 0:
-                    if not compensate_for_camera_motion or (
-                        compensate_for_camera_motion and segm_mask[i] > 0
-                    ):
+                    if not compensate_for_camera_motion or (compensate_for_camera_motion and segm_mask[i] > 0):
                         img = draw_circle(
                             img,
                             coord=coord,
@@ -328,13 +319,7 @@ class Visualizer:
                         self.linewidth,
                     )
             if self.tracks_leave_trace > 0:
-                rgb = Image.fromarray(
-                    np.uint8(
-                        add_weighted(
-                            np.array(rgb), alpha, np.array(original), 1 - alpha, 0
-                        )
-                    )
-                )
+                rgb = Image.fromarray(np.uint8(add_weighted(np.array(rgb), alpha, np.array(original), 1 - alpha, 0)))
         rgb = np.array(rgb)
         return rgb
 

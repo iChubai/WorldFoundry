@@ -581,6 +581,7 @@ class RandomVerticalFlip(object):
 
 class RandomGaussianBlur(object):
     """Random gaussian blur implementation."""
+
     def __init__(self, prob=0.3, sigma=[0.1, 2.0]):
         """Init.
 
@@ -626,6 +627,7 @@ class RandomGaussianBlur(object):
 
 class RandomGrayScale(RandomGaussianBlur):
     """Random gray scale implementation."""
+
     def __init__(self, prob=0.2):
         """Init.
 
@@ -637,6 +639,7 @@ class RandomGrayScale(RandomGaussianBlur):
 
 class RandomColorJitter(RandomGaussianBlur):
     """Random color jitter implementation."""
+
     def __init__(self, prob=0.8, brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1):
         """Init.
 
@@ -652,6 +655,7 @@ class RandomColorJitter(RandomGaussianBlur):
 
 class SubtractMeanImage(object):
     """Subtract mean image implementation."""
+
     def __init__(self, mean, change_channels=False):
         """Init.
 
@@ -726,6 +730,7 @@ class ToTensor(object):
 
 class MultiRestrictSize(object):
     """Multi restrict size implementation."""
+
     def __init__(
         self,
         max_short_edge=None,
@@ -835,6 +840,7 @@ class MultiRestrictSize(object):
 
 class MultiToTensor(object):
     """Multi to tensor implementation."""
+
     def __call__(self, samples):
         """Call.
 

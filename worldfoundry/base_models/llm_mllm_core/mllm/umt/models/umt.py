@@ -7,10 +7,7 @@ from torch import nn
 from .backbones.vit import build_vit
 from .backbones.bert.builder import build_bert
 from .criterions import MLMLoss, VTC_VTM_Loss, UTA_Loss
-from .mask import (
-    TubeMaskingGenerator, 
-    RandomMaskingGenerator
-)
+from .mask import TubeMaskingGenerator, RandomMaskingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +40,7 @@ class UMT(nn.Module):
         self.loss_weight = config.criterion.loss_weight
         self.criterion_uta = UTA_Loss(
             config.criterion.uta_norm_type,
-            config.criterion.uta_loss_type, 
+            config.criterion.uta_loss_type,
         )
         self.criterion_vtc_vtm = VTC_VTM_Loss(config.criterion.vtm_hard_neg)
         self.criterion_mlm = MLMLoss(config.criterion.mlm_masking_prob, tokenizer)
@@ -77,9 +74,7 @@ class UMT(nn.Module):
 
         ## VTC loss
         if self.loss_weight.vtc != 0:
-            loss_vtc = self.criterion_vtc_vtm.vtc_loss(
-                vision_proj, text_proj, idx, self.temp, all_gather=True
-            )
+            loss_vtc = self.criterion_vtc_vtm.vtc_loss(vision_proj, text_proj, idx, self.temp, all_gather=True)
         else:
             loss_vtc = torch.tensor(0)
 
@@ -101,9 +96,7 @@ class UMT(nn.Module):
 
         ## MLM loss
         if self.is_pretrain and self.loss_weight.mlm != 0:
-            loss_mlm = self.criterion_mlm.mlm_loss(
-                self.text_encoder, text, vision_embeds, None
-            )
+            loss_mlm = self.criterion_mlm.mlm_loss(self.text_encoder, text, vision_embeds, None)
         else:
             loss_mlm = torch.tensor(0)
 
@@ -129,26 +122,27 @@ class UMT(nn.Module):
         mask_type = self.image_mask_type if T == 1 else self.video_mask_type
         window_size = self.image_window_size if T == 1 else self.video_window_size
         mask_ratio = self.image_mask_ratio if T == 1 else self.video_mask_ratio
-        
+
         if self.clip_teacher is None or self.loss_weight.uta == 0:
             return None, None
 
         if H != self.clip_img_size:
             image = torch.nn.functional.interpolate(
-                image.reshape(B, C*T, H, W), 
-                size=(self.clip_img_size, self.clip_img_size), 
-                mode='bicubic', align_corners=False
+                image.reshape(B, C * T, H, W),
+                size=(self.clip_img_size, self.clip_img_size),
+                mode="bicubic",
+                align_corners=False,
             )
             image = image.view(B, C, T, self.clip_img_size, self.clip_img_size)
 
         with torch.no_grad():
-            if mask_type == 'tube':
+            if mask_type == "tube":
                 mask = TubeMaskingGenerator(window_size, mask_ratio, B)
                 clip_output, attn = self.clip_teacher(image)
-            elif mask_type == 'random':
+            elif mask_type == "random":
                 mask = RandomMaskingGenerator(window_size, mask_ratio, B)
                 clip_output, attn = self.clip_teacher(image)
-            elif mask_type in 'attention':
+            elif mask_type in "attention":
                 clip_output, attn = self.clip_teacher(image)
                 BT, N = attn.shape
                 N_vis = N - int(N * mask_ratio)
@@ -160,12 +154,12 @@ class UMT(nn.Module):
                 mask = mask.view(B, -1).to(torch.bool)
             else:
                 raise NotImplementedError
-            
+
             # mask clip output
             K, _, _, C = clip_output.shape
             mask_clip = mask.unsqueeze(0).repeat(K, 1, 1)
             clip_output = clip_output[~mask_clip].reshape(K, B, -1, C)
-        
+
         return mask, clip_output
 
     def encode_vision(self, image, test=False):
@@ -184,17 +178,20 @@ class UMT(nn.Module):
         """
         T = image.shape[1]
         use_image = True if T == 1 else False
-        image = image.permute(0, 2, 1, 3, 4) # [B,T,C,H,W] -> [B,C,T,H,W]
+        image = image.permute(0, 2, 1, 3, 4)  # [B,T,C,H,W] -> [B,C,T,H,W]
         # whether save temporal dimension
-        keep_temporal=self.config.model.vision_encoder.keep_temporal
+        keep_temporal = self.config.model.vision_encoder.keep_temporal
         if test:
             vision_embeds, pooled_vision_embeds, _ = self.vision_encoder(
-                image, None, use_image, keep_temporal,
+                image,
+                None,
+                use_image,
+                keep_temporal,
             )
             return vision_embeds, pooled_vision_embeds
         else:
             mask, clip_output = self.encode_teacher(image)
-            if mask is not None and (self.video_mask_type != 'tube' or self.image_mask_type != 'tube'):
+            if mask is not None and (self.video_mask_type != "tube" or self.image_mask_type != "tube"):
                 keep_temporal = False
             vision_embeds, pooled_vision_embeds, student_output = self.vision_encoder(
                 image, mask, use_image, keep_temporal
@@ -242,7 +239,7 @@ class UMT(nn.Module):
 
         teacher_name = self.config.model.vision_encoder.clip_teacher
         self.clip_teacher = None
-        if teacher_name != 'none':
+        if teacher_name != "none":
             raise ValueError("UMT metric inference does not use a clip teacher")
         # parameters for mask
         img_size = self.config.model.vision_encoder.img_size
@@ -256,7 +253,7 @@ class UMT(nn.Module):
         self.image_mask_type = self.config.model.vision_encoder.image_mask_type
         self.image_window_size = (1, img_size // patch_size, img_size // patch_size)
         self.image_mask_ratio = self.config.model.vision_encoder.image_mask_ratio
-        
+
         return vision_encoder
 
     def build_text_encoder(self):

@@ -7,10 +7,9 @@ from torch import nn, Tensor
 from .mlp import MLPBlock
 
 
-
-
 class TwoWayTransformer(nn.Module):
     """Two way transformer implementation."""
+
     def __init__(
         self,
         depth: int,
@@ -108,6 +107,7 @@ class TwoWayTransformer(nn.Module):
 
 class TwoWayAttentionBlock(nn.Module):
     """Two way attention block implementation."""
+
     def __init__(
         self,
         embedding_dim: int,
@@ -161,9 +161,7 @@ class TwoWayAttentionBlock(nn.Module):
 
         self.skip_first_layer_pe = skip_first_layer_pe
 
-    def forward(
-        self, queries: Tensor, keys: Tensor, query_pe: Tensor, key_pe: Tensor
-    ) -> Tuple[Tensor, Tensor]:
+    def forward(self, queries: Tensor, keys: Tensor, query_pe: Tensor, key_pe: Tensor) -> Tuple[Tensor, Tensor]:
         """Forward.
 
         Args:
@@ -230,9 +228,7 @@ class AttentionForTwoWayAttentionBlock(nn.Module):
         self.embedding_dim = embedding_dim
         self.internal_dim = embedding_dim // downsample_rate
         self.num_heads = num_heads
-        assert (
-            self.internal_dim % num_heads == 0
-        ), "num_heads must divide embedding_dim."
+        assert self.internal_dim % num_heads == 0, "num_heads must divide embedding_dim."
         self.c_per_head = self.internal_dim / num_heads
         self.inv_sqrt_c_per_head = 1.0 / math.sqrt(self.c_per_head)
 

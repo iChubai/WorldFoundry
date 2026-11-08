@@ -3,6 +3,7 @@
 This module requires ``transformers`` and is imported lazily by model
 ``generate()`` methods — ``import open_clip`` does not require transformers.
 """
+
 from typing import Callable, Optional
 
 import torch
@@ -50,18 +51,19 @@ class MultimodalGenerationWrapper(nn.Module, GenerationMixin):
         eos_token_id: End-of-sequence token id.
         bos_token_id: Start-of-sequence token id.
     """
+
     main_input_name = "input_ids"
     _is_stateful = False
 
     def __init__(
-            self,
-            text_encoder_fn: Callable,
-            text_decoder_fn: Callable,
-            image_embs: torch.Tensor,
-            vocab_size: int = 49408,
-            pad_token_id: int = 0,
-            eos_token_id: int = 49407,
-            bos_token_id: int = 49406,
+        self,
+        text_encoder_fn: Callable,
+        text_decoder_fn: Callable,
+        image_embs: torch.Tensor,
+        vocab_size: int = 49408,
+        pad_token_id: int = 0,
+        eos_token_id: int = 49407,
+        bos_token_id: int = 49406,
     ):
         """Init.
 
@@ -96,10 +98,10 @@ class MultimodalGenerationWrapper(nn.Module, GenerationMixin):
         return self._image_embs.device
 
     def prepare_inputs_for_generation(
-            self,
-            input_ids,
-            image_embs=None,
-            **kwargs,
+        self,
+        input_ids,
+        image_embs=None,
+        **kwargs,
     ):
         """Prepare inputs for generation.
 
@@ -115,10 +117,10 @@ class MultimodalGenerationWrapper(nn.Module, GenerationMixin):
         }
 
     def forward(
-            self,
-            input_ids: torch.Tensor,
-            image_embs: Optional[torch.Tensor] = None,
-            **kwargs,  # absorb cache_position, attention_mask, etc.
+        self,
+        input_ids: torch.Tensor,
+        image_embs: Optional[torch.Tensor] = None,
+        **kwargs,  # absorb cache_position, attention_mask, etc.
     ) -> CausalLMOutputWithPast:
         """Forward.
 

@@ -16,6 +16,7 @@ from .model_misc import LayerScale
 
 class ResidualAttentionBlock(nn.Module):
     """Residual attention block implementation."""
+
     def __init__(
         self,
         d_model: int,
@@ -43,16 +44,8 @@ class ResidualAttentionBlock(nn.Module):
         self.ln_1 = norm_layer(d_model)
         self.ln_2 = norm_layer(d_model)
 
-        self.ls_1 = (
-            LayerScale(d_model, ls_init_value)
-            if ls_init_value is not None
-            else nn.Identity()
-        )
-        self.ls_2 = (
-            LayerScale(d_model, ls_init_value)
-            if ls_init_value is not None
-            else nn.Identity()
-        )
+        self.ls_1 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
+        self.ls_2 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
 
         # MLP
         mlp_width = int(d_model * mlp_ratio)
@@ -111,21 +104,16 @@ class ResidualAttentionBlock(nn.Module):
         Returns:
             The return value.
         """
-        k_x = (
-            self.ln_1_kv(k_x) if hasattr(self, "ln_1_kv") and k_x is not None else None
-        )
-        v_x = (
-            self.ln_1_kv(v_x) if hasattr(self, "ln_1_kv") and v_x is not None else None
-        )
-        x = q_x + self.ls_1(
-            self.attention(q_x=self.ln_1(q_x), k_x=k_x, v_x=v_x, attn_mask=attn_mask)
-        )
+        k_x = self.ln_1_kv(k_x) if hasattr(self, "ln_1_kv") and k_x is not None else None
+        v_x = self.ln_1_kv(v_x) if hasattr(self, "ln_1_kv") and v_x is not None else None
+        x = q_x + self.ls_1(self.attention(q_x=self.ln_1(q_x), k_x=k_x, v_x=v_x, attn_mask=attn_mask))
         x = x + self.ls_2(self.mlp(self.ln_2(x)))
         return x
 
 
 class Transformer(nn.Module):
     """Transformer implementation."""
+
     def __init__(
         self,
         width: int,
@@ -170,9 +158,7 @@ class Transformer(nn.Module):
         )
 
         if compile_mode is not None:
-            self.forward = torch.compile(
-                self.forward, mode=compile_mode, fullgraph=True
-            )
+            self.forward = torch.compile(self.forward, mode=compile_mode, fullgraph=True)
             if self.grad_checkpointing:
                 torch._dynamo.config.optimize_ddp = False
 
@@ -191,11 +177,7 @@ class Transformer(nn.Module):
             The return value.
         """
         for _, r in enumerate(self.resblocks):
-            if (
-                self.grad_checkpointing
-                and not torch.jit.is_scripting()
-                and self.training
-            ):
+            if self.grad_checkpointing and not torch.jit.is_scripting() and self.training:
                 x = checkpoint(r, x, None, None, attn_mask, use_reentrant=False)
             else:
                 x = r(
@@ -233,6 +215,7 @@ def text_global_pool(
 
 class TextTransformer(nn.Module):
     """Text transformer implementation."""
+
     def __init__(
         self,
         context_length: int = 77,
@@ -301,9 +284,7 @@ class TextTransformer(nn.Module):
         if no_causal_mask:
             self.attn_mask = None
         else:
-            self.register_buffer(
-                "attn_mask", self.build_causal_mask(), persistent=False
-            )
+            self.register_buffer("attn_mask", self.build_causal_mask(), persistent=False)
         if proj_bias:
             self.text_projection = nn.Linear(width, output_dim)
         else:
@@ -322,9 +303,7 @@ class TextTransformer(nn.Module):
         mask.triu_(1)  # zero out the lower diagonal
         return mask
 
-    def forward(
-        self, text: torch.Tensor
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def forward(self, text: torch.Tensor) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """Forward.
 
         Args:
@@ -357,6 +336,7 @@ class TextTransformer(nn.Module):
 
 class VETextEncoder(nn.Module):
     """Ve text encoder implementation."""
+
     def __init__(
         self,
         d_model: int,
@@ -424,15 +404,11 @@ class VETextEncoder(nn.Module):
             assert input_boxes is None or len(input_boxes) == 0, "not supported"
 
             # Encode the text
-            tokenized = self.tokenizer(text, context_length=self.context_length).to(
-                device
-            )  # [b, seq_len]
+            tokenized = self.tokenizer(text, context_length=self.context_length).to(device)  # [b, seq_len]
             text_attention_mask = (tokenized != 0).bool()
 
             # manually embed the tokens
-            inputs_embeds = self.encoder.token_embedding(
-                tokenized
-            )  # [b, seq_len, d=1024]
+            inputs_embeds = self.encoder.token_embedding(tokenized)  # [b, seq_len, d=1024]
             _, text_memory = self.encoder(tokenized)  # [b, seq_len, d=1024]
 
             assert text_memory.shape[1] == inputs_embeds.shape[1]
@@ -446,9 +422,7 @@ class VETextEncoder(nn.Module):
             # The text is already encoded, use as is.
             text_attention_mask, text_memory_resized, tokenized = text
             inputs_embeds = tokenized["inputs_embeds"]
-            assert input_boxes is None or len(input_boxes) == 0, (
-                "Can't replace boxes in text if it's already encoded"
-            )
+            assert input_boxes is None or len(input_boxes) == 0, "Can't replace boxes in text if it's already encoded"
 
         # Note that the input_embeds are returned in pytorch's convention (sequence first)
         return (

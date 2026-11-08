@@ -108,6 +108,7 @@ def apply_droppath(
 
 class DropPathResidualBlock(ResidualBlock):
     """Drop path residual block implementation."""
+
     def __init__(
         self,
         main: nn.Module,

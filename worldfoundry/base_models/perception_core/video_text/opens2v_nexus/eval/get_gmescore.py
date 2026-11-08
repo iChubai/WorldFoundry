@@ -94,9 +94,7 @@ def main():
             texts=[text_prompt] * len(frames),
             instruction="Find an image that matches the given text.",
         )
-        e_corpus = gme.get_image_embeddings(
-            images=frames, is_query=False, show_progress_bar=False
-        )
+        e_corpus = gme.get_image_embeddings(images=frames, is_query=False, show_progress_bar=False)
         gme_scores = (e_query * e_corpus).sum(-1)
         gme_score = gme_scores.mean().detach().item()
 

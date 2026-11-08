@@ -34,6 +34,7 @@ except ImportError:
 
 class Qwen3Backbone(torch.nn.Module):
     """Qwen backbone implementation."""
+
     def __init__(
         self,
         model_name: str = "nvidia/Cosmos-Reason2-2B",

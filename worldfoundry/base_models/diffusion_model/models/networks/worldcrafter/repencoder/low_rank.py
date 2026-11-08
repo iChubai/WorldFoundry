@@ -126,9 +126,7 @@ def inject_low_rank_branches(model: nn.Module) -> int:
         setattr(parent, child, replacement)
         count += 1
     if count != EXPECTED_LOW_RANK_MODULES:
-        raise RuntimeError(
-            f"RepEncoder low-rank graph changed: {count} != {EXPECTED_LOW_RANK_MODULES}"
-        )
+        raise RuntimeError(f"RepEncoder low-rank graph changed: {count} != {EXPECTED_LOW_RANK_MODULES}")
     return count
 
 

@@ -15,6 +15,7 @@ Use only when the recipe ships a LightVAE weight file.
 import logging
 import torch
 import torch._dynamo
+
 if hasattr(torch._dynamo.config, "recompile_limit"):
     torch._dynamo.config.recompile_limit = 1024
 elif hasattr(torch._dynamo.config, "accumulated_recompile_limit"):
@@ -60,6 +61,7 @@ def _map_lightvae_key_to_wanvae(key):
     Args:
         key: The key.
     """
+
     def _map_resnet_tail(tail):
         """Helper function to map resnet tail.
 
@@ -67,15 +69,15 @@ def _map_lightvae_key_to_wanvae(key):
             tail: The tail.
         """
         if tail.startswith("norm1."):
-            return "residual.0." + tail[len("norm1."):]
+            return "residual.0." + tail[len("norm1.") :]
         if tail.startswith("conv1."):
-            return "residual.2." + tail[len("conv1."):]
+            return "residual.2." + tail[len("conv1.") :]
         if tail.startswith("norm2."):
-            return "residual.3." + tail[len("norm2."):]
+            return "residual.3." + tail[len("norm2.") :]
         if tail.startswith("conv2."):
-            return "residual.6." + tail[len("conv2."):]
+            return "residual.6." + tail[len("conv2.") :]
         if tail.startswith("conv_shortcut."):
-            return "shortcut." + tail[len("conv_shortcut."):]
+            return "shortcut." + tail[len("conv_shortcut.") :]
         return tail
 
     # Skip training-only projection heads.
@@ -92,12 +94,12 @@ def _map_lightvae_key_to_wanvae(key):
     if key.startswith("encoder.conv_in."):
         return key.replace("encoder.conv_in.", "encoder.conv1.", 1)
     if key.startswith("encoder.mid_block.resnets.0."):
-        tail = key[len("encoder.mid_block.resnets.0."):]
+        tail = key[len("encoder.mid_block.resnets.0.") :]
         return "encoder.middle.0." + _map_resnet_tail(tail)
     if key.startswith("encoder.mid_block.attentions.0."):
         return key.replace("encoder.mid_block.attentions.0.", "encoder.middle.1.", 1)
     if key.startswith("encoder.mid_block.resnets.1."):
-        tail = key[len("encoder.mid_block.resnets.1."):]
+        tail = key[len("encoder.mid_block.resnets.1.") :]
         return "encoder.middle.2." + _map_resnet_tail(tail)
     if key.startswith("encoder.norm_out."):
         return key.replace("encoder.norm_out.", "encoder.head.0.", 1)
@@ -122,12 +124,12 @@ def _map_lightvae_key_to_wanvae(key):
     if key.startswith("decoder.conv_in."):
         return key.replace("decoder.conv_in.", "decoder.conv1.", 1)
     if key.startswith("decoder.mid_block.resnets.0."):
-        tail = key[len("decoder.mid_block.resnets.0."):]
+        tail = key[len("decoder.mid_block.resnets.0.") :]
         return "decoder.middle.0." + _map_resnet_tail(tail)
     if key.startswith("decoder.mid_block.attentions.0."):
         return key.replace("decoder.mid_block.attentions.0.", "decoder.middle.1.", 1)
     if key.startswith("decoder.mid_block.resnets.1."):
-        tail = key[len("decoder.mid_block.resnets.1."):]
+        tail = key[len("decoder.mid_block.resnets.1.") :]
         return "decoder.middle.2." + _map_resnet_tail(tail)
     if key.startswith("decoder.norm_out."):
         return key.replace("decoder.norm_out.", "decoder.head.0.", 1)
@@ -218,6 +220,7 @@ def convert_to_channels_last_3d(module):
         else:
             convert_to_channels_last_3d(child)
 
+
 class CausalConv3d(nn.Conv3d):
     """
     Causal 3d convolusion.
@@ -231,7 +234,7 @@ class CausalConv3d(nn.Conv3d):
             self.padding[2],
             self.padding[1],
             self.padding[1],
-            2 * self.padding[0], 
+            2 * self.padding[0],
             0,
         )
         self.padding = (0, 0, 0)
@@ -251,6 +254,7 @@ class CausalConv3d(nn.Conv3d):
         x = F.pad(x, padding)
 
         return super().forward(x)
+
 
 class RMS_norm(nn.Module):
     """Norm implementation."""
@@ -279,10 +283,11 @@ class RMS_norm(nn.Module):
         Args:
             x: The x.
         """
-        dims = (1 if self.channel_first else -1)
+        dims = 1 if self.channel_first else -1
         # Use a more compiler-friendly RMS implementation
         rms = (x.pow(2).mean(dims, keepdim=True) + 1e-6).sqrt()
         return (x / rms) * self.gamma + self.bias
+
 
 class Upsample(nn.Upsample):
     """Upsample implementation."""
@@ -316,7 +321,7 @@ class Resample(nn.Module):
         self.mode = mode
 
         if mode == "upsample2d":
-            self.resample = nn.Sequential( 
+            self.resample = nn.Sequential(
                 Upsample(scale_factor=(2.0, 2.0), mode="nearest-exact"),
                 nn.Conv2d(dim, dim, 3, padding=1),
             )
@@ -325,18 +330,12 @@ class Resample(nn.Module):
                 Upsample(scale_factor=(2.0, 2.0), mode="nearest-exact"),
                 nn.Conv2d(dim, dim, 3, padding=1),
             )
-            self.time_conv = CausalConv3d(
-                dim, dim * 2, (3, 1, 1), padding=(1, 0, 0))
+            self.time_conv = CausalConv3d(dim, dim * 2, (3, 1, 1), padding=(1, 0, 0))
         elif mode == "downsample2d":
-            self.resample = nn.Sequential(
-                nn.ZeroPad2d((0, 1, 0, 1)),
-                nn.Conv2d(dim, dim, 3, stride=(2, 2)))
+            self.resample = nn.Sequential(nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2)))
         elif mode == "downsample3d":
-            self.resample = nn.Sequential(
-                nn.ZeroPad2d((0, 1, 0, 1)),
-                nn.Conv2d(dim, dim, 3, stride=(2, 2)))
-            self.time_conv = CausalConv3d(
-                dim, dim, (3, 1, 1), stride=(2, 1, 1), padding=(0, 0, 0))
+            self.resample = nn.Sequential(nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2)))
+            self.time_conv = CausalConv3d(dim, dim, (3, 1, 1), stride=(2, 1, 1), padding=(0, 0, 0))
         else:
             self.resample = nn.Identity()
 
@@ -360,18 +359,15 @@ class Resample(nn.Module):
                 cache_x = x[:, :, -CACHE_T:, :, :].clone()
 
                 if feat_cache[idx] == "Rep":
-                    x = self.time_conv(x) 
+                    x = self.time_conv(x)
                 else:
-                    if cache_x.shape[2] < 2: 
-                        cache_x = torch.cat([
-                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(x.device),
-                            cache_x
-                        ], dim=2)
+                    if cache_x.shape[2] < 2:
+                        cache_x = torch.cat([feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(x.device), cache_x], dim=2)
                     x = self.time_conv(x, feat_cache[idx])
 
                 feat_cache[idx] = cache_x
                 feat_idx[0] += 1
-                
+
                 x = x.reshape(b, 2, c, t, h, w)
                 x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
                 x = x.reshape(b, c, t * 2, h, w)
@@ -392,8 +388,7 @@ class Resample(nn.Module):
                     feat_idx[0] += 1
                 else:
                     cache_x = x[:, :, -1:, :, :].clone()
-                    x = self.time_conv(
-                        torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
+                    x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
                     feat_cache[idx] = cache_x
                     feat_idx[0] += 1
 
@@ -425,10 +420,11 @@ class Resample(nn.Module):
         nn.init.zeros_(conv_weight)
         c1, c2, t, h, w = conv_weight.size()
         init_matrix = torch.eye(c1 // 2, c2)
-        conv_weight[:c1 // 2, :, -1, 0, 0] = init_matrix
-        conv_weight[c1 // 2:, :, -1, 0, 0] = init_matrix
+        conv_weight[: c1 // 2, :, -1, 0, 0] = init_matrix
+        conv_weight[c1 // 2 :, :, -1, 0, 0] = init_matrix
         conv.weight = nn.Parameter(conv_weight)
         nn.init.zeros_(conv.bias.data)
+
 
 class ResidualBlock(nn.Module):
     """Residual block implementation."""
@@ -454,9 +450,7 @@ class ResidualBlock(nn.Module):
             nn.Dropout(dropout),
             CausalConv3d(out_dim, out_dim, 3, padding=1),
         )
-        self.shortcut = (
-            CausalConv3d(in_dim, out_dim, 1)
-            if in_dim != out_dim else nn.Identity())
+        self.shortcut = CausalConv3d(in_dim, out_dim, 1) if in_dim != out_dim else nn.Identity()
 
     def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):
         """Forward.
@@ -476,8 +470,7 @@ class ResidualBlock(nn.Module):
                     # cache last frame of last two chunk
                     cache_x = torch.cat(
                         [
-                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(
-                                cache_x.device),
+                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                             cache_x,
                         ],
                         dim=2,
@@ -523,10 +516,7 @@ class AttentionBlock(nn.Module):
         x = rearrange(x, "b c t h w -> (b t) c h w")
         x = self.norm(x)
         # compute query, key, value
-        q, k, v = (
-            self.to_qkv(x).reshape(b * t, 1, c * 3,
-                                   -1).permute(0, 1, 3,
-                                               2).contiguous().chunk(3, dim=-1))
+        q, k, v = self.to_qkv(x).reshape(b * t, 1, c * 3, -1).permute(0, 1, 3, 2).contiguous().chunk(3, dim=-1)
 
         # apply attention
         x = _worldfoundry_scaled_dot_product_attention(
@@ -552,8 +542,7 @@ def patchify(x, patch_size):
     if patch_size == 1:
         return x
     if x.dim() == 4:
-        x = rearrange(
-            x, "b c (h q) (w r) -> b (c r q) h w", q=patch_size, r=patch_size)
+        x = rearrange(x, "b c (h q) (w r) -> b (c r q) h w", q=patch_size, r=patch_size)
     elif x.dim() == 5:
         x = rearrange(
             x,
@@ -578,8 +567,7 @@ def unpatchify(x, patch_size):
         return x
 
     if x.dim() == 4:
-        x = rearrange(
-            x, "b (c r q) h w -> b c (h q) (w r)", q=patch_size, r=patch_size)
+        x = rearrange(x, "b (c r q) h w -> b c (h q) (w r)", q=patch_size, r=patch_size)
     elif x.dim() == 5:
         x = rearrange(
             x,
@@ -720,19 +708,14 @@ class DupUp3D(nn.Module):
             x.size(6) * self.factor_s,
         )
         if first_chunk:
-            x = x[:, :, self.factor_t - 1:, :, :]
+            x = x[:, :, self.factor_t - 1 :, :, :]
         return x
+
 
 class Down_ResidualBlock(nn.Module):
     """Down residual block implementation."""
 
-    def __init__(self,
-                 in_dim,
-                 out_dim,
-                 dropout,
-                 mult,
-                 temperal_downsample=False,
-                 down_flag=False):
+    def __init__(self, in_dim, out_dim, dropout, mult, temperal_downsample=False, down_flag=False):
         """Init.
 
         Args:
@@ -780,16 +763,19 @@ class Down_ResidualBlock(nn.Module):
 
         return x + self.avg_shortcut(x_copy)
 
+
 class Up_ResidualBlock(nn.Module):
     """Up residual block implementation."""
 
-    def __init__(self,
-                 in_dim,
-                 out_dim,
-                 dropout,
-                 mult, # 3
-                 temperal_upsample=False,
-                 up_flag=False):
+    def __init__(
+        self,
+        in_dim,
+        out_dim,
+        dropout,
+        mult,  # 3
+        temperal_upsample=False,
+        up_flag=False,
+    ):
         """Init.
 
         Args:
@@ -814,7 +800,7 @@ class Up_ResidualBlock(nn.Module):
 
         # Main path with residual blocks and upsample
         upsamples = []
-        for _ in range(mult): # 3
+        for _ in range(mult):  # 3
             upsamples.append(ResidualBlock(in_dim, out_dim, dropout))
             in_dim = out_dim
 
@@ -838,12 +824,13 @@ class Up_ResidualBlock(nn.Module):
         x_main = x.clone()
         for i, module in enumerate(self.upsamples):
             x_main = module(x_main, feat_cache, feat_idx, first_chunk)
-        
+
         if self.avg_shortcut is not None:
             x_shortcut = self.avg_shortcut(x, first_chunk)
             return x_main + x_shortcut
         else:
             return x_main
+
 
 class Encoder3d(nn.Module):
     """Encoder d implementation."""
@@ -887,9 +874,7 @@ class Encoder3d(nn.Module):
         # downsample blocks
         downsamples = []
         for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
-            t_down_flag = (
-                temperal_downsample[i]
-                if i < len(temperal_downsample) else False)
+            t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
                     in_dim=in_dim,
@@ -898,7 +883,8 @@ class Encoder3d(nn.Module):
                     mult=num_res_blocks,
                     temperal_downsample=t_down_flag,
                     down_flag=i != len(dim_mult) - 1,
-                ))
+                )
+            )
             scale /= 2.0
         self.downsamples = nn.Sequential(*downsamples)
 
@@ -931,8 +917,7 @@ class Encoder3d(nn.Module):
             if cache_x.shape[2] < 2 and feat_cache[idx] is not None:
                 cache_x = torch.cat(
                     [
-                        feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(
-                            cache_x.device),
+                        feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                         cache_x,
                     ],
                     dim=2,
@@ -965,8 +950,7 @@ class Encoder3d(nn.Module):
                 if cache_x.shape[2] < 2 and feat_cache[idx] is not None:
                     cache_x = torch.cat(
                         [
-                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(
-                                cache_x.device),
+                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                             cache_x,
                         ],
                         dim=2,
@@ -978,6 +962,7 @@ class Encoder3d(nn.Module):
                 x = layer(x)
 
         return x
+
 
 class Decoder3d(nn.Module):
     """Decoder d implementation."""
@@ -1004,16 +989,16 @@ class Decoder3d(nn.Module):
             dropout: The dropout.
         """
         super().__init__()
-        self.dim = dim # 256
-        self.z_dim = z_dim # 48
-        self.dim_mult = dim_mult # [1, 2, 4, 4]
-        self.num_res_blocks = num_res_blocks # 2
-        self.attn_scales = attn_scales # []
-        self.temperal_upsample = temperal_upsample # [True, True, False]
+        self.dim = dim  # 256
+        self.z_dim = z_dim  # 48
+        self.dim_mult = dim_mult  # [1, 2, 4, 4]
+        self.num_res_blocks = num_res_blocks  # 2
+        self.attn_scales = attn_scales  # []
+        self.temperal_upsample = temperal_upsample  # [True, True, False]
 
         # dimensions
-        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]] # [1024, 1024, 1024, 512, 256]
-        scale = 1.0 / 2**(len(dim_mult) - 2) # 0.25
+        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # [1024, 1024, 1024, 512, 256]
+        scale = 1.0 / 2 ** (len(dim_mult) - 2)  # 0.25
         # init block
         self.conv1 = CausalConv3d(z_dim, dims[0], 3, padding=1)
         # middle blocks
@@ -1027,17 +1012,17 @@ class Decoder3d(nn.Module):
         upsamples = []
         for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
             # temperal_upsample = [True, True, False]
-            t_up_flag = temperal_upsample[i] if i < len(
-                temperal_upsample) else False
+            t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(
                     in_dim=in_dim,
                     out_dim=out_dim,
                     dropout=dropout,
-                    mult=num_res_blocks + 1, # 3
+                    mult=num_res_blocks + 1,  # 3
                     temperal_upsample=t_up_flag,
-                    up_flag=i != len(dim_mult) - 1, # dim_mult = [1, 2, 4, 4]
-                ))
+                    up_flag=i != len(dim_mult) - 1,  # dim_mult = [1, 2, 4, 4]
+                )
+            )
         self.upsamples = nn.Sequential(*upsamples)
 
         # output blocks
@@ -1063,8 +1048,7 @@ class Decoder3d(nn.Module):
             if cache_x.shape[2] < 2 and feat_cache[idx] is not None:
                 cache_x = torch.cat(
                     [
-                        feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(
-                            cache_x.device),
+                        feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                         cache_x,
                     ],
                     dim=2,
@@ -1099,8 +1083,7 @@ class Decoder3d(nn.Module):
                 if cache_x.shape[2] < 2 and feat_cache[idx] is not None:
                     cache_x = torch.cat(
                         [
-                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(
-                                cache_x.device),
+                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                             cache_x,
                         ],
                         dim=2,
@@ -1155,13 +1138,13 @@ class WanVAE_(nn.Module):
             pruning_rate: The pruning rate.
         """
         super().__init__()
-        self.dim = dim # 160
-        self.z_dim = z_dim # 48
-        self.dim_mult = dim_mult # [1, 2, 4, 4]
-        self.num_res_blocks = num_res_blocks # 2
-        self.attn_scales = attn_scales # []
-        self.temperal_downsample = temperal_downsample # [False, True, True]
-        self.temperal_upsample = temperal_downsample[::-1] # [True, True, False]
+        self.dim = dim  # 160
+        self.z_dim = z_dim  # 48
+        self.dim_mult = dim_mult  # [1, 2, 4, 4]
+        self.num_res_blocks = num_res_blocks  # 2
+        self.attn_scales = attn_scales  # []
+        self.temperal_downsample = temperal_downsample  # [False, True, True]
+        self.temperal_upsample = temperal_downsample[::-1]  # [True, True, False]
 
         # Pruning-compatible with Turbo-VAED LightVAE student.
         dim = max(1, int(round(dim * (1.0 - pruning_rate))))
@@ -1221,15 +1204,14 @@ class WanVAE_(nn.Module):
                 )
             else:
                 out_ = self.encoder(
-                    x[:, :, 1 + 4 * (i - 1):1 + 4 * i, :, :],
+                    x[:, :, 1 + 4 * (i - 1) : 1 + 4 * i, :, :],
                     feat_cache=self._enc_feat_map,
                     feat_idx=self._enc_conv_idx,
                 )
                 out = torch.cat([out, out_], 2)
         mu, log_var = self.conv1(out).chunk(2, dim=1)
         if isinstance(scale[0], torch.Tensor):
-            mu = (mu - scale[0].view(1, self.z_dim, 1, 1, 1)) * scale[1].view(
-                1, self.z_dim, 1, 1, 1)
+            mu = (mu - scale[0].view(1, self.z_dim, 1, 1, 1)) * scale[1].view(1, self.z_dim, 1, 1, 1)
         else:
             mu = (mu - scale[0]) * scale[1]
         self.clear_cache()
@@ -1244,8 +1226,7 @@ class WanVAE_(nn.Module):
         """
         self.clear_cache()
         if isinstance(scale[0], torch.Tensor):
-            z = z / scale[1].view(1, self.z_dim, 1, 1, 1) + scale[0].view(
-                1, self.z_dim, 1, 1, 1)
+            z = z / scale[1].view(1, self.z_dim, 1, 1, 1) + scale[0].view(1, self.z_dim, 1, 1, 1)
         else:
             z = z / scale[1] + scale[0]
         iter_ = z.shape[2]
@@ -1254,14 +1235,14 @@ class WanVAE_(nn.Module):
             self._conv_idx = [0]
             if i == 0:
                 out = self.decoder(
-                    x[:, :, i:i + 1, :, :],
+                    x[:, :, i : i + 1, :, :],
                     feat_cache=self._feat_map,
                     feat_idx=self._conv_idx,
                     first_chunk=True,
                 )
             else:
                 out_ = self.decoder(
-                    x[:, :, i:i + 1, :, :],
+                    x[:, :, i : i + 1, :, :],
                     feat_cache=self._feat_map,
                     feat_idx=self._conv_idx,
                 )
@@ -1316,12 +1297,12 @@ def _video_vae(pretrained_path=None, z_dim=16, dim=160, device="cpu", **kwargs):
     """
     # params
     cfg = dict(
-        dim=dim, # 160
-        z_dim=z_dim, # 48
+        dim=dim,  # 160
+        z_dim=z_dim,  # 48
         dim_mult=[1, 2, 4, 4],
         num_res_blocks=2,
         attn_scales=[],
-        temperal_downsample=[True, True, True], # [False, True, True]
+        temperal_downsample=[True, True, True],  # [False, True, True]
         dropout=0.0,
     )
     cfg.update(**kwargs)
@@ -1338,9 +1319,7 @@ def _video_vae(pretrained_path=None, z_dim=16, dim=160, device="cpu", **kwargs):
         raw_state = load_torch_state_dict(pretrained_path, map_location="cpu")
         state_dict = _normalize_vae_state_dict(raw_state)
         missing, unexpected = model.load_state_dict(state_dict, strict=False, assign=True)
-        logging.info(
-            f"VAE checkpoint loaded with strict=False (missing={len(missing)}, unexpected={len(unexpected)})"
-        )
+        logging.info(f"VAE checkpoint loaded with strict=False (missing={len(missing)}, unexpected={len(unexpected)})")
 
         # Convert Conv3d weights to channels_last_3d for cuDNN optimization
         convert_to_channels_last_3d(model)
@@ -1506,11 +1485,15 @@ class Wan2_2_VAE:
             self.model = (
                 _video_vae(
                     pretrained_path=vae_pth,
-                    z_dim=z_dim, # 48
-                    dim=c_dim, # 160
-                    dim_mult=dim_mult, # [1, 2, 4, 4]
-                    temperal_downsample=temperal_downsample, # [False, True, True]
-                ).eval().requires_grad_(False).to(device=device, dtype=dtype))
+                    z_dim=z_dim,  # 48
+                    dim=c_dim,  # 160
+                    dim_mult=dim_mult,  # [1, 2, 4, 4]
+                    temperal_downsample=temperal_downsample,  # [False, True, True]
+                )
+                .eval()
+                .requires_grad_(False)
+                .to(device=device, dtype=dtype)
+            )
         elif self.vae_type == "mg_lightvae":
             if not lightvae_encoder_vae_pth:
                 raise RuntimeError(
@@ -1521,9 +1504,7 @@ class Wan2_2_VAE:
                 resolved_pruning_rate = infer_lightvae_pruning_rate_from_ckpt(vae_pth)
                 if resolved_pruning_rate is None:
                     resolved_pruning_rate = 0.75
-                    logging.warning(
-                        "Unable to infer LightVAE pruning rate from checkpoint; fallback to 0.75."
-                    )
+                    logging.warning("Unable to infer LightVAE pruning rate from checkpoint; fallback to 0.75.")
             logging.info(
                 f"Loading mg_lightvae decoder from {vae_pth} (pruning_rate={resolved_pruning_rate}), "
                 f"while keeping teacher encoder from {lightvae_encoder_vae_pth}."
@@ -1537,7 +1518,10 @@ class Wan2_2_VAE:
                     dim_mult=dim_mult,
                     temperal_downsample=temperal_downsample,
                     pruning_rate=0.0,
-                ).eval().requires_grad_(False).to(device=device, dtype=dtype)
+                )
+                .eval()
+                .requires_grad_(False)
+                .to(device=device, dtype=dtype)
             )
             # Student decoder branch (for reconstruction): pruned LightVAE checkpoint.
             self.model = (
@@ -1548,7 +1532,11 @@ class Wan2_2_VAE:
                     dim_mult=dim_mult,
                     temperal_downsample=temperal_downsample,
                     pruning_rate=resolved_pruning_rate,
-                ).eval().requires_grad_(False).to(device=device, dtype=dtype))
+                )
+                .eval()
+                .requires_grad_(False)
+                .to(device=device, dtype=dtype)
+            )
         else:
             raise ValueError(f"Unsupported vae_type: {self.vae_type}")
 
@@ -1561,7 +1549,9 @@ class Wan2_2_VAE:
         try:
             if not isinstance(videos, list):
                 raise TypeError("videos should be a list")
-            encode_model = self.encoder_model if self.vae_type == "mg_lightvae" and self.encoder_model is not None else self.model
+            encode_model = (
+                self.encoder_model if self.vae_type == "mg_lightvae" and self.encoder_model is not None else self.model
+            )
             return [
                 encode_model.encode(
                     u.unsqueeze(0).to(device=self.device, dtype=self.dtype),
@@ -1583,9 +1573,9 @@ class Wan2_2_VAE:
             if not isinstance(zs, list):
                 raise TypeError("zs should be a list")
             return [
-                self.model.decode(u.unsqueeze(0).to(device=self.device, dtype=self.dtype),
-                                    self.scale).clamp_(-1,
-                                                                1).squeeze(0)
+                self.model.decode(u.unsqueeze(0).to(device=self.device, dtype=self.dtype), self.scale)
+                .clamp_(-1, 1)
+                .squeeze(0)
                 for u in zs
             ]
         except TypeError as e:
@@ -1611,13 +1601,13 @@ class Wan2_2_VAE:
             z = z / inv_std + mean
         if profiler is not None:
             torch.cuda.synchronize()
-            profiler['vae_prep'] = profiler.get('vae_prep', 0) + (time.time() - t_prep)
+            profiler["vae_prep"] = profiler.get("vae_prep", 0) + (time.time() - t_prep)
 
         t_conv2 = time.time()
         x = self.model.conv2(z)
         if profiler is not None:
             torch.cuda.synchronize()
-            profiler['vae_conv2'] = profiler.get('vae_conv2', 0) + (time.time() - t_conv2)
+            profiler["vae_conv2"] = profiler.get("vae_conv2", 0) + (time.time() - t_conv2)
 
         iter_ = x.shape[2]
         segment_outputs = []
@@ -1631,44 +1621,40 @@ class Wan2_2_VAE:
                 feat_cache=feat_cache,
                 feat_idx=current_feat_idx,
                 first_chunk=(first_chunk if i == 0 else False),
-                profiler=profiler
+                profiler=profiler,
             )
             segment_outputs.append(chunk_out)
         out = segment_outputs[0] if len(segment_outputs) == 1 else torch.cat(segment_outputs, dim=2)
         if profiler is not None:
             torch.cuda.synchronize()
-            profiler['vae_decoder_loop'] = profiler.get('vae_decoder_loop', 0) + (time.time() - t_loop)
+            profiler["vae_decoder_loop"] = profiler.get("vae_decoder_loop", 0) + (time.time() - t_loop)
 
         t_post = time.time()
         out = unpatchify(out, patch_size=2)
         out = out.clamp_(-1, 1)
         if profiler is not None:
             torch.cuda.synchronize()
-            profiler['vae_post'] = profiler.get('vae_post', 0) + (time.time() - t_post)
+            profiler["vae_post"] = profiler.get("vae_post", 0) + (time.time() - t_post)
         return out
 
     def stream_decode(self, z, feat_cache, first_chunk=False, segment_size=5, profiler=None, compile_decoder=False):
         """
         Stream decode video latents using feature cache for temporal consistency.
-        
+
         Args:
             z (torch.Tensor): Input latents of shape [B, C, T, H, W].
             feat_cache (list): List of cached features from previous chunks.
             first_chunk (bool): Whether this is the first chunk of a video.
             profiler (dict, optional): Dictionary to store timing information.
             compile_decoder (bool): Whether to trigger torch.compile on the decoder.
-            
+
         Returns:
             out (torch.Tensor): Decoded video frames.
             feat_cache (list): Updated feature cache.
         """
         if compile_decoder and hasattr(self.model, "decoder") and not hasattr(self.model.decoder, "_is_compiled"):
             logging.info("Triggering torch.compile on VAE Decoder (Static Mode)...")
-            self.model.decoder = torch.compile(
-                self.model.decoder, 
-                dynamic=False, 
-                fullgraph=False
-            )
+            self.model.decoder = torch.compile(self.model.decoder, dynamic=False, fullgraph=False)
             self.model.decoder._is_compiled = True
 
         try:
@@ -1680,7 +1666,7 @@ class Wan2_2_VAE:
                 profiler=profiler,
             )
             return out, feat_cache
-            
+
         except Exception as e:
             logging.error(f"Error in stream_decode: {e}")
             return None, feat_cache

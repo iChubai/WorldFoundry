@@ -52,12 +52,8 @@ def compute_axial_cis(
         offset: The offset.
         device: The device.
     """
-    freqs_x = 1.0 / (
-        theta ** (torch.arange(0, dim, 4, device=device)[: (dim // 4)].float() / dim)
-    )
-    freqs_y = 1.0 / (
-        theta ** (torch.arange(0, dim, 4, device=device)[: (dim // 4)].float() / dim)
-    )
+    freqs_x = 1.0 / (theta ** (torch.arange(0, dim, 4, device=device)[: (dim // 4)].float() / dim))
+    freqs_y = 1.0 / (theta ** (torch.arange(0, dim, 4, device=device)[: (dim // 4)].float() / dim))
 
     t_x, t_y = init_t_xy(end_x, end_y, scale_pos, offset, device=device)
     freqs_x = torch.outer(t_x, freqs_x)
@@ -96,11 +92,7 @@ def apply_rotary_enc(
         repeat_freqs_k: The repeat freqs k.
     """
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
-    xk_ = (
-        torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
-        if xk.shape[-2] != 0
-        else None
-    )
+    xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2)) if xk.shape[-2] != 0 else None
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
     xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
     if xk_ is None:
@@ -193,6 +185,7 @@ def rotate_half(x: torch.Tensor):
 
 class VisionRotaryEmbeddingVE(nn.Module):
     """Vision rotary embedding ve implementation."""
+
     def __init__(
         self,
         dim: int,

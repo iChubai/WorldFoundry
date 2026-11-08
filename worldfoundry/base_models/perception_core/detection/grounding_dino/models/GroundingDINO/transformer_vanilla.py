@@ -14,6 +14,7 @@ Copy-paste from torch.nn.Transformer with modifications:
     * extra LN at the end of encoder is removed
     * decoder returns a stack of activations from all decoding layers
 """
+
 from typing import Optional
 
 import torch
@@ -32,6 +33,7 @@ from .utils import (
 
 class TextTransformer(nn.Module):
     """Text transformer implementation."""
+
     def __init__(self, num_layers, d_model=256, nheads=8, dim_feedforward=2048, dropout=0.1):
         """Init.
 
@@ -81,6 +83,7 @@ class TextTransformer(nn.Module):
 
 class TransformerEncoderLayer(nn.Module):
     """Transformer encoder layer implementation."""
+
     def __init__(
         self,
         d_model,

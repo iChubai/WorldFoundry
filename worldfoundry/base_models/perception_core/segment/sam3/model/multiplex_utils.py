@@ -69,9 +69,7 @@ class MultiplexState:
         self.allowed_bucket_capacity = allowed_bucket_capacity
         self._initialize_assignments(assignments, object_ids=object_ids)
 
-    def _initialize_assignments(
-        self, assignments: list[list[int]], *, object_ids: Optional[list[int]] = None
-    ):
+    def _initialize_assignments(self, assignments: list[list[int]], *, object_ids: Optional[list[int]] = None):
         """Helper function to initialize assignments.
 
         Args:
@@ -84,25 +82,16 @@ class MultiplexState:
             raise ValueError("No buckets found in the state")
 
         self.multiplex_count = len(self.assignments[0])
-        assert all(
-            len(self.assignments[i]) == self.multiplex_count
-            for i in range(self.num_buckets)
-        )
+        assert all(len(self.assignments[i]) == self.multiplex_count for i in range(self.num_buckets))
 
         # number of non-negative elements in the state
-        self.total_valid_entries = sum(
-            sum(1 for x in bucket if x >= 0) for bucket in self.assignments
-        )
-        self.total_non_padding_entries = sum(
-            sum(1 for x in bucket if x != _PADDING_NUM) for bucket in self.assignments
-        )
+        self.total_valid_entries = sum(sum(1 for x in bucket if x >= 0) for bucket in self.assignments)
+        self.total_non_padding_entries = sum(sum(1 for x in bucket if x != _PADDING_NUM) for bucket in self.assignments)
 
         # check the validity of the object IDs
         self.object_ids = object_ids
         if self.object_ids is not None:
-            assert len(self.object_ids) == self.total_valid_entries, (
-                "object_ids should map 1:1 to the valid entries"
-            )
+            assert len(self.object_ids) == self.total_valid_entries, "object_ids should map 1:1 to the valid entries"
 
         # check the validity of the assignments
         all_object_idxs = set()
@@ -130,10 +119,7 @@ class MultiplexState:
             The return value.
         """
         # returns the number of available slots in the state
-        return (
-            self.num_buckets * self.allowed_bucket_capacity
-            - self.total_non_padding_entries
-        )
+        return self.num_buckets * self.allowed_bucket_capacity - self.total_non_padding_entries
 
     def find_next_batch_of_available_indices(
         self,
@@ -192,9 +178,7 @@ class MultiplexState:
         )
 
         if object_ids is not None:
-            assert len(object_ids) == len(object_indices), (
-                "object_ids must have the same length as object_indices"
-            )
+            assert len(object_ids) == len(object_indices), "object_ids must have the same length as object_indices"
             object_ids = object_ids.copy()
 
         num_new_objects = len(object_indices)
@@ -229,9 +213,7 @@ class MultiplexState:
                     break
 
         if len(object_indices) > 0 and not allow_new_buckets:
-            raise ValueError(
-                f"Cannot place objects {list(reversed(object_indices))} without creating new buckets"
-            )
+            raise ValueError(f"Cannot place objects {list(reversed(object_indices))} without creating new buckets")
 
         # Create new buckets for remaining objects (or all objects if prefer_new_buckets)
         while len(object_indices) > 0:
@@ -250,12 +232,8 @@ class MultiplexState:
             f"{self.total_valid_entries=} != {original_num_entries=} + {num_new_objects=}"
         )
 
-        logger.info(
-            f"Filled {slots_filled} slots and created {buckets_created} new buckets"
-        )
-        logger.info(
-            f"{self.num_buckets=}, {self.total_valid_entries=}, {self.total_non_padding_entries=}"
-        )
+        logger.info(f"Filled {slots_filled} slots and created {buckets_created} new buckets")
+        logger.info(f"{self.num_buckets=}, {self.total_valid_entries=}, {self.total_non_padding_entries=}")
 
     def remove_objects(self, object_indices: list[int], strict: bool = True):
         """
@@ -279,9 +257,7 @@ class MultiplexState:
                     object_indices.remove(obj_id)
 
         if strict:
-            assert len(object_indices) == 0, (
-                f"Failed to remove objects: {object_indices}"
-            )
+            assert len(object_indices) == 0, f"Failed to remove objects: {object_indices}"
 
         # Check which buckets should be completely removed (all objects removed/paddings)
         # and which buckets we will keep
@@ -289,14 +265,10 @@ class MultiplexState:
         buckets_to_keep = []
         for bucket_idx, bucket in enumerate(self.assignments):
             # Check if all objects in this bucket are removed or are paddings
-            all_removed = all(
-                obj_id in [_PADDING_NUM, _REMOVED_NUM] for obj_id in bucket
-            )
+            all_removed = all(obj_id in [_PADDING_NUM, _REMOVED_NUM] for obj_id in bucket)
             if all_removed:
                 buckets_to_remove.append(bucket_idx)
-                logger.info(
-                    f"Bucket {bucket_idx} marked for removal - all objects removed/paddings"
-                )
+                logger.info(f"Bucket {bucket_idx} marked for removal - all objects removed/paddings")
             else:
                 buckets_to_keep.append(bucket_idx)
 
@@ -347,9 +319,7 @@ class MultiplexState:
 
         logger.info(f"Removed these buckets: {buckets_to_remove}")
         logger.info(f"Kept these buckets: {buckets_to_keep}")
-        logger.info(
-            f"Remaining buckets: {self.num_buckets}, total valid entries: {self.total_valid_entries}"
-        )
+        logger.info(f"Remaining buckets: {self.num_buckets}, total valid entries: {self.total_valid_entries}")
 
         return buckets_to_keep
 
@@ -392,9 +362,7 @@ class MultiplexState:
             with padding entries filled with 0
         """
         num_valid_entries = x.shape[0]
-        assert num_valid_entries == self.total_valid_entries, (
-            f"{num_valid_entries=} != {self.total_valid_entries=}"
-        )
+        assert num_valid_entries == self.total_valid_entries, f"{num_valid_entries=} != {self.total_valid_entries=}"
         output_shape = (
             self.num_buckets,
             self.multiplex_count,
@@ -417,9 +385,7 @@ class MultiplexState:
         """
         num_buckets, multiplex_count = x.shape[:2]
         assert num_buckets == self.num_buckets, f"{num_buckets=} != {self.num_buckets=}"
-        assert multiplex_count == self.multiplex_count, (
-            f"{multiplex_count=} != {self.multiplex_count=}"
-        )
+        assert multiplex_count == self.multiplex_count, f"{multiplex_count=} != {self.multiplex_count=}"
         output_shape = (self.total_valid_entries,) + x.shape[2:]
 
         x_flat = x.reshape(num_buckets * multiplex_count, -1)
@@ -446,14 +412,13 @@ class MultiplexState:
         Note that this returns the internal object idx representations,
         not the arbitrary object IDs that are passed in during initialization
         """
-        all_valid_objects = {
-            obj_idx for bucket in self.assignments for obj_idx in bucket if obj_idx >= 0
-        }
+        all_valid_objects = {obj_idx for bucket in self.assignments for obj_idx in bucket if obj_idx >= 0}
         return all_valid_objects
 
 
 class MultiplexController(nn.Module):
     """Multiplex controller implementation."""
+
     def __init__(
         self,
         multiplex_count: int,
@@ -496,9 +461,7 @@ class MultiplexController(nn.Module):
         dtype: torch.dtype,
         random: bool = True,
         *,
-        object_ids: Optional[
-            list[int]
-        ] = None,  # object_ids is an auxiliary field that we pass to the state unmodified
+        object_ids: Optional[list[int]] = None,  # object_ids is an auxiliary field that we pass to the state unmodified
     ) -> MultiplexState:
         """Get state.
 
@@ -528,8 +491,7 @@ class MultiplexController(nn.Module):
                 [
                     torch.arange(num_valid_entries, dtype=torch.long),
                     torch.tensor(
-                        [_PADDING_NUM]
-                        * (num_buckets * true_bucket_capacity - num_valid_entries),
+                        [_PADDING_NUM] * (num_buckets * true_bucket_capacity - num_valid_entries),
                         dtype=torch.long,
                     ),
                 ],
@@ -542,11 +504,7 @@ class MultiplexController(nn.Module):
             # convert to a list of list
             assignments = []
             for i in range(num_buckets):
-                assignments.append(
-                    ids[
-                        i * true_bucket_capacity : (i + 1) * true_bucket_capacity
-                    ].tolist()
-                )
+                assignments.append(ids[i * true_bucket_capacity : (i + 1) * true_bucket_capacity].tolist())
         else:
             # Only shuffle the the IDs within the first #batch_size slots, leave all paddings at the end
             if random:
@@ -568,9 +526,7 @@ class MultiplexController(nn.Module):
             assignments = []
             for i in range(num_buckets):
                 assignments.append(
-                    ids[
-                        i * allowed_bucket_capacity : (i + 1) * allowed_bucket_capacity
-                    ].tolist()
+                    ids[i * allowed_bucket_capacity : (i + 1) * allowed_bucket_capacity].tolist()
                     + [_PADDING_NUM] * (true_bucket_capacity - allowed_bucket_capacity)
                 )
 

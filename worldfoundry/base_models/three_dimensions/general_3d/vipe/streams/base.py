@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 class FrameAttribute(Enum):
     """Frame attribute implementation."""
+
     POSE = "pose"
     INTRINSICS = "intrinsics"
     CAMERA_TYPE = "camera_type"
@@ -169,6 +170,7 @@ class VideoFrame:
         Returns:
             The return value.
         """
+
         def map_cpu(x):
             """Map cpu.
 
@@ -196,6 +198,7 @@ class VideoFrame:
         Returns:
             The return value.
         """
+
         def map_cuda(x):
             """Map cuda.
 
@@ -660,6 +663,7 @@ class StreamProcessor(Protocol):
 
 class AssignAttributesProcessor(StreamProcessor):
     """Assign attributes processor implementation."""
+
     def __init__(self, stream_attributes: dict[FrameAttribute, list[Any]]):
         """Init.
 
@@ -808,6 +812,7 @@ class ProcessedVideoStream(VideoStream):
 
 class StreamList:
     """Stream list implementation."""
+
     @staticmethod
     def make(config: DictConfig | BaseConfigSchema) -> "StreamList":
         """Make.

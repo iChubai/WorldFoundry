@@ -111,9 +111,7 @@ class Permute(nn.Module):
         return x.permute(*self.dims)
 
 
-def position_grid_to_embed(
-    pos_grid: torch.Tensor, embed_dim: int, omega_0: float = 100
-) -> torch.Tensor:
+def position_grid_to_embed(pos_grid: torch.Tensor, embed_dim: int, omega_0: float = 100) -> torch.Tensor:
     """
     Convert 2D position grid (HxWx2) to sinusoidal embeddings (HxWxC)
 
@@ -239,10 +237,7 @@ def custom_interpolate(
 
     if total > INT_MAX:
         chunks = torch.chunk(x, chunks=(total // INT_MAX) + 1, dim=0)
-        outs = [
-            nn.functional.interpolate(c, size=size, mode=mode, align_corners=align_corners)
-            for c in chunks
-        ]
+        outs = [nn.functional.interpolate(c, size=size, mode=mode, align_corners=align_corners) for c in chunks]
         return torch.cat(outs, dim=0).contiguous()
 
     return nn.functional.interpolate(x, size=size, mode=mode, align_corners=align_corners)

@@ -103,9 +103,7 @@ def _project_materialized_camera_qkv(
     if any(bias is not None for bias in biases):
         qkv_b = torch.cat(
             [
-                bias
-                if bias is not None
-                else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
+                bias if bias is not None else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
                 for bias, weight in zip(biases, weights)
             ]
         )
@@ -489,16 +487,8 @@ class BidirectionalGDNUCPESinglePathLiteLABothTriton(BidirectionalGDNUCPESingleP
             rope_sin = torch.zeros(N, D_head // 2, device=x.device, dtype=torch.float32)
 
         # ---- 4. Fused Triton prep kernel --------------------------------
-        q_norm_w = (
-            _execution_weight_bias(self.q_norm_cam)[0]
-            .to(device=x.device, dtype=torch.float32)
-            .contiguous()
-        )
-        k_norm_w = (
-            _execution_weight_bias(self.k_norm_cam)[0]
-            .to(device=x.device, dtype=torch.float32)
-            .contiguous()
-        )
+        q_norm_w = _execution_weight_bias(self.q_norm_cam)[0].to(device=x.device, dtype=torch.float32).contiguous()
+        k_norm_w = _execution_weight_bias(self.k_norm_cam)[0].to(device=x.device, dtype=torch.float32).contiguous()
         k_scale = (D_head**-0.5) * (S**-0.5)
         norm_eps_val = float(
             getattr(

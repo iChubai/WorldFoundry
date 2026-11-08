@@ -36,16 +36,16 @@ num_workers = 6
 
 criterion = dict(
     loss_weight=dict(
-        vtc=1.0, 
-        mlm=1.0, 
-        vtm=1.0, 
+        vtc=1.0,
+        mlm=1.0,
+        vtm=1.0,
         mvm=0.0,
         uta=0.0,
     ),  # 0: disabled.
     vtm_hard_neg=True,
     mlm_masking_prob=0.5,
     distill_final_features=True,
-    clip_loss_ratio=[1., 1.]
+    clip_loss_ratio=[1.0, 1.0],
 )
 
 optimizer = dict(
@@ -53,7 +53,7 @@ optimizer = dict(
     lr=1e-5,
     opt_betas=[0.9, 0.98],  # default
     weight_decay=0.05,
-    max_grad_norm=3.,  # requires a positive float, use -1 to disable
+    max_grad_norm=3.0,  # requires a positive float, use -1 to disable
     # use a different lr for some modules, e.g., larger lr for new modules
     different_lr=dict(enable=False, module_names=[], lr=1e-3),
 )
@@ -103,18 +103,18 @@ model = dict(
     vision_encoder=dict(
         # backbone
         name="pretrain_internvideo2_1b_patch14_224",
-        img_size=224, 
+        img_size=224,
         num_frames="${num_frames}",
         tubelet_size=1,
-        patch_size=14, 
+        patch_size=14,
         d_model=1408,
         clip_embed_dim=768,
         clip_teacher_embed_dim=3200,
         clip_teacher_final_dim=768,
-        clip_norm_type='l2',
+        clip_norm_type="l2",
         clip_return_layer=6,
         clip_student_return_interval=1,
-        pretrained='your_model_path/1B_stage2_pt.pth',
+        pretrained="your_model_path/1B_stage2_pt.pth",
         use_checkpoint=True,
         checkpoint_num=40,
         use_flash_attn=False,
@@ -131,13 +131,13 @@ model = dict(
         image_mask_ratio=0.5,
         sep_image_video_pos_embed=True,
         keep_temporal=False,
-        only_mask=True
+        only_mask=True,
     ),
     text_encoder="${TextEncoders[${text_enc}]}",
     multimodal=dict(enable=True),
     embed_dim=512,
     temp=0.07,
-    find_unused_parameters=False
+    find_unused_parameters=False,
 )
 
 evaluate = True
@@ -149,7 +149,7 @@ evaluation = dict(
     eval_offload=True,  # offload gpu tensors to cpu to save memory.
 )
 
-gradient_checkpointing = True # for text encoder
+gradient_checkpointing = True  # for text encoder
 use_flash_sdp = False
 use_mem_efficient_sdp = False and not use_flash_sdp
 compile_model = False

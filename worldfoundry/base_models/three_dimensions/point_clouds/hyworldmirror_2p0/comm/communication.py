@@ -3,6 +3,7 @@
 import torch
 import torch.distributed as dist
 
+
 def all2all(tensor, scatter_dim, gather_dim, cur_group, async_op):
     """All2all.
 
@@ -18,14 +19,17 @@ def all2all(tensor, scatter_dim, gather_dim, cur_group, async_op):
     gather_tensor_list = [torch.zeros_like(x) for x in scatter_tensor_list]
     comm = dist.all_to_all(gather_tensor_list, scatter_tensor_list, group=cur_group, async_op=async_op)
     if async_op:
+
         def wait():
             """Wait."""
             comm.wait()
             recieved_tensor = torch.cat(gather_tensor_list, dim=gather_dim).contiguous()
             return recieved_tensor
+
         return wait()
     recieved_tensor = torch.cat(gather_tensor_list, dim=gather_dim).contiguous()
     return recieved_tensor
+
 
 def all_gather(tensor, gather_dim, cur_group, async_op):
     """All gather.
@@ -42,17 +46,20 @@ def all_gather(tensor, gather_dim, cur_group, async_op):
     comm = dist.all_gather(gather_list, tensor, group=cur_group, async_op=async_op)
     gather_tensor = torch.cat(gather_list, dim=gather_dim)
     if async_op:
+
         def wait():
             """Wait."""
             comm.wait()
             gather_tensor = torch.cat(gather_list, dim=gather_dim)
             return gather_tensor
+
         return wait()
     return gather_tensor
 
 
 class _All2All(torch.autograd.Function):
     """All all implementation."""
+
     @staticmethod
     def forward(ctx, tensor, scatter_dim, gather_dim, cur_group, async_op):
         """Forward.
@@ -69,7 +76,9 @@ class _All2All(torch.autograd.Function):
         ctx.scatter_dim = scatter_dim
         ctx.gather_dim = gather_dim
         ctx.async_op = async_op
-        return all2all(tensor=tensor, scatter_dim=scatter_dim, gather_dim=gather_dim, cur_group=cur_group, async_op=async_op)
+        return all2all(
+            tensor=tensor, scatter_dim=scatter_dim, gather_dim=gather_dim, cur_group=cur_group, async_op=async_op
+        )
 
     @staticmethod
     def backward(ctx, grad_outputs):
@@ -82,8 +91,10 @@ class _All2All(torch.autograd.Function):
         input_t = grad_outputs
         return (all2all(input_t, ctx.gather_dim, ctx.scatter_dim, ctx.cur_group, False), None, None, None, None)
 
+
 class _Allgather(torch.autograd.Function):
     """Allgather implementation."""
+
     @staticmethod
     def forward(ctx, tensor, gather_dim, cur_group, async_op):
         """Forward.
@@ -112,4 +123,9 @@ class _Allgather(torch.autograd.Function):
         sp_group_size = dist.get_world_size(group=sp_group)
         rank = dist.get_rank()
         rank_in_group = dist.get_group_rank(group=sp_group, global_rank=rank)
-        return (grad_outputs.split(grad_outputs.shape[ctx.gather_dim] // sp_group_size, dim=ctx.gather_dim)[rank_in_group], None, None, None)
+        return (
+            grad_outputs.split(grad_outputs.shape[ctx.gather_dim] // sp_group_size, dim=ctx.gather_dim)[rank_in_group],
+            None,
+            None,
+            None,
+        )

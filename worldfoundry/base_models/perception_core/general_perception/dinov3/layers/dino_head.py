@@ -12,6 +12,7 @@ from torch.nn.init import trunc_normal_
 
 class DINOHead(nn.Module):
     """Dino head implementation."""
+
     def __init__(
         self,
         in_dim,

@@ -42,16 +42,12 @@ def get_norm_constants(
 ) -> Tuple[Tuple[float, ...], Tuple[float, ...]]:
     """Return published MiniMax H3 video mean/std tables."""
     if norm_type not in NORM_CONFIGS:
-        raise ValueError(
-            f"Unknown norm_type: {norm_type}. Must be one of {list(NORM_CONFIGS.keys())}"
-        )
+        raise ValueError(f"Unknown norm_type: {norm_type}. Must be one of {list(NORM_CONFIGS.keys())}")
     config = NORM_CONFIGS[norm_type]
     return config["mean"], config["std"]
 
 
-def get_normalize_transform(
-    norm_type: str = "imagenet", *, inplace: bool = False
-) -> Normalize:
+def get_normalize_transform(norm_type: str = "imagenet", *, inplace: bool = False) -> Normalize:
     """Build the pixel/latent normalize callable."""
     mean, std = get_norm_constants(norm_type)
     return Normalize(mean, std, inplace=inplace)
@@ -69,8 +65,8 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 class VAEProcessor:
-
     """Apply H3 mean/std to video pixels or latents."""
+
     def __init__(
         self,
         *,
@@ -99,9 +95,7 @@ class VAEProcessor:
         self.crop_mode = crop_mode
         self.transform = transform or get_normalize_transform(pixel_norm_type)
         self._runtime_owned_transform = (
-            get_normalize_transform(pixel_norm_type, inplace=True)
-            if transform is None
-            else None
+            get_normalize_transform(pixel_norm_type, inplace=True) if transform is None else None
         )
         self.transform_rev = transform_rev or get_denormalize_transform(pixel_norm_type)
         self.use_3d_conv = use_3d_conv
@@ -143,20 +137,14 @@ class VAEProcessor:
             return max(T, min_frames)
 
         if mode == "pad":
-            aligned_r = (
-                math.ceil((remainder - intra_tail) / self.vae_ratio_t)
-                * self.vae_ratio_t
-                + intra_tail
-            )
+            aligned_r = math.ceil((remainder - intra_tail) / self.vae_ratio_t) * self.vae_ratio_t + intra_tail
             if aligned_r > self.clip_length:
                 return (full_chunks + 1) * self.clip_length + intra_tail
             return full_chunks * self.clip_length + aligned_r
         else:  # trim
             k = (remainder - intra_tail) // self.vae_ratio_t
             if k >= 0:
-                target = (
-                    full_chunks * self.clip_length + k * self.vae_ratio_t + intra_tail
-                )
+                target = full_chunks * self.clip_length + k * self.vae_ratio_t + intra_tail
                 return max(target, min_frames)
             elif full_chunks > 0:
                 return full_chunks * self.clip_length
@@ -193,17 +181,13 @@ class VAEProcessor:
         drop and keeps these mirrored processor fields at zero.
         """
         if self.isolated_last_frame:
-            raise ValueError(
-                "align_video_length_2pass does not support isolated_last_frame"
-            )
+            raise ValueError("align_video_length_2pass does not support isolated_last_frame")
         if self.token_overlap != 0 or self.frame_overlap != 0:
             raise ValueError("align_video_length_2pass requires token_drop=0 alignment")
 
         leading = self.align_video_length(video_length, mode="pad", granularity="token")
         token_aligned = video_length + leading
-        trailing = self.align_video_length(
-            token_aligned, mode="pad", granularity="chunk"
-        )
+        trailing = self.align_video_length(token_aligned, mode="pad", granularity="chunk")
 
         if trailing > 0:
             intra_tail = self.clip_length % self.vae_ratio_t
@@ -219,13 +203,9 @@ class VAEProcessor:
         return leading, trailing, drop_tokens
 
     def get_suitable_video_length(self, video_length, verbose=False):
-        used_frame_length = video_length + self.align_video_length(
-            video_length, mode="trim", granularity="chunk"
-        )
+        used_frame_length = video_length + self.align_video_length(video_length, mode="trim", granularity="chunk")
         if verbose:
-            logger.info(
-                f"Pick first {used_frame_length} frames from {video_length}-frame video"
-            )
+            logger.info(f"Pick first {used_frame_length} frames from {video_length}-frame video")
         return used_frame_length
 
     def get_latent_length(self, video_length):
@@ -236,11 +216,7 @@ class VAEProcessor:
             tail_token += 1
 
         video_length = self.get_suitable_video_length(video_length)
-        latent_length = (
-            int((video_length - tail_frame) // self.clip_length)
-            * self.tokens_chunk_size
-            + tail_token
-        )
+        latent_length = int((video_length - tail_frame) // self.clip_length) * self.tokens_chunk_size + tail_token
         return latent_length
 
     def transform_tensor(self, tensor, *, runtime_owned=False):

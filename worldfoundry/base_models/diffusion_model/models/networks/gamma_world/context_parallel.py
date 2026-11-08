@@ -33,7 +33,9 @@ from torch.distributed import ProcessGroup
 from torch.nn import Module
 
 from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.attention import attention
-from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.neighborhood_attention import NeighborhoodAttention
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.neighborhood_attention import (
+    NeighborhoodAttention,
+)
 
 
 def post_all2all(local_seq_2_local_head, seq_world_size):
@@ -93,9 +95,7 @@ def async_a2a_communicate(
     if len(a2a_inputs) > 1:
         first = a2a_inputs[0]
         compatible = all(
-            value.shape == first.shape
-            and value.dtype == first.dtype
-            and value.device == first.device
+            value.shape == first.shape and value.dtype == first.dtype and value.device == first.device
             for value in a2a_inputs[1:]
         )
         try:

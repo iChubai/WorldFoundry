@@ -43,7 +43,7 @@ class DPTHead(nn.Module):
         out_channels: List[int] = [256, 512, 1024, 1024],
         pos_embed: bool = True,
         down_ratio: int = 1,
-        is_gsdpt: bool = False
+        is_gsdpt: bool = False,
     ) -> None:
         """Init.
 
@@ -70,7 +70,9 @@ class DPTHead(nn.Module):
 
         self.norm = nn.LayerNorm(dim_in)
         # Projection layers for each output channel from tokens.
-        self.projects = nn.ModuleList([nn.Conv2d(in_channels=dim_in, out_channels=oc, kernel_size=1, stride=1, padding=0) for oc in out_channels])
+        self.projects = nn.ModuleList(
+            [nn.Conv2d(in_channels=dim_in, out_channels=oc, kernel_size=1, stride=1, padding=0) for oc in out_channels]
+        )
         # Resize layers for upsampling feature maps.
         self.resize_layers = nn.ModuleList(
             [
@@ -100,17 +102,16 @@ class DPTHead(nn.Module):
         head_features_2 = 32
 
         if self.is_gsdpt:
-            self.scratch.output_conv1 = nn.Conv2d(head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1)
+            self.scratch.output_conv1 = nn.Conv2d(
+                head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1
+            )
             conv2_in_channels = head_features_1 // 2
             self.scratch.output_conv2 = nn.Sequential(
                 nn.Conv2d(conv2_in_channels, head_features_2, kernel_size=3, stride=1, padding=1),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(head_features_2, output_dim, kernel_size=1, stride=1, padding=0),
             )
-            self.input_merger = nn.Sequential(
-                nn.Conv2d(3, conv2_in_channels, 7, 1, 3),
-                nn.ReLU()
-                )
+            self.input_merger = nn.Sequential(nn.Conv2d(3, conv2_in_channels, 7, 1, 3), nn.ReLU())
         else:
             self.scratch.output_conv1 = nn.Conv2d(
                 head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1
@@ -158,24 +159,24 @@ class DPTHead(nn.Module):
 
         for frame_start in range(0, S, frames_chunk_size):
             frame_end = min(frame_start + frames_chunk_size, S)
-            
+
             if self.is_gsdpt:
-                gs, preds, conf = self._forward_impl(
-                    token_list, images, patch_start_idx, frame_start, frame_end
-                )
+                gs, preds, conf = self._forward_impl(token_list, images, patch_start_idx, frame_start, frame_end)
                 gs_chunks.append(gs)
                 preds_chunks.append(preds)
                 conf_chunks.append(conf)
             else:
-                preds, conf = self._forward_impl(
-                    token_list, images, patch_start_idx, frame_start, frame_end
-                )
+                preds, conf = self._forward_impl(token_list, images, patch_start_idx, frame_start, frame_end)
                 preds_chunks.append(preds)
                 conf_chunks.append(conf)
 
         # Concatenate chunks along frame dimension
         if self.is_gsdpt:
-            return torch.cat(gs_chunks, dim=1), torch.cat(preds_chunks, dim=1), torch.cat(conf_chunks, dim=1), 
+            return (
+                torch.cat(gs_chunks, dim=1),
+                torch.cat(preds_chunks, dim=1),
+                torch.cat(conf_chunks, dim=1),
+            )
         else:
             return torch.cat(preds_chunks, dim=1), torch.cat(conf_chunks, dim=1)
 
@@ -216,11 +217,11 @@ class DPTHead(nn.Module):
             patch_tokens = tokens[:, :, patch_start_idx:]
             if frame_start is not None and frame_end is not None:
                 patch_tokens = patch_tokens[:, frame_start:frame_end]
-            
+
             # Reshape to [B*S, N_patches, C]
             patch_tokens = patch_tokens.reshape(B * S, -1, patch_tokens.shape[-1])
             patch_tokens = self.norm(patch_tokens)
-            
+
             # Convert to 2D feature map [B*S, C, ph, pw]
             feat = patch_tokens.permute(0, 2, 1).reshape(B * S, patch_tokens.shape[-1], ph, pw)
             feat = proj(feat)
@@ -234,10 +235,7 @@ class DPTHead(nn.Module):
         fused = self.scratch_forward(feats)
         fused = custom_interpolate(
             fused,
-            size=(
-                int(ph * self.patch_size / self.down_ratio),
-                int(pw * self.patch_size / self.down_ratio)
-            ),
+            size=(int(ph * self.patch_size / self.down_ratio), int(pw * self.patch_size / self.down_ratio)),
             mode="bilinear",
             align_corners=True,
         )
@@ -253,7 +251,7 @@ class DPTHead(nn.Module):
             preds, conf = self.activate_head(out, activation=self.activation)
             preds = preds.reshape(B, S, *preds.shape[1:])
             conf = conf.reshape(B, S, *conf.shape[1:])
-            
+
             # Merge direct image features
             img_flat = images.reshape(B * S, -1, H, W)
             img_feat = self.input_merger(img_flat)
@@ -312,7 +310,9 @@ class DPTHead(nn.Module):
         out = self.scratch.output_conv1(out)
         return out
 
-    def activate_head(self, out_head: torch.Tensor, activation: str = "inv_log+expp1") -> Tuple[torch.Tensor, torch.Tensor]:
+    def activate_head(
+        self, out_head: torch.Tensor, activation: str = "inv_log+expp1"
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Process network output to extract attribute (e.g. points, depth, etc.) and confidence values.
 
@@ -324,7 +324,7 @@ class DPTHead(nn.Module):
             Tuple of (attribute tensor, confidence tensor)
         """
         # Parse activation string
-        act_attr, act_conf = (activation.split("+") if "+" in activation else (activation, "expp1"))
+        act_attr, act_conf = activation.split("+") if "+" in activation else (activation, "expp1")
 
         # (B,C,H,W) -> (B,H,W,C)
         feat = out_head.permute(0, 2, 3, 1)
@@ -332,17 +332,21 @@ class DPTHead(nn.Module):
 
         # Map point activations to lambdas for clarity and conciseness
         attr_activations = {
-            "norm_exp": lambda x: (x / x.norm(dim=-1, keepdim=True).clamp(min=1e-8)) * torch.expm1(x.norm(dim=-1, keepdim=True)),
+            "norm_exp": lambda x: (x / x.norm(dim=-1, keepdim=True).clamp(min=1e-8))
+            * torch.expm1(x.norm(dim=-1, keepdim=True)),
             "norm": lambda x: x / x.norm(dim=-1, keepdim=True),
             "exp": torch.exp,
             "relu": F.relu,
             "inv_log": self._apply_inverse_log_transform,
-            "xy_inv_log": lambda x: torch.cat([
-                x[..., :2] * self._apply_inverse_log_transform(x[..., 2:]), 
-                self._apply_inverse_log_transform(x[..., 2:])
-            ], dim=-1),
+            "xy_inv_log": lambda x: torch.cat(
+                [
+                    x[..., :2] * self._apply_inverse_log_transform(x[..., 2:]),
+                    self._apply_inverse_log_transform(x[..., 2:]),
+                ],
+                dim=-1,
+            ),
             "sigmoid": torch.sigmoid,
-            "linear": lambda x: x
+            "linear": lambda x: x,
         }
 
         if act_attr not in attr_activations:
@@ -350,29 +354,24 @@ class DPTHead(nn.Module):
         attr_out = attr_activations[act_attr](attr)
 
         # Confidence activation mapping
-        conf_activations = {
-            "expp1": lambda c: 1 + c.exp(),
-            "expp0": torch.exp,
-            "sigmoid": torch.sigmoid
-        }
+        conf_activations = {"expp1": lambda c: 1 + c.exp(), "expp0": torch.exp, "sigmoid": torch.sigmoid}
         if act_conf not in conf_activations:
             raise ValueError(f"Unknown confidence activation: {act_conf}")
         conf_out = conf_activations[act_conf](conf)
 
         return attr_out, conf_out
-    
+
     def _apply_inverse_log_transform(self, input_tensor: torch.Tensor) -> torch.Tensor:
         """
         Apply inverse logarithm transform: sign(y) * (exp(|y|) - 1)
-        
+
         Args:
             input_tensor: Input tensor
-            
+
         Returns:
             Transformed tensor
         """
         return torch.sign(input_tensor) * (torch.expm1(torch.abs(input_tensor)))
-
 
 
 ################################################################################
@@ -587,17 +586,17 @@ def custom_interpolate(
 ) -> torch.Tensor:
     """
     Custom interpolation function to handle large tensors by chunking.
-    
+
     Avoids INT_MAX overflow issues in nn.functional.interpolate when dealing with
     very large input tensors by splitting them into smaller chunks.
-    
+
     Args:
         x: Input tensor to interpolate
         size: Target output size (H, W)
         scale_factor: Scaling factor if size is not provided
         mode: Interpolation mode (default: "bilinear")
         align_corners: Whether to align corners in interpolation
-        
+
     Returns:
         Interpolated tensor
     """

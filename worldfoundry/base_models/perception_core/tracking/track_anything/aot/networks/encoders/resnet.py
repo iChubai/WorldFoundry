@@ -13,6 +13,7 @@ from ...utils.learning import freeze_params
 
 class Bottleneck(nn.Module):
     """Bottleneck implementation."""
+
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, dilation=1, downsample=None, BatchNorm=None):
@@ -76,6 +77,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
     """Res net implementation."""
+
     def __init__(self, block, layers, output_stride, BatchNorm, freeze_at=0):
         """Init.
 

@@ -29,6 +29,7 @@ from torch import nn
 
 class PreNorm(nn.Module):
     """Pre norm implementation."""
+
     def __init__(self, dim, fn):
         """Init.
 

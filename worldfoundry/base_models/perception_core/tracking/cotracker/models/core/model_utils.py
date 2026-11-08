@@ -177,9 +177,7 @@ def bilinear_sampler(input, coords, align_corners=True, padding_mode="border"):
         coords = coords[..., [1, 2, 0]]
 
     if align_corners:
-        coords = coords * torch.tensor(
-            [2 / max(size - 1, 1) for size in reversed(sizes)], device=coords.device
-        )
+        coords = coords * torch.tensor([2 / max(size - 1, 1) for size in reversed(sizes)], device=coords.device)
     else:
         coords = coords * torch.tensor([2 / size for size in reversed(sizes)], device=coords.device)
 
@@ -218,9 +216,7 @@ def sample_features4d(input, coords):
     # B C R 1
     feats = bilinear_sampler(input, coords)
 
-    return feats.permute(0, 2, 1, 3).view(
-        B, -1, feats.shape[1] * feats.shape[3]
-    )  # B C R 1 -> B R C
+    return feats.permute(0, 2, 1, 3).view(B, -1, feats.shape[1] * feats.shape[3])  # B C R 1 -> B R C
 
 
 def sample_features5d(input, coords):

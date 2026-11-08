@@ -1,4 +1,4 @@
-""" huggingface model adapter
+"""huggingface model adapter
 
 Wraps HuggingFace transformers (https://github.com/huggingface/transformers) models for use as a text tower in CLIP model.
 """
@@ -13,7 +13,11 @@ from torch import TensorType
 try:
     import transformers
     from transformers import AutoModel, AutoModelForMaskedLM, AutoTokenizer, AutoConfig, PretrainedConfig
-    from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling, BaseModelOutputWithPoolingAndCrossAttentions
+    from transformers.modeling_outputs import (
+        BaseModelOutput,
+        BaseModelOutputWithPooling,
+        BaseModelOutputWithPoolingAndCrossAttentions,
+    )
 except ImportError as e:
     transformers = None
 
@@ -70,8 +74,11 @@ class ClsPooler(nn.Module):
         self.use_pooler_output = use_pooler_output
 
     def forward(self, x: BaseModelOutput, attention_mask: TensorType):
-
-        if self.use_pooler_output and isinstance(x, (BaseModelOutputWithPooling, BaseModelOutputWithPoolingAndCrossAttentions)) and (x.pooler_output is not None):
+        if (
+            self.use_pooler_output
+            and isinstance(x, (BaseModelOutputWithPooling, BaseModelOutputWithPoolingAndCrossAttentions))
+            and (x.pooler_output is not None)
+        ):
             return x.pooler_output
 
         return x.last_hidden_state[:, self.cls_token_position, :]
@@ -80,7 +87,17 @@ class ClsPooler(nn.Module):
 class HFTextEncoder(nn.Module):
     """HuggingFace model adapter"""
 
-    def __init__(self, model_name_or_path: str, output_dim: int, tokenizer_name: str = None, config: PretrainedConfig = None, pooler_type: str = None, proj: str = None, pretrained: bool = True, masked_language_modeling: bool = False):
+    def __init__(
+        self,
+        model_name_or_path: str,
+        output_dim: int,
+        tokenizer_name: str = None,
+        config: PretrainedConfig = None,
+        pooler_type: str = None,
+        proj: str = None,
+        pretrained: bool = True,
+        masked_language_modeling: bool = False,
+    ):
         super().__init__()
 
         self.output_dim = output_dim
@@ -93,9 +110,17 @@ class HFTextEncoder(nn.Module):
         if config is None:
             self.config = AutoConfig.from_pretrained(model_name_or_path)
             if masked_language_modeling:
-                create_func, model_args = (AutoModelForMaskedLM.from_pretrained, model_name_or_path) if pretrained else (AutoModelForMaskedLM.from_config, self.config)
+                create_func, model_args = (
+                    (AutoModelForMaskedLM.from_pretrained, model_name_or_path)
+                    if pretrained
+                    else (AutoModelForMaskedLM.from_config, self.config)
+                )
             else:
-                create_func, model_args = (AutoModel.from_pretrained, model_name_or_path) if pretrained else (AutoModel.from_config, self.config)
+                create_func, model_args = (
+                    (AutoModel.from_pretrained, model_name_or_path)
+                    if pretrained
+                    else (AutoModel.from_config, self.config)
+                )
             # TODO: do all model configs have this attribute? PretrainedConfig does so yes??
             if hasattr(self.config, "is_encoder_decoder") and self.config.is_encoder_decoder:
                 self.transformer = create_func(model_args)
@@ -175,7 +200,9 @@ class HFTextEncoder(nn.Module):
         image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(input_ids.device)
         vocab_size = getattr(self.config, arch_dict[self.config.model_type]["config_names"]["vocab_size"])
         probability_matrix = torch.full(labels.shape, mlm_probability)
-        input_ids, labels = self.mask(input_ids, vocab_size, input_ids.device, targets=labels, probability_matrix=probability_matrix)
+        input_ids, labels = self.mask(
+            input_ids, vocab_size, input_ids.device, targets=labels, probability_matrix=probability_matrix
+        )
         mlm_output = self.transformer(
             input_ids,
             attention_mask=attn_mask,
@@ -220,7 +247,9 @@ class HFTextEncoder(nn.Module):
         encoder = self.transformer.encoder if hasattr(self.transformer, "encoder") else self.transformer
         layer_list = getattr(encoder, arch_dict[self.config.model_type]["config_names"]["layer_attr"])
         print(f"Unlocking {unlocked_layers}/{len(layer_list) + 1} layers of hf model")
-        embeddings = getattr(self.transformer, arch_dict[self.config.model_type]["config_names"]["token_embeddings_attr"])
+        embeddings = getattr(
+            self.transformer, arch_dict[self.config.model_type]["config_names"]["token_embeddings_attr"]
+        )
         modules = [embeddings, *layer_list][:-unlocked_layers]
         # freeze layers
         for module in modules:

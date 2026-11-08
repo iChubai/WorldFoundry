@@ -17,6 +17,7 @@ from worldfoundry.core.nn.blocks.layers import LayerNorm2d, PositionEmbeddingRan
 
 class PromptEncoder(nn.Module):
     """Prompt encoder implementation."""
+
     def __init__(
         self,
         embed_dim: int,

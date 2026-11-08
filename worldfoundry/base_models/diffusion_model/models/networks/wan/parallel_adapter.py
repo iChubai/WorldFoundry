@@ -35,14 +35,10 @@ def pad_freqs(original_tensor, target_len):
 
     seq_len, s1, s2 = original_tensor.shape
     pad_size = target_len - seq_len
-    padding_tensor = torch.ones(
-        pad_size,
-        s1,
-        s2,
-        dtype=original_tensor.dtype,
-        device=original_tensor.device)
+    padding_tensor = torch.ones(pad_size, s1, s2, dtype=original_tensor.dtype, device=original_tensor.device)
     padded_tensor = torch.cat([original_tensor, padding_tensor], dim=0)
     return padded_tensor
+
 
 @amp.autocast(enabled=False)
 @torch.compiler.disable()
@@ -62,28 +58,29 @@ def rope_apply(x, grid_sizes, freqs):
         seq_len = f * h * w
 
         # precompute multipliers
-        x_i = torch.view_as_complex(x[i, :s].to(torch.float32).reshape(
-            s, n, -1, 2))
-        freqs_i = torch.cat([
-            freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
-            freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
-            freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)
-        ],
-        dim=-1).reshape(seq_len, 1, -1)
+        x_i = torch.view_as_complex(x[i, :s].to(torch.float32).reshape(s, n, -1, 2))
+        freqs_i = torch.cat(
+            [
+                freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
+                freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
+                freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1),
+            ],
+            dim=-1,
+        ).reshape(seq_len, 1, -1)
 
         # apply rotary embedding
         sp_size = get_sequence_parallel_world_size()
         sp_rank = get_sequence_parallel_rank()
         freqs_i = pad_freqs(freqs_i, s * sp_size)
         s_per_rank = s
-        freqs_i_rank = freqs_i[(sp_rank * s_per_rank):((sp_rank + 1) *
-                                                       s_per_rank), :, :]
+        freqs_i_rank = freqs_i[(sp_rank * s_per_rank) : ((sp_rank + 1) * s_per_rank), :, :]
         x_i = torch.view_as_real(x_i * freqs_i_rank).flatten(2)
         x_i = torch.cat([x_i, x[i, s:]])
 
         # append to collection
         output.append(x_i)
     return torch.stack(output)
+
 
 def rope_apply_qk(q, k, grid_sizes, freqs):
     """Apply :func:`rope_apply` to Q and K with the same grid / freqs."""
@@ -92,13 +89,8 @@ def rope_apply_qk(q, k, grid_sizes, freqs):
     k = rope_apply(k, grid_sizes, freqs)
     return q, k
 
-def usp_attn_forward(self,
-                     x,
-                     seq_lens,
-                     grid_sizes,
-                     freqs,
-                     dtype=torch.bfloat16,
-                     t=0):
+
+def usp_attn_forward(self, x, seq_lens, grid_sizes, freqs, dtype=torch.bfloat16, t=0):
     """Wan self-attention forward that routes Q/K/V through xFuser long-context.
 
     Bound onto a block as a method. RoPE is applied on the local SP shard
@@ -133,12 +125,7 @@ def usp_attn_forward(self,
     #     k = torch.cat([u[:l] for u, l in zip(k, k_lens)]).unsqueeze(0)
     #     v = torch.cat([u[:l] for u, l in zip(v, k_lens)]).unsqueeze(0)
 
-    x = xFuserLongContextAttention()(
-        None,
-        query=half(q),
-        key=half(k),
-        value=half(v),
-        window_size=self.window_size)
+    x = xFuserLongContextAttention()(None, query=half(q), key=half(k), value=half(v), window_size=self.window_size)
 
     # TODO: padding after attention.
     # x = torch.cat([x, x.new_zeros(b, s - x.size(1), n, d)], dim=1)
@@ -147,6 +134,7 @@ def usp_attn_forward(self,
     x = x.flatten(2)
     x = self.o(x)
     return x
+
 
 @amp.autocast(enabled=False)
 @torch.compiler.disable()
@@ -163,8 +151,7 @@ def s2v_rope_apply(x, grid_sizes, freqs):
     for i, _ in enumerate(x):
         s = x.size(1)
         # precompute multipliers
-        x_i = torch.view_as_complex(x[i, :s].to(torch.float64).reshape(
-            s, n, -1, 2))
+        x_i = torch.view_as_complex(x[i, :s].to(torch.float64).reshape(s, n, -1, 2))
         freqs_i = freqs[i]
         freqs_i_rank = pad_freqs(freqs_i, s)
         x_i = torch.view_as_real(x_i * freqs_i_rank).flatten(2)
@@ -173,6 +160,7 @@ def s2v_rope_apply(x, grid_sizes, freqs):
         output.append(x_i)
     return torch.stack(output).float()
 
+
 def s2v_rope_apply_qk(q, k, grid_sizes, freqs):
     """Apply :func:`s2v_rope_apply` to Q and K with the same per-sample freqs."""
 
@@ -180,13 +168,8 @@ def s2v_rope_apply_qk(q, k, grid_sizes, freqs):
     k = s2v_rope_apply(k, grid_sizes, freqs)
     return q, k
 
-def usp_attn_s2v_forward(self,
-                     x,
-                     seq_lens,
-                     grid_sizes,
-                     freqs,
-                     dtype=torch.bfloat16,
-                     t=0):
+
+def usp_attn_s2v_forward(self, x, seq_lens, grid_sizes, freqs, dtype=torch.bfloat16, t=0):
     """S2V self-attention forward through xFuser, using per-sample RoPE tables."""
 
     b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
@@ -216,12 +199,7 @@ def usp_attn_s2v_forward(self,
     #     k = torch.cat([u[:l] for u, l in zip(k, k_lens)]).unsqueeze(0)
     #     v = torch.cat([u[:l] for u, l in zip(v, k_lens)]).unsqueeze(0)
 
-    x = xFuserLongContextAttention()(
-        None,
-        query=half(q),
-        key=half(k),
-        value=half(v),
-        window_size=self.window_size)
+    x = xFuserLongContextAttention()(None, query=half(q), key=half(k), value=half(v), window_size=self.window_size)
 
     # TODO: padding after attention.
     # x = torch.cat([x, x.new_zeros(b, s - x.size(1), n, d)], dim=1)
@@ -251,7 +229,7 @@ def _all_to_all_4d(tensor, scatter_dim, gather_dim, sp_group_obj):
     )
 
     # Extract underlying ProcessGroup from GroupCoordinator
-    pg = getattr(sp_group_obj, 'device_group', sp_group_obj)
+    pg = getattr(sp_group_obj, "device_group", sp_group_obj)
 
     # Step 1: permute scatter_dim to front.
     dims = list(range(tensor.dim()))
@@ -315,7 +293,7 @@ def sp_prope_forward(self, x, cam_emb, seq_lens=None, sp_group=None):
     k = self.norm_k(self.k_proj(x)).view(batch_size, chunk_seq_len, num_heads, head_dim)
     v = self.v_proj(x).view(batch_size, chunk_seq_len, num_heads, head_dim)
 
-    use_head_parallel = (num_heads % sp_size == 0)
+    use_head_parallel = num_heads % sp_size == 0
 
     if use_head_parallel:
         # Head-parallel: all-to-all scatter heads, gather seq
@@ -335,8 +313,8 @@ def sp_prope_forward(self, x, cam_emb, seq_lens=None, sp_group=None):
         q.transpose(1, 2),
         k.transpose(1, 2),
         v.transpose(1, 2),
-        viewmats=cam_emb['viewmats'],
-        Ks=cam_emb['K'],
+        viewmats=cam_emb["viewmats"],
+        Ks=cam_emb["K"],
     )
 
     # Local attention: attention expects [B, S, N, D_head]

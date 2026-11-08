@@ -19,6 +19,7 @@ XFORMERS_AVAILABLE = False
 
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -97,6 +98,7 @@ class Attention(nn.Module):
 
 class MemEffAttention(Attention):
     """Mem eff attention implementation."""
+
     def forward(self, x: Tensor, attn_bias=None, pos=None) -> Tensor:
         """Forward.
 

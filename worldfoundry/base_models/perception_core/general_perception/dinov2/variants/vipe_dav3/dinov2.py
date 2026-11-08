@@ -24,6 +24,7 @@ from worldfoundry.base_models.perception_core.general_perception.dinov2.variants
 
 class DinoV2(nn.Module):
     """Dino implementation."""
+
     def __init__(
         self,
         name: str,

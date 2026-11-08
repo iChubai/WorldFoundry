@@ -37,10 +37,7 @@ class WanTransformerMethodsMixin:
             value = torch.einsum("fhwpqrc->cfphqwr", value)
             value = value.reshape(
                 channels,
-                *[
-                    grid_size * patch_size
-                    for grid_size, patch_size in zip(grid, self.patch_size)
-                ],
+                *[grid_size * patch_size for grid_size, patch_size in zip(grid, self.patch_size)],
             )
             output.append(value)
         return output

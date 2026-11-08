@@ -100,14 +100,10 @@ class InputProcessor:
 
         batch_tensor = self._stack_batch(proc_imgs)
         out_exts = (
-            torch.from_numpy(np.asarray(out_exts)).float()
-            if out_exts is not None and out_exts[0] is not None
-            else None
+            torch.from_numpy(np.asarray(out_exts)).float() if out_exts is not None and out_exts[0] is not None else None
         )
         out_ixts = (
-            torch.from_numpy(np.asarray(out_ixts)).float()
-            if out_ixts is not None and out_ixts[0] is not None
-            else None
+            torch.from_numpy(np.asarray(out_ixts)).float() if out_ixts is not None and out_ixts[0] is not None else None
         )
         return (batch_tensor, out_exts, out_ixts)
 
@@ -177,9 +173,7 @@ class InputProcessor:
             process_res_method=process_res_method,
         )
         if not results:
-            raise RuntimeError(
-                "No preprocessing results returned. Check inputs and parallel_execution."
-            )
+            raise RuntimeError("No preprocessing results returned. Check inputs and parallel_execution.")
         return results
 
     def _unpack_results(self, results):
@@ -191,8 +185,7 @@ class InputProcessor:
             processed_images, out_sizes, out_intrinsics, out_extrinsics = zip(*results)
         except Exception as e:
             raise RuntimeError(
-                "Unexpected results structure from parallel_execution: "
-                f"{type(results)} / sample: {results[0]}"
+                f"Unexpected results structure from parallel_execution: {type(results)} / sample: {results[0]}"
             ) from e
 
         return list(processed_images), list(out_sizes), list(out_intrinsics), list(out_extrinsics)
@@ -210,8 +203,7 @@ class InputProcessor:
         min_h = min(h for h, _ in out_sizes)
         min_w = min(w for _, w in out_sizes)
         logger.warn(
-            f"Images in batch have different sizes {out_sizes}; "
-            f"center-cropping all to smallest ({min_h},{min_w})"
+            f"Images in batch have different sizes {out_sizes}; center-cropping all to smallest ({min_h},{min_w})"
         )
 
         center_crop = T.CenterCrop((min_h, min_w))

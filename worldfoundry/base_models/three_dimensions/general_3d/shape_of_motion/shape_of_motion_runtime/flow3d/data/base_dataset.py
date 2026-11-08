@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, default_collate
 
 class BaseDataset(Dataset):
     """Base dataset implementation."""
+
     @property
     @abstractmethod
     def num_frames(self) -> int: ...
@@ -53,9 +54,7 @@ class BaseDataset(Dataset):
         ...
 
     @abstractmethod
-    def get_bkgd_points(
-        self, num_samples: int, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def get_bkgd_points(self, num_samples: int, **kwargs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Returns background points:
             coordinates (N, 3),

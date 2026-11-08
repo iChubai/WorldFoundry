@@ -9,7 +9,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.transforms import Compose
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.blocks import FeatureFusionBlock, _make_scratch
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.blocks import (
+    FeatureFusionBlock,
+    _make_scratch,
+)
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_priorda_dav2 import DINOv2
 from .transform import NormalizeImage, Resize
@@ -36,6 +39,7 @@ def _make_fusion_block(features, use_bn, size=None):
 
 class ConvBlock(nn.Module):
     """Conv block implementation."""
+
     def __init__(self, in_feature, out_feature):
         """Init.
 
@@ -62,6 +66,7 @@ class ConvBlock(nn.Module):
 
 class DPTHead(nn.Module):
     """Dpt head implementation."""
+
     def __init__(
         self,
         in_channels,
@@ -208,6 +213,7 @@ class DPTHead(nn.Module):
 
 class DepthAnythingV2(nn.Module):
     """Depth anything implementation."""
+
     def __init__(
         self,
         encoder="vitl",

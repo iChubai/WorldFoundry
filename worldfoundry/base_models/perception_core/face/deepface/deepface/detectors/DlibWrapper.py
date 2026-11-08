@@ -5,14 +5,12 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 
 
 def build_model():
-
     home = functions.get_deepface_home()
 
     import dlib  # this requirement is not a must that's why imported here
 
     # check required file exists in the home/.deepface/weights folder
     if os.path.isfile(home + "/.deepface/weights/shape_predictor_5_face_landmarks.dat") != True:
-
         file_name = "shape_predictor_5_face_landmarks.dat.bz2"
         print(f"{file_name} is going to be downloaded")
 
@@ -37,7 +35,6 @@ def build_model():
 
 
 def detect_face(detector, img, align=True):
-
     import dlib  # this requirement is not a must that's why imported here
 
     resp = []
@@ -54,7 +51,6 @@ def detect_face(detector, img, align=True):
     detections, scores, _ = face_detector.run(img, 1)
 
     if len(detections) > 0:
-
         for idx, d in enumerate(detections):
             left = d.left()
             right = d.right()
@@ -62,9 +58,7 @@ def detect_face(detector, img, align=True):
             bottom = d.bottom()
 
             # detected_face = img[top:bottom, left:right]
-            detected_face = img[
-                max(0, top) : min(bottom, img.shape[0]), max(0, left) : min(right, img.shape[1])
-            ]
+            detected_face = img[max(0, top) : min(bottom, img.shape[0]), max(0, left) : min(right, img.shape[1])]
 
             img_region = [left, top, right - left, bottom - top]
             confidence = scores[idx]

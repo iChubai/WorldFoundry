@@ -12,4 +12,5 @@ class YOLOv5CrowdHumanDataset(BatchShapePolicyDataset, CrowdHumanDataset):
     We only add `BatchShapePolicy` function compared with CrowdHumanDataset.
     See `mmyolo/datasets/utils.py#BatchShapePolicy` for details
     """
+
     pass

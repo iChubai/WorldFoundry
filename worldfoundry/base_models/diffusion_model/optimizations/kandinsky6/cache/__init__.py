@@ -12,7 +12,12 @@ from typing import Literal
 from torch import nn
 
 from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.base import ConfigModel
-from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.cache.magcache import MagCache, MagCacheConfig, prepare_mag_ratios, select_mag_ratios
+from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.cache.magcache import (
+    MagCache,
+    MagCacheConfig,
+    prepare_mag_ratios,
+    select_mag_ratios,
+)
 from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.cache.navicache import NaviCache, NaviCacheConfig
 
 CacheMode = Literal["none", "magcache", "navicache"]

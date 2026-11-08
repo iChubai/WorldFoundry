@@ -24,7 +24,6 @@ labels = ["asian", "indian", "black", "white", "middle eastern", "latino hispani
 def loadModel(
     url="https://github.com/serengil/deepface_models/releases/download/v1.0/race_model_single_batch.h5",
 ):
-
     model = VGGFace.baseModel()
 
     # --------------------------

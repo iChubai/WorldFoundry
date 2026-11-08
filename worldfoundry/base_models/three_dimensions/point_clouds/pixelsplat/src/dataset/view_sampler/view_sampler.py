@@ -14,6 +14,7 @@ T = TypeVar("T")
 
 class ViewSampler(ABC, Generic[T]):
     """View sampler implementation."""
+
     cfg: T
     stage: Stage
     is_overfitting: bool

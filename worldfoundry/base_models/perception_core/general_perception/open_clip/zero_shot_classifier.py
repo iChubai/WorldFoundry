@@ -20,15 +20,15 @@ def batched(iterable, n):
 
 
 def build_zero_shot_classifier(
-        model,
-        tokenizer,
-        classnames: Sequence[str],
-        templates: Sequence[Union[Callable, str]],
-        num_classes_per_batch: Optional[int] = 10,
-        device: Union[str, torch.device] = 'cpu',
-        use_tqdm: bool = False,
+    model,
+    tokenizer,
+    classnames: Sequence[str],
+    templates: Sequence[Union[Callable, str]],
+    num_classes_per_batch: Optional[int] = 10,
+    device: Union[str, torch.device] = "cpu",
+    use_tqdm: bool = False,
 ):
-    """ Build zero-shot classifier weights by iterating over class names in batches
+    """Build zero-shot classifier weights by iterating over class names in batches
     Args:
         model: CLIP model instance
         tokenizer: CLIP tokenizer instance
@@ -45,6 +45,7 @@ def build_zero_shot_classifier(
     num_classes = len(classnames)
     if use_tqdm:
         import tqdm
+
         num_iter = 1 if num_classes_per_batch is None else ((num_classes - 1) // num_classes_per_batch + 1)
         iter_wrap = partial(tqdm.tqdm, total=num_iter, unit_scale=num_classes_per_batch)
     else:
@@ -61,7 +62,7 @@ def build_zero_shot_classifier(
         texts = tokenizer(texts).to(device)
         output = model(text=texts)
         if isinstance(output, dict):
-            class_embeddings = output['text_features']
+            class_embeddings = output["text_features"]
         elif isinstance(output, (tuple, list)):
             class_embeddings = output[1]
         else:
@@ -81,14 +82,14 @@ def build_zero_shot_classifier(
 
 
 def build_zero_shot_classifier_legacy(
-        model,
-        tokenizer,
-        classnames: Sequence[str],
-        templates: Sequence[Union[Callable, str]],
-        device: Union[str, torch.device] = 'cpu',
-        use_tqdm: bool = False,
+    model,
+    tokenizer,
+    classnames: Sequence[str],
+    templates: Sequence[Union[Callable, str]],
+    device: Union[str, torch.device] = "cpu",
+    use_tqdm: bool = False,
 ):
-    """ Build zero-shot classifier weights by iterating over class names 1 by 1
+    """Build zero-shot classifier weights by iterating over class names 1 by 1
     Args:
         model: CLIP model instance
         tokenizer: CLIP tokenizer instance
@@ -101,6 +102,7 @@ def build_zero_shot_classifier_legacy(
     assert isinstance(classnames, Sequence) and len(classnames) > 0
     if use_tqdm:
         import tqdm
+
         iter_wrap = tqdm.tqdm
     else:
         iter_wrap = iter
@@ -114,7 +116,7 @@ def build_zero_shot_classifier_legacy(
             texts = tokenizer(texts).to(device)  # tokenize
             output = model(text=texts)
             if isinstance(output, dict):
-                class_embeddings = output['text_features']
+                class_embeddings = output["text_features"]
             elif isinstance(output, (tuple, list)):
                 class_embeddings = output[1]
             else:

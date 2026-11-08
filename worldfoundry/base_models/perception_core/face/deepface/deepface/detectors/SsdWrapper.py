@@ -9,12 +9,10 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 
 
 def build_model():
-
     home = functions.get_deepface_home()
 
     # model structure
     if os.path.isfile(home + "/.deepface/weights/deploy.prototxt") != True:
-
         print("deploy.prototxt will be downloaded...")
 
         url = "https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/deploy.prototxt"
@@ -25,7 +23,6 @@ def build_model():
 
     # pre-trained weights
     if os.path.isfile(home + "/.deepface/weights/res10_300x300_ssd_iter_140000.caffemodel") != True:
-
         print("res10_300x300_ssd_iter_140000.caffemodel will be downloaded...")
 
         url = "https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/res10_300x300_ssd_iter_140000.caffemodel"
@@ -49,7 +46,6 @@ def build_model():
 
 
 def detect_face(detector, img, align=True):
-
     resp = []
 
     detected_face = None
@@ -85,9 +81,7 @@ def detect_face(detector, img, align=True):
     detections_df["top"] = (detections_df["top"] * 300).astype(int)
 
     if detections_df.shape[0] > 0:
-
         for _, instance in detections_df.iterrows():
-
             left = instance["left"]
             right = instance["right"]
             bottom = instance["bottom"]

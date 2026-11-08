@@ -40,7 +40,6 @@ def closest_color(requested_color):
 
     min_colors = {}
     for key, name in webcolors.CSS3_HEX_TO_NAMES.items():
-
         r_c, g_c, b_c = webcolors.hex_to_rgb(key)
         rd = (r_c - requested_color[0]) ** 2
         gd = (g_c - requested_color[1]) ** 2
@@ -69,8 +68,8 @@ class MultilingualPromptFormat:
 
     def __init__(
         self,
-        font_path: str = 'assets/glyph_sdxl_assets/multilingual_10-lang_idx.json',
-        color_path: str = 'assets/glyph_sdxl_assets/color_idx.json',
+        font_path: str = "assets/glyph_sdxl_assets/multilingual_10-lang_idx.json",
+        color_path: str = "assets/glyph_sdxl_assets/color_idx.json",
     ):
         """Init.
 
@@ -78,15 +77,15 @@ class MultilingualPromptFormat:
             font_path: The font path.
             color_path: The color path.
         """
-        with open(font_path, 'r') as f:
+        with open(font_path, "r") as f:
             self.font_dict = json.load(f)
-        with open(color_path, 'r') as f:
+        with open(color_path, "r") as f:
             self.color_dict = json.load(f)
 
     def format_prompt(self, texts, styles):
-        '''
+        """
         Text "{text}" in {color}, {type}.
-        '''
+        """
 
         prompt = ""
         for text, style in zip(texts, styles):

@@ -16,6 +16,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 
 XFORMERS_AVAILABLE = False
 
+
 def modulate(x, shift, scale):
     """Modulate.
 
@@ -26,8 +27,10 @@ def modulate(x, shift, scale):
     """
     return x * (1 + scale.unsqueeze(2)) + shift.unsqueeze(2)
 
+
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -46,7 +49,7 @@ class Block(nn.Module):
         ffn_layer: Callable[..., nn.Module] = Mlp,
         qk_norm: bool = False,
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
-        rope=None
+        rope=None,
     ) -> None:
         """Init.
 
@@ -101,7 +104,6 @@ class Block(nn.Module):
 
         self.sample_drop_ratio = drop_path
 
-
     def forward(self, x: Tensor, pos=None) -> Tensor:
         """Forward.
 
@@ -112,6 +114,7 @@ class Block(nn.Module):
         Returns:
             The return value.
         """
+
         def attn_residual_func(x: Tensor, pos=None) -> Tensor:
             """Attn residual func.
 
@@ -151,13 +154,17 @@ class Block(nn.Module):
             x = x + ffn_residual_func(x)
         return x
 
+
 class DistBlock(Block):
     """Dist block implementation."""
+
     def __init__(self, *args, attn_class: Callable[..., nn.Module] = DistAttention, **kwargs):
         """Init."""
         super().__init__(*args, attn_class=attn_class, **kwargs)
 
-    def forward(self, x: Tensor, pos=None, sp_size=1,sp_group=None,padding_tokens=0,block_type = None, token_shape=None) -> Tensor:
+    def forward(
+        self, x: Tensor, pos=None, sp_size=1, sp_group=None, padding_tokens=0, block_type=None, token_shape=None
+    ) -> Tensor:
         """Forward.
 
         Args:
@@ -172,7 +179,8 @@ class DistBlock(Block):
         Returns:
             The return value.
         """
-        def attn_residual_func(x: Tensor, pos=None, sp_size=1,sp_group=None,padding_tokens=0) -> Tensor:
+
+        def attn_residual_func(x: Tensor, pos=None, sp_size=1, sp_group=None, padding_tokens=0) -> Tensor:
             """Attn residual func.
 
             Args:
@@ -185,7 +193,9 @@ class DistBlock(Block):
             Returns:
                 The return value.
             """
-            return self.ls1(self.attn(self.norm1(x), pos=pos,sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens))
+            return self.ls1(
+                self.attn(self.norm1(x), pos=pos, sp_size=sp_size, sp_group=sp_group, padding_tokens=padding_tokens)
+            )
 
         def ffn_residual_func(x: Tensor) -> Tensor:
             """Ffn residual func.
@@ -201,16 +211,24 @@ class DistBlock(Block):
         if self.training and self.sample_drop_ratio > 0.1:
             # the overhead is compensated only for a drop path rate larger than 0.1
             x = drop_add_residual_stochastic_depth(
-                x, pos=pos, sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens,residual_func=attn_residual_func, sample_drop_ratio=self.sample_drop_ratio
+                x,
+                pos=pos,
+                sp_size=sp_size,
+                sp_group=sp_group,
+                padding_tokens=padding_tokens,
+                residual_func=attn_residual_func,
+                sample_drop_ratio=self.sample_drop_ratio,
             )
             x = drop_add_residual_stochastic_depth(
                 x, residual_func=ffn_residual_func, sample_drop_ratio=self.sample_drop_ratio
             )
         elif self.training and self.sample_drop_ratio > 0.0:
-            x = x + self.drop_path1(attn_residual_func(x, pos=pos,sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens))
+            x = x + self.drop_path1(
+                attn_residual_func(x, pos=pos, sp_size=sp_size, sp_group=sp_group, padding_tokens=padding_tokens)
+            )
             x = x + self.drop_path1(ffn_residual_func(x))  # FIXME: drop_path2
         else:
-            x = x + attn_residual_func(x, pos=pos,sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens)
+            x = x + attn_residual_func(x, pos=pos, sp_size=sp_size, sp_group=sp_group, padding_tokens=padding_tokens)
             x = x + ffn_residual_func(x)
         return x
 
@@ -351,6 +369,7 @@ def drop_add_residual_stochastic_depth_list(
 
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
+
     def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
         """
         x_list contains a list of tensors to nest together and run

@@ -331,9 +331,7 @@ class SanaMSControlNet(SanaMS):
             control_signal, control_signal_skip = self.controlnet[i - 1](
                 x, y, t0, control_signal, y_lens, (self.h, self.w), image_pos_embed, **kwargs
             )
-            x = self.blocks[i](
-                x + control_signal_skip, y, t0, y_lens, (self.h, self.w), image_pos_embed, **kwargs
-            )
+            x = self.blocks[i](x + control_signal_skip, y, t0, y_lens, (self.h, self.w), image_pos_embed, **kwargs)
 
         for i in range(self.copy_blocks_num + 1, len(self.blocks)):
             x = self.blocks[i](x, y, t0, y_lens, (self.h, self.w), image_pos_embed, **kwargs)

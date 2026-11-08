@@ -150,4 +150,6 @@ class MosaicGPTConfig(PretrainedConfig):
         if self.embedding_fraction > 1 or self.embedding_fraction <= 0:
             raise ValueError("model.embedding_fraction must be between 0 (exclusive) and 1 (inclusive)!")
         if isinstance(self.logit_scale, str) and self.logit_scale != "inv_sqrt_d_model":
-            raise ValueError(f"{self.logit_scale=} is not recognized as an option; use numeric value or 'inv_sqrt_d_model'.")
+            raise ValueError(
+                f"{self.logit_scale=} is not recognized as an option; use numeric value or 'inv_sqrt_d_model'."
+            )

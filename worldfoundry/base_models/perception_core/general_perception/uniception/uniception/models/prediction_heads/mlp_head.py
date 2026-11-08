@@ -75,9 +75,9 @@ class MLPHead(nn.Module):
 
         # Check the input dimensions
         assert feat.ndim == 3, f"Input feature tensor must have 3 dimensions (B, C, T), got {feat.ndim}"
-        assert (
-            feat.shape[1] == self.input_feature_dim
-        ), f"Input feature dimension {feat.shape[1]} does not match expected dimension {self.input_feature_dim}"
+        assert feat.shape[1] == self.input_feature_dim, (
+            f"Input feature dimension {feat.shape[1]} does not match expected dimension {self.input_feature_dim}"
+        )
 
         # Apply the projection layer
         feat = feat.permute(0, 2, 1)  # (B, T, C)

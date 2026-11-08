@@ -8,7 +8,10 @@ from typing import Optional, Union, List
 
 from worldfoundry.core.nn.blocks.layers import Mlp
 from .utils.geometry import homogenize_points, robust_scale_estimation
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.pos_embed import RoPE2D, PositionGetter
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.pos_embed import (
+    RoPE2D,
+    PositionGetter,
+)
 from .layers.block import BlockRope
 from .layers.attention import FlashAttentionRope
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.transformer_head import (
@@ -18,28 +21,33 @@ from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models
 )
 from .layers.camera_head import CameraHead
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.conv_head import ConvHead
-from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import dinov2_vitl14, dinov2_vitl14_reg
+from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import (
+    dinov2_vitl14,
+    dinov2_vitl14_reg,
+)
 from huggingface_hub import PyTorchModelHubMixin
 from .ttt import FastWeightGluMLPMultihead, TTTOperator
 
+
 class Pi3(nn.Module, PyTorchModelHubMixin):
     """Pi implementation."""
+
     def __init__(
-            self,
-            pos_type='rope100',
-            decoder_size='large',
-            ttt_insert_after: Union[int, List[int]] = None,
-            ttt_head_dim: int = 512,
-            ttt_inter_multi: int = 2,
-            num_muon_update_steps: int = 5,
-            use_momentum: bool = False,
-            ttt_update_steps: int = 1,
-            conf: bool = True,
-            attn_insert_after: Union[int, List[int], None] = None,
-            ttt_pre_norm: bool = False,
-            pi3x: bool = False,
-            pi3x_metric: bool = True,
-        ):
+        self,
+        pos_type="rope100",
+        decoder_size="large",
+        ttt_insert_after: Union[int, List[int]] = None,
+        ttt_head_dim: int = 512,
+        ttt_inter_multi: int = 2,
+        num_muon_update_steps: int = 5,
+        use_momentum: bool = False,
+        ttt_update_steps: int = 1,
+        conf: bool = True,
+        attn_insert_after: Union[int, List[int], None] = None,
+        ttt_pre_norm: bool = False,
+        pi3x: bool = False,
+        pi3x_metric: bool = True,
+    ):
         """Init.
 
         Args:
@@ -102,55 +110,59 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         # ----------------------
         #  Positonal Encoding
         # ----------------------
-        self.pos_type = pos_type if pos_type is not None else 'none'
-        self.rope=None
-        if self.pos_type.startswith('rope'): # eg rope100 
-            if RoPE2D is None: raise ImportError("Cannot find cuRoPE2D, please install it following the README instructions")
-            freq = float(self.pos_type[len('rope'):])
+        self.pos_type = pos_type if pos_type is not None else "none"
+        self.rope = None
+        if self.pos_type.startswith("rope"):  # eg rope100
+            if RoPE2D is None:
+                raise ImportError("Cannot find cuRoPE2D, please install it following the README instructions")
+            freq = float(self.pos_type[len("rope") :])
             self.rope = RoPE2D(freq=freq)
             self.position_getter = PositionGetter()
         else:
             raise NotImplementedError
-        
 
         # ----------------------
         #        Decoder
         # ----------------------
-        enc_embed_dim = self.encoder.blocks[0].attn.qkv.in_features        # 1024
-        if decoder_size == 'small':
+        enc_embed_dim = self.encoder.blocks[0].attn.qkv.in_features  # 1024
+        if decoder_size == "small":
             dec_embed_dim = 384
             dec_num_heads = 6
             mlp_ratio = 4
             dec_depth = 24
-        elif decoder_size == 'base':
+        elif decoder_size == "base":
             dec_embed_dim = 768
             dec_num_heads = 12
             mlp_ratio = 4
             dec_depth = 24
-        elif decoder_size == 'large':
+        elif decoder_size == "large":
             dec_embed_dim = 1024
             dec_num_heads = 16
             mlp_ratio = 4
             dec_depth = 36
         else:
             raise NotImplementedError
-        self.decoder = nn.ModuleList([
-            BlockRope(
-                dim=dec_embed_dim,
-                num_heads=dec_num_heads,
-                mlp_ratio=mlp_ratio,
-                qkv_bias=True,
-                proj_bias=True,
-                ffn_bias=True,
-                drop_path=0.0,
-                norm_layer=partial(nn.LayerNorm, eps=1e-6),
-                act_layer=nn.GELU,
-                ffn_layer=Mlp,
-                init_values=0.01,
-                qk_norm=True,
-                attn_class=FlashAttentionRope,
-                rope=self.rope
-            ) for _ in range(dec_depth)])
+        self.decoder = nn.ModuleList(
+            [
+                BlockRope(
+                    dim=dec_embed_dim,
+                    num_heads=dec_num_heads,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=True,
+                    proj_bias=True,
+                    ffn_bias=True,
+                    drop_path=0.0,
+                    norm_layer=partial(nn.LayerNorm, eps=1e-6),
+                    act_layer=nn.GELU,
+                    ffn_layer=Mlp,
+                    init_values=0.01,
+                    qk_norm=True,
+                    attn_class=FlashAttentionRope,
+                    rope=self.rope,
+                )
+                for _ in range(dec_depth)
+            ]
+        )
         self.dec_embed_dim = dec_embed_dim
 
         # ----------------------
@@ -164,14 +176,14 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         for i in range(3):
             pe_token = nn.Parameter(torch.randn(1, 1, 1, self.dec_embed_dim))
             nn.init.normal_(pe_token, std=1e-6)
-            self.register_parameter(f'pe_token_{i}', pe_token)
+            self.register_parameter(f"pe_token_{i}", pe_token)
         self.patch_start_idx += 1
 
         # ----------------------
         #  Local Points Decoder
         # ----------------------
         self.point_decoder = TransformerDecoder(
-            in_dim=2*self.dec_embed_dim, 
+            in_dim=2 * self.dec_embed_dim,
             dec_embed_dim=1024,
             dec_num_heads=16,
             out_dim=1024,
@@ -179,19 +191,19 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         )
         if self.pi3x:
             self.point_head = ConvHead(
-                num_features=4, 
+                num_features=4,
                 dim_in=1024,
                 projects=nn.Identity(),
-                dim_out=[2, 1], 
+                dim_out=[2, 1],
                 dim_proj=1024,
                 dim_upsample=[256, 128, 64],
                 dim_times_res_block_hidden=2,
                 num_res_blocks=2,
-                res_block_norm='group_norm',
+                res_block_norm="group_norm",
                 last_res_blocks=0,
                 last_conv_channels=32,
                 last_conv_size=1,
-                using_uv=True
+                using_uv=True,
             )
         else:
             self.point_head = LinearPts3d(patch_size=14, dec_embed_dim=1024, output_dim=3)
@@ -210,11 +222,11 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         #     Metric Decoder
         # ----------------------
         if self.pi3x and self.pi3x_metric:
-            self.metric_token = nn.Parameter(torch.randn(1, 1, 2*self.dec_embed_dim))
+            self.metric_token = nn.Parameter(torch.randn(1, 1, 2 * self.dec_embed_dim))
             self.metric_decoder = ContextOnlyTransformerDecoder(
-                in_dim=2*self.dec_embed_dim, 
+                in_dim=2 * self.dec_embed_dim,
                 dec_embed_dim=512,
-                dec_num_heads=8,                # 8
+                dec_num_heads=8,  # 8
                 out_dim=512,
                 rope=self.rope,
             )
@@ -229,12 +241,12 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         #  Camera Pose Decoder
         # ----------------------
         self.camera_decoder = TransformerDecoder(
-            in_dim=2*self.dec_embed_dim, 
+            in_dim=2 * self.dec_embed_dim,
             dec_embed_dim=1024,
-            dec_num_heads=16,                # 8
+            dec_num_heads=16,  # 8
             out_dim=512,
             rope=self.rope,
-            use_checkpoint=False
+            use_checkpoint=False,
         )
         self.camera_head = CameraHead(dim=512, output_quat=False)
 
@@ -253,24 +265,23 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         self.ttt_gate_projs = None
         self.ttt_op_order = None
 
-        self.ttt_layers = nn.ModuleList([
-            FastWeightGluMLPMultihead(
-                dim=dec_embed_dim,
-                head_dim=ttt_head_dim,
-                inter_multi=ttt_inter_multi,
-                bias=False,
-                base_lr=0.01,
-                muon_update_steps=self.num_muon_update_steps,
-                use_momentum=self.use_momentum,
-                ttt_update_steps=self.ttt_update_steps,
-                ttt_pre_norm=self.ttt_pre_norm,
-            )
-            for _ in self.ttt_insert_after
-        ])
-        self.ttt_gate_projs = nn.ModuleList([
-            nn.Linear(dec_embed_dim, 1)
-            for _ in self.ttt_insert_after
-        ])
+        self.ttt_layers = nn.ModuleList(
+            [
+                FastWeightGluMLPMultihead(
+                    dim=dec_embed_dim,
+                    head_dim=ttt_head_dim,
+                    inter_multi=ttt_inter_multi,
+                    bias=False,
+                    base_lr=0.01,
+                    muon_update_steps=self.num_muon_update_steps,
+                    use_momentum=self.use_momentum,
+                    ttt_update_steps=self.ttt_update_steps,
+                    ttt_pre_norm=self.ttt_pre_norm,
+                )
+                for _ in self.ttt_insert_after
+            ]
+        )
+        self.ttt_gate_projs = nn.ModuleList([nn.Linear(dec_embed_dim, 1) for _ in self.ttt_insert_after])
 
         for gate_proj in self.ttt_gate_projs:
             torch.nn.init.zeros_(gate_proj.weight)
@@ -285,35 +296,34 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         # ----------------------
         #   Attention Adapters
         # ----------------------
-        self.swa_layers = nn.ModuleList([
-            BlockRope(
-                dim=dec_embed_dim,
-                num_heads=dec_num_heads,
-                mlp_ratio=ttt_inter_multi,
-                qkv_bias=True,
-                proj_bias=True,
-                ffn_bias=True,
-                drop_path=0.0,
-                norm_layer=partial(nn.LayerNorm, eps=1e-6),
-                act_layer=nn.GELU,
-                ffn_layer=Mlp,
-                init_values=0.01,
-                qk_norm=True,
-                attn_class=FlashAttentionRope,
-                rope=self.rope,
-            )
-            for _ in self.attn_insert_after
-        ])
-        self.swa_gate_projs = nn.ModuleList([
-            nn.Linear(dec_embed_dim, 1)
-            for _ in self.attn_insert_after
-        ])
+        self.swa_layers = nn.ModuleList(
+            [
+                BlockRope(
+                    dim=dec_embed_dim,
+                    num_heads=dec_num_heads,
+                    mlp_ratio=ttt_inter_multi,
+                    qkv_bias=True,
+                    proj_bias=True,
+                    ffn_bias=True,
+                    drop_path=0.0,
+                    norm_layer=partial(nn.LayerNorm, eps=1e-6),
+                    act_layer=nn.GELU,
+                    ffn_layer=Mlp,
+                    init_values=0.01,
+                    qk_norm=True,
+                    attn_class=FlashAttentionRope,
+                    rope=self.rope,
+                )
+                for _ in self.attn_insert_after
+            ]
+        )
+        self.swa_gate_projs = nn.ModuleList([nn.Linear(dec_embed_dim, 1) for _ in self.attn_insert_after])
 
         for gate_proj in self.swa_gate_projs:
             torch.nn.init.zeros_(gate_proj.weight)
             if gate_proj.bias is not None:
                 torch.nn.init.zeros_(gate_proj.bias)
-    
+
     def _initialize_ttt_layers_from_global(
         self,
         layers: Optional[nn.ModuleList],
@@ -334,7 +344,6 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         print(f"Initializing {len(layers)} {kind} layers from decoder attention blocks")
         print(f"  Insert positions: {insert_positions}")
 
-
         for layer_idx, insert_idx in enumerate(insert_positions):
             decoder_idx = int(insert_idx)
             if decoder_idx % 2 == 0:
@@ -346,9 +355,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 )
 
             if decoder_idx % 2 == 0:
-                raise AssertionError(
-                    f"Decoder index {decoder_idx} is not a global-attention layer after adjustment."
-                )
+                raise AssertionError(f"Decoder index {decoder_idx} is not a global-attention layer after adjustment.")
 
             source_layer = self.decoder[decoder_idx]
             target_layer = layers[layer_idx]
@@ -362,8 +369,19 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             return
         self._initialize_ttt_layers_from_global(self.swa_layers, "swa", self.attn_insert_after)
 
-    def decode(self, hidden, N, H, W, ttt_dict: Optional[dict] = None, window_size: Optional[int] = None, overlap_size: Optional[int] = None, is_first_window: bool = False,
-               turn_off_ttt=False, turn_off_swa=False) -> torch.Tensor:
+    def decode(
+        self,
+        hidden,
+        N,
+        H,
+        W,
+        ttt_dict: Optional[dict] = None,
+        window_size: Optional[int] = None,
+        overlap_size: Optional[int] = None,
+        is_first_window: bool = False,
+        turn_off_ttt=False,
+        turn_off_swa=False,
+    ) -> torch.Tensor:
         """Decode.
 
         Args:
@@ -385,32 +403,40 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         B = BN // N
 
         final_output = []
-        
-        hidden = hidden.reshape(B*N, hw, -1)
 
-        register_token = self.register_token.repeat(B, N, 1, 1).reshape(B*N, *self.register_token.shape[-2:])
+        hidden = hidden.reshape(B * N, hw, -1)
 
-        pe_token_0 = getattr(self, 'pe_token_0')  # (1, 1, 1, dim)
-        pe_token_1 = getattr(self, 'pe_token_1')  # (1, 1, 1, dim)
-        pe_token_2 = getattr(self, 'pe_token_2')  # (1, 1, 1, dim)
+        register_token = self.register_token.repeat(B, N, 1, 1).reshape(B * N, *self.register_token.shape[-2:])
+
+        pe_token_0 = getattr(self, "pe_token_0")  # (1, 1, 1, dim)
+        pe_token_1 = getattr(self, "pe_token_1")  # (1, 1, 1, dim)
+        pe_token_2 = getattr(self, "pe_token_2")  # (1, 1, 1, dim)
         if overlap_size is None or window_size is None:
             raise ValueError("overlap_size and window_size must be provided when num_pe_tokens > 0")
         num_overlap_with_previous = min(overlap_size, N)
         num_other_frames = min(max(window_size - 2 * overlap_size, 0), N - num_overlap_with_previous)
         num_overlap_with_later = max(min(overlap_size, N, N - num_overlap_with_previous - num_other_frames), 0)
-        pe_tokens = torch.cat([
-            pe_token_0.repeat(B, num_overlap_with_previous, 1, 1),
-            pe_token_1.repeat(B, num_other_frames, 1, 1),
-            pe_token_2.repeat(B, num_overlap_with_later, 1, 1)
-        ], dim=1).to(hidden.device).to(hidden.dtype).reshape(B*N, *pe_token_0.shape[-2:])  # (B*N, 1, dim)
+        pe_tokens = (
+            torch.cat(
+                [
+                    pe_token_0.repeat(B, num_overlap_with_previous, 1, 1),
+                    pe_token_1.repeat(B, num_other_frames, 1, 1),
+                    pe_token_2.repeat(B, num_overlap_with_later, 1, 1),
+                ],
+                dim=1,
+            )
+            .to(hidden.device)
+            .to(hidden.dtype)
+            .reshape(B * N, *pe_token_0.shape[-2:])
+        )  # (B*N, 1, dim)
         hidden = torch.cat([pe_tokens, hidden], dim=1)
 
         # Concatenate special tokens with patch tokens
         hidden = torch.cat([register_token, hidden], dim=1)
         hw = hidden.shape[1]
 
-        if self.pos_type.startswith('rope'):
-            pos = self.position_getter(B * N, H//self.patch_size, W//self.patch_size, hidden.device)
+        if self.pos_type.startswith("rope"):
+            pos = self.position_getter(B * N, H // self.patch_size, W // self.patch_size, hidden.device)
 
         if self.patch_start_idx > 0:
             # do not use position embedding for special tokens (camera and register tokens)
@@ -418,7 +444,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             pos = pos + torch.ones_like(pos)
             pos_special = torch.zeros(B * N, self.patch_start_idx, 2).to(hidden.device).to(pos.dtype)
             pos = torch.cat([pos_special, pos], dim=1)
-       
+
         ttt_output_info = None
         ttt_state = ttt_dict.get("ttt") if ttt_dict is not None else None
         attn_state = ttt_dict.get("attn") if ttt_dict is not None else None
@@ -429,14 +455,14 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
             if i % 2 == 0:
                 # frame attention
-                pos_reshaped = pos.reshape(B*N, hw, -1) if pos is not None else None
-                hidden = hidden.reshape(B*N, hw, -1)
+                pos_reshaped = pos.reshape(B * N, hw, -1) if pos is not None else None
+                hidden = hidden.reshape(B * N, hw, -1)
                 hidden_for_block = hidden
                 pos_for_block = pos_reshaped
             else:
                 # global attention
-                pos_reshaped = pos.reshape(B, N*hw, -1) if pos is not None else None
-                hidden = hidden.reshape(B, N*hw, -1)
+                pos_reshaped = pos.reshape(B, N * hw, -1) if pos is not None else None
+                hidden = hidden.reshape(B, N * hw, -1)
                 hidden_for_block = hidden
                 pos_for_block = pos_reshaped
 
@@ -447,13 +473,13 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 and i in self.ttt_insert_after
                 and self.ttt_insert_after.index(i) % 2 == 0
             )
-            
+
             if i % 2 == 1 and not layer_skip0:
                 hidden_before_block = hidden_for_block
             elif i % 2 == 0 and layer_skip0:
                 hidden_before_block = hidden_for_block
             else:
-                hidden_before_block = hidden_for_block # dummy
+                hidden_before_block = hidden_for_block  # dummy
 
             hidden = blk(hidden_for_block, xpos=pos_for_block)
 
@@ -470,7 +496,8 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 gate_scale = torch.nn.functional.silu(self.ttt_gate_projs[layer_idx](tokens_in))
                 # keep the gate scale to be always 0
                 # if i <= 19: gate_scale = torch.zeros_like(gate_scale)  # turn off ttt
-                if turn_off_ttt: gate_scale = torch.zeros_like(gate_scale)  # turn off ttt
+                if turn_off_ttt:
+                    gate_scale = torch.zeros_like(gate_scale)  # turn off ttt
                 gate_scales.append(gate_scale)
                 info = {
                     "ttt_op_order": ttt_state.get("ttt_op_order", []),
@@ -479,7 +506,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                     "w2": ttt_state["w2"][layer_idx],
                 }
                 ttt_output, output = self.ttt_layers[layer_idx](tokens_in, info)
-                
+
                 update_term = ttt_output * gate_scale
 
                 tokens_out = update_term + tokens_post
@@ -517,11 +544,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                     pos_current = None
 
                 # Check if we have KV cache from history
-                use_kv_cache = (
-                    history is not None 
-                    and isinstance(history, dict) 
-                    and "k" in history
-                )
+                use_kv_cache = history is not None and isinstance(history, dict) and "k" in history
 
                 if use_kv_cache:
                     # Use KV cache path
@@ -530,7 +553,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                     # Forward with KV cache
                     x_curr_flat = x_in_for_layer.reshape(B, N * hw, -1)
                     swa_output_flat = self.swa_layers[layer_idx].forward_with_kv_cache(
-                        x_curr_flat, k_cache, v_cache,
+                        x_curr_flat,
+                        k_cache,
+                        v_cache,
                         xpos=pos_current,
                     )
                     swa_output = swa_output_flat.reshape(B, N, hw, -1)
@@ -558,8 +583,8 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                         pos_swa = None
 
                     swa_output_full = self.swa_layers[layer_idx](
-                        x_swa, 
-                        xpos=pos_swa, 
+                        x_swa,
+                        xpos=pos_swa,
                     )
                     swa_output_full = swa_output_full.reshape(B, N_total, hw, x_in.shape[-1])
                     if history_raw is not None:
@@ -569,7 +594,8 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                         swa_output = swa_output_full
 
                 gate_scale = torch.nn.functional.silu(self.swa_gate_projs[layer_idx](swa_output))
-                if turn_off_swa: gate_scale = torch.zeros_like(gate_scale)
+                if turn_off_swa:
+                    gate_scale = torch.zeros_like(gate_scale)
                 attn_gate_scales.append(gate_scale)
 
                 update_term = swa_output * gate_scale
@@ -586,7 +612,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
                 x_for_cache = x_in
                 x_for_cache_flat = x_for_cache.reshape(B, N * hw, -1)
-                
+
                 # Position for cache: use first frame's position repeated (same as original logic)
                 if pos is not None:
                     pos_for_cache = pos.reshape(B, N, hw, -1)[:, :1].repeat(1, N, 1, 1).reshape(B, N * hw, -1)
@@ -594,15 +620,15 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                     pos_for_cache = None
 
                 k_new, v_new = self.swa_layers[layer_idx].compute_kv_cache(x_for_cache_flat, xpos=pos_for_cache)
-                
+
                 if getattr(self, "detach_swa_history", False):
                     k_new = k_new.detach()
                     v_new = v_new.detach()
-                
+
                 ttt_output_info["history"][layer_idx] = {"k": k_new, "v": v_new}
 
-            if i+1 in [len(self.decoder)-1, len(self.decoder)]:
-                final_output.append(hidden.reshape(B*N, hw, -1))
+            if i + 1 in [len(self.decoder) - 1, len(self.decoder)]:
+                final_output.append(hidden.reshape(B * N, hw, -1))
 
         avg_gate_scale = torch.tensor(0.0, device=hidden.device, dtype=torch.float32)
         avg_attn_gate_scale: Optional[torch.Tensor] = None
@@ -616,19 +642,17 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 avg_attn_gate_scale = all_attn_gate_scales.abs().mean()
 
         if len(final_output) < 2:
-            raise RuntimeError(
-                f"Decoder expected to collect two final outputs but got {len(final_output)}."
-            )
+            raise RuntimeError(f"Decoder expected to collect two final outputs but got {len(final_output)}.")
 
         return (
             torch.cat([final_output[0], final_output[1]], dim=-1),
-            (pos.reshape(B*N, hw, -1) if pos is not None else None),
+            (pos.reshape(B * N, hw, -1) if pos is not None else None),
             ttt_output_info,
             avg_gate_scale,
             avg_attn_gate_scale,
             gate_scales,
         )
-    
+
     def forward(self, imgs, *args, **kwargs):
         """Forward.
 
@@ -636,16 +660,16 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             imgs: The imgs.
         """
         # Windowing controls (optional)
-        window_size = kwargs.pop('window_size', -1)
-        overlap_size = kwargs.pop('overlap_size', 1)
-        num_iterations = kwargs.pop('num_iterations', 1)
-        no_detach = kwargs.pop('no_detach', False)
-        sim3 = kwargs.pop('sim3', False)
-        se3 = kwargs.pop('se3', False)
-        reset_every = kwargs.pop('reset_every', 0)  # reset TTT / adapter state every N windows (0 disables)
-        turn_off_ttt = kwargs.pop('turn_off_ttt', False)
-        turn_off_swa = kwargs.pop('turn_off_swa', False)
-        sim3_scale_mode = kwargs.pop('sim3_scale_mode', 'median')
+        window_size = kwargs.pop("window_size", -1)
+        overlap_size = kwargs.pop("overlap_size", 1)
+        num_iterations = kwargs.pop("num_iterations", 1)
+        no_detach = kwargs.pop("no_detach", False)
+        sim3 = kwargs.pop("sim3", False)
+        se3 = kwargs.pop("se3", False)
+        reset_every = kwargs.pop("reset_every", 0)  # reset TTT / adapter state every N windows (0 disables)
+        turn_off_ttt = kwargs.pop("turn_off_ttt", False)
+        turn_off_swa = kwargs.pop("turn_off_swa", False)
+        sim3_scale_mode = kwargs.pop("sim3_scale_mode", "median")
 
         if sim3 and se3:
             raise ValueError("'sim3' and 'se3' alignments are mutually exclusive; enable only one.")
@@ -717,7 +741,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         all_predictions = []
         all_gate_scales: List[torch.Tensor] = []
         all_attn_gate_scales: List[torch.Tensor] = []
-        
+
         windows_iter = windows
         for window_idx, (start_idx, end_idx) in enumerate(windows_iter):
             if reset_every > 0 and window_idx > 0 and window_idx % reset_every == 0:
@@ -729,7 +753,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
             # Initialize to satisfy static analyzers; will be set inside decode loop
             hidden = None  # type: ignore[assignment]
-            pos = None     # type: ignore[assignment]
+            pos = None  # type: ignore[assignment]
 
             for _ in range(num_iterations):
                 if self.ttt_layers is not None and w0 is None:
@@ -771,14 +795,19 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                         "ttt": ttt_state,
                         "attn": attn_state,
                     }
-                hidden, pos, ttt_output_info, decode_avg_gate_scale, decode_avg_attn_gate_scale, _decode_gate_scales = self.decode(
-                    hidden_input, Nw, H, W,
-                    ttt_dict=ttt_dict,
-                    window_size=window_size,
-                    overlap_size=overlap_size,
-                    is_first_window=(start_idx == 0),
-                    turn_off_ttt=turn_off_ttt,
-                    turn_off_swa=turn_off_swa,
+                hidden, pos, ttt_output_info, decode_avg_gate_scale, decode_avg_attn_gate_scale, _decode_gate_scales = (
+                    self.decode(
+                        hidden_input,
+                        Nw,
+                        H,
+                        W,
+                        ttt_dict=ttt_dict,
+                        window_size=window_size,
+                        overlap_size=overlap_size,
+                        is_first_window=(start_idx == 0),
+                        turn_off_ttt=turn_off_ttt,
+                        turn_off_swa=turn_off_swa,
+                    )
                 )
                 if decode_avg_gate_scale is not None:
                     all_gate_scales.append(decode_avg_gate_scale.detach().cpu())
@@ -788,7 +817,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 # TODO: get the updated state from the ttt layer
                 if self.ttt_layers is not None and ttt_output_info is not None:
                     w0, w1, w2 = ttt_output_info["w0"], ttt_output_info["w1"], ttt_output_info["w2"]
-                
+
                 # TODO: get the updated history from the swa layer
                 if ttt_output_info is not None:
                     swa_history = ttt_output_info.get("history", swa_history)
@@ -802,11 +831,13 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 conf_hidden = self.conf_decoder(hidden, xpos=pos)
             else:
                 conf_hidden = None
-            
+
             if self.pi3x and self.pi3x_metric:
                 hw = hidden.shape[1]
-                pos_hw = pos.reshape(B, Nw*hw, -1)
-                metric_hidden = self.metric_decoder(self.metric_token.repeat(B, 1, 1), hidden.reshape(B, Nw*hw, -1), xpos=pos_hw[:, 0:1], ypos=pos_hw)
+                pos_hw = pos.reshape(B, Nw * hw, -1)
+                metric_hidden = self.metric_decoder(
+                    self.metric_token.repeat(B, 1, 1), hidden.reshape(B, Nw * hw, -1), xpos=pos_hw[:, 0:1], ypos=pos_hw
+                )
             else:
                 metric_hidden = None
 
@@ -814,17 +845,17 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
             global_camera_hidden = camera_hidden
 
-            with torch.autocast(device_type='cuda', enabled=False):
+            with torch.autocast(device_type="cuda", enabled=False):
                 # local points
                 point_hidden = point_hidden.float()
                 if self.pi3x:
-                    xy, z = self.point_head(point_hidden[:, self.patch_start_idx:], patch_h=patch_h, patch_w=patch_w)
+                    xy, z = self.point_head(point_hidden[:, self.patch_start_idx :], patch_h=patch_h, patch_w=patch_w)
                     xy = xy.permute(0, 2, 3, 1).reshape(B, Nw, H, W, -1)
                     z = z.permute(0, 2, 3, 1).reshape(B, Nw, H, W, -1)
                     z = torch.exp(z.clamp(max=15.0))
                     local_points = torch.cat([xy * z, z], dim=-1)
                 else:
-                    ret = self.point_head([point_hidden[:, self.patch_start_idx:]], (H, W)).reshape(B, Nw, H, W, -1)
+                    ret = self.point_head([point_hidden[:, self.patch_start_idx :]], (H, W)).reshape(B, Nw, H, W, -1)
                     xy, z = ret.split([2, 1], dim=-1)
                     z = torch.exp(z)
                     local_points = torch.cat([xy * z, z], dim=-1)
@@ -832,13 +863,15 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 # confidence
                 if conf_hidden is not None and self.conf_head is not None:
                     conf_hidden = conf_hidden.float()
-                    conf = self.conf_head([conf_hidden[:, self.patch_start_idx:]], (H, W)).reshape(B, Nw, H, W, -1)
+                    conf = self.conf_head([conf_hidden[:, self.patch_start_idx :]], (H, W)).reshape(B, Nw, H, W, -1)
                 else:
                     conf = None
 
                 # camera
                 global_camera_hidden = global_camera_hidden.float()
-                camera_poses = self.camera_head(global_camera_hidden[:, self.patch_start_idx:], patch_h, patch_w).reshape(B, Nw, 4, 4)
+                camera_poses = self.camera_head(
+                    global_camera_hidden[:, self.patch_start_idx :], patch_h, patch_w
+                ).reshape(B, Nw, 4, 4)
                 camera_qvec = None
                 local_camera_poses = None
                 local_camera_qvec = None
@@ -846,7 +879,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 # metric
                 if self.pi3x and self.pi3x_metric and metric_hidden is not None:
                     metric = self.metric_head(metric_hidden.float()).reshape(B).exp()
-                    
+
                     # apply metric to points and camera poses
                     # points = torch.einsum('bnij, bnhwj -> bnhwi', camera_poses, homogenize_points(local_points))[..., :3] * metric.view(B, 1, 1, 1, 1)
                     camera_poses[..., :3, 3] = camera_poses[..., :3, 3] * metric.view(B, 1, 1)
@@ -856,11 +889,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 else:
                     metric = None
 
-
             # unproject local points using camera poses
-            with torch.autocast(device_type='cuda', enabled=False):
-                points = torch.einsum('bnij, bnhwj -> bnhwi', camera_poses, homogenize_points(local_points))[..., :3]
-
+            with torch.autocast(device_type="cuda", enabled=False):
+                points = torch.einsum("bnij, bnhwj -> bnhwi", camera_poses, homogenize_points(local_points))[..., :3]
 
             def maybe_detach(t, no_detach=no_detach):
                 """Maybe detach.
@@ -891,13 +922,13 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         align_on_resets_without_explicit_pose = reset_every > 0 and not sim3 and not se3
         if sim3:
             merged = self._merge_windowed_predictions_sim3(
-                all_predictions, 
-                allow_scale=True, 
+                all_predictions,
+                allow_scale=True,
                 scale_mode=sim3_scale_mode,
             )
         elif se3 or align_on_resets_without_explicit_pose:
             merged = self._merge_windowed_predictions_sim3(
-                all_predictions, 
+                all_predictions,
                 allow_scale=False,
                 reset_every=reset_every,
                 reuse_transform_within_reset_block=align_on_resets_without_explicit_pose,
@@ -908,7 +939,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             merged["avg_gate_scale"] = torch.stack(all_gate_scales).mean()
         if all_attn_gate_scales:
             merged["attn_gate_scale"] = torch.stack(all_attn_gate_scales).mean()
-        
+
         return merged
 
     def _merge_windowed_predictions(self, all_predictions, window_size, overlap_size):
@@ -923,7 +954,15 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
         merged_predictions = {}
         keys = list(all_predictions[0].keys())
-        sequence_keys = {"points", "local_points", "conf", "camera_poses", "local_camera_poses", "camera_qvec", "local_camera_qvec"}
+        sequence_keys = {
+            "points",
+            "local_points",
+            "conf",
+            "camera_poses",
+            "local_camera_poses",
+            "camera_qvec",
+            "local_camera_qvec",
+        }
         for key in keys:
             # Collect window tensors
             window_tensors = [pred.get(key, None) for pred in all_predictions]
@@ -1000,18 +1039,28 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 conf_b = pred_b.get("conf", None)
 
                 # Only collect when both sides have enough frames for a full overlap window
-                if cam_a is not None and cam_b is not None and cam_a.shape[1] >= overlap_size and cam_b.shape[1] >= overlap_size:
+                if (
+                    cam_a is not None
+                    and cam_b is not None
+                    and cam_a.shape[1] >= overlap_size
+                    and cam_b.shape[1] >= overlap_size
+                ):
                     S_a = cam_a.shape[1]
                     # Take last overlap_size from A and first overlap_size from B
-                    prev_cam_chunks.append(cam_a[:, S_a - overlap_size: S_a])  # (B, O, 4, 4)
-                    next_cam_chunks.append(cam_b[:, 0: overlap_size])         # (B, O, 4, 4)
+                    prev_cam_chunks.append(cam_a[:, S_a - overlap_size : S_a])  # (B, O, 4, 4)
+                    next_cam_chunks.append(cam_b[:, 0:overlap_size])  # (B, O, 4, 4)
 
-                if lpts_a is not None and lpts_b is not None and lpts_a.shape[1] >= overlap_size and lpts_b.shape[1] >= overlap_size:
+                if (
+                    lpts_a is not None
+                    and lpts_b is not None
+                    and lpts_a.shape[1] >= overlap_size
+                    and lpts_b.shape[1] >= overlap_size
+                ):
                     S_a = lpts_a.shape[1]
-                    prev_pcd_chunks.append(lpts_a[:, S_a - overlap_size: S_a])  # (B, O, H, W, 3)
-                    next_pcd_chunks.append(lpts_b[:, 0: overlap_size])          # (B, O, H, W, 3)
+                    prev_pcd_chunks.append(lpts_a[:, S_a - overlap_size : S_a])  # (B, O, H, W, 3)
+                    next_pcd_chunks.append(lpts_b[:, 0:overlap_size])  # (B, O, H, W, 3)
                     if conf_b is not None and conf_b.shape[1] >= overlap_size:
-                        next_conf_chunks.append(conf_b[:, 0: overlap_size].squeeze(-1))  # (B, O, H, W)
+                        next_conf_chunks.append(conf_b[:, 0:overlap_size].squeeze(-1))  # (B, O, H, W)
 
             # Stack along a new chunk dimension if any collected
             if prev_cam_chunks and next_cam_chunks:
@@ -1029,7 +1078,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         self,
         all_predictions,
         allow_scale: bool = True,
-        scale_mode: str = 'median',
+        scale_mode: str = "median",
         reset_every: int = 0,
         reuse_transform_within_reset_block: bool = False,
     ):
@@ -1075,7 +1124,13 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         window_size = getattr(self, "_last_window_size", -1)
         overlap_size = getattr(self, "_last_overlap_size", 0)
 
-        def _estimate_relative_sim3(prev_aligned: dict, curr_raw: dict, overlap: int, current_allow_scale: bool, forced_scale: Optional[torch.Tensor] = None):
+        def _estimate_relative_sim3(
+            prev_aligned: dict,
+            curr_raw: dict,
+            overlap: int,
+            current_allow_scale: bool,
+            forced_scale: Optional[torch.Tensor] = None,
+        ):
             """Helper function to estimate relative sim3.
 
             Args:
@@ -1121,7 +1176,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                     and prev_local_raw.shape[1] > prev_idx
                     and curr_local_raw.shape[1] > 0
                 ):
-                    if scale_mode in ['median_all', 'trimmed_mean_all']:
+                    if scale_mode in ["median_all", "trimmed_mean_all"]:
                         # Use all overlapping frames
                         actual_overlap = min(overlap, prev_local_raw.shape[1] - prev_idx, curr_local_raw.shape[1])
                         if actual_overlap > 0:
@@ -1148,8 +1203,8 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                     prev_depth_flat = prev_depth_f32.reshape(batch_size, -1)
                     curr_depth_flat = curr_depth_f32.reshape(batch_size, -1)
                     valid_flat = valid.reshape(batch_size, -1)
-                    
-                    if scale_mode in ['median', 'median_all']:
+
+                    if scale_mode in ["median", "median_all"]:
                         scale_values = []
                         for b in range(batch_size):
                             valid_idx = valid_flat[b]
@@ -1159,13 +1214,13 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                             else:
                                 scale_values.append(torch.tensor(1.0, device=device, dtype=torch.float32))
                         relative_scale = torch.stack(scale_values).to(dtype)
-                    elif scale_mode in ['trimmed_mean', 'trimmed_mean_all']:
+                    elif scale_mode in ["trimmed_mean", "trimmed_mean_all"]:
                         # Vectorized implementation for trimmed mean
                         # Mask invalid entries with NaN or filter before passing?
                         # robust_scale_estimation expects (B, N)
                         # Since N varies per batch due to validity, we might still need a loop or careful padding.
                         # However, valid_flat is (B, N_pixels).
-                        
+
                         # To keep it simple and consistent with the median loop structure for now (which handles varying valid counts per batch):
                         scale_values = []
                         for b in range(batch_size):
@@ -1180,7 +1235,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                             else:
                                 scale_values.append(torch.tensor(1.0, device=device, dtype=torch.float32))
                         relative_scale = torch.stack(scale_values).to(dtype)
-                    elif scale_mode in ['sim3_avg1']:
+                    elif scale_mode in ["sim3_avg1"]:
                         scale_values = []
                         for b in range(batch_size):
                             valid_idx = valid_flat[b]
@@ -1253,7 +1308,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             aligned_pred["_local_points_raw"] = original_local_points
 
             if original_local_points is not None:
-                if allow_scale: # Keep using global allow_scale for applying scale if we have it, or maybe we should track per-window scale application?
+                if allow_scale:  # Keep using global allow_scale for applying scale if we have it, or maybe we should track per-window scale application?
                     # Actually, current_scale will be 1.0 if current_allow_scale was False.
                     # So we can just always apply current_scale.
                     scale_factor = current_scale.view(batch_size, 1, 1, 1, 1)
@@ -1278,13 +1333,9 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 frames = cam_tensor.shape[1]
                 rot_local = cam_tensor[..., :3, :3]
                 trans_local = cam_tensor[..., :3, 3]
-                rot_global = torch.matmul(
-                    current_rot.unsqueeze(1).expand(-1, frames, -1, -1),
-                    rot_local
-                )
+                rot_global = torch.matmul(current_rot.unsqueeze(1).expand(-1, frames, -1, -1), rot_local)
                 rotated_trans = torch.matmul(
-                    current_rot.unsqueeze(1).expand(-1, frames, -1, -1),
-                    trans_local.unsqueeze(-1)
+                    current_rot.unsqueeze(1).expand(-1, frames, -1, -1), trans_local.unsqueeze(-1)
                 ).squeeze(-1)
                 if allow_scale:
                     rotated_trans = rotated_trans * current_scale.view(batch_size, 1, 1)
@@ -1302,14 +1353,12 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
 
             if camera_global is not None and aligned_local_points is not None:
                 aligned_points = torch.einsum(
-                    'bnij, bnhwj -> bnhwi',
-                    camera_global,
-                    homogenize_points(aligned_local_points)
+                    "bnij, bnhwj -> bnhwi", camera_global, homogenize_points(aligned_local_points)
                 )[..., :3]
             else:
                 points = pred.get("points", None)
                 if points is not None:
-                    rotated_points = torch.einsum('bij, bnhwj -> bnhwi', current_rot, points)
+                    rotated_points = torch.einsum("bij, bnhwj -> bnhwi", current_rot, points)
                     if allow_scale:
                         rotated_points = rotated_points * current_scale.view(batch_size, 1, 1, 1, 1)
                     aligned_points = rotated_points + current_trans.view(batch_size, 1, 1, 1, 3)

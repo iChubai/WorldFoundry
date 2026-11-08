@@ -11,7 +11,7 @@ import torch
 
 from worldfoundry.core.io.paths import package_data_path
 
-_MODEL_CONFIG_PATHS = [package_data_path('models', 'runtime', 'configs', 'llava_next/eva_clip')]
+_MODEL_CONFIG_PATHS = [package_data_path("models", "runtime", "configs", "llava_next/eva_clip")]
 _MODEL_CONFIGS = {}  # directory (model_name: config) of model architecture configs
 
 

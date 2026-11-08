@@ -11,7 +11,10 @@ from .rotation import quat_to_mat, mat_to_quat
 
 
 def extri_intri_to_pose_encoding(
-    extrinsics, intrinsics, image_size_hw=None, pose_encoding_type="absT_quaR_FoV"  # e.g., (256, 512)
+    extrinsics,
+    intrinsics,
+    image_size_hw=None,
+    pose_encoding_type="absT_quaR_FoV",  # e.g., (256, 512)
 ):
     """Convert camera extrinsics and intrinsics to a compact pose encoding.
 
@@ -62,7 +65,10 @@ def extri_intri_to_pose_encoding(
 
 
 def pose_encoding_to_extri_intri(
-    pose_encoding, image_size_hw=None, pose_encoding_type="absT_quaR_FoV", build_intrinsics=True  # e.g., (256, 512)
+    pose_encoding,
+    image_size_hw=None,
+    pose_encoding_type="absT_quaR_FoV",
+    build_intrinsics=True,  # e.g., (256, 512)
 ):
     """Convert a pose encoding back to camera extrinsics and intrinsics.
 

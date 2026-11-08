@@ -59,6 +59,7 @@ try:
     @torch.compiler.allow_in_graph
     class Fp8LinearFn(torch.autograd.Function):
         """Fp linear fn implementation."""
+
         @staticmethod
         def forward(ctx, a, b_t, bias):
             """Forward.
@@ -106,6 +107,7 @@ try:
 
     class Fp8Linear(torch.nn.Linear):
         """Fp linear implementation."""
+
         def forward(self, input: torch.Tensor) -> torch.Tensor:
             """Forward.
 
@@ -121,6 +123,7 @@ try:
 
     class Fp8LinearKMaskedBias(LinearKMaskedBias):
         """Fp linear k masked bias implementation."""
+
         def forward(self, input: torch.Tensor) -> torch.Tensor:
             """Forward.
 
@@ -187,6 +190,7 @@ except (ImportError, AttributeError):
     # FP8 not available — provide stub that raises at runtime
     class _FP8Stub:
         """Stub implementation."""
+
         def __getattr__(self, name):
             """Getattr.
 

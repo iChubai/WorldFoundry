@@ -34,6 +34,7 @@ STEP_VIDEO_CONFIG = {
 
 class StepVideoDenoiser:
     """StepVideo DiT adapter that forwards dual text/CLIP embeddings."""
+
     def __init__(self, model: StepVideoModel) -> None:
         self.model = model
 

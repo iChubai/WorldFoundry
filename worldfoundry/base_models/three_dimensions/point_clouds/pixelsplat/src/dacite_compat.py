@@ -55,10 +55,7 @@ def _convert(value: Any, annotation: Any, config: Config) -> Any:
         return tuple(value)
     if origin is dict:
         key_type, value_type = arguments or (Any, Any)
-        return {
-            _convert(key, key_type, config): _convert(item, value_type, config)
-            for key, item in value.items()
-        }
+        return {_convert(key, key_type, config): _convert(item, value_type, config) for key, item in value.items()}
     if annotation in config.cast:
         return annotation(value)
     if isinstance(annotation, type) and not isinstance(value, annotation):

@@ -1,4 +1,4 @@
-_base_ = './yolov5_l_mask-refine-v61_syncbn_fast_8xb16-300e_coco.py'
+_base_ = "./yolov5_l_mask-refine-v61_syncbn_fast_8xb16-300e_coco.py"
 
 # This config use refining bbox and `YOLOv5CopyPaste`.
 # Refining bbox means refining bbox by mask while loading annotations and
@@ -18,4 +18,5 @@ model = dict(
         deepen_factor=deepen_factor,
         widen_factor=widen_factor,
     ),
-    bbox_head=dict(head_module=dict(widen_factor=widen_factor)))
+    bbox_head=dict(head_module=dict(widen_factor=widen_factor)),
+)

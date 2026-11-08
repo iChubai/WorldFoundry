@@ -18,7 +18,10 @@ from typing import Optional, Tuple
 import torch
 
 from transformers import AutoConfig, AutoModelForCausalLM, MptConfig, MptForCausalLM, MptModel, GenerationConfig
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.llava_arch import (
+    LlavaMetaModel,
+    LlavaMetaForCausalLM,
+)
 
 
 class LlavaMptConfig(MptConfig):
@@ -79,8 +82,9 @@ class LlavaMptForCausalLM(MptForCausalLM, LlavaMetaForCausalLM):
         cache_position=None,
         images=None,
     ):
-
-        input_ids, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
+        input_ids, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(
+            input_ids, attention_mask, past_key_values, labels, images
+        )
 
         return super().forward(
             input_ids,
@@ -96,7 +100,9 @@ class LlavaMptForCausalLM(MptForCausalLM, LlavaMetaForCausalLM):
 
     def prepare_inputs_for_generation(self, input_ids, past_key_values=None, inputs_embeds=None, **kwargs):
         images = kwargs.pop("images", None)
-        _inputs = super().prepare_inputs_for_generation(input_ids, past_key_values=past_key_values, inputs_embeds=inputs_embeds, **kwargs)
+        _inputs = super().prepare_inputs_for_generation(
+            input_ids, past_key_values=past_key_values, inputs_embeds=inputs_embeds, **kwargs
+        )
         _inputs["images"] = images
         return _inputs
 

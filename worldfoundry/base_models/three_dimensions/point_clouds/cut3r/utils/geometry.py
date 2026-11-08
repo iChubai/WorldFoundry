@@ -120,9 +120,7 @@ def get_med_dist_between_poses(poses):
     from scipy.spatial.distance import pdist
 
     centers = [
-        pose[:3, 3].detach().cpu().numpy()
-        if isinstance(pose, torch.Tensor)
-        else np.asarray(pose[:3, 3])
+        pose[:3, 3].detach().cpu().numpy() if isinstance(pose, torch.Tensor) else np.asarray(pose[:3, 3])
         for pose in poses
     ]
     return np.median(pdist(centers))

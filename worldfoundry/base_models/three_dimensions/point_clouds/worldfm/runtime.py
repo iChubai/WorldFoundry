@@ -326,9 +326,11 @@ class WorldFMRepresentation:
         splitted_dist = []
         splitted_masks = []
         for index in trange(0, len(splitted_images), self.batch_size, desc="MoGe Infer", leave=False):
-            batch = np.stack(splitted_images[index:index + self.batch_size])
+            batch = np.stack(splitted_images[index : index + self.batch_size])
             tensor = torch.tensor(batch / 255.0, dtype=torch.float32, device=device).permute(0, 3, 1, 2)
-            fov_x, _ = np.rad2deg(utils3d.numpy.intrinsics_to_fov(np.array(intrinsics[index:index + self.batch_size])))
+            fov_x, _ = np.rad2deg(
+                utils3d.numpy.intrinsics_to_fov(np.array(intrinsics[index : index + self.batch_size]))
+            )
             fov_x_tensor = torch.tensor(fov_x, dtype=torch.float32, device=device)
             outputs = model.infer(
                 tensor,
@@ -351,11 +353,14 @@ class WorldFMRepresentation:
         )
         panorama_depth = panorama_depth.astype(np.float32)
         panorama_depth = cv2.resize(panorama_depth, (image_rgb.shape[1], image_rgb.shape[0]), cv2.INTER_LINEAR)
-        panorama_mask = cv2.resize(
-            panorama_mask.astype(np.uint8),
-            (image_rgb.shape[1], image_rgb.shape[0]),
-            cv2.INTER_NEAREST,
-        ) > 0
+        panorama_mask = (
+            cv2.resize(
+                panorama_mask.astype(np.uint8),
+                (image_rgb.shape[1], image_rgb.shape[0]),
+                cv2.INTER_NEAREST,
+            )
+            > 0
+        )
 
         depth_raw = panorama_depth.copy()
         if panorama_mask.any():

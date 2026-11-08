@@ -23,7 +23,6 @@ elif tf_version == 2:
 def loadModel(
     url="https://github.com/serengil/deepface_models/releases/download/v1.0/age_model_weights.h5",
 ):
-
     model = VGGFace.baseModel()
 
     # --------------------------

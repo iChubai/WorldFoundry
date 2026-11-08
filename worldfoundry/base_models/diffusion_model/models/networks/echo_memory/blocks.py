@@ -305,11 +305,7 @@ class EchoWanAttentionBlock(DiTBlock):
         original_x = x
         x = self._inject_actions(x, memory_context)
         x = self._action_attention(x, original_x, memory_context)
-        self_attention_kwargs = {
-            key: kwargs.pop(key)
-            for key in _SELF_ATTENTION_INTERNAL_KWARGS
-            if key in kwargs
-        }
+        self_attention_kwargs = {key: kwargs.pop(key) for key in _SELF_ATTENTION_INTERNAL_KWARGS if key in kwargs}
         kwargs.pop("_worldfoundry_inplace_residual", None)
         y = self.self_attn(
             modulate(self.norm1(x), shift_msa, scale_msa),

@@ -66,7 +66,6 @@ class CameraHead(nn.Module):
         self.fl_act = fl_act
         self.trunk_depth = trunk_depth
 
-
         # Build the trunk using a sequence of transformer blocks.
         self.trunk = nn.Sequential(
             *[
@@ -86,7 +85,7 @@ class CameraHead(nn.Module):
         # Module for producing modulation parameters: shift, scale, and a gate.
         self.poseLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(dim_in, 3 * dim_in, bias=True))
 
-        self.camera_time_upsample = ChannelExpandAndReshape(input_channels= dim_in)
+        self.camera_time_upsample = ChannelExpandAndReshape(input_channels=dim_in)
         # Adaptive layer normalization without affine parameters.
         self.adaln_norm = nn.LayerNorm(dim_in, elementwise_affine=False, eps=1e-6)
         self.pose_branch = Mlp(in_features=dim_in, hidden_features=dim_in // 2, out_features=self.target_dim, drop=0)
@@ -108,9 +107,11 @@ class CameraHead(nn.Module):
 
         # Extract the camera tokens
         pose_tokens = tokens[:, :, 0]
-        upsample_pose = self.camera_time_upsample(pose_tokens[:,1:,:]) 
+        upsample_pose = self.camera_time_upsample(pose_tokens[:, 1:, :])
         pose_tokens = self.token_norm(pose_tokens)
-        pose_tokens = torch.cat([pose_tokens[:,0:1,:], upsample_pose], dim=1) # The unsampled pose tokens were not normalized by token_norm. This will be improved in the future. 
+        pose_tokens = torch.cat(
+            [pose_tokens[:, 0:1, :], upsample_pose], dim=1
+        )  # The unsampled pose tokens were not normalized by token_norm. This will be improved in the future.
         pred_pose_enc_list = self.trunk_fn(pose_tokens, num_iterations)
         return pred_pose_enc_list
 

@@ -97,14 +97,18 @@ def resize_evaclip_pos_embed(state_dict, model, interpolation: str = "bicubic", 
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
             pos_tokens = pos_tokens.reshape(-1, orig_size, orig_size, embedding_size).permute(0, 3, 1, 2)
-            pos_tokens = torch.nn.functional.interpolate(pos_tokens, size=(new_size, new_size), mode="bicubic", align_corners=False)
+            pos_tokens = torch.nn.functional.interpolate(
+                pos_tokens, size=(new_size, new_size), mode="bicubic", align_corners=False
+            )
             pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
             new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
             state_dict["visual.pos_embed"] = new_pos_embed
 
             patch_embed_proj = state_dict["visual.patch_embed.proj.weight"]
             patch_size = model.visual.patch_embed.patch_size
-            state_dict["visual.patch_embed.proj.weight"] = torch.nn.functional.interpolate(patch_embed_proj.float(), size=patch_size, mode="bicubic", align_corners=False)
+            state_dict["visual.patch_embed.proj.weight"] = torch.nn.functional.interpolate(
+                patch_embed_proj.float(), size=patch_size, mode="bicubic", align_corners=False
+            )
 
 
 def resize_eva_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_dim=1):
@@ -127,14 +131,18 @@ def resize_eva_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
             pos_tokens = pos_tokens.reshape(-1, orig_size, orig_size, embedding_size).permute(0, 3, 1, 2)
-            pos_tokens = torch.nn.functional.interpolate(pos_tokens, size=(new_size, new_size), mode="bicubic", align_corners=False)
+            pos_tokens = torch.nn.functional.interpolate(
+                pos_tokens, size=(new_size, new_size), mode="bicubic", align_corners=False
+            )
             pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
             new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
             state_dict["pos_embed"] = new_pos_embed
 
             patch_embed_proj = state_dict["patch_embed.proj.weight"]
             patch_size = model.visual.patch_embed.patch_size
-            state_dict["patch_embed.proj.weight"] = torch.nn.functional.interpolate(patch_embed_proj.float(), size=patch_size, mode="bicubic", align_corners=False)
+            state_dict["patch_embed.proj.weight"] = torch.nn.functional.interpolate(
+                patch_embed_proj.float(), size=patch_size, mode="bicubic", align_corners=False
+            )
 
 
 def resize_rel_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_dim=1):
@@ -220,14 +228,18 @@ def resize_rel_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
             pos_tokens = pos_tokens.reshape(-1, orig_size, orig_size, embedding_size).permute(0, 3, 1, 2)
-            pos_tokens = torch.nn.functional.interpolate(pos_tokens, size=(new_size, new_size), mode="bicubic", align_corners=False)
+            pos_tokens = torch.nn.functional.interpolate(
+                pos_tokens, size=(new_size, new_size), mode="bicubic", align_corners=False
+            )
             pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
             new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
             state_dict["pos_embed"] = new_pos_embed
 
             patch_embed_proj = state_dict["patch_embed.proj.weight"]
             patch_size = model.visual.patch_embed.patch_size
-            state_dict["patch_embed.proj.weight"] = torch.nn.functional.interpolate(patch_embed_proj.float(), size=patch_size, mode="bicubic", align_corners=False)
+            state_dict["patch_embed.proj.weight"] = torch.nn.functional.interpolate(
+                patch_embed_proj.float(), size=patch_size, mode="bicubic", align_corners=False
+            )
 
 
 def freeze_batch_norm_2d(module, module_match={}, name=""):

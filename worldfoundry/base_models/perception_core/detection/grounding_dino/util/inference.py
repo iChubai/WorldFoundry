@@ -81,13 +81,13 @@ def load_image(image_path: str) -> Tuple[np.array, torch.Tensor]:
 
 
 def predict(
-        model,
-        image: torch.Tensor,
-        caption: str,
-        box_threshold: float,
-        text_threshold: float,
-        device: str = "cuda",
-        remove_combined: bool = False
+    model,
+    image: torch.Tensor,
+    caption: str,
+    box_threshold: float,
+    text_threshold: float,
+    device: str = "cuda",
+    remove_combined: bool = False,
 ) -> Tuple[torch.Tensor, torch.Tensor, List[str]]:
     """Predict.
 
@@ -120,29 +120,31 @@ def predict(
 
     tokenizer = model.tokenizer
     tokenized = tokenizer(caption)
-    
+
     if remove_combined:
-        sep_idx = [i for i in range(len(tokenized['input_ids'])) if tokenized['input_ids'][i] in [101, 102, 1012]]
-        
+        sep_idx = [i for i in range(len(tokenized["input_ids"])) if tokenized["input_ids"][i] in [101, 102, 1012]]
+
         phrases = []
         for logit in logits:
             max_idx = logit.argmax()
             insert_idx = bisect.bisect_left(sep_idx, max_idx)
             right_idx = sep_idx[insert_idx]
             left_idx = sep_idx[insert_idx - 1]
-            phrases.append(get_phrases_from_posmap(logit > text_threshold, tokenized, tokenizer, left_idx, right_idx).replace('.', ''))
+            phrases.append(
+                get_phrases_from_posmap(logit > text_threshold, tokenized, tokenizer, left_idx, right_idx).replace(
+                    ".", ""
+                )
+            )
     else:
         phrases = [
-            get_phrases_from_posmap(logit > text_threshold, tokenized, tokenizer).replace('.', '')
-            for logit
-            in logits
+            get_phrases_from_posmap(logit > text_threshold, tokenized, tokenizer).replace(".", "") for logit in logits
         ]
 
     return boxes, logits.max(dim=1)[0], phrases
 
 
 def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor, phrases: List[str]) -> np.ndarray:
-    """    
+    """
     This function annotates an image with bounding boxes and labels.
 
     Parameters:
@@ -171,12 +173,7 @@ def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor
 class Model:
     """Model implementation."""
 
-    def __init__(
-        self,
-        model_config_path: str,
-        model_checkpoint_path: str,
-        device: str = "cuda"
-    ):
+    def __init__(self, model_config_path: str, model_checkpoint_path: str, device: str = "cuda"):
         """Init.
 
         Args:
@@ -185,18 +182,12 @@ class Model:
             device: The device.
         """
         self.model = load_model(
-            model_config_path=model_config_path,
-            model_checkpoint_path=model_checkpoint_path,
-            device=device
+            model_config_path=model_config_path, model_checkpoint_path=model_checkpoint_path, device=device
         ).to(device)
         self.device = device
 
     def predict_with_caption(
-        self,
-        image: np.ndarray,
-        caption: str,
-        box_threshold: float = 0.35,
-        text_threshold: float = 0.25
+        self, image: np.ndarray, caption: str, box_threshold: float = 0.35, text_threshold: float = 0.25
     ) -> Tuple[sv.Detections, List[str]]:
         """
         import cv2
@@ -222,22 +213,15 @@ class Model:
             image=processed_image,
             caption=caption,
             box_threshold=box_threshold,
-            text_threshold=text_threshold, 
-            device=self.device)
+            text_threshold=text_threshold,
+            device=self.device,
+        )
         source_h, source_w, _ = image.shape
-        detections = Model.post_process_result(
-            source_h=source_h,
-            source_w=source_w,
-            boxes=boxes,
-            logits=logits)
+        detections = Model.post_process_result(source_h=source_h, source_w=source_w, boxes=boxes, logits=logits)
         return detections, phrases
 
     def predict_with_classes(
-        self,
-        image: np.ndarray,
-        classes: List[str],
-        box_threshold: float,
-        text_threshold: float
+        self, image: np.ndarray, classes: List[str], box_threshold: float, text_threshold: float
     ) -> sv.Detections:
         """
         import cv2
@@ -266,13 +250,10 @@ class Model:
             caption=caption,
             box_threshold=box_threshold,
             text_threshold=text_threshold,
-            device=self.device)
+            device=self.device,
+        )
         source_h, source_w, _ = image.shape
-        detections = Model.post_process_result(
-            source_h=source_h,
-            source_w=source_w,
-            boxes=boxes,
-            logits=logits)
+        detections = Model.post_process_result(source_h=source_h, source_w=source_w, boxes=boxes, logits=logits)
         class_id = Model.phrases2classes(phrases=phrases, classes=classes)
         detections.class_id = class_id
         return detections
@@ -299,12 +280,7 @@ class Model:
         return image_transformed
 
     @staticmethod
-    def post_process_result(
-            source_h: int,
-            source_w: int,
-            boxes: torch.Tensor,
-            logits: torch.Tensor
-    ) -> sv.Detections:
+    def post_process_result(source_h: int, source_w: int, boxes: torch.Tensor, logits: torch.Tensor) -> sv.Detections:
         """Post process result.
 
         Args:

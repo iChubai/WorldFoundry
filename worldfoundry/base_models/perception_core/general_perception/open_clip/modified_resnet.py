@@ -13,6 +13,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 
 class Bottleneck(nn.Module):
     """Bottleneck implementation."""
+
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1):
@@ -45,11 +46,15 @@ class Bottleneck(nn.Module):
 
         if stride > 1 or inplanes != planes * Bottleneck.expansion:
             # downsampling layer is prepended with an avgpool, and the subsequent convolution has stride 1
-            self.downsample = nn.Sequential(OrderedDict([
-                ("-1", nn.AvgPool2d(stride)),
-                ("0", nn.Conv2d(inplanes, planes * self.expansion, 1, stride=1, bias=False)),
-                ("1", nn.BatchNorm2d(planes * self.expansion))
-            ]))
+            self.downsample = nn.Sequential(
+                OrderedDict(
+                    [
+                        ("-1", nn.AvgPool2d(stride)),
+                        ("0", nn.Conv2d(inplanes, planes * self.expansion, 1, stride=1, bias=False)),
+                        ("1", nn.BatchNorm2d(planes * self.expansion)),
+                    ]
+                )
+            )
 
     def forward(self, x: torch.Tensor):
         """Forward.
@@ -74,6 +79,7 @@ class Bottleneck(nn.Module):
 
 class AttentionPool2d(nn.Module):
     """Attention pool d implementation."""
+
     def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int = None):
         """Init.
 
@@ -84,7 +90,7 @@ class AttentionPool2d(nn.Module):
             output_dim: The output dim.
         """
         super().__init__()
-        self.positional_embedding = nn.Parameter(torch.randn(spacial_dim ** 2 + 1, embed_dim) / embed_dim ** 0.5)
+        self.positional_embedding = nn.Parameter(torch.randn(spacial_dim**2 + 1, embed_dim) / embed_dim**0.5)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
         self.q_proj = nn.Linear(embed_dim, embed_dim)
         self.v_proj = nn.Linear(embed_dim, embed_dim)
@@ -123,12 +129,12 @@ class ModifiedResNet(nn.Module):
     """
 
     def __init__(
-            self,
-            layers: List[int],
-            output_dim: int,
-            heads: int,
-            image_size: int = 224,
-            width: int = 64,
+        self,
+        layers: List[int],
+        output_dim: int,
+        heads: int,
+        image_size: int = 224,
+        width: int = 64,
     ):
         """Init.
 
@@ -186,7 +192,7 @@ class ModifiedResNet(nn.Module):
     def init_parameters(self):
         """Init parameters."""
         if self.attnpool is not None:
-            std = self.attnpool.c_proj.in_features ** -0.5
+            std = self.attnpool.c_proj.in_features**-0.5
             nn.init.normal_(self.attnpool.q_proj.weight, std=std)
             nn.init.normal_(self.attnpool.k_proj.weight, std=std)
             nn.init.normal_(self.attnpool.v_proj.weight, std=std)
@@ -204,13 +210,13 @@ class ModifiedResNet(nn.Module):
             unlocked_groups: The unlocked groups.
             freeze_bn_stats: The freeze bn stats.
         """
-        assert unlocked_groups == 0, 'partial locking not currently supported for this model'
+        assert unlocked_groups == 0, "partial locking not currently supported for this model"
         for param in self.parameters():
             param.requires_grad = False
         if freeze_bn_stats:
             freeze_batch_norm_2d(self)
 
-    def set_grad_checkpointing(self, enable: bool = True, impl: str = 'inline'):
+    def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
         """Set grad checkpointing.
 
         Args:
@@ -233,16 +239,16 @@ class ModifiedResNet(nn.Module):
         return x
 
     def forward_intermediates(
-            self,
-            x: torch.Tensor,
-            indices: Optional[Union[int, List[int]]] = None,
-            stop_early: bool = False,
-            normalize_intermediates: bool = False,
-            intermediates_only: bool = False,
-            output_fmt: str = 'NCHW',
-            output_extra_tokens: bool = False,
+        self,
+        x: torch.Tensor,
+        indices: Optional[Union[int, List[int]]] = None,
+        stop_early: bool = False,
+        normalize_intermediates: bool = False,
+        intermediates_only: bool = False,
+        output_fmt: str = "NCHW",
+        output_extra_tokens: bool = False,
     ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
-        """ Forward features that returns intermediates.
+        """Forward features that returns intermediates.
 
         Args:
             x: Input image tensor
@@ -255,7 +261,7 @@ class ModifiedResNet(nn.Module):
         Returns:
 
         """
-        assert output_fmt in ('NCHW',), 'Output format must be == NCHW.'
+        assert output_fmt in ("NCHW",), "Output format must be == NCHW."
         # NOTE normalize_intermediates and return_extra_tokens don't apply
         take_indices, max_index = feature_take_indices(5, indices)
 
@@ -263,19 +269,19 @@ class ModifiedResNet(nn.Module):
         intermediates = []
         blocks = [self.stem, self.layer1, self.layer2, self.layer3, self.layer4]
         if not stop_early:
-            blocks = blocks[:max_index + 1]
+            blocks = blocks[: max_index + 1]
         for i, blk in enumerate(blocks):
             x = blk(x)
             if i in take_indices:
                 intermediates.append(x)
 
-        output['image_intermediates'] = intermediates
+        output["image_intermediates"] = intermediates
 
         if intermediates_only:
             return output
 
         x = self.attnpool(x)
-        output['image_features'] = x
+        output["image_features"] = x
 
         return output
 

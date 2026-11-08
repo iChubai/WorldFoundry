@@ -17,6 +17,7 @@ def recursive_fn_factory(fn):
     Args:
         fn: The fn.
     """
+
     def recursive_fn(b):
         """Recursive fn.
 
@@ -64,25 +65,19 @@ def clone_output_wrapper(f):
     def wrapped(*args, **kwargs):
         """Wrapped."""
         outputs = f(*args, **kwargs)
-        return tree_map_only(
-            torch.Tensor, lambda t: t.clone() if t.is_cuda else t, outputs
-        )
+        return tree_map_only(torch.Tensor, lambda t: t.clone() if t.is_cuda else t, outputs)
 
     return wrapped
 
 
-def compile_wrapper(
-    fn, *, mode="max-autotune", fullgraph=True, dynamic=False, name=None
-):
+def compile_wrapper(fn, *, mode="max-autotune", fullgraph=True, dynamic=False, name=None):
     """Compile with recursive_contiguous on inputs and recursive_clone on outputs.
     Used for SAM2 tracker components that need contiguous inputs for CUDA graphs."""
     compiled_fn = torch.compile(fn, mode=mode, fullgraph=fullgraph, dynamic=dynamic)
 
     def compiled_fn_wrapper(*args, **kwargs):
         """Compiled fn wrapper."""
-        with torch.autograd.profiler.record_function(
-            f"compiled {fn}" if name is None else name
-        ):
+        with torch.autograd.profiler.record_function(f"compiled {fn}" if name is None else name):
             CUDAGRAPH_MODES = ["max-autotune", "reduce-overhead"]
             args = recursive_contiguous(args)
             kwargs = recursive_contiguous(kwargs)
@@ -123,8 +118,7 @@ def shape_logging_wrapper(fn, keep_kwargs, enable_logging=False):
         shapes = tuple(get_shape(arg) for arg in args) + tuple(
             (k, get_shape(v))
             for k, v in kwargs.items()
-            if isinstance(v, (torch.Tensor, list))
-            and (len(keep_kwargs) > 0 and k in keep_kwargs)
+            if isinstance(v, (torch.Tensor, list)) and (len(keep_kwargs) > 0 and k in keep_kwargs)
         )
         if shapes not in seen_shapes:
             seen_shapes.add(shapes)

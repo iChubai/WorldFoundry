@@ -52,22 +52,23 @@ class _BaseDPTHead(nn.Module):
         self._cast_pos_embed_dtype = _cast_pos_embed_dtype
 
         self.norm = nn.LayerNorm(dim_in)
-        self.projects = nn.ModuleList([
-            nn.Conv2d(in_channels=dim_in, out_channels=oc, kernel_size=1, stride=1, padding=0)
-            for oc in out_channels
-        ])
-        self.resize_layers = nn.ModuleList([
-            nn.ConvTranspose2d(
-                in_channels=out_channels[0], out_channels=out_channels[0], kernel_size=4, stride=4, padding=0
-            ),
-            nn.ConvTranspose2d(
-                in_channels=out_channels[1], out_channels=out_channels[1], kernel_size=2, stride=2, padding=0
-            ),
-            nn.Identity(),
-            nn.Conv2d(
-                in_channels=out_channels[3], out_channels=out_channels[3], kernel_size=3, stride=2, padding=1
-            ),
-        ])
+        self.projects = nn.ModuleList(
+            [nn.Conv2d(in_channels=dim_in, out_channels=oc, kernel_size=1, stride=1, padding=0) for oc in out_channels]
+        )
+        self.resize_layers = nn.ModuleList(
+            [
+                nn.ConvTranspose2d(
+                    in_channels=out_channels[0], out_channels=out_channels[0], kernel_size=4, stride=4, padding=0
+                ),
+                nn.ConvTranspose2d(
+                    in_channels=out_channels[1], out_channels=out_channels[1], kernel_size=2, stride=2, padding=0
+                ),
+                nn.Identity(),
+                nn.Conv2d(
+                    in_channels=out_channels[3], out_channels=out_channels[3], kernel_size=3, stride=2, padding=1
+                ),
+            ]
+        )
         self.scratch = _make_scratch(out_channels, features, expand=False)
         self.scratch.stem_transpose = None
         self.scratch.refinenet1 = _make_fusion_block(features)
@@ -76,9 +77,7 @@ class _BaseDPTHead(nn.Module):
         self.scratch.refinenet4 = _make_fusion_block(features, has_residual=False)
 
         head_features_1 = features
-        self.scratch.output_conv1 = nn.Conv2d(
-            head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1
-        )
+        self.scratch.output_conv1 = nn.Conv2d(head_features_1, head_features_1 // 2, kernel_size=3, stride=1, padding=1)
 
     def _apply_pos_embed(self, x: torch.Tensor, W: int, H: int, ratio: float = 0.1) -> torch.Tensor:
         """Helper function to apply pos embed.
@@ -165,17 +164,22 @@ class _BaseDPTHead(nn.Module):
             feat = resize(feat)
             feats.append(feat)
 
-        fused = checkpoint(self.scratch_forward, feats, use_reentrant=False) if self.gradient_checkpoint else self.scratch_forward(feats)
+        fused = (
+            checkpoint(self.scratch_forward, feats, use_reentrant=False)
+            if self.gradient_checkpoint
+            else self.scratch_forward(feats)
+        )
         _interpolate_fn = lambda t: custom_interpolate(
             t,
-            size=(
-                int(ph * self.patch_size / self.down_ratio),
-                int(pw * self.patch_size / self.down_ratio)
-            ),
+            size=(int(ph * self.patch_size / self.down_ratio), int(pw * self.patch_size / self.down_ratio)),
             mode="bilinear",
             align_corners=True,
         )
-        fused = checkpoint(_interpolate_fn, fused, use_reentrant=False) if self.gradient_checkpoint else _interpolate_fn(fused)
+        fused = (
+            checkpoint(_interpolate_fn, fused, use_reentrant=False)
+            if self.gradient_checkpoint
+            else _interpolate_fn(fused)
+        )
 
         if self.pos_embed:
             fused = self._apply_pos_embed(fused, W, H)
@@ -239,9 +243,13 @@ class DPTHead(_BaseDPTHead):
             The return value.
         """
         super().__init__(
-            dim_in=dim_in, patch_size=patch_size, features=features,
-            out_channels=out_channels, pos_embed=pos_embed,
-            down_ratio=down_ratio, gradient_checkpoint=gradient_checkpoint,
+            dim_in=dim_in,
+            patch_size=patch_size,
+            features=features,
+            out_channels=out_channels,
+            pos_embed=pos_embed,
+            down_ratio=down_ratio,
+            gradient_checkpoint=gradient_checkpoint,
         )
         self.activation = activation
         self.is_gsdpt = is_gsdpt
@@ -256,10 +264,7 @@ class DPTHead(_BaseDPTHead):
             nn.Conv2d(head_features_2, output_dim, kernel_size=1, stride=1, padding=0),
         )
         if self.is_gsdpt:
-            self.input_merger = nn.Sequential(
-                nn.Conv2d(3, conv2_in_channels, 7, 1, 3),
-                nn.ReLU()
-                )
+            self.input_merger = nn.Sequential(nn.Conv2d(3, conv2_in_channels, 7, 1, 3), nn.ReLU())
 
     def to(self, *args, **kwargs):
         """To."""
@@ -268,9 +273,17 @@ class DPTHead(_BaseDPTHead):
         self.resize_layers = self.resize_layers.to(*args, **kwargs)
         if self.is_gsdpt:
             self.input_merger = self.input_merger.to(*args, **kwargs)
-        for key in ('layer1_rn', 'layer2_rn', 'layer3_rn', 'layer4_rn',
-                    'refinenet1', 'refinenet2', 'refinenet3', 'refinenet4',
-                    'output_conv1'):
+        for key in (
+            "layer1_rn",
+            "layer2_rn",
+            "layer3_rn",
+            "layer4_rn",
+            "refinenet1",
+            "refinenet2",
+            "refinenet3",
+            "refinenet4",
+            "output_conv1",
+        ):
             if not hasattr(self.scratch, key):
                 continue
             setattr(self.scratch, key, getattr(self.scratch, key).to(*args, **kwargs))
@@ -280,7 +293,7 @@ class DPTHead(_BaseDPTHead):
         self.scratch.output_conv2 = self.scratch.output_conv2.to(*args, **kwargs)
 
         return self
-    
+
     def forward(
         self,
         token_list: List[torch.Tensor],
@@ -318,7 +331,7 @@ class DPTHead(_BaseDPTHead):
 
         for frame_start in range(0, S, frames_chunk_size):
             frame_end = min(frame_start + frames_chunk_size, S)
-            
+
             if self.is_gsdpt:
                 if self.enable_depth_mask:
                     gs, preds, conf, depth_mask = self._forward_impl(
@@ -329,9 +342,7 @@ class DPTHead(_BaseDPTHead):
                     conf_chunks.append(conf)
                     depth_mask_chunks.append(depth_mask)
                 else:
-                    gs, preds, conf = self._forward_impl(
-                        token_list, images, patch_start_idx, frame_start, frame_end
-                    )
+                    gs, preds, conf = self._forward_impl(token_list, images, patch_start_idx, frame_start, frame_end)
                     gs_chunks.append(gs)
                     preds_chunks.append(preds)
                     conf_chunks.append(conf)
@@ -344,9 +355,7 @@ class DPTHead(_BaseDPTHead):
                     conf_chunks.append(conf)
                     depth_mask_chunks.append(depth_mask)
                 else:
-                    preds, conf = self._forward_impl(
-                        token_list, images, patch_start_idx, frame_start, frame_end
-                    )
+                    preds, conf = self._forward_impl(token_list, images, patch_start_idx, frame_start, frame_end)
                     preds_chunks.append(preds)
                     conf_chunks.append(conf)
 
@@ -362,7 +371,11 @@ class DPTHead(_BaseDPTHead):
             return torch.cat(gs_chunks, dim=1), torch.cat(preds_chunks, dim=1), torch.cat(conf_chunks, dim=1)
         else:
             if self.enable_depth_mask:
-                return torch.cat(preds_chunks, dim=1), torch.cat(conf_chunks, dim=1), torch.cat(depth_mask_chunks, dim=1)
+                return (
+                    torch.cat(preds_chunks, dim=1),
+                    torch.cat(conf_chunks, dim=1),
+                    torch.cat(depth_mask_chunks, dim=1),
+                )
             else:
                 return torch.cat(preds_chunks, dim=1), torch.cat(conf_chunks, dim=1)
 
@@ -404,7 +417,7 @@ class DPTHead(_BaseDPTHead):
                 preds, conf = self.activate_head(out, activation=self.activation)
             preds = preds.reshape(B, S, *preds.shape[1:])
             conf = conf.reshape(B, S, *conf.shape[1:])
-            
+
             # Merge direct image features
             img_flat = images.reshape(B * S, -1, H, W)
             img_feat = self.input_merger(img_flat)
@@ -428,7 +441,9 @@ class DPTHead(_BaseDPTHead):
                 conf = conf.reshape(B, S, *conf.shape[1:])
                 return preds, conf
 
-    def activate_head(self, out_head: torch.Tensor, activation: str = "inv_log+expp1") -> Tuple[torch.Tensor, torch.Tensor]:
+    def activate_head(
+        self, out_head: torch.Tensor, activation: str = "inv_log+expp1"
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Process network output to extract attribute (e.g. points, depth, etc.) and confidence values.
 
@@ -441,13 +456,15 @@ class DPTHead(_BaseDPTHead):
         """
         # Parse activation string
         if self.enable_depth_mask:
-            act_attr, act_conf, act_depth_mask = (activation.split("+") if "+" in activation else (activation, "expp1", "linear"))
+            act_attr, act_conf, act_depth_mask = (
+                activation.split("+") if "+" in activation else (activation, "expp1", "linear")
+            )
 
             # (B,C,H,W) -> (B,H,W,C)
             feat = out_head.permute(0, 2, 3, 1)
             attr, conf, depth_mask = feat[..., :-2], feat[..., -2], feat[..., -1]
         else:
-            act_attr, act_conf = (activation.split("+") if "+" in activation else (activation, "expp1"))
+            act_attr, act_conf = activation.split("+") if "+" in activation else (activation, "expp1")
 
             # (B,C,H,W) -> (B,H,W,C)
             feat = out_head.permute(0, 2, 3, 1)
@@ -455,17 +472,21 @@ class DPTHead(_BaseDPTHead):
 
         # Map point activations to lambdas for clarity and conciseness
         attr_activations = {
-            "norm_exp": lambda x: (x / x.norm(dim=-1, keepdim=True).clamp(min=1e-8)) * torch.expm1(x.norm(dim=-1, keepdim=True)),
+            "norm_exp": lambda x: (x / x.norm(dim=-1, keepdim=True).clamp(min=1e-8))
+            * torch.expm1(x.norm(dim=-1, keepdim=True)),
             "norm": lambda x: x / x.norm(dim=-1, keepdim=True),
             "exp": torch.exp,
             "relu": F.relu,
             "inv_log": self._apply_inverse_log_transform,
-            "xy_inv_log": lambda x: torch.cat([
-                x[..., :2] * self._apply_inverse_log_transform(x[..., 2:]), 
-                self._apply_inverse_log_transform(x[..., 2:])
-            ], dim=-1),
+            "xy_inv_log": lambda x: torch.cat(
+                [
+                    x[..., :2] * self._apply_inverse_log_transform(x[..., 2:]),
+                    self._apply_inverse_log_transform(x[..., 2:]),
+                ],
+                dim=-1,
+            ),
             "sigmoid": torch.sigmoid,
-            "linear": lambda x: x
+            "linear": lambda x: x,
         }
 
         if act_attr not in attr_activations:
@@ -473,15 +494,11 @@ class DPTHead(_BaseDPTHead):
         attr_out = attr_activations[act_attr](attr)
 
         # Confidence activation mapping
-        conf_activations = {
-            "expp1": lambda c: 1 + c.exp(),
-            "expp0": torch.exp,
-            "sigmoid": torch.sigmoid
-        }
+        conf_activations = {"expp1": lambda c: 1 + c.exp(), "expp0": torch.exp, "sigmoid": torch.sigmoid}
         if act_conf not in conf_activations:
             raise ValueError(f"Unknown confidence activation: {act_conf}")
         conf_out = conf_activations[act_conf](conf)
-        
+
         if self.enable_depth_mask:
             depth_mask_activations = {
                 "sigmoid": torch.sigmoid,
@@ -493,19 +510,18 @@ class DPTHead(_BaseDPTHead):
             return attr_out, conf_out, depth_mask_out
         else:
             return attr_out, conf_out
-    
+
     def _apply_inverse_log_transform(self, input_tensor: torch.Tensor) -> torch.Tensor:
         """
         Apply inverse logarithm transform: sign(y) * (exp(|y|) - 1)
-        
+
         Args:
             input_tensor: Input tensor
-            
+
         Returns:
             Transformed tensor
         """
         return torch.sign(input_tensor) * (torch.expm1(torch.abs(input_tensor)))
-
 
 
 ################################################################################
@@ -720,17 +736,17 @@ def custom_interpolate(
 ) -> torch.Tensor:
     """
     Custom interpolation function to handle large tensors by chunking.
-    
+
     Avoids INT_MAX overflow issues in nn.functional.interpolate when dealing with
     very large input tensors by splitting them into smaller chunks.
-    
+
     Args:
         x: Input tensor to interpolate
         size: Target output size (H, W)
         scale_factor: Scaling factor if size is not provided
         mode: Interpolation mode (default: "bilinear")
         align_corners: Whether to align corners in interpolation
-        
+
     Returns:
         Interpolated tensor
     """

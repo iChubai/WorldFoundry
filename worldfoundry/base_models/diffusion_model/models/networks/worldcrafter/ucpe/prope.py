@@ -145,7 +145,9 @@ class PropeDotProductAttention(torch.nn.Module):
         )
 
     def _precompute_and_cache_apply_fns(
-        self, viewmats: torch.Tensor, Ks: Optional[torch.Tensor],
+        self,
+        viewmats: torch.Tensor,
+        Ks: Optional[torch.Tensor],
         coeffs_x: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
         coeffs_y: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
     ):
@@ -306,9 +308,7 @@ def _prepare_apply_fns(
     if coeffs_y is None:
         coeffs_y = _rope_precompute_coeffs(
             torch.tile(
-                torch.repeat_interleave(
-                    torch.arange(patches_y, device=device), patches_x
-                ),
+                torch.repeat_interleave(torch.arange(patches_y, device=device), patches_x),
                 (cameras,),
             ),
             freq_base=100.0,
@@ -382,23 +382,13 @@ def _rope_precompute_coeffs(
     assert feat_dim % 2 == 0
     num_freqs = feat_dim // 2
     freqs = freq_scale * (
-        freq_base
-        ** (
-            -torch.arange(num_freqs, device=positions.device)[None, None, None, :]
-            / num_freqs
-        )
+        freq_base ** (-torch.arange(num_freqs, device=positions.device)[None, None, None, :] / num_freqs)
     )
     angles = positions[None, None, :, None] * freqs
     # Shape should be: `(batch, num_heads, seqlen, num_freqs)`; we're
     # broadcasting across `batch` and `num_heads`.
     assert angles.shape == (1, 1, positions.shape[0], num_freqs)
     return torch.cos(angles).to(dtype), torch.sin(angles).to(dtype)
-
-
-
-
-
-
 
 
 def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
@@ -410,8 +400,10 @@ def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
     return out
 
 
-
 # Shared PRoPE algebra; WorldCrafter retains only its variable-grid projection rules.
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3.pi3.models.layers.prope import (
-    _rope_apply_coeffs, _apply_block_diagonal, _invert_SE3, _invert_K,
+    _rope_apply_coeffs,
+    _apply_block_diagonal,
+    _invert_SE3,
+    _invert_K,
 )

@@ -36,6 +36,7 @@ from flow3d.transforms import rt_to_mat4
 @dataclass
 class iPhoneDataConfig:
     """I phone data config implementation."""
+
     data_dir: str
     start: int = 0
     end: int = -1
@@ -59,6 +60,7 @@ class iPhoneDataConfig:
 
 class iPhoneDataset(BaseDataset):
     """I phone dataset implementation."""
+
     def __init__(
         self,
         data_dir: str,
@@ -176,9 +178,7 @@ class iPhoneDataset(BaseDataset):
             imgs = torch.from_numpy(
                 np.array(
                     [
-                        iio.imread(
-                            osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png")
-                        )
+                        iio.imread(osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png"))
                         for frame_name in tqdm(
                             self.frame_names,
                             desc=f"Loading {self.split} images",
@@ -196,12 +196,11 @@ class iPhoneDataset(BaseDataset):
             H, W = self.get_image(0).shape[:2]
             Ks = np.array(intrinsics, np.float32).reshape(-1, 3, 3)
             _W, _H = Ks[0, 0:2, 2]
-            
+
             W_scale = W / (2 * _W)
             H_scale = H / (2 * _H)
             Ks[:, 0, :] *= W_scale
             Ks[:, 1, :] *= H_scale
-
 
             xyzw = True
             poses_path = Path(data_dir) / "flow3d_preprocessed/monst3r/pred_traj.txt"
@@ -210,7 +209,8 @@ class iPhoneDataset(BaseDataset):
             w2cs = np.concatenate(
                 [
                     # Convert TUM pose to SE3 pose
-                    Rotation.from_quat(w2cs[:, 4:]).as_matrix() if not xyzw
+                    Rotation.from_quat(w2cs[:, 4:]).as_matrix()
+                    if not xyzw
                     else Rotation.from_quat(np.concatenate([w2cs[:, 5:], w2cs[:, 4:5]], -1)).as_matrix(),
                     w2cs[:, 1:4, None],
                 ],
@@ -223,29 +223,26 @@ class iPhoneDataset(BaseDataset):
             ones = np.tile(np.array([0, 0, 0, 1], dtype=np.float32), (num_frames, 1, 1))
             w2cs = np.concatenate([w2cs, ones], axis=1)
 
-
             T0 = w2cs[len(w2cs) // 2]  # First camera pose (4x4 matrix)
-            T0_inv = np.linalg.inv(T0)    # Inverse of the first camera pose
+            T0_inv = np.linalg.inv(T0)  # Inverse of the first camera pose
 
             # # Apply T0_inv to all camera poses
             w2cs = np.matmul(T0_inv[np.newaxis, :, :], w2cs)
 
             w2cs = np.linalg.inv(w2cs)
-            
+
             w2cs = torch.from_numpy(w2cs).float()
             Ks = torch.from_numpy(Ks[:, :3, :3]).float()
             self.w2cs = w2cs
             self.Ks = Ks
             self.Ks[:, :2] /= factor
-        
+
         if not skip_load_imgs:
             # Load images.
             imgs = torch.from_numpy(
                 np.array(
                     [
-                        iio.imread(
-                            osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png")
-                        )
+                        iio.imread(osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png"))
                         for frame_name in tqdm(
                             self.frame_names,
                             desc=f"Loading {self.split} images",
@@ -287,22 +284,18 @@ class iPhoneDataset(BaseDataset):
                         frame_name: The frame name.
                     """
                     from PIL import Image
-                    normal = Image.open(
-                        osp.join(
-                            self.data_dir, 
-                            f"normal_lotus/{factor}x/{frame_name}.png"
-                        )
-                    )
+
+                    normal = Image.open(osp.join(self.data_dir, f"normal_lotus/{factor}x/{frame_name}.png"))
                     normal = np.array(normal)
-                    normal = normal / 255.
-                    normal = normal * 2. - 1.
+                    normal = normal / 255.0
+                    normal = normal * 2.0 - 1.0
 
                     if len(normal.shape) == 4:
                         normal = normal.squeeze(0)
-                    
+
                     # Here the normal should be inward normal
                     return normal
-            
+
                 try:
                     self.normals = torch.from_numpy(
                         np.array(
@@ -319,8 +312,7 @@ class iPhoneDataset(BaseDataset):
                     )
                 except:
                     print("No monocular normal found")
-                
-                
+
                 # Load depths.
                 def load_depth(i, frame_name):
                     """Load depth.
@@ -342,7 +334,9 @@ class iPhoneDataset(BaseDataset):
                         # rescale depth output by monst3r to its original resolution as monst3r uses 512 or 224 resolution.
                         depths = np.load(os.path.join(self.data_dir, "flow3d_preprocessed/scene_depth.npy"))
                         depths = torch.tensor(depths).float()
-                        depths = F.interpolate(depths.unsqueeze(1), (H, W), mode="bilinear", align_corners=False).squeeze(1)
+                        depths = F.interpolate(
+                            depths.unsqueeze(1), (H, W), mode="bilinear", align_corners=False
+                        ).squeeze(1)
                         depth = depths[i]
 
                     else:
@@ -361,39 +355,29 @@ class iPhoneDataset(BaseDataset):
                     np.array(
                         [
                             load_depth(i, frame_name)
-                            for i, frame_name in enumerate(tqdm(
-                                self.frame_names,
-                                desc=f"Loading {self.split} depths",
-                                leave=False,
-                            ))
+                            for i, frame_name in enumerate(
+                                tqdm(
+                                    self.frame_names,
+                                    desc=f"Loading {self.split} depths",
+                                    leave=False,
+                                )
+                            )
                         ],
                         np.float32,
                     )
                 )
-                max_depth_values_per_frame = self.depths.reshape(
-                    self.num_frames, -1
-                ).max(1)[0]
+                max_depth_values_per_frame = self.depths.reshape(self.num_frames, -1).max(1)[0]
                 max_depth_value = max_depth_values_per_frame.median() * 2.5
                 self.depths = torch.clamp(self.depths, 0, max_depth_value)
                 # Median filter depths.
                 # NOTE(hangg): This operator is very expensive.
                 if self.use_median_filter:
-                    for i in tqdm(
-                        range(self.num_frames), desc="Processing depths", leave=False
-                    ):
+                    for i in tqdm(range(self.num_frames), desc="Processing depths", leave=False):
                         depth = masked_median_blur(
                             self.depths[[i]].unsqueeze(1).to("cuda"),
-                            (
-                                self.masks[[i]]
-                                * self.valid_masks[[i]]
-                                * (self.depths[[i]] > 0)
-                            )
-                            .unsqueeze(1)
-                            .to("cuda"),
+                            (self.masks[[i]] * self.valid_masks[[i]] * (self.depths[[i]] > 0)).unsqueeze(1).to("cuda"),
                         )[0, 0].cpu()
-                        self.depths[i] = depth * self.masks[i] + self.depths[i] * (
-                            1 - self.masks[i]
-                        )
+                        self.depths[i] = depth * self.masks[i] + self.depths[i] * (1 - self.masks[i])
                 # Load the query pixels from 2D tracks.
                 self.query_tracks_2d = [
                     torch.from_numpy(
@@ -407,9 +391,7 @@ class iPhoneDataset(BaseDataset):
                     )
                     for frame_name in self.frame_names
                 ]
-                guru.info(
-                    f"{len(self.query_tracks_2d)=} {self.query_tracks_2d[0].shape=}"
-                )
+                guru.info(f"{len(self.query_tracks_2d)=} {self.query_tracks_2d[0].shape=}")
 
                 # Load sam features.
                 # sam_feat_dir = osp.join(
@@ -448,14 +430,10 @@ class iPhoneDataset(BaseDataset):
                 )
 
         if self.scene_norm_dict is None:
-            cached_scene_norm_dict_path = osp.join(
-                self.cache_dir, "scene_norm_dict.pth"
-            )
+            cached_scene_norm_dict_path = osp.join(self.cache_dir, "scene_norm_dict.pth")
             if osp.exists(cached_scene_norm_dict_path) and self.load_from_cache:
                 print("loading cached scene norm dict...")
-                self.scene_norm_dict = torch.load(
-                    osp.join(self.cache_dir, "scene_norm_dict.pth")
-                )
+                self.scene_norm_dict = torch.load(osp.join(self.cache_dir, "scene_norm_dict.pth"))
             elif self.training:
                 # Compute the scene scale and transform for normalization.
                 # Normalize the scene based on the foreground 3D tracks.
@@ -470,8 +448,7 @@ class iPhoneDataset(BaseDataset):
                 original_up = -F.normalize(self.w2cs[:, 1, :3].mean(0), dim=-1)
                 target_up = original_up.new_tensor([0.0, 0.0, 1.0])
                 R = roma.rotvec_to_rotmat(
-                    F.normalize(original_up.cross(target_up, dim=-1), dim=-1)
-                    * original_up.dot(target_up).acos_()
+                    F.normalize(original_up.cross(target_up, dim=-1), dim=-1) * original_up.dot(target_up).acos_()
                 )
                 transfm = rt_to_mat4(R, torch.einsum("ij,j->i", -R, scene_center))
                 self.scene_norm_dict = SceneNormDict(scale=scale, transfm=transfm)
@@ -488,9 +465,7 @@ class iPhoneDataset(BaseDataset):
             self.depths /= scale
 
         if not skip_load_imgs:
-            guru.info(
-                f"{self.imgs.shape=} {self.valid_masks.shape=} {self.masks.shape=}"
-            )
+            guru.info(f"{self.imgs.shape=} {self.valid_masks.shape=} {self.masks.shape=}")
 
     @property
     def num_frames(self) -> int:
@@ -571,9 +546,7 @@ class iPhoneDataset(BaseDataset):
         Returns:
             The return value.
         """
-        return iio.imread(
-            osp.join(self.data_dir, f"rgb/{self.factor}x/{self.frame_names[0]}.png")
-        ).shape[1::-1]
+        return iio.imread(osp.join(self.data_dir, f"rgb/{self.factor}x/{self.frame_names[0]}.png")).shape[1::-1]
 
     # def get_sam_features(self) -> list[torch.Tensor, tuple[int, int], tuple[int, int]]:
     #     return self.sam_features, self.sam_original_size, self.sam_input_size
@@ -590,9 +563,7 @@ class iPhoneDataset(BaseDataset):
                 number of samples less than what is specified.
             step (int): The step to temporally subsample the track.
         """
-        assert (
-            self.split == "train"
-        ), "fetch_tracks_3d is only available for the training split."
+        assert self.split == "train", "fetch_tracks_3d is only available for the training split."
         cached_track_3d_path = osp.join(self.cache_dir, f"tracks_3d_{num_samples}.pth")
         if osp.exists(cached_track_3d_path) and step == 1 and self.load_from_cache:
             print("loading cached 3d tracks data...")
@@ -611,23 +582,15 @@ class iPhoneDataset(BaseDataset):
         raw_tracks_2d = []
         candidate_frames = list(range(0, self.num_frames, step))
         num_sampled_frames = len(candidate_frames)
-        for i in (
-            tqdm(candidate_frames, desc="Loading 2D tracks", leave=False)
-            if show_pbar
-            else candidate_frames
-        ):
+        for i in tqdm(candidate_frames, desc="Loading 2D tracks", leave=False) if show_pbar else candidate_frames:
             curr_num_samples = self.query_tracks_2d[i].shape[0]
             num_samples_per_frame = (
                 int(np.floor(num_samples / num_sampled_frames))
                 if i != candidate_frames[-1]
-                else num_samples
-                - (num_sampled_frames - 1)
-                * int(np.floor(num_samples / num_sampled_frames))
+                else num_samples - (num_sampled_frames - 1) * int(np.floor(num_samples / num_sampled_frames))
             )
             if num_samples_per_frame < curr_num_samples:
-                track_sels = np.random.choice(
-                    curr_num_samples, (num_samples_per_frame,), replace=False
-                )
+                track_sels = np.random.choice(curr_num_samples, (num_samples_per_frame,), replace=False)
             else:
                 track_sels = np.arange(0, curr_num_samples)
             curr_tracks_2d = []
@@ -640,9 +603,7 @@ class iPhoneDataset(BaseDataset):
                             osp.join(
                                 self.data_dir,
                                 "flow3d_preprocessed/2d_tracks/",
-                                f"{self.factor}x/"
-                                f"{self.frame_names[i]}_"
-                                f"{self.frame_names[j]}.npy",
+                                f"{self.factor}x/{self.frame_names[i]}_{self.frame_names[j]}.npy",
                             )
                         ).astype(np.float32)
                     )
@@ -682,9 +643,7 @@ class iPhoneDataset(BaseDataset):
                 )
                 * track_depths
             )
-            tracks_3d = torch.einsum(
-                "nij,npj->npi", c2ws, F.pad(tracks_3d, (0, 1), value=1.0)
-            )[..., :3]
+            tracks_3d = torch.einsum("nij,npj->npi", c2ws, F.pad(tracks_3d, (0, 1), value=1.0))[..., :3]
             # Filter out out-of-mask tracks.
             is_in_masks = (
                 F.grid_sample(
@@ -745,9 +704,7 @@ class iPhoneDataset(BaseDataset):
             filtered_track_colors,
         )
 
-    def get_bkgd_points(
-        self, num_samples: int, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def get_bkgd_points(self, num_samples: int, **kwargs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Get bkgd points.
 
         Args:
@@ -771,9 +728,7 @@ class iPhoneDataset(BaseDataset):
         for i in tqdm(candidate_frames, desc="Loading bkgd points", leave=False):
             img = self.imgs[i]
             depth = self.depths[i]
-            bool_mask = ((1.0 - self.masks[i]) * self.valid_masks[i] * (depth > 0)).to(
-                torch.bool
-            )
+            bool_mask = ((1.0 - self.masks[i]) * self.valid_masks[i] * (depth > 0)).to(torch.bool)
             w2c = self.w2cs[i]
             K = self.Ks[i]
             points = (
@@ -784,23 +739,17 @@ class iPhoneDataset(BaseDataset):
                 )
                 * depth[bool_mask][:, None]
             )
-            points = torch.einsum(
-                "ij,pj->pi", torch.linalg.inv(w2c)[:3], F.pad(points, (0, 1), value=1.0)
-            )
+            points = torch.einsum("ij,pj->pi", torch.linalg.inv(w2c)[:3], F.pad(points, (0, 1), value=1.0))
             point_normals = normal_from_depth_image(depth, K, w2c)[bool_mask]
             point_colors = img[bool_mask]
             curr_num_samples = points.shape[0]
             num_samples_per_frame = (
                 int(np.floor(num_samples / num_sampled_frames))
                 if i != candidate_frames[-1]
-                else num_samples
-                - (num_sampled_frames - 1)
-                * int(np.floor(num_samples / num_sampled_frames))
+                else num_samples - (num_sampled_frames - 1) * int(np.floor(num_samples / num_sampled_frames))
             )
             if num_samples_per_frame < curr_num_samples:
-                point_sels = np.random.choice(
-                    curr_num_samples, (num_samples_per_frame,), replace=False
-                )
+                point_sels = np.random.choice(curr_num_samples, (num_samples_per_frame,), replace=False)
             else:
                 point_sels = np.arange(0, curr_num_samples)
             bkgd_points.append(points[point_sels])
@@ -849,15 +798,13 @@ class iPhoneDataset(BaseDataset):
                 data["normals"] = self.normals[index]
             except:
                 pass
-            
+
             # (H, W).
             data["depths"] = self.depths[index]
             # (P, 2).
             data["query_tracks_2d"] = self.query_tracks_2d[index][:, :2]
             target_inds = torch.from_numpy(
-                np.random.choice(
-                    self.num_frames, (self.num_targets_per_frame,), replace=False
-                )
+                np.random.choice(self.num_frames, (self.num_targets_per_frame,), replace=False)
             )
             # (N, P, 4).
             target_tracks_2d = torch.stack(
@@ -867,9 +814,7 @@ class iPhoneDataset(BaseDataset):
                             osp.join(
                                 self.data_dir,
                                 "flow3d_preprocessed/2d_tracks/",
-                                f"{self.factor}x/"
-                                f"{self.frame_names[index]}_"
-                                f"{self.frame_names[target_index.item()]}.npy",
+                                f"{self.factor}x/{self.frame_names[index]}_{self.frame_names[target_index.item()]}.npy",
                             )
                         ).astype(np.float32)
                     )
@@ -891,9 +836,7 @@ class iPhoneDataset(BaseDataset):
                 data["target_visibles"],
                 data["target_invisibles"],
                 data["target_confidences"],
-            ) = parse_tapir_track_info(
-                target_tracks_2d[..., 2], target_tracks_2d[..., 3]
-            )
+            ) = parse_tapir_track_info(target_tracks_2d[..., 2], target_tracks_2d[..., 3])
             # (N, P).
             data["target_track_depths"] = F.grid_sample(
                 self.depths[target_inds, None],
@@ -932,24 +875,18 @@ class iPhoneDatasetKeypointView(Dataset):
         self.dataset = dataset
         assert self.dataset.split == "train"
         # Load 2D keypoints.
-        keypoint_paths = sorted(
-            glob(osp.join(self.dataset.data_dir, "keypoint/2x/train/0_*.json"))
-        )
+        keypoint_paths = sorted(glob(osp.join(self.dataset.data_dir, "keypoint/2x/train/0_*.json")))
         keypoints = []
         for keypoint_path in keypoint_paths:
             with open(keypoint_path) as f:
                 keypoints.append(json.load(f))
-        time_ids = [
-            int(osp.basename(p).split("_")[1].split(".")[0]) for p in keypoint_paths
-        ]
+        time_ids = [int(osp.basename(p).split("_")[1].split(".")[0]) for p in keypoint_paths]
         # only use time ids that are in the dataset.
         start = self.dataset.start
         time_ids = [t - start for t in time_ids if t - start in self.dataset.time_ids]
         self.time_ids = torch.tensor(time_ids)
         self.time_pairs = torch.tensor(list(product(self.time_ids, repeat=2)))
-        self.index_pairs = torch.tensor(
-            list(product(range(len(self.time_ids)), repeat=2))
-        )
+        self.index_pairs = torch.tensor(list(product(range(len(self.time_ids)), repeat=2)))
         self.keypoints = torch.tensor(keypoints, dtype=torch.float32)
         self.keypoints[..., :2] *= 2.0 / self.dataset.factor
 

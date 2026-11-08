@@ -11,6 +11,7 @@ from torch.nn import functional as F
 
 class Sam(nn.Module):
     """Sam implementation."""
+
     mask_threshold: float = 0.0
     image_format: str = "RGB"
 
@@ -73,9 +74,7 @@ class Sam(nn.Module):
         outputs = []
         for image_record, curr_embedding in zip(batched_input, image_embeddings):
             points = (
-                (image_record["point_coords"], image_record["point_labels"])
-                if "point_coords" in image_record
-                else None
+                (image_record["point_coords"], image_record["point_labels"]) if "point_coords" in image_record else None
             )
             sparse_embeddings, dense_embeddings = self.prompt_encoder(
                 points=points,

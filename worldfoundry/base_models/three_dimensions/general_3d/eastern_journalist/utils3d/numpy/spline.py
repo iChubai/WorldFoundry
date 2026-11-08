@@ -5,10 +5,12 @@ from typing import *
 import numpy as np
 
 
-__all__ = ['linear_spline_interpolate']
+__all__ = ["linear_spline_interpolate"]
 
 
-def linear_spline_interpolate(x: np.ndarray, t: np.ndarray, s: np.ndarray, extrapolation_mode: Literal['constant', 'linear'] = 'constant') -> np.ndarray:
+def linear_spline_interpolate(
+    x: np.ndarray, t: np.ndarray, s: np.ndarray, extrapolation_mode: Literal["constant", "linear"] = "constant"
+) -> np.ndarray:
     """
     Linear spline interpolation.
 
@@ -17,25 +19,24 @@ def linear_spline_interpolate(x: np.ndarray, t: np.ndarray, s: np.ndarray, extra
     - `t`: np.ndarray, shape (n,): the times of the data points.
     - `s`: np.ndarray, shape (m,): the times to be interpolated.
     - `extrapolation_mode`: str, the mode of extrapolation. 'constant' means extrapolate the boundary values, 'linear' means extrapolate linearly.
-    
+
     ### ## Returns
     - `y`: np.ndarray, shape (..., m, d): the interpolated values.
     """
-    i = np.searchsorted(t, s, side='left')
-    if extrapolation_mode == 'constant':
+    i = np.searchsorted(t, s, side="left")
+    if extrapolation_mode == "constant":
         prev = np.clip(i - 1, 0, len(t) - 1)
         suc = np.clip(i, 0, len(t) - 1)
-    elif extrapolation_mode == 'linear':
+    elif extrapolation_mode == "linear":
         prev = np.clip(i - 1, 0, len(t) - 2)
         suc = np.clip(i, 1, len(t) - 1)
     else:
-        raise ValueError(f'Invalid extrapolation_mode: {extrapolation_mode}')
-    
+        raise ValueError(f"Invalid extrapolation_mode: {extrapolation_mode}")
+
     u = (s - t[prev]) / np.maximum(t[suc] - t[prev], 1e-12)
     y = u * x[suc] + (1 - u) * x[prev]
 
     return y
-    
 
 
 def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray) -> np.ndarray:
@@ -53,7 +54,7 @@ def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarra
     n = b.shape[-1]
     cc = np.zeros_like(b)
     dd = np.zeros_like(b)
-    cc[..., 0] = c[..., 0] / b[..., 0]    
+    cc[..., 0] = c[..., 0] / b[..., 0]
     dd[..., 0] = d[..., 0] / b[..., 0]
     for i in range(1, n):
         cc[..., i] = c[..., i] / (b[..., i] - a[..., i - 1] * cc[..., i - 1])
@@ -75,7 +76,7 @@ def _solve_tridiagonal(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarra
 #     - `s`: np.ndarray, shape (..., m,): the y-coordinates of the data points.
 #     - `v0`: np.ndarray, shape (...,): the value of the derivative at the first knot, as the boundary condition. If None, it is set to zero.
 #     - `vn`: np.ndarray, shape (...,): the value of the derivative at the last knot, as the boundary condition. If None, it is set to zero.
-    
+
 #     ### ## Returns
 #     - `y`: np.ndarray, shape (..., m): the interpolated values.
 #     """

@@ -81,9 +81,7 @@ class DepthAnythingAdapter:
             depth = self.model(tensor)
 
         # Interpolate to original size
-        depth = F.interpolate(
-            depth[None], (original_h, original_w), mode="bilinear", align_corners=False
-        )[0, 0]
+        depth = F.interpolate(depth[None], (original_h, original_w), mode="bilinear", align_corners=False)[0, 0]
 
         # DepthAnything outputs relative depth values (larger = closer to camera)
         # For point cloud generation, we typically want absolute depth where larger = farther

@@ -159,11 +159,9 @@ class FlowDecoder(nn.Module):
         )
         hidden = self.ray_pe_proj(torch.cat([hidden, ray_pe_small], dim=1))
         features_out = head.align(head.hamburger(hidden))
-        features_out = F.interpolate(
-            features_out, scale_factor=2, mode="bilinear", align_corners=False)
+        features_out = F.interpolate(features_out, scale_factor=2, mode="bilinear", align_corners=False)
         features_out = head.out_conv(features_out)
-        features_out = F.interpolate(
-            features_out, scale_factor=2, mode="bilinear", align_corners=False)
+        features_out = F.interpolate(features_out, scale_factor=2, mode="bilinear", align_corners=False)
         features_out = head.ll_fusion(features_out, features["ll"].clone())
         return self.linear_pred_flow(torch.cat([features_out, ray_pe], dim=1))
 
@@ -200,8 +198,7 @@ def _camera_pixel_uv(
     return torch.stack(
         [
             torch.atan2(direction[0], direction[2]) / math.pi,
-            torch.asin(direction[1].clamp(-1.0 + 1e-6, 1.0 - 1e-6))
-            / (math.pi / 2.0),
+            torch.asin(direction[1].clamp(-1.0 + 1e-6, 1.0 - 1e-6)) / (math.pi / 2.0),
         ]
     )
 
@@ -247,9 +244,7 @@ class RigidFilter(nn.Module):
             indexing="ij",
         )
         camera_rays = F.normalize(
-            torch.stack(
-                [grid_x, grid_y, torch.full_like(grid_x, focal_estimate)], dim=-1)
-            .reshape(-1, 3),
+            torch.stack([grid_x, grid_y, torch.full_like(grid_x, focal_estimate)], dim=-1).reshape(-1, 3),
             dim=-1,
         )
         moment = camera_rays.T @ world_rays
@@ -278,8 +273,7 @@ class RigidFilter(nn.Module):
             ),
             dim=-1,
         )
-        errors = ((candidate_rays @ rotation.T - world_rays[None]) ** 2).sum(
-            dim=(-1, -2))
+        errors = ((candidate_rays @ rotation.T - world_rays[None]) ** 2).sum(dim=(-1, -2))
         return torch.stack([torch.log(fov_candidates[errors.argmin()]), pitch, roll])
 
     @staticmethod
@@ -293,11 +287,8 @@ class RigidFilter(nn.Module):
         from torch.func import jacrev, vmap
 
         grid_x_flat, grid_y_flat = grid_x.flatten(), grid_y.flatten()
-        jacobian = vmap(
-            lambda x, y: jacrev(lambda p: _camera_pixel_uv(p, x, y))(parameters)
-        )(grid_x_flat, grid_y_flat)
-        residual = vmap(lambda x, y: _camera_pixel_uv(parameters, x, y))(
-            grid_x_flat, grid_y_flat)
+        jacobian = vmap(lambda x, y: jacrev(lambda p: _camera_pixel_uv(p, x, y))(parameters))(grid_x_flat, grid_y_flat)
+        residual = vmap(lambda x, y: _camera_pixel_uv(parameters, x, y))(grid_x_flat, grid_y_flat)
         residual = residual - target.permute(1, 2, 0).reshape(-1, 2)
         hessian = torch.einsum("nji,njk->ik", jacobian, jacobian)
         gradient = torch.einsum("nji,nj->i", jacobian, residual)
@@ -334,11 +325,9 @@ class RigidFilter(nn.Module):
         damping = flow.new_tensor(self.lm_lambda)
         previous_cost = None
         for _ in range(self.lm_steps):
-            parameters, cost = self._lm_step(
-                parameters, flow, grid_x, grid_y, damping)
+            parameters, cost = self._lm_step(parameters, flow, grid_x, grid_y, damping)
             if previous_cost is not None:
-                damping = torch.where(
-                    cost > previous_cost, damping * 10.0, damping * 0.1)
+                damping = torch.where(cost > previous_cost, damping * 10.0, damping * 0.1)
                 damping = damping.clamp(1e-6, 1e2)
             previous_cost = cost
         return parameters
@@ -391,8 +380,7 @@ class FlowEstimator(nn.Module):
         base_grid = perspective_to_erp_grid(base_fov, zero, zero, height, width)
         dense_grid = (base_grid + torch.tanh(delta) * 2.0).clamp(-1.0, 1.0)
         with torch.autocast(device_type=image.device.type, enabled=False):
-            rigid_grid, parameters = self.rigid_filter(
-                dense_grid.float(), height, width)
+            rigid_grid, parameters = self.rigid_filter(dense_grid.float(), height, width)
         return {
             "dense_grid": dense_grid,
             "rigid_grid": rigid_grid.to(dense_grid.dtype),

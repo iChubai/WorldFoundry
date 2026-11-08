@@ -46,6 +46,7 @@ def _get_activation_fn(activation):
 
 class LongShortTermTransformer(nn.Module):
     """Long short term transformer implementation."""
+
     def __init__(
         self,
         num_layers=2,
@@ -195,6 +196,7 @@ class LongShortTermTransformer(nn.Module):
 
 class DualBranchGPM(nn.Module):
     """Dual branch gpm implementation."""
+
     def __init__(
         self,
         num_layers=2,
@@ -342,6 +344,7 @@ class DualBranchGPM(nn.Module):
 
 class LongShortTermTransformerBlock(nn.Module):
     """Long short term transformer block implementation."""
+
     def __init__(
         self,
         d_model,
@@ -503,6 +506,7 @@ class LongShortTermTransformerBlock(nn.Module):
 
 class LongShortTermTransformerBlockV2(nn.Module):
     """Long short term transformer block implementation."""
+
     def __init__(
         self,
         d_model,
@@ -672,6 +676,7 @@ class LongShortTermTransformerBlockV2(nn.Module):
 
 class GatedPropagationModule(nn.Module):
     """Gated propagation module implementation."""
+
     def __init__(
         self,
         d_model,

@@ -85,9 +85,7 @@ def _prepare_fused_gdn_inputs(self, x: torch.Tensor, HW) -> _FusedGDNPrep:
     if any(bias is not None for bias in biases):
         qkv_b = torch.cat(
             [
-                bias
-                if bias is not None
-                else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
+                bias if bias is not None else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
                 for bias, weight in zip(biases, (q_w, k_w, v_w))
             ]
         )

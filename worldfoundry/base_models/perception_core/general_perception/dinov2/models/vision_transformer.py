@@ -29,6 +29,7 @@ logger = logging.getLogger("dinov2")
 
 class BlockChunk(nn.ModuleList):
     """Block chunk implementation."""
+
     def forward(self, x):
         """Forward.
 
@@ -42,6 +43,7 @@ class BlockChunk(nn.ModuleList):
 
 class DinoVisionTransformer(nn.Module):
     """Dino vision transformer implementation."""
+
     def __init__(
         self,
         img_size=224,
@@ -232,7 +234,9 @@ class DinoVisionTransformer(nn.Module):
 
         assert (h0, w0) == patch_pos_embed.shape[-2:]
         patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).flatten(1, 2)
-        return torch.cat((class_pos_embed[:, None, :].expand(patch_pos_embed.shape[0], -1, -1), patch_pos_embed), dim=1).to(previous_dtype)
+        return torch.cat(
+            (class_pos_embed[:, None, :].expand(patch_pos_embed.shape[0], -1, -1), patch_pos_embed), dim=1
+        ).to(previous_dtype)
 
     def prepare_tokens_with_masks(self, x, masks=None):
         """Prepare tokens with masks.

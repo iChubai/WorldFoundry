@@ -2,7 +2,10 @@
 from dataclasses import dataclass, field
 from typing import List, Literal, Optional, Union
 
-from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import DATASET_MAPPING, register_dataset_info
+from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import (
+    DATASET_MAPPING,
+    register_dataset_info,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
 
 logger = get_logger()
@@ -26,11 +29,14 @@ class DataArguments:
         model_author (List[str]): List containing Chinese and English names of the model author. Default is None.
         custom_dataset_info (Optional[str]): Path to custom dataset_info.json file. Default is None.
     """
+
     # dataset_id or dataset_dir or dataset_path
     dataset: List[str] = field(
-        default_factory=list, metadata={'help': f'dataset choices: {list(DATASET_MAPPING.keys())}'})
+        default_factory=list, metadata={"help": f"dataset choices: {list(DATASET_MAPPING.keys())}"}
+    )
     val_dataset: List[str] = field(
-        default_factory=list, metadata={'help': f'dataset choices: {list(DATASET_MAPPING.keys())}'})
+        default_factory=list, metadata={"help": f"dataset choices: {list(DATASET_MAPPING.keys())}"}
+    )
     split_dataset_ratio: float = 0.01
 
     data_seed: int = 42
@@ -40,16 +46,16 @@ class DataArguments:
     val_dataset_shuffle: bool = False
     streaming: bool = False
     interleave_prob: Optional[List[float]] = None
-    stopping_strategy: Literal['first_exhausted', 'all_exhausted'] = 'first_exhausted'
+    stopping_strategy: Literal["first_exhausted", "all_exhausted"] = "first_exhausted"
     shuffle_buffer_size: int = 1000
 
-    download_mode: Literal['force_redownload', 'reuse_dataset_if_exists'] = 'reuse_dataset_if_exists'
+    download_mode: Literal["force_redownload", "reuse_dataset_if_exists"] = "reuse_dataset_if_exists"
     columns: Optional[Union[dict, str]] = None
     strict: bool = False
     remove_unused_columns: bool = True
     # Chinese name and English name
-    model_name: Optional[List[str]] = field(default=None, metadata={'help': "e.g. ['小黄', 'Xiao Huang']"})
-    model_author: Optional[List[str]] = field(default=None, metadata={'help': "e.g. ['魔搭', 'ModelScope']"})
+    model_name: Optional[List[str]] = field(default=None, metadata={"help": "e.g. ['小黄', 'Xiao Huang']"})
+    model_author: Optional[List[str]] = field(default=None, metadata={"help": "e.g. ['魔搭', 'ModelScope']"})
 
     custom_dataset_info: List[str] = field(default_factory=list)  # .json
 
@@ -63,29 +69,29 @@ class DataArguments:
     def __post_init__(self):
         self.columns = self.parse_to_dict(self.columns)
         if len(self.val_dataset) > 0 or self.streaming:
-            self.split_dataset_ratio = 0.
+            self.split_dataset_ratio = 0.0
             if len(self.val_dataset) > 0:
-                msg = 'len(args.val_dataset) > 0'
+                msg = "len(args.val_dataset) > 0"
             else:
-                msg = 'args.streaming is True'
-            logger.info(f'Because {msg}, setting split_dataset_ratio: {self.split_dataset_ratio}')
+                msg = "args.streaming is True"
+            logger.info(f"Because {msg}, setting split_dataset_ratio: {self.split_dataset_ratio}")
         self._init_custom_dataset_info()
 
     def get_dataset_kwargs(self):
         return {
-            'seed': self.data_seed,
-            'num_proc': self.dataset_num_proc,
-            'load_from_cache_file': self.load_from_cache_file,
-            'streaming': self.streaming,
-            'interleave_prob': self.interleave_prob,
-            'stopping_strategy': self.stopping_strategy,
-            'shuffle_buffer_size': self.shuffle_buffer_size,
-            'use_hf': self.use_hf,
-            'hub_token': self.hub_token,
-            'download_mode': self.download_mode,
-            'columns': self.columns,
-            'strict': self.strict,
-            'model_name': self.model_name,
-            'model_author': self.model_author,
-            'remove_unused_columns': self.remove_unused_columns,
+            "seed": self.data_seed,
+            "num_proc": self.dataset_num_proc,
+            "load_from_cache_file": self.load_from_cache_file,
+            "streaming": self.streaming,
+            "interleave_prob": self.interleave_prob,
+            "stopping_strategy": self.stopping_strategy,
+            "shuffle_buffer_size": self.shuffle_buffer_size,
+            "use_hf": self.use_hf,
+            "hub_token": self.hub_token,
+            "download_mode": self.download_mode,
+            "columns": self.columns,
+            "strict": self.strict,
+            "model_name": self.model_name,
+            "model_author": self.model_author,
+            "remove_unused_columns": self.remove_unused_columns,
         }

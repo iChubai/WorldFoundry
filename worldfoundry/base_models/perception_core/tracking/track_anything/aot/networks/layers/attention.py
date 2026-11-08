@@ -66,6 +66,7 @@ def multiply_by_xchunks(x, y, chunks=1):
 # Long-term attention
 class MultiheadAttention(nn.Module):
     """Multihead attention implementation."""
+
     def __init__(
         self,
         d_model,
@@ -181,6 +182,7 @@ class MultiheadAttention(nn.Module):
 # Short-term attention
 class MultiheadLocalAttentionV1(nn.Module):
     """Multihead local attention implementation."""
+
     def __init__(
         self,
         d_model,
@@ -331,6 +333,7 @@ class MultiheadLocalAttentionV1(nn.Module):
 
 class MultiheadLocalAttentionV2(nn.Module):
     """Multihead local attention implementation."""
+
     def __init__(
         self,
         d_model,
@@ -549,6 +552,7 @@ class MultiheadLocalAttentionV2(nn.Module):
 
 class MultiheadLocalAttentionV3(nn.Module):
     """Multihead local attention implementation."""
+
     def __init__(self, d_model, num_head, dropout=0.0, max_dis=7, dilation=1, use_linear=True):
         """Init.
 
@@ -737,6 +741,7 @@ def silu(x):
 
 class GatedPropagation(nn.Module):
     """Gated propagation implementation."""
+
     def __init__(
         self,
         d_qk,
@@ -889,6 +894,7 @@ class GatedPropagation(nn.Module):
 
 class LocalGatedPropagation(nn.Module):
     """Local gated propagation implementation."""
+
     def __init__(
         self,
         d_qk,

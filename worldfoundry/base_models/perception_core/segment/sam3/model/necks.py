@@ -14,6 +14,7 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc impor
 
 class Sam3DualViTDetNeck(nn.Module):
     """Sam dual vi t det neck implementation."""
+
     def __init__(
         self,
         trunk: nn.Module,
@@ -138,6 +139,7 @@ class Sam3DualViTDetNeck(nn.Module):
 
 class Sam3TriViTDetNeck(nn.Module):
     """Sam tri vi t det neck implementation."""
+
     def __init__(
         self,
         trunk: nn.Module,
@@ -250,29 +252,19 @@ class Sam3TriViTDetNeck(nn.Module):
                 sam3_conv_out = conv(x_data)
                 sam3_x_out = NestedTensor(sam3_conv_out, x_mask)
                 sam3_out.append(sam3_x_out)
-                sam3_pos.append(
-                    self.position_encoding(sam3_conv_out).to(sam3_conv_out.dtype)
-                )
+                sam3_pos.append(self.position_encoding(sam3_conv_out).to(sam3_conv_out.dtype))
 
             if need_interactive_out:
                 interactive_conv_out_t = interactive_conv(x_data)
                 interactive_conv_out = NestedTensor(interactive_conv_out_t, x_mask)
                 interactive_out.append(interactive_conv_out)
-                interactive_pos.append(
-                    self.position_encoding(interactive_conv_out_t).to(
-                        interactive_conv_out_t.dtype
-                    )
-                )
+                interactive_pos.append(self.position_encoding(interactive_conv_out_t).to(interactive_conv_out_t.dtype))
 
             if need_propagation_out:
                 propagation_conv_out = propagation_conv(x_data)
                 propagation_x_out = NestedTensor(propagation_conv_out, x_mask)
                 propagation_out.append(propagation_x_out)
-                propagation_pos.append(
-                    self.position_encoding(propagation_conv_out).to(
-                        propagation_conv_out.dtype
-                    )
-                )
+                propagation_pos.append(self.position_encoding(propagation_conv_out).to(propagation_conv_out.dtype))
 
         return (
             sam3_out,

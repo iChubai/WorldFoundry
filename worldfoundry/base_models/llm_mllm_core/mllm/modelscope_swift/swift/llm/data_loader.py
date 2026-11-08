@@ -8,7 +8,6 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
 
 
 class BatchSamplerShard:
-
     def __init__(self, total_samples: int, batch_size: int, shuffle: bool, drop_last: bool, data_seed: Optional[int]):
         self.total_samples = total_samples // self.world_size
         self.batch_size = batch_size
@@ -31,7 +30,7 @@ class BatchSamplerShard:
             generator = torch.Generator()
             generator.manual_seed(self.curr_seed)
             total_idx = torch.randperm(self.total_samples * self.world_size, generator=generator).tolist()
-            total_idx = total_idx[start_idx:start_idx + self.total_samples]
+            total_idx = total_idx[start_idx : start_idx + self.total_samples]
         else:
             total_idx = list(range(start_idx, start_idx + self.total_samples))
 
@@ -57,15 +56,14 @@ class BatchSamplerShard:
 
 
 class DataLoaderShard(DataLoader):
-
     def __init__(self, dataset, device=None, **dataloader_params):
         self.device = device
         super().__init__(dataset, **dataloader_params)
 
     def set_epoch(self, epoch: int):
-        if self.batch_sampler is not None and hasattr(self.batch_sampler, 'set_epoch'):
+        if self.batch_sampler is not None and hasattr(self.batch_sampler, "set_epoch"):
             self.batch_sampler.set_epoch(epoch)
-        elif self.sampler is not None and hasattr(self.sampler, 'set_epoch'):
+        elif self.sampler is not None and hasattr(self.sampler, "set_epoch"):
             self.sampler.set_epoch(epoch)
 
     def __iter__(self):
@@ -76,7 +74,6 @@ class DataLoaderShard(DataLoader):
 
 
 class DataLoaderDispatcher:
-
     def __init__(self, base_dataloader, device=None):
         self.base_dataloader = base_dataloader
         self.device = device

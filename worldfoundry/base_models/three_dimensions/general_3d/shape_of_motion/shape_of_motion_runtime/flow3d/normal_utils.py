@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import math
 from torch import Tensor
 
+
 def normalized_quat_to_rotmat(quat: Tensor) -> Tensor:
     """Convert normalized quaternion to rotation matrix.
 
@@ -36,6 +37,7 @@ def normalized_quat_to_rotmat(quat: Tensor) -> Tensor:
     )
     return mat.reshape(quat.shape[:-1] + (3, 3))
 
+
 # ref: https://github.com/hbb1/2d-gaussian-splatting/blob/61c7b417393d5e0c58b742ad5e2e5f9e9f240cc6/utils/point_utils.py#L26
 def _depths_to_points(depthmap, world_view_transform, full_proj_transform, fx, fy):
     """Helper function to depths to points.
@@ -49,11 +51,7 @@ def _depths_to_points(depthmap, world_view_transform, full_proj_transform, fx, f
     """
     c2w = (world_view_transform.T).inverse()
     H, W = depthmap.shape[:2]
-    intrins = torch.tensor(
-        [[fx, 0., W/2.],
-        [0., fy, H/2.],
-        [0., 0., 1.0]]
-    ).float().cuda()
+    intrins = torch.tensor([[fx, 0.0, W / 2.0], [0.0, fy, H / 2.0], [0.0, 0.0, 1.0]]).float().cuda()
 
     import pdb
     # pdb.set_trace()
@@ -63,9 +61,7 @@ def _depths_to_points(depthmap, world_view_transform, full_proj_transform, fx, f
         torch.arange(H, device="cuda").float(),
         indexing="xy",
     )
-    points = torch.stack([grid_x, grid_y, torch.ones_like(grid_x)], dim=-1).reshape(
-        -1, 3
-    )
+    points = torch.stack([grid_x, grid_y, torch.ones_like(grid_x)], dim=-1).reshape(-1, 3)
     rays_d = points @ intrins.inverse().T @ c2w[:3, :3].T
     rays_o = c2w[:3, 3]
     points = depthmap.reshape(-1, 1) * rays_d + rays_o
@@ -83,7 +79,11 @@ def _depth_to_normal(depth, world_view_transform, full_proj_transform, fx, fy):
         fy: The fy.
     """
     points = _depths_to_points(
-        depth, world_view_transform, full_proj_transform, fx, fy,
+        depth,
+        world_view_transform,
+        full_proj_transform,
+        fx,
+        fy,
     ).reshape(*depth.shape[:2], 3)
     output = torch.zeros_like(points)
     dx = torch.cat([points[2:, 1:-1] - points[:-2, 1:-1]], dim=0)
@@ -104,6 +104,7 @@ def depth_to_normal(depths, camtoworlds, Ks, near_plane, far_plane):
         far_plane: The far plane.
     """
     import pdb
+
     # pdb.set_trace()
     height, width = depths.shape[1:3]
     viewmats = torch.linalg.inv(camtoworlds)  # [C, 4, 4]
@@ -116,9 +117,7 @@ def depth_to_normal(depths, camtoworlds, Ks, near_plane, far_plane):
         projection_matrix = _getProjectionMatrix(
             znear=near_plane, zfar=far_plane, fovX=FoVx, fovY=FoVy, device=depths.device
         ).transpose(0, 1)
-        full_proj_transform = (
-            world_view_transform.unsqueeze(0).bmm(projection_matrix.unsqueeze(0))
-        ).squeeze(0)
+        full_proj_transform = (world_view_transform.unsqueeze(0).bmm(projection_matrix.unsqueeze(0))).squeeze(0)
         normal = _depth_to_normal(depth, world_view_transform, full_proj_transform, Ks[cid, 0, 0], Ks[cid, 1, 1])
         normals.append(normal)
     normals = torch.stack(normals, dim=0)

@@ -36,6 +36,7 @@ except ImportError:
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm
+
     XLA_AVAILABLE = True
 else:
     XLA_AVAILABLE = False
@@ -112,9 +113,7 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
         # Derive height/width from the input image's aspect ratio if not
         # specified, targeting a fixed pixel budget (1024²).
         image_size = image.size
-        calculated_width, calculated_height = calculate_dimensions(
-            1024 * 1024, image_size[0] / image_size[1]
-        )
+        calculated_width, calculated_height = calculate_dimensions(1024 * 1024, image_size[0] / image_size[1])
         height = height or calculated_height
         width = width or calculated_width
 
@@ -127,7 +126,9 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
 
         # 1. Check inputs
         self.check_inputs(
-            prompt, height, width,
+            prompt,
+            height,
+            width,
             negative_prompt=negative_prompt,
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,
@@ -158,13 +159,9 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
         #     multimodal text encoder (cross-attention keys/values).
         #   • vae_image        (~1024²) — high-res crop encoded by the VAE
         #     into the latent space and concatenated with the noisy latent.
-        if image is not None and not (
-            isinstance(image, torch.Tensor) and image.size(1) == self.latent_channels
-        ):
+        if image is not None and not (isinstance(image, torch.Tensor) and image.size(1) == self.latent_channels):
             image_width, image_height = image.size
-            condition_width, condition_height = calculate_dimensions(
-                CONDITION_IMAGE_SIZE, image_width / image_height
-            )
+            condition_width, condition_height = calculate_dimensions(CONDITION_IMAGE_SIZE, image_width / image_height)
             vae_width, vae_height = calculate_dimensions(VAE_IMAGE_SIZE, image_width / image_height)
             condition_image = self.image_processor.resize(image, condition_height, condition_width)
             # unsqueeze(2) adds a temporal dimension expected by the 3-D VAE.
@@ -182,8 +179,7 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
             )
         elif true_cfg_scale <= 1 and has_neg_prompt:
             logger.warning(
-                "negative_prompt is passed but classifier-free guidance is not enabled since "
-                "true_cfg_scale <= 1"
+                "negative_prompt is passed but classifier-free guidance is not enabled since true_cfg_scale <= 1"
             )
 
         # True CFG is active only when a negative prompt is given AND the scale
@@ -192,18 +188,23 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
 
         # Encode the conditional prompt (text + condition thumbnail).
         prompt_embeds, prompt_embeds_mask = self.encode_prompt(
-            image=[condition_image], prompt=prompt,
-            prompt_embeds=prompt_embeds, prompt_embeds_mask=prompt_embeds_mask,
-            device=device, num_images_per_prompt=num_images_per_prompt,
+            image=[condition_image],
+            prompt=prompt,
+            prompt_embeds=prompt_embeds,
+            prompt_embeds_mask=prompt_embeds_mask,
+            device=device,
+            num_images_per_prompt=num_images_per_prompt,
             max_sequence_length=max_sequence_length,
         )
         if do_true_cfg:
             # Encode the unconditional (negative) prompt separately.
             negative_prompt_embeds, negative_prompt_embeds_mask = self.encode_prompt(
-                image=[condition_image], prompt=negative_prompt,
+                image=[condition_image],
+                prompt=negative_prompt,
                 prompt_embeds=negative_prompt_embeds,
                 prompt_embeds_mask=negative_prompt_embeds_mask,
-                device=device, num_images_per_prompt=num_images_per_prompt,
+                device=device,
+                num_images_per_prompt=num_images_per_prompt,
                 max_sequence_length=max_sequence_length,
             )
 
@@ -213,9 +214,12 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
             [vae_image],
             batch_size * num_images_per_prompt,
             num_channels_latents,
-            height, width,
+            height,
+            width,
             prompt_embeds.dtype,
-            device, generator, latents,
+            device,
+            generator,
+            latents,
         )
 
         # img_shapes tells the transformer the spatial extent of each sequence
@@ -232,10 +236,7 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
         ] * batch_size
 
         # 5. Prepare timesteps
-        sigmas = (
-            np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
-            if sigmas is None else sigmas
-        )
+        sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps) if sigmas is None else sigmas
         image_seq_len = latents.shape[1]
         # calculate_shift adapts the flow-matching time shift μ based on the
         # sequence length so that longer sequences denoise more slowly.
@@ -247,7 +248,11 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
             self.scheduler.config.get("max_shift", 1.15),
         )
         timesteps, num_inference_steps = retrieve_timesteps(
-            self.scheduler, num_inference_steps, device, sigmas=sigmas, mu=mu,
+            self.scheduler,
+            num_inference_steps,
+            device,
+            sigmas=sigmas,
+            mu=mu,
         )
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
         self._num_timesteps = len(timesteps)
@@ -260,8 +265,7 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
             guidance = guidance.expand(latents.shape[0])
         elif not self.transformer.config.guidance_embeds and guidance_scale is not None:
             logger.warning(
-                f"guidance_scale is passed as {guidance_scale}, but ignored since the model "
-                f"is not guidance-distilled."
+                f"guidance_scale is passed as {guidance_scale}, but ignored since the model is not guidance-distilled."
             )
             guidance = None
         else:
@@ -272,12 +276,9 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
 
         # Pre-compute per-sample text sequence lengths to avoid recomputing
         # them inside the loop; used by the transformer's attention mask logic.
-        txt_seq_lens = (
-            prompt_embeds_mask.sum(dim=1).tolist() if prompt_embeds_mask is not None else None
-        )
+        txt_seq_lens = prompt_embeds_mask.sum(dim=1).tolist() if prompt_embeds_mask is not None else None
         negative_txt_seq_lens = (
-            negative_prompt_embeds_mask.sum(dim=1).tolist()
-            if negative_prompt_embeds_mask is not None else None
+            negative_prompt_embeds_mask.sum(dim=1).tolist() if negative_prompt_embeds_mask is not None else None
         )
 
         # 6. Denoising loop
@@ -358,9 +359,7 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
                     latents = callback_outputs.pop("latents", latents)
                     prompt_embeds = callback_outputs.pop("prompt_embeds", prompt_embeds)
 
-                if i == len(timesteps) - 1 or (
-                    (i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0
-                ):
+                if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     progress_bar.update()
 
                 if XLA_AVAILABLE:
@@ -383,9 +382,9 @@ class PanoDiffusionPipeline(QwenImageEditPlusPipeline):
                 .view(1, self.vae.config.z_dim, 1, 1, 1)
                 .to(latents.device, latents.dtype)
             )
-            latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(
-                1, self.vae.config.z_dim, 1, 1, 1
-            ).to(latents.device, latents.dtype)
+            latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(1, self.vae.config.z_dim, 1, 1, 1).to(
+                latents.device, latents.dtype
+            )
             latents = latents.to(self.vae.dtype)
             latents = latents / latents_std + latents_mean
             # Decode; [:, :, 0] selects the single temporal frame.

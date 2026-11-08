@@ -61,6 +61,7 @@ class UpsamplerType(Enum):
 @dataclass
 class UpsamplerConfig:
     """Serializable HunyuanVideo 1.5 upsampler hyperparameters."""
+
     load_from: str
     enable: bool = False
     hidden_channels: int = 128
@@ -71,6 +72,7 @@ class UpsamplerConfig:
 
 class SRResidualCausalBlock3D(nn.Module):
     """Sr residual causal block d implementation."""
+
     def __init__(self, channels: int):
         """Init.
 

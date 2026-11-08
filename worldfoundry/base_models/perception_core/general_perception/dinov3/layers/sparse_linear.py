@@ -23,6 +23,7 @@ try:
 
     class LinearW24(torch.nn.Linear):
         """Linear implementation."""
+
         ALGO = "largest_abs_values_greedy"
 
         def __init__(self, *args, **kwargs) -> None:
@@ -137,6 +138,7 @@ except ImportError:
     # xformers not available — provide stubs that raise at runtime
     class _SparseStub:
         """Sparse stub implementation."""
+
         def __getattr__(self, name):
             """Getattr.
 

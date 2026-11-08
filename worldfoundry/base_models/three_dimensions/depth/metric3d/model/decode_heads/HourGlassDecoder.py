@@ -25,6 +25,7 @@ def compute_depth_expectation(prob, depth_values):
 
 class ConvBlock(nn.Module):
     """Conv block implementation."""
+
     def __init__(self, in_channels, out_channels, kernel_size=3):
         """Init.
 
@@ -58,6 +59,7 @@ class ConvBlock(nn.Module):
 
 class ConvBlock_double(nn.Module):
     """Conv block double implementation."""
+
     def __init__(self, in_channels, out_channels, kernel_size=3):
         """Init.
 
@@ -95,6 +97,7 @@ class ConvBlock_double(nn.Module):
 
 class DecoderFeature(nn.Module):
     """Decoder feature implementation."""
+
     def __init__(self, feat_channels, num_ch_dec=[64, 64, 128, 256]):
         """Init.
 
@@ -152,6 +155,7 @@ class DecoderFeature(nn.Module):
 
 class UNet(nn.Module):
     """U net implementation."""
+
     def __init__(self, inp_ch=32, output_chal=1, down_sample_times=3, channel_mode="v0"):
         """Init.
 
@@ -234,6 +238,7 @@ class UNet(nn.Module):
 
 class ConvBnReLU(nn.Module):
     """Conv bn re lu implementation."""
+
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, pad=1):
         """Init.
 
@@ -266,6 +271,7 @@ class ConvBnReLU(nn.Module):
 
 class HourglassDecoder(nn.Module):
     """Hourglass decoder implementation."""
+
     def __init__(self, cfg):
         """Init.
 

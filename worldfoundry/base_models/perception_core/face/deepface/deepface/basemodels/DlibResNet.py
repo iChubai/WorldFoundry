@@ -9,7 +9,6 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 
 class DlibResNet:
     def __init__(self):
-
         # this is not a must dependency
         import dlib  # 19.20.0
 
@@ -47,7 +46,6 @@ class DlibResNet:
         # return None  # classes must return None
 
     def predict(self, img_aligned):
-
         # functions.detectFace returns 4 dimensional images
         if len(img_aligned.shape) == 4:
             img_aligned = img_aligned[0]

@@ -23,9 +23,7 @@ from .vit import (
 # LOGGER = logging.getLogger(__name__)
 
 
-ViTPreset = Literal[
-    "dinov2l16_384",
-]
+ViTPreset = Literal["dinov2l16_384",]
 
 
 @dataclass
@@ -94,9 +92,7 @@ def create_vit(
         model = timm.create_model(config.timm_preset, pretrained=use_pretrained)
         model.forward_features = types.MethodType(forward_features_eva_fixed, model)
     else:
-        model = timm.create_model(
-            config.timm_preset, pretrained=use_pretrained, dynamic_img_size=True
-        )
+        model = timm.create_model(config.timm_preset, pretrained=use_pretrained, dynamic_img_size=True)
     model = make_vit_b16_backbone(
         model,
         encoder_feature_dims=config.encoder_feature_dims,
@@ -111,9 +107,7 @@ def create_vit(
 
     if checkpoint_uri is not None:
         state_dict = torch.load(checkpoint_uri, map_location="cpu")
-        missing_keys, unexpected_keys = model.load_state_dict(
-            state_dict=state_dict, strict=False
-        )
+        missing_keys, unexpected_keys = model.load_state_dict(state_dict=state_dict, strict=False)
 
         if len(unexpected_keys) != 0:
             raise KeyError(f"Found unexpected keys when loading vit: {unexpected_keys}")

@@ -103,7 +103,7 @@ def get_sobel_kernel(kernel_size):
     K = kernel_size
     sobel = torch.tensor(list(range(K))) - K // 2
     sobel_x, sobel_y = sobel.view(-1, 1), sobel.view(1, -1)
-    sum_xy = sobel_x ** 2 + sobel_y ** 2
+    sum_xy = sobel_x**2 + sobel_y**2
     sum_xy[sum_xy == 0] = 1
     sobel_x, sobel_y = sobel_x / sum_xy, sobel_y / sum_xy
     sobel_kernel = torch.stack([sobel_x.unsqueeze(0), sobel_y.unsqueeze(0)], dim=0)

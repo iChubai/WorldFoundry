@@ -26,6 +26,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.build import 
 
 class _MissingVipeExtModule:
     """Missing vipe ext module implementation."""
+
     def __init__(self, module_name: str, reason: str) -> None:
         """Init.
 
@@ -53,6 +54,7 @@ class _MissingVipeExtModule:
 
 class _MissingVipeExt:
     """Missing vipe ext implementation."""
+
     def __init__(self, reason: str) -> None:
         """Init.
 

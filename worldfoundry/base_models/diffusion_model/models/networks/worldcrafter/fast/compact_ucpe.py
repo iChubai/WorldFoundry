@@ -11,9 +11,7 @@ from torch.nn import functional as F
 
 def _forward(self, x):
     # Keep the input and operator unchanged. No BF16 GEMM substitution.
-    return F.linear(
-        x, self.weight.float(), None if self.bias is None else self.bias.float()
-    )
+    return F.linear(x, self.weight.float(), None if self.bias is None else self.bias.float())
 
 
 def compact_ucpe(model):
@@ -27,13 +25,9 @@ def compact_ucpe(model):
                 modules.append(layer)
                 for p in layer.parameters(recurse=False):
                     if p.dtype != torch.float32:
-                        raise ValueError(
-                            f"Expected FP32 UCPE parameters, got {p.dtype}"
-                        )
+                        raise ValueError(f"Expected FP32 UCPE parameters, got {p.dtype}")
                     if not torch.equal(p, p.bfloat16().float()):
-                        raise ValueError(
-                            "UCPE storage conversion would lose information"
-                        )
+                        raise ValueError("UCPE storage conversion would lose information")
                     parameters.append(p)
                     supported.add(id(p))
         if {id(p) for p in camera.parameters()} != supported:

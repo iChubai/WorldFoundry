@@ -14,7 +14,9 @@ from .swin_backbone import swin_3d_small, swin_3d_tiny
 
 class BaseEvaluator(nn.Module):
     def __init__(
-        self, backbone=dict(), vqa_head=dict(),
+        self,
+        backbone=dict(),
+        vqa_head=dict(),
     ):
         super().__init__()
         self.backbone = VideoBackbone(**backbone)
@@ -48,9 +50,7 @@ class DOVER(nn.Module):
         backbone_preserve_keys="fragments,resize",
         multi=False,
         layer=-1,
-        backbone=dict(
-            resize={"window_size": (4, 4, 4)}, fragments={"window_size": (4, 4, 4)}
-        ),
+        backbone=dict(resize={"window_size": (4, 4, 4)}, fragments={"window_size": (4, 4, 4)}),
         divide_head=False,
         vqa_head=dict(in_channels=768),
         var=False,
@@ -94,7 +94,7 @@ class DOVER(nn.Module):
             setattr(self, key + "_backbone", b)
         if divide_head:
             for key in backbone:
-                pre_pool = False #if key == "technical" else True
+                pre_pool = False  # if key == "technical" else True
                 if key not in self.backbone_preserve_keys:
                     continue
                 b = VQAHead(pre_pool=pre_pool, **vqa_head)
@@ -115,7 +115,7 @@ class DOVER(nn.Module):
         return_raw_feats=False,
         reduce_scores=False,
         pooled=False,
-        **kwargs
+        **kwargs,
     ):
         assert (return_pooled_feats & return_raw_feats) == False, "Please only choose one kind of features to return"
         if inference:
@@ -173,15 +173,8 @@ class DOVER(nn.Module):
             if return_pooled_feats:
                 return scores, feats
             return scores
-        
-    def forward_head(
-        self,
-        feats,
-        inference=True,
-        reduce_scores=False,
-        pooled=False,
-        **kwargs
-    ):
+
+    def forward_head(self, feats, inference=True, reduce_scores=False, pooled=False, **kwargs):
         if inference:
             self.eval()
             with torch.no_grad():
@@ -229,7 +222,8 @@ class DOVER(nn.Module):
             if return_pooled_feats:
                 return scores, feats
             return scores
-        
+
+
 class MinimumDOVER(nn.Module):
     def __init__(self):
         super().__init__()
@@ -238,22 +232,22 @@ class MinimumDOVER(nn.Module):
         self.technical_head = VQAHead(pre_pool=False, in_channels=768)
         self.aesthetic_head = VQAHead(pre_pool=False, in_channels=768)
 
-
-    def forward(self,aesthetic_view, technical_view):
+    def forward(self, aesthetic_view, technical_view):
         self.eval()
         with torch.no_grad():
             aesthetic_score = self.aesthetic_head(self.aesthetic_backbone(aesthetic_view))
             technical_score = self.technical_head(self.technical_backbone(technical_view))
-            
-        aesthetic_score_pooled = torch.mean(aesthetic_score, (1,2,3,4))
-        technical_score_pooled = torch.mean(technical_score, (1,2,3,4))
-        return [aesthetic_score_pooled, technical_score_pooled]
 
+        aesthetic_score_pooled = torch.mean(aesthetic_score, (1, 2, 3, 4))
+        technical_score_pooled = torch.mean(technical_score, (1, 2, 3, 4))
+        return [aesthetic_score_pooled, technical_score_pooled]
 
 
 class BaseImageEvaluator(nn.Module):
     def __init__(
-        self, backbone=dict(), iqa_head=dict(),
+        self,
+        backbone=dict(),
+        iqa_head=dict(),
     ):
         super().__init__()
         self.backbone = ImageBackbone(**backbone)

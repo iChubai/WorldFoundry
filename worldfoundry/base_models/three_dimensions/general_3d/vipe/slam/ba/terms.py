@@ -33,6 +33,7 @@ from .kernel import RobustKernel
 
 class TermEvalReturn(ABC):
     """Term eval return implementation."""
+
     @abstractmethod
     def jtwj(self, group_name_row: str, group_name_col: str) -> SparseBlockMatrix: ...
 
@@ -57,6 +58,7 @@ class TermEvalReturn(ABC):
 @dataclass(kw_only=True)
 class ConcreteTermEvalReturn(TermEvalReturn):
     """Concrete term eval return implementation."""
+
     J: dict[str, SparseBlockMatrix]  # group_name -> (n_occ, res_dim, manifold_dim)
     w: torch.Tensor  # (n_terms, res_dim, )
     r: torch.Tensor  # (n_terms, res_dim, )
@@ -122,6 +124,7 @@ class ConcreteTermEvalReturn(TermEvalReturn):
 
 class SolverTerm(ABC):
     """Solver term implementation."""
+
     @abstractmethod
     def forward(
         self,
@@ -343,6 +346,7 @@ class DispSensRegularizationTerm(SolverTerm):
     @dataclass(kw_only=True)
     class ThisTermEvalReturn(TermEvalReturn):
         """This term eval return implementation."""
+
         alpha: float
         i_inds: torch.Tensor
         disps_sens_res: torch.Tensor

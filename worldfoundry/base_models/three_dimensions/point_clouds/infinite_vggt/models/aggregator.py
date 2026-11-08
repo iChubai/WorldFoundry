@@ -14,7 +14,10 @@ from typing import Optional, Tuple, Union, List, Dict, Any
 
 from worldfoundry.core.nn.blocks.layers import PatchEmbed
 from ..layers.block import Block
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.rope import RotaryPositionEmbedding2D, PositionGetter
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.rope import (
+    RotaryPositionEmbedding2D,
+    PositionGetter,
+)
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.vision_transformer import (
     vit_small,
     vit_base,
@@ -172,7 +175,6 @@ class Aggregator(nn.Module):
             )
         self.last_scores = torch.zeros(self.depth)
 
-
     def __build_patch_embed__(
         self,
         patch_embed,
@@ -215,12 +217,7 @@ class Aggregator(nn.Module):
                 self.patch_embed.mask_token.requires_grad_(False)
 
     def forward(
-        self,
-        images: torch.Tensor,
-        past_key_values=None,
-        use_cache=False,
-        past_frame_idx=0,
-        total_budget=0
+        self, images: torch.Tensor, past_key_values=None, use_cache=False, past_frame_idx=0, total_budget=0
     ) -> Tuple[List[torch.Tensor], int]:
         """
         Args:
@@ -239,7 +236,7 @@ class Aggregator(nn.Module):
             S_true = past_frame_idx + 1
         else:
             S_true = S
-        
+
         if use_cache and S > 1:
             print(f"Use KV cache expects S=1, got S={S}")
 
@@ -261,7 +258,7 @@ class Aggregator(nn.Module):
         if use_cache:
             camera_token_full = slice_expand_and_flatten(self.camera_token, B, S_true)
             camera_token = camera_token_full[-1:, :, :]
-            
+
             register_token_full = slice_expand_and_flatten(self.register_token, B, S_true)
             register_token = register_token_full[-1:, :, :]
         else:
@@ -300,19 +297,29 @@ class Aggregator(nn.Module):
                     if use_cache:
                         if past_key_values[global_idx] is not None:
                             k, v = past_key_values[global_idx]
-                        tokens, global_idx, global_intermediates, new_kv, current_scores = self._process_global_attention(
-                            tokens, B, S, P, C, global_idx, pos=pos,
-                            past_key_values_block=past_key_values[global_idx] if past_key_values[global_idx] is not None else None,
-                            use_cache=True,
-                            past_frame_idx=past_frame_idx,
-                            cache_budget=current_budgets[global_idx].item()
+                        tokens, global_idx, global_intermediates, new_kv, current_scores = (
+                            self._process_global_attention(
+                                tokens,
+                                B,
+                                S,
+                                P,
+                                C,
+                                global_idx,
+                                pos=pos,
+                                past_key_values_block=past_key_values[global_idx]
+                                if past_key_values[global_idx] is not None
+                                else None,
+                                use_cache=True,
+                                past_frame_idx=past_frame_idx,
+                                cache_budget=current_budgets[global_idx].item(),
+                            )
                         )
                         past_key_values[global_idx - 1] = new_kv
-                        if current_scores is not None: # pruning happened
+                        if current_scores is not None:  # pruning happened
                             scores.append(current_scores)
                         else:
-                            scores.append(self.last_scores[global_idx-1].item())
-                    else: 
+                            scores.append(self.last_scores[global_idx - 1].item())
+                    else:
                         tokens, global_idx, global_intermediates = self._process_global_attention(
                             tokens, B, S, P, C, global_idx, pos=pos
                         )
@@ -322,13 +329,13 @@ class Aggregator(nn.Module):
                 # concat frame and global intermediates, [B x S x P x 2C]
                 concat_inter = torch.cat([frame_intermediates[i], global_intermediates[i]], dim=-1)
                 output_list.append(concat_inter)
-        if scores: # update scores
+        if scores:  # update scores
             self.last_scores = torch.tensor(scores, device=self.last_scores.device, dtype=self.last_scores.dtype)
 
         del concat_inter
         del frame_intermediates
         del global_intermediates
-        if use_cache:      
+        if use_cache:
             return output_list, self.patch_start_idx, past_key_values
         return output_list, self.patch_start_idx
 
@@ -347,7 +354,6 @@ class Aggregator(nn.Module):
 
         # by default, self.aa_block_size=1, which processes one block at a time
         for _ in range(self.aa_block_size):
-
             tokens = self.frame_blocks[frame_idx](tokens, pos=pos)
             frame_idx += 1
             intermediates.append(tokens.reshape(B, S, P, C))
@@ -366,18 +372,18 @@ class Aggregator(nn.Module):
         past_key_values_block=None,
         use_cache=False,
         past_frame_idx=0,
-        cache_budget=None
+        cache_budget=None,
     ) -> Union[Tuple[torch.Tensor, int, List[torch.Tensor]], Tuple[torch.Tensor, int, List[torch.Tensor], List]]:
         """
         Process global attention blocks. We keep tokens in shape (B, S*P, C).
-                """
-        
+        """
+
         if tokens.shape != (B, S * P, C):
             tokens = tokens.reshape(B, S, P, C).reshape(B, S * P, C)
 
         if pos is not None and pos.shape != (B, S * P, 2):
             pos = pos.reshape(B, S, P, 2).reshape(B, S * P, 2)
-            
+
         intermediates = []
 
         for _ in range(self.aa_block_size):
@@ -388,16 +394,16 @@ class Aggregator(nn.Module):
                 attn_mask = future_frame.to(tokens.dtype) * torch.finfo(tokens.dtype).min
             else:
                 attn_mask = None
-            
+
             scores = None
             if use_cache:
                 tokens, block_kv, scores = self.global_blocks[global_idx](
-                    tokens, 
-                    pos=pos, 
-                    attn_mask=attn_mask, 
+                    tokens,
+                    pos=pos,
+                    attn_mask=attn_mask,
                     past_key_values=past_key_values_block,
                     use_cache=True,
-                    cache_budget=cache_budget
+                    cache_budget=cache_budget,
                 )
             else:
                 tokens = self.global_blocks[global_idx](tokens, pos=pos, attn_mask=attn_mask)
@@ -410,7 +416,7 @@ class Aggregator(nn.Module):
         if use_cache:
             return tokens, global_idx, intermediates, block_kv, scores
         return tokens, global_idx, intermediates
-        
+
     def _calculate_dynamic_budgets(self, total_budget):
         """Helper function to calculate dynamic budgets.
 

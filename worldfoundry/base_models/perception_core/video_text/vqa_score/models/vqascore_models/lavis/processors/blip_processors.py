@@ -1,8 +1,8 @@
 """
- Copyright (c) 2022, salesforce.com, inc.
- All rights reserved.
- SPDX-License-Identifier: BSD-3-Clause
- For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+Copyright (c) 2022, salesforce.com, inc.
+All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
+For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
 import re
@@ -103,9 +103,7 @@ class BlipQuestionProcessor(BaseProcessor):
 
 @registry.register_processor("blip_image_train")
 class BlipImageTrainProcessor(BlipImageBaseProcessor):
-    def __init__(
-        self, image_size=384, mean=None, std=None, min_scale=0.5, max_scale=1.0
-    ):
+    def __init__(self, image_size=384, mean=None, std=None, min_scale=0.5, max_scale=1.0):
         super().__init__(mean=mean, std=std)
 
         self.transform = transforms.Compose(
@@ -170,9 +168,7 @@ class BlipImageEvalProcessor(BlipImageBaseProcessor):
 
         self.transform = transforms.Compose(
             [
-                transforms.Resize(
-                    (image_size, image_size), interpolation=InterpolationMode.BICUBIC
-                ),
+                transforms.Resize((image_size, image_size), interpolation=InterpolationMode.BICUBIC),
                 transforms.ToTensor(),
                 self.normalize,
             ]
@@ -196,9 +192,7 @@ class BlipImageEvalProcessor(BlipImageBaseProcessor):
 
 @registry.register_processor("blip2_image_train")
 class Blip2ImageTrainProcessor(BlipImageBaseProcessor):
-    def __init__(
-        self, image_size=364, mean=None, std=None, min_scale=0.5, max_scale=1.0
-    ):
+    def __init__(self, image_size=364, mean=None, std=None, min_scale=0.5, max_scale=1.0):
         super().__init__(mean=mean, std=std)
 
         self.transform = transforms.Compose(

@@ -29,6 +29,7 @@ logger = logging.getLogger("dinov2")
 
 class BlockChunk(nn.ModuleList):
     """Block chunk implementation."""
+
     def forward(self, x):
         """Forward.
 
@@ -42,6 +43,7 @@ class BlockChunk(nn.ModuleList):
 
 class DinoVisionTransformer(nn.Module):
     """Dino vision transformer implementation."""
+
     def __init__(
         self,
         img_size=224,
@@ -103,7 +105,7 @@ class DinoVisionTransformer(nn.Module):
         self.num_register_tokens = num_register_tokens
         self.interpolate_antialias = interpolate_antialias
         self.interpolate_offset = interpolate_offset
-        self.use_reentrant = False # hardcoded to False
+        self.use_reentrant = False  # hardcoded to False
 
         self.patch_embed = embed_layer(img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
         num_patches = self.patch_embed.num_patches

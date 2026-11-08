@@ -65,9 +65,17 @@ class OtterVideo(BaseModel):
         tensor_dtype=None,
     ) -> str:
         if isinstance(input_data, Image.Image):
-            vision_x = self.image_processor.preprocess([input_data], return_tensors="pt")["pixel_values"].unsqueeze(1).unsqueeze(0)
+            vision_x = (
+                self.image_processor.preprocess([input_data], return_tensors="pt")["pixel_values"]
+                .unsqueeze(1)
+                .unsqueeze(0)
+            )
         elif isinstance(input_data, list):  # list of video frames
-            vision_x = self.image_processor.preprocess(input_data, return_tensors="pt")["pixel_values"].unsqueeze(0).unsqueeze(0)
+            vision_x = (
+                self.image_processor.preprocess(input_data, return_tensors="pt")["pixel_values"]
+                .unsqueeze(0)
+                .unsqueeze(0)
+            )
         else:
             raise ValueError("Invalid input data. Expected PIL Image or list of video frames.")
 
@@ -88,7 +96,17 @@ class OtterVideo(BaseModel):
             no_repeat_ngram_size=3,
             bad_words_ids=bad_words_id,
         )
-        parsed_output = self.model.text_tokenizer.decode(generated_text[0]).split("<answer>")[-1].lstrip().rstrip().split("<|endofchunk|>")[0].lstrip().rstrip().lstrip('"').rstrip('"')
+        parsed_output = (
+            self.model.text_tokenizer.decode(generated_text[0])
+            .split("<answer>")[-1]
+            .lstrip()
+            .rstrip()
+            .split("<|endofchunk|>")[0]
+            .lstrip()
+            .rstrip()
+            .lstrip('"')
+            .rstrip('"')
+        )
         return parsed_output
 
     def generate(self, input_data):

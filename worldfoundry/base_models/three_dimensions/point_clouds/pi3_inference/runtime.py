@@ -62,11 +62,11 @@ class Pi3Representation:
                 raise FileNotFoundError(f"model.safetensors not found in {model_root}")
 
             from safetensors.torch import load_file
+
             model = Pi3()
             model.load_state_dict(load_file(ckpt_path), strict=True)
 
         return cls(model=model, device=device)
-
 
     def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Run Pi3 inference and return all outputs.
@@ -90,17 +90,17 @@ class Pi3Representation:
             with torch.amp.autocast("cuda", dtype=self.dtype, enabled=autocast_enabled):
                 res = self.model(imgs)
 
-        results["points"] = res["points"].cpu().numpy()              # (B, N, H, W, 3)
+        results["points"] = res["points"].cpu().numpy()  # (B, N, H, W, 3)
         results["local_points"] = res["local_points"].cpu().numpy()  # (B, N, H, W, 3)
         results["camera_poses"] = res["camera_poses"].cpu().numpy()  # (B, N, 4, 4)
-        results["conf"] = res["conf"].cpu().numpy()                  # (B, N, H, W, 1)
+        results["conf"] = res["conf"].cpu().numpy()  # (B, N, H, W, 1)
 
         # Quality masks: confidence + depth-edge filtering
         conf_tensor = res["conf"]
         masks = torch.sigmoid(conf_tensor[..., 0]) > conf_threshold
         non_edge = ~depth_edge(res["local_points"][..., 2], rtol=edge_rtol)
         masks = torch.logical_and(masks, non_edge)
-        results["masks"] = masks.cpu().numpy()                       # (B, N, H, W)
+        results["masks"] = masks.cpu().numpy()  # (B, N, H, W)
 
         results["depth_map"] = res["local_points"][..., 2].cpu().numpy()  # (B, N, H, W)
 

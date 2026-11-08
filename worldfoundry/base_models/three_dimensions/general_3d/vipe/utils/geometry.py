@@ -490,6 +490,7 @@ class ScaledTransform:
 @dataclass(slots=True, kw_only=True)
 class IncompleteRigScaledTransform:
     """Incomplete rig scaled transform implementation."""
+
     transform: ScaledTransform
     right_translation: torch.Tensor
 

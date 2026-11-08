@@ -21,9 +21,7 @@ class YOLOv5GeneralGroundingDataset(BatchShapePolicyDataset, CocoDataset):
         Returns:
             List[dict]: A list of annotation.
         """  # noqa: E501
-        with get_local_path(
-            self.ann_file, backend_args=self.backend_args
-        ) as local_path:
+        with get_local_path(self.ann_file, backend_args=self.backend_args) as local_path:
             self.coco = self.COCOAPI(local_path)
 
         img_ids = self.coco.get_img_ids()
@@ -37,14 +35,10 @@ class YOLOv5GeneralGroundingDataset(BatchShapePolicyDataset, CocoDataset):
             raw_ann_info = self.coco.load_anns(ann_ids)
             total_ann_ids.extend(ann_ids)
 
-            parsed_data_info = self.parse_data_info(
-                {"raw_ann_info": raw_ann_info, "raw_img_info": raw_img_info}
-            )
+            parsed_data_info = self.parse_data_info({"raw_ann_info": raw_ann_info, "raw_img_info": raw_img_info})
             data_list.append(parsed_data_info)
         if self.ANN_ID_UNIQUE:
-            assert len(set(total_ann_ids)) == len(total_ann_ids), (
-                f"Annotation ids in '{self.ann_file}' are not unique!"
-            )
+            assert len(set(total_ann_ids)) == len(total_ann_ids), f"Annotation ids in '{self.ann_file}' are not unique!"
 
         del self.coco
         # print(len(data_list))
@@ -74,9 +68,7 @@ class YOLOv5GeneralGroundingDataset(BatchShapePolicyDataset, CocoDataset):
                 if osp.exists(candidate_img_path):
                     img_path = candidate_img_path
                     break
-        assert img_path is not None, (
-            f"Image path {img_info['file_name']} not found in{img_prefix}"
-        )
+        assert img_path is not None, f"Image path {img_info['file_name']} not found in{img_prefix}"
         if self.data_prefix.get("seg", None):
             seg_map_path = osp.join(
                 self.data_prefix["seg"],
@@ -188,6 +180,4 @@ class YOLOv5GeneralGroundingDataset(BatchShapePolicyDataset, CocoDataset):
                 else:
                     self.data_prefix[data_key] = prefix
             else:
-                raise TypeError(
-                    f"prefix should be a string, tuple or list,but got {type(prefix)}"
-                )
+                raise TypeError(f"prefix should be a string, tuple or list,but got {type(prefix)}")

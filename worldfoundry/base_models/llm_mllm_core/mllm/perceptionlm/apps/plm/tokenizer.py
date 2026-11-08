@@ -50,13 +50,8 @@ class Llama3Tokenizer(TikTokenTokenizer):
             "<|end_header_id|>",
             "<|reserved_special_token_4|>",
             "<|eot_id|>",  # End of turn
-        ] + [
-            f"<|reserved_special_token_{i}|>"
-            for i in range(5, self.num_reserved_special_tokens - 5)
-        ]
-        self.special_tokens = {
-            token: num_base_tokens + i for i, token in enumerate(special_tokens)
-        }
+        ] + [f"<|reserved_special_token_{i}|>" for i in range(5, self.num_reserved_special_tokens - 5)]
+        self.special_tokens = {token: num_base_tokens + i for i, token in enumerate(special_tokens)}
         self.model = tiktoken.Encoding(
             name=Path(model_path).name,
             pat_str=self.pat_str,
@@ -75,9 +70,7 @@ class Llama3Tokenizer(TikTokenTokenizer):
             self.special_tokens["<|end_of_text|>"],
             self.special_tokens["<|eot_id|>"],
         }
-        logger.info(
-            f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}"
-        )
+        logger.info(f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}")
 
     def encode(
         self,
@@ -143,9 +136,7 @@ class Llama3Tokenizer(TikTokenTokenizer):
         return self.model.decode(cast(List[int], t))
 
     @staticmethod
-    def _split_whitespaces_or_nonwhitespaces(
-        s: str, max_consecutive_slice_len: int
-    ) -> Iterator[str]:
+    def _split_whitespaces_or_nonwhitespaces(s: str, max_consecutive_slice_len: int) -> Iterator[str]:
         """
         Splits the string `s` so that each substring contains no more than `max_consecutive_slice_len`
         consecutive whitespaces or consecutive non-whitespaces.
@@ -222,8 +213,7 @@ class PLMTokenizer(Llama3Tokenizer):
             assert self.pooling_ratio is not None
             width, height = media.size(-2), media.size(-1)
             num_patches = int(
-                (width // self.patch_size // self.pooling_ratio)
-                * (height // self.patch_size // self.pooling_ratio)
+                (width // self.patch_size // self.pooling_ratio) * (height // self.patch_size // self.pooling_ratio)
             )
             dialog = conv_template.get_conversation_dict_list(
                 num_images=num_media_chunks,
@@ -254,18 +244,13 @@ class PLMTokenizer(Llama3Tokenizer):
                     response_ids.extend(tokens)
                 else:
                     source_ids.extend(tokens)
-                if (
-                    len(text_ids) + len(source_ids) + len(response_ids) + 1
-                    > self.seq_len
-                ):
+                if len(text_ids) + len(source_ids) + len(response_ids) + 1 > self.seq_len:
                     if len(text_ids) == 0:
                         return PLMTokenizedSample(is_valid=False)
                     logger.info(f"Truncated text length to {len(text_ids) + 1}")
                     break
                 text_ids.extend(source_ids)
-                response_pos.extend(
-                    [i + len(text_ids) for i in range(len(response_ids))]
-                )
+                response_pos.extend([i + len(text_ids) for i in range(len(response_ids))])
                 text_ids.extend(response_ids)
                 source_ids = []
                 response_ids = []
@@ -286,8 +271,7 @@ class PLMTokenizer(Llama3Tokenizer):
         if media is not None:
             width, height = media.size(-2), media.size(-1)
             num_patches = int(
-                (width // self.patch_size // self.pooling_ratio)
-                * (height // self.patch_size // self.pooling_ratio)
+                (width // self.patch_size // self.pooling_ratio) * (height // self.patch_size // self.pooling_ratio)
             )
             prompt = self.conversation_template.get_generation_prompt(
                 question, num_images=len(media), num_patches=num_patches

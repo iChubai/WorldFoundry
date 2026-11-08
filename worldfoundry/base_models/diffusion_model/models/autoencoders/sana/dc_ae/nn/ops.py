@@ -69,6 +69,7 @@ def resize(
         return F.interpolate(value, size=size, scale_factor=scale_factor, mode=mode)
     raise NotImplementedError(f"resize(mode={mode}) not implemented")
 
+
 __all__ = [
     "ConvLayer",
     "UpSampleLayer",
@@ -97,6 +98,7 @@ __all__ = [
 
 class ConvLayer(nn.Module):
     """Conv layer implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -197,6 +199,7 @@ class ConvLayer(nn.Module):
 
 class UpSampleLayer(nn.Module):
     """Up sample layer implementation."""
+
     def __init__(
         self,
         mode="bicubic",
@@ -237,6 +240,7 @@ class UpSampleLayer(nn.Module):
 
 class ConvPixelUnshuffleDownSampleLayer(nn.Module):
     """Conv pixel unshuffle down sample layer implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -281,6 +285,7 @@ class ConvPixelUnshuffleDownSampleLayer(nn.Module):
 
 class PixelUnshuffleChannelAveragingDownSampleLayer(nn.Module):
     """Pixel unshuffle channel averaging down sample layer implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -339,6 +344,7 @@ class PixelUnshuffleChannelAveragingDownSampleLayer(nn.Module):
 
 class ConvPixelShuffleUpSampleLayer(nn.Module):
     """Conv pixel shuffle up sample layer implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -382,6 +388,7 @@ class ConvPixelShuffleUpSampleLayer(nn.Module):
 
 class InterpolateConvUpSampleLayer(nn.Module):
     """Interpolate conv up sample layer implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -443,6 +450,7 @@ class InterpolateConvUpSampleLayer(nn.Module):
 
 class ChannelDuplicatingPixelUnshuffleUpSampleLayer(nn.Module):
     """Channel duplicating pixel unshuffle up sample layer implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -497,6 +505,7 @@ class ChannelDuplicatingPixelUnshuffleUpSampleLayer(nn.Module):
 
 class LinearLayer(nn.Module):
     """Linear layer implementation."""
+
     def __init__(
         self,
         in_features: int,
@@ -558,6 +567,7 @@ class LinearLayer(nn.Module):
 
 class IdentityLayer(nn.Module):
     """Identity layer implementation."""
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward.
 
@@ -577,6 +587,7 @@ class IdentityLayer(nn.Module):
 
 class DSConv(nn.Module):
     """Ds conv implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -639,6 +650,7 @@ class DSConv(nn.Module):
 
 class MBConv(nn.Module):
     """Mb conv implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -716,6 +728,7 @@ class MBConv(nn.Module):
 
 class FusedMBConv(nn.Module):
     """Fused mb conv implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -785,6 +798,7 @@ class FusedMBConv(nn.Module):
 
 class GLUMBConv(nn.Module):
     """Glumb conv implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -872,6 +886,7 @@ class GLUMBConv(nn.Module):
 
 class ResBlock(nn.Module):
     """Res block implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -943,6 +958,7 @@ class ResBlock(nn.Module):
 
 class ChannelChunkConv3d(nn.Conv3d):
     """Channel chunk conv d implementation."""
+
     CONV3D_NUMEL_LIMIT = 2**31
 
     def _get_output_numel(self, input_shape: torch.Size) -> int:
@@ -1228,6 +1244,7 @@ class LiteMLA(nn.Module):
 
 class EfficientViTBlock(nn.Module):
     """Efficient vi t block implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -1321,6 +1338,7 @@ class EfficientViTBlock(nn.Module):
 
 class ResidualBlock(nn.Module):
     """Residual block implementation."""
+
     def __init__(
         self,
         main: Optional[nn.Module],
@@ -1379,6 +1397,7 @@ class ResidualBlock(nn.Module):
 
 class DAGBlock(nn.Module):
     """Dag block implementation."""
+
     def __init__(
         self,
         inputs: dict[str, nn.Module],
@@ -1434,6 +1453,7 @@ class DAGBlock(nn.Module):
 
 class OpSequential(nn.Module):
     """Op sequential implementation."""
+
     def __init__(self, op_list: list[Optional[nn.Module]]):
         """Init.
 

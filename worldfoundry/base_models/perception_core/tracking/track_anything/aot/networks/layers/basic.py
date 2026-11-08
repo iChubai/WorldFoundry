@@ -11,6 +11,7 @@ from torch import nn
 
 class GroupNorm1D(nn.Module):
     """Group norm d implementation."""
+
     def __init__(self, indim, groups=8):
         """Init.
 
@@ -32,6 +33,7 @@ class GroupNorm1D(nn.Module):
 
 class GNActDWConv2d(nn.Module):
     """Gn act dw conv d implementation."""
+
     def __init__(self, indim, gn_groups=32):
         """Init.
 
@@ -62,6 +64,7 @@ class GNActDWConv2d(nn.Module):
 
 class DWConv2d(nn.Module):
     """Dw conv d implementation."""
+
     def __init__(self, indim, dropout=0.1):
         """Init.
 
@@ -91,6 +94,7 @@ class DWConv2d(nn.Module):
 
 class ScaleOffset(nn.Module):
     """Scale offset implementation."""
+
     def __init__(self, indim):
         """Init.
 
@@ -116,6 +120,7 @@ class ScaleOffset(nn.Module):
 
 class ConvGN(nn.Module):
     """Conv gn implementation."""
+
     def __init__(self, indim, outdim, kernel_size, gn_groups=8):
         """Init.
 
@@ -198,6 +203,7 @@ def mask_out(x, y, mask_rate=0.15, training=False):
 
 class DropPath(nn.Module):
     """Drop path implementation."""
+
     def __init__(self, drop_prob=None, batch_dim=0):
         """Init.
 
@@ -237,6 +243,7 @@ class DropPath(nn.Module):
 
 class DropOutLogit(nn.Module):
     """Drop out logit implementation."""
+
     def __init__(self, drop_prob=None):
         """Init.
 

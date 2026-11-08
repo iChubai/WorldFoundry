@@ -78,13 +78,10 @@ class GammaWorldLatentInitializer:
                 )
             )
         if len(images) != requested_players:
-            raise ValueError(
-                f"Gamma-World received {len(images)} images for n_players={requested_players}"
-            )
+            raise ValueError(f"Gamma-World received {len(images)} images for n_players={requested_players}")
         if requested_players != self.num_players:
             raise ValueError(
-                f"the released Gamma checkpoint supports {self.num_players} players, "
-                f"got {requested_players}"
+                f"the released Gamma checkpoint supports {self.num_players} players, got {requested_players}"
             )
         return images
 
@@ -107,9 +104,7 @@ class GammaWorldLatentInitializer:
                 f"(official state_t=48 latent frames; received {request.num_frames!r})"
             )
         if request.height % self.spatial_compression or request.width % self.spatial_compression:
-            raise ValueError(
-                f"Gamma height and width must be divisible by {self.spatial_compression}"
-            )
+            raise ValueError(f"Gamma height and width must be divisible by {self.spatial_compression}")
         if (request.num_frames - 1) % self.temporal_compression:
             raise ValueError("Gamma num_frames must satisfy (num_frames - 1) % 4 == 0")
 

@@ -35,6 +35,7 @@ VCHITECT_2B_CONFIG = {
 
 class VchitectDenoiser:
     """Vchitect-XL transformer adapter for the standard runner loop."""
+
     def __init__(self, model: VchitectXLTransformerModel) -> None:
         self.model = model
 

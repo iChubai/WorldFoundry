@@ -94,6 +94,7 @@ class EfficientUpdateFormer(nn.Module):
 
     def initialize_weights(self):
         """Initialize weights."""
+
         def _basic_init(module):
             """Helper function to basic init.
 
@@ -163,6 +164,7 @@ class EfficientUpdateFormer(nn.Module):
 
 class CorrBlock:
     """Corr block implementation."""
+
     def __init__(self, fmaps, num_levels=4, radius=4, multiple_track_feats=False, padding_mode="zeros"):
         """
         Build a pyramid of feature maps from the input.

@@ -24,7 +24,11 @@ import torchvision
 from torch import nn
 from torchvision.models._utils import IntermediateLayerGetter
 
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import NestedTensor, clean_state_dict, is_main_process
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
+    NestedTensor,
+    clean_state_dict,
+    is_main_process,
+)
 
 from .position_encoding import build_position_encoding
 from .swin_transformer import build_swin_transformer
@@ -93,6 +97,7 @@ class FrozenBatchNorm2d(torch.nn.Module):
 
 class BackboneBase(nn.Module):
     """Backbone base implementation."""
+
     def __init__(
         self,
         backbone: nn.Module,
@@ -110,19 +115,12 @@ class BackboneBase(nn.Module):
         """
         super().__init__()
         for name, parameter in backbone.named_parameters():
-            if (
-                not train_backbone
-                or "layer2" not in name
-                and "layer3" not in name
-                and "layer4" not in name
-            ):
+            if not train_backbone or "layer2" not in name and "layer3" not in name and "layer4" not in name:
                 parameter.requires_grad_(False)
 
         return_layers = {}
         for idx, layer_index in enumerate(return_interm_indices):
-            return_layers.update(
-                {"layer{}".format(5 - len(return_interm_indices) + idx): "{}".format(layer_index)}
-            )
+            return_layers.update({"layer{}".format(5 - len(return_interm_indices) + idx): "{}".format(layer_index)})
 
         # if len:
         #     if use_stage1_feature:
@@ -189,6 +187,7 @@ class Backbone(BackboneBase):
 
 class Joiner(nn.Sequential):
     """Joiner implementation."""
+
     def __init__(self, backbone, position_embedding):
         """Init.
 
@@ -264,14 +263,14 @@ def build_backbone(args):
     else:
         raise NotImplementedError("Unknown backbone {}".format(args.backbone))
 
-    assert len(bb_num_channels) == len(
-        return_interm_indices
-    ), f"len(bb_num_channels) {len(bb_num_channels)} != len(return_interm_indices) {len(return_interm_indices)}"
+    assert len(bb_num_channels) == len(return_interm_indices), (
+        f"len(bb_num_channels) {len(bb_num_channels)} != len(return_interm_indices) {len(return_interm_indices)}"
+    )
 
     model = Joiner(backbone, position_embedding)
     model.num_channels = bb_num_channels
-    assert isinstance(
-        bb_num_channels, List
-    ), "bb_num_channels is expected to be a List but {}".format(type(bb_num_channels))
+    assert isinstance(bb_num_channels, List), "bb_num_channels is expected to be a List but {}".format(
+        type(bb_num_channels)
+    )
     # import ipdb; ipdb.set_trace()
     return model

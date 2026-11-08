@@ -21,8 +21,10 @@ from .ffn_layers import Mlp
 from worldfoundry.core.nn.blocks.layers import LayerScale
 from .utils import cat_keep_shapes, uncat_with_shapes
 
+
 class SelfAttentionBlock(nn.Module):
     """Self attention block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -264,6 +266,7 @@ class SelfAttentionBlock(nn.Module):
 
 class CausalSelfAttentionBlock(nn.Module):
     """Causal self attention block implementation."""
+
     def __init__(
         self,
         dim: int,

@@ -107,11 +107,7 @@ class WanTextToVideoLatentInitializer:
                 f"Wan num_frames must satisfy (num_frames - 1) % {self.temporal_compression} == 0: "
                 f"got {request.num_frames}"
             )
-        latent_frames = (
-            (request.num_frames - 1) // self.temporal_compression
-            + 1
-            + int(extra_latent_frames)
-        )
+        latent_frames = (request.num_frames - 1) // self.temporal_compression + 1 + int(extra_latent_frames)
         return torch.randn(
             request.batch_size,
             self.channels,
@@ -194,8 +190,7 @@ class WanReferenceLatentInitializer(WanTextToVideoLatentInitializer):
         references = self._references(request)
         if len(references) > self.max_reference_images:
             raise ValueError(
-                f"Wan reference-to-video accepts at most {self.max_reference_images} images, "
-                f"got {len(references)}"
+                f"Wan reference-to-video accepts at most {self.max_reference_images} images, got {len(references)}"
             )
         encoded_references = []
         codec_dtype = self._codec_dtype(latent_encoder)
@@ -282,8 +277,11 @@ class WanImageToVideoLatentInitializer(WanTextToVideoLatentInitializer):
         )
         pixels = pixels.unsqueeze(2).repeat(request.batch_size, 1, 1, 1, 1)
         condition_latents = encode_wan_image_condition(
-            pixels, num_frames=request.num_frames, latent_encoder=latent_encoder,
-            device=device, dtype=noise.dtype,
+            pixels,
+            num_frames=request.num_frames,
+            latent_encoder=latent_encoder,
+            device=device,
+            dtype=noise.dtype,
         )
         image_latents = condition_latents[:, 4:]
         if image_latents.shape != noise.shape:
@@ -324,12 +322,16 @@ class WanCausalFirstFrameLatentInitializer(WanTextToVideoLatentInitializer):
         image = load_pil_image(WanImageToVideoLatentInitializer._image(request), first_sequence_item=False)
         pixels = torch.from_numpy(np.ascontiguousarray(np.asarray(image, dtype=np.float32)))
         pixels = pixels.permute(2, 0, 1).div_(127.5).sub_(1.0).unsqueeze(0)
-        pixels = torch.nn.functional.interpolate(
-            pixels, size=(request.height, request.width), mode="bicubic", align_corners=False
-        ).unsqueeze(2).repeat(request.batch_size, 1, 1, 1, 1)
-        first = latent_encoder.encode(
-            pixels.to(device=device, dtype=self._codec_dtype(latent_encoder))
-        ).to(device=device, dtype=noise.dtype)
+        pixels = (
+            torch.nn.functional.interpolate(
+                pixels, size=(request.height, request.width), mode="bicubic", align_corners=False
+            )
+            .unsqueeze(2)
+            .repeat(request.batch_size, 1, 1, 1, 1)
+        )
+        first = latent_encoder.encode(pixels.to(device=device, dtype=self._codec_dtype(latent_encoder))).to(
+            device=device, dtype=noise.dtype
+        )
         if first.shape != noise[:, :, :1].shape:
             raise ValueError(
                 "causal Wan first-frame latent geometry must match generated noise: "
@@ -479,9 +481,11 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
             )
         if request.batch_size != 1:
             raise ValueError("Wan VACE media conditioning currently requires batch size one")
-        frames = torch.from_numpy(
-            coerce_video_frames(value, max_frames=request.num_frames)[..., :3]
-        ).permute(0, 3, 1, 2).float()
+        frames = (
+            torch.from_numpy(coerce_video_frames(value, max_frames=request.num_frames)[..., :3])
+            .permute(0, 3, 1, 2)
+            .float()
+        )
         frames = WanVaceLatentInitializer._fit_frames(frames, request.num_frames)
         frames = torch.nn.functional.interpolate(
             frames,
@@ -489,9 +493,15 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
             mode="bilinear",
             align_corners=False,
         )
-        return frames.permute(1, 0, 2, 3).unsqueeze(0).div(127.5).sub(1.0).to(
-            device=device,
-            dtype=dtype,
+        return (
+            frames.permute(1, 0, 2, 3)
+            .unsqueeze(0)
+            .div(127.5)
+            .sub(1.0)
+            .to(
+                device=device,
+                dtype=dtype,
+            )
         )
 
     @staticmethod
@@ -534,9 +544,15 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
             size=(request.height, request.width),
             mode="nearest",
         )
-        return frames.permute(1, 0, 2, 3).unsqueeze(0).div(255.0).clamp_(0.0, 1.0).to(
-            device=device,
-            dtype=dtype,
+        return (
+            frames.permute(1, 0, 2, 3)
+            .unsqueeze(0)
+            .div(255.0)
+            .clamp_(0.0, 1.0)
+            .to(
+                device=device,
+                dtype=dtype,
+            )
         )
 
     def initialize(
@@ -561,9 +577,7 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
         dtype: torch.dtype,
     ) -> LatentInitialization:
         references = self._references(request)
-        declared_reference_count = int(
-            request.inputs.get("vace_reference_count", len(references))
-        )
+        declared_reference_count = int(request.inputs.get("vace_reference_count", len(references)))
         if declared_reference_count != len(references):
             raise ValueError(
                 "vace_reference_count must match the number of VACE reference images: "
@@ -584,9 +598,7 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
             direct_context = direct_context.to(device=device, dtype=noise.dtype)
             expected = (noise.shape[0], 96, *noise.shape[2:])
             if tuple(direct_context.shape) != expected:
-                raise ValueError(
-                    f"vace_context must have shape {expected}, got {tuple(direct_context.shape)}"
-                )
+                raise ValueError(f"vace_context must have shape {expected}, got {tuple(direct_context.shape)}")
             return LatentInitialization(
                 noise,
                 {
@@ -628,10 +640,7 @@ class WanVaceLatentInitializer(WanTextToVideoLatentInitializer):
         ).to(dtype=noise.dtype)
 
         if len(references) > generated_noise.shape[2]:
-            raise ValueError(
-                f"Wan VACE accepts at most {generated_noise.shape[2]} references "
-                "at this frame count"
-            )
+            raise ValueError(f"Wan VACE accepts at most {generated_noise.shape[2]} references at this frame count")
         reference_latents = []
         if references:
             from worldfoundry.core import load_pil_image, resize_and_letterbox

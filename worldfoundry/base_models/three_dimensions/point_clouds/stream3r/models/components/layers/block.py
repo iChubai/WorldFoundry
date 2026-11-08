@@ -92,7 +92,9 @@ class Block(nn.Module):
             return self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.1:
-            assert attn_mask is None and kv_cache is None, "attn_mask and kv_cache are not supported for drop_add_residual_stochastic_depth yet"
+            assert attn_mask is None and kv_cache is None, (
+                "attn_mask and kv_cache are not supported for drop_add_residual_stochastic_depth yet"
+            )
             # the overhead is compensated only for a drop path rate larger than 0.1
             x = drop_add_residual_stochastic_depth(
                 x,

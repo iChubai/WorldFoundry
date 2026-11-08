@@ -90,9 +90,7 @@ def _mh_moe_fwd_kernel(
     if tile_id >= total_tiles:
         return
 
-    expert_id = _binary_search_expert_id(
-        cu_expert_tile_counts_ptr, tile_id, NUM_EXPERTS, LOG2_NUM_EXPERTS
-    )
+    expert_id = _binary_search_expert_id(cu_expert_tile_counts_ptr, tile_id, NUM_EXPERTS, LOG2_NUM_EXPERTS)
     expert_id_i64 = expert_id.to(tl.int64)
     head_id = expert_id // (NUM_EXPERTS // NUM_HEADS)
 
@@ -109,9 +107,7 @@ def _mh_moe_fwd_kernel(
     block_token_offs = token_start + block_t_offs
     block_token_mask = block_t_offs < n
 
-    gather_ids = tl.load(
-        gather_ids_ptr + block_token_offs, mask=block_token_mask, other=0
-    )
+    gather_ids = tl.load(gather_ids_ptr + block_token_offs, mask=block_token_mask, other=0)
     probs = tl.load(probs_ptr + block_token_offs, mask=block_token_mask, other=0.0)
     x_offs = gather_ids * stride_x_s + head_id * stride_x_h
 
@@ -160,11 +156,7 @@ def _mh_moe_fwd_kernel(
 
     if DETERMINISTIC:
         # Store to flat (T, D_HEAD) buffer; host scatter_back accumulates deterministically.
-        y_ptrs = (
-            y_ptr
-            + block_token_offs[:, None] * stride_y_s
-            + dh_offs[None, :] * stride_y_dh
-        )
+        y_ptrs = y_ptr + block_token_offs[:, None] * stride_y_s + dh_offs[None, :] * stride_y_dh
         tl.store(
             y_ptrs,
             y_acc.to(y_ptr.dtype.element_ty),
@@ -274,10 +266,12 @@ def mh_moe_fwd_func(
 
     expert_token_counts = expert_offsets.diff()
     expert_tile_counts = (expert_token_counts + BLOCK_T - 1) // BLOCK_T
-    cu_expert_tile_counts = torch.cat([
-        torch.zeros(1, dtype=torch.int32, device=expert_offsets.device),
-        torch.cumsum(expert_tile_counts, dim=0, dtype=torch.int32),
-    ])
+    cu_expert_tile_counts = torch.cat(
+        [
+            torch.zeros(1, dtype=torch.int32, device=expert_offsets.device),
+            torch.cumsum(expert_tile_counts, dim=0, dtype=torch.int32),
+        ]
+    )
 
     grid_size = (T + BLOCK_T - 1) // BLOCK_T + num_flatten_experts
 

@@ -56,7 +56,10 @@ def generic_param_init_fn_(
         raise ValueError(f"Expected init_div_is_residual to be boolean or numeric, got {init_div_is_residual}")
     if init_div_is_residual is not False:
         if verbose > 1:
-            warnings.warn(f"Initializing _is_residual layers then dividing them by {div_is_residual:.3f}. " + f"Set `init_div_is_residual: false` in init config to disable this.")
+            warnings.warn(
+                f"Initializing _is_residual layers then dividing them by {div_is_residual:.3f}. "
+                + f"Set `init_div_is_residual: false` in init config to disable this."
+            )
     if isinstance(module, nn.Linear):
         if hasattr(module, "_fused"):
             fused_init_helper_(module, init_fn_)
@@ -110,7 +113,11 @@ def generic_param_init_fn_(
             for s, e in zip(splits[:-1], splits[1:]):
                 init_fn_(module.in_proj_weight[s:e])
         else:
-            assert module.q_proj_weight is not None and module.k_proj_weight is not None and (module.v_proj_weight is not None)
+            assert (
+                module.q_proj_weight is not None
+                and module.k_proj_weight is not None
+                and (module.v_proj_weight is not None)
+            )
             assert module.in_proj_weight is None
             init_fn_(module.q_proj_weight)
             init_fn_(module.k_proj_weight)
@@ -176,7 +183,9 @@ def baseline_param_init_fn_(
 ):
     del kwargs
     if init_std is None:
-        raise ValueError("You must set model.init_config['init_std'] to a float value to use the default initialization scheme.")
+        raise ValueError(
+            "You must set model.init_config['init_std'] to a float value to use the default initialization scheme."
+        )
     _normal_param_init_fn_(
         module=module,
         std=init_std,
@@ -258,7 +267,10 @@ def kaiming_uniform_param_init_fn_(
 ):
     del kwargs
     if verbose > 1:
-        warnings.warn(f"Using nn.init.kaiming_uniform_ init fn with parameters: " + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}")
+        warnings.warn(
+            f"Using nn.init.kaiming_uniform_ init fn with parameters: "
+            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
+        )
     kaiming_uniform_ = partial(
         nn.init.kaiming_uniform_,
         a=init_gain,
@@ -292,7 +304,10 @@ def kaiming_normal_param_init_fn_(
 ):
     del kwargs
     if verbose > 1:
-        warnings.warn(f"Using nn.init.kaiming_normal_ init fn with parameters: " + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}")
+        warnings.warn(
+            f"Using nn.init.kaiming_normal_ init fn with parameters: "
+            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
+        )
     kaiming_normal_ = partial(
         torch.nn.init.kaiming_normal_,
         a=init_gain,

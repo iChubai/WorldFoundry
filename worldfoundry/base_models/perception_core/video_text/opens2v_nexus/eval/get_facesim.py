@@ -39,12 +39,7 @@ def get_image_path_from_json(json_data, video_name, input_image_folder):
     if video_prefix in json_data.keys():
         img_paths = json_data[video_prefix].get("img_paths", [])
         for img_path in img_paths:
-            if (
-                "/man/" in img_path
-                or "/woman/" in img_path
-                or "/crop_woman/" in img_path
-                or "/crop_man/" in img_path
-            ):
+            if "/man/" in img_path or "/woman/" in img_path or "/crop_woman/" in img_path or "/crop_man/" in img_path:
                 img_path = os.path.join(input_image_folder, img_path)
                 return img_path
     return None
@@ -56,9 +51,7 @@ def pad_np_bgr_image(np_image, scale=1.25):
     h, w = np_image.shape[:2]
     top = bottom = int(h * pad_scale)
     left = right = int(w * pad_scale)
-    return cv2.copyMakeBorder(
-        np_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(128, 128, 128)
-    ), (
+    return cv2.copyMakeBorder(np_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(128, 128, 128)), (
         left,
         top,
     )
@@ -77,11 +70,7 @@ def get_face_keypoints(face_model, image_bgr):
 def batch_cosine_similarity(embedding_image, embedding_frames, device="cuda"):
     embedding_image = torch.tensor(embedding_image).to(device)
     embedding_frames = torch.tensor(embedding_frames).to(device)
-    return (
-        torch.nn.functional.cosine_similarity(embedding_image, embedding_frames, dim=-1)
-        .cpu()
-        .numpy()
-    )
+    return torch.nn.functional.cosine_similarity(embedding_image, embedding_frames, dim=-1).cpu().numpy()
 
 
 @torch.no_grad()
@@ -136,23 +125,17 @@ def process_video(
     cur_scores = []
     arc_scores = []
     for frame_rgb in video_frames:
-        align_face_frame, arcface_frame_embedding = process_image(
-            face_arc_model, frame_rgb
-        )
+        align_face_frame, arcface_frame_embedding = process_image(face_arc_model, frame_rgb)
         if align_face_frame is None:
             continue
         cur_embedding_frame = inference(face_cur_model, align_face_frame, device)
         cur_score = max(
             0.0,
-            batch_cosine_similarity(
-                cur_image_embedding, cur_embedding_frame, device=device
-            ).item(),
+            batch_cosine_similarity(cur_image_embedding, cur_embedding_frame, device=device).item(),
         )
         arc_score = max(
             0.0,
-            batch_cosine_similarity(
-                arcface_image_embedding, arcface_frame_embedding, device=device
-            ).item(),
+            batch_cosine_similarity(arcface_image_embedding, arcface_frame_embedding, device=device).item(),
         )
         if cur_score != 0.0:
             cur_scores.append(cur_score)
@@ -180,10 +163,7 @@ def process_video_files(
     for video_file in tqdm(video_files):
         print(f"Processing video: {video_file}")
         file_basename = os.path.basename(video_file)
-        if not any(
-            keyword in file_basename
-            for keyword in ["singlehuman", "singleface", "faceobj", "humanobj"]
-        ):
+        if not any(keyword in file_basename for keyword in ["singlehuman", "singleface", "faceobj", "humanobj"]):
             continue
 
         # For image
@@ -191,9 +171,7 @@ def process_video_files(
         if image_path is None:
             print(f"Error: No valid image path found for {video_file}")
             continue
-        align_face_image, arcface_image_embedding = process_image(
-            face_arc_model, image_path
-        )
+        align_face_image, arcface_image_embedding = process_image(face_arc_model, image_path)
         if align_face_image is None:
             print(f"Error processing image at {image_path}")
             continue
@@ -267,13 +245,9 @@ def main():
         return
 
     face_arc_path = os.path.join(model_path, "face_extractor")
-    face_cur_path = os.path.join(
-        model_path, "glint360k_curricular_face_r101_backbone.bin"
-    )
+    face_cur_path = os.path.join(model_path, "glint360k_curricular_face_r101_backbone.bin")
 
-    face_arc_model = FaceAnalysis(
-        root=face_arc_path, providers=["CUDAExecutionProvider"]
-    )
+    face_arc_model = FaceAnalysis(root=face_arc_path, providers=["CUDAExecutionProvider"])
     face_arc_model.prepare(ctx_id=0, det_size=(320, 320))
 
     face_cur_model = get_model("IR_101")([112, 112])

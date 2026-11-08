@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class BlockChunk(nn.ModuleList):
     """Block chunk implementation."""
+
     def forward(self, x):
         """Forward.
 
@@ -42,6 +43,7 @@ class BlockChunk(nn.ModuleList):
 
 class DinoVisionTransformer(nn.Module):
     """Dino vision transformer implementation."""
+
     def __init__(
         self,
         img_size=224,

@@ -23,6 +23,7 @@ from torch import Tensor, nn
 # Supports two parametrizations of the rope parameters: either using `base` or `min_period` and `max_period`.
 class RopePositionEmbedding(nn.Module):
     """Rope position embedding implementation."""
+
     def __init__(
         self,
         embed_dim: int,

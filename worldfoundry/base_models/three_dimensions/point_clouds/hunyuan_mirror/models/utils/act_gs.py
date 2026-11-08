@@ -3,7 +3,7 @@
 import torch
 from einops import rearrange
 
-    
+
 def reg_dense_offsets(xyz, shift=6.0):
     """Reg dense offsets.
 
@@ -14,6 +14,7 @@ def reg_dense_offsets(xyz, shift=6.0):
     d = xyz.norm(dim=-1, keepdim=True)
     return xyz / d.clamp(min=1e-8) * (torch.exp(d - shift) - torch.exp(-shift))
 
+
 def reg_dense_scales(scales):
     """Reg dense scales.
 
@@ -21,6 +22,7 @@ def reg_dense_scales(scales):
         scales: The scales.
     """
     return scales.exp()
+
 
 def reg_dense_rotation(rotations, eps=1e-8):
     """Reg dense rotation.
@@ -31,13 +33,15 @@ def reg_dense_rotation(rotations, eps=1e-8):
     """
     return rotations / (rotations.norm(dim=-1, keepdim=True) + eps)
 
+
 def reg_dense_sh(sh):
     """Reg dense sh.
 
     Args:
         sh: The sh.
     """
-    return rearrange(sh, '... (d_sh xyz) -> ... d_sh xyz', xyz=3)
+    return rearrange(sh, "... (d_sh xyz) -> ... d_sh xyz", xyz=3)
+
 
 def reg_dense_opacities(opacities):
     """Reg dense opacities.
@@ -46,6 +50,7 @@ def reg_dense_opacities(opacities):
         opacities: The opacities.
     """
     return opacities.sigmoid()
+
 
 def reg_dense_weights(weights):
     """Reg dense weights.

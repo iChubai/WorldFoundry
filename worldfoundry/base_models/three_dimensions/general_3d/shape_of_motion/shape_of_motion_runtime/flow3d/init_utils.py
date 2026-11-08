@@ -61,9 +61,8 @@ def init_trainable_poses(w2cs: Tensor) -> CameraPoses:
 
     return CameraPoses(Rs, ts)
 
-def init_fg_from_tracks_3d(
-    cano_t: int, tracks_3d: TrackObservations, motion_coefs: torch.Tensor
-) -> GaussianParams:
+
+def init_fg_from_tracks_3d(cano_t: int, tracks_3d: TrackObservations, motion_coefs: torch.Tensor) -> GaussianParams:
     """
     using dataclasses individual tensors so we know they're consistent
     and are always masked/filtered together
@@ -116,9 +115,7 @@ def init_bg(
     bg_means = points.xyz
 
     # Initialize gaussian orientations by normals.
-    local_normals = points.normals.new_tensor([[0.0, 0.0, 1.0]]).expand_as(
-        points.normals
-    )
+    local_normals = points.normals.new_tensor([[0.0, 0.0, 1.0]]).expand_as(points.normals)
     bg_quats = roma.rotvec_to_unitquat(
         F.normalize(local_normals.cross(points.normals), dim=-1)
         * (local_normals * points.normals).sum(-1, keepdim=True).acos_()
@@ -193,9 +190,7 @@ def init_motion_params_with_procrustes(
 
     means_cano = means_cano[valid_mask]
 
-    sampled_centers, num_bases, labels = sample_initial_bases_centers(
-        cluster_init_method, cano_t, tracks_3d, num_bases
-    )
+    sampled_centers, num_bases, labels = sample_initial_bases_centers(cluster_init_method, cano_t, tracks_3d, num_bases)
 
     # assign each point to the label to compute the cluster weight
     ids, counts = labels.unique(return_counts=True)
@@ -230,26 +225,15 @@ def init_motion_params_with_procrustes(
     skipped_ts = {}
     for n, cluster_id in enumerate(ids):
         mask_in_cluster = labels == cluster_id
-        cluster = tracks_3d.xyz[mask_in_cluster].transpose(
-            0, 1
-        )  # [num_frames, n_pts, 3]
-        visibilities = tracks_3d.visibles[mask_in_cluster].swapaxes(
-            0, 1
-        )  # [num_frames, n_pts]
-        confidences = tracks_3d.confidences[mask_in_cluster].swapaxes(
-            0, 1
-        )  # [num_frames, n_pts]
+        cluster = tracks_3d.xyz[mask_in_cluster].transpose(0, 1)  # [num_frames, n_pts, 3]
+        visibilities = tracks_3d.visibles[mask_in_cluster].swapaxes(0, 1)  # [num_frames, n_pts]
+        confidences = tracks_3d.confidences[mask_in_cluster].swapaxes(0, 1)  # [num_frames, n_pts]
         weights = get_weights_for_procrustes(cluster, visibilities)
         prev_t = cano_t
         cluster_skip_ts = []
         for cur_t in tgt_ts:
             # compute pairwise transform from cano_t
-            procrustes_weights = (
-                weights[cano_t]
-                * weights[cur_t]
-                * (confidences[cano_t] + confidences[cur_t])
-                / 2
-            )
+            procrustes_weights = weights[cano_t] * weights[cur_t] * (confidences[cano_t] + confidences[cur_t]) / 2
             if procrustes_weights.sum() < min_mean_weight * num_frames:
                 init_rots[n, cur_t] = init_rots[n, prev_t]
                 init_ts[n, cur_t] = init_ts[n, prev_t]
@@ -265,9 +249,9 @@ def init_motion_params_with_procrustes(
                 init_rot, init_t, _ = se3
                 assert init_rot.shape[-1] == rot_dim
                 # double cover
-                if rot_type == "quat" and torch.linalg.norm(
-                    init_rot - init_rots[n][prev_t]
-                ) > torch.linalg.norm(-init_rot - init_rots[n][prev_t]):
+                if rot_type == "quat" and torch.linalg.norm(init_rot - init_rots[n][prev_t]) > torch.linalg.norm(
+                    -init_rot - init_rots[n][prev_t]
+                ):
                     init_rot = -init_rot
                 init_rots[n, cur_t] = init_rot
                 init_ts[n, cur_t] = init_t
@@ -333,9 +317,7 @@ def run_initial_optim(
             {"params": fg.params["means"], "lr": 1e-3},
         ],
     )
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(
-        optimizer, gamma=0.1 ** (1 / num_iters)
-    )
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.1 ** (1 / num_iters))
     G = fg.params.means.shape[0]
     num_frames = bases.num_frames
     device = bases.params["rots"].device
@@ -344,9 +326,7 @@ def run_initial_optim(
         min_v if i <= th else (max_v - min_v) * (i - th) / (num_iters - th) + min_v
     )
 
-    gt_2d, gt_depth = project_2d_tracks(
-        tracks_3d.xyz.swapaxes(0, 1), Ks, w2cs, return_depth=True
-    )
+    gt_2d, gt_depth = project_2d_tracks(tracks_3d.xyz.swapaxes(0, 1), Ks, w2cs, return_depth=True)
     # (G, T, 2)
     gt_2d = gt_2d.swapaxes(0, 1)
     # (G, T)
@@ -374,9 +354,7 @@ def run_initial_optim(
         )
         loss += track_3d_loss * 1.0
 
-        pred_2d, pred_depth = project_2d_tracks(
-            positions.swapaxes(0, 1), Ks, w2cs, return_depth=True
-        )
+        pred_2d, pred_depth = project_2d_tracks(positions.swapaxes(0, 1), Ks, w2cs, return_depth=True)
         pred_2d = pred_2d.swapaxes(0, 1)
         pred_depth = pred_depth.swapaxes(0, 1)
 
@@ -396,13 +374,9 @@ def run_initial_optim(
             far_depths = torch.quantile(gt_depth, 0.98, dim=0, keepdim=True)
             loss_depth_in_range = 0
             if (pred_depth < near_depths).any():
-                loss_depth_in_range += (near_depths - pred_depth)[
-                    pred_depth < near_depths
-                ].mean()
+                loss_depth_in_range += (near_depths - pred_depth)[pred_depth < near_depths].mean()
             if (pred_depth > far_depths).any():
-                loss_depth_in_range += (pred_depth - far_depths)[
-                    pred_depth > far_depths
-                ].mean()
+                loss_depth_in_range += (pred_depth - far_depths)[pred_depth > far_depths].mean()
 
             loss += loss_depth_in_range * w_smooth_func(i, 0.05, 0.5, 400)
 
@@ -411,9 +385,7 @@ def run_initial_optim(
 
         # motion basis should be smooth.
         w_smooth = w_smooth_func(i, 0.01, 0.1, 400)
-        small_acc_loss = compute_se3_smoothness_loss(
-            bases.params["rots"], bases.params["transls"]
-        )
+        small_acc_loss = compute_se3_smoothness_loss(bases.params["rots"], bases.params["transls"])
         loss += small_acc_loss * w_smooth
 
         small_acc_loss_tracks = compute_accel_loss(positions)
@@ -529,9 +501,7 @@ def vis_se3_init_3d(server, init_rots, init_ts, basis_centers):
         rmats = cont_6d_to_rmat(init_rots)
     transls = init_ts
     transfms = rt_to_mat4(rmats, transls)
-    center_tracks3d = torch.einsum(
-        "bnij,bj->bni", transfms, F.pad(basis_centers, (0, 1), value=1.0)
-    )[..., :3]
+    center_tracks3d = torch.einsum("bnij,bj->bni", transfms, F.pad(basis_centers, (0, 1), value=1.0))[..., :3]
     vis_tracks_3d(server, center_tracks3d.cpu().numpy(), labels, name="se3_centers")
 
 
@@ -563,9 +533,7 @@ def vis_tracks_2d_video(
     tracks_2d = (
         project_2d_tracks(tracks_3d.swapaxes(0, 1), Ks, w2cs).cpu().numpy()  # type: ignore
     )
-    frames = np.asarray(
-        draw_keypoints_video(imgs, tracks_2d, colors, occs, radius=radius)
-    )
+    frames = np.asarray(draw_keypoints_video(imgs, tracks_2d, colors, occs, radius=radius))
     iio.imwrite(path, frames, fps=15)
 
 
@@ -587,9 +555,7 @@ def vis_tracks_3d(
     N, T = vis_tracks.shape[:2]
     vis_tracks = np.asarray(vis_tracks)
     for i in range(N):
-        server.scene.add_spline_catmull_rom(
-            f"/{name}/{i}/spline", vis_tracks[i], color=colors[i], segments=T - 1
-        )
+        server.scene.add_spline_catmull_rom(f"/{name}/{i}/spline", vis_tracks[i], color=colors[i], segments=T - 1)
         server.scene.add_point_cloud(
             f"/{name}/{i}/start",
             vis_tracks[i, [0]],
@@ -606,9 +572,7 @@ def vis_tracks_3d(
         )
 
 
-def sample_initial_bases_centers(
-    mode: str, cano_t: int, tracks_3d: TrackObservations, num_bases: int
-):
+def sample_initial_bases_centers(mode: str, cano_t: int, tracks_3d: TrackObservations, num_bases: int):
     """
     :param mode: "farthest" | "hdbscan" | "kmeans"
     :param tracks_3d: [G, T, 3]
@@ -647,9 +611,7 @@ def sample_initial_bases_centers(
     # import ipdb; ipdb.set_trace()
 
     velocities = xyz_interp[:, 1:] - xyz_interp[:, :-1]
-    vel_dirs = (
-        velocities / (cp.linalg.norm(velocities, axis=-1, keepdims=True) + 1e-5)
-    ).reshape((num_tracks, -1))
+    vel_dirs = (velocities / (cp.linalg.norm(velocities, axis=-1, keepdims=True) + 1e-5)).reshape((num_tracks, -1))
 
     # [num_bases, num_gaussians]
     if mode == "kmeans":
@@ -660,18 +622,13 @@ def sample_initial_bases_centers(
     labels = model.labels_
     num_bases = labels.max().item() + 1
     sampled_centers = torch.stack(
-        [
-            means_canonical[torch.tensor(labels == i)].median(dim=0).values
-            for i in range(num_bases)
-        ]
+        [means_canonical[torch.tensor(labels == i)].median(dim=0).values for i in range(num_bases)]
     )[None]
     print("number of {} clusters: ".format(mode), num_bases)
     return sampled_centers, num_bases, torch.tensor(labels)
 
 
-def _sample_initial_bases_centers_cpu(
-    mode: str, cano_t: int, tracks_3d: TrackObservations, num_bases: int
-):
+def _sample_initial_bases_centers_cpu(mode: str, cano_t: int, tracks_3d: TrackObservations, num_bases: int):
     """Helper function to sample initial bases centers cpu.
 
     Args:
@@ -691,7 +648,12 @@ def _sample_initial_bases_centers_cpu(
     vel_dirs = vel_dirs.reshape((num_tracks, -1))
 
     labels_np: np.ndarray
-    use_sklearn = os.getenv("WORLDFOUNDRY_SHAPE_OF_MOTION_USE_SKLEARN", "").strip().lower() in {"1", "true", "yes", "on"}
+    use_sklearn = os.getenv("WORLDFOUNDRY_SHAPE_OF_MOTION_USE_SKLEARN", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
     if mode == "hdbscan" and use_sklearn:
         try:
             from sklearn.cluster import HDBSCAN as SkHDBSCAN

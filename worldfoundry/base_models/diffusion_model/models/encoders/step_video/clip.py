@@ -33,9 +33,7 @@ def _load_local_bert_model(model_dir):
             weights_only=True,
         )
         bert_state_dict = {
-            key.removeprefix("bert."): value
-            for key, value in state_dict.items()
-            if key.startswith("bert.")
+            key.removeprefix("bert."): value for key, value in state_dict.items() if key.startswith("bert.")
         }
         if bert_state_dict:
             state_dict = bert_state_dict
@@ -53,9 +51,10 @@ def _load_local_bert_model(model_dir):
 
 class HunyuanClip(nn.Module):
     """
-        Hunyuan clip code copied from https://github.com/huggingface/diffusers/blob/main/src/diffusers/pipelines/hunyuandit/pipeline_hunyuandit.py
-        hunyuan's clip used BertModel and BertTokenizer, so we copy it.
+    Hunyuan clip code copied from https://github.com/huggingface/diffusers/blob/main/src/diffusers/pipelines/hunyuandit/pipeline_hunyuandit.py
+    hunyuan's clip used BertModel and BertTokenizer, so we copy it.
     """
+
     def __init__(self, model_dir, max_length=77):
         """Init.
 
@@ -64,11 +63,11 @@ class HunyuanClip(nn.Module):
             max_length: The max length.
         """
         super(HunyuanClip, self).__init__()
-        
+
         self.max_length = max_length
-        self.tokenizer = BertTokenizer.from_pretrained(os.path.join(model_dir, 'tokenizer'))
-        self.text_encoder = _load_local_bert_model(os.path.join(model_dir, 'clip_text_encoder'))
-        
+        self.tokenizer = BertTokenizer.from_pretrained(os.path.join(model_dir, "tokenizer"))
+        self.text_encoder = _load_local_bert_model(os.path.join(model_dir, "clip_text_encoder"))
+
     @torch.no_grad
     def forward(self, prompts, with_mask=True):
         """Forward.
@@ -91,4 +90,3 @@ class HunyuanClip(nn.Module):
             attention_mask=text_inputs.attention_mask.to(self.device) if with_mask else None,
         )
         return prompt_embeds.last_hidden_state, prompt_embeds.pooler_output
-        

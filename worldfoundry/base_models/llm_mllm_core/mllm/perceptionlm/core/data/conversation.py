@@ -54,9 +54,7 @@ class Conversation:
             # However replace <image> in annotations with the self.image_token
             for conversation in self.conversations:
                 if conversation["from"] == "human":
-                    conversation["value"] = conversation["value"].replace(
-                        "<image>", self.image_token * num_patches
-                    )
+                    conversation["value"] = conversation["value"].replace("<image>", self.image_token * num_patches)
         else:
             # Some annotations already have image tags. remove and add ourself.
             self.conversations[0]["value"] = (
@@ -90,20 +88,15 @@ class Conversation:
                 conv_dict_list.append(conv_dict)
             else:
                 raise ValueError(
-                    f"conv['from'] must be human or assistant, but got {conv['from']}."
-                    "Please fix your jsonl file."
+                    f"conv['from'] must be human or assistant, but got {conv['from']}.Please fix your jsonl file."
                 )
         # Add bos and eos token at the start and end of the conversation (TODO (Maaz): Is there a better way to do it?)
         conv_dict_list[0]["user"] = f"{self.bos_token}{conv_dict_list[0]['user']}"
-        conv_dict_list[-1][
-            "assistant"
-        ] = f"{conv_dict_list[-1]['assistant']}{self.eos_token}"
+        conv_dict_list[-1]["assistant"] = f"{conv_dict_list[-1]['assistant']}{self.eos_token}"
 
         return conv_dict_list
 
-    def get_generation_prompt(
-        self, prompt: str, num_images: int = 1, num_patches: int = 144
-    ):
+    def get_generation_prompt(self, prompt: str, num_images: int = 1, num_patches: int = 144):
         if prompt.count("<image>") == num_images:
             prompt = prompt.replace("<image>", self.image_token * num_patches)
         else:
@@ -122,9 +115,7 @@ class Conversation:
             )
 
         sys_text = self.bos_token + self.pre_system + self.system + self.sep_system
-        return (
-            sys_text + self.pre_question + prompt + self.sep_question + self.pre_answer
-        )
+        return sys_text + self.pre_question + prompt + self.sep_question + self.pre_answer
 
     def add_conv(self, conv: Union[List, Dict]):
         if isinstance(conv, list):
@@ -172,10 +163,7 @@ conv_plm_sft = Conversation(
     "You are able to understand the visual content that the user provides, "
     "and assist the user with a variety of tasks using natural language.",
     conversations=[],
-    place_image_token=lambda text, image_token, num_image_tokens: (
-        image_token * num_image_tokens
-    )
-    + text,
+    place_image_token=lambda text, image_token, num_image_tokens: (image_token * num_image_tokens) + text,
     bos_token="<|begin_of_text|>",
     pre_system="<|start_header_id|>system<|end_header_id|>\n\n",
     pre_question="<|start_header_id|>user<|end_header_id|>\n\n",

@@ -13,6 +13,7 @@ from .config import CLIPAudioCfg
 @dataclass
 class AudioAugmentationCfg:
     """Audio augmentation cfg implementation."""
+
     data_trunc: str = "rand_trunc"
     data_fill: str = "repeatpad"
     enable_fusion: bool = False
@@ -105,11 +106,11 @@ class AudioPreprocess:
     """Picklable audio preprocessing callable for DataLoader spawn/forkserver workers."""
 
     def __init__(
-            self,
-            audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
-            data_fill: str = "repeatpad",
-            data_trunc: str = "rand_trunc",
-            int16_normalize: bool = False,
+        self,
+        audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
+        data_fill: str = "repeatpad",
+        data_trunc: str = "rand_trunc",
+        int16_normalize: bool = False,
     ):
         """Init.
 
@@ -134,10 +135,10 @@ class AudioPreprocess:
             waveform: The waveform.
         """
         if len(waveform) >= self.clip_samples:
-            return waveform[:self.clip_samples]
+            return waveform[: self.clip_samples]
         if self.data_fill == "repeat":
             repeats = int(np.ceil(self.clip_samples / len(waveform)))
-            waveform = waveform.repeat(repeats)[:self.clip_samples]
+            waveform = waveform.repeat(repeats)[: self.clip_samples]
         elif self.data_fill == "repeatpad":
             repeats = self.clip_samples // len(waveform)
             waveform = waveform.repeat(repeats)
@@ -191,18 +192,18 @@ class AudioPreprocess:
                     elif global_mel.shape[0] > chunk_frames:
                         overflow = global_mel.shape[0] - chunk_frames
                         idx = random.randint(0, overflow)
-                        global_mel = global_mel[idx:idx + chunk_frames]
+                        global_mel = global_mel[idx : idx + chunk_frames]
                     mel_fusion = torch.stack([global_mel] + local_mels, dim=0)
                     longer = True
                 result["mel_fusion"] = mel_fusion
-                waveform = waveform[:self.clip_samples]
+                waveform = waveform[: self.clip_samples]
             elif self.data_trunc == "rand_trunc":
                 overflow = len(waveform) - self.clip_samples
                 idx = random.randint(0, overflow)
-                waveform = waveform[idx:idx + self.clip_samples]
+                waveform = waveform[idx : idx + self.clip_samples]
                 longer = True
             elif self.data_trunc == "trunc":
-                waveform = waveform[:self.clip_samples]
+                waveform = waveform[: self.clip_samples]
                 longer = True
             else:
                 raise ValueError(f"Unsupported audio truncation mode: {self.data_trunc}")
@@ -219,10 +220,10 @@ class AudioPreprocess:
 
 
 def make_audio_preprocess(
-        audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
-        data_fill: str = "repeatpad",
-        data_trunc: str = "rand_trunc",
-        int16_normalize: bool = False,
+    audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
+    data_fill: str = "repeatpad",
+    data_trunc: str = "rand_trunc",
+    int16_normalize: bool = False,
 ):
     """Make audio preprocess.
 
@@ -241,9 +242,9 @@ def make_audio_preprocess(
 
 
 def audio_transform_v2(
-        audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
-        is_train: bool = False,
-        audio_aug_cfg: Union[AudioAugmentationCfg, Dict[str, Any], None] = None,
+    audio_cfg: Union[CLIPAudioCfg, Dict[str, Any]],
+    is_train: bool = False,
+    audio_aug_cfg: Union[AudioAugmentationCfg, Dict[str, Any], None] = None,
 ):
     """Audio transform v2.
 

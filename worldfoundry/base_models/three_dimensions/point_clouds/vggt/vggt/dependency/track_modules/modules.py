@@ -24,6 +24,7 @@ def _ntuple(n):
     Args:
         n: The n.
     """
+
     def parse(x):
         """Parse.
 
@@ -186,6 +187,7 @@ class Mlp(nn.Module):
 
 class AttnBlock(nn.Module):
     """Attn block implementation."""
+
     def __init__(
         self,
         hidden_size,
@@ -232,6 +234,7 @@ class AttnBlock(nn.Module):
 
 class CrossAttnBlock(nn.Module):
     """Cross attn block implementation."""
+
     def __init__(self, hidden_size, context_dim, num_heads=1, mlp_ratio=4.0, **block_kwargs):
         """
         Cross attention block

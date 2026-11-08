@@ -18,6 +18,7 @@ from .modules import Mlp
 
 class BaseTrackerPredictor(nn.Module):
     """Base tracker predictor implementation."""
+
     def __init__(
         self,
         stride=1,

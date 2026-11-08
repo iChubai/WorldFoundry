@@ -19,7 +19,7 @@ def build_bert(model_config, pretrain, checkpoint):
     Returns: TODO
 
     """
-    current_dir = str(package_data_path('models', 'runtime', 'configs', 'umt', 'bert'))
+    current_dir = str(package_data_path("models", "runtime", "configs", "umt", "bert"))
     target_file = os.path.join(current_dir, model_config.text_encoder.config)  # Construct the new file path
     bert_config = BertConfig.from_json_file(target_file)
     target_file
@@ -58,16 +58,14 @@ def build_bert_decoder(model_config, checkpoint):
     Returns: TODO
 
     """
-    current_dir = str(package_data_path('models', 'runtime', 'configs', 'umt', 'bert'))
+    current_dir = str(package_data_path("models", "runtime", "configs", "umt", "bert"))
     target_file = os.path.join(current_dir, model_config.text_encoder.config)  # Construct the new file path
     bert_config = BertConfig.from_json_file(target_file)
     bert_config.encoder_width = model_config.vision_encoder.d_model
     bert_config.gradient_checkpointing = checkpoint
 
     bert_config.fusion_layer = 0
-    bert_config.num_hidden_layers = (
-        bert_config.num_hidden_layers - model_config.text_encoder.fusion_layer
-    )
+    bert_config.num_hidden_layers = bert_config.num_hidden_layers - model_config.text_encoder.fusion_layer
 
     text_decoder, loading_info = BertLMHeadModel.from_pretrained(
         model_config.text_encoder.pretrained,

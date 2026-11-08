@@ -18,6 +18,7 @@ torch.set_float32_matmul_precision("high")
 @dataclass
 class RenderConfig:
     """Render config implementation."""
+
     work_dir: str
     port: int = 8890
 

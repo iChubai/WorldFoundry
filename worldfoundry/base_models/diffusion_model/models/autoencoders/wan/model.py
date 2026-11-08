@@ -1491,9 +1491,7 @@ class WanVideoVAE(nn.Module):
             device=data_device,
         )
         if len(decoded_tiles) != len(tasks):
-            raise RuntimeError(
-                f"decoded {len(decoded_tiles)} VAE tiles for {len(tasks)} spatial tasks"
-            )
+            raise RuntimeError(f"decoded {len(decoded_tiles)} VAE tiles for {len(tasks)} spatial tasks")
         for index, (h, h_, w, w_) in enumerate(tasks):
             hidden_states_batch = decoded_tiles[index].to(
                 device=data_device,
@@ -1557,9 +1555,7 @@ class WanVideoVAE(nn.Module):
         decoded_tiles = []
         for h, h_, w, w_ in tqdm(tasks, desc="VAE decoding"):
             tile = hidden_states[:, :, :, h:h_, w:w_].to(device)
-            decoded_tiles.append(
-                self._decode_tile(tile, device, temporal_chunk_size).to("cpu")
-            )
+            decoded_tiles.append(self._decode_tile(tile, device, temporal_chunk_size).to("cpu"))
         return self._merge_spatial_decode_tiles(
             decoded_tiles,
             tasks,
@@ -1619,10 +1615,7 @@ class WanVideoVAE(nn.Module):
 
         metadata_by_rank = [None] * world_size
         dist.all_gather_object(metadata_by_rank, local_metadata, group=group)
-        rank_sizes = [
-            sum(int(item[2]) for item in (metadata or []))
-            for metadata in metadata_by_rank
-        ]
+        rank_sizes = [sum(int(item[2]) for item in (metadata or [])) for metadata in metadata_by_rank]
         max_size = max(rank_sizes, default=0)
         if max_size == 0:
             raise RuntimeError("parallel Wan VAE decode produced no tile payloads")
@@ -1637,9 +1630,9 @@ class WanVideoVAE(nn.Module):
         for rank_index, metadata in enumerate(metadata_by_rank):
             offset = 0
             for task_index, shape, numel in metadata or []:
-                decoded_tiles[int(task_index)] = gathered_payloads[rank_index][
-                    offset : offset + int(numel)
-                ].reshape(tuple(shape)).to("cpu")
+                decoded_tiles[int(task_index)] = (
+                    gathered_payloads[rank_index][offset : offset + int(numel)].reshape(tuple(shape)).to("cpu")
+                )
                 offset += int(numel)
         if any(tile is None for tile in decoded_tiles):
             raise RuntimeError("parallel Wan VAE gather did not return every spatial tile")

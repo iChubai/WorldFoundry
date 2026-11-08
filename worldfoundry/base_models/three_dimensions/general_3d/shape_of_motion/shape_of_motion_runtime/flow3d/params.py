@@ -9,6 +9,7 @@ from torch import Tensor
 
 from flow3d.transforms import cont_6d_to_rmat
 
+
 ###### Deprecated ######
 class CameraScales(nn.Module):
     """Align the monst3r camera pose scale with the scene"""
@@ -23,9 +24,7 @@ class CameraScales(nn.Module):
             camera_scales: The camera scales.
         """
         super().__init__()
-        self.params = nn.ParameterDict(
-            {"camera_scales": camera_scales}
-        )    
+        self.params = nn.ParameterDict({"camera_scales": camera_scales})
 
     @staticmethod
     def init_from_state_dict(state_dict, prefix="params."):
@@ -39,7 +38,7 @@ class CameraScales(nn.Module):
         assert all(f"{prefix}{k}" in state_dict for k in param_keys)
         args = {k: state_dict[f"{prefix}{k}"] for k in param_keys}
         return CameraScales(**args)
-    
+
     def get_camera_scales(self) -> torch.Tensor:
         """Get camera scales.
 
@@ -51,6 +50,7 @@ class CameraScales(nn.Module):
 
 class CameraPoses(nn.Module):
     """Camera poses implementation."""
+
     def __init__(
         self,
         Rs: Tensor,
@@ -70,7 +70,6 @@ class CameraPoses(nn.Module):
             }
         )
 
-    
     @staticmethod
     def init_from_state_dict(
         state_dict: dict[str, Tensor],
@@ -107,15 +106,13 @@ class CameraPoses(nn.Module):
         """get the 3x4 camera pose"""
         rot_mats = self.get_rot_matrix()
         ts = self.params["ts"]
-        pose = torch.cat([rot_mats, ts], dim=-1) # [..., 3, 4]
-        homo_pad = torch.tensor([0., 0., 0., 1.]).repeat(pose.shape[0], 1, 1).to(pose.device)
-        pose = torch.cat([
-            pose,
-            homo_pad], dim=-2) # (..., 4, 4)
+        pose = torch.cat([rot_mats, ts], dim=-1)  # [..., 3, 4]
+        homo_pad = torch.tensor([0.0, 0.0, 0.0, 1.0]).repeat(pose.shape[0], 1, 1).to(pose.device)
+        pose = torch.cat([pose, homo_pad], dim=-2)  # (..., 4, 4)
         assert pose.shape[-2:] == (4, 4)
         return pose
 
-    def invert(self, use_inverse: bool=False):
+    def invert(self, use_inverse: bool = False):
         """invert the camera pose"""
         Rs = self.params["Rs"]
         ts = self.params["ts"]
@@ -131,8 +128,10 @@ class CameraPoses(nn.Module):
         t_new = (Rs_ @ ts + ts_)[..., 0]
         return self(R_new, t_new)
 
+
 class GaussianParams(nn.Module):
     """Gaussian params implementation."""
+
     def __init__(
         self,
         means: torch.Tensor,
@@ -157,9 +156,7 @@ class GaussianParams(nn.Module):
             scene_scale: The scene scale.
         """
         super().__init__()
-        if not check_gaussian_sizes(
-            means, quats, scales, colors, opacities, motion_coefs
-        ):
+        if not check_gaussian_sizes(means, quats, scales, colors, opacities, motion_coefs):
             import ipdb
 
             ipdb.set_trace()
@@ -291,6 +288,7 @@ class GaussianParams(nn.Module):
 
 class MotionBases(nn.Module):
     """Motion bases implementation."""
+
     def __init__(self, rots, transls):
         """Init.
 
@@ -359,18 +357,12 @@ def check_gaussian_sizes(
     """
     dims = means.shape[:-1]
     leading_dims_match = (
-        quats.shape[:-1] == dims
-        and scales.shape[:-1] == dims
-        and colors.shape[:-1] == dims
-        and opacities.shape == dims
+        quats.shape[:-1] == dims and scales.shape[:-1] == dims and colors.shape[:-1] == dims and opacities.shape == dims
     )
     if motion_coefs is not None and motion_coefs.numel() > 0:
         leading_dims_match &= motion_coefs.shape[:-1] == dims
     dims_correct = (
-        means.shape[-1] == 3
-        and (quats.shape[-1] == 4)
-        and (scales.shape[-1] == 3)
-        and (colors.shape[-1] == 3)
+        means.shape[-1] == 3 and (quats.shape[-1] == 4) and (scales.shape[-1] == 3) and (colors.shape[-1] == 3)
     )
     return leading_dims_match and dims_correct
 

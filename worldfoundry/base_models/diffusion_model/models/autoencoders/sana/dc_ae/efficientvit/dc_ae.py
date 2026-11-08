@@ -58,6 +58,7 @@ __all__ = ["DCAE", "dc_vae_f32", "dc_ae_f32c32", "dc_ae_f64c128", "dc_ae_f128c51
 @dataclass
 class EncoderConfig:
     """Encoder config implementation."""
+
     in_channels: int = MISSING
     latent_channels: int = MISSING
     width_list: tuple[int, ...] = (128, 256, 512, 512, 1024, 1024)
@@ -78,6 +79,7 @@ class EncoderConfig:
 @dataclass
 class DecoderConfig:
     """Decoder config implementation."""
+
     in_channels: int = MISSING
     latent_channels: int = MISSING
     in_shortcut: Optional[str] = "duplicating"
@@ -97,6 +99,7 @@ class DecoderConfig:
 @dataclass
 class DCVAEConfig:
     """Dcvae config implementation."""
+
     is_training: bool = False  # NOTE: set to True in vae train config
     use_spatial_tiling: bool = False
     use_temporal_tiling: bool = False
@@ -110,6 +113,7 @@ class DCVAEConfig:
 @dataclass
 class DCAEConfig:
     """Dcae config implementation."""
+
     in_channels: int = 3
     latent_channels: int = 32
     encoder: EncoderConfig = field(
@@ -470,6 +474,7 @@ def build_decoder_project_out_block(
 
 class Encoder(nn.Module):
     """Encoder implementation."""
+
     def __init__(self, cfg: EncoderConfig, is_video: bool):
         """Init.
 
@@ -550,6 +555,7 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     """Decoder implementation."""
+
     def __init__(self, cfg: DecoderConfig, is_video: bool):
         """Init.
 
@@ -639,6 +645,7 @@ class Decoder(nn.Module):
 
 class DCAE(nn.Module):
     """Dcae implementation."""
+
     def __init__(self, cfg: DCAEConfig):
         """Init.
 
@@ -660,13 +667,13 @@ class DCAE(nn.Module):
             self.use_temporal_tiling = cfg.video.use_temporal_tiling
             self.spatial_tile_size = cfg.video.spatial_tile_size
             self.temporal_tile_size = cfg.video.temporal_tile_size
-            assert (
-                cfg.video.spatial_tile_size // cfg.video.spatial_compression_ratio
-            ), f"spatial tile size {cfg.video.spatial_tile_size} must be divisible by spatial compression of {cfg.video.spatial_compression_ratio}"
+            assert cfg.video.spatial_tile_size // cfg.video.spatial_compression_ratio, (
+                f"spatial tile size {cfg.video.spatial_tile_size} must be divisible by spatial compression of {cfg.video.spatial_compression_ratio}"
+            )
             self.spatial_tile_latent_size = cfg.video.spatial_tile_size // cfg.video.spatial_compression_ratio
-            assert (
-                cfg.video.temporal_tile_size // cfg.video.time_compression_ratio
-            ), f"temporal tile size {cfg.video.temporal_tile_size} must be divisible by temporal compression of {cfg.video.time_compression_ratio}"
+            assert cfg.video.temporal_tile_size // cfg.video.time_compression_ratio, (
+                f"temporal tile size {cfg.video.temporal_tile_size} must be divisible by temporal compression of {cfg.video.time_compression_ratio}"
+            )
             self.temporal_tile_latent_size = cfg.video.temporal_tile_size // cfg.video.time_compression_ratio
             self.tile_overlap_factor = cfg.video.tile_overlap_factor
         else:

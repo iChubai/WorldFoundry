@@ -17,7 +17,7 @@ from .backbones.levit import stem_b4_transpose
 from timm.models.layers import get_act_layer
 
 
-def _make_fusion_block(features, use_bn, size = None):
+def _make_fusion_block(features, use_bn, size=None):
     """Helper function to make fusion block.
 
     Args:
@@ -38,6 +38,7 @@ def _make_fusion_block(features, use_bn, size = None):
 
 class DPT(BaseModel):
     """Dpt implementation."""
+
     def __init__(
         self,
         head,
@@ -46,7 +47,7 @@ class DPT(BaseModel):
         readout="project",
         channels_last=False,
         use_bn=False,
-        **kwargs
+        **kwargs,
     ):
         """Init.
 
@@ -63,18 +64,18 @@ class DPT(BaseModel):
 
         self.channels_last = channels_last
 
-        # For the Swin, Swin 2, LeViT and Next-ViT Transformers, the hierarchical architectures prevent setting the 
+        # For the Swin, Swin 2, LeViT and Next-ViT Transformers, the hierarchical architectures prevent setting the
         # hooks freely. Instead, the hooks have to be chosen according to the ranges specified in the comments.
         hooks = {
             "beitl16_512": [5, 11, 17, 23],
             "beitl16_384": [5, 11, 17, 23],
             "beitb16_384": [2, 5, 8, 11],
             "swin2l24_384": [1, 1, 17, 1],  # Allowed ranges: [0, 1], [0,  1], [ 0, 17], [ 0,  1]
-            "swin2b24_384": [1, 1, 17, 1],                  # [0, 1], [0,  1], [ 0, 17], [ 0,  1]
-            "swin2t16_256": [1, 1, 5, 1],                   # [0, 1], [0,  1], [ 0,  5], [ 0,  1]
-            "swinl12_384": [1, 1, 17, 1],                   # [0, 1], [0,  1], [ 0, 17], [ 0,  1]
-            "next_vit_large_6m": [2, 6, 36, 39],            # [0, 2], [3,  6], [ 7, 36], [37, 39]
-            "levit_384": [3, 11, 21],                       # [0, 3], [6, 11], [14, 21]
+            "swin2b24_384": [1, 1, 17, 1],  # [0, 1], [0,  1], [ 0, 17], [ 0,  1]
+            "swin2t16_256": [1, 1, 5, 1],  # [0, 1], [0,  1], [ 0,  5], [ 0,  1]
+            "swinl12_384": [1, 1, 17, 1],  # [0, 1], [0,  1], [ 0, 17], [ 0,  1]
+            "next_vit_large_6m": [2, 6, 36, 39],  # [0, 2], [3,  6], [ 7, 36], [37, 39]
+            "levit_384": [3, 11, 21],  # [0, 3], [6, 11], [14, 21]
             "vitb_rn50_384": [0, 1, 8, 11],
             "vitb16_384": [2, 5, 8, 11],
             "vitl16_384": [5, 11, 17, 23],
@@ -91,7 +92,7 @@ class DPT(BaseModel):
         self.pretrained, self.scratch = _make_encoder(
             backbone,
             features,
-            False, # Set to true of you want to train from scratch, uses ImageNet weights
+            False,  # Set to true of you want to train from scratch, uses ImageNet weights
             groups=1,
             expand=False,
             exportable=False,
@@ -110,6 +111,7 @@ class DPT(BaseModel):
             self.forward_transformer = forward_swin
         elif "next_vit" in backbone:
             from .backbones.next_vit import forward_next_vit
+
             self.forward_transformer = forward_next_vit
         elif "levit" in backbone:
             self.forward_transformer = forward_levit
@@ -125,7 +127,6 @@ class DPT(BaseModel):
             self.scratch.refinenet4 = _make_fusion_block(features, use_bn)
 
         self.scratch.output_conv = head
-
 
     def forward(self, x):
         """Forward.
@@ -166,6 +167,7 @@ class DPT(BaseModel):
 
 class DPTDepthModel(DPT):
     """Dpt depth model implementation."""
+
     def __init__(self, path=None, non_negative=True, **kwargs):
         """Init.
 
@@ -192,7 +194,7 @@ class DPTDepthModel(DPT):
         super().__init__(head, **kwargs)
 
         if path is not None:
-           self.load(path)
+            self.load(path)
 
     def forward(self, x):
         """Forward.

@@ -23,6 +23,7 @@ from .attention import Attention, LayerScale, Mlp
 
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -105,6 +106,7 @@ class Block(nn.Module):
         Returns:
             The return value.
         """
+
         def attn_residual_func(x: Tensor, pos=None, attn_mask=None) -> Tensor:
             """Attn residual func.
 

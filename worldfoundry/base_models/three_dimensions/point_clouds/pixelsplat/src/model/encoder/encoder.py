@@ -13,6 +13,7 @@ T = TypeVar("T")
 
 class Encoder(nn.Module, ABC, Generic[T]):
     """Encoder implementation."""
+
     cfg: T
 
     def __init__(self, cfg: T) -> None:

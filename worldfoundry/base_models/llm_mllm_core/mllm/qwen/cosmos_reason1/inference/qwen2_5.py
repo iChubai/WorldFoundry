@@ -512,9 +512,7 @@ class Qwen2_5_VLRotaryEmbedding(nn.Module):
 
         self.config = config
         self.rope_init_fn = (
-            self._default_rope_parameters
-            if self.rope_type == "default"
-            else ROPE_INIT_FUNCTIONS[self.rope_type]
+            self._default_rope_parameters if self.rope_type == "default" else ROPE_INIT_FUNCTIONS[self.rope_type]
         )
 
         inv_freq, self.attention_scaling = self.rope_init_fn(self.config, device)
@@ -525,10 +523,7 @@ class Qwen2_5_VLRotaryEmbedding(nn.Module):
     def _default_rope_parameters(config: Qwen2_5_VLConfig, device=None):
         dim = getattr(config, "head_dim", None) or config.hidden_size // config.num_attention_heads
         base = float(getattr(config, "rope_theta", 10000.0))
-        inv_freq = 1.0 / (
-            base
-            ** (torch.arange(0, dim, 2, dtype=torch.int64, device=device).float() / dim)
-        )
+        inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2, dtype=torch.int64, device=device).float() / dim))
         return inv_freq, 1.0
 
     def init_weights(self, buffer_device: Optional[torch.device] = None):

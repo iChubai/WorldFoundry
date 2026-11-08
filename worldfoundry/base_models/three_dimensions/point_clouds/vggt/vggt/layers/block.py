@@ -27,6 +27,7 @@ XFORMERS_AVAILABLE = False
 
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -110,6 +111,7 @@ class Block(nn.Module):
         Returns:
             The return value.
         """
+
         def attn_residual_func(x: Tensor, pos=None) -> Tensor:
             """Attn residual func.
 
@@ -286,6 +288,7 @@ def drop_add_residual_stochastic_depth_list(
 
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
+
     def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
         """
         x_list contains a list of tensors to nest together and run

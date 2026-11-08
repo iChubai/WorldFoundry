@@ -26,6 +26,7 @@ from .modules import Mlp, AttnBlock, CrossAttnBlock, ResidualBlock
 
 class BasicEncoder(nn.Module):
     """Basic encoder implementation."""
+
     def __init__(self, input_dim=3, output_dim=128, stride=4):
         """Init.
 
@@ -110,6 +111,7 @@ class BasicEncoder(nn.Module):
 
 class ShallowEncoder(nn.Module):
     """Shallow encoder implementation."""
+
     def __init__(self, input_dim=3, output_dim=32, stride=1, norm_fn="instance"):
         """Init.
 
@@ -271,6 +273,7 @@ class EfficientUpdateFormer(nn.Module):
 
     def initialize_weights(self):
         """Initialize weights."""
+
         def _basic_init(module):
             """Helper function to basic init.
 
@@ -337,6 +340,7 @@ class EfficientUpdateFormer(nn.Module):
 
 class CorrBlock:
     """Corr block implementation."""
+
     def __init__(self, fmaps, num_levels=4, radius=4, multiple_track_feats=False, padding_mode="zeros"):
         """Init.
 

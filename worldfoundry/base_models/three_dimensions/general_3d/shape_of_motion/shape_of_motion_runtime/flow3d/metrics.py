@@ -30,6 +30,7 @@ def _masked_mse(preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor 
 
 class _MeanMetric(torch.nn.Module):
     """Mean metric implementation."""
+
     def __init__(self) -> None:
         """Init.
 
@@ -71,6 +72,7 @@ class _MeanMetric(torch.nn.Module):
 
 class mPSNR(_MeanMetric):
     """M psnr implementation."""
+
     def forward(self, preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> torch.Tensor:
         """Forward.
 
@@ -87,7 +89,9 @@ class mPSNR(_MeanMetric):
         self.update(value)
         return value.detach()
 
-    def update(self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None) -> None:  # type: ignore[override]
+    def update(
+        self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None
+    ) -> None:  # type: ignore[override]
         """Update.
 
         Args:
@@ -107,6 +111,7 @@ class mPSNR(_MeanMetric):
 
 class mSSIM(_MeanMetric):
     """M ssim implementation."""
+
     def forward(self, preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> torch.Tensor:
         """Forward.
 
@@ -123,7 +128,9 @@ class mSSIM(_MeanMetric):
         self.update(value)
         return value.detach()
 
-    def update(self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None) -> None:  # type: ignore[override]
+    def update(
+        self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None
+    ) -> None:  # type: ignore[override]
         """Update.
 
         Args:
@@ -143,6 +150,7 @@ class mSSIM(_MeanMetric):
 
 class mLPIPS(_MeanMetric):
     """M lpips implementation."""
+
     def forward(self, preds: torch.Tensor, targets: torch.Tensor, masks: torch.Tensor | None = None) -> torch.Tensor:
         """Forward.
 
@@ -164,7 +172,9 @@ class mLPIPS(_MeanMetric):
         self.update(value)
         return value.detach()
 
-    def update(self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None) -> None:  # type: ignore[override]
+    def update(
+        self, preds: torch.Tensor, targets: torch.Tensor | None = None, masks: torch.Tensor | None = None
+    ) -> None:  # type: ignore[override]
         """Update.
 
         Args:
@@ -183,7 +193,10 @@ class mLPIPS(_MeanMetric):
 
 class PCK(_MeanMetric):
     """Pck implementation."""
-    def update(self, preds: torch.Tensor, targets: torch.Tensor | None = None, threshold: float | torch.Tensor = 1.0) -> None:  # type: ignore[override]
+
+    def update(
+        self, preds: torch.Tensor, targets: torch.Tensor | None = None, threshold: float | torch.Tensor = 1.0
+    ) -> None:  # type: ignore[override]
         """Update.
 
         Args:

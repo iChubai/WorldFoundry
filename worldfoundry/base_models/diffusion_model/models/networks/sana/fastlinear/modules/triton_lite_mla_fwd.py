@@ -31,6 +31,7 @@ from .triton_lite_mla_kernels.vk_q_mm_divide_fwd import vk_q_mm_divide_fwd
 
 class TritonLiteMLAFwdFunction(torch.autograd.Function):
     """Forward-only autograd Function wrapping fused LiteMLA kernels."""
+
     @staticmethod
     def forward(
         ctx,
@@ -112,6 +113,7 @@ class TritonLiteMLAFwdFunction(torch.autograd.Function):
 
 class TritonLiteMLAFwd(nn.Module):
     """Inference-only LiteLA using the fused Triton forward kernels."""
+
     def __init__(
         self,
         dim: int,

@@ -9,7 +9,10 @@ import torch
 import torch.nn.functional as F
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from ..models.networks.worldcrafter.fast.contract import resolve_dmd_inference_trace
-from ..models.networks.worldcrafter.fast.camera import build_ucpe_attention_kwargs_sequential_pyramid, pyramid_token_grids
+from ..models.networks.worldcrafter.fast.camera import (
+    build_ucpe_attention_kwargs_sequential_pyramid,
+    pyramid_token_grids,
+)
 from .helios import XLA_AVAILABLE
 
 
@@ -37,9 +40,7 @@ def sample_fast(
     device: torch.device | None = None,
     transformer_dtype: torch.dtype = None,
     generator: torch.Generator | None = None,
-    callback_on_step_end: (
-        Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None
-    ) = None,
+    callback_on_step_end: (Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None) = None,
     callback_on_step_end_tensor_inputs: list[str] = ["latents"],
     progress_bar=None,
 ):
@@ -65,39 +66,29 @@ def sample_fast(
     batch_size, num_channel, num_frames, height, width = latents.shape
     patch_size = self.transformer.config.patch_size
     ucpe_attention_kwargs_per_stage = None
-    if (
-        camera_trajectory is not None
-        and num_latent_frames_per_chunk is not None
-        and (chunk_index is not None)
-    ):
-        ucpe_attention_kwargs_per_stage = (
-            build_ucpe_attention_kwargs_sequential_pyramid(
-                self.transformer,
-                camera_trajectory,
-                num_latent_frames_per_chunk=num_latent_frames_per_chunk,
-                chunk_index=chunk_index,
-                token_grids=pyramid_token_grids(
-                    height // patch_size[1],
-                    width // patch_size[2],
-                    pyramid_num_stages,
-                    low_to_high=True,
-                ),
-                vae_scale_factor_temporal=self.vae_scale_factor_temporal,
-                restart_each_chunk=camera_restart_each_chunk,
-                translation_scale=camera_translation_scale,
-                pixel_center=ucpe_pixel_center,
-            )
+    if camera_trajectory is not None and num_latent_frames_per_chunk is not None and (chunk_index is not None):
+        ucpe_attention_kwargs_per_stage = build_ucpe_attention_kwargs_sequential_pyramid(
+            self.transformer,
+            camera_trajectory,
+            num_latent_frames_per_chunk=num_latent_frames_per_chunk,
+            chunk_index=chunk_index,
+            token_grids=pyramid_token_grids(
+                height // patch_size[1],
+                width // patch_size[2],
+                pyramid_num_stages,
+                low_to_high=True,
+            ),
+            vae_scale_factor_temporal=self.vae_scale_factor_temporal,
+            restart_each_chunk=camera_restart_each_chunk,
+            translation_scale=camera_translation_scale,
+            pixel_center=ucpe_pixel_center,
         )
-    latents = latents.permute(0, 2, 1, 3, 4).reshape(
-        batch_size * num_frames, num_channel, height, width
-    )
+    latents = latents.permute(0, 2, 1, 3, 4).reshape(batch_size * num_frames, num_channel, height, width)
     for _ in range(pyramid_num_stages - 1):
         height //= 2
         width //= 2
         latents = F.interpolate(latents, size=(height, width), mode="bilinear") * 2
-    latents = latents.reshape(
-        batch_size, num_frames, num_channel, height, width
-    ).permute(0, 2, 1, 3, 4)
+    latents = latents.reshape(batch_size, num_frames, num_channel, height, width).permute(0, 2, 1, 3, 4)
     batch_size = latents.shape[0]
     start_point_list = [latents]
     i = 0
@@ -116,9 +107,7 @@ def sample_fast(
                 batch_size * num_frames, num_channel, height // 2, width // 2
             )
             latents = F.interpolate(latents, size=(height, width), mode="nearest")
-            latents = latents.reshape(
-                batch_size, num_frames, num_channel, height, width
-            ).permute(0, 2, 1, 3, 4)
+            latents = latents.reshape(batch_size, num_frames, num_channel, height, width).permute(0, 2, 1, 3, 4)
             ori_sigma = 1 - self.scheduler.ori_start_sigmas[i_s]
             gamma = self.scheduler.config.gamma
             alpha = 1 / (math.sqrt(1 + 1 / gamma) * (1 - ori_sigma) + ori_sigma)
@@ -155,9 +144,7 @@ def sample_fast(
                 int(idx),
                 int(len(timesteps)),
             )
-            timestep = self.dmd_timestep_contract.student_condition(
-                t, latents.shape[0], device=latents.device
-            )
+            timestep = self.dmd_timestep_contract.student_condition(t, latents.shape[0], device=latents.device)
             with stage_transformer.cache_context("cond"):
                 noise_pred = stage_transformer(
                     hidden_states=latents.to(transformer_dtype),

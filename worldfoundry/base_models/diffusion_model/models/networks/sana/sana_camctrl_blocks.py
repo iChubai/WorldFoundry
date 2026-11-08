@@ -84,7 +84,7 @@ def create_grid(
     """Create a pixel coordinate grid of shape ``(H, W, 3)`` or ``(B, H, W, 3)``."""
     if device.type == "cpu":
         assert dtype in (torch.float32, torch.float64), (
-            f"ERR: {dtype} is not supported by {device.type}\n" "If device is `cpu`, use float32 or float64"
+            f"ERR: {dtype} is not supported by {device.type}\nIf device is `cpu`, use float32 or float64"
         )
     _xs = torch.linspace(0, width - 1, width, dtype=dtype, device=device)
     _ys = torch.linspace(0, height - 1, height, dtype=dtype, device=device)

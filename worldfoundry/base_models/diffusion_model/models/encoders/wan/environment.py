@@ -53,8 +53,7 @@ def resolve_vggt_1b_root(path: str | Path | None = None) -> Path:
     )
     for candidate in candidates:
         if (candidate / "config.json").is_file() and any(
-            (candidate / filename).is_file()
-            for filename in ("model.safetensors", "model.pt", "pytorch_model.bin")
+            (candidate / filename).is_file() for filename in ("model.safetensors", "model.pt", "pytorch_model.bin")
         ):
             return candidate.resolve()
     if path is not None and str(path).strip():

@@ -76,6 +76,7 @@ def _camera_execution_weight_bias(module: nn.Module) -> tuple[torch.Tensor, torc
         module = materialized
     return module.weight, getattr(module, "bias", None)
 
+
 # ---------------------------------------------------------------------------
 # Softmax-block KV cache helpers.
 #
@@ -508,9 +509,7 @@ class _GDNUCPEBase(GDN):
             )
             return
 
-        logging.getLogger(__name__).debug(
-            "Initializing camera-branch QKV for %s", self.__class__.__name__
-        )
+        logging.getLogger(__name__).debug("Initializing camera-branch QKV for %s", self.__class__.__name__)
         w = self.qkv.weight
         b = self.qkv.bias
         dim = self.cam_dim
@@ -764,9 +763,7 @@ class _GDNUCPEBase(GDN):
         if any(bias is not None for bias in biases):
             qkv_b = torch.cat(
                 [
-                    bias
-                    if bias is not None
-                    else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
+                    bias if bias is not None else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
                     for bias, weight in zip(biases, (q_w, k_w, v_w))
                 ]
             )
@@ -1524,9 +1521,7 @@ def _prepare_cam_qkv_softmax(
     if any(bias is not None for bias in biases):
         qkv_b = torch.cat(
             [
-                bias
-                if bias is not None
-                else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
+                bias if bias is not None else torch.zeros(weight.shape[0], device=weight.device, dtype=weight.dtype)
                 for bias, weight in zip(biases, (q_w, k_w, v_w))
             ]
         )

@@ -8,6 +8,7 @@ from worldfoundry.core.nn import Mlp
 
 class MlpFP32(Mlp):
     """Mlp implementation."""
+
     @staticmethod
     def map_to_args_to_float(args, kwargs):
         """Map to args to float.
@@ -16,10 +17,7 @@ class MlpFP32(Mlp):
             args: The args.
             kwargs: The kwargs.
         """
-        args = tuple(
-            torch.float32 if isinstance(arg, torch.dtype) else arg
-            for arg in args
-        )
+        args = tuple(torch.float32 if isinstance(arg, torch.dtype) else arg for arg in args)
         kwargs = dict(kwargs)
         for key in kwargs:
             if key == "dtype":
@@ -32,7 +30,7 @@ class MlpFP32(Mlp):
         args, kwargs = self.map_to_args_to_float(args, kwargs)
         self.fc2 = self.fc2.to(*args, **kwargs)
         return self
-    
+
     def forward_infer(self, x):
         """Forward infer.
 

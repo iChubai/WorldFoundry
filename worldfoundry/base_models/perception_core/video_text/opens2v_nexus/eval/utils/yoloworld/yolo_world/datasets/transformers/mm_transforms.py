@@ -28,9 +28,7 @@ class RandomLoadText:
                 self.class_texts = json.load(f)
 
     def __call__(self, results: dict) -> dict:
-        assert "texts" in results or hasattr(self, "class_texts"), (
-            "No texts found in results."
-        )
+        assert "texts" in results or hasattr(self, "class_texts"), "No texts found in results."
         class_texts = results.get("texts", getattr(self, "class_texts", None))
 
         num_classes = len(class_texts)
@@ -43,9 +41,7 @@ class RandomLoadText:
         positive_labels = set(results[gt_label_tag])
 
         if len(positive_labels) > self.max_num_samples:
-            positive_labels = set(
-                random.sample(list(positive_labels), k=self.max_num_samples)
-            )
+            positive_labels = set(random.sample(list(positive_labels), k=self.max_num_samples))
 
         num_neg_samples = min(
             min(num_classes, self.max_num_samples) - len(positive_labels),
@@ -113,9 +109,7 @@ class LoadText:
                 self.class_texts = json.load(f)
 
     def __call__(self, results: dict) -> dict:
-        assert "texts" in results or hasattr(self, "class_texts"), (
-            "No texts found in results."
-        )
+        assert "texts" in results or hasattr(self, "class_texts"), "No texts found in results."
         class_texts = results.get("texts", getattr(self, "class_texts", None))
 
         texts = []

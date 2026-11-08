@@ -97,9 +97,7 @@ class DINOv2Encoder(UniCeptionViTEncoderBase):
                 backbones as in_tree_dinov2,
             )
         except ImportError as exc:
-            raise ImportError(
-                "UniCeption requires WorldFoundry's in-tree DINOv2 base model on PYTHONPATH"
-            ) from exc
+            raise ImportError("UniCeption requires WorldFoundry's in-tree DINOv2 base model on PYTHONPATH") from exc
         model_factory = getattr(in_tree_dinov2, model_name)
         self.model = model_factory(
             pretrained=torch_hub_pretrained if pretrained_checkpoint_path is None else False,
@@ -187,9 +185,9 @@ class DINOv2Encoder(UniCeptionViTEncoderBase):
         assert encoder_input.image.ndim == 4, "Input must be of shape (B, C, H, W)"
         batch_size, channels, height, width = encoder_input.image.shape
         assert channels == 3, "Input must have 3 channels"
-        assert (
-            height % self.patch_size == 0 and width % self.patch_size == 0
-        ), f"Input shape must be divisible by patch size: {self.patch_size}"
+        assert height % self.patch_size == 0 and width % self.patch_size == 0, (
+            f"Input shape must be divisible by patch size: {self.patch_size}"
+        )
 
         # Extract the features from the DINOv2 model
         result_dict = self.model.forward_features(encoder_input.image)
@@ -305,9 +303,9 @@ class DINOv2IntermediateFeatureReturner(DINOv2Encoder, IntermediateFeatureReturn
         assert encoder_input.image.ndim == 4, "Input must be of shape (B, C, H, W)"
         batch_size, channels, height, width = encoder_input.image.shape
         assert channels == 3, "Input must have 3 channels"
-        assert (
-            height % self.patch_size == 0 and width % self.patch_size == 0
-        ), f"Input shape must be divisible by patch size: {self.patch_size}"
+        assert height % self.patch_size == 0 and width % self.patch_size == 0, (
+            f"Input shape must be divisible by patch size: {self.patch_size}"
+        )
 
         if self.indices is None:
             self.indices = range(len(self.model.blocks))

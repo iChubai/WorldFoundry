@@ -13,6 +13,7 @@ from .segmentor import Segmentor
 
 class SegTracker:
     """Seg tracker implementation."""
+
     def __init__(self, segtracker_args, sam_args, aot_args, grounding_dino_checkpoint: str | None = None) -> None:
         """
         Initialize SAM and AOT.

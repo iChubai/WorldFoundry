@@ -14,9 +14,9 @@ from safetensors import safe_open
 from worldfoundry.core.attention import scaled_dot_product_attention
 from .qwen3.modeling_qwen3 import (
     Qwen3Attention,
-    Qwen3MLP, 
-    Qwen3PreTrainedModel, 
-    Qwen3RMSNorm, 
+    Qwen3MLP,
+    Qwen3PreTrainedModel,
+    Qwen3RMSNorm,
     Qwen3RotaryEmbedding,
     apply_rotary_pos_emb,
 )
@@ -32,6 +32,7 @@ flex_attention = torch.compile(flex_attention)
 
 class Qwen3Config(_Qwen3Config):
     """Qwen config implementation."""
+
     model_type = "qwen3"
     keys_to_ignore_at_inference = ["past_key_values"]
 
@@ -49,6 +50,7 @@ class Qwen3Config(_Qwen3Config):
 
 class PackedAttention(Qwen3Attention):
     """Packed attention implementation."""
+
     def __init__(self, config, layer_idx: Optional[int] = None):
         """Init.
 
@@ -88,8 +90,12 @@ class PackedAttention(Qwen3Attention):
         total_seq_len = packed_sequence.shape[0]
         dtype, device = packed_sequence.dtype, packed_sequence.device
         packed_query_states = torch.zeros((total_seq_len, self.num_heads * self.head_dim), dtype=dtype, device=device)
-        packed_key_states = torch.zeros((total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device)
-        packed_value_states = torch.zeros((total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device)
+        packed_key_states = torch.zeros(
+            (total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device
+        )
+        packed_value_states = torch.zeros(
+            (total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device
+        )
 
         packed_query_states[packed_und_token_indexes] = self.q_proj(packed_sequence).to(dtype)
         packed_key_states[packed_und_token_indexes] = self.k_proj(packed_sequence).to(dtype)
@@ -104,7 +110,7 @@ class PackedAttention(Qwen3Attention):
 
         packed_query_states_[packed_und_token_indexes] = self.q_norm(packed_query_states[packed_und_token_indexes])
         packed_key_states_[packed_und_token_indexes] = self.k_norm(packed_key_states[packed_und_token_indexes])
-        
+
         packed_cos, packed_sin = packed_position_embeddings
         packed_query_states, packed_key_states = apply_rotary_pos_emb(
             packed_query_states_, packed_key_states_, packed_cos, packed_sin, unsqueeze_dim=1
@@ -138,9 +144,9 @@ class PackedAttention(Qwen3Attention):
             packed_key_states_ = pad_sequence(packed_key_states_.permute(1, 0, 2), pad_size)
             packed_value_states = pad_sequence(packed_value_states.permute(1, 0, 2), pad_size)
             packed_attn_output = flex_attention(
-                packed_query_states_.unsqueeze(0), # 1, num_head, L, head_dim
-                packed_key_states_.unsqueeze(0), 
-                packed_value_states.unsqueeze(0), 
+                packed_query_states_.unsqueeze(0),  # 1, num_head, L, head_dim
+                packed_key_states_.unsqueeze(0),
+                packed_value_states.unsqueeze(0),
                 enable_gqa=True,
                 block_mask=attention_mask,
             )
@@ -155,6 +161,7 @@ class PackedAttention(Qwen3Attention):
 
 class PackedAttentionMoT(Qwen3Attention):
     """Packed attention mo t implementation."""
+
     def __init__(self, config, layer_idx: Optional[int] = None):
         """Init.
 
@@ -163,7 +170,7 @@ class PackedAttentionMoT(Qwen3Attention):
             layer_idx: The layer idx.
         """
         super().__init__(config, layer_idx)
-   
+
         if self.config.qk_norm:
             self.q_norm = Qwen3RMSNorm(self.head_dim, eps=config.rms_norm_eps)
             self.k_norm = Qwen3RMSNorm(self.head_dim, eps=config.rms_norm_eps)
@@ -174,15 +181,19 @@ class PackedAttentionMoT(Qwen3Attention):
             self.k_norm = nn.Identity()
             self.q_norm_mot_gen = nn.Identity()
             self.k_norm_mot_gen = nn.Identity()
-        
+
         # if llm and expert are the same, then use the pretrained weight, else reinitializaiton
         mot_gen_hidden_size = config.expert_config.hidden_size
-        
+
         self.q_proj_mot_gen = nn.Linear(mot_gen_hidden_size, self.num_heads * self.head_dim, bias=config.attention_bias)
-        self.k_proj_mot_gen = nn.Linear(mot_gen_hidden_size, self.num_key_value_heads * self.head_dim, bias=config.attention_bias)
-        self.v_proj_mot_gen = nn.Linear(mot_gen_hidden_size, self.num_key_value_heads * self.head_dim, bias=config.attention_bias)
+        self.k_proj_mot_gen = nn.Linear(
+            mot_gen_hidden_size, self.num_key_value_heads * self.head_dim, bias=config.attention_bias
+        )
+        self.v_proj_mot_gen = nn.Linear(
+            mot_gen_hidden_size, self.num_key_value_heads * self.head_dim, bias=config.attention_bias
+        )
         self.o_proj_mot_gen = nn.Linear(self.num_heads * self.head_dim, mot_gen_hidden_size, bias=config.attention_bias)
-        
+
     def forward(self, *args, **kwargs):
         """Forward."""
         return self.forward_train(*args, **kwargs)
@@ -208,14 +219,18 @@ class PackedAttentionMoT(Qwen3Attention):
             packed_und_token_indexes: The packed und token indexes.
             packed_gen_token_indexes: The packed gen token indexes.
         """
-        
+
         total_seq_len = packed_sequence_und.shape[0] + packed_sequence_gen.shape[0]
         dtype, device = packed_sequence_und.dtype, packed_sequence_und.device
 
         packed_query_states = torch.zeros((total_seq_len, self.num_heads * self.head_dim), dtype=dtype, device=device)
-        packed_key_states = torch.zeros((total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device)
-        packed_value_states = torch.zeros((total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device)
-        
+        packed_key_states = torch.zeros(
+            (total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device
+        )
+        packed_value_states = torch.zeros(
+            (total_seq_len, self.num_key_value_heads * self.head_dim), dtype=dtype, device=device
+        )
+
         # 0123 6789 45 1011         <-> 0123 6789 45 1011
         packed_query_states[packed_und_token_indexes] = self.q_proj(packed_sequence_und)
         packed_query_states[packed_gen_token_indexes] = self.q_proj_mot_gen(packed_sequence_gen)
@@ -229,21 +244,23 @@ class PackedAttentionMoT(Qwen3Attention):
         packed_query_states = packed_query_states.view(-1, self.num_heads, self.head_dim)
         packed_key_states = packed_key_states.view(-1, self.num_key_value_heads, self.head_dim)
         packed_value_states = packed_value_states.view(-1, self.num_key_value_heads, self.head_dim)
-   
+
         packed_query_states_ = packed_query_states.new_zeros(packed_query_states.shape)
         packed_key_states_ = packed_key_states.new_zeros(packed_key_states.shape)
 
         packed_query_states_[packed_und_token_indexes] = self.q_norm(packed_query_states[packed_und_token_indexes])
-        packed_query_states_[packed_gen_token_indexes] = self.q_norm_mot_gen(packed_query_states[packed_gen_token_indexes])
-        
+        packed_query_states_[packed_gen_token_indexes] = self.q_norm_mot_gen(
+            packed_query_states[packed_gen_token_indexes]
+        )
+
         packed_key_states_[packed_und_token_indexes] = self.k_norm(packed_key_states[packed_und_token_indexes])
         packed_key_states_[packed_gen_token_indexes] = self.k_norm_mot_gen(packed_key_states[packed_gen_token_indexes])
-        
+
         packed_cos, packed_sin = packed_position_embeddings
         packed_query_states_, packed_key_states_ = apply_rotary_pos_emb(
             packed_query_states_, packed_key_states_, packed_cos, packed_sin, unsqueeze_dim=1
         )
-        
+
         if isinstance(attention_mask, List):
             packed_key_states_ = packed_key_states_[:, :, None, :].repeat(1, 1, self.num_key_value_groups, 1)
             packed_key_states_ = packed_key_states_.reshape(-1, self.num_heads, self.head_dim)
@@ -273,25 +290,26 @@ class PackedAttentionMoT(Qwen3Attention):
             packed_key_states_ = pad_sequence(packed_key_states_.permute(1, 0, 2), pad_size)
             packed_value_states = pad_sequence(packed_value_states.permute(1, 0, 2), pad_size)
             packed_attn_output = flex_attention(
-                packed_query_states_.unsqueeze(0), # 1, num_head, L, head_dim
+                packed_query_states_.unsqueeze(0),  # 1, num_head, L, head_dim
                 packed_key_states_.unsqueeze(0),
-                packed_value_states.unsqueeze(0), 
+                packed_value_states.unsqueeze(0),
                 enable_gqa=True,
                 block_mask=attention_mask,
             )
-            #breakpoint()
+            # breakpoint()
             end_index = packed_attn_output.shape[2] - pad_size
             packed_attn_output = packed_attn_output[0, :, :end_index, :]
 
         packed_attn_output = packed_attn_output.transpose(0, 1).reshape(-1, self.num_heads * self.head_dim)
         packed_attn_output_und = self.o_proj(packed_attn_output[packed_und_token_indexes])
         packed_attn_output_gen = self.o_proj_mot_gen(packed_attn_output[packed_gen_token_indexes])
-     
+
         return packed_attn_output_und, packed_attn_output_gen
 
 
 class Qwen3DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
+
     def __init__(self, config: Qwen3Config, layer_idx: int):
         """Init.
 
@@ -302,12 +320,12 @@ class Qwen3DecoderLayer(nn.Module):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = PackedAttention(config=config, layer_idx=layer_idx)
-        
+
         self.mlp = Qwen3MLP(config)
 
         self.input_layernorm = Qwen3RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm = Qwen3RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        
+
     def forward(self, *args, **kwargs):
         """Forward."""
         return self.forward_train(*args, **kwargs)
@@ -344,7 +362,7 @@ class Qwen3DecoderLayer(nn.Module):
             sample_lens=sample_lens,
             attention_mask=attention_mask,
             packed_position_embeddings=packed_position_embeddings,
-            packed_und_token_indexes=packed_und_token_indexes
+            packed_und_token_indexes=packed_und_token_indexes,
         )
 
         packed_sequence = residual + packed_sequence
@@ -356,15 +374,16 @@ class Qwen3DecoderLayer(nn.Module):
         packed_sequence = residual + packed_sequence
 
         return packed_sequence, packed_sequence_gen
-    
+
 
 class Qwen3MoTDecoderLayer(nn.Module):
     """Qwen mo t decoder layer implementation."""
+
     def __init__(
-        self, 
-        config, 
+        self,
+        config,
         # gen_config
-        layer_idx: Optional[int] = None, 
+        layer_idx: Optional[int] = None,
         attn_module: Optional[Qwen3Attention] = PackedAttentionMoT,
     ):
         """Init.
@@ -383,14 +402,18 @@ class Qwen3MoTDecoderLayer(nn.Module):
         self.mlp_mot_gen = Qwen3MLP(config.expert_config)
 
         self.input_layernorm = Qwen3RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        self.input_layernorm_mot_gen = Qwen3RMSNorm(config.expert_config.hidden_size, eps=config.expert_config.rms_norm_eps)
+        self.input_layernorm_mot_gen = Qwen3RMSNorm(
+            config.expert_config.hidden_size, eps=config.expert_config.rms_norm_eps
+        )
         self.post_attention_layernorm = Qwen3RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        self.post_attention_layernorm_mot_gen = Qwen3RMSNorm(config.expert_config.hidden_size, eps=config.expert_config.rms_norm_eps)
+        self.post_attention_layernorm_mot_gen = Qwen3RMSNorm(
+            config.expert_config.hidden_size, eps=config.expert_config.rms_norm_eps
+        )
 
     def forward(self, *args, **kwargs):
         """Forward."""
         return self.forward_train(*args, **kwargs)
-    
+
     def forward_train(
         self,
         packed_sequence_und: torch.Tensor,
@@ -415,10 +438,10 @@ class Qwen3MoTDecoderLayer(nn.Module):
         Returns:
             The return value.
         """
-        
+
         residual_und = packed_sequence_und
         residual_gen = packed_sequence_gen
-    
+
         packed_sequence_und_ = self.input_layernorm(packed_sequence_und)
         packed_sequence_gen_ = self.input_layernorm_mot_gen(packed_sequence_gen)
 
@@ -435,7 +458,7 @@ class Qwen3MoTDecoderLayer(nn.Module):
 
         packed_sequence_und = residual_und + packed_sequence_und_
         packed_sequence_gen = residual_gen + packed_sequence_gen_
-        
+
         # Fully Connected
         residual_und = packed_sequence_und
         residual_gen = packed_sequence_gen
@@ -444,10 +467,8 @@ class Qwen3MoTDecoderLayer(nn.Module):
         packed_sequence_gen_ = packed_sequence_gen.new_zeros(packed_sequence_gen.shape)
 
         packed_sequence_und_ = self.mlp(self.post_attention_layernorm(packed_sequence_und))
-        packed_sequence_gen_ = self.mlp_mot_gen(
-            self.post_attention_layernorm_mot_gen(packed_sequence_gen)
-        )
-     
+        packed_sequence_gen_ = self.mlp_mot_gen(self.post_attention_layernorm_mot_gen(packed_sequence_gen))
+
         packed_sequence_und = residual_und + packed_sequence_und_
         packed_sequence_gen = residual_gen + packed_sequence_gen_
 
@@ -493,8 +514,12 @@ class Qwen3MoTDecoderLayer(nn.Module):
             packed_query_sequence = self.input_layernorm(packed_query_sequence)
         elif mode == "gen":
             packed_query_sequence_ = torch.zeros_like(packed_query_sequence)
-            packed_query_sequence_[packed_text_indexes] = self.input_layernorm(packed_query_sequence[packed_text_indexes])
-            packed_query_sequence_[packed_vae_token_indexes] = self.input_layernorm_mot_gen(packed_query_sequence[packed_vae_token_indexes])
+            packed_query_sequence_[packed_text_indexes] = self.input_layernorm(
+                packed_query_sequence[packed_text_indexes]
+            )
+            packed_query_sequence_[packed_vae_token_indexes] = self.input_layernorm_mot_gen(
+                packed_query_sequence[packed_vae_token_indexes]
+            )
             packed_query_sequence = packed_query_sequence_
 
         # Self Attention
@@ -523,7 +548,9 @@ class Qwen3MoTDecoderLayer(nn.Module):
             packed_text_query_sequence = packed_query_sequence[packed_text_indexes]
             packed_vae_query_sequence = packed_query_sequence[packed_vae_token_indexes]
             packed_text_query_sequence = self.post_attention_layernorm(packed_text_query_sequence).to(torch.bfloat16)
-            packed_vae_query_sequence = self.post_attention_layernorm_mot_gen(packed_vae_query_sequence).to(torch.bfloat16)
+            packed_vae_query_sequence = self.post_attention_layernorm_mot_gen(packed_vae_query_sequence).to(
+                torch.bfloat16
+            )
 
             packed_query_sequence_ = torch.zeros_like(packed_query_sequence).to(torch.bfloat16)
             packed_query_sequence_[packed_text_indexes] = self.mlp(packed_text_query_sequence)
@@ -532,15 +559,17 @@ class Qwen3MoTDecoderLayer(nn.Module):
 
         packed_query_sequence = residual + packed_query_sequence
         return packed_query_sequence, past_key_values
-    
+
 
 Decoder_layer_dict = {
     "Qwen3DecoderLayer": Qwen3DecoderLayer,
     "Qwen3MoTDecoderLayer": partial(Qwen3MoTDecoderLayer, attn_module=PackedAttentionMoT),
 }
 
+
 class Qwen3Model(Qwen3PreTrainedModel):
     """Qwen model implementation."""
+
     def __init__(self, config):
         """Init.
 
@@ -554,10 +583,8 @@ class Qwen3Model(Qwen3PreTrainedModel):
         self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
         layer_module = Decoder_layer_dict[config.layer_module]
 
-        self.layers = nn.ModuleList(
-            [layer_module(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
-        )
-       
+        self.layers = nn.ModuleList([layer_module(config, layer_idx) for layer_idx in range(config.num_hidden_layers)])
+
         self.norm = Qwen3RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         if self.use_mot:
             self.norm_mot_gen = Qwen3RMSNorm(config.expert_config.hidden_size, eps=config.expert_config.rms_norm_eps)
@@ -619,7 +646,7 @@ class Qwen3Model(Qwen3PreTrainedModel):
                 sample_lens=sample_lens,
                 attention_mask=attention_mask,
                 packed_position_embeddings=packed_position_embeddings,
-                **extra_inputs
+                **extra_inputs,
             )
 
         if self.use_mot:
@@ -631,12 +658,13 @@ class Qwen3Model(Qwen3PreTrainedModel):
             packed_sequence_gen_ = self.norm_mot_gen(packed_sequence_gen)
             return packed_sequence_und_, packed_sequence_gen_
         else:
-            assert packed_sequence_gen.shape[0]==0
+            assert packed_sequence_gen.shape[0] == 0
             return self.norm(packed_sequence_und), packed_sequence_gen
 
 
 class Qwen3ForCausalLM(Qwen3PreTrainedModel):
     """Qwen for causal lm implementation."""
+
     _tied_weights_keys = ["lm_head.weight"]
 
     def __init__(self, config):
@@ -654,7 +682,7 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
         self.use_mot = config.use_mot
         if self.use_mot:
             self.expert_layers = config.expert_config.num_hidden_layers
-            self.llm_identical = config.hidden_size==config.expert_config.hidden_size
+            self.llm_identical = config.hidden_size == config.expert_config.hidden_size
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -666,13 +694,14 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
             mllm_state_dict: The mllm state dict.
             logger: The logger.
         """
-        logger.info("Initializing LLM decoder from MLLM weights") 
+        logger.info("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "mot_gen" in name:
                 continue
-            
-            original_name = "language_model."+name.replace("_und", "") if "norm_und" in name \
-                            else "language_model."+name
+
+            original_name = (
+                "language_model." + name.replace("_und", "") if "norm_und" in name else "language_model." + name
+            )
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
             except:
@@ -689,27 +718,28 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
         if not enable:
             print("Initializing LLM decoder randomly")
             return mllm_state_dict
-        
-        print("Initializing LLM decoder from MLLM weights") 
+
+        print("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "mot_gen" in name:
                 continue
-            
-            original_name = "language_model."+name.replace("_und", "") if "norm_und" in name \
-                            else "language_model."+name
+
+            original_name = (
+                "language_model." + name.replace("_und", "") if "norm_und" in name else "language_model." + name
+            )
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
             except:
                 print(f"'{name}' not initialized")
         return mllm_state_dict
-    
+
     def init_expert(self, expert_path, from_scratch=True):
         """initialize parameters of action expert using the pretrained llm ckpt"""
 
         if from_scratch:
             print("INFO: `from_scratch=True`. Expert (`_mot_gen`) parameters will be randomly initialized.")
             return
-        assert 1==0
+        assert 1 == 0
         safetensor_files = glob.glob(f"{expert_path}/*.safetensors")
         expert_state_dict = dict()
         for file_path in safetensor_files:
@@ -718,35 +748,36 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
                     expert_state_dict[key] = f.get_tensor(key)
 
         layer_mapping = get_layer_mapping_strategy(self.llm_layers, self.expert_layers)
-        
+
         for name, param in self.named_parameters():
             if "mot_gen" not in name:
                 continue
 
-            original_name = name.replace("_mot_gen", "")  
-            
-            if any(n in name for n in ["q_norm_mot_gen", "k_norm_mot_gen"]):      
-                param.data.copy_(self.state_dict()[original_name].data)    
+            original_name = name.replace("_mot_gen", "")
+
+            if any(n in name for n in ["q_norm_mot_gen", "k_norm_mot_gen"]):
+                param.data.copy_(self.state_dict()[original_name].data)
             elif any(proj in name for proj in ["q_proj_mot_gen", "k_proj_mot_gen", "v_proj_mot_gen", "o_proj_mot_gen"]):
                 if self.llm_identical and not expert_path:
                     param.data.copy_(expert_state_dict[original_name].data)
             else:
-                layer_match = re.search(r'layers\.(\d+)\.', name)
+                layer_match = re.search(r"layers\.(\d+)\.", name)
                 if layer_match:
                     curr_layer_idx = int(layer_match.group(1))
                     if curr_layer_idx < len(layer_mapping):
                         expert_pos = layer_mapping[curr_layer_idx]
-                        original_name_template = name.replace("_mot_gen", "").replace(f"layers.{curr_layer_idx}.", "layers.{}.") # Build parameter name template
-                 
+                        original_name_template = name.replace("_mot_gen", "").replace(
+                            f"layers.{curr_layer_idx}.", "layers.{}."
+                        )  # Build parameter name template
+
                         interpolated_param = interpolate_layer_params(
-                            expert_state_dict, expert_pos, original_name_template,
-                            num_expert_layers=self.expert_layers
+                            expert_state_dict, expert_pos, original_name_template, num_expert_layers=self.expert_layers
                         )
 
                         if interpolated_param is not None:
                             param.data.copy_(interpolated_param)
                         else:
-                            fallback_idx = min(int(expert_pos), self.expert_layers-1)
+                            fallback_idx = min(int(expert_pos), self.expert_layers - 1)
                             fallback_name = original_name_template.format(fallback_idx)
                             if fallback_name in expert_state_dict:
                                 param.data.copy_(expert_state_dict[fallback_name])
@@ -754,7 +785,7 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
                 else:
                     if original_name in expert_state_dict:
                         param.data.copy_(expert_state_dict[original_name].data)
-    
+
     def init_mot(self):
         """initialize the action expert by direct param copy, requiring llm and expert sharing the same arch"""
         for name, param in self.named_parameters():

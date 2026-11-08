@@ -91,24 +91,16 @@ class RepresentationBackbone(nn.Module):
             qk_norm=True,
             rope=self.rope,
         )
-        self.frame_blocks = nn.ModuleList(
-            [Block(**block_args) for _ in range(self.config.vggt_depth)]
-        )
-        self.global_blocks = nn.ModuleList(
-            [Block(**block_args) for _ in range(self.config.vggt_depth)]
-        )
+        self.frame_blocks = nn.ModuleList([Block(**block_args) for _ in range(self.config.vggt_depth)])
+        self.global_blocks = nn.ModuleList([Block(**block_args) for _ in range(self.config.vggt_depth)])
         self.camera_token = nn.Parameter(torch.zeros(1, 2, 1, self.config.dino_dim))
-        self.register_token = nn.Parameter(
-            torch.zeros(1, 2, self.config.vggt_register_tokens, self.config.dino_dim)
-        )
+        self.register_token = nn.Parameter(torch.zeros(1, 2, self.config.vggt_register_tokens, self.config.dino_dim))
         self.camera_mlp = nn.Sequential(
             nn.Linear(11, self.config.dino_dim, bias=True),
             nn.SiLU(),
             nn.Linear(self.config.dino_dim, self.config.dino_dim, bias=True),
         )
-        self.geo_feature_connector = nn.Linear(
-            self.config.dino_dim * 2, self.config.scene_dim, bias=True
-        )
+        self.geo_feature_connector = nn.Linear(self.config.dino_dim * 2, self.config.scene_dim, bias=True)
         self.geo_feature_norm = nn.LayerNorm(self.config.scene_dim, bias=False)
 
     def forward(
@@ -159,19 +151,13 @@ class RepresentationBackbone(nn.Module):
                 tokens = tokens.reshape(batch, views, total_tokens, channels).reshape(
                     batch * views, total_tokens, channels
                 )
-            frame_pos = pos.reshape(batch, views, total_tokens, 2).reshape(
-                batch * views, total_tokens, 2
-            )
+            frame_pos = pos.reshape(batch, views, total_tokens, 2).reshape(batch * views, total_tokens, 2)
             tokens = self.frame_blocks[frame_index](tokens, pos=frame_pos)
             frame_index += 1
             last_frame = tokens.reshape(batch, views, total_tokens, channels)
 
-            tokens = tokens.reshape(batch, views, total_tokens, channels).reshape(
-                batch, views * total_tokens, channels
-            )
-            global_pos = pos.reshape(batch, views, total_tokens, 2).reshape(
-                batch, views * total_tokens, 2
-            )
+            tokens = tokens.reshape(batch, views, total_tokens, channels).reshape(batch, views * total_tokens, channels)
+            global_pos = pos.reshape(batch, views, total_tokens, 2).reshape(batch, views * total_tokens, 2)
             tokens = self.global_blocks[global_index](tokens, pos=global_pos)
             global_index += 1
             last_global = tokens.reshape(batch, views, total_tokens, channels)

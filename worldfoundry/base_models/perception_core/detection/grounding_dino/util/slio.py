@@ -24,6 +24,7 @@ except ImportError:
 
 class BaseFileHandler(metaclass=ABCMeta):
     """Base file handler implementation."""
+
     @abstractmethod
     def load_from_fileobj(self, file, **kwargs):
         """Load from fileobj.
@@ -76,6 +77,7 @@ class BaseFileHandler(metaclass=ABCMeta):
 
 class JsonHandler(BaseFileHandler):
     """Json handler implementation."""
+
     def load_from_fileobj(self, file):
         """Load from fileobj.
 
@@ -104,6 +106,7 @@ class JsonHandler(BaseFileHandler):
 
 class PickleHandler(BaseFileHandler):
     """Pickle handler implementation."""
+
     def load_from_fileobj(self, file, **kwargs):
         """Load from fileobj.
 
@@ -151,6 +154,7 @@ class PickleHandler(BaseFileHandler):
 
 class YamlHandler(BaseFileHandler):
     """Yaml handler implementation."""
+
     def load_from_fileobj(self, file, **kwargs):
         """Load from fileobj.
 

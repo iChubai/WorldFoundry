@@ -369,7 +369,9 @@ class CrossAttention(nn.Module):
                 attention_mask_batch = attention_mask[start_idx:end_idx]
             else:
                 attention_mask_batch = None
-            result = xformers.ops.memory_efficient_attention(query_batch, key_batch, value_batch, attn_bias=attention_mask_batch)
+            result = xformers.ops.memory_efficient_attention(
+                query_batch, key_batch, value_batch, attn_bias=attention_mask_batch
+            )
             results.append(result)
         full_result = torch.cat(results, dim=0)
         return full_result

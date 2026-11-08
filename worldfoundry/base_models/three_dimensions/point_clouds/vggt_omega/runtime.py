@@ -118,14 +118,11 @@ class VGGTOmegaRepresentation:
         }
 
         if "camera_and_register_tokens" in predictions:
-            results["camera_and_register_tokens"] = (
-                predictions["camera_and_register_tokens"].detach().cpu().numpy()
-            )
+            results["camera_and_register_tokens"] = predictions["camera_and_register_tokens"].detach().cpu().numpy()
         if "text_alignment_embedding" in predictions:
-            results["text_alignment_embedding"] = (
-                predictions["text_alignment_embedding"].detach().cpu().numpy()
-            )
+            results["text_alignment_embedding"] = predictions["text_alignment_embedding"].detach().cpu().numpy()
         return results
+
 
 def _resolve_checkpoint_file(pretrained_model_path: str, *, enable_alignment: bool = False) -> Path:
     """
@@ -139,9 +136,7 @@ def _resolve_checkpoint_file(pretrained_model_path: str, *, enable_alignment: bo
     if path.is_file():
         return path
     if path.is_dir():
-        checkpoint_name = (
-            "vggt_omega_1b_256_text.pt" if enable_alignment else DEFAULT_VGGT_OMEGA_CHECKPOINT_NAME
-        )
+        checkpoint_name = "vggt_omega_1b_256_text.pt" if enable_alignment else DEFAULT_VGGT_OMEGA_CHECKPOINT_NAME
         checkpoint = path / checkpoint_name
         if checkpoint.is_file():
             return checkpoint

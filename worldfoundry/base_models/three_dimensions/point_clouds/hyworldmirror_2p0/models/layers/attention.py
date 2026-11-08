@@ -9,6 +9,7 @@ from torch import Tensor, nn
 
 try:
     from flash_attn_interface import flash_attn_func as flash_attn_func_v3
+
     _USE_FLASH_ATTN_V3 = True
 except ImportError:
     flash_attn_func_v3 = None
@@ -25,6 +26,7 @@ from ...comm.padding import depad_by_length, pad_by_length
 
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -97,7 +99,7 @@ class Attention(nn.Module):
             flash_attn_func_v3 is not None or flash_attn_func_v2 is not None
         ):
             if q.is_contiguous():
-                q = q.transpose(1,2)
+                q = q.transpose(1, 2)
             else:
                 q = q.transpose(1, 2).contiguous()
             if k.is_contiguous():
@@ -125,7 +127,9 @@ class Attention(nn.Module):
             else:
                 x = x.transpose(1, 2).contiguous()
         else:
-            x = _worldfoundry_scaled_dot_product_attention(q, k, v, dropout_p=self.attn_drop.p if self.training else 0.0)
+            x = _worldfoundry_scaled_dot_product_attention(
+                q, k, v, dropout_p=self.attn_drop.p if self.training else 0.0
+            )
         return x
 
     def _project_output(self, x: Tensor, B: int, N: int, C: int) -> Tensor:
@@ -164,8 +168,10 @@ class Attention(nn.Module):
         x = self._apply_attention(q, k, v)
         return self._project_output(x, B, N, C)
 
+
 class DistAttention(Attention):
     """Dist attention implementation."""
+
     def forward(self, x: Tensor, pos=None, sp_size=1, sp_group=None, padding_tokens=0) -> Tensor:
         """Forward.
 
@@ -182,14 +188,13 @@ class DistAttention(Attention):
 
         q, k, v, B, N, C = self._compute_qkv(x)
 
-        if sp_size>1:
-
-            q = _All2All.apply(q,1,2,sp_group,False)
-            k = _All2All.apply(k,1,2,sp_group,False)
-            v = _All2All.apply(v,1,2,sp_group,False)
-            q = depad_by_length(q,padding_tokens,2)
-            k = depad_by_length(k,padding_tokens,2)
-            v = depad_by_length(v,padding_tokens,2)
+        if sp_size > 1:
+            q = _All2All.apply(q, 1, 2, sp_group, False)
+            k = _All2All.apply(k, 1, 2, sp_group, False)
+            v = _All2All.apply(v, 1, 2, sp_group, False)
+            q = depad_by_length(q, padding_tokens, 2)
+            k = depad_by_length(k, padding_tokens, 2)
+            v = depad_by_length(v, padding_tokens, 2)
 
         if self.rope is not None:
             q = self.rope(q, pos)
@@ -197,15 +202,16 @@ class DistAttention(Attention):
 
         x = self._apply_attention(q, k, v)
 
-        if sp_size>1:
-            x = pad_by_length(x,padding_tokens,2,0)
-            x = _All2All.apply(x,2,1,sp_group,False)
+        if sp_size > 1:
+            x = pad_by_length(x, padding_tokens, 2, 0)
+            x = _All2All.apply(x, 2, 1, sp_group, False)
 
         return self._project_output(x, B, N, C)
 
 
 class MemEffAttention(Attention):
     """Mem eff attention implementation."""
+
     def forward(self, x: Tensor, attn_bias=None, pos=None) -> Tensor:
         """Forward.
 

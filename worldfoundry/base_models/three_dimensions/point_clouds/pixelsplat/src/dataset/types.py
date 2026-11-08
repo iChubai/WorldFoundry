@@ -17,6 +17,7 @@ Stage = Literal["test"]
 
 class BatchedViews(TypedDict, total=False):
     """Batched views implementation."""
+
     extrinsics: Float[Tensor, "batch _ 4 4"]  # batch view 4 4
     intrinsics: Float[Tensor, "batch _ 3 3"]  # batch view 3 3
     image: Float[Tensor, "batch _ _ _ _"]  # batch view channel height width
@@ -27,6 +28,7 @@ class BatchedViews(TypedDict, total=False):
 
 class BatchedExample(TypedDict, total=False):
     """Batched example implementation."""
+
     target: BatchedViews
     context: BatchedViews
     scene: list[str]
@@ -34,6 +36,7 @@ class BatchedExample(TypedDict, total=False):
 
 class UnbatchedViews(TypedDict, total=False):
     """Unbatched views implementation."""
+
     extrinsics: Float[Tensor, "_ 4 4"]
     intrinsics: Float[Tensor, "_ 3 3"]
     image: Float[Tensor, "_ 3 height width"]
@@ -44,6 +47,7 @@ class UnbatchedViews(TypedDict, total=False):
 
 class UnbatchedExample(TypedDict, total=False):
     """Unbatched example implementation."""
+
     target: UnbatchedViews
     context: UnbatchedViews
     scene: str

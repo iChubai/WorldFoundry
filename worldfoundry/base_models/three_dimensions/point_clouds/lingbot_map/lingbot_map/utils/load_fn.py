@@ -103,7 +103,9 @@ def load_and_preprocess_images_square(image_path_list, target_size=1024):
     return images, original_coords
 
 
-def load_and_preprocess_images(image_path_list, fx=None, fy=None, cx=None, cy=None, mode="crop", image_size=512, patch_size=16):
+def load_and_preprocess_images(
+    image_path_list, fx=None, fy=None, cx=None, cy=None, mode="crop", image_size=512, patch_size=16
+):
     """
     A quick start function to load and preprocess images for model input.
     This assumes the images should have the same shape for easier batching, but our model can also work well with different shapes.
@@ -133,8 +135,6 @@ def load_and_preprocess_images(image_path_list, fx=None, fy=None, cx=None, cy=No
     # Check for empty list
     if len(image_path_list) == 0:
         raise ValueError("At least 1 image is required")
-
-        
 
     # Validate mode
     if mode not in ["crop", "pad"]:

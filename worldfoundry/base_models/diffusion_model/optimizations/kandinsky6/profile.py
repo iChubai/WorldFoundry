@@ -1,10 +1,13 @@
 """Kandinsky-6 profiling configuration and inactive sampling context."""
+
 from contextlib import contextmanager
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any, Literal
 from .base import ConfigModel
+
 ProfileMode = Literal["none", "time_mem_module"]
+
 
 class ProfileConfig(ConfigModel):
     """Which profiler to attach. ``none`` leaves the pipeline uninstrumented."""

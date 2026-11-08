@@ -17,6 +17,7 @@ XFORMERS_AVAILABLE = False
 
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -94,7 +95,9 @@ class Block(nn.Module):
 
         self.sample_drop_ratio = drop_path
 
-    def forward(self, x: Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None) -> Union[Tensor, Tuple[Tensor, Dict]]:
+    def forward(
+        self, x: Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None
+    ) -> Union[Tensor, Tuple[Tensor, Dict]]:
         """Forward.
 
         Args:
@@ -108,8 +111,10 @@ class Block(nn.Module):
         Returns:
             The return value.
         """
-            
-        def attn_residual_func(x: Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None) -> Union[Tensor, Tuple[Tensor, Dict]]:
+
+        def attn_residual_func(
+            x: Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None
+        ) -> Union[Tensor, Tuple[Tensor, Dict]]:
             """Attn residual func.
 
             Args:
@@ -124,13 +129,16 @@ class Block(nn.Module):
                 The return value.
             """
             if use_cache:
-                output, new_kv, scores = self.attn(self.norm1(x), pos=pos, past_key_values=past_key_values, use_cache=True, cache_budget=cache_budget)
+                output, new_kv, scores = self.attn(
+                    self.norm1(x), pos=pos, past_key_values=past_key_values, use_cache=True, cache_budget=cache_budget
+                )
                 return self.ls1(output), new_kv, scores
             else:
                 if attn_mask is not None:
                     return self.ls1(self.attn(self.norm1(x), pos=pos, attn_mask=attn_mask))
                 else:
                     return self.ls1(self.attn(self.norm1(x), pos=pos))
+
         def ffn_residual_func(x: Tensor) -> Tensor:
             """Ffn residual func.
 
@@ -141,9 +149,11 @@ class Block(nn.Module):
                 The return value.
             """
             return self.ls2(self.mlp(self.norm2(x)))
-        
+
         if use_cache:
-            attn_output, new_kv, scores = attn_residual_func(x, pos=pos, past_key_values=past_key_values, use_cache=True, cache_budget=cache_budget)
+            attn_output, new_kv, scores = attn_residual_func(
+                x, pos=pos, past_key_values=past_key_values, use_cache=True, cache_budget=cache_budget
+            )
             x = x + attn_output
             x = x + ffn_residual_func(x)
             return x, new_kv, scores
@@ -168,6 +178,7 @@ class Block(nn.Module):
             x = x + attn_residual_func(x, pos=pos, attn_mask=attn_mask)
             x = x + ffn_residual_func(x)
         return x
+
 
 def drop_add_residual_stochastic_depth(
     x: Tensor,
@@ -308,6 +319,7 @@ def drop_add_residual_stochastic_depth_list(
 
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
+
     def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
         """
         x_list contains a list of tensors to nest together and run

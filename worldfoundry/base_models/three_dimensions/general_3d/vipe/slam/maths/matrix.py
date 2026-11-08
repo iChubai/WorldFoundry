@@ -29,6 +29,7 @@ from .vector import RavelMapping, SparseBlockVector, SparseNullVector, SparseVec
 @dataclass(kw_only=True)
 class SparseBlockMatrix:
     """Sparse block matrix implementation."""
+
     i_inds: torch.Tensor
     j_inds: torch.Tensor
 
@@ -191,6 +192,7 @@ class SparseBlockMatrix:
 @dataclass(kw_only=True)
 class SparseNullMatrix(SparseBlockMatrix):
     """Sparse null matrix implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(i_inds=torch.tensor([]), j_inds=torch.tensor([]))
@@ -248,6 +250,7 @@ class SparseNullMatrix(SparseBlockMatrix):
 @dataclass(kw_only=True)
 class SparseDenseBlockMatrix(SparseBlockMatrix):
     """Sparse dense block matrix implementation."""
+
     # (n_blocks, n_block_rows, n_block_cols)
     data: torch.Tensor
 
@@ -441,6 +444,7 @@ class SparseDenseBlockMatrix(SparseBlockMatrix):
 @dataclass(kw_only=True)
 class SparseMDiagonalBlockMatrix(SparseBlockMatrix):
     """Sparse m diagonal block matrix implementation."""
+
     # (n_blocks, N, n_diags)
     #  +-----+
     #  |x    |

@@ -37,7 +37,8 @@ class QwenVLEmbedder:
         # AutoProcessor 包含了 Tokenizer，并且还能处理图像，因此对两个功能都适用。
         self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
         self.text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_id, torch_dtype=torch.bfloat16  # Use bfloat16 for efficiency
+            model_id,
+            torch_dtype=torch.bfloat16,  # Use bfloat16 for efficiency
         ).to(self.device)
         self.processor.tokenizer.padding_side = "left"
 

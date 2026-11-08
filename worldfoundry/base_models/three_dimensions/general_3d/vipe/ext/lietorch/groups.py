@@ -344,6 +344,7 @@ class LieGroup:
 
 class SO3(LieGroup):
     """SO3 implementation."""
+
     group_name = "SO3"
     group_id = 1
     manifold_dim = 3
@@ -366,6 +367,7 @@ class SO3(LieGroup):
 
 class RxSO3(LieGroup):
     """Rx implementation."""
+
     group_name = "RxSO3"
     group_id = 2
     manifold_dim = 4
@@ -388,6 +390,7 @@ class RxSO3(LieGroup):
 
 class SE3(LieGroup):
     """SE3 implementation."""
+
     group_name = "SE3"
     group_id = 3
     manifold_dim = 6
@@ -421,6 +424,7 @@ class SE3(LieGroup):
 
 class Sim3(LieGroup):
     """Sim implementation."""
+
     group_name = "Sim3"
     group_id = 4
     manifold_dim = 7

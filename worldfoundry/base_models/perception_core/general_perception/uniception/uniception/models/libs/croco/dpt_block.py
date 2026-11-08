@@ -275,7 +275,6 @@ def make_nonlinearity(nonlinearity, dim=None, on_channels=False):
 
 
 def make_fusion_block(features, use_bn, width_ratio=1, nonlinearity="relu"):
-
     nonlinear_layer = make_nonlinearity(nonlinearity, features, on_channels=True)
 
     return FeatureFusionBlock_custom(

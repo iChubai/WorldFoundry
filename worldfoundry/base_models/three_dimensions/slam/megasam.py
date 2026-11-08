@@ -91,16 +91,25 @@ def run_single(
     for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
         env[name] = str(n_threads)
     command = [
-        sys.executable, "-m", "worldfoundry.base_models.three_dimensions.slam.megasam",
-        "--video", str(Path(video_path).resolve()), "--output", str(Path(output_path).resolve()),
-        "--target_fps", str(target_fps), "--worker",
+        sys.executable,
+        "-m",
+        "worldfoundry.base_models.three_dimensions.slam.megasam",
+        "--video",
+        str(Path(video_path).resolve()),
+        "--output",
+        str(Path(output_path).resolve()),
+        "--target_fps",
+        str(target_fps),
+        "--worker",
     ]
     if cpu_list and shutil.which("taskset"):
         command = ["taskset", "-c", cpu_list, *command]
     subprocess.run(command, env=env, check=True)
 
 
-def _gpu_worker_process(gpu_id: int, worker_idx: int, n_workers: int, task_list: list[tuple[str, str]], target_fps: float) -> None:
+def _gpu_worker_process(
+    gpu_id: int, worker_idx: int, n_workers: int, task_list: list[tuple[str, str]], target_fps: float
+) -> None:
     try:
         available = sorted(os.sched_getaffinity(0))
     except AttributeError:
@@ -130,7 +139,9 @@ def _gpu_worker_process(gpu_id: int, worker_idx: int, n_workers: int, task_list:
     for idx, (video_path, output_path) in enumerate(task_list):
         print(f"  {tag} [{idx + 1}/{len(task_list)}] {os.path.basename(video_path)}", flush=True)
         try:
-            run_single(video_path, output_path, device="0", target_fps=target_fps, cpu_list=cpu_list, n_threads=n_threads)
+            run_single(
+                video_path, output_path, device="0", target_fps=target_fps, cpu_list=cpu_list, n_threads=n_threads
+            )
             ok += 1
         except subprocess.CalledProcessError as exc:
             stderr_msg = exc.stderr.decode(errors="replace")[-500:] if exc.stderr else "no stderr"

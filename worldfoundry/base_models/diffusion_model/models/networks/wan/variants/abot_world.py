@@ -3,6 +3,7 @@
 Causal self-attention, relative / reference RoPE, and an action adapter
 on the Wan 2.2 official stem.  Adds action + causal hooks.
 """
+
 from __future__ import annotations
 
 import math
@@ -54,21 +55,13 @@ def _causal_rope_apply(
     for batch_index, (frames, height, width) in enumerate(grid_sizes.tolist()):
         sequence_length = frames * height * width
         sample = torch.view_as_complex(
-            value[batch_index, :sequence_length]
-            .float()
-            .reshape(sequence_length, heads, -1, 2)
+            value[batch_index, :sequence_length].float().reshape(sequence_length, heads, -1, 2)
         )
         sample_freqs = torch.cat(
             [
-                bands[0][start_frame : start_frame + frames]
-                .view(frames, 1, 1, -1)
-                .expand(frames, height, width, -1),
-                bands[1][:height]
-                .view(1, height, 1, -1)
-                .expand(frames, height, width, -1),
-                bands[2][:width]
-                .view(1, 1, width, -1)
-                .expand(frames, height, width, -1),
+                bands[0][start_frame : start_frame + frames].view(frames, 1, 1, -1).expand(frames, height, width, -1),
+                bands[1][:height].view(1, height, 1, -1).expand(frames, height, width, -1),
+                bands[2][:width].view(1, 1, width, -1).expand(frames, height, width, -1),
             ],
             dim=-1,
         ).reshape(sequence_length, 1, -1)
@@ -96,23 +89,15 @@ def _relative_rope_apply(
     for batch_index, (frames, height, width) in enumerate(grid_sizes.tolist()):
         sequence_length = frames * height * width
         sample = torch.view_as_complex(
-            value[batch_index, :sequence_length]
-            .float()
-            .reshape(sequence_length, heads, -1, 2)
+            value[batch_index, :sequence_length].float().reshape(sequence_length, heads, -1, 2)
         )
         temporal_indices = frame_indices[:frames].to(value.device, torch.long)
         temporal_indices = temporal_indices.clamp(0, maximum_frame_index)
         sample_freqs = torch.cat(
             [
-                bands[0][temporal_indices]
-                .view(frames, 1, 1, -1)
-                .expand(frames, height, width, -1),
-                bands[1][:height]
-                .view(1, height, 1, -1)
-                .expand(frames, height, width, -1),
-                bands[2][:width]
-                .view(1, 1, width, -1)
-                .expand(frames, height, width, -1),
+                bands[0][temporal_indices].view(frames, 1, 1, -1).expand(frames, height, width, -1),
+                bands[1][:height].view(1, height, 1, -1).expand(frames, height, width, -1),
+                bands[2][:width].view(1, 1, width, -1).expand(frames, height, width, -1),
             ],
             dim=-1,
         ).reshape(sequence_length, 1, -1)
@@ -197,12 +182,8 @@ def _apply_reference_rope(
     value: torch.Tensor,
     freqs: torch.Tensor,
 ) -> torch.Tensor:
-    complex_value = torch.view_as_complex(
-        value.float().reshape(*value.shape[:3], -1, 2)
-    )
-    output = torch.view_as_real(
-        complex_value * freqs.to(value.device, torch.complex64)
-    ).flatten(3)
+    complex_value = torch.view_as_complex(value.float().reshape(*value.shape[:3], -1, 2))
+    output = torch.view_as_real(complex_value * freqs.to(value.device, torch.complex64)).flatten(3)
     return output.to(value.dtype)
 
 
@@ -336,17 +317,11 @@ class _CausalSelfAttention(nn.Module):
         cache_size = int(cache[value_name].shape[1])
         global_end = self._cache_index(cache, "global_end_index")
         local_end = self._cache_index(cache, "local_end_index")
-        if (
-            self.local_attn_size != -1
-            and cache_current_end > global_end
-            and new_tokens + local_end > cache_size
-        ):
+        if self.local_attn_size != -1 and cache_current_end > global_end and new_tokens + local_end > cache_size:
             evicted = new_tokens + local_end - cache_size
             rolled = local_end - evicted - sink_tokens
             if evicted < 0 or rolled < 0:
-                raise RuntimeError(
-                    f"invalid ABot-World KV roll: evicted={evicted}, rolled={rolled}"
-                )
+                raise RuntimeError(f"invalid ABot-World KV roll: evicted={evicted}, rolled={rolled}")
             cache[key_name][:, sink_tokens : sink_tokens + rolled] = cache[key_name][
                 :, sink_tokens + evicted : sink_tokens + evicted + rolled
             ].clone()
@@ -389,9 +364,7 @@ class _CausalSelfAttention(nn.Module):
             cache_current_end=cache_current_end,
         )
         if local_start < sink_tokens or local_end > cache["k_raw"].shape[1]:
-            raise RuntimeError(
-                f"ABot-World relative KV write [{local_start}:{local_end}] is out of range"
-            )
+            raise RuntimeError(f"ABot-World relative KV write [{local_start}:{local_end}] is out of range")
         if query_reference_len:
             cache["k_raw"][:, :reference_len] = k[:, :query_reference_len]
             cache["v"][:, :reference_len] = v[:, :query_reference_len]
@@ -399,9 +372,7 @@ class _CausalSelfAttention(nn.Module):
         cache["v"][:, local_start:local_end] = v[:, query_reference_len:]
 
         maximum_video_tokens = (
-            local_end - sink_tokens
-            if self.local_attn_size == -1
-            else self.local_attn_size * frame_sequence_length
+            local_end - sink_tokens if self.local_attn_size == -1 else self.local_attn_size * frame_sequence_length
         )
         recent_start = max(sink_tokens, local_end - maximum_video_tokens)
         visible_tokens = local_end - recent_start
@@ -527,9 +498,7 @@ class _CausalSelfAttention(nn.Module):
         )
         cache["k"][:, local_start:local_end] = roped_k
         cache["v"][:, local_start:local_end] = v
-        maximum_tokens = (
-            local_end if self.local_attn_size == -1 else self.local_attn_size * frame_sequence_length
-        )
+        maximum_tokens = local_end if self.local_attn_size == -1 else self.local_attn_size * frame_sequence_length
         recent_start = max(sink_tokens, local_end - maximum_tokens)
         if sink_tokens and recent_start > sink_tokens:
             visible_k = torch.cat(
@@ -660,11 +629,7 @@ class _CausalBlock(nn.Module):
             eps=eps,
             use_relative_rope=use_relative_rope,
         )
-        self.norm3 = (
-            _AffineWanLayerNorm(dim, eps, elementwise_affine=True)
-            if cross_attn_norm
-            else nn.Identity()
-        )
+        self.norm3 = _AffineWanLayerNorm(dim, eps, elementwise_affine=True) if cross_attn_norm else nn.Identity()
         self.cross_attn = _CrossAttention(
             dim,
             num_heads,
@@ -727,9 +692,7 @@ class _CausalBlock(nn.Module):
             context_lens,
             cache=crossattn_cache,
         )
-        residual = self.ffn(
-            modulate(self.norm2, value, chunks[4], chunks[3])
-        )
+        residual = self.ffn(modulate(self.norm2, value, chunks[4], chunks[3]))
         return value + gate(residual, chunks[5])
 
 
@@ -869,9 +832,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
     ) -> list[torch.Tensor]:
         if actions is None:
             return features
-        action_features = [
-            self.act_control_adapter(sample.unsqueeze(0)) for sample in actions
-        ]
+        action_features = [self.act_control_adapter(sample.unsqueeze(0)) for sample in actions]
         output = []
         for feature, action in zip(features, action_features):
             if feature.shape[2] > action.shape[2]:
@@ -965,9 +926,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
         device: torch.device,
     ) -> torch.Tensor:
         timestep = torch.zeros((batch_size, 1), dtype=torch.long, device=device)
-        embedding = self.time_embedding(
-            sinusoidal_embedding_1d(self.freq_dim, timestep.flatten()).to(dtype)
-        )
+        embedding = self.time_embedding(sinusoidal_embedding_1d(self.freq_dim, timestep.flatten()).to(dtype))
         embedding = self.time_projection(embedding).unflatten(1, (6, self.dim))
         embedding = embedding.unflatten(0, timestep.shape)
         return embedding.expand(-1, token_len, -1, -1)
@@ -999,10 +958,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
         features = [self.patch_embedding(sample.unsqueeze(0)) for sample in x]
         features = self._apply_actions(features, act_context, act_context_scale)
         grid_sizes = torch.stack(
-            [
-                torch.tensor(feature.shape[2:], dtype=torch.long, device=device)
-                for feature in features
-            ]
+            [torch.tensor(feature.shape[2:], dtype=torch.long, device=device) for feature in features]
         )
         tokens = [feature.flatten(2).transpose(1, 2) for feature in features]
         seq_lens = torch.tensor(
@@ -1075,9 +1031,7 @@ class ABotWorldModel(nn.Module, NativeConfigMixin):
                 context=context_tensor,
                 context_lens=None,
                 kv_cache=kv_cache[index],
-                crossattn_cache=(
-                    crossattn_cache[index] if crossattn_cache is not None else None
-                ),
+                crossattn_cache=(crossattn_cache[index] if crossattn_cache is not None else None),
                 current_start=current_start,
             )
         if query_reference_len:

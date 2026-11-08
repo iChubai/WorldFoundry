@@ -1,4 +1,4 @@
-""" CLIP Model
+"""CLIP Model
 
 Adapted from https://github.com/openai/CLIP. Originally MIT License, Copyright (c) 2021 OpenAI.
 """
@@ -122,7 +122,9 @@ def get_cast_dtype(precision: str):
     return cast_dtype
 
 
-def _build_vision_tower(embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: bool = False, cast_dtype: Optional[torch.dtype] = None):
+def _build_vision_tower(
+    embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: bool = False, cast_dtype: Optional[torch.dtype] = None
+):
     if isinstance(vision_cfg, dict):
         vision_cfg = CLIPVisionCfg(**vision_cfg)
 
@@ -160,12 +162,24 @@ def _build_vision_tower(embed_dim: int, vision_cfg: CLIPVisionCfg, quick_gelu: b
         )
     elif vision_cfg.timm_model_name:
         visual = TimmModel(
-            vision_cfg.timm_model_name, pretrained=vision_cfg.timm_model_pretrained, pool=vision_cfg.timm_pool, proj=vision_cfg.timm_proj, proj_bias=vision_cfg.timm_proj_bias, embed_dim=embed_dim, image_size=vision_cfg.image_size
+            vision_cfg.timm_model_name,
+            pretrained=vision_cfg.timm_model_pretrained,
+            pool=vision_cfg.timm_pool,
+            proj=vision_cfg.timm_proj,
+            proj_bias=vision_cfg.timm_proj_bias,
+            embed_dim=embed_dim,
+            image_size=vision_cfg.image_size,
         )
         act_layer = nn.GELU  # so that text transformer doesn't use QuickGELU w/ timm models
     elif isinstance(vision_cfg.layers, (tuple, list)):
         vision_heads = vision_cfg.width * 32 // vision_cfg.head_width
-        visual = ModifiedResNet(layers=vision_cfg.layers, output_dim=embed_dim, heads=vision_heads, image_size=vision_cfg.image_size, width=vision_cfg.width)
+        visual = ModifiedResNet(
+            layers=vision_cfg.layers,
+            output_dim=embed_dim,
+            heads=vision_heads,
+            image_size=vision_cfg.image_size,
+            width=vision_cfg.width,
+        )
     else:
         vision_heads = vision_cfg.width // vision_cfg.head_width
         norm_layer = LayerNormFp32 if cast_dtype in (torch.float16, torch.bfloat16) else LayerNorm
@@ -197,7 +211,14 @@ def _build_text_tower(
         text_cfg = CLIPTextCfg(**text_cfg)
 
     if text_cfg.hf_model_name:
-        text = HFTextEncoder(text_cfg.hf_model_name, output_dim=embed_dim, tokenizer_name=text_cfg.hf_tokenizer_name, proj=text_cfg.proj, pooler_type=text_cfg.pooler_type, masked_language_modeling=text_cfg.masked_language_modeling)
+        text = HFTextEncoder(
+            text_cfg.hf_model_name,
+            output_dim=embed_dim,
+            tokenizer_name=text_cfg.hf_tokenizer_name,
+            proj=text_cfg.proj,
+            pooler_type=text_cfg.pooler_type,
+            masked_language_modeling=text_cfg.masked_language_modeling,
+        )
     else:
         act_layer = QuickGELU if quick_gelu else nn.GELU
         norm_layer = LayerNorm
@@ -327,7 +348,6 @@ def convert_weights_to_lp(model: nn.Module, dtype=torch.float16):
     """Convert applicable model parameters to low-precision (bf16 or fp16)"""
 
     def _convert_weights(l):
-
         if isinstance(l, (nn.Conv1d, nn.Conv2d, nn.Linear)):
             l.weight.data = l.weight.data.to(dtype)
             if l.bias is not None:
@@ -360,7 +380,17 @@ def convert_to_custom_text_state_dict(state_dict: dict):
         # old format state_dict, move text tower -> .text
         new_state_dict = {}
         for k, v in state_dict.items():
-            if any(k.startswith(p) for p in ("text_projection", "positional_embedding", "token_embedding", "transformer", "ln_final", "logit_scale")):
+            if any(
+                k.startswith(p)
+                for p in (
+                    "text_projection",
+                    "positional_embedding",
+                    "token_embedding",
+                    "transformer",
+                    "ln_final",
+                    "logit_scale",
+                )
+            ):
                 k = "text." + k
             new_state_dict[k] = v
         return new_state_dict
@@ -376,12 +406,16 @@ def build_model_from_openai_state_dict(
 
     if vit:
         vision_width = state_dict["visual.conv1.weight"].shape[0]
-        vision_layers = len([k for k in state_dict.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")])
+        vision_layers = len(
+            [k for k in state_dict.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")]
+        )
         vision_patch_size = state_dict["visual.conv1.weight"].shape[-1]
         grid_size = round((state_dict["visual.positional_embedding"].shape[0] - 1) ** 0.5)
         image_size = vision_patch_size * grid_size
     else:
-        counts: list = [len(set(k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}"))) for b in [1, 2, 3, 4]]
+        counts: list = [
+            len(set(k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}"))) for b in [1, 2, 3, 4]
+        ]
         vision_layers = tuple(counts)
         vision_width = state_dict["visual.layer1.0.conv1.weight"].shape[0]
         output_width = round((state_dict["visual.attnpool.positional_embedding"].shape[0] - 1) ** 0.5)
@@ -402,7 +436,13 @@ def build_model_from_openai_state_dict(
         patch_size=vision_patch_size,
         image_size=image_size,
     )
-    text_cfg = CLIPTextCfg(context_length=context_length, vocab_size=vocab_size, width=transformer_width, heads=transformer_heads, layers=transformer_layers)
+    text_cfg = CLIPTextCfg(
+        context_length=context_length,
+        vocab_size=vocab_size,
+        width=transformer_width,
+        heads=transformer_heads,
+        layers=transformer_layers,
+    )
     model = CLIP(
         embed_dim,
         vision_cfg=vision_cfg,
@@ -424,6 +464,11 @@ def trace_model(model, batch_size=256, device=torch.device("cpu")):
     image_size = model.visual.image_size
     example_images = torch.ones((batch_size, 3, image_size, image_size), device=device)
     example_text = torch.zeros((batch_size, model.context_length), dtype=torch.int, device=device)
-    model = torch.jit.trace_module(model, inputs=dict(forward=(example_images, example_text), encode_text=(example_text,), encode_image=(example_images,)))
+    model = torch.jit.trace_module(
+        model,
+        inputs=dict(
+            forward=(example_images, example_text), encode_text=(example_text,), encode_image=(example_images,)
+        ),
+    )
     model.visual.image_size = image_size
     return model

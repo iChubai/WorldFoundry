@@ -173,7 +173,8 @@ def matrix_game4_egypt_recipe() -> NativeDiffusionRecipe:
         components=(
             ComponentSpec(denoiser, build_matrix_game4_denoiser, {"weights": "dit"}),
             ComponentSpec(
-                conditioner, build_wan_text_conditioner,
+                conditioner,
+                build_wan_text_conditioner,
                 {"weights": "text-encoder", "tokenizer": "tokenizer"},
             ),
             ComponentSpec(initializer, build_wan_causal_control_initializer, {"sink": "sink"}),
@@ -181,25 +182,33 @@ def matrix_game4_egypt_recipe() -> NativeDiffusionRecipe:
             ComponentSpec(codec, build_wan_video_vae38_decoder, {"weights": "vae"}, options={"dtype": torch.bfloat16}),
         ),
         checkpoints={
-            "dit": CheckpointSpec(repo_id=MATRIX_GAME4_REPO, revision=MATRIX_GAME4_REVISION,
-                                  files=("fps-egypt/model.safetensors",)),
-            "sink": CheckpointSpec(repo_id=MATRIX_GAME4_REPO, revision=MATRIX_GAME4_REVISION,
-                                   files=("fps-egypt/sink.png",)),
-            "text-encoder": CheckpointSpec(repo_id=base_repo, revision=base_revision,
-                                           files=("models_t5_umt5-xxl-enc-bf16.pth",)),
+            "dit": CheckpointSpec(
+                repo_id=MATRIX_GAME4_REPO, revision=MATRIX_GAME4_REVISION, files=("fps-egypt/model.safetensors",)
+            ),
+            "sink": CheckpointSpec(
+                repo_id=MATRIX_GAME4_REPO, revision=MATRIX_GAME4_REVISION, files=("fps-egypt/sink.png",)
+            ),
+            "text-encoder": CheckpointSpec(
+                repo_id=base_repo, revision=base_revision, files=("models_t5_umt5-xxl-enc-bf16.pth",)
+            ),
             "tokenizer": CheckpointSpec(repo_id=base_repo, revision=base_revision, files=WAN_TOKENIZER_FILES),
             "vae": CheckpointSpec(repo_id=base_repo, revision=base_revision, files=("Wan2.2_VAE.pth",)),
         },
         execution=ExecutionSpec(
             strategy="autoregressive-window",
             bindings={
-                "denoiser": denoiser, "conditioner": conditioner,
-                "latent_initializer": initializer, "latent_encoder": codec,
-                "scheduler": scheduler, "decoder": codec,
+                "denoiser": denoiser,
+                "conditioner": conditioner,
+                "latent_initializer": initializer,
+                "latent_encoder": codec,
+                "scheduler": scheduler,
+                "decoder": codec,
             },
             options={
-                "prediction_mode": "distilled-x0", "fixed_timesteps": (1000, 500),
-                "context_timestep": 0, "renoise_dtype": "float32",
+                "prediction_mode": "distilled-x0",
+                "fixed_timesteps": (1000, 500),
+                "context_timestep": 0,
+                "renoise_dtype": "float32",
             },
         ),
         capabilities=frozenset({"video-to-video", "low-poly-control", "causal-kv-cache", "kv-only-prefix"}),

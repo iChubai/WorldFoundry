@@ -7,6 +7,7 @@
 
 使用z-buffer处理遮挡关系 (保留最近的点)
 """
+
 from __future__ import annotations
 
 from typing import Iterable
@@ -14,14 +15,23 @@ from typing import Iterable
 import numpy as np
 import torch
 
+
 class ZBufferResult:
     """Cached z-buffer result for recoloring with different point colors."""
-    __slots__ = ("H", "W", "valid", "order", "unique_flat", "first_idx",
-                 "depth_img", "mask_img")
 
-    def __init__(self, H: int, W: int, valid: np.ndarray, order: np.ndarray,
-                 unique_flat: np.ndarray, first_idx: np.ndarray,
-                 depth_img: np.ndarray, mask_img: np.ndarray):
+    __slots__ = ("H", "W", "valid", "order", "unique_flat", "first_idx", "depth_img", "mask_img")
+
+    def __init__(
+        self,
+        H: int,
+        W: int,
+        valid: np.ndarray,
+        order: np.ndarray,
+        unique_flat: np.ndarray,
+        first_idx: np.ndarray,
+        depth_img: np.ndarray,
+        mask_img: np.ndarray,
+    ):
         self.H = H
         self.W = W
         self.valid = valid
@@ -53,7 +63,7 @@ def _compute_zbuffer(
     fx, fy = float(K[0, 0]), float(K[1, 1])
     cx, cy = float(K[0, 2]), float(K[1, 2])
 
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         z_safe = np.where(z > 0, z, 1.0)
         u_f = x / z_safe * fx + cx
         v_f = y / z_safe * fy + cy
@@ -62,12 +72,7 @@ def _compute_zbuffer(
 
     # Validity check
     int32_max = np.iinfo(np.int32).max
-    uv_valid = (
-        np.isfinite(u_f) & np.isfinite(v_f) &
-        (z > 0) &
-        (np.abs(u_f) < int32_max) &
-        (np.abs(v_f) < int32_max)
-    )
+    uv_valid = np.isfinite(u_f) & np.isfinite(v_f) & (z > 0) & (np.abs(u_f) < int32_max) & (np.abs(v_f) < int32_max)
     u_i = np.zeros(len(u_f), dtype=np.int32)
     v_i = np.zeros(len(v_f), dtype=np.int32)
     if uv_valid.any():
@@ -96,8 +101,7 @@ def _compute_zbuffer(
         depth_img = depth_min.reshape(H, W)
         depth_img[~mask_img] = 0.0
 
-    return ZBufferResult(H, W, valid, order, unique_flat, first_idx,
-                         depth_img, mask_img)
+    return ZBufferResult(H, W, valid, order, unique_flat, first_idx, depth_img, mask_img)
 
 
 def _assemble_channels(
@@ -201,6 +205,7 @@ def recolor_projection(
 # GPU-batched projection: 所有帧共享同一点云，一次性在GPU上完成投影
 # ---------------------------------------------------------------------------
 
+
 def render_projection_batch_gpu(
     points_world: np.ndarray,
     Ks: np.ndarray,
@@ -280,9 +285,9 @@ def render_projection_batch_gpu(
         flat[~valid] = 0  # safe index for invalid points
 
         # Move to CPU for z-buffer scatter
-        z_cpu = z.float().cpu().numpy()     # [F, N] ensure float32
-        flat_cpu = flat.cpu().numpy()       # [F, N]
-        valid_cpu = valid.cpu().numpy()     # [F, N]
+        z_cpu = z.float().cpu().numpy()  # [F, N] ensure float32
+        flat_cpu = flat.cpu().numpy()  # [F, N]
+        valid_cpu = valid.cpu().numpy()  # [F, N]
 
         # Free GPU memory
         del pts, pts_homo, w2cs, Ks_t, pts_cam, x, y, z, safe_z
@@ -319,8 +324,7 @@ def render_projection_batch_gpu(
             depth_img = depth_min.reshape(H, W)
             depth_img[~mask_img] = 0.0
 
-        zbuf = ZBufferResult(H, W, v_mask, order, unique_flat, first_idx,
-                             depth_img, mask_img)
+        zbuf = ZBufferResult(H, W, v_mask, order, unique_flat, first_idx, depth_img, mask_img)
 
         rgb_img = None
         if need_rgb:

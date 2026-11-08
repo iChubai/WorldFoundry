@@ -225,9 +225,7 @@ def render_cuda_orthographic(
         dump["near"] = near
         dump["far"] = far
 
-    projection_matrix = get_projection_matrix(
-        near, far, repeat(fov_x, "-> b", b=b), fov_y
-    )
+    projection_matrix = get_projection_matrix(near, far, repeat(fov_x, "-> b", b=b), fov_y)
     projection_matrix = rearrange(projection_matrix, "b i j -> b j i")
     view_matrix = rearrange(extrinsics.inverse(), "b i j -> b j i")
     full_projection = view_matrix @ projection_matrix
@@ -307,17 +305,13 @@ def render_depth_cuda(
         The return value.
     """
     # Specify colors according to Gaussian depths.
-    camera_space_gaussians = einsum(
-        extrinsics.inverse(), homogenize_points(gaussian_means), "b i j, b g j -> b g i"
-    )
+    camera_space_gaussians = einsum(extrinsics.inverse(), homogenize_points(gaussian_means), "b i j, b g j -> b g i")
     fake_color = camera_space_gaussians[..., 2]
 
     if mode == "disparity":
         fake_color = 1 / fake_color
     elif mode == "relative_disparity":
-        fake_color = depth_to_relative_disparity(
-            fake_color, near[:, None], far[:, None]
-        )
+        fake_color = depth_to_relative_disparity(fake_color, near[:, None], far[:, None])
     elif mode == "log":
         fake_color = fake_color.minimum(near[:, None]).maximum(far[:, None]).log()
 

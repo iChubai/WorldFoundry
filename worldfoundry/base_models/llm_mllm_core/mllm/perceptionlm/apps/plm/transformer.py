@@ -26,7 +26,9 @@ from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transformer i
     cross_entropy,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.utils import InitArgs
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.vision_encoder.pe import VisionTransformer as PE_VisionTransformer
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.vision_encoder.pe import (
+    VisionTransformer as PE_VisionTransformer,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.vision_projector.mlp import MLPProjector
 
 logger = logging.getLogger(__name__)
@@ -34,9 +36,7 @@ logger = logging.getLogger(__name__)
 
 def create_causal_mask(seqlen, attn_impl, sliding_window):
     if sliding_window is not None and attn_impl == "xformers":
-        return fmha.attn_bias.LocalAttentionFromBottomRightMask(
-            window_left=sliding_window - 1, window_right=0
-        )
+        return fmha.attn_bias.LocalAttentionFromBottomRightMask(window_left=sliding_window - 1, window_right=0)
     elif attn_impl == "xformers":
         return fmha.attn_bias.LowerTriangularMask()
     elif attn_impl == "sdpa":
@@ -44,9 +44,7 @@ def create_causal_mask(seqlen, attn_impl, sliding_window):
     elif attn_impl == "flex_attention":
         return create_block_mask(causal_mask, None, None, seqlen, seqlen)
     else:
-        raise NotImplementedError(
-            f"Attention {attn_impl} with {sliding_window} sliding window not implemented"
-        )
+        raise NotImplementedError(f"Attention {attn_impl} with {sliding_window} sliding window not implemented")
 
 
 def attention_flops_per_token(n_layers, seq_len, dim, causal):
@@ -54,12 +52,8 @@ def attention_flops_per_token(n_layers, seq_len, dim, causal):
     return 3.5 * (4 * n_layers * seq_len * dim // (2 if causal else 1))
 
 
-def get_num_flop_per_token(
-    num_non_embed_params: int, n_layers: int, dim: int, seq_len: int
-) -> int:
-    return 6 * num_non_embed_params + attention_flops_per_token(
-        n_layers, seq_len, dim, True
-    )
+def get_num_flop_per_token(num_non_embed_params: int, n_layers: int, dim: int, seq_len: int) -> int:
+    return 6 * num_non_embed_params + attention_flops_per_token(n_layers, seq_len, dim, True)
 
 
 def causal_mask(b, h, q_idx, kv_idx):
@@ -68,7 +62,6 @@ def causal_mask(b, h, q_idx, kv_idx):
 
 @dataclass
 class LMTransformerArgs(BaseTransformerArgs):
-
     seed: int = 42
 
     vocab_size: int = -1
@@ -116,9 +109,7 @@ class LMTransformer(BaseTransformer):
             )
 
         if args.vision_model:
-            logger.info(
-                f"Initializing PE_VisionTransformer with args: {args.vision_model}"
-            )
+            logger.info(f"Initializing PE_VisionTransformer with args: {args.vision_model}")
             self.vision_model = PE_VisionTransformer(**args.vision_model, output_dim=None)
             self.vision_projector = MLPProjector(args)
 
@@ -166,11 +157,7 @@ class LMTransformer(BaseTransformer):
                 media_type=media_type,
             )
 
-        mask = (
-            mask
-            if mask is not None
-            else create_causal_mask(seqlen, attn_impl, self.sliding_window)
-        )
+        mask = mask if mask is not None else create_causal_mask(seqlen, attn_impl, self.sliding_window)
 
         h = super().forward(h, tok_idx=tok_idx, mask=mask, attn_impl=attn_impl)
 
@@ -216,9 +203,7 @@ class LMTransformer(BaseTransformer):
         # Get indices for non-text samples
         non_text_indices = [
             idx
-            for start, end, m_type in zip(
-                cumulative_indices[:-1], cumulative_indices[1:], media_type
-            )
+            for start, end, m_type in zip(cumulative_indices[:-1], cumulative_indices[1:], media_type)
             if m_type != "text"
             for idx in range(start, end)
         ]
@@ -226,9 +211,7 @@ class LMTransformer(BaseTransformer):
         valid_index_filter = img_indices_L < h_tok.shape[1]
         img_indices_L = img_indices_L[valid_index_filter]
         img_indices_B = img_indices_B[valid_index_filter]
-        h_tok[img_indices_B, img_indices_L] = h_img[non_text_indices].flatten(0, 1)[
-            valid_index_filter
-        ]
+        h_tok[img_indices_B, img_indices_L] = h_img[non_text_indices].flatten(0, 1)[valid_index_filter]
         return h_tok
 
 
@@ -266,13 +249,9 @@ def tp_parallelize(model, tp_mesh, model_args: LMTransformerArgs, distributed_ar
 
     # Embedding layer tp
     main_plan = {}
-    main_plan["tok_embeddings"] = ColwiseParallel(
-        input_layouts=Replicate(), output_layouts=Shard(1)
-    )
+    main_plan["tok_embeddings"] = ColwiseParallel(input_layouts=Replicate(), output_layouts=Shard(1))
     main_plan["norm"] = SequenceParallel()
-    main_plan["output"] = ColwiseParallel(
-        input_layouts=Shard(1), output_layouts=Replicate()
-    )
+    main_plan["output"] = ColwiseParallel(input_layouts=Shard(1), output_layouts=Replicate())
 
     parallelize_module(
         model,

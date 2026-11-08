@@ -9,6 +9,7 @@ from torch import Tensor
 @dataclass
 class Gaussians:
     """Gaussians implementation."""
+
     means: Float[Tensor, "batch gaussian dim"]
     covariances: Float[Tensor, "batch gaussian dim dim"]
     harmonics: Float[Tensor, "batch gaussian 3 d_sh"]

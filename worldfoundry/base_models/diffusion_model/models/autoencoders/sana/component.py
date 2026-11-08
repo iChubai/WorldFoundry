@@ -41,7 +41,8 @@ class SanaDCAutoencoder:
         self.spatial_tile_size = spatial_tile_size
         self.spatial_overlap = int(spatial_overlap)
         if spatial_tile_size is not None and (
-            spatial_tile_size <= 0 or spatial_tile_size % self.spatial_compression_factor
+            spatial_tile_size <= 0
+            or spatial_tile_size % self.spatial_compression_factor
             or not 0 <= self.spatial_overlap < spatial_tile_size
             or self.spatial_overlap % self.spatial_compression_factor
         ):
@@ -81,11 +82,13 @@ class SanaDCAutoencoder:
         tile_size = self.spatial_tile_size // scale
         stride = tile_size - self.spatial_overlap // scale
         height, width = latents.shape[-2:]
-        pixels = torch.zeros((latents.shape[0], 3, height * scale, width * scale), device=latents.device, dtype=torch.float32)
+        pixels = torch.zeros(
+            (latents.shape[0], 3, height * scale, width * scale), device=latents.device, dtype=torch.float32
+        )
         weights = torch.zeros_like(pixels[:1, :1])
         for top in range(0, height, stride):
             for left in range(0, width, stride):
-                tile = self.model.decode(latents[..., top:top + tile_size, left:left + tile_size])
+                tile = self.model.decode(latents[..., top : top + tile_size, left : left + tile_size])
                 th, tw = tile.shape[-2:]
                 wy = torch.ones(th, device=tile.device, dtype=torch.float32)
                 wx = torch.ones(tw, device=tile.device, dtype=torch.float32)
@@ -119,7 +122,11 @@ def build_sana_dc_autoencoder(context: ComponentBuildContext) -> SanaDCAutoencod
         model,
         scaling_factor=config.scaling_factor or 0.41407,
         decoder_input_scale=float(context.component_options.get("decoder_input_scale", 1.0)),
-        spatial_tile_size=(int(context.component_options.get("spatial_tile_size", 1024)) if context.component_options.get("tiled", False) else None),
+        spatial_tile_size=(
+            int(context.component_options.get("spatial_tile_size", 1024))
+            if context.component_options.get("tiled", False)
+            else None
+        ),
         spatial_overlap=int(context.component_options.get("spatial_overlap", 256)),
     )
 

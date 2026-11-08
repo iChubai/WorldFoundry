@@ -2,6 +2,7 @@
 
 Inspired by https://github.com/karpathy/minGPT/blob/master/mingpt/model.py
 """
+
 import math
 import warnings
 from typing import List, Optional, Tuple, Union
@@ -53,17 +54,23 @@ class MPTModel(MPTPreTrainedModel):
                 config.init_device = "meta"
         if config.norm_type.lower() not in NORM_CLASS_REGISTRY.keys():
             norm_options = " | ".join(NORM_CLASS_REGISTRY.keys())
-            raise NotImplementedError(f"Requested norm type ({config.norm_type}) is not implemented within this repo (Options: {norm_options}).")
+            raise NotImplementedError(
+                f"Requested norm type ({config.norm_type}) is not implemented within this repo (Options: {norm_options})."
+            )
         norm_class = NORM_CLASS_REGISTRY[config.norm_type.lower()]
         self.embedding_fraction = config.embedding_fraction
         self.wte = SharedEmbedding(config.vocab_size, config.d_model, device=config.init_device)
         if not self.alibi:
             self.wpe = torch.nn.Embedding(config.max_seq_len, config.d_model, device=config.init_device)
         self.emb_drop = nn.Dropout(config.emb_pdrop)
-        self.blocks = nn.ModuleList([MPTBlock(device=config.init_device, **config.to_dict()) for _ in range(config.n_layers)])
+        self.blocks = nn.ModuleList(
+            [MPTBlock(device=config.init_device, **config.to_dict()) for _ in range(config.n_layers)]
+        )
         self.norm_f = norm_class(config.d_model, device=config.init_device)
         if config.init_device != "meta":
-            print(f'You are using config.init_device={config.init_device!r}, but you can also use config.init_device="meta" with Composer + FSDP for fast initialization.')
+            print(
+                f'You are using config.init_device={config.init_device!r}, but you can also use config.init_device="meta" with Composer + FSDP for fast initialization.'
+            )
             self.apply(self.param_init_fn)
         self.is_causal = not self.prefix_lm
         self._attn_bias_initialized = False
@@ -139,7 +146,10 @@ class MPTModel(MPTPreTrainedModel):
                 _s_k = max(0, attn_bias.size(-1) - s_k)
                 attn_bias = attn_bias[:, :, :, _s_k:]
             if prefix_mask is not None and attention_mask.shape != prefix_mask.shape:
-                raise ValueError(f"attention_mask shape={attention_mask.shape} " + f"and prefix_mask shape={prefix_mask.shape} are not equal.")
+                raise ValueError(
+                    f"attention_mask shape={attention_mask.shape} "
+                    + f"and prefix_mask shape={prefix_mask.shape} are not equal."
+                )
             min_val = torch.finfo(attn_bias.dtype).min
             attn_bias = attn_bias.masked_fill(~attention_mask.view(-1, 1, 1, s_k), min_val)
         return (attn_bias, None)
@@ -147,12 +157,18 @@ class MPTModel(MPTPreTrainedModel):
     def _apply_prefix_mask(self, attn_bias: torch.Tensor, prefix_mask: torch.Tensor):
         (s_k, s_q) = attn_bias.shape[-2:]
         if s_k != self.config.max_seq_len or s_q != self.config.max_seq_len:
-            raise ValueError("attn_bias does not match the expected shape. " + f"The last two dimensions should both be {self.config.max_length} " + f"but are {s_k} and {s_q}.")
+            raise ValueError(
+                "attn_bias does not match the expected shape. "
+                + f"The last two dimensions should both be {self.config.max_length} "
+                + f"but are {s_k} and {s_q}."
+            )
         seq_len = prefix_mask.shape[-1]
         if seq_len > self.config.max_seq_len:
             raise ValueError(f"prefix_mask sequence length cannot exceed max_seq_len={self.config.max_seq_len}")
         attn_bias = attn_bias[..., :seq_len, :seq_len]
-        causal = torch.tril(torch.ones((seq_len, seq_len), dtype=torch.bool, device=prefix_mask.device)).view(1, 1, seq_len, seq_len)
+        causal = torch.tril(torch.ones((seq_len, seq_len), dtype=torch.bool, device=prefix_mask.device)).view(
+            1, 1, seq_len, seq_len
+        )
         prefix = prefix_mask.view(-1, 1, 1, seq_len)
         cannot_attend = ~torch.logical_or(causal, prefix.bool())
         min_val = torch.finfo(attn_bias.dtype).min
@@ -164,7 +180,9 @@ class MPTModel(MPTPreTrainedModel):
         if seq_len > self.config.max_seq_len:
             raise ValueError(f"sequence_id sequence length cannot exceed max_seq_len={self.config.max_seq_len}")
         attn_bias = attn_bias[..., :seq_len, :seq_len]
-        cannot_attend = torch.logical_not(torch.eq(sequence_id.view(-1, seq_len, 1), sequence_id.view(-1, 1, seq_len))).unsqueeze(1)
+        cannot_attend = torch.logical_not(
+            torch.eq(sequence_id.view(-1, seq_len, 1), sequence_id.view(-1, 1, seq_len))
+        ).unsqueeze(1)
         min_val = torch.finfo(attn_bias.dtype).min
         attn_bias = attn_bias.masked_fill(cannot_attend, min_val)
         return attn_bias
@@ -198,7 +216,9 @@ class MPTModel(MPTPreTrainedModel):
             raise NotImplementedError("return_dict False is not implemented yet for MPT")
         if output_attentions:
             if self.attn_impl != "torch":
-                raise NotImplementedError("output_attentions is not implemented for MPT when using attn_impl `flash` or `triton`.")
+                raise NotImplementedError(
+                    "output_attentions is not implemented for MPT when using attn_impl `flash` or `triton`."
+                )
 
         if attention_mask is not None and attention_mask[:, 0].sum() != attention_mask.shape[0] and self.training:
             raise NotImplementedError("MPT does not support training with left padding.")
@@ -212,15 +232,21 @@ class MPTModel(MPTPreTrainedModel):
 
         if self.training:
             if self.attn_uses_sequence_id and sequence_id is None:
-                raise ValueError("sequence_id is a required argument when MPT is configured with attn_uses_sequence_id=True " + "and the model is in train mode.")
+                raise ValueError(
+                    "sequence_id is a required argument when MPT is configured with attn_uses_sequence_id=True "
+                    + "and the model is in train mode."
+                )
             elif (self.attn_uses_sequence_id is False) and (sequence_id is not None):
                 warnings.warn(
-                    "MPT received non-None input for `sequence_id` but is configured with attn_uses_sequence_id=False. " + "This input will be ignored. If you want the model to use `sequence_id`, set attn_uses_sequence_id to True."
+                    "MPT received non-None input for `sequence_id` but is configured with attn_uses_sequence_id=False. "
+                    + "This input will be ignored. If you want the model to use `sequence_id`, set attn_uses_sequence_id to True."
                 )
 
         S = input_ids.size(1)
 
-        assert S <= self.config.max_seq_len, f"Cannot forward input with seq_len={S}, this model only supports seq_len<={self.config.max_seq_len}"
+        assert S <= self.config.max_seq_len, (
+            f"Cannot forward input with seq_len={S}, this model only supports seq_len<={self.config.max_seq_len}"
+        )
 
         tok_emb = self.wte(input_ids)  # type: ignore
         if self.alibi:
@@ -229,7 +255,10 @@ class MPTModel(MPTPreTrainedModel):
             past_position = 0
             if past_key_values is not None:
                 if len(past_key_values) != self.config.n_layers:
-                    raise ValueError(f"past_key_values must provide a past_key_value for each attention " + f"layer in the network ({len(past_key_values)=}; {self.config.n_layers=}).")
+                    raise ValueError(
+                        f"past_key_values must provide a past_key_value for each attention "
+                        + f"layer in the network ({len(past_key_values)=}; {self.config.n_layers=})."
+                    )
                 # For attn_impl: triton and flash the past key tensor spec is (batch, seq, dim).
                 # For attn_impl: torch the past key tensor spec is (batch, heads, head_dim, seq).
                 # Here we shift position embedding using the `seq` dim of the past key
@@ -238,7 +267,10 @@ class MPTModel(MPTPreTrainedModel):
                     past_position = past_key_values[0][0].size(3)
 
             if S + past_position > self.config.max_seq_len:
-                raise ValueError(f"Cannot forward input with past sequence length {past_position} and current sequence length " f"{S + 1}, this model only supports total sequence length <= {self.config.max_seq_len}.")
+                raise ValueError(
+                    f"Cannot forward input with past sequence length {past_position} and current sequence length "
+                    f"{S + 1}, this model only supports total sequence length <= {self.config.max_seq_len}."
+                )
             pos = torch.arange(
                 past_position,
                 S + past_position,
@@ -345,7 +377,9 @@ class MPTForCausalLM(MPTPreTrainedModel):
                 if logit_scale == "inv_sqrt_d_model":
                     logit_scale = 1 / math.sqrt(config.d_model)
                 else:
-                    raise ValueError(f"logit_scale={logit_scale!r} is not recognized as an option; use numeric value or 'inv_sqrt_d_model'.")
+                    raise ValueError(
+                        f"logit_scale={logit_scale!r} is not recognized as an option; use numeric value or 'inv_sqrt_d_model'."
+                    )
             self.logit_scale = logit_scale
 
     def get_input_embeddings(self):
@@ -422,7 +456,9 @@ class MPTForCausalLM(MPTPreTrainedModel):
 
         if self.logit_scale is not None:
             if self.logit_scale == 0:
-                warnings.warn(f"Multiplying logits by {self.logit_scale=}. This will produce uniform (uninformative) outputs.")
+                warnings.warn(
+                    f"Multiplying logits by {self.logit_scale=}. This will produce uniform (uninformative) outputs."
+                )
             logits *= self.logit_scale
 
         loss = None

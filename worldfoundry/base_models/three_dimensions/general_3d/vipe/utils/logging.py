@@ -32,6 +32,7 @@ def configure_logging() -> logging.Logger:
     # Define a custom logging handler to use tqdm.write
     class TqdmLoggingHandler(logging.Handler):
         """Tqdm logging handler implementation."""
+
         def emit(self, record):
             """Emit.
 

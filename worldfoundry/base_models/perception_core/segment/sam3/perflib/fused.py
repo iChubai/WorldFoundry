@@ -21,11 +21,7 @@ def addmm_act(activation, linear, mat1):
         raise ValueError("Expected grad to be disabled.")
     self = linear.bias.detach()
     mat2 = linear.weight.detach()
-    dtype = (
-        torch.get_autocast_dtype(mat1.device.type)
-        if torch.is_autocast_enabled(mat1.device.type)
-        else mat1.dtype
-    )
+    dtype = torch.get_autocast_dtype(mat1.device.type) if torch.is_autocast_enabled(mat1.device.type) else mat1.dtype
     self = self.to(dtype)
     mat1 = mat1.to(dtype)
     mat2 = mat2.to(dtype)

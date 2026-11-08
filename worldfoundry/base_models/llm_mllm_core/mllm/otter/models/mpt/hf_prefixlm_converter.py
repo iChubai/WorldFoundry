@@ -6,6 +6,7 @@ Causal LM to convert it to a Prefix LM.
 Prefix LMs accepts a `bidirectional_mask` input in `forward`
 and treat the input prompt as the prefix in `generate`.
 """
+
 import math
 import warnings
 from types import MethodType
@@ -141,7 +142,10 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
         (b, s) = bidirectional_mask.shape
         max_length = attn_modules[0].bias.shape[-1]
         if s > max_length:
-            raise ValueError(f"bidirectional_mask sequence length (={s}) exceeds the " + f"max length allowed by the model ({max_length}).")
+            raise ValueError(
+                f"bidirectional_mask sequence length (={s}) exceeds the "
+                + f"max length allowed by the model ({max_length})."
+            )
         assert s <= max_length
         if s < max_length:
             pad = torch.zeros(
@@ -208,7 +212,9 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
                 expanded_bidirectional_mask = _expand_mask_bloom(bidirectional_mask, tgt_length=src_length)
                 combined_attention_mask = torch.logical_and(combined_attention_mask, expanded_bidirectional_mask)
         expanded_attn_mask = _expand_mask_bloom(attention_mask, tgt_length=src_length)
-        combined_attention_mask = expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask | combined_attention_mask
+        combined_attention_mask = (
+            expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask | combined_attention_mask
+        )
         return combined_attention_mask
 
     def _build_alibi_tensor(
@@ -263,13 +269,16 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
     ) -> Union[Tuple[torch.Tensor, ...], BaseModelOutputWithPastAndCrossAttentions]:
         if deprecated_arguments.pop("position_ids", False) is not False:
             warnings.warn(
-                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. " + "You can safely ignore passing `position_ids`.",
+                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. "
+                + "You can safely ignore passing `position_ids`.",
                 FutureWarning,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
         use_cache = use_cache if use_cache is not None else self.config.use_cache
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
         if input_ids is not None and inputs_embeds is not None:
@@ -318,7 +327,9 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
                 all_hidden_states = all_hidden_states + hst
             if self.gradient_checkpointing and self.training:
                 if use_cache:
-                    logger.warning("`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...")
+                    logger.warning(
+                        "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+                    )
                     use_cache = False
 
                 def create_custom_forward(module):
@@ -409,7 +420,8 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
         """Replacement forward method for BloomCausalLM."""
         if deprecated_arguments.pop("position_ids", False) is not False:
             warnings.warn(
-                "`position_ids` have no functionality in BLOOM and will be removed " + "in v5.0.0. You can safely ignore passing `position_ids`.",
+                "`position_ids` have no functionality in BLOOM and will be removed "
+                + "in v5.0.0. You can safely ignore passing `position_ids`.",
                 FutureWarning,
             )
         if len(deprecated_arguments) > 0:
@@ -523,8 +535,12 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
                     ).to(inputs_embeds.device)
                     combined_attention_mask = torch.maximum(expanded_bidirectional_mask, combined_attention_mask)
         if attention_mask is not None:
-            expanded_attn_mask = _expand_mask_opt(attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]).to(inputs_embeds.device)
-            combined_attention_mask = expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask + combined_attention_mask
+            expanded_attn_mask = _expand_mask_opt(attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]).to(
+                inputs_embeds.device
+            )
+            combined_attention_mask = (
+                expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask + combined_attention_mask
+            )
         return combined_attention_mask
 
     setattr(
@@ -664,7 +680,11 @@ def convert_hf_causal_lm_to_prefix_lm(model: CAUSAL_LM_TYPES) -> CAUSAL_LM_TYPES
     elif isinstance(model, OPTForCausalLM):
         return _convert_opt_causal_lm_to_prefix_lm(model)
     else:
-        raise TypeError(f"Cannot convert model to Prefix LM. " + f"Model does not belong to set of supported HF models:" + f"\n{_SUPPORTED_HF_MODELS}")
+        raise TypeError(
+            f"Cannot convert model to Prefix LM. "
+            + f"Model does not belong to set of supported HF models:"
+            + f"\n{_SUPPORTED_HF_MODELS}"
+        )
 
 
 def add_bidirectional_mask_if_missing(batch: Dict[str, Any]):
@@ -679,6 +699,8 @@ def add_bidirectional_mask_if_missing(batch: Dict[str, Any]):
             for i, continuation_indices in enumerate(batch["continuation_indices"]):
                 batch["bidirectional_mask"][i, continuation_indices] = 0
         elif "labels" in batch and "attention_mask" in batch:
-            batch["bidirectional_mask"] = torch.logical_and(torch.eq(batch["attention_mask"], 1), torch.eq(batch["labels"], -100)).type_as(batch["attention_mask"])
+            batch["bidirectional_mask"] = torch.logical_and(
+                torch.eq(batch["attention_mask"], 1), torch.eq(batch["labels"], -100)
+            ).type_as(batch["attention_mask"])
         else:
             raise KeyError("No bidirectional_mask in batch and not sure how to construct one.")

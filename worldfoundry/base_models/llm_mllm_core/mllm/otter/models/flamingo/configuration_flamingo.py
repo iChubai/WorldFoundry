@@ -51,10 +51,18 @@ class FlamingoConfig(PretrainedConfig):
     >>> # Initializing a FlamingoForConditionalGeneration (with random weights) from the Salesforce/Flamingo-opt-2.7b style configuration
     >>> model = FlamingoForConditionalGeneration(configuration)
     ```"""
+
     model_type = "flamingo"
     is_composition = True
 
-    def __init__(self, vision_config=None, text_config=None, cross_attn_every_n_layers: int = 4, use_media_placement_augmentation: bool = True, **kwargs):
+    def __init__(
+        self,
+        vision_config=None,
+        text_config=None,
+        cross_attn_every_n_layers: int = 4,
+        use_media_placement_augmentation: bool = True,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         if vision_config is None:
             vision_config = {}

@@ -108,7 +108,7 @@ class NormalizedRotaryPositionEmbedding2D(nn.Module):
         quarter_dim = self.periods.shape[0]
         half_dim = self.head_dim // 2
         exponents = 2 * torch.arange(quarter_dim, device=self.periods.device, dtype=self.dtype) / half_dim
-        periods = self.base ** exponents
+        periods = self.base**exponents
         self.periods.data.copy_(periods)
 
     def _get_sincos_for_grid(self, H: int, W: int, device: torch.device, dtype: torch.dtype) -> Tuple[Tensor, Tensor]:

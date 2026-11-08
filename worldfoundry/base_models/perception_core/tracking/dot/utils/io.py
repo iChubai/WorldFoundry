@@ -37,12 +37,12 @@ def read_video_from_file(path, start_step, time_steps, channels, resolution):
     video, _, _ = torchvision.io.read_video(path, output_format="TCHW", pts_unit="sec")
     if time_steps is None:
         time_steps = len(video) - start_step
-    video = video[start_step: start_step + time_steps]
+    video = video[start_step : start_step + time_steps]
     if resolution is not None:
         video = F.interpolate(video, size=resolution, mode="bilinear")
     if channels == "last":
         video = video.permute(0, 2, 3, 1)
-    video = video / 255.
+    video = video / 255.0
     return video
 
 
@@ -62,7 +62,7 @@ def read_video_from_folder(path, start_step, time_steps, channels, resolution, e
 
 
 def read_frame(path, resolution=None, channels="first"):
-    frame = Image.open(path).convert('RGB')
+    frame = Image.open(path).convert("RGB")
     frame = np.array(frame)
     frame = frame.astype(np.float32)
     frame = frame / 255
@@ -88,7 +88,7 @@ def write_video_to_file(video, path, channels):
     create_folder(os.path.dirname(path))
     if channels == "first":
         video = video.permute(0, 2, 3, 1)
-    video = (video.cpu() * 255.).to(torch.uint8)
+    video = (video.cpu() * 255.0).to(torch.uint8)
     torchvision.io.write_video(path, video, 24, "h264", options={"pix_fmt": "yuv420p", "crf": "23"})
     return video
 
@@ -121,9 +121,7 @@ def write_tracks(tracks, path):
 
 
 def read_config(path):
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         config = json.load(f)
     args = argparse.Namespace(**config)
     return args
-
-

@@ -11,6 +11,7 @@ from torch import Tensor, nn
 
 class RMSNorm(nn.Module):
     """Rms norm implementation."""
+
     def __init__(self, dim: int, eps: float = 1e-5):
         """Init.
 

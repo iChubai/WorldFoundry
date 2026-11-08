@@ -16,6 +16,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 
 XFORMERS_AVAILABLE = False
 
+
 def modulate(x, shift, scale):
     """Modulate.
 
@@ -26,8 +27,10 @@ def modulate(x, shift, scale):
     """
     return x * (1 + scale.unsqueeze(2)) + shift.unsqueeze(2)
 
+
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -46,7 +49,7 @@ class Block(nn.Module):
         ffn_layer: Callable[..., nn.Module] = Mlp,
         qk_norm: bool = False,
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
-        rope=None
+        rope=None,
     ) -> None:
         """Init.
 
@@ -101,7 +104,6 @@ class Block(nn.Module):
 
         self.sample_drop_ratio = drop_path
 
-
     def forward(self, x: Tensor, pos=None) -> Tensor:
         """Forward.
 
@@ -112,6 +114,7 @@ class Block(nn.Module):
         Returns:
             The return value.
         """
+
         def attn_residual_func(x: Tensor, pos=None) -> Tensor:
             """Attn residual func.
 
@@ -288,6 +291,7 @@ def drop_add_residual_stochastic_depth_list(
 
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
+
     def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
         """
         x_list contains a list of tensors to nest together and run

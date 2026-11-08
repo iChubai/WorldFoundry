@@ -242,15 +242,15 @@ class MultiViewAlternatingAttentionTransformer(UniCeptionInfoSharingBase):
         """
         # Check that the number of views matches the input and the features are of expected shape
         if self.use_pe_for_non_reference_views:
-            assert (
-                len(model_input.features) <= self.max_num_views_for_pe
-            ), f"Expected less than {self.max_num_views_for_pe} views, got {len(model_input.features)}"
-        assert all(
-            view_features.shape[1] == self.input_embed_dim for view_features in model_input.features
-        ), f"All views must have input dimension {self.input_embed_dim}"
-        assert all(
-            view_features.ndim == 4 for view_features in model_input.features
-        ), "All views must have 4 dimensions (N, C, H, W)"
+            assert len(model_input.features) <= self.max_num_views_for_pe, (
+                f"Expected less than {self.max_num_views_for_pe} views, got {len(model_input.features)}"
+            )
+        assert all(view_features.shape[1] == self.input_embed_dim for view_features in model_input.features), (
+            f"All views must have input dimension {self.input_embed_dim}"
+        )
+        assert all(view_features.ndim == 4 for view_features in model_input.features), (
+            "All views must have 4 dimensions (N, C, H, W)"
+        )
 
         # Initialize the multi-view features from the model input and number of views for current input
         multi_view_features = model_input.features
@@ -266,15 +266,15 @@ class MultiViewAlternatingAttentionTransformer(UniCeptionInfoSharingBase):
                 f"Number of additional token tensors ({len(additional_tokens_per_view)}) "
                 f"must match number of views ({num_of_views})"
             )
-            assert all(
-                tokens.ndim == 3 for tokens in additional_tokens_per_view
-            ), "Additional tokens per view must have 3 dimensions (N, C, T)"
-            assert all(
-                tokens.shape[1] == self.input_embed_dim for tokens in additional_tokens_per_view
-            ), f"Additional tokens per view must have input dimension {self.input_embed_dim}"
-            assert all(
-                tokens.shape[0] == batch_size for tokens in additional_tokens_per_view
-            ), "Batch size mismatch for additional tokens per view"
+            assert all(tokens.ndim == 3 for tokens in additional_tokens_per_view), (
+                "Additional tokens per view must have 3 dimensions (N, C, T)"
+            )
+            assert all(tokens.shape[1] == self.input_embed_dim for tokens in additional_tokens_per_view), (
+                f"Additional tokens per view must have input dimension {self.input_embed_dim}"
+            )
+            assert all(tokens.shape[0] == batch_size for tokens in additional_tokens_per_view), (
+                "Batch size mismatch for additional tokens per view"
+            )
 
             num_of_additional_tokens_per_view = additional_tokens_per_view[0].shape[2]
 
@@ -318,9 +318,9 @@ class MultiViewAlternatingAttentionTransformer(UniCeptionInfoSharingBase):
         if model_input.additional_input_tokens is not None:
             additional_tokens = model_input.additional_input_tokens
             assert additional_tokens.ndim == 3, "Additional tokens must have 3 dimensions (N, C, T)"
-            assert (
-                additional_tokens.shape[1] == self.input_embed_dim
-            ), f"Additional tokens must have input dimension {self.input_embed_dim}"
+            assert additional_tokens.shape[1] == self.input_embed_dim, (
+                f"Additional tokens must have input dimension {self.input_embed_dim}"
+            )
             assert additional_tokens.shape[0] == batch_size, "Batch size mismatch for additional tokens"
 
             # Reshape to channel-last format for transformer processing
@@ -623,7 +623,10 @@ class MultiViewAlternatingAttentionTransformerIFR(
     def forward(
         self,
         model_input: MultiViewTransformerInput,
-    ) -> Union[List[MultiViewTransformerOutput], Tuple[MultiViewTransformerOutput, List[MultiViewTransformerOutput]],]:
+    ) -> Union[
+        List[MultiViewTransformerOutput],
+        Tuple[MultiViewTransformerOutput, List[MultiViewTransformerOutput]],
+    ]:
         """
         Forward interface for the Multi-View Alternating-Attention Transformer with Intermediate Feature Return.
 
@@ -652,15 +655,15 @@ class MultiViewAlternatingAttentionTransformerIFR(
         """
         # Check that the number of views matches the input and the features are of expected shape
         if self.use_pe_for_non_reference_views:
-            assert (
-                len(model_input.features) <= self.max_num_views_for_pe
-            ), f"Expected less than {self.max_num_views_for_pe} views, got {len(model_input.features)}"
-        assert all(
-            view_features.shape[1] == self.input_embed_dim for view_features in model_input.features
-        ), f"All views must have input dimension {self.input_embed_dim}"
-        assert all(
-            view_features.ndim == 4 for view_features in model_input.features
-        ), "All views must have 4 dimensions (N, C, H, W)"
+            assert len(model_input.features) <= self.max_num_views_for_pe, (
+                f"Expected less than {self.max_num_views_for_pe} views, got {len(model_input.features)}"
+            )
+        assert all(view_features.shape[1] == self.input_embed_dim for view_features in model_input.features), (
+            f"All views must have input dimension {self.input_embed_dim}"
+        )
+        assert all(view_features.ndim == 4 for view_features in model_input.features), (
+            "All views must have 4 dimensions (N, C, H, W)"
+        )
 
         # Get the indices of the intermediate features to return
         intermediate_multi_view_features = []
@@ -680,15 +683,15 @@ class MultiViewAlternatingAttentionTransformerIFR(
                 f"Number of additional token tensors ({len(additional_tokens_per_view)}) "
                 f"must match number of views ({num_of_views})"
             )
-            assert all(
-                tokens.ndim == 3 for tokens in additional_tokens_per_view
-            ), "Additional tokens per view must have 3 dimensions (N, C, T)"
-            assert all(
-                tokens.shape[1] == self.input_embed_dim for tokens in additional_tokens_per_view
-            ), f"Additional tokens per view must have input dimension {self.input_embed_dim}"
-            assert all(
-                tokens.shape[0] == batch_size for tokens in additional_tokens_per_view
-            ), "Batch size mismatch for additional tokens per view"
+            assert all(tokens.ndim == 3 for tokens in additional_tokens_per_view), (
+                "Additional tokens per view must have 3 dimensions (N, C, T)"
+            )
+            assert all(tokens.shape[1] == self.input_embed_dim for tokens in additional_tokens_per_view), (
+                f"Additional tokens per view must have input dimension {self.input_embed_dim}"
+            )
+            assert all(tokens.shape[0] == batch_size for tokens in additional_tokens_per_view), (
+                "Batch size mismatch for additional tokens per view"
+            )
 
             num_of_additional_tokens_per_view = additional_tokens_per_view[0].shape[2]
 
@@ -732,9 +735,9 @@ class MultiViewAlternatingAttentionTransformerIFR(
         if model_input.additional_input_tokens is not None:
             additional_tokens = model_input.additional_input_tokens
             assert additional_tokens.ndim == 3, "Additional tokens must have 3 dimensions (N, C, T)"
-            assert (
-                additional_tokens.shape[1] == self.input_embed_dim
-            ), f"Additional tokens must have input dimension {self.input_embed_dim}"
+            assert additional_tokens.shape[1] == self.input_embed_dim, (
+                f"Additional tokens must have input dimension {self.input_embed_dim}"
+            )
             assert additional_tokens.shape[0] == batch_size, "Batch size mismatch for additional tokens"
 
             # Reshape to channel-last format for transformer processing

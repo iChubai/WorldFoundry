@@ -216,9 +216,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
             elif image.ndim == 3:
                 source_pattern = "H W C"
             else:
-                raise ValueError(
-                    f"Tensor image must have CHW, HWC, or BCHW layout, got shape {tuple(image.shape)}"
-                )
+                raise ValueError(f"Tensor image must have CHW, HWC, or BCHW layout, got shape {tuple(image.shape)}")
             if source_pattern != pattern:
                 if "B" in pattern and "B" not in source_pattern:
                     image = rearrange(image, f"{source_pattern} -> {pattern}", B=1)
@@ -263,9 +261,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
                 # A frame sequence is T C H W; add the batch dimension.
                 video = video.unsqueeze(0)
             elif video.ndim != 5:
-                raise ValueError(
-                    f"Tensor video must have TCHW or BTCHW layout, got shape {tuple(video.shape)}"
-                )
+                raise ValueError(f"Tensor video must have TCHW or BTCHW layout, got shape {tuple(video.shape)}")
             video = video / normalize
             video = video.to(dtype=torch_dtype or self.torch_dtype, device=device or self.device)
             video = video * (max_value - min_value) + min_value
@@ -653,9 +649,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
             vram_limit: The vram limit.
         """
         if self.model_pool_factory is None:
-            raise RuntimeError(
-                "staged pipeline checkpoint discovery requires an explicit model_pool_factory"
-            )
+            raise RuntimeError("staged pipeline checkpoint discovery requires an explicit model_pool_factory")
         model_pool = self.model_pool_factory(model_configs=self.model_pool_configs)
         for model_config in model_configs:
             model_config.download_if_necessary()

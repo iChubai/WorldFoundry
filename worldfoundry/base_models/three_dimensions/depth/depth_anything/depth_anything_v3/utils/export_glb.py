@@ -107,21 +107,13 @@ def export_to_glb(
         Path to the exported ``scene.glb`` file.
     """
     # 1) Use prediction.processed_images, which is already processed image data
-    assert (
-        prediction.processed_images is not None
-    ), "Export to GLB: prediction.processed_images is required but not available"
-    assert (
-        prediction.depth is not None
-    ), "Export to GLB: prediction.depth is required but not available"
-    assert (
-        prediction.intrinsics is not None
-    ), "Export to GLB: prediction.intrinsics is required but not available"
-    assert (
-        prediction.extrinsics is not None
-    ), "Export to GLB: prediction.extrinsics is required but not available"
-    assert (
-        prediction.conf is not None
-    ), "Export to GLB: prediction.conf is required but not available"
+    assert prediction.processed_images is not None, (
+        "Export to GLB: prediction.processed_images is required but not available"
+    )
+    assert prediction.depth is not None, "Export to GLB: prediction.depth is required but not available"
+    assert prediction.intrinsics is not None, "Export to GLB: prediction.intrinsics is required but not available"
+    assert prediction.extrinsics is not None, "Export to GLB: prediction.extrinsics is required but not available"
+    assert prediction.conf is not None, "Export to GLB: prediction.conf is required but not available"
     logger.info(f"conf_thresh_percentile: {conf_thresh_percentile}")
     logger.info(f"num max points: {num_max_points}")
     logger.info(f"Exporting to GLB with num_max_points: {num_max_points}")
@@ -159,9 +151,7 @@ def export_to_glb(
 
     # 5) Based on first camera orientation + glTF axis system, center by point cloud,
     # construct alignment transform, and apply to point cloud
-    A = _compute_alignment_transform_first_cam_glTF_center_by_points(
-        prediction.extrinsics[0], points
-    )  # (4,4)
+    A = _compute_alignment_transform_first_cam_glTF_center_by_points(prediction.extrinsics[0], points)  # (4,4)
 
     if points.shape[0] > 0:
         points = trimesh.transform_points(points, A)
@@ -393,9 +383,7 @@ def _add_cameras_to_scene(
         scene.add_geometry(path)
 
 
-def _camera_frustum_lines(
-    K: np.ndarray, ext_w2c: np.ndarray, W: int, H: int, scale: float
-) -> np.ndarray:
+def _camera_frustum_lines(K: np.ndarray, ext_w2c: np.ndarray, W: int, H: int, scale: float) -> np.ndarray:
     """Helper function to camera frustum lines.
 
     Args:

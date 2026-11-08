@@ -95,7 +95,9 @@ class RotaryEmbedding(torch.nn.Module):
         return (q * cos) + (rotate_half(q) * sin), (k * cos) + (rotate_half(k) * sin)
 
 
-def _make_causal_mask(input_ids_shape: torch.Size, device: torch.device, past_key_values_length: int) -> torch.BoolTensor:
+def _make_causal_mask(
+    input_ids_shape: torch.Size, device: torch.device, past_key_values_length: int
+) -> torch.BoolTensor:
     batch_size, target_length = input_ids_shape
     mask = torch.empty(
         (target_length, target_length + past_key_values_length),
@@ -176,7 +178,10 @@ class Attention(nn.Module):
         self.hidden_dropout = config.hidden_dropout
 
         if self.head_dim * self.num_heads != self.hidden_size:
-            raise ValueError(f"`hidden_size` must be divisible by num_heads (got `hidden_size`: {self.hidden_size} and `num_heads`:" f" {self.num_heads}).")
+            raise ValueError(
+                f"`hidden_size` must be divisible by num_heads (got `hidden_size`: {self.hidden_size} and `num_heads`:"
+                f" {self.num_heads})."
+            )
 
         self.maybe_rotary = RotaryEmbedding(config.head_dim) if config.rotary else lambda q, k: (q, k)
 
@@ -291,7 +296,9 @@ class Attention(nn.Module):
             key_layer_ = key_layer.reshape(batch_size, self.num_kv, -1, self.head_dim)
             value_layer_ = value_layer.reshape(batch_size, self.num_kv, -1, self.head_dim)
 
-            attn_output = F.scaled_dot_product_attention(query_layer_, key_layer_, value_layer_, None, 0.0, is_causal=True)
+            attn_output = F.scaled_dot_product_attention(
+                query_layer_, key_layer_, value_layer_, None, 0.0, is_causal=True
+            )
 
             x = attn_output.view(batch_size, self.num_heads, q_length, self.head_dim)
             x = x.permute(0, 2, 1, 3)
@@ -316,7 +323,8 @@ class Attention(nn.Module):
                 attention_scores = attention_scores.to(torch.float32)
             # attn_weights = torch.masked_fill(attention_scores, attention_mask, torch.finfo(attention_scores.dtype).min)
             attention_probs = F.softmax(
-                (attention_scores + alibi.view(batch_size, self.num_heads, 1, -1)) * self.inv_norm_factor + attention_mask_float,
+                (attention_scores + alibi.view(batch_size, self.num_heads, 1, -1)) * self.inv_norm_factor
+                + attention_mask_float,
                 dim=-1,
                 dtype=hidden_states.dtype,
             )
@@ -472,7 +480,9 @@ class RWPreTrainedModel(PreTrainedModel):
             module.gradient_checkpointing = value
 
     @staticmethod
-    def _convert_to_standard_cache(past_key_value: Tuple[Tuple[torch.Tensor, torch.Tensor]], batch_size: int) -> Tuple[Tuple[torch.Tensor, torch.Tensor]]:
+    def _convert_to_standard_cache(
+        past_key_value: Tuple[Tuple[torch.Tensor, torch.Tensor]], batch_size: int
+    ) -> Tuple[Tuple[torch.Tensor, torch.Tensor]]:
         """
         Standardizes the format of the cache so as to match most implementations, i.e. to tuple(tuple([batch_size,
         num_heads, ...]))
@@ -490,7 +500,9 @@ class RWPreTrainedModel(PreTrainedModel):
         )
 
     @staticmethod
-    def _convert_to_rw_cache(past_key_value: Tuple[Tuple[torch.Tensor, torch.Tensor]]) -> Tuple[Tuple[torch.Tensor, torch.Tensor]]:
+    def _convert_to_rw_cache(
+        past_key_value: Tuple[Tuple[torch.Tensor, torch.Tensor]],
+    ) -> Tuple[Tuple[torch.Tensor, torch.Tensor]]:
         batch_size, num_heads, head_dim, seq_length = past_key_value[0][0].shape
         batch_size_times_num_heads = batch_size * num_heads
         # key:  [batch_size, num_heads, head_dim, seq_length] -> [batch_size * num_heads, head_dim, seq_length]
@@ -550,7 +562,9 @@ class RWModel(RWPreTrainedModel):
 
         # [batch_size, seq_length] -> [batch_size, 1, tgt_length, src_length]
         expanded_attn_mask = _expand_mask(attention_mask, tgt_length=src_length)
-        combined_attention_mask = expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask | combined_attention_mask
+        combined_attention_mask = (
+            expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask | combined_attention_mask
+        )
 
         return combined_attention_mask
 
@@ -573,14 +587,17 @@ class RWModel(RWPreTrainedModel):
         if deprecated_arguments.pop("position_ids", False) is not False:
             # `position_ids` could have been `torch.Tensor` or `None` so defaulting pop to `False` allows to detect if users were passing explicitly `None`
             warnings.warn(
-                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore" " passing `position_ids`.",
+                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
+                " passing `position_ids`.",
                 FutureWarning,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")
 
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
         use_cache = use_cache if use_cache is not None else self.config.use_cache
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
@@ -639,7 +656,9 @@ class RWModel(RWPreTrainedModel):
 
             if self.gradient_checkpointing and self.training:
                 if use_cache:
-                    logger.warning("`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...")
+                    logger.warning(
+                        "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+                    )
                     use_cache = False
 
                 def create_custom_forward(module):
@@ -769,7 +788,8 @@ class RWForCausalLM(RWPreTrainedModel):
         if deprecated_arguments.pop("position_ids", False) is not False:
             # `position_ids` could have been `torch.Tensor` or `None` so defaulting pop to `False` allows to detect if users were passing explicitly `None`
             warnings.warn(
-                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore" " passing `position_ids`.",
+                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
+                " passing `position_ids`.",
                 FutureWarning,
             )
         if len(deprecated_arguments) > 0:
@@ -832,7 +852,9 @@ class RWForCausalLM(RWPreTrainedModel):
         standardized_past = self._convert_to_standard_cache(past, batch_size=len(beam_idx))
 
         # Get a copy of `beam_idx` on all the devices where we need those indices.
-        device_to_beam_idx = {past_state.device: beam_idx.to(past_state.device) for layer_past in past for past_state in layer_past}
+        device_to_beam_idx = {
+            past_state.device: beam_idx.to(past_state.device) for layer_past in past for past_state in layer_past
+        }
         reordered_past = tuple(
             (
                 layer_past[0].index_select(0, device_to_beam_idx[layer_past[0].device]),
@@ -881,7 +903,8 @@ class RWForSequenceClassification(RWPreTrainedModel):
         if deprecated_arguments.pop("position_ids", False) is not False:
             # `position_ids` could have been `torch.Tensor` or `None` so defaulting pop to `False` allows to detect if users were passing explicitly `None`
             warnings.warn(
-                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore" " passing `position_ids`.",
+                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
+                " passing `position_ids`.",
                 FutureWarning,
             )
         if len(deprecated_arguments) > 0:
@@ -918,7 +941,10 @@ class RWForSequenceClassification(RWPreTrainedModel):
                 sequence_lengths = torch.ne(input_ids, self.config.pad_token_id).sum(dim=-1) - 1
             else:
                 sequence_lengths = -1
-                logger.warning(f"{self.__class__.__name__} will not detect padding tokens in `inputs_embeds`. Results may be " "unexpected if using padding tokens in conjunction with `inputs_embeds.`")
+                logger.warning(
+                    f"{self.__class__.__name__} will not detect padding tokens in `inputs_embeds`. Results may be "
+                    "unexpected if using padding tokens in conjunction with `inputs_embeds.`"
+                )
 
         pooled_logits = logits[torch.arange(batch_size, device=logits.device), sequence_lengths]
 
@@ -1003,7 +1029,8 @@ class RWForTokenClassification(RWPreTrainedModel):
         if deprecated_arguments.pop("position_ids", False) is not False:
             # `position_ids` could have been `torch.Tensor` or `None` so defaulting pop to `False` allows to detect if users were passing explicitly `None`
             warnings.warn(
-                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore" " passing `position_ids`.",
+                "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
+                " passing `position_ids`.",
                 FutureWarning,
             )
         if len(deprecated_arguments) > 0:

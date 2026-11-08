@@ -95,9 +95,7 @@ class MMDoubleStreamBlock(nn.Module):
         head_dim = hidden_size // heads_num
         mlp_hidden_dim = int(hidden_size * mlp_width_ratio)
 
-        self.img_mod = ModulateDiT(
-            hidden_size, factor=6, act_layer=get_activation_layer("silu"), **factory_kwargs
-        )
+        self.img_mod = ModulateDiT(hidden_size, factor=6, act_layer=get_activation_layer("silu"), **factory_kwargs)
         self.img_norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6, **factory_kwargs)
         self.img_attn_q = nn.Linear(hidden_size, hidden_size, bias=qkv_bias, **factory_kwargs)
         self.img_attn_k = nn.Linear(hidden_size, hidden_size, bias=qkv_bias, **factory_kwargs)
@@ -113,11 +111,11 @@ class MMDoubleStreamBlock(nn.Module):
         self.img_attn_proj = nn.Linear(hidden_size, hidden_size, bias=qkv_bias, **factory_kwargs)
 
         self.img_norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6, **factory_kwargs)
-        self.img_mlp = MLP(hidden_size, mlp_hidden_dim, act_layer=get_activation_layer(mlp_act_type), bias=True, **factory_kwargs)
-
-        self.txt_mod = ModulateDiT(
-            hidden_size, factor=6, act_layer=get_activation_layer("silu"), **factory_kwargs
+        self.img_mlp = MLP(
+            hidden_size, mlp_hidden_dim, act_layer=get_activation_layer(mlp_act_type), bias=True, **factory_kwargs
         )
+
+        self.txt_mod = ModulateDiT(hidden_size, factor=6, act_layer=get_activation_layer("silu"), **factory_kwargs)
         self.txt_norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6, **factory_kwargs)
 
         self.txt_attn_q = nn.Linear(hidden_size, hidden_size, bias=qkv_bias, **factory_kwargs)
@@ -132,7 +130,9 @@ class MMDoubleStreamBlock(nn.Module):
         )
         self.txt_attn_proj = nn.Linear(hidden_size, hidden_size, bias=qkv_bias, **factory_kwargs)
         self.txt_norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6, **factory_kwargs)
-        self.txt_mlp = MLP(hidden_size, mlp_hidden_dim, act_layer=get_activation_layer(mlp_act_type), bias=True, **factory_kwargs)
+        self.txt_mlp = MLP(
+            hidden_size, mlp_hidden_dim, act_layer=get_activation_layer(mlp_act_type), bias=True, **factory_kwargs
+        )
 
         self.hybrid_seq_parallel_attn = None
 
@@ -191,9 +191,9 @@ class MMDoubleStreamBlock(nn.Module):
 
         if freqs_cis is not None:
             img_qq, img_kk = apply_rotary_emb(img_q, img_k, freqs_cis, head_first=False)
-            assert (
-                img_qq.shape == img_q.shape and img_kk.shape == img_k.shape
-            ), f"img_kk: {img_qq.shape}, img_q: {img_q.shape}, img_kk: {img_kk.shape}, img_k: {img_k.shape}"
+            assert img_qq.shape == img_q.shape and img_kk.shape == img_k.shape, (
+                f"img_kk: {img_qq.shape}, img_q: {img_q.shape}, img_kk: {img_kk.shape}, img_k: {img_k.shape}"
+            )
             img_q, img_k = img_qq, img_kk
 
         txt_modulated = self.txt_norm1(txt)
@@ -207,7 +207,7 @@ class MMDoubleStreamBlock(nn.Module):
         txt_q = self.txt_attn_q_norm(txt_q).to(txt_v)
         txt_k = self.txt_attn_k_norm(txt_k).to(txt_v)
 
-        attn_mode = 'flash' if is_flash else self.attn_mode
+        attn_mode = "flash" if is_flash else self.attn_mode
         attn = parallel_attention(
             (img_q, txt_q),
             (img_k, txt_k),
@@ -220,13 +220,11 @@ class MMDoubleStreamBlock(nn.Module):
             block_idx=block_idx,
         )
 
-        img_attn, txt_attn = attn[:, :img_q.shape[1]].contiguous(), attn[:, img_q.shape[1]:].contiguous()
+        img_attn, txt_attn = attn[:, : img_q.shape[1]].contiguous(), attn[:, img_q.shape[1] :].contiguous()
 
         img = img + apply_gate(self.img_attn_proj(img_attn), gate=img_mod1_gate)
         img = img + apply_gate(
-            self.img_mlp(
-                modulate(self.img_norm2(img), shift=img_mod2_shift, scale=img_mod2_scale)
-            ),
+            self.img_mlp(modulate(self.img_norm2(img), shift=img_mod2_shift, scale=img_mod2_scale)),
             gate=img_mod2_gate,
         )
 
@@ -266,7 +264,7 @@ class MMSingleStreamBlock(nn.Module):
         head_dim = hidden_size // heads_num
         mlp_hidden_dim = int(hidden_size * mlp_width_ratio)
         self.mlp_hidden_dim = mlp_hidden_dim
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or head_dim**-0.5
 
         self.linear1_q = nn.Linear(hidden_size, hidden_size, **factory_kwargs)
         self.linear1_k = nn.Linear(hidden_size, hidden_size, **factory_kwargs)
@@ -316,7 +314,7 @@ class MMSingleStreamBlock(nn.Module):
         q = rearrange(q, "B L (H D) -> B L H D", H=self.heads_num)
         k = rearrange(k, "B L (H D) -> B L H D", H=self.heads_num)
         v = rearrange(v, "B L (H D) -> B L H D", H=self.heads_num)
-        
+
         mlp = self.linear1_mlp(x_mod)
 
         # Apply QK-Norm if needed.
@@ -327,13 +325,13 @@ class MMSingleStreamBlock(nn.Module):
         img_k, txt_k = k[:, :-txt_len, :, :], k[:, -txt_len:, :, :]
         img_v, txt_v = v[:, :-txt_len, :, :], v[:, -txt_len:, :, :]
         img_qq, img_kk = apply_rotary_emb(img_q, img_k, freqs_cis, head_first=False)
-        assert (
-            img_qq.shape == img_q.shape and img_kk.shape == img_k.shape
-        ), f"img_kk: {img_qq.shape}, img_q: {img_q.shape}, img_kk: {img_kk.shape}, img_k: {img_k.shape}"
+        assert img_qq.shape == img_q.shape and img_kk.shape == img_k.shape, (
+            f"img_kk: {img_qq.shape}, img_q: {img_q.shape}, img_kk: {img_kk.shape}, img_k: {img_k.shape}"
+        )
         img_q, img_k = img_qq, img_kk
 
         if is_flash:
-            attn_mode = 'flash'
+            attn_mode = "flash"
         else:
             attn_mode = self.attn_mode
         attn = parallel_attention(
@@ -347,8 +345,9 @@ class MMSingleStreamBlock(nn.Module):
             attn_param=attn_param,
         )
         output = self.linear2(attn, self.mlp_act(mlp))
-        
+
         return x + apply_gate(output, gate=mod_gate)
+
 
 class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
     """
@@ -444,35 +443,29 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         self.glyph_byT5_v2 = glyph_byT5_v2
         if self.glyph_byT5_v2:
             self.byt5_in = ByT5Mapper(
-                in_dim=1472,
-                out_dim=2048,
-                hidden_dim=2048,
-                out_dim1=hidden_size,
-                use_residual=False
+                in_dim=1472, out_dim=2048, hidden_dim=2048, out_dim1=hidden_size, use_residual=False
             )
 
         if hidden_size % heads_num != 0:
-            raise ValueError(
-                f"Hidden size {hidden_size} must be divisible by heads_num {heads_num}"
-            )
+            raise ValueError(f"Hidden size {hidden_size} must be divisible by heads_num {heads_num}")
         pe_dim = hidden_size // heads_num
         if sum(rope_dim_list) != pe_dim:
-            raise ValueError(
-                f"Got {rope_dim_list} but expected positional dim {pe_dim}"
-            )
+            raise ValueError(f"Got {rope_dim_list} but expected positional dim {pe_dim}")
         self.hidden_size = hidden_size
         self.heads_num = heads_num
 
         self.img_in = PatchEmbed(
-            self.patch_size, self.in_channels, self.hidden_size,
-            is_reshape_temporal_channels=is_reshape_temporal_channels, concat_condition=concat_condition, **factory_kwargs
+            self.patch_size,
+            self.in_channels,
+            self.hidden_size,
+            is_reshape_temporal_channels=is_reshape_temporal_channels,
+            concat_condition=concat_condition,
+            **factory_kwargs,
         )
 
         # Vision projection
         if vision_projection == "linear":
-            self.vision_in = VisionProjection(
-                input_dim=self.vision_states_dim, output_dim=self.hidden_size
-            )
+            self.vision_in = VisionProjection(input_dim=self.vision_states_dim, output_dim=self.hidden_size)
         else:
             self.vision_in = None
 
@@ -493,33 +486,24 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
                 **factory_kwargs,
             )
         else:
-            raise NotImplementedError(
-                f"Unsupported text_projection: {self.text_projection}"
-            )
+            raise NotImplementedError(f"Unsupported text_projection: {self.text_projection}")
 
         # time modulation
-        self.time_in = TimestepEmbedder(
-            self.hidden_size, get_activation_layer("silu"), **factory_kwargs
-        )
+        self.time_in = TimestepEmbedder(self.hidden_size, get_activation_layer("silu"), **factory_kwargs)
         self.vector_in = (
-            MLPEmbedder(
-                self.config.text_states_dim_2, self.hidden_size, **factory_kwargs
-            ) if self.text_pool_type is not None else None
+            MLPEmbedder(self.config.text_states_dim_2, self.hidden_size, **factory_kwargs)
+            if self.text_pool_type is not None
+            else None
         )
         self.guidance_in = (
-            TimestepEmbedder(
-                self.hidden_size, get_activation_layer("silu"), **factory_kwargs
-            )
+            TimestepEmbedder(self.hidden_size, get_activation_layer("silu"), **factory_kwargs)
             if guidance_embed
             else None
         )
 
         self.time_r_in = (
-            TimestepEmbedder(self.hidden_size, get_activation_layer("silu"), **factory_kwargs)
-            if use_meanflow
-            else None
+            TimestepEmbedder(self.hidden_size, get_activation_layer("silu"), **factory_kwargs) if use_meanflow else None
         )
-
 
         self.double_blocks = nn.ModuleList(
             [
@@ -564,21 +548,21 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
 
         # STA
         if attn_param is None:
-            self.attn_param = { 
+            self.attn_param = {
                 # STA
-                'win_size': [[3, 3, 3]],
-                'win_type': "fixed",
-                'win_ratio': 10,
-                'tile_size': [6, 8, 8],
+                "win_size": [[3, 3, 3]],
+                "win_type": "fixed",
+                "win_ratio": 10,
+                "tile_size": [6, 8, 8],
                 # SSTA
-                'ssta_topk': 64,
-                'ssta_threshold': 0.0,
-                'ssta_lambda': 0.7,
-                'ssta_sampling_type': 'importance',
-                'ssta_adaptive_pool': None,
+                "ssta_topk": 64,
+                "ssta_threshold": 0.0,
+                "ssta_lambda": 0.7,
+                "ssta_sampling_type": "importance",
+                "ssta_adaptive_pool": None,
                 # FlexBlockAttention:
-                "attn_sparse_type": 'ssta',
-                "attn_pad_type": 'zero',
+                "attn_sparse_type": "ssta",
+                "attn_pad_type": "zero",
                 "attn_use_text_mask": 1,
                 "attn_mask_share_within_head": 0,
             }
@@ -589,7 +573,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
             self.register_to_config(attn_param=self.attn_param)
 
         if use_cond_type_embedding:
-            self.cond_type_embedding = nn.Embedding(3, self.hidden_size) 
+            self.cond_type_embedding = nn.Embedding(3, self.hidden_size)
             self.cond_type_embedding.weight.data.fill_(0)
             assert self.glyph_byT5_v2, "text type embedding is only used when glyph_byT5_v2 is True"
             assert vision_projection is not None, "text type embedding is only used when vision_projection is not None"
@@ -620,9 +604,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         rope_dim_list = self.rope_dim_list
         if rope_dim_list is None:
             rope_dim_list = [head_dim // target_ndim for _ in range(target_ndim)]
-        assert (
-            sum(rope_dim_list) == head_dim
-        ), "sum(rope_dim_list) should equal to head_dim of attention layer"
+        assert sum(rope_dim_list) == head_dim, "sum(rope_dim_list) should equal to head_dim of attention layer"
         freqs_cos, freqs_sin = get_nd_rotary_pos_embed(
             tuple(rope_dim_list),
             rope_sizes,
@@ -661,10 +643,22 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
                     )
                 else:
                     reorder_txt_i = torch.cat(
-                        [byt5_txt_i[byt5_text_mask_i], txt_i[text_mask_i], byt5_txt_i[~byt5_text_mask_i], txt_i[~text_mask_i]], dim=0
+                        [
+                            byt5_txt_i[byt5_text_mask_i],
+                            txt_i[text_mask_i],
+                            byt5_txt_i[~byt5_text_mask_i],
+                            txt_i[~text_mask_i],
+                        ],
+                        dim=0,
                     )
                 reorder_mask_i = torch.cat(
-                    [byt5_text_mask_i[byt5_text_mask_i], text_mask_i[text_mask_i], byt5_text_mask_i[~byt5_text_mask_i], text_mask_i[~text_mask_i]], dim=0
+                    [
+                        byt5_text_mask_i[byt5_text_mask_i],
+                        text_mask_i[text_mask_i],
+                        byt5_text_mask_i[~byt5_text_mask_i],
+                        text_mask_i[~text_mask_i],
+                    ],
+                    dim=0,
                 )
 
                 reorder_txt.append(reorder_txt_i)
@@ -704,9 +698,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         """
 
         if guidance is None:
-            guidance = torch.tensor(
-                [6016.0], device=hidden_states.device, dtype=torch.bfloat16
-            )
+            guidance = torch.tensor([6016.0], device=hidden_states.device, dtype=torch.bfloat16)
 
         img = x = hidden_states
         text_mask = encoder_attention_mask
@@ -718,7 +710,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
             oh // self.patch_size[1],
             ow // self.patch_size[2],
         )
-        self.attn_param['thw'] = [tt, th, tw]
+        self.attn_param["thw"] = [tt, th, tw]
         if freqs_cos is None and freqs_sin is None:
             freqs_cos, freqs_sin = self.get_rotary_pos_embed((tt, th, tw))
 
@@ -730,7 +722,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
             sp_rank = parallel_dims.sp_rank
             if img.shape[1] % sp_size != 0:
                 n_token = img.shape[1]
-                assert n_token > (n_token // sp_size + 1) * (sp_size - 1), f'Too short context length for SP {sp_size}'
+                assert n_token > (n_token // sp_size + 1) * (sp_size - 1), f"Too short context length for SP {sp_size}"
             img = torch.chunk(img, sp_size, dim=1)[sp_rank]
             freqs_cos = torch.chunk(freqs_cos, sp_size, dim=0)[sp_rank]
             freqs_sin = torch.chunk(freqs_sin, sp_size, dim=0)[sp_rank]
@@ -744,14 +736,11 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
 
         if self.guidance_embed:
             if guidance is None:
-                raise ValueError(
-                    "Didn't get guidance strength for guidance distilled model."
-                )
+                raise ValueError("Didn't get guidance strength for guidance distilled model.")
             vec = vec + self.guidance_in(guidance)
 
         if timestep_r is not None:
             vec = vec + self.time_r_in(timestep_r)
-
 
         # Embed text tokens
         if self.text_projection == "linear":
@@ -759,9 +748,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         elif self.text_projection == "single_refiner":
             txt = self.txt_in(txt, t, text_mask if self.use_attention_mask else None)
         else:
-            raise NotImplementedError(
-                f"Unsupported text_projection: {self.text_projection}"
-            )
+            raise NotImplementedError(f"Unsupported text_projection: {self.text_projection}")
         if self.cond_type_embedding is not None:
             cond_emb = self.cond_type_embedding(
                 torch.zeros_like(txt[:, :, 0], device=text_mask.device, dtype=torch.long)
@@ -777,9 +764,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
                     torch.ones_like(byt5_txt[:, :, 0], device=byt5_txt.device, dtype=torch.long)
                 )
                 byt5_txt = byt5_txt + cond_emb
-            txt, text_mask = self.reorder_txt_token(
-                byt5_txt, txt, byt5_text_mask, text_mask, zero_feat=True
-            )
+            txt, text_mask = self.reorder_txt_token(byt5_txt, txt, byt5_text_mask, text_mask, zero_feat=True)
 
         if self.vision_in is not None and vision_states is not None:
             extra_encoder_hidden_states = self.vision_in(vision_states)
@@ -801,7 +786,8 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
             # Ensure valid tokens precede padding tokens
             if self.cond_type_embedding is not None:
                 cond_emb = self.cond_type_embedding(
-                    2 * torch.ones_like(
+                    2
+                    * torch.ones_like(
                         extra_encoder_hidden_states[:, :, 0],
                         dtype=torch.long,
                         device=extra_encoder_hidden_states.device,
@@ -809,9 +795,7 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
                 )
                 extra_encoder_hidden_states = extra_encoder_hidden_states + cond_emb
 
-            txt, text_mask = self.reorder_txt_token(
-                extra_encoder_hidden_states, txt, extra_attention_mask, text_mask
-            )
+            txt, text_mask = self.reorder_txt_token(extra_encoder_hidden_states, txt, extra_attention_mask, text_mask)
 
         freqs_cis = (freqs_cos, freqs_sin) if freqs_cos is not None else None
 
@@ -821,12 +805,9 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
                 self.attn_mode in ["flex_block_attention"]
                 and self.attn_param["win_type"] == "hybrid"
                 and self.attn_param["win_ratio"] > 0
-                and (
-                    (index + 1) % self.attn_param["win_ratio"] == 0
-                    or (index + 1) == len(self.double_blocks)
-                )
+                and ((index + 1) % self.attn_param["win_ratio"] == 0 or (index + 1) == len(self.double_blocks))
             )
-            self.attn_param["layer-name"] = f"double_block_{index+1}"
+            self.attn_param["layer-name"] = f"double_block_{index + 1}"
             img, txt = block(
                 img=img,
                 txt=txt,
@@ -850,12 +831,9 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
                     self.attn_mode in ["flex_block_attention"]
                     and self.attn_param["win_type"] == "hybrid"
                     and self.attn_param["win_ratio"] > 0
-                    and (
-                        (index + 1) % self.attn_param["win_ratio"] == 0
-                        or (index + 1) == len(self.single_blocks)
-                    )
+                    and ((index + 1) % self.attn_param["win_ratio"] == 0 or (index + 1) == len(self.single_blocks))
                 )
-                self.attn_param["layer-name"] = f"single_block_{index+1}"
+                self.attn_param["layer-name"] = f"single_block_{index + 1}"
                 x = block(
                     x=x,
                     vec=vec,
@@ -921,6 +899,6 @@ class HunyuanVideo_1_5_DiffusionTransformer(nn.Module, NativeConfigMixin):
         )
         self.attn_mode = attn_mode
         for block in self.double_blocks:
-            block.attn_mode = attn_mode 
+            block.attn_mode = attn_mode
         for block in self.single_blocks:
             block.attn_mode = attn_mode

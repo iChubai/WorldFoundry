@@ -11,7 +11,7 @@ def runtime_root() -> Path:
     Returns:
         The return value.
     """
-    return Path(__file__).resolve().parent / 'splatt3r_runtime'
+    return Path(__file__).resolve().parent / "splatt3r_runtime"
 
 
 from .worldfoundry_runtime import (

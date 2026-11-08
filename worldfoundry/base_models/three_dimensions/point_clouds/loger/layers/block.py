@@ -37,8 +37,10 @@ except ImportError:
 
 attn_bias_cache: Dict[Tuple, Any] = {}
 
+
 class BlockRope(nn.Module):
     """Block rope implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -55,8 +57,8 @@ class BlockRope(nn.Module):
         norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
         attn_class: Callable[..., nn.Module] = Attention,
         ffn_layer: Callable[..., nn.Module] = Mlp,
-        qk_norm: bool=False,
-        rope=None
+        qk_norm: bool = False,
+        rope=None,
     ) -> None:
         """Init.
 
@@ -92,7 +94,7 @@ class BlockRope(nn.Module):
             attn_drop=attn_drop,
             proj_drop=drop,
             qk_norm=qk_norm,
-            rope=rope
+            rope=rope,
         )
 
         self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
@@ -114,44 +116,35 @@ class BlockRope(nn.Module):
 
     def compute_kv_cache(self, x: Tensor, xpos=None) -> tuple[Tensor, Tensor]:
         """Compute K, V for caching from input x.
-        
+
         Args:
             x: Input tensor [B, N, C]
             xpos: Position info for RoPE
-            
+
         Returns:
             (k, v): Cached K and V tensors, each [B, num_heads, N, head_dim]
         """
         x_normed = self.norm1(x)
         return self.attn.compute_kv(x_normed, xpos=xpos)
-    
-    def forward_with_kv_cache(
-        self, 
-        x: Tensor, 
-        k_cache: Tensor, 
-        v_cache: Tensor,
-        xpos=None,
-        attn_mask=None
-    ) -> Tensor:
+
+    def forward_with_kv_cache(self, x: Tensor, k_cache: Tensor, v_cache: Tensor, xpos=None, attn_mask=None) -> Tensor:
         """Forward with pre-computed KV cache for history tokens.
-        
+
         Args:
             x: Current tokens [B, N_curr, C]
             k_cache: Cached K from history [B, num_heads, N_hist, head_dim]
             v_cache: Cached V from history [B, num_heads, N_hist, head_dim]
             xpos: Position info for current tokens
             attn_mask: Optional attention mask
-            
+
         Returns:
             Output for current tokens [B, N_curr, C]
         """
         # Attention with KV cache
         x_normed = self.norm1(x)
-        attn_out = self.attn.forward_with_kv_cache(
-            x_normed, k_cache, v_cache, xpos=xpos, attn_mask=attn_mask
-        )
+        attn_out = self.attn.forward_with_kv_cache(x_normed, k_cache, v_cache, xpos=xpos, attn_mask=attn_mask)
         x = x + self.ls1(attn_out)
-        
+
         # MLP (only on current tokens)
         x = x + self.ls2(self.mlp(self.norm2(x)))
         return x
@@ -167,6 +160,7 @@ class BlockRope(nn.Module):
         Returns:
             The return value.
         """
+
         def attn_residual_func(x: Tensor) -> Tensor:
             """Attn residual func.
 

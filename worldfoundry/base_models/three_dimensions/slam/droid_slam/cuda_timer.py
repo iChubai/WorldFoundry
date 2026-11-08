@@ -2,8 +2,10 @@
 
 import torch
 
+
 class CudaTimer:
     """Cuda timer implementation."""
+
     def __init__(self, name, enabled=True):
         """Init.
 
@@ -22,7 +24,7 @@ class CudaTimer:
         """Enter."""
         if self.enabled:
             self.start.record()
-        
+
     def __exit__(self, type, value, traceback):
         """Exit.
 

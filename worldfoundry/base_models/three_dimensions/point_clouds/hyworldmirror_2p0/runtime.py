@@ -63,6 +63,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hyworldmirror_2p0.ut
 # Model loading helpers (checkpoint, config, selective load)
 # ============================================================
 
+
 def _get_model_config_from_yaml(cfg) -> dict:
     if hasattr(cfg, "wrapper") and hasattr(cfg.wrapper, "model"):
         model_cfg = cfg.wrapper.model
@@ -115,8 +116,7 @@ def _load_state_dict_selective(model, ckpt_state, source_name="checkpoint"):
 def _has_model_files(path: str) -> bool:
     """Check whether a directory contains the expected model artifacts."""
     has_weights = os.path.isfile(os.path.join(path, "model.safetensors"))
-    has_config = (os.path.isfile(os.path.join(path, "config.yaml"))
-                  or os.path.isfile(os.path.join(path, "config.json")))
+    has_config = os.path.isfile(os.path.join(path, "config.yaml")) or os.path.isfile(os.path.join(path, "config.json"))
     return has_weights and has_config
 
 
@@ -139,6 +139,7 @@ def _resolve_model_dir(model_path: str, subfolder: str) -> str:
 
     print(f"[Init] Downloading from HuggingFace: {model_path} (subfolder={subfolder})")
     from huggingface_hub import snapshot_download
+
     repo_root = snapshot_download(
         repo_id=model_path,
         allow_patterns=[f"{subfolder}/*"],
@@ -156,6 +157,7 @@ def _resolve_model_dir(model_path: str, subfolder: str) -> str:
 def _load_model_config(model_dir: str) -> dict:
     """Load model constructor kwargs from config.yaml or config.json in model_dir."""
     import json as _json
+
     yaml_path = os.path.join(model_dir, "config.yaml")
     json_path = os.path.join(model_dir, "config.json")
 
@@ -173,16 +175,18 @@ def _load_model_config(model_dir: str) -> dict:
 # FSDP / bf16 helpers
 # ============================================================
 
+
 def _collect_fp32_critical_modules(model):
     from worldfoundry.base_models.three_dimensions.point_clouds.hyworldmirror_2p0.models.layers.mlp import (
         MlpFP32,
     )
+
     critical = set()
     for _, module in model.named_modules():
-        if isinstance(module, MlpFP32) and hasattr(module, 'fc2'):
+        if isinstance(module, MlpFP32) and hasattr(module, "fc2"):
             if any(p.dtype == torch.float32 for p in module.fc2.parameters()):
                 critical.add(module.fc2)
-        if hasattr(module, 'scratch') and hasattr(module.scratch, 'output_conv2'):
+        if hasattr(module, "scratch") and hasattr(module.scratch, "output_conv2"):
             oc2 = module.scratch.output_conv2
             if any(p.dtype == torch.float32 for p in oc2.parameters()):
                 critical.add(oc2)
@@ -206,8 +210,10 @@ def _cast_noncritical_fp32_to_bf16(model, critical_modules):
         dtype = next((p.dtype for p in module.parameters(recurse=False)), None)
         if dtype is None:
             return args
-        return tuple(a.to(dtype) if isinstance(a, torch.Tensor) and a.is_floating_point() and a.dtype != dtype else a
-                     for a in args)
+        return tuple(
+            a.to(dtype) if isinstance(a, torch.Tensor) and a.is_floating_point() and a.dtype != dtype else a
+            for a in args
+        )
 
     for name, module in model.named_modules():
         if not any(True for _ in module.children()):
@@ -222,35 +228,41 @@ def _wrap_model_fsdp(model, sp_group, device, use_cpu_offload=False, enable_bf16
     wrap_cls = {DistBlock, Block, DPTHead, CameraHead}
     if enable_bf16:
         fp32_critical = _collect_fp32_critical_modules(model)
+
         def policy(module, recurse, nonwrapped_numel, **kw):
             if recurse:
                 return True
             return isinstance(module, tuple(wrap_cls)) or module in fp32_critical
+
         auto_wrap_policy = policy
     else:
-        auto_wrap_policy = functools.partial(
-            transformer_auto_wrap_policy, transformer_layer_cls=wrap_cls)
+        auto_wrap_policy = functools.partial(transformer_auto_wrap_policy, transformer_layer_cls=wrap_cls)
 
     fsdp_model = FSDP(
-        model, process_group=sp_group,
+        model,
+        process_group=sp_group,
         sharding_strategy=ShardingStrategy.FULL_SHARD,
-        auto_wrap_policy=auto_wrap_policy, mixed_precision=None,
+        auto_wrap_policy=auto_wrap_policy,
+        mixed_precision=None,
         cpu_offload=CPUOffload(offload_params=True) if use_cpu_offload else None,
-        device_id=device, use_orig_params=True, sync_module_states=True,
+        device_id=device,
+        use_orig_params=True,
+        sync_module_states=True,
         forward_prefetch=False,
     )
 
     rank = dist.get_rank()
     if rank == 0:
         total = sum(p.numel() for p in fsdp_model.parameters())
-        local = sum(getattr(p, '_local_tensor', p).numel() for p in fsdp_model.parameters())
-        print(f"[FSDP] total={total/1e6:.1f}M, local≈{local/1e6:.1f}M")
+        local = sum(getattr(p, "_local_tensor", p).numel() for p in fsdp_model.parameters())
+        print(f"[FSDP] total={total / 1e6:.1f}M, local≈{local / 1e6:.1f}M")
     return fsdp_model
 
 
 # ============================================================
 # WorldMirrorPipeline
 # ============================================================
+
 
 class WorldMirrorPipeline:
     """HY-World 2.0 WorldMirror inference pipeline.
@@ -315,15 +327,15 @@ class WorldMirrorPipeline:
             if device is not None:
                 requested_device = torch.device(device)
                 if requested_device.type == "cuda" and not torch.cuda.is_available():
-                    raise RuntimeError(
-                        f"Requested device '{device}' but CUDA is not available."
-                    )
+                    raise RuntimeError(f"Requested device '{device}' but CUDA is not available.")
                 device = requested_device
             else:
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             sp_group = None
             if use_fsdp:
-                print("[Pipeline] Warning: use_fsdp is ignored in single-GPU mode (FSDP requires torchrun with multiple GPUs)")
+                print(
+                    "[Pipeline] Warning: use_fsdp is ignored in single-GPU mode (FSDP requires torchrun with multiple GPUs)"
+                )
                 use_fsdp = False
             print(f"[Pipeline] Single-GPU mode on {device}")
 
@@ -340,7 +352,9 @@ class WorldMirrorPipeline:
             model = WorldMirror(**model_cfg).to(device)
             state = _load_checkpoint_state_dict(ckpt_path)
             _load_state_dict_selective(model, state, source_name=ckpt_path)
-            del state; gc.collect(); torch.cuda.empty_cache()
+            del state
+            gc.collect()
+            torch.cuda.empty_cache()
         else:
             model_dir = _resolve_model_dir(pretrained_model_name_or_path, subfolder)
             model_cfg = _load_model_config(model_dir)
@@ -351,7 +365,9 @@ class WorldMirrorPipeline:
             model = WorldMirror(**model_cfg).to(device)
             state = load_safetensors(os.path.join(model_dir, "model.safetensors"))
             _load_state_dict_selective(model, state, source_name=model_dir)
-            del state; gc.collect(); torch.cuda.empty_cache()
+            del state
+            gc.collect()
+            torch.cuda.empty_cache()
 
         # bf16 casting — two strategies depending on FSDP:
         #
@@ -397,11 +413,9 @@ class WorldMirrorPipeline:
 
         # FSDP wrapping
         if use_fsdp and is_distributed:
-            model = _wrap_model_fsdp(model, sp_group, device,
-                                     use_cpu_offload=fsdp_cpu_offload,
-                                     enable_bf16=enable_bf16)
+            model = _wrap_model_fsdp(model, sp_group, device, use_cpu_offload=fsdp_cpu_offload, enable_bf16=enable_bf16)
             if enable_bf16:
-                inner = model.module if hasattr(model, 'module') else model
+                inner = model.module if hasattr(model, "module") else model
                 inner.to = lambda *a, **kw: inner
 
         if rank == 0:
@@ -481,9 +495,12 @@ class WorldMirrorPipeline:
         # 1. Prepare input
         t0 = time.perf_counter()
         img_paths, subdir_name = prepare_input(
-            input_path, target_size=target_size, fps=fps,
+            input_path,
+            target_size=target_size,
+            fps=fps,
             video_strategy=video_strategy,
-            min_frames=video_min_frames, max_frames=video_max_frames,
+            min_frames=video_min_frames,
+            max_frames=video_max_frames,
         )
         if log_time:
             timings["data_loading"] = time.perf_counter() - t0
@@ -505,8 +522,7 @@ class WorldMirrorPipeline:
 
         t0_all = time.perf_counter()
         try:
-            predictions, imgs, infer_time = self._run_inference(
-                img_paths, effective, prior_cam_path, prior_depth_path)
+            predictions, imgs, infer_time = self._run_inference(img_paths, effective, prior_cam_path, prior_depth_path)
         except ValueError as e:
             if rank == 0:
                 print(f"[Pipeline] Skipping '{input_path}': {e}")
@@ -530,23 +546,38 @@ class WorldMirrorPipeline:
             B, S, C, H, W = imgs.shape
             t0 = time.perf_counter()
 
-            sky_mask = (compute_sky_mask(
-                img_paths, H, W, S, predictions=predictions,
-                source=sky_mask_source, model_threshold=model_sky_threshold,
-                processed_aspect_ratio=W / H,
-            ) if apply_sky_mask else None)
+            sky_mask = (
+                compute_sky_mask(
+                    img_paths,
+                    H,
+                    W,
+                    S,
+                    predictions=predictions,
+                    source=sky_mask_source,
+                    model_threshold=model_sky_threshold,
+                    processed_aspect_ratio=W / H,
+                )
+                if apply_sky_mask
+                else None
+            )
 
             filter_mask, gs_filter_mask = None, None
             if apply_confidence_mask or apply_edge_mask or apply_sky_mask:
                 filter_mask, gs_filter_mask = compute_filter_mask(
-                    predictions, imgs, img_paths, H, W, S,
+                    predictions,
+                    imgs,
+                    img_paths,
+                    H,
+                    W,
+                    S,
                     apply_confidence_mask=apply_confidence_mask,
                     apply_edge_mask=apply_edge_mask,
                     apply_sky_mask=apply_sky_mask,
                     confidence_percentile=confidence_percentile,
                     edge_normal_threshold=edge_normal_threshold,
                     edge_depth_threshold=edge_depth_threshold,
-                    sky_mask=sky_mask, use_gs_depth=save_gs,
+                    sky_mask=sky_mask,
+                    use_gs_depth=save_gs,
                 )
 
             if log_time:
@@ -554,13 +585,22 @@ class WorldMirrorPipeline:
 
             t0 = time.perf_counter()
             save_timings = save_results(
-                predictions, imgs, img_paths, outdir,
-                save_depth=save_depth, save_normal=save_normal,
-                save_gs=save_gs, save_camera=save_camera,
-                save_points=save_points, save_colmap=save_colmap,
-                save_sky_mask=save_sky_mask, save_conf=save_conf,
-                log_time=log_time, max_resolution=max_resolution,
-                filter_mask=filter_mask, gs_filter_mask=gs_filter_mask,
+                predictions,
+                imgs,
+                img_paths,
+                outdir,
+                save_depth=save_depth,
+                save_normal=save_normal,
+                save_gs=save_gs,
+                save_camera=save_camera,
+                save_points=save_points,
+                save_colmap=save_colmap,
+                save_sky_mask=save_sky_mask,
+                save_conf=save_conf,
+                log_time=log_time,
+                max_resolution=max_resolution,
+                filter_mask=filter_mask,
+                gs_filter_mask=gs_filter_mask,
                 sky_mask=sky_mask,
                 compress_pts=compress_pts,
                 compress_pts_max_points=compress_pts_max_points,
@@ -573,12 +613,13 @@ class WorldMirrorPipeline:
 
             # Render interpolated video from Gaussian splats
             if save_rendered and "splats" in predictions:
-                inner_model = model.module if hasattr(model, 'module') else model
-                if hasattr(inner_model, 'gs_renderer'):
+                inner_model = model.module if hasattr(model, "module") else model
+                if hasattr(inner_model, "gs_renderer"):
                     t0_render = time.perf_counter()
                     try:
-                        splats_f32 = {k: v.float() if isinstance(v, torch.Tensor) else v
-                                      for k, v in predictions["splats"].items()}
+                        splats_f32 = {
+                            k: v.float() if isinstance(v, torch.Tensor) else v for k, v in predictions["splats"].items()
+                        }
                         render_interpolated_video(
                             inner_model.gs_renderer,
                             splats_f32,
@@ -603,7 +644,7 @@ class WorldMirrorPipeline:
             if log_time:
                 print_and_save_timings(timings, outdir)
 
-            print(f"\n{'='*60}\n[Pipeline] Results saved to: {outdir}\n{'='*60}\n")
+            print(f"\n{'=' * 60}\n[Pipeline] Results saved to: {outdir}\n{'=' * 60}\n")
 
         if is_distributed:
             del predictions, imgs
@@ -616,9 +657,7 @@ class WorldMirrorPipeline:
     def _run_inference(self, img_paths, target_size, prior_cam_path, prior_depth_path):
         """Run model forward pass."""
         device = self.device
-        imgs = prepare_images_to_tensor(
-            img_paths, target_size=target_size, resize_strategy="crop"
-        ).to(device)
+        imgs = prepare_images_to_tensor(img_paths, target_size=target_size, resize_strategy="crop").to(device)
         views = {"img": imgs}
         B, S, C, H, W = imgs.shape
 
@@ -653,8 +692,8 @@ class WorldMirrorPipeline:
                 cond_flags[1] = 1
 
         use_amp = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
-        inner = self.model.module if hasattr(self.model, 'module') else self.model
-        model_bf16 = getattr(inner, 'enable_bf16', False)
+        inner = self.model.module if hasattr(self.model, "module") else self.model
+        model_bf16 = getattr(inner, "enable_bf16", False)
 
         t0 = time.perf_counter()
         with torch.amp.autocast("cuda", enabled=(not model_bf16 and use_amp), dtype=torch.bfloat16):
@@ -676,14 +715,15 @@ class WorldMirrorPipeline:
 # Head disabling helper
 # ============================================================
 
+
 def _disable_heads(model, head_names):
     """Disable and free specified heads. head_names: list of 'camera','depth','normal','points','gs'."""
     mapping = {
-        "camera": ("enable_cam",   ["cam_head"]),
-        "depth":  ("enable_depth", ["depth_head"]),
-        "normal": ("enable_norm",  ["norm_head"]),
-        "points": ("enable_pts",   ["pts_head"]),
-        "gs":     ("enable_gs",    ["gs_head", "gs_renderer"]),
+        "camera": ("enable_cam", ["cam_head"]),
+        "depth": ("enable_depth", ["depth_head"]),
+        "normal": ("enable_norm", ["norm_head"]),
+        "points": ("enable_pts", ["pts_head"]),
+        "gs": ("enable_gs", ["gs_head", "gs_renderer"]),
     }
     head_names = list(head_names)
     if "camera" in head_names and "gs" not in head_names:
@@ -704,12 +744,13 @@ def _disable_heads(model, head_names):
     if freed:
         gc.collect()
         torch.cuda.empty_cache()
-        print(f"[Init] Disabled heads: {head_names}, freed ~{freed/1e6:.1f}M params")
+        print(f"[Init] Disabled heads: {head_names}, freed ~{freed / 1e6:.1f}M params")
 
 
 # ============================================================
 # CLI entry point
 # ============================================================
+
 
 def _broadcast_string(s, rank, src=0):
     if rank == src:
@@ -719,7 +760,11 @@ def _broadcast_string(s, rank, src=0):
         length = torch.tensor([0], dtype=torch.long, device="cuda")
     dist.broadcast(length, src=src)
     n = length.item()
-    tensor = torch.tensor(list(data), dtype=torch.uint8, device="cuda") if rank == src else torch.empty(n, dtype=torch.uint8, device="cuda")
+    tensor = (
+        torch.tensor(list(data), dtype=torch.uint8, device="cuda")
+        if rank == src
+        else torch.empty(n, dtype=torch.uint8, device="cuda")
+    )
     dist.broadcast(tensor, src=src)
     return tensor.cpu().numpy().tobytes().decode("utf-8")
 
@@ -728,12 +773,24 @@ def main():
     parser = argparse.ArgumentParser(description="HY-World 2.0 WorldMirror Pipeline")
     parser.add_argument("--input_path", type=str, required=True)
     parser.add_argument("--output_path", type=str, default="inference_output")
-    parser.add_argument("--strict_output_path", type=str, default=None,
-                        help="If set, save results directly to this path (no subdir/timestamp)")
-    parser.add_argument("--pretrained_model_name_or_path", type=str, default="tencent/HY-World-2.0",
-                        help="HuggingFace repo ID or local path")
-    parser.add_argument("--subfolder", type=str, default="HY-WorldMirror-2.0",
-                        help="Subfolder inside the repo containing WorldMirror weights")
+    parser.add_argument(
+        "--strict_output_path",
+        type=str,
+        default=None,
+        help="If set, save results directly to this path (no subdir/timestamp)",
+    )
+    parser.add_argument(
+        "--pretrained_model_name_or_path",
+        type=str,
+        default="tencent/HY-World-2.0",
+        help="HuggingFace repo ID or local path",
+    )
+    parser.add_argument(
+        "--subfolder",
+        type=str,
+        default="HY-WorldMirror-2.0",
+        help="Subfolder inside the repo containing WorldMirror weights",
+    )
     parser.add_argument("--config_path", type=str, default=None)
     parser.add_argument("--ckpt_path", type=str, default=None)
     parser.add_argument("--use_fsdp", action="store_true", default=False)
@@ -770,14 +827,16 @@ def main():
     parser.add_argument("--compress_gs_max_points", type=int, default=5_000_000)
     parser.add_argument("--prior_cam_path", type=str, default=None)
     parser.add_argument("--prior_depth_path", type=str, default=None)
-    parser.add_argument("--disable_heads", type=str, nargs="*", default=None,
-                        help="Heads to disable: camera depth normal points gs")
-    parser.add_argument("--save_rendered", action="store_true", default=False,
-                        help="Render interpolated video from Gaussian splats")
-    parser.add_argument("--render_interp_per_pair", type=int, default=15,
-                        help="Interpolated frames per camera pair for video rendering")
-    parser.add_argument("--render_depth", action="store_true", default=False,
-                        help="Also render depth video")
+    parser.add_argument(
+        "--disable_heads", type=str, nargs="*", default=None, help="Heads to disable: camera depth normal points gs"
+    )
+    parser.add_argument(
+        "--save_rendered", action="store_true", default=False, help="Render interpolated video from Gaussian splats"
+    )
+    parser.add_argument(
+        "--render_interp_per_pair", type=int, default=15, help="Interpolated frames per camera pair for video rendering"
+    )
+    parser.add_argument("--render_depth", action="store_true", default=False, help="Also render depth video")
     parser.add_argument("--log_time", action="store_true", default=True)
     parser.add_argument("--no_log_time", dest="log_time", action="store_false")
     parser.add_argument("--no_interactive", action="store_true")
@@ -786,15 +845,18 @@ def main():
     pipeline = WorldMirrorPipeline.from_pretrained(
         pretrained_model_name_or_path=args.pretrained_model_name_or_path,
         subfolder=args.subfolder,
-        config_path=args.config_path, ckpt_path=args.ckpt_path,
-        use_fsdp=args.use_fsdp, enable_bf16=args.enable_bf16,
+        config_path=args.config_path,
+        ckpt_path=args.ckpt_path,
+        use_fsdp=args.use_fsdp,
+        enable_bf16=args.enable_bf16,
         fsdp_cpu_offload=args.fsdp_cpu_offload,
         disable_heads=args.disable_heads,
     )
 
     call_kwargs = dict(
         output_path=args.output_path,
-        target_size=args.target_size, fps=args.fps,
+        target_size=args.target_size,
+        fps=args.fps,
         video_strategy=args.video_strategy,
         video_min_frames=args.video_min_frames,
         video_max_frames=args.video_max_frames,
@@ -846,7 +908,8 @@ def main():
         while True:
             if is_distributed:
                 dist.distributed_c10d._get_default_group()._get_backend(
-                    torch.device("cuda")).options._timeout = _INF_TIMEOUT
+                    torch.device("cuda")
+                ).options._timeout = _INF_TIMEOUT
 
             new_input = ""
             if rank == 0:
@@ -858,7 +921,8 @@ def main():
             if is_distributed:
                 new_input = _broadcast_string(new_input, rank, src=0)
                 dist.distributed_c10d._get_default_group()._get_backend(
-                    torch.device("cuda")).options._timeout = _DEF_TIMEOUT
+                    torch.device("cuda")
+                ).options._timeout = _DEF_TIMEOUT
 
             if not new_input or new_input.lower() in ("quit", "exit", "q"):
                 break

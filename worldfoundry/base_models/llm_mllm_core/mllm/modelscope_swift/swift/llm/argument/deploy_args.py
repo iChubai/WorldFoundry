@@ -27,13 +27,14 @@ class DeployArguments(InferArguments):
         log_interval (int): The interval for printing global statistics. Default is 20.
         max_logprobs(int): Max number of logprobs to return
     """
-    host: str = '0.0.0.0'
+
+    host: str = "0.0.0.0"
     port: int = 8000
     api_key: Optional[str] = None
     ssl_keyfile: Optional[str] = None
     ssl_certfile: Optional[str] = None
 
-    owned_by: str = 'swift'
+    owned_by: str = "swift"
     served_model_name: Optional[str] = None
     verbose: bool = True  # Whether to log request_info
     log_interval: int = 20  # Interval for printing global statistics
@@ -51,7 +52,7 @@ class DeployArguments(InferArguments):
         self.adapter_mapping = {}
         adapters = []
         for i, adapter in enumerate(self.adapters):
-            adapter_path = adapter.split('=')
+            adapter_path = adapter.split("=")
             if len(adapter_path) == 1:
                 adapter_path = (None, adapter_path[0])
             adapter_name, adapter_path = adapter_path
@@ -72,6 +73,6 @@ class DeployArguments(InferArguments):
         pass
 
     def _init_result_path(self, folder_name: str) -> None:
-        if folder_name == 'infer_result':
-            folder_name = 'deploy_result'
+        if folder_name == "infer_result":
+            folder_name = "deploy_result"
         return super()._init_result_path(folder_name)

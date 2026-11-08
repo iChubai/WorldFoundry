@@ -36,6 +36,7 @@ from vggt.models.vggt import VGGT
 
 class EncoderDecoder(nn.Module):
     """Encoder decoder implementation."""
+
     def __init__(
         self,
         depth,
@@ -108,9 +109,7 @@ class EncoderDecoder(nn.Module):
         )
 
         if timeit:
-            rendered_images, time_t = self.renderer(
-                rec_tokens, target_rays, timeit=timeit
-            )
+            rendered_images, time_t = self.renderer(rec_tokens, target_rays, timeit=timeit)
         else:
             rendered_images = self.renderer(rec_tokens, target_rays, timeit=timeit)
 
@@ -197,26 +196,16 @@ class Reconstructor(nn.Module):
         else:
             tgt_w = vggt_imsize
             tgt_h = (int(tgt_w * h / w) // self.vggt_patch_size) * self.vggt_patch_size
-        input_images = F.interpolate(
-            input_images, size=(tgt_h, tgt_w), mode="bilinear", antialias=True
-        )
-        input_images = einops.rearrange(
-            input_images, "(b v) c h w -> b v c h w", b=b, v=v_input
-        )
+        input_images = F.interpolate(input_images, size=(tgt_h, tgt_w), mode="bilinear", antialias=True)
+        input_images = einops.rearrange(input_images, "(b v) c h w -> b v c h w", b=b, v=v_input)
         # extract features for the conditioning images
         if self.freeze_vggt:
             with torch.no_grad():
-                tokens_vggt_cond = self.vggt(
-                    input_images, cameras_possibly_zero=input_camera_cond
-                ).detach()
+                tokens_vggt_cond = self.vggt(input_images, cameras_possibly_zero=input_camera_cond).detach()
         else:
-            tokens_vggt_cond = self.vggt(
-                input_images, cameras_possibly_zero=input_camera_cond
-            )
+            tokens_vggt_cond = self.vggt(input_images, cameras_possibly_zero=input_camera_cond)
 
-        tokens_vggt_image_cond = tokens_vggt_cond[
-            :, :, self.vggt.aggregator.patch_start_idx :, :
-        ]
+        tokens_vggt_image_cond = tokens_vggt_cond[:, :, self.vggt.aggregator.patch_start_idx :, :]
 
         tokens_vggt_image_cond = self.geo_feature_connector(tokens_vggt_image_cond)
         tokens_vggt_image_cond = self.geo_feature_norm(tokens_vggt_image_cond)
@@ -226,6 +215,4 @@ class Reconstructor(nn.Module):
 
 def EncDec_VitB8(**kwargs):
     """Encdec vitb8."""
-    return EncoderDecoder(
-        depth=12, hidden_size=768, patch_size=8, num_heads=12, **kwargs
-    )
+    return EncoderDecoder(depth=12, hidden_size=768, patch_size=8, num_heads=12, **kwargs)

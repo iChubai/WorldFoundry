@@ -288,6 +288,7 @@ def add_prope_parameters(model, zero_init: bool = True):
     # Import here to avoid circular dependency
     try:
         from ...reference_21 import WanSelfAttention, WanT2VCrossAttention, WanI2VCrossAttention
+
         cross_attn_types = (WanT2VCrossAttention, WanI2VCrossAttention)
     except ImportError:
         WanSelfAttention = None
@@ -300,6 +301,7 @@ def add_prope_parameters(model, zero_init: bool = True):
             WanI2VCrossAttention as ActionWanI2VCrossAttention,
             WanGanCrossAttention as ActionWanGanCrossAttention,
         )
+
         cross_attn_types = cross_attn_types + (
             ActionWanT2VCrossAttention,
             ActionWanI2VCrossAttention,
@@ -317,7 +319,7 @@ def add_prope_parameters(model, zero_init: bool = True):
 
     for name, module in model.named_modules():
         if isinstance(module, attn_types) and not isinstance(module, cross_attn_types):
-            if not hasattr(module, 'prope_o'):
+            if not hasattr(module, "prope_o"):
                 # Get dim from existing projection layer
                 dim = module.o.out_features
                 prope_o = nn.Linear(dim, dim)
@@ -327,9 +329,6 @@ def add_prope_parameters(model, zero_init: bool = True):
                     nn.init.zeros_(prope_o.bias)
 
                 # Move to same device/dtype as existing parameters
-                prope_o = prope_o.to(
-                    device=module.o.weight.device,
-                    dtype=module.o.weight.dtype
-                )
+                prope_o = prope_o.to(device=module.o.weight.device, dtype=module.o.weight.dtype)
 
                 module.prope_o = prope_o

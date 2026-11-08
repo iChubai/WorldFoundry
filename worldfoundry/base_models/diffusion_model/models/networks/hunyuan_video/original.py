@@ -69,7 +69,7 @@ class IndividualTokenRefinerBlock(torch.nn.Module):
         self.mlp = torch.nn.Sequential(
             torch.nn.Linear(hidden_size, hidden_size * 4),
             torch.nn.SiLU(),
-            torch.nn.Linear(hidden_size * 4, hidden_size)
+            torch.nn.Linear(hidden_size * 4, hidden_size),
         )
         self.adaLN_modulation = torch.nn.Sequential(
             torch.nn.SiLU(),
@@ -101,9 +101,7 @@ class SingleTokenRefiner(torch.nn.Module):
         self.input_embedder = torch.nn.Linear(in_channels, hidden_size, bias=True)
         self.t_embedder = TimestepEmbeddings(256, hidden_size, computation_device="cpu")
         self.c_embedder = torch.nn.Sequential(
-            torch.nn.Linear(in_channels, hidden_size),
-            torch.nn.SiLU(),
-            torch.nn.Linear(hidden_size, hidden_size)
+            torch.nn.Linear(in_channels, hidden_size), torch.nn.SiLU(), torch.nn.Linear(hidden_size, hidden_size)
         )
         self.blocks = torch.nn.ModuleList([IndividualTokenRefinerBlock(hidden_size=hidden_size) for _ in range(depth)])
 
@@ -148,7 +146,7 @@ class MMDoubleStreamBlockComponent(torch.nn.Module):
         self.ff = torch.nn.Sequential(
             torch.nn.Linear(hidden_size, hidden_size * mlp_width_ratio),
             torch.nn.GELU(approximate="tanh"),
-            torch.nn.Linear(hidden_size * mlp_width_ratio, hidden_size)
+            torch.nn.Linear(hidden_size * mlp_width_ratio, hidden_size),
         )
 
     def forward(self, hidden_states, conditioning, freqs_cis=None, token_replace_vec=None, tr_token=None):
@@ -156,9 +154,18 @@ class MMDoubleStreamBlockComponent(torch.nn.Module):
         mod1_shift, mod1_scale, mod1_gate, mod2_shift, mod2_scale, mod2_gate = self.mod(conditioning).chunk(6, dim=-1)
         if token_replace_vec is not None:
             assert tr_token is not None
-            tr_mod1_shift, tr_mod1_scale, tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate = self.mod(token_replace_vec).chunk(6, dim=-1)
+            tr_mod1_shift, tr_mod1_scale, tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate = self.mod(
+                token_replace_vec
+            ).chunk(6, dim=-1)
         else:
-            tr_mod1_shift, tr_mod1_scale, tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate = None, None, None, None, None, None
+            tr_mod1_shift, tr_mod1_scale, tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate = (
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
 
         norm_hidden_states = self.norm1(hidden_states)
         norm_hidden_states = modulate(
@@ -177,7 +184,11 @@ class MMDoubleStreamBlockComponent(torch.nn.Module):
 
         if freqs_cis is not None:
             q, k = apply_rotary_emb(q, k, freqs_cis, head_first=False)
-        return (q, k, v), (mod1_gate, mod2_shift, mod2_scale, mod2_gate), (tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate)
+        return (
+            (q, k, v),
+            (mod1_gate, mod2_shift, mod2_scale, mod2_gate),
+            (tr_mod1_gate, tr_mod2_shift, tr_mod2_scale, tr_mod2_gate),
+        )
 
     def process_ff(self, hidden_states, attn_output, mod, mod_tr=None, tr_token=None):
         """Apply gated attn residual then AdaLN-modulated FFN on ``B S C``."""
@@ -223,7 +234,9 @@ class MMDoubleStreamBlock(torch.nn.Module):
         max_seqlen_kv=None,
     ):
         """Joint-attend video stream A and text stream B; return updated ``B S C`` pairs."""
-        (q_a, k_a, v_a), mod_a, mod_tr = self.component_a(hidden_states_a, conditioning, freqs_cis, token_replace_vec, tr_token)
+        (q_a, k_a, v_a), mod_a, mod_tr = self.component_a(
+            hidden_states_a, conditioning, freqs_cis, token_replace_vec, tr_token
+        )
         (q_b, k_b, v_b), mod_b, _ = self.component_b(hidden_states_b, conditioning, freqs_cis=None)
 
         image_length = q_a.shape[1]
@@ -308,7 +321,7 @@ class MMSingleStreamBlock(torch.nn.Module):
         self.ff = torch.nn.Sequential(
             torch.nn.Linear(hidden_size, hidden_size * mlp_width_ratio),
             torch.nn.GELU(approximate="tanh"),
-            torch.nn.Linear(hidden_size * mlp_width_ratio, hidden_size, bias=False)
+            torch.nn.Linear(hidden_size * mlp_width_ratio, hidden_size, bias=False),
         )
 
     def forward(
@@ -391,15 +404,21 @@ class FinalLayer(torch.nn.Module):
 class HunyuanVideoDiT(torch.nn.Module):
     """Checkpoint-compatible HunyuanVideo MM-DiT (double then single stream)."""
 
-    def __init__(self, in_channels=16, hidden_size=3072, text_dim=4096, num_double_blocks=20, num_single_blocks=40, guidance_embed=True):
+    def __init__(
+        self,
+        in_channels=16,
+        hidden_size=3072,
+        text_dim=4096,
+        num_double_blocks=20,
+        num_single_blocks=40,
+        guidance_embed=True,
+    ):
         super().__init__()
         self.img_in = PatchEmbed(in_channels=in_channels, embed_dim=hidden_size)
         self.txt_in = SingleTokenRefiner(in_channels=text_dim, hidden_size=hidden_size)
         self.time_in = TimestepEmbeddings(256, hidden_size, computation_device="cpu")
         self.vector_in = torch.nn.Sequential(
-            torch.nn.Linear(768, hidden_size),
-            torch.nn.SiLU(),
-            torch.nn.Linear(hidden_size, hidden_size)
+            torch.nn.Linear(768, hidden_size), torch.nn.SiLU(), torch.nn.Linear(hidden_size, hidden_size)
         )
         self.guidance_in = TimestepEmbeddings(256, hidden_size, computation_device="cpu") if guidance_embed else None
         self.double_blocks = torch.nn.ModuleList([MMDoubleStreamBlock(hidden_size) for _ in range(num_double_blocks)])
@@ -417,7 +436,6 @@ class HunyuanVideoDiT(torch.nn.Module):
         """Fold ``B (T'H'W') (C·1·2·2)`` tokens back to ``B C T H W`` (patch ``(1,2,2)``)."""
         x = rearrange(x, "B (T H W) (C pT pH pW) -> B C (T pT) (H pH) (W pW)", H=H, W=W, pT=1, pH=2, pW=2)
         return x
-
 
     def prepare_freqs(self, latents):
         """Build 3-axis RoPE for the post-patch ``(T, H/2, W/2)`` lattice from ``B C T H W``."""
@@ -440,7 +458,7 @@ class HunyuanVideoDiT(torch.nn.Module):
         freqs_cos: torch.Tensor = None,
         freqs_sin: torch.Tensor = None,
         guidance: torch.Tensor = None,
-        **kwargs
+        **kwargs,
     ):
         """Denoise ``B C T H W`` latents; return residual in the same layout."""
         B, C, T, H, W = x.shape
@@ -482,5 +500,5 @@ class HunyuanVideoDiT(torch.nn.Module):
 
         img = x[:, :img_seq_len]
         img = self.final_layer(img, vec)
-        img = self.unpatchify(img, T=T//1, H=H//2, W=W//2)
+        img = self.unpatchify(img, T=T // 1, H=H // 2, W=W // 2)
         return img

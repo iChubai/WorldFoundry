@@ -17,6 +17,7 @@ from .backbone_resnet import BackboneResnet, BackboneResnetCfg
 @dataclass
 class BackboneDinoCfg:
     """Backbone dino cfg implementation."""
+
     name: Literal["dino"]
     model: Literal["dino_vits16", "dino_vits8", "dino_vitb16", "dino_vitb8"]
     d_out: int
@@ -24,6 +25,7 @@ class BackboneDinoCfg:
 
 class BackboneDino(Backbone[BackboneDinoCfg]):
     """Backbone dino implementation."""
+
     def __init__(self, cfg: BackboneDinoCfg, d_in: int) -> None:
         """Init.
 

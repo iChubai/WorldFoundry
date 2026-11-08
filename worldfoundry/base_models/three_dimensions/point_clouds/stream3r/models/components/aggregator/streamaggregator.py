@@ -167,15 +167,15 @@ class STreamAggregator(nn.Module):
             for i in range(S):
                 curr_view_start = i * P
                 curr_view_end = (i + 1) * P
-                mask[curr_view_start:curr_view_end, curr_view_end:] = float('-inf')
+                mask[curr_view_start:curr_view_end, curr_view_end:] = float("-inf")
         elif mode == "window":
             window_size = 5
             for i in range(S):
                 curr_view_start = i * P
                 curr_view_end = (i + 1) * P
-                mask[curr_view_start:curr_view_end, P:] = float('-inf')
+                mask[curr_view_start:curr_view_end, P:] = float("-inf")
                 start_view = max(1, i - window_size + 1)
-                mask[curr_view_start:curr_view_end, start_view*P:(i+1)*P] = 0
+                mask[curr_view_start:curr_view_end, start_view * P : (i + 1) * P] = 0
         elif mode == "full":
             mask = None
         else:
@@ -184,10 +184,7 @@ class STreamAggregator(nn.Module):
         return mask
 
     def forward(
-        self,
-        images: torch.Tensor,
-        mode: str = "causal",
-        kv_cache_list: List[List[torch.Tensor]] = None
+        self, images: torch.Tensor, mode: str = "causal", kv_cache_list: List[List[torch.Tensor]] = None
     ) -> Tuple[List[torch.Tensor], int]:
         """
         Args:
@@ -262,7 +259,7 @@ class STreamAggregator(nn.Module):
                         tokens, global_idx, global_intermediates, kv_cache = self._process_global_attention(
                             tokens, B, S, P, C, global_idx, pos=pos, attn_mask=attn_mask, kv_cache=kv_cache
                         )
-                        kv_cache_list[global_idx-1] = kv_cache
+                        kv_cache_list[global_idx - 1] = kv_cache
                     else:
                         tokens, global_idx, global_intermediates = self._process_global_attention(
                             tokens, B, S, P, C, global_idx, pos=pos, attn_mask=attn_mask
@@ -299,12 +296,7 @@ class STreamAggregator(nn.Module):
 
         # by default, self.aa_block_size=1, which processes one block at a time
         for _ in range(self.aa_block_size):
-            tokens = checkpoint(
-                self.frame_blocks[frame_idx],
-                tokens,
-                pos,
-                use_reentrant=False
-            )
+            tokens = checkpoint(self.frame_blocks[frame_idx], tokens, pos, use_reentrant=False)
             frame_idx += 1
             intermediates.append(tokens.view(B, S, P, C))
 
@@ -326,21 +318,10 @@ class STreamAggregator(nn.Module):
         for _ in range(self.aa_block_size):
             if kv_cache is not None:
                 tokens, kv_cache = checkpoint(
-                    self.global_blocks[global_idx],
-                    tokens,
-                    pos,
-                    attn_mask,
-                    kv_cache,
-                    use_reentrant=False
+                    self.global_blocks[global_idx], tokens, pos, attn_mask, kv_cache, use_reentrant=False
                 )
             else:
-                tokens = checkpoint(
-                    self.global_blocks[global_idx],
-                    tokens,
-                    pos,
-                    attn_mask,
-                    use_reentrant=False
-                )
+                tokens = checkpoint(self.global_blocks[global_idx], tokens, pos, attn_mask, use_reentrant=False)
             global_idx += 1
             intermediates.append(tokens.view(B, S, P, C))
 

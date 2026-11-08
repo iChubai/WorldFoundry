@@ -15,17 +15,11 @@ class WanT2VCrossAttention(_WanT2VCrossAttention):
         batch = x.size(0)
         q = self.norm_q(self.q(x)).view(batch, -1, self.num_heads, self.head_dim)
         if not crossattn_cache["is_init"]:
-            crossattn_cache["k"] = self.norm_k(self.k(context)).view(
-                batch, -1, self.num_heads, self.head_dim
-            )
-            crossattn_cache["v"] = self.v(context).view(
-                batch, -1, self.num_heads, self.head_dim
-            )
+            crossattn_cache["k"] = self.norm_k(self.k(context)).view(batch, -1, self.num_heads, self.head_dim)
+            crossattn_cache["v"] = self.v(context).view(batch, -1, self.num_heads, self.head_dim)
             crossattn_cache["is_init"] = True
 
-        attended = flash_attention(
-            q, crossattn_cache["k"], crossattn_cache["v"], k_lens=context_lens
-        )
+        attended = flash_attention(q, crossattn_cache["k"], crossattn_cache["v"], k_lens=context_lens)
         return self.o(attended.flatten(2))
 
 

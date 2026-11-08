@@ -156,7 +156,7 @@ class AggregatorBase(nn.Module, ABC):
             patch_size=patch_size,
             num_register_tokens=num_register_tokens,
             embed_dim=embed_dim,
-            pretrained_path=pretrained_path
+            pretrained_path=pretrained_path,
         )
 
         # Initialize RoPE
@@ -185,7 +185,7 @@ class AggregatorBase(nn.Module, ABC):
             self.register_buffer(name, torch.FloatTensor(value).view(1, 1, 3, 1, 1), persistent=False)
 
         # Initialize from DINO checkpoint if available
-        if hasattr(self, '_dino_checkpoint') and self._dino_checkpoint is not None:
+        if hasattr(self, "_dino_checkpoint") and self._dino_checkpoint is not None:
             self._init_blocks_from_dino(self._dino_checkpoint)
             del self._dino_checkpoint  # Free memory
 
@@ -210,12 +210,7 @@ class AggregatorBase(nn.Module, ABC):
         - "dinov2_*": DINOv2 ViT variants (vitl14, vitb14, vits14, vitg2)
         """
         if "conv" in patch_embed:
-            self.patch_embed = PatchEmbed(
-                img_size=img_size,
-                patch_size=patch_size,
-                in_chans=3,
-                embed_dim=embed_dim
-            )
+            self.patch_embed = PatchEmbed(img_size=img_size, patch_size=patch_size, in_chans=3, embed_dim=embed_dim)
             self._dino_checkpoint = None
 
         else:
@@ -245,7 +240,7 @@ class AggregatorBase(nn.Module, ABC):
             if pretrained_path:
                 try:
                     ckpt = torch.load(pretrained_path)
-                    ckpt.pop('pos_embed', None)
+                    ckpt.pop("pos_embed", None)
                     logger.info("Loading pretrained weights for DINOv2")
                     missing, unexpected = self.patch_embed.load_state_dict(ckpt, strict=False)
                     logger.info(f"Missing keys: {len(missing)}, Unexpected keys: {len(unexpected)}")
@@ -313,7 +308,7 @@ class AggregatorBase(nn.Module, ABC):
         logger.info("Initializing blocks from DINOv2 pretrained weights")
 
         # Extract block keys
-        dino_block_keys = [k for k in dino_ckpt.keys() if k.startswith('blocks.')]
+        dino_block_keys = [k for k in dino_ckpt.keys() if k.startswith("blocks.")]
         if not dino_block_keys:
             logger.warning("No 'blocks' found in DINO checkpoint")
             return
@@ -321,7 +316,7 @@ class AggregatorBase(nn.Module, ABC):
         # Get block indices
         block_indices = set()
         for key in dino_block_keys:
-            parts = key.split('.')
+            parts = key.split(".")
             if len(parts) > 1 and parts[1].isdigit():
                 block_indices.add(int(parts[1]))
 
@@ -332,10 +327,10 @@ class AggregatorBase(nn.Module, ABC):
         for i, block in enumerate(self.frame_blocks):
             dino_block_idx = i % num_dino_blocks
             block_state_dict = {}
-            prefix = f'blocks.{dino_block_idx}.'
+            prefix = f"blocks.{dino_block_idx}."
             for key, value in dino_ckpt.items():
                 if key.startswith(prefix):
-                    new_key = key[len(prefix):]
+                    new_key = key[len(prefix) :]
                     block_state_dict[new_key] = value
 
             if block_state_dict:
@@ -347,10 +342,10 @@ class AggregatorBase(nn.Module, ABC):
         for i, block in enumerate(self.global_blocks):
             dino_block_idx = i % num_dino_blocks
             block_state_dict = {}
-            prefix = f'blocks.{dino_block_idx}.'
+            prefix = f"blocks.{dino_block_idx}."
             for key, value in dino_ckpt.items():
                 if key.startswith(prefix):
-                    new_key = key[len(prefix):]
+                    new_key = key[len(prefix) :]
                     block_state_dict[new_key] = value
 
             if block_state_dict:
@@ -410,10 +405,7 @@ class AggregatorBase(nn.Module, ABC):
         _, P_patch, C = patch_tokens.shape
 
         # Prepare special tokens
-        special_tokens = self._prepare_special_tokens(
-            B, S_local, S_global, C,
-            num_frame_for_scale=num_frame_for_scale
-        )
+        special_tokens = self._prepare_special_tokens(B, S_local, S_global, C, num_frame_for_scale=num_frame_for_scale)
 
         # Concatenate special tokens + patch tokens
         tokens = torch.cat([special_tokens, patch_tokens], dim=1)
@@ -513,12 +505,8 @@ class AggregatorBase(nn.Module, ABC):
         for i in range(self.aa_block_size):
             if self.training and self.use_gradient_checkpoint:
                 from torch.utils.checkpoint import checkpoint
-                tokens = checkpoint(
-                    self.frame_blocks[frame_idx],
-                    tokens,
-                    pos,
-                    use_reentrant=self.use_reentrant
-                )
+
+                tokens = checkpoint(self.frame_blocks[frame_idx], tokens, pos, use_reentrant=self.use_reentrant)
             else:
                 tokens = self.frame_blocks[frame_idx](tokens, pos=pos)
 
@@ -538,7 +526,7 @@ class AggregatorBase(nn.Module, ABC):
         C: int,
         global_idx: int,
         pos: Optional[torch.Tensor] = None,
-        **kwargs
+        **kwargs,
     ) -> Tuple[torch.Tensor, int, List[torch.Tensor]]:
         """
         Process global (cross-frame) attention blocks.
@@ -613,7 +601,13 @@ class AggregatorBase(nn.Module, ABC):
                     )
                 elif attn_type == "global":
                     tokens, global_idx, global_intermediates = self._process_global_attention(
-                        tokens, B, S_local, S_global, P, C, global_idx,
+                        tokens,
+                        B,
+                        S_local,
+                        S_global,
+                        P,
+                        C,
+                        global_idx,
                         pos=pos_global,
                         num_frame_for_scale=num_frame_for_scale,
                         sliding_window_size=sliding_window_size,

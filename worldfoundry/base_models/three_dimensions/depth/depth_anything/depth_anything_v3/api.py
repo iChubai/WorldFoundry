@@ -124,11 +124,7 @@ def _load_state_dict_file(path: str | Path) -> dict[str, torch.Tensor]:
     state = torch.load(path, map_location="cpu")
     while isinstance(state, dict):
         wrapped = next(
-            (
-                state[key]
-                for key in ("state_dict", "module", "model")
-                if key in state and isinstance(state[key], dict)
-            ),
+            (state[key] for key in ("state_dict", "module", "model") if key in state and isinstance(state[key], dict)),
             None,
         )
         if wrapped is None:
@@ -232,6 +228,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         Returns:
             The return value.
         """
+
         def strip_prefix(prefix: str) -> dict[str, torch.Tensor]:
             """Strip prefix.
 
@@ -399,7 +396,6 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
 
         # Export if requested
         if export_dir is not None:
-
             if "gs" in export_format:
                 if infer_gs and "gs_video" not in export_format:
                     export_format = f"{export_format}-gs_video"
@@ -487,16 +483,8 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         imgs = imgs_cpu.to(device, non_blocking=True)[None].float()
 
         # Convert camera parameters to tensors
-        ex_t = (
-            extrinsics.to(device, non_blocking=True)[None].float()
-            if extrinsics is not None
-            else None
-        )
-        in_t = (
-            intrinsics.to(device, non_blocking=True)[None].float()
-            if intrinsics is not None
-            else None
-        )
+        ex_t = extrinsics.to(device, non_blocking=True)[None].float() if extrinsics is not None else None
+        in_t = intrinsics.to(device, non_blocking=True)[None].float() if intrinsics is not None else None
 
         return imgs, ex_t, in_t
 
@@ -587,9 +575,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         prediction.processed_images = processed_imgs
         return prediction
 
-    def _export_results(
-        self, prediction: Prediction, export_format: str, export_dir: str, **kwargs
-    ) -> None:
+    def _export_results(self, prediction: Prediction, export_format: str, export_dir: str, **kwargs) -> None:
         """Export results to specified format and directory."""
         start_time = time.time()
         from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.export import export

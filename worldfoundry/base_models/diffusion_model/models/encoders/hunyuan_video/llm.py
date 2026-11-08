@@ -103,9 +103,8 @@ class HunyuanVideoMLLMEncoder(LlavaForConditionalGeneration):
             attention_mask: The attention mask.
             hidden_state_skip_layer: The hidden state skip layer.
         """
-        outputs = super().forward(input_ids=input_ids,
-                                  attention_mask=attention_mask,
-                                  output_hidden_states=True,
-                                  pixel_values=pixel_values)
+        outputs = super().forward(
+            input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True, pixel_values=pixel_values
+        )
         hidden_state = outputs.hidden_states[-(hidden_state_skip_layer + 1)]
         return hidden_state

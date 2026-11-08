@@ -21,6 +21,7 @@ from .image_self_attention import ImageSelfAttention, ImageSelfAttentionCfg
 @dataclass
 class EpipolarTransformerCfg:
     """Epipolar transformer cfg implementation."""
+
     self_attention: ImageSelfAttentionCfg
     num_octaves: int
     num_layers: int
@@ -33,6 +34,7 @@ class EpipolarTransformerCfg:
 
 class EpipolarTransformer(nn.Module):
     """Epipolar transformer implementation."""
+
     cfg: EpipolarTransformerCfg
     epipolar_sampler: EpipolarSampler
     depth_encoding: nn.Sequential
@@ -118,9 +120,7 @@ class EpipolarTransformer(nn.Module):
             features = rearrange(features, "(b v) c h w -> b v c h w", b=b, v=v)
 
         # Get the samples used for epipolar attention.
-        sampling = self.epipolar_sampler.forward(
-            features, extrinsics, intrinsics, near, far
-        )
+        sampling = self.epipolar_sampler.forward(features, extrinsics, intrinsics, near, far)
 
         if self.cfg.num_octaves > 0:
             # Compute positionally encoded depths for the features.
@@ -150,9 +150,7 @@ class EpipolarTransformer(nn.Module):
         # Add randomly permuted per-view embeddings to the other views.
         if v > 2:
             shuffle = torch.randperm(v - 1, device=kv.device)
-            view_embeddings = rearrange(
-                self.view_embeddings(shuffle), "ov c -> () () ov () () c"
-            )
+            view_embeddings = rearrange(self.view_embeddings(shuffle), "ov c -> () () ov () () c")
             kv = kv + view_embeddings
 
         # Run the transformer.
@@ -186,6 +184,7 @@ class EpipolarTransformer(nn.Module):
 
 class ImageSelfAttentionWrapper(nn.Module):
     """Image self attention wrapper implementation."""
+
     def __init__(
         self,
         self_attention_cfg: ImageSelfAttentionCfg,

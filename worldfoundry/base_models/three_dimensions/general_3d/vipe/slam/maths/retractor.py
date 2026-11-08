@@ -25,6 +25,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras imp
 
 class BaseRetractor:
     """Base retractor implementation."""
+
     def oplus(self, x: Any, inds: torch.Tensor, dx: torch.Tensor) -> None:
         """Oplus.
 
@@ -41,6 +42,7 @@ class BaseRetractor:
 
 class PoseRetractor(BaseRetractor):
     """Pose retractor implementation."""
+
     def oplus(self, x: SE3, inds: torch.Tensor, dx: torch.Tensor) -> None:
         """Oplus.
 
@@ -57,6 +59,7 @@ class PoseRetractor(BaseRetractor):
 
 class RigRotationOnlyRetractor(BaseRetractor):
     """Rig rotation only retractor implementation."""
+
     def oplus(self, x: SE3, inds: torch.Tensor, dx: torch.Tensor) -> None:
         """Oplus.
 
@@ -75,6 +78,7 @@ class RigRotationOnlyRetractor(BaseRetractor):
 
 class DenseDispRetractor(BaseRetractor):
     """Dense disp retractor implementation."""
+
     def oplus(self, x: torch.Tensor, inds: torch.Tensor, dx: torch.Tensor) -> None:
         """Oplus.
 
@@ -92,6 +96,7 @@ class DenseDispRetractor(BaseRetractor):
 
 class TracksDispRetractor(BaseRetractor):
     """Tracks disp retractor implementation."""
+
     def oplus(self, x: torch.Tensor, inds: torch.Tensor, dx: torch.Tensor) -> None:
         """Oplus.
 
@@ -109,6 +114,7 @@ class TracksDispRetractor(BaseRetractor):
 
 class IntrinsicsRetractor(BaseRetractor):
     """Intrinsics retractor implementation."""
+
     def __init__(self, camera_type: CameraType):
         """Init.
 

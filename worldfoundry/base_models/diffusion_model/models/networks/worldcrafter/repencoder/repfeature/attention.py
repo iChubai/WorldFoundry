@@ -30,15 +30,16 @@ class Attention(nn.Module):
             kv = query
         batch, query_tokens, channels = query.shape
         key_tokens = kv.shape[1]
-        q = self.q_proj(query).reshape(
-            batch, query_tokens, self.num_heads, self.head_dim
-        )
+        q = self.q_proj(query).reshape(batch, query_tokens, self.num_heads, self.head_dim)
         k = self.k_proj(kv).reshape(batch, key_tokens, self.num_heads, self.head_dim)
         v = self.v_proj(kv).reshape(batch, key_tokens, self.num_heads, self.head_dim)
         q = self.q_norm(q)
         k = self.k_norm(k)
         value = scaled_dot_product_attention(
-            q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p=0.0,
+            q.transpose(1, 2),
+            k.transpose(1, 2),
+            v.transpose(1, 2),
+            dropout_p=0.0,
         ).transpose(1, 2)
         value = value.reshape(batch, query_tokens, channels)
         return self.proj(value)

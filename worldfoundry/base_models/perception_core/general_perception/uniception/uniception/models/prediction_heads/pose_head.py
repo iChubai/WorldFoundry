@@ -131,9 +131,9 @@ class PoseHead(nn.Module):
         feat = feature_input.last_feature  # (B, C, H, W)
 
         # Check the input dimensions
-        assert (
-            feat.shape[1] == self.input_feature_dim
-        ), f"Input feature dimension {feat.shape[1]} does not match expected dimension {self.input_feature_dim}"
+        assert feat.shape[1] == self.input_feature_dim, (
+            f"Input feature dimension {feat.shape[1]} does not match expected dimension {self.input_feature_dim}"
+        )
 
         # Apply the projection layer to the patch-level features
         feat = self.proj(feat)  # (B, PC, H, W)

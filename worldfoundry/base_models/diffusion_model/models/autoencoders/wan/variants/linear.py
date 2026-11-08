@@ -64,6 +64,7 @@ class CausalConv3d(nn.Conv3d):
 
 class RMS_norm(nn.Module):
     """Norm implementation."""
+
     def __init__(self, dim, channel_first=True, images=True, bias=False):
         """Init.
 
@@ -93,6 +94,7 @@ class RMS_norm(nn.Module):
 
 class Upsample(nn.Upsample):
     """Upsample implementation."""
+
     def forward(self, x):
         """
         Fix bfloat16 support for nearest neighbor interpolation.
@@ -102,6 +104,7 @@ class Upsample(nn.Upsample):
 
 class Resample(nn.Module):
     """Resample implementation."""
+
     def __init__(self, dim, mode):
         """Init.
 
@@ -150,7 +153,6 @@ class Resample(nn.Module):
                     feat_cache[idx] = "Rep"
                     feat_idx[0] += 1
                 else:
-
                     cache_x = x[:, :, -CACHE_T:, :, :].clone()
                     if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
                         # cache last frame of last two chunk
@@ -181,7 +183,6 @@ class Resample(nn.Module):
                     feat_cache[idx] = x.clone()
                     feat_idx[0] += 1
                 else:
-
                     cache_x = x[:, :, -1:, :, :].clone()
 
                     x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
@@ -225,6 +226,7 @@ class Resample(nn.Module):
 
 class ResidualBlock(nn.Module):
     """Residual block implementation."""
+
     def __init__(self, in_dim, out_dim, dropout=0.0):
         """Init.
 
@@ -326,6 +328,7 @@ class AttentionBlock(nn.Module):
 
 class Encoder3d(nn.Module):
     """Encoder d implementation."""
+
     def __init__(
         self,
         dim=128,
@@ -443,6 +446,7 @@ class Encoder3d(nn.Module):
 
 class Decoder3d(nn.Module):
     """Decoder d implementation."""
+
     def __init__(
         self,
         dim=128,
@@ -574,6 +578,7 @@ def count_conv3d(model):
 
 class WanVAE_(nn.Module):
     """Wan implementation."""
+
     def __init__(
         self,
         dim=128,
@@ -740,7 +745,9 @@ def _video_vae(pretrained_path=None, z_dim=None, device="cpu", **kwargs):
         state_dict = load_state_dict(local_path, device="cpu")
     else:
         checkpoint = load_torch_state_dict(local_path, map_location="cpu")
-        state_dict = checkpoint["state_dict"] if isinstance(checkpoint, dict) and "state_dict" in checkpoint else checkpoint
+        state_dict = (
+            checkpoint["state_dict"] if isinstance(checkpoint, dict) and "state_dict" in checkpoint else checkpoint
+        )
     model.load_state_dict(state_dict, assign=True)
 
     return model
@@ -749,12 +756,14 @@ def _video_vae(pretrained_path=None, z_dim=None, device="cpu", **kwargs):
 @dataclass
 class WanVAEConfig:
     """Wan vae config implementation."""
+
     # cache_dir
     cache_dir: Optional[str] = None
 
 
 class WanVAE:
     """Wan vae implementation."""
+
     def __init__(self, z_dim=16, vae_pth="cache/vae_step_411000.pth", dtype=torch.float, device="cuda"):
         """Init.
 

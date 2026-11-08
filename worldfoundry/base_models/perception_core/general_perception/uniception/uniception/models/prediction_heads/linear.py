@@ -76,9 +76,9 @@ class LinearFeature(nn.Module):
 
         x = feature_input.last_feature
 
-        assert (
-            x.shape[1] == self.input_feature_dim
-        ), f"Input feature dimension mismatch: {x.shape[1]} != {self.input_feature_dim}"
+        assert x.shape[1] == self.input_feature_dim, (
+            f"Input feature dimension mismatch: {x.shape[1]} != {self.input_feature_dim}"
+        )
 
         x = self.linear(x)
         x = F.pixel_shuffle(x, self.patch_size)

@@ -31,7 +31,7 @@ def soft_nms(boxes, scores, method, gaussian_sigma, linear_threshold, prune_thre
             [0]: int64 tensor with the indices of the elements that have been kept
             by Soft NMS, sorted in decreasing order of scores
             [1]: float tensor with the re-scored scores of the elements that were kept
-"""
+    """
     return _soft_nms(
         Boxes,
         pairwise_iou,
@@ -44,9 +44,7 @@ def soft_nms(boxes, scores, method, gaussian_sigma, linear_threshold, prune_thre
     )
 
 
-def batched_soft_nms(
-        boxes, scores, idxs, method, gaussian_sigma, linear_threshold, prune_threshold
-):
+def batched_soft_nms(boxes, scores, idxs, method, gaussian_sigma, linear_threshold, prune_threshold):
     """
     Performs soft non-maximum suppression in a batched fashion.
 
@@ -91,20 +89,18 @@ def batched_soft_nms(
     max_coordinate = boxes.max()
     offsets = idxs.to(boxes) * (max_coordinate + 1)
     boxes_for_nms = boxes + offsets[:, None]
-    return soft_nms(
-        boxes_for_nms, scores, method, gaussian_sigma, linear_threshold, prune_threshold
-    )
+    return soft_nms(boxes_for_nms, scores, method, gaussian_sigma, linear_threshold, prune_threshold)
 
 
 def _soft_nms(
-        box_class,
-        pairwise_iou_func,
-        boxes,
-        scores,
-        method,
-        gaussian_sigma,
-        linear_threshold,
-        prune_threshold,
+    box_class,
+    pairwise_iou_func,
+    boxes,
+    scores,
+    method,
+    gaussian_sigma,
+    linear_threshold,
+    prune_threshold,
 ):
     """
     Soft non-max suppression algorithm.

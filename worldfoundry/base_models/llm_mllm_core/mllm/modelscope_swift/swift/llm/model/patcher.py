@@ -16,9 +16,23 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from transformers import PreTrainedModel, dynamic_module_utils, trainer
 from transformers.modeling_outputs import SequenceClassifierOutputWithPast
 
-from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import deep_getattr, to_device, to_float_dtype
-from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_dist_setting, get_logger, is_mp_ddp, safe_ddp_context, use_torchacc
-from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.torch_utils import _get_max_memory, _sync_max_memory, get_device_count
+from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import (
+    deep_getattr,
+    to_device,
+    to_float_dtype,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import (
+    get_dist_setting,
+    get_logger,
+    is_mp_ddp,
+    safe_ddp_context,
+    use_torchacc,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils.torch_utils import (
+    _get_max_memory,
+    _sync_max_memory,
+    get_device_count,
+)
 from .model_arch import get_model_arch
 from .utils import HfConfigFactory, get_llm_model
 
@@ -29,7 +43,6 @@ def patch_fixed_float_dtype(module: torch.nn.Module, dtype):
     """Patch the module, to make sure the consisitent dtype."""
 
     def get_float_dtype_hook(dtype):
-
         def _float_dtype_hook(module, input, output):
             return to_float_dtype(output, dtype)
 
@@ -42,7 +55,6 @@ def patch_fixed_device(module: torch.nn.Module, device):
     """Move the output to the specific device"""
 
     def get_device_hook(device):
-
         def _device_hook(module, input, output):
             return to_device(output, device)
 
@@ -61,7 +73,6 @@ def patch_output_clone(module: torch.nn.Module):
 
 
 def patch_get_input_embeddings(model, embedding_keys: str):
-
     def get_input_embeddings(self) -> nn.Module:
         return deep_getattr(model, embedding_keys)
 
@@ -69,11 +80,10 @@ def patch_get_input_embeddings(model, embedding_keys: str):
 
 
 def patch_output_normalizer(module: torch.nn.Module, model_meta):
-
     def lm_head_forward(self, hidden_states):
         return hidden_states
 
-    lm_heads = ['lm_head', 'output', 'embed_out', 'output_layer']
+    lm_heads = ["lm_head", "output", "embed_out", "output_layer"]
     llm_model = get_llm_model(module, model_meta=model_meta)
 
     found = False
@@ -83,13 +93,12 @@ def patch_output_normalizer(module: torch.nn.Module, model_meta):
             found = True
             break
 
-    assert found, 'Cannot find the proper lm_head name'
+    assert found, "Cannot find the proper lm_head name"
 
     def forward(self, input_ids: torch.LongTensor = None, attention_mask=None, *args, **kwargs):
-
         outputs = self.forward_origin(input_ids=input_ids, attention_mask=attention_mask, *args, **kwargs)
         hidden_states = outputs.logits
-        left_padding = (attention_mask[:, -1].sum() == attention_mask.shape[0])
+        left_padding = attention_mask[:, -1].sum() == attention_mask.shape[0]
         if left_padding:
             embeddings = hidden_states[:, -1]
         else:
@@ -99,7 +108,7 @@ def patch_output_normalizer(module: torch.nn.Module, model_meta):
         embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
 
         return {
-            'last_hidden_state': embeddings.contiguous(),
+            "last_hidden_state": embeddings.contiguous(),
         }
 
     llm_model.forward_origin = llm_model.forward
@@ -153,15 +162,15 @@ def patch_ignore_check_imports():
 
 
 def _patch_sequence_classification(model, model_meta):
-    hidden_size = HfConfigFactory.get_config_attr(model.config, 'hidden_size')
-    initializer_range = HfConfigFactory.get_config_attr(model.config, 'initializer_range')
+    hidden_size = HfConfigFactory.get_config_attr(model.config, "hidden_size")
+    initializer_range = HfConfigFactory.get_config_attr(model.config, "initializer_range")
 
-    lm_heads = ['lm_head', 'output', 'embed_out', 'output_layer']
+    lm_heads = ["lm_head", "output", "embed_out", "output_layer"]
     llm_model = get_llm_model(model, model_meta=model_meta)
     llm_model.num_labels = model.config.num_labels
     llm_model.score = nn.Linear(hidden_size, llm_model.num_labels, bias=False, dtype=llm_model.dtype)
-    if llm_model.score.weight.device == torch.device('meta'):
-        llm_model.score.to_empty(device='cpu')
+    if llm_model.score.weight.device == torch.device("meta"):
+        llm_model.score.to_empty(device="cpu")
     llm_model.score.weight.data.normal_(mean=0.0, std=initializer_range)
     for lm_head in lm_heads:
         if hasattr(llm_model, lm_head):
@@ -172,11 +181,11 @@ def _patch_sequence_classification(model, model_meta):
 
     @wraps(origin_forward)
     def new_forward(self, *args, **kwargs):
-        labels = kwargs.pop('labels', None)
-        return_dict = kwargs.pop('return_dict', None)
+        labels = kwargs.pop("labels", None)
+        return_dict = kwargs.pop("return_dict", None)
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        input_ids = kwargs.get('input_ids')
-        inputs_embeds = kwargs.get('inputs_embeds')
+        input_ids = kwargs.get("input_ids")
+        inputs_embeds = kwargs.get("inputs_embeds")
 
         output = origin_forward(self, *args, **kwargs)
         output.logits = output.logits.to(self.score.weight.dtype)
@@ -187,7 +196,7 @@ def _patch_sequence_classification(model, model_meta):
             batch_size = inputs_embeds.shape[0]
 
         if self.config.pad_token_id is None and batch_size != 1:
-            raise ValueError('Cannot handle batch sizes > 1 if no padding token is defined.')
+            raise ValueError("Cannot handle batch sizes > 1 if no padding token is defined.")
         if self.config.pad_token_id is None:
             sequence_lengths = -1
         else:
@@ -206,27 +215,27 @@ def _patch_sequence_classification(model, model_meta):
             labels = labels.to(logits.device)
             if self.config.problem_type is None:
                 if self.num_labels == 1:
-                    self.config.problem_type = 'regression'
+                    self.config.problem_type = "regression"
                 elif self.num_labels > 1 and (labels.dtype == torch.long or labels.dtype == torch.int):
-                    self.config.problem_type = 'single_label_classification'
+                    self.config.problem_type = "single_label_classification"
                 else:
-                    self.config.problem_type = 'multi_label_classification'
+                    self.config.problem_type = "multi_label_classification"
 
-            if self.config.problem_type == 'regression':
+            if self.config.problem_type == "regression":
                 loss_fct = MSELoss()
                 if self.num_labels == 1:
                     loss = loss_fct(pooled_logits.squeeze(), labels.squeeze())
                 else:
                     loss = loss_fct(pooled_logits, labels)
-            elif self.config.problem_type == 'single_label_classification':
+            elif self.config.problem_type == "single_label_classification":
                 loss_fct = CrossEntropyLoss()
                 loss = loss_fct(pooled_logits.view(-1, self.num_labels), labels.view(-1))
-            elif self.config.problem_type == 'multi_label_classification':
+            elif self.config.problem_type == "multi_label_classification":
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
-            output = (pooled_logits, ) + output[1:]
-            return ((loss, ) + output) if loss is not None else output
+            output = (pooled_logits,) + output[1:]
+            return ((loss,) + output) if loss is not None else output
 
         return SequenceClassifierOutputWithPast(
             loss=loss,
@@ -252,7 +261,7 @@ def patch_automodel_for_sequence_classification(model_meta):
             _patch_sequence_classification(self, model_meta)
 
         cls.__init__ = __new_init__
-        if hasattr(cls, '_tp_plan'):  # fix tp_plan
+        if hasattr(cls, "_tp_plan"):  # fix tp_plan
             cls._tp_plan = cls._tp_plan or {}
         res = from_pretrained(cls, *args, **kwargs)
         cls.__init__ = __init__
@@ -272,11 +281,11 @@ def patch_automodel(automodel_class, model_info):
 
     @classmethod
     def _new_from_pretrained(cls, *args, **kwargs):
-        if 'AutoAWQFor' in automodel_class.__name__:
-            kwargs.pop('use_cache', None)
-        if model_info.quant_method == 'gptq':
-            cls.main_input_name = 'input_ids'
-        if hasattr(cls, '_tp_plan'):  # fix tp_plan
+        if "AutoAWQFor" in automodel_class.__name__:
+            kwargs.pop("use_cache", None)
+        if model_info.quant_method == "gptq":
+            cls.main_input_name = "input_ids"
+        if hasattr(cls, "_tp_plan"):  # fix tp_plan
             cls._tp_plan = cls._tp_plan or {}
         model = from_pretrained(cls, *args, **kwargs)
         return model
@@ -305,12 +314,12 @@ def patch_mp_ddp():
         from accelerate.utils.modeling import get_balanced_memory, infer_auto_device_map
 
         @wraps(infer_auto_device_map)
-        def _infer_auto_device_map_patch(model: nn.Module,
-                                         max_memory: Optional[Dict[Union[int, str], Union[int, str]]] = None,
-                                         **kwargs) -> Dict[str, Union[int, str, torch.device]]:
+        def _infer_auto_device_map_patch(
+            model: nn.Module, max_memory: Optional[Dict[Union[int, str], Union[int, str]]] = None, **kwargs
+        ) -> Dict[str, Union[int, str, torch.device]]:
             """The auxiliary function for supports MP + DDP. Monkey Patching.
             add feat in accelerate to support MP + DDP"""
-            verbose = kwargs.pop('verbose', False)
+            verbose = kwargs.pop("verbose", False)
             n_gpu = get_device_count()
             _, local_rank, _, local_world_size = get_dist_setting()
             device_ids = list(range(local_rank, n_gpu, local_world_size))
@@ -322,14 +331,16 @@ def patch_mp_ddp():
 
         _old_ddp_init = DDP.__init__
         accelerate.accelerator.torch.nn.parallel.DistributedDataParallel.__init__ = (
-            lambda self, model, device_ids, output_device, *args, **kwargs: _old_ddp_init(self, model, *args, **kwargs))
+            lambda self, model, device_ids, output_device, *args, **kwargs: _old_ddp_init(self, model, *args, **kwargs)
+        )
         transformers.modeling_utils.get_balanced_memory = lambda *args, **kwargs: {}
         transformers.modeling_utils.infer_auto_device_map = _infer_auto_device_map_patch
 
     if is_mp_ddp() or use_torchacc():
         _old_accelerator_init = trainer.Accelerator.__init__
-        trainer.Accelerator.__init__ = (lambda self, device_placement=False, *args, **kwargs: _old_accelerator_init(
-            self, device_placement=device_placement, *args, **kwargs))
+        trainer.Accelerator.__init__ = lambda self, device_placement=False, *args, **kwargs: _old_accelerator_init(
+            self, device_placement=device_placement, *args, **kwargs
+        )
         trainer.Accelerator.verify_device_map = lambda *args, **kwargs: False
 
 
@@ -350,12 +361,16 @@ def patch_get_dynamic_module():
 
 @contextmanager
 def patch_tp_plan(load_model: bool):
-    if not load_model or not is_mp_ddp() or version.parse(
-            transformers.__version__) < version.parse('4.50') or 'WORLD_SIZE' not in os.environ:
+    if (
+        not load_model
+        or not is_mp_ddp()
+        or version.parse(transformers.__version__) < version.parse("4.50")
+        or "WORLD_SIZE" not in os.environ
+    ):
         yield
         return
-    WORLD_SIZE = os.environ.get('WORLD_SIZE')
-    os.environ['_PATCH_WORLD_SIZE'] = WORLD_SIZE
-    os.environ.pop('WORLD_SIZE')
+    WORLD_SIZE = os.environ.get("WORLD_SIZE")
+    os.environ["_PATCH_WORLD_SIZE"] = WORLD_SIZE
+    os.environ.pop("WORLD_SIZE")
     yield
-    os.environ['WORLD_SIZE'] = WORLD_SIZE
+    os.environ["WORLD_SIZE"] = WORLD_SIZE

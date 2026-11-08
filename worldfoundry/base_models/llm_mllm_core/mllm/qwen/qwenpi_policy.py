@@ -63,12 +63,9 @@ class AdaptiveEnsembler:
         if cur_action.ndim == 1:
             curr_act_preds = np.stack(self.action_history)
         else:
-            curr_act_preds = np.stack([
-                pred_actions[i] for (
-                    i,
-                    pred_actions) in zip(range(num_actions -
-                                               1, -1, -1), self.action_history)
-            ])
+            curr_act_preds = np.stack(
+                [pred_actions[i] for (i, pred_actions) in zip(range(num_actions - 1, -1, -1), self.action_history)]
+            )
 
         # calculate cosine similarity between the current prediction and all previous predictions
         ref = curr_act_preds[num_actions - 1, :]
@@ -98,8 +95,7 @@ def center_crop_image(image: Union[np.ndarray, Image.Image]) -> Image.Image:
         The return value.
     """
     crop_scale = 0.9
-    side_scale = float(np.sqrt(np.clip(crop_scale, 0.0,
-                                       1.0)))  # side length scale
+    side_scale = float(np.sqrt(np.clip(crop_scale, 0.0, 1.0)))  # side length scale
     out_size = (224, 224)
 
     # Convert input to PIL Image
@@ -161,17 +157,13 @@ def resize_with_pad(img, width, height, pad_value=-1):
     ratio = max(cur_width / width, cur_height / height)
     resized_height = int(cur_height / ratio)
     resized_width = int(cur_width / ratio)
-    resized_img = F.interpolate(img,
-                                size=(resized_height, resized_width),
-                                mode="bilinear",
-                                align_corners=False)
+    resized_img = F.interpolate(img, size=(resized_height, resized_width), mode="bilinear", align_corners=False)
 
     pad_height = max(0, int(height - resized_height))
     pad_width = max(0, int(width - resized_width))
 
     # pad on left and top of image
-    padded_img = F.pad(resized_img, (pad_width, 0, pad_height, 0),
-                       value=pad_value)
+    padded_img = F.pad(resized_img, (pad_width, 0, pad_height, 0), value=pad_value)
     return padded_img
 
 
@@ -203,10 +195,8 @@ class PolicyPreprocessMixin:
                 if isinstance(img, np.ndarray):
                     img = torch.from_numpy(img)
 
-                img = resize_with_pad(img,
-                                      *self.config.resize_imgs_with_padding,
-                                      pad_value=0)
-                img = self.image_processor(img)['pixel_values']
+                img = resize_with_pad(img, *self.config.resize_imgs_with_padding, pad_value=0)
+                img = self.image_processor(img)["pixel_values"]
                 images.append(img)
                 img_masks.append(True)
             else:
@@ -217,10 +207,8 @@ class PolicyPreprocessMixin:
         if isinstance(images[0], torch.Tensor):
             images = torch.stack(images, dim=0).to(device=device)
         elif isinstance(images[0], np.ndarray):
-            images = torch.from_numpy(np.stack(images, axis=0)).to(
-                device=device)  # torch.Size([3, 256, 1176])
-        img_masks = torch.tensor(img_masks,
-                                 dtype=torch.bool).to(device=device)  # (*b, n)
+            images = torch.from_numpy(np.stack(images, axis=0)).to(device=device)  # torch.Size([3, 256, 1176])
+        img_masks = torch.tensor(img_masks, dtype=torch.bool).to(device=device)  # (*b, n)
 
         return images, img_masks
 
@@ -258,15 +246,11 @@ class PolicyPreprocessMixin:
 
         # either provide `prompt` or (`lang_tokens`, `lang_masks`)
         if prompt is None and (lang_tokens is None or lang_masks is None):
-            raise ValueError(
-                "Either 'prompt' or ('lang_tokens', 'lang_masks') must be provided in the observation."
-            )
+            raise ValueError("Either 'prompt' or ('lang_tokens', 'lang_masks') must be provided in the observation.")
 
         device = observation["state"].device
         if prompt is not None and (lang_tokens is None or lang_masks is None):
-            prompt = [
-                p if p.startswith("<bos>") else f"<bos>{p}" for p in prompt
-            ]
+            prompt = [p if p.startswith("<bos>") else f"<bos>{p}" for p in prompt]
             prompt = [p if p.endswith("\n") else f"{p}\n" for p in prompt]
             tokenized_prompt = self.language_tokenizer.__call__(
                 prompt,
@@ -276,19 +260,15 @@ class PolicyPreprocessMixin:
                 return_tensors="pt",
             )
             lang_tokens = tokenized_prompt["input_ids"].to(device=device)
-            lang_masks = tokenized_prompt["attention_mask"].to(
-                device=device, dtype=torch.bool)
+            lang_masks = tokenized_prompt["attention_mask"].to(device=device, dtype=torch.bool)
         else:
             lang_tokens = observation["lang_tokens"].to(device=device)
-            lang_masks = observation["lang_masks"].to(device=device,
-                                                      dtype=torch.bool)
+            lang_masks = observation["lang_masks"].to(device=device, dtype=torch.bool)
 
         return lang_tokens, lang_masks
 
     @torch.no_grad
-    def select_action(self,
-                      observation: dict[str, Tensor],
-                      noise: Tensor | None = None):
+    def select_action(self, observation: dict[str, Tensor], noise: Tensor | None = None):
         """Select action.
 
         Args:
@@ -299,7 +279,7 @@ class PolicyPreprocessMixin:
         images, img_masks = self.prepare_images(observation)
         state = self.prepare_state(observation)
         lang_tokens, lang_masks = self.prepare_language(observation)
-        device = 'cuda'
+        device = "cuda"
         dtype = torch.bfloat16
 
         actions = self.model.sample_actions(
@@ -314,11 +294,13 @@ class PolicyPreprocessMixin:
 
 class QwenPI0InferencePolicy(PolicyPreprocessMixin, QwenPI0Policy):
     """Qwen inference policy implementation."""
+
     pass  # Only combine necessary functions
 
 
 class PI0InfernecePolicy(PolicyPreprocessMixin, PI0Policy):
     """Infernece policy implementation."""
+
     pass  # Only combine necessary functions
 
 
@@ -329,7 +311,7 @@ def merge_qwen_config(policy_config, qwen_config):
         policy_config: The policy config.
         qwen_config: The qwen config.
     """
-    if hasattr(qwen_config, 'to_dict'):
+    if hasattr(qwen_config, "to_dict"):
         config_dict = qwen_config.to_dict()
     else:
         config_dict = qwen_config
@@ -363,9 +345,9 @@ def merge_qwen_config(policy_config, qwen_config):
 
 
 class QwenPiServer:
-    '''
+    """
     policy wrapper to support action ensemble or chunk execution
-    '''
+    """
 
     def __init__(
         self,
@@ -394,8 +376,7 @@ class QwenPiServer:
 
         self.task_description = None
 
-        self.action_ensembler = AdaptiveEnsembler(self.action_ensemble_horizon,
-                                                  self.adaptive_ensemble_alpha)
+        self.action_ensembler = AdaptiveEnsembler(self.action_ensemble_horizon, self.adaptive_ensemble_alpha)
 
         self.vla = self.load_vla(path_to_pi_model)
         self.vla = self.vla.to("cuda").eval()
@@ -404,29 +385,16 @@ class QwenPiServer:
         self.global_step = 0
         self.last_action_chunk = None
 
-    def init_norm(
-            self,
-            states_path=DEFAULT_NORM_STATS_PATH,
-            state_dim=14,
-            action_dim=14):
-        '''
+    def init_norm(self, states_path=DEFAULT_NORM_STATS_PATH, state_dim=14, action_dim=14):
+        """
         TODO: show be rewritten as a dict
-        '''
+        """
         with open(states_path) as f:
-            norm_stats = json.load(
-                f)['stack_bowls_three-aloha-agilex_clean_50_rep']
-        self.state_mean = np.array(
-            norm_stats["norm_stats"]["state"]["mean"][:state_dim],
-            dtype=np.float32)
-        self.state_std = np.array(
-            norm_stats["norm_stats"]["state"]["std"][:state_dim],
-            dtype=np.float32)
-        self.action_mean = np.array(
-            norm_stats["norm_stats"]["actions"]["mean"][:action_dim],
-            dtype=np.float32)
-        self.action_std = np.array(
-            norm_stats["norm_stats"]["actions"]["std"][:action_dim],
-            dtype=np.float32)
+            norm_stats = json.load(f)["stack_bowls_three-aloha-agilex_clean_50_rep"]
+        self.state_mean = np.array(norm_stats["norm_stats"]["state"]["mean"][:state_dim], dtype=np.float32)
+        self.state_std = np.array(norm_stats["norm_stats"]["state"]["std"][:state_dim], dtype=np.float32)
+        self.action_mean = np.array(norm_stats["norm_stats"]["actions"]["mean"][:action_dim], dtype=np.float32)
+        self.action_std = np.array(norm_stats["norm_stats"]["actions"]["std"][:action_dim], dtype=np.float32)
 
     def state_normalizer(self, unnorm_state):
         """State normalizer.
@@ -470,9 +438,9 @@ class QwenPiServer:
         language_tokenizer = AutoTokenizer.from_pretrained(base_model_path)
         processor = AutoProcessor.from_pretrained(base_model_path)
 
-        print('Initializing model ... ')
+        print("Initializing model ... ")
 
-        if 'qwen' in path_to_pi_model:
+        if "qwen" in path_to_pi_model:
             policy = QwenPI0InferencePolicy(config)
         else:
             # Shuai: Not tested yet
@@ -494,7 +462,7 @@ class QwenPiServer:
         policy.processor = processor
         policy.image_processor = processor.image_processor
 
-        print('Model initialized ... ')
+        print("Model initialized ... ")
 
         self.init_norm()
         return policy
@@ -517,12 +485,12 @@ class QwenPiServer:
         # (If trained with image augmentations) Center crop image and then resize back up to original size.
         # IMPORTANT: Let's say crop scale == 0.9. To get the new height and width (post-crop), multiply
         #            the original height and width by sqrt(0.9) -- not 0.9!
-        if 'reset' in observation and observation['reset']:
+        if "reset" in observation and observation["reset"]:
             self.reset()
             return dict(action=None)
 
-        unnorm_state = observation['state']
-        observation['state'] = self.state_normalizer(observation['state'])
+        unnorm_state = observation["state"]
+        observation["state"] = self.state_normalizer(observation["state"])
 
         if self.use_length == -1 or self.global_step % self.use_length == 0:
             normalized_actions = self.vla.select_action(observation).squeeze(0)
@@ -534,12 +502,9 @@ class QwenPiServer:
         elif self.use_length == -1:  # do ensemble
             action = self.action_ensembler.ensemble_action(normalized_actions)
 
-        action = self.action_unnormalizer(
-            action[:14])  # TODO: remove the hard code dim!
+        action = self.action_unnormalizer(action[:14])  # TODO: remove the hard code dim!
         action = action[:14]  # + self.last_state[0,:14]
-        print(
-            f"on server step: {self.global_step} state {observation['state'][:7]} action {action[:7]}"
-        )
+        print(f"on server step: {self.global_step} state {observation['state'][:7]} action {action[:7]}")
 
         self.global_step += 1
 
@@ -547,8 +512,8 @@ class QwenPiServer:
 
 
 if __name__ == "__main__":
-
     from .websocket_policy_server import WebsocketPolicyServer
+
     PATH_TO_PI_MODEL = os.environ["WORLDFOUNDRY_QWEN_PI_MODEL_PATH"]
 
     model = QwenPiServer(PATH_TO_PI_MODEL, use_length=50)

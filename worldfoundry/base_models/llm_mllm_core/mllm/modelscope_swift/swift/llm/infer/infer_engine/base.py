@@ -8,15 +8,16 @@ from ..protocol import ChatCompletionResponse, ChatCompletionStreamResponse, Req
 
 
 class BaseInferEngine(ABC):
-
     @abstractmethod
-    def infer(self,
-              infer_requests: List[InferRequest],
-              request_config: Optional[RequestConfig] = None,
-              metrics: Optional[List[Metric]] = None,
-              *,
-              use_tqdm: Optional[bool] = None,
-              **kwargs) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
+    def infer(
+        self,
+        infer_requests: List[InferRequest],
+        request_config: Optional[RequestConfig] = None,
+        metrics: Optional[List[Metric]] = None,
+        *,
+        use_tqdm: Optional[bool] = None,
+        **kwargs,
+    ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
         """
         This method performs inference on a list of inference requests.
 
@@ -37,10 +38,9 @@ class BaseInferEngine(ABC):
         pass
 
     @abstractmethod
-    async def infer_async(self,
-                          infer_request: InferRequest,
-                          request_config: Optional[RequestConfig] = None,
-                          **kwargs) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionStreamResponse]]:
+    async def infer_async(
+        self, infer_request: InferRequest, request_config: Optional[RequestConfig] = None, **kwargs
+    ) -> Union[ChatCompletionResponse, AsyncIterator[ChatCompletionStreamResponse]]:
         """
         This method performs asynchronous inference on a single inference request.
 

@@ -11,14 +11,32 @@ from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.mux 
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.piflow_sampler import piflow_denoise_loop
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.postprocess_audio import postprocess_audio
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.postprocess_video import postprocess_video
-from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.prepare_latents import append_i2va_tail_condition, audio_latent_duration, encode_i2va_first_frame, prepare_audio_latents, prepare_video_latents
-from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.prepare_ropes import VisualRopeCache, compute_rope1d
+from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.prepare_latents import (
+    append_i2va_tail_condition,
+    audio_latent_duration,
+    encode_i2va_first_frame,
+    prepare_audio_latents,
+    prepare_video_latents,
+)
+from worldfoundry.base_models.diffusion_model.runners.kandinsky6_algorithms.prepare_ropes import (
+    VisualRopeCache,
+    compute_rope1d,
+)
 from worldfoundry.base_models.diffusion_model.models.encoders.kandinsky6.beautifier import NullBeautifier
 from worldfoundry.base_models.diffusion_model.kandinsky6_types import Kandinsky6PipelineOutput, LatentBundle
 from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.cache import CacheDiT, CacheMode
-from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.offload import NoOpOffload, OffloadHandle, OffloadStrategy
+from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.offload import (
+    NoOpOffload,
+    OffloadHandle,
+    OffloadStrategy,
+)
 from worldfoundry.base_models.diffusion_model.optimizations.kandinsky6.profile import NoOpProfile
-from worldfoundry.base_models.diffusion_model.recipes.kandinsky6_config import CacheConfig, MagCacheConfig, NaviCacheConfig, PipelineConfig
+from worldfoundry.base_models.diffusion_model.recipes.kandinsky6_config import (
+    CacheConfig,
+    MagCacheConfig,
+    NaviCacheConfig,
+    PipelineConfig,
+)
 from worldfoundry.base_models.diffusion_model.runners.kandinsky6_progress import denoising_progress
 
 logger = logging.getLogger("kandinsky")
@@ -243,7 +261,6 @@ class Kandinsky6Sampler:
             return
 
         raise ValueError(f"Unknown cache mode: {mode!r}")
-
 
     @staticmethod
     def _generation_mode(*, do_audio: bool, image: object | None) -> str:
@@ -623,4 +640,6 @@ class Kandinsky6Sampler:
                 write_expanded_prompt(saved, captions[index])
             path = paths[0] if batch_size == 1 else paths
 
-        return Kandinsky6PipelineOutput(frames=frames, audio=audio, path=path, prompts=list(captions), latents=result_bundle)
+        return Kandinsky6PipelineOutput(
+            frames=frames, audio=audio, path=path, prompts=list(captions), latents=result_bundle
+        )

@@ -20,6 +20,7 @@ import torch.nn as nn
 
 class CameraDec(nn.Module):
     """Camera dec implementation."""
+
     def __init__(self, dim_in=1536):
         """Init.
 

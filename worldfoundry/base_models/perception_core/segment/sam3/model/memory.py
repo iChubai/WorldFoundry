@@ -149,9 +149,7 @@ class CXBlock(nn.Module):
             groups=dim if use_dwconv else 1,
         )  # depthwise conv
         self.norm = LayerNorm2d(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(
-            dim, 4 * dim
-        )  # pointwise/1x1 convs, implemented with linear layers
+        self.pwconv1 = nn.Linear(dim, 4 * dim)  # pointwise/1x1 convs, implemented with linear layers
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(4 * dim, dim)
         self.gamma = (
@@ -184,6 +182,7 @@ class CXBlock(nn.Module):
 
 class SimpleFuser(nn.Module):
     """Simple fuser implementation."""
+
     def __init__(self, layer, num_layers, dim=None, input_projection=False):
         """Init.
 
@@ -216,6 +215,7 @@ class SimpleFuser(nn.Module):
 
 class SimpleMaskEncoder(nn.Module):
     """Simple mask encoder implementation."""
+
     def __init__(
         self,
         out_dim,

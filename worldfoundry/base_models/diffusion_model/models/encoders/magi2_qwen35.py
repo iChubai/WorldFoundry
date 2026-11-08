@@ -93,11 +93,7 @@ def _as_list(value: Any) -> list:
 
 
 def _pick(values: dict, keys: Iterable[str]) -> list[tuple[str, Any]]:
-    return [
-        (key, values[key])
-        for key in keys
-        if key in values and values[key] not in (None, [], {})
-    ]
+    return [(key, values[key]) for key in keys if key in values and values[key] not in (None, [], {})]
 
 
 def json_to_compact_markdown(raw_json: str | dict[str, Any]) -> str:
@@ -108,11 +104,7 @@ def json_to_compact_markdown(raw_json: str | dict[str, Any]) -> str:
 
     obj = strip_empty(obj)
     if not isinstance(obj, dict) or "global_layer" not in obj:
-        return (
-            raw_json
-            if isinstance(raw_json, str)
-            else json.dumps(raw_json, ensure_ascii=False)
-        )
+        return raw_json if isinstance(raw_json, str) else json.dumps(raw_json, ensure_ascii=False)
 
     global_layer = _as_dict(obj.get("global_layer"))
     dynamic_layer = _as_dict(obj.get("dynamic_layer"))
@@ -218,9 +210,7 @@ def json_to_compact_markdown(raw_json: str | dict[str, Any]) -> str:
                 text = _one_line(dialogue_line.get("text"))
                 timestamp = _one_line(dialogue_line.get("timestamp"))
                 if text:
-                    prefix = (
-                        f"   - dialogue {speaker}: " if speaker else "   - dialogue: "
-                    )
+                    prefix = f"   - dialogue {speaker}: " if speaker else "   - dialogue: "
                     line = prefix + text
                     if timestamp:
                         line += f" ({timestamp})"
@@ -311,15 +301,11 @@ class Magi2Qwen35TextEncoder(nn.Module):
             behavior="isolated",
         )
         original_pre_tokenizer = self.tokenizer.backend_tokenizer.pre_tokenizer
-        self.tokenizer.backend_tokenizer.pre_tokenizer = pre_tokenizers.Sequence(
-            [cjk_split, original_pre_tokenizer]
-        )
+        self.tokenizer.backend_tokenizer.pre_tokenizer = pre_tokenizers.Sequence([cjk_split, original_pre_tokenizer])
 
         from transformers import Qwen3_5TextModel
 
-        self.text_model = Qwen3_5TextModel.from_pretrained(
-            model_path, torch_dtype=precision
-        )
+        self.text_model = Qwen3_5TextModel.from_pretrained(model_path, torch_dtype=precision)
         self.to(device)
         self.text_model.eval()
         self.text_model.requires_grad_(False)
@@ -371,9 +357,7 @@ class Magi2Qwen35TextEncoder(nn.Module):
             pass
         return prompt
 
-    def get_target_token_indices(
-        self, prompt: str, target_str: Optional[str]
-    ) -> Optional[list[int]]:
+    def get_target_token_indices(self, prompt: str, target_str: Optional[str]) -> Optional[list[int]]:
         if not target_str:
             return None
         prompt = self._normalize_prompt(prompt)
@@ -399,9 +383,7 @@ class Magi2Qwen35TextEncoder(nn.Module):
                 indices.append(index)
         return indices
 
-    def get_special_token(
-        self, prompt: str, target_strs: list[str], text_feature: torch.Tensor
-    ) -> torch.Tensor:
+    def get_special_token(self, prompt: str, target_strs: list[str], text_feature: torch.Tensor) -> torch.Tensor:
         embeddings = []
         for target_str in target_strs:
             indices = self.get_target_token_indices(prompt, target_str)
@@ -465,9 +447,7 @@ class Magi2Qwen35SubprocessTextEncoder:
         self.max_length = int(max_length)
         self.skip_layer = int(skip_layer)
         self.python_executable = str(python_executable or sys.executable)
-        self.transformers_overlay = resolve_magi2_transformers_overlay(
-            transformers_overlay
-        )
+        self.transformers_overlay = resolve_magi2_transformers_overlay(transformers_overlay)
 
     @torch.inference_mode()
     def encode(self, prompt: str) -> torch.Tensor:

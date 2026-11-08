@@ -8,6 +8,7 @@ available per layer via ``self_attn_types``.  TeaCache-style
 
 Adds linear attention and TeaCache hooks.  No VACE or causal cache.
 """
+
 import math
 from typing import Optional
 

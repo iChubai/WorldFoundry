@@ -3,10 +3,12 @@ from typing import Dict, List, Optional, Tuple
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm.template import split_str_parts_by
 
 
-def calculate_loss_scale(query: str,
-                         response: str,
-                         response_loss_scale_map: Dict[str, list],
-                         query_loss_scale_map: Optional[Dict[str, list]] = None) -> Tuple[List[str], List[float]]:
+def calculate_loss_scale(
+    query: str,
+    response: str,
+    response_loss_scale_map: Dict[str, list],
+    query_loss_scale_map: Optional[Dict[str, list]] = None,
+) -> Tuple[List[str], List[float]]:
     """Calculate the loss scale by splitting the agent response.
 
     This algorithm comes from paper: https://arxiv.org/pdf/2309.00986.pdf
@@ -43,16 +45,16 @@ def calculate_loss_scale(query: str,
     weights = []
     agent_content = []
     for c in agent_parts:
-        if c['key'] in response_loss_scale_map:
-            loss_scale = response_loss_scale_map[c['key']]
-            assert len(loss_scale) in {1, 2}, f'loss_scale: {loss_scale}'
+        if c["key"] in response_loss_scale_map:
+            loss_scale = response_loss_scale_map[c["key"]]
+            assert len(loss_scale) in {1, 2}, f"loss_scale: {loss_scale}"
             if len(loss_scale) == 1:
                 weights += loss_scale
-                agent_content.append(c['content'])
+                agent_content.append(c["content"])
             else:
                 weights += loss_scale
-                agent_content += [c['key'], c['content']]
+                agent_content += [c["key"], c["content"]]
         else:
-            weights.append(1.)
-            agent_content.append(c['content'])
+            weights.append(1.0)
+            agent_content.append(c["content"])
     return agent_content, weights

@@ -29,7 +29,9 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
         self.language_model = PersimmonForCausalLM._from_config(config.text_config)
-        self.vision_embed_tokens = nn.Linear(config.patch_size * config.patch_size * config.num_channels, config.hidden_size)
+        self.vision_embed_tokens = nn.Linear(
+            config.patch_size * config.patch_size * config.num_channels, config.hidden_size
+        )
 
         self.gradient_checkpointing = False
         # Initialize weights and apply final processing
@@ -60,7 +62,9 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
             image_patch_input_indices: Tensor of indices of the image patches in the input_ids tensor. Shape: [b, s]
         """
         if not (word_embeddings.shape[0] == len(continuous_embeddings)):
-            raise ValueError(f"Batch sizes must match! Got {len(continuous_embeddings)=} and {word_embeddings.shape[0]=}")
+            raise ValueError(
+                f"Batch sizes must match! Got {len(continuous_embeddings)=} and {word_embeddings.shape[0]=}"
+            )
 
         output_embeddings = word_embeddings.clone()
         for batch_idx in range(word_embeddings.shape[0]):
@@ -72,7 +76,10 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
             src_indices = image_patch_input_indices[batch_idx][dst_indices]
             # Check if we have more indices than embeddings. Note that we could have fewer indices if images got truncated.
             if src_indices.shape[0] > continuous_embeddings[batch_idx].shape[0]:
-                raise ValueError(f"Number of continuous embeddings {continuous_embeddings[batch_idx].shape=} does not match " f"number of continuous token ids {src_indices.shape=} in batch element {batch_idx}.")
+                raise ValueError(
+                    f"Number of continuous embeddings {continuous_embeddings[batch_idx].shape=} does not match "
+                    f"number of continuous token ids {src_indices.shape=} in batch element {batch_idx}."
+                )
             output_embeddings[batch_idx, dst_indices] = continuous_embeddings[batch_idx][src_indices]
         return output_embeddings
 
@@ -92,7 +99,9 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
         use_cache = use_cache if use_cache is not None else self.config.use_cache
 
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
@@ -116,14 +125,19 @@ class FuyuForCausalLM(FuyuPreTrainedModel):
 
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
-            position_ids = torch.arange(past_key_values_length, seq_length + past_key_values_length, dtype=torch.long, device=device)
+            position_ids = torch.arange(
+                past_key_values_length, seq_length + past_key_values_length, dtype=torch.long, device=device
+            )
             position_ids = position_ids.unsqueeze(0)
 
         if inputs_embeds is None:
             inputs_embeds = self.language_model.get_input_embeddings()(input_ids)
             if image_patches is not None and past_key_values is None:
                 # patch_embeddings = self.vision_embed_tokens(image_patches.to(self.vision_embed_tokens.weight.dtype))
-                patch_embeddings = [self.vision_embed_tokens(patch.to(self.vision_embed_tokens.weight.dtype)).squeeze(0) for patch in image_patches]
+                patch_embeddings = [
+                    self.vision_embed_tokens(patch.to(self.vision_embed_tokens.weight.dtype)).squeeze(0)
+                    for patch in image_patches
+                ]
                 inputs_embeds = self.gather_continuous_embeddings(
                     word_embeddings=inputs_embeds,
                     continuous_embeddings=patch_embeddings,

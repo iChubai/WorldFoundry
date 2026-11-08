@@ -15,6 +15,7 @@ from ...utils.math import truncated_normal_
 
 class Downsample2D(nn.Module):
     """Downsample d implementation."""
+
     def __init__(self, mode="nearest", scale=4):
         """Init.
 
@@ -53,6 +54,7 @@ def generate_coord(x):
 
 class PositionEmbeddingSine(nn.Module):
     """Position embedding sine implementation."""
+
     def __init__(self, num_pos_feats=64, temperature=10000, normalize=False, scale=None):
         """Init.
 
@@ -101,6 +103,7 @@ class PositionEmbeddingSine(nn.Module):
 
 class PositionEmbeddingLearned(nn.Module):
     """Position embedding learned implementation."""
+
     def __init__(self, num_pos_feats=64, H=30, W=30):
         """Init.
 

@@ -19,6 +19,7 @@ def catch_exception(fn):
     Args:
         fn: The fn.
     """
+
     @wraps(fn)
     def wrapper(*args, **kwargs):
         """Wrapper."""
@@ -26,16 +27,19 @@ def catch_exception(fn):
             return fn(*args, **kwargs)
         except Exception as e:
             import traceback
-            print(f"Exception in {fn.__name__}",  end='r')
+
+            print(f"Exception in {fn.__name__}", end="r")
             # print({', '.join(repr(arg) for arg in args)}, {', '.join(f'{k}={v!r}' for k, v in kwargs.items())})
             traceback.print_exc(chain=False)
             time.sleep(0.1)
             return None
+
     return wrapper
 
 
 class CallbackOnException:
     """Callback on exception implementation."""
+
     def __init__(self, callback: Callable, exception: type):
         """Init.
 
@@ -62,7 +66,8 @@ class CallbackOnException:
             self.callback()
             return True
         return False
-    
+
+
 def traverse_nested_dict_keys(d: Dict[str, Dict]) -> Generator[Tuple[str, ...], None, None]:
     """Traverse nested dict keys.
 
@@ -75,9 +80,9 @@ def traverse_nested_dict_keys(d: Dict[str, Dict]) -> Generator[Tuple[str, ...], 
     for k, v in d.items():
         if isinstance(v, dict):
             for sub_key in traverse_nested_dict_keys(v):
-                yield (k, ) + sub_key
+                yield (k,) + sub_key
         else:
-            yield (k, )
+            yield (k,)
 
 
 def get_nested_dict(d: Dict[str, Dict], keys: Tuple[str, ...], default: Any = None):
@@ -93,6 +98,7 @@ def get_nested_dict(d: Dict[str, Dict], keys: Tuple[str, ...], default: Any = No
         if d is None:
             break
     return d
+
 
 def set_nested_dict(d: Dict[str, Dict], keys: Tuple[str, ...], value: Any):
     """Set nested dict.
@@ -122,7 +128,7 @@ def key_average(list_of_dicts: list) -> Dict[str, Any]:
             v = get_nested_dict(d, k)
             if v is not None and not math.isnan(v):
                 values.append(v)
-        avg = sum(values) / len(values) if values else float('nan')
+        avg = sum(values) / len(values) if values else float("nan")
         set_nested_dict(result, k, avg)
     return result
 
@@ -135,7 +141,7 @@ def flatten_nested_dict(d: Dict[str, Any], parent_key: Tuple[str, ...] = None) -
     if parent_key is None:
         parent_key = ()
     for k, v in d.items():
-        new_key = parent_key + (k, )
+        new_key = parent_key + (k,)
         if isinstance(v, MutableMapping):
             items.extend(flatten_nested_dict(v, new_key).items())
         else:
@@ -165,7 +171,8 @@ def read_jsonl(file):
         file: The file.
     """
     import json
-    with open(file, 'r') as f:
+
+    with open(file, "r") as f:
         data = f.readlines()
     return [json.loads(line) for line in data]
 
@@ -178,9 +185,10 @@ def write_jsonl(data: List[dict], file):
         file: The file.
     """
     import json
-    with open(file, 'w') as f:
+
+    with open(file, "w") as f:
         for item in data:
-            f.write(json.dumps(item) + '\n')
+            f.write(json.dumps(item) + "\n")
 
 
 def to_hierachical_dataframe(data: List[Dict[Tuple[str, ...], Any]]):
@@ -190,10 +198,11 @@ def to_hierachical_dataframe(data: List[Dict[Tuple[str, ...], Any]]):
         data: The data.
     """
     import pandas as pd
+
     data = [flatten_nested_dict(d) for d in data]
     df = pd.DataFrame(data)
     df = df.sort_index(axis=1)
-    df.columns = pd.MultiIndex.from_tuples(df.columns)  
+    df.columns = pd.MultiIndex.from_tuples(df.columns)
     return df
 
 
@@ -218,7 +227,8 @@ def recursive_replace(d: Union[List, Dict, str], mapping: Dict[str, str]):
 
 class timeit:
     """Timeit implementation."""
-    _history: Dict[str, List['timeit']] = {}
+
+    _history: Dict[str, List["timeit"]] = {}
 
     def __init__(self, name: str = None, verbose: bool = True, average: bool = False):
         """Init.
@@ -243,21 +253,26 @@ class timeit:
             func: The func.
         """
         import inspect
+
         if inspect.iscoroutinefunction(func):
+
             async def wrapper(*args, **kwargs):
                 """Wrapper."""
                 with timeit(self.name or func.__qualname__):
                     ret = await func(*args, **kwargs)
                 return ret
+
             return wrapper
         else:
+
             def wrapper(*args, **kwargs):
                 """Wrapper."""
                 with timeit(self.name or func.__qualname__):
                     ret = func(*args, **kwargs)
                 return ret
+
             return wrapper
-        
+
     def __enter__(self):
         """Enter."""
         self.start = time.time()
@@ -285,7 +300,7 @@ class timeit:
         return sum(t.time for t in timeit._history[self.name]) / len(timeit._history[self.name])
 
     @property
-    def history(self) -> List['timeit']:
+    def history(self) -> List["timeit"]:
         """History.
 
         Returns:
@@ -331,10 +346,10 @@ def strip_common_prefix_suffix(strings: List[str]) -> List[str]:
         if any(s[-end] != first[-end] for s in strings):
             break
 
-    return [s[start:len(s) - end + 1] for s in strings]
+    return [s[start : len(s) - end + 1] for s in strings]
 
 
-def multithead_execute(inputs: List[Any], num_workers: int, pbar = None):
+def multithead_execute(inputs: List[Any], num_workers: int, pbar=None):
     """Multithead execute.
 
     Args:
@@ -347,9 +362,9 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar = None):
     from tqdm import tqdm
 
     if pbar is not None:
-        pbar.total = len(inputs) if hasattr(inputs, '__len__') else None
+        pbar.total = len(inputs) if hasattr(inputs, "__len__") else None
     else:
-        pbar = tqdm(total=len(inputs) if hasattr(inputs, '__len__') else None)
+        pbar = tqdm(total=len(inputs) if hasattr(inputs, "__len__") else None)
 
     def decorator(fn: Callable):
         """Decorator.
@@ -357,11 +372,9 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar = None):
         Args:
             fn: The fn.
         """
-        with (
-            ThreadPoolExecutor(max_workers=num_workers) as executor,
-            pbar
-        ):  
+        with ThreadPoolExecutor(max_workers=num_workers) as executor, pbar:
             pbar.refresh()
+
             @catch_exception
             @suppress_traceback
             def _fn(input):
@@ -373,9 +386,10 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar = None):
                 ret = fn(input)
                 pbar.update()
                 return ret
+
             executor.map(_fn, inputs)
             executor.shutdown(wait=True)
-    
+
     return decorator
 
 
@@ -385,6 +399,7 @@ def suppress_traceback(fn):
     Args:
         fn: The fn.
     """
+
     @wraps(fn)
     def wrapper(*args, **kwargs):
         """Wrapper."""
@@ -393,12 +408,14 @@ def suppress_traceback(fn):
         except Exception as e:
             e.__traceback__ = e.__traceback__.tb_next.tb_next
             raise
+
     return wrapper
 
 
 class no_warnings:
     """No warnings implementation."""
-    def __init__(self, action: str = 'ignore', **kwargs):
+
+    def __init__(self, action: str = "ignore", **kwargs):
         """Init.
 
         Args:
@@ -406,27 +423,29 @@ class no_warnings:
         """
         self.action = action
         self.filter_kwargs = kwargs
-    
+
     def __call__(self, fn):
         """Call.
 
         Args:
             fn: The fn.
         """
+
         @wraps(fn)
         def wrapper(*args, **kwargs):
             """Wrapper."""
             with warnings.catch_warnings():
                 warnings.simplefilter(self.action, **self.filter_kwargs)
                 return fn(*args, **kwargs)
-        return wrapper  
-    
+
+        return wrapper
+
     def __enter__(self):
         """Enter."""
         self.warnings_manager = warnings.catch_warnings()
         self.warnings_manager.__enter__()
         warnings.simplefilter(self.action, **self.filter_kwargs)
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit.
 

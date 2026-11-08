@@ -206,15 +206,15 @@ class MultiViewCrossAttentionTransformer(UniCeptionInfoSharingBase):
             MultiViewTransformerOutput: Output of the model post information sharing.
         """
         # Check that the number of views matches the input and the features are of expected shape
-        assert (
-            len(model_input.features) == self.num_views
-        ), f"Expected {self.num_views} views, got {len(model_input.features)}"
-        assert all(
-            view_features.shape[1] == self.input_embed_dim for view_features in model_input.features
-        ), f"All views must have input dimension {self.input_embed_dim}"
-        assert all(
-            view_features.ndim == 4 for view_features in model_input.features
-        ), "All views must have 4 dimensions (N, C, H, W)"
+        assert len(model_input.features) == self.num_views, (
+            f"Expected {self.num_views} views, got {len(model_input.features)}"
+        )
+        assert all(view_features.shape[1] == self.input_embed_dim for view_features in model_input.features), (
+            f"All views must have input dimension {self.input_embed_dim}"
+        )
+        assert all(view_features.ndim == 4 for view_features in model_input.features), (
+            "All views must have 4 dimensions (N, C, H, W)"
+        )
 
         # Initialize the multi-view features from the model input
         multi_view_features = model_input.features
@@ -392,7 +392,10 @@ class MultiViewCrossAttentionTransformerIFR(MultiViewCrossAttentionTransformer, 
     def forward(
         self,
         model_input: MultiViewTransformerInput,
-    ) -> Union[List[MultiViewTransformerOutput], Tuple[MultiViewTransformerOutput, List[MultiViewTransformerOutput]],]:
+    ) -> Union[
+        List[MultiViewTransformerOutput],
+        Tuple[MultiViewTransformerOutput, List[MultiViewTransformerOutput]],
+    ]:
         """
         Forward interface for the Multi-View Cross-Attention Transformer with Intermediate Feature Return.
 
@@ -408,15 +411,15 @@ class MultiViewCrossAttentionTransformerIFR(MultiViewCrossAttentionTransformer, 
                 If intermediates_only is False, returns a tuple of final output and a list of intermediate outputs.
         """
         # Check that the number of views matches the input and the features are of expected shape
-        assert (
-            len(model_input.features) == self.num_views
-        ), f"Expected {self.num_views} views, got {len(model_input.features)}"
-        assert all(
-            view_features.shape[1] == self.input_embed_dim for view_features in model_input.features
-        ), f"All views must have input dimension {self.input_embed_dim}"
-        assert all(
-            view_features.ndim == 4 for view_features in model_input.features
-        ), "All views must have 4 dimensions (N, C, H, W)"
+        assert len(model_input.features) == self.num_views, (
+            f"Expected {self.num_views} views, got {len(model_input.features)}"
+        )
+        assert all(view_features.shape[1] == self.input_embed_dim for view_features in model_input.features), (
+            f"All views must have input dimension {self.input_embed_dim}"
+        )
+        assert all(view_features.ndim == 4 for view_features in model_input.features), (
+            "All views must have 4 dimensions (N, C, H, W)"
+        )
 
         # Get the indices of the intermediate features to return
         intermediate_multi_view_features = []

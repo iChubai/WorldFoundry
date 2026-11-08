@@ -58,9 +58,7 @@ def sample_video_frames(video_path, num_frames=16):
     return frames
 
 
-def generate_image_embeddings(
-    prompt_image, vision_encoder, vision_processor, projector, device="cuda:0"
-):
+def generate_image_embeddings(prompt_image, vision_encoder, vision_processor, projector, device="cuda:0"):
     prompt_image = prompt_image.convert("RGB")
     inputs = vision_processor(images=[prompt_image], return_tensors="pt", padding=True)
     inputs = inputs.to(device)
@@ -99,9 +97,7 @@ def run_image(
         )
         if add_padding == "padding":
             prompt_embeddings = torch.cat([prompt_embeddings, padding_token], dim=0)
-        prompt_embeddings = prompt_embeddings / prompt_embeddings.norm(
-            p=2, dim=-1, keepdim=True
-        )
+        prompt_embeddings = prompt_embeddings / prompt_embeddings.norm(p=2, dim=-1, keepdim=True)
         runner.model.num_test_classes = prompt_embeddings.shape[0]
         runner.model.setembeddings(prompt_embeddings[None])
     else:
@@ -171,9 +167,7 @@ def load_model_and_config(args, clip_model_path, device):
     if args.work_dir is not None:
         cfg.work_dir = args.work_dir
     elif cfg.get("work_dir", None) is None:
-        cfg.work_dir = osp.join(
-            "./work_dirs", osp.splitext(osp.basename(args.model_config))[0]
-        )
+        cfg.work_dir = osp.join("./work_dirs", osp.splitext(osp.basename(args.model_config))[0])
 
     cfg.load_from = args.yolo_model_path
     cfg.text_model_name = clip_model_path
@@ -280,9 +274,7 @@ def main():
         print("continue")
         return
 
-    yolo_vision_model, yolo_processor, runner, txt_feats = load_model_and_config(
-        args, yolo_clip_model_path, device
-    )
+    yolo_vision_model, yolo_processor, runner, txt_feats = load_model_and_config(args, yolo_clip_model_path, device)
     gme = GmeQwen2VL(gme_model_path, attn_model="flash_attention_2", device=device)
 
     with open(input_json_file, "r") as f:
@@ -313,22 +305,14 @@ def main():
 
             for frame in frames:
                 frame_flag = True
-                for prompt_image_path, image_label in zip(
-                    prompt_image_paths, image_labels
-                ):
-                    if "face" in prefix and (
-                        image_label == "Man" or image_label == "Woman"
-                    ):
+                for prompt_image_path, image_label in zip(prompt_image_paths, image_labels):
+                    if "face" in prefix and (image_label == "Man" or image_label == "Woman"):
                         continue
 
-                    if "human" in prefix and (
-                        image_label == "Man" or image_label == "Woman"
-                    ):
+                    if "human" in prefix and (image_label == "Man" or image_label == "Woman"):
                         image_label = "human"
 
-                    prompt_image_file_path = os.path.join(
-                        input_image_folder, prompt_image_path
-                    )
+                    prompt_image_file_path = os.path.join(input_image_folder, prompt_image_path)
                     prompt_image = Image.open(prompt_image_file_path)
 
                     pred_instances = yoloworld_inference(
@@ -370,16 +354,12 @@ def main():
             gme_text_score = (e_query * e_local_image_corpus).sum(-1)
 
             retrieval_score_list = []
-            for bbox_conf, text_conf, nexus_score in zip(
-                all_yolo_world_conf, gme_text_score, gme_image_score
-            ):
+            for bbox_conf, text_conf, nexus_score in zip(all_yolo_world_conf, gme_text_score, gme_image_score):
                 if bbox_conf > 0.6 and text_conf > 0.30 and nexus_score != 0:
                     retrieval_score_list.append(nexus_score)
 
             if len(retrieval_score_list) != 0:
-                nexus_score = (
-                    torch.mean(torch.tensor(retrieval_score_list)).item() / frame_obj
-                )
+                nexus_score = torch.mean(torch.tensor(retrieval_score_list)).item() / frame_obj
             else:
                 nexus_score = 0
 

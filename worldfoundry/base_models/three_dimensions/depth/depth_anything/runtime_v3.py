@@ -13,13 +13,7 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
 DEFAULT_DEPTH_ANYTHING3_REPO = "depth-anything/DA3-LARGE-1.1"
 DEFAULT_DEPTH_ANYTHING3_SMALL_REPO = "depth-anything/DA3-SMALL"
 WORLDBENCH_DA3_PACKAGE_PATH = (
-    Path("src")
-    / "worldfoundry"
-    / "base_models"
-    / "three_dimensions"
-    / "depth"
-    / "depth_anything"
-    / "depth_anything_v3"
+    Path("src") / "worldfoundry" / "base_models" / "three_dimensions" / "depth" / "depth_anything" / "depth_anything_v3"
 )
 
 
@@ -98,9 +92,7 @@ class DepthAnything3Representation:
         default_ref_view_strategy: str = "saddle_balanced",
         default_align_to_input_ext_scale: bool = True,
     ) -> None:
-        self.device = torch.device(
-            device or ("cuda" if torch.cuda.is_available() else "cpu")
-        )
+        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
         self.model = model
         self.default_process_res = int(default_process_res)
         self.default_process_res_method = str(default_process_res_method)
@@ -229,11 +221,7 @@ class DepthAnything3Representation:
         if export_dir:
             exports_root = Path(export_dir) / "exports"
             if exports_root.is_dir():
-                export_artifacts = [
-                    str(path)
-                    for path in sorted(exports_root.rglob("*"))
-                    if path.is_file()
-                ]
+                export_artifacts = [str(path) for path in sorted(exports_root.rglob("*")) if path.is_file()]
 
         return {
             "prediction": prediction,

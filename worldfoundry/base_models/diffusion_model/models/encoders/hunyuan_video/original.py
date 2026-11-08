@@ -31,9 +31,7 @@ def _llm_final_layer_norm(model: nn.Module) -> nn.Module:
     nested = getattr(language_model, "norm", None)
     if isinstance(nested, nn.Module):
         return nested
-    raise AttributeError(
-        f"{type(model).__name__} exposes neither .norm nor .language_model.norm"
-    )
+    raise AttributeError(f"{type(model).__name__} exposes neither .norm nor .language_model.norm")
 
 
 def use_default(value, default):
@@ -65,17 +63,13 @@ def load_text_encoder(
     if text_encoder_path is None:
         raise ValueError(f"`text_encoder_path` not exists")
     if logger is not None:
-        logger.info(
-            f"Loading text encoder model ({text_encoder_type}) from: {text_encoder_path}"
-        )
+        logger.info(f"Loading text encoder model ({text_encoder_type}) from: {text_encoder_path}")
 
     if text_encoder_type == "clipL":
         text_encoder = CLIPTextModel.from_pretrained(text_encoder_path)
         text_encoder.final_layer_norm = text_encoder.text_model.final_layer_norm
     elif text_encoder_type == "llm":
-        text_encoder = AutoModel.from_pretrained(
-            text_encoder_path, low_cpu_mem_usage=True
-        )
+        text_encoder = AutoModel.from_pretrained(text_encoder_path, low_cpu_mem_usage=True)
         text_encoder.final_layer_norm = _llm_final_layer_norm(text_encoder)
     else:
         raise ValueError(f"Unsupported text encoder type: {text_encoder_type}")
@@ -95,9 +89,7 @@ def load_text_encoder(
     return text_encoder, text_encoder_path
 
 
-def load_tokenizer(
-    tokenizer_type, tokenizer_path=None, padding_side="right", logger=None
-):
+def load_tokenizer(tokenizer_type, tokenizer_path=None, padding_side="right", logger=None):
     """Load tokenizer.
 
     Args:
@@ -114,9 +106,7 @@ def load_tokenizer(
     if tokenizer_type == "clipL":
         tokenizer = CLIPTokenizer.from_pretrained(tokenizer_path, max_length=77)
     elif tokenizer_type == "llm":
-        tokenizer = AutoTokenizer.from_pretrained(
-            tokenizer_path, padding_side=padding_side
-        )
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, padding_side=padding_side)
     else:
         raise ValueError(f"Unsupported tokenizer type: {tokenizer_type}")
 
@@ -149,6 +139,7 @@ class TextEncoderModelOutput(ModelOutput):
 
 class TextEncoder(nn.Module):
     """Text encoder implementation."""
+
     def __init__(
         self,
         text_encoder_type: str,
@@ -193,20 +184,12 @@ class TextEncoder(nn.Module):
         self.max_length = max_length
         self.precision = text_encoder_precision
         self.model_path = text_encoder_path
-        self.tokenizer_type = (
-            tokenizer_type if tokenizer_type is not None else text_encoder_type
-        )
-        self.tokenizer_path = (
-            tokenizer_path if tokenizer_path is not None else text_encoder_path
-        )
+        self.tokenizer_type = tokenizer_type if tokenizer_type is not None else text_encoder_type
+        self.tokenizer_path = tokenizer_path if tokenizer_path is not None else text_encoder_path
         self.use_attention_mask = use_attention_mask
         if prompt_template_video is not None:
-            assert (
-                use_attention_mask is True
-            ), "Attention mask is True required when training videos."
-        self.input_max_length = (
-            input_max_length if input_max_length is not None else max_length
-        )
+            assert use_attention_mask is True, "Attention mask is True required when training videos."
+        self.input_max_length = input_max_length if input_max_length is not None else max_length
         self.prompt_template = prompt_template
         self.prompt_template_video = prompt_template_video
         self.hidden_state_skip_layer = hidden_state_skip_layer
@@ -216,10 +199,9 @@ class TextEncoder(nn.Module):
 
         self.use_template = self.prompt_template is not None
         if self.use_template:
-            assert (
-                isinstance(self.prompt_template, dict)
-                and "template" in self.prompt_template
-            ), f"`prompt_template` must be a dictionary with a key 'template', got {self.prompt_template}"
+            assert isinstance(self.prompt_template, dict) and "template" in self.prompt_template, (
+                f"`prompt_template` must be a dictionary with a key 'template', got {self.prompt_template}"
+            )
             assert "{}" in str(self.prompt_template["template"]), (
                 "`prompt_template['template']` must contain a placeholder `{}` for the input text, "
                 f"got {self.prompt_template['template']}"
@@ -228,10 +210,9 @@ class TextEncoder(nn.Module):
         self.use_video_template = self.prompt_template_video is not None
         if self.use_video_template:
             if self.prompt_template_video is not None:
-                assert (
-                    isinstance(self.prompt_template_video, dict)
-                    and "template" in self.prompt_template_video
-                ), f"`prompt_template_video` must be a dictionary with a key 'template', got {self.prompt_template_video}"
+                assert isinstance(self.prompt_template_video, dict) and "template" in self.prompt_template_video, (
+                    f"`prompt_template_video` must be a dictionary with a key 'template', got {self.prompt_template_video}"
+                )
             assert "{}" in str(self.prompt_template_video["template"]), (
                 "`prompt_template_video['template']` must contain a placeholder `{}` for the input text, "
                 f"got {self.prompt_template_video['template']}"
@@ -300,10 +281,7 @@ class TextEncoder(nn.Module):
             else:
                 raise ValueError(f"Unsupported data type: {data_type}")
             if isinstance(text, (list, tuple)):
-                text = [
-                    self.apply_text_to_template(one_text, prompt_template)
-                    for one_text in text
-                ]
+                text = [self.apply_text_to_template(one_text, prompt_template) for one_text in text]
                 if isinstance(text[0], list):
                     tokenize_input_type = "list"
             elif isinstance(text, str):
@@ -365,18 +343,13 @@ class TextEncoder(nn.Module):
         """
         device = self.model.device if device is None else device
         use_attention_mask = use_default(use_attention_mask, self.use_attention_mask)
-        hidden_state_skip_layer = use_default(
-            hidden_state_skip_layer, self.hidden_state_skip_layer
-        )
+        hidden_state_skip_layer = use_default(hidden_state_skip_layer, self.hidden_state_skip_layer)
         do_sample = use_default(do_sample, not self.reproduce)
-        attention_mask = (
-            batch_encoding["attention_mask"].to(device) if use_attention_mask else None
-        )
+        attention_mask = batch_encoding["attention_mask"].to(device) if use_attention_mask else None
         outputs = self.model(
             input_ids=batch_encoding["input_ids"].to(device),
             attention_mask=attention_mask,
-            output_hidden_states=output_hidden_states
-            or hidden_state_skip_layer is not None,
+            output_hidden_states=output_hidden_states or hidden_state_skip_layer is not None,
         )
         if hidden_state_skip_layer is not None:
             last_hidden_state = outputs.hidden_states[-(hidden_state_skip_layer + 1)]
@@ -397,14 +370,10 @@ class TextEncoder(nn.Module):
                 raise ValueError(f"Unsupported data type: {data_type}")
             if crop_start > 0:
                 last_hidden_state = last_hidden_state[:, crop_start:]
-                attention_mask = (
-                    attention_mask[:, crop_start:] if use_attention_mask else None
-                )
+                attention_mask = attention_mask[:, crop_start:] if use_attention_mask else None
 
         if output_hidden_states:
-            return TextEncoderModelOutput(
-                last_hidden_state, attention_mask, outputs.hidden_states
-            )
+            return TextEncoderModelOutput(last_hidden_state, attention_mask, outputs.hidden_states)
         return TextEncoderModelOutput(last_hidden_state, attention_mask)
 
     def forward(

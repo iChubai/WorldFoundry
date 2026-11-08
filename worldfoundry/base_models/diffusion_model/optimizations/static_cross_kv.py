@@ -268,7 +268,9 @@ class StaticConditionCache:
     clip_feature: torch.Tensor | None = None
     store: _StaticCrossKVCache = field(default_factory=_StaticCrossKVCache, init=False, repr=False)
     _batches: dict[tuple[int | None, int | None, int | None], StaticConditionCache] = field(
-        default_factory=dict, init=False, repr=False,
+        default_factory=dict,
+        init=False,
+        repr=False,
     )
 
     def __len__(self) -> int:
@@ -284,7 +286,8 @@ class StaticConditionCache:
         return self._batches[key]
 
     def project_context(
-        self, module: nn.Module,
+        self,
+        module: nn.Module,
         project: Callable[[torch.Tensor, torch.Tensor | None], torch.Tensor],
     ) -> torch.Tensor:
         """Project once in eval/no-grad inference, preserving the caller's math."""
@@ -300,8 +303,10 @@ class StaticConditionCache:
         """Projected context/KV storage, excluding the original conditions."""
         tensors = [entry[2] for entry in self.store._condition_entries.values()]
         tensors.extend(
-            tensor for entries in self.store._entries.values()
-            for _, projected in entries.values() for tensor in projected
+            tensor
+            for entries in self.store._entries.values()
+            for _, projected in entries.values()
+            for tensor in projected
         )
         return sum(t.numel() * t.element_size() for t in tensors) + sum(
             batch.nbytes for batch in self._batches.values()
@@ -314,7 +319,9 @@ def _require_static_inference(module: nn.Module) -> None:
 
 
 def reuse_cross_kv(
-    module: nn.Module, context: torch.Tensor, store: _StaticCrossKVCache | None,
+    module: nn.Module,
+    context: torch.Tensor,
+    store: _StaticCrossKVCache | None,
     project: Callable[[], tuple[torch.Tensor, ...]],
 ) -> tuple[torch.Tensor, ...]:
     """Reuse normalized condition K/V; queries and attention always run live."""

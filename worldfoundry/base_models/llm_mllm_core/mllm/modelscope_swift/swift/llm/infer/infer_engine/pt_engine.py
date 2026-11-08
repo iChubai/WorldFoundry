@@ -15,12 +15,27 @@ from tqdm import tqdm
 from transformers import GenerationConfig, LogitsProcessorList
 from transformers.utils import is_torch_npu_available
 
-from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import InferRequest, Template, TemplateMeta, get_model_tokenizer, safe_snapshot_download, to_device
+from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm import (
+    InferRequest,
+    Template,
+    TemplateMeta,
+    get_model_tokenizer,
+    safe_snapshot_download,
+    to_device,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import Metric
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners import Swift
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger
-from ..protocol import (ChatCompletionResponse, ChatCompletionResponseChoice, ChatCompletionResponseStreamChoice,
-                        ChatCompletionStreamResponse, ChatMessage, DeltaMessage, RequestConfig, random_uuid)
+from ..protocol import (
+    ChatCompletionResponse,
+    ChatCompletionResponseChoice,
+    ChatCompletionResponseStreamChoice,
+    ChatCompletionStreamResponse,
+    ChatMessage,
+    DeltaMessage,
+    RequestConfig,
+    random_uuid,
+)
 from .infer_engine import InferEngine
 from .utils import AdapterRequest, InferStreamer, LogitsStreamer, TokensIteratorStreamer, prepare_generation_config
 
@@ -28,38 +43,37 @@ logger = get_logger()
 
 
 class _GenerationConfig(GenerationConfig):
-
     def __repr__(self) -> str:
         parameters = inspect.signature(self.to_json_string).parameters
         kwargs = {}
-        if 'ignore_metadata' in parameters:
-            kwargs['ignore_metadata'] = True
+        if "ignore_metadata" in parameters:
+            kwargs["ignore_metadata"] = True
         gen_kwargs = json.loads(self.to_json_string(**kwargs))
-        gen_kwargs.pop('transformers_version', None)
-        return f'GenerationConfig({gen_kwargs})'
+        gen_kwargs.pop("transformers_version", None)
+        return f"GenerationConfig({gen_kwargs})"
 
 
 class PtEngine(InferEngine):
-
     def __init__(
-            self,
-            model_id_or_path: str,
-            torch_dtype: Optional[torch.dtype] = None,
-            *,
-            adapters: List[str] = None,
-            max_batch_size: int = 1,  # 0/1: no limit
-            model_type: Optional[str] = None,
-            use_hf: Optional[bool] = None,
-            revision: Optional[str] = None,
-            hub_token: Optional[str] = None,
-            load_model: bool = True,
-            # model kwargs
-            attn_impl: Literal['flash_attn', 'sdpa', 'eager', None] = None,
-            device_map: Optional[Union[str, Dict[str, Any]]] = None,
-            quantization_config=None,
-            model_kwargs: Optional[Dict[str, Any]] = None,
-            template: Optional[Template] = None,
-            **kwargs):
+        self,
+        model_id_or_path: str,
+        torch_dtype: Optional[torch.dtype] = None,
+        *,
+        adapters: List[str] = None,
+        max_batch_size: int = 1,  # 0/1: no limit
+        model_type: Optional[str] = None,
+        use_hf: Optional[bool] = None,
+        revision: Optional[str] = None,
+        hub_token: Optional[str] = None,
+        load_model: bool = True,
+        # model kwargs
+        attn_impl: Literal["flash_attn", "sdpa", "eager", None] = None,
+        device_map: Optional[Union[str, Dict[str, Any]]] = None,
+        quantization_config=None,
+        model_kwargs: Optional[Dict[str, Any]] = None,
+        template: Optional[Template] = None,
+        **kwargs,
+    ):
         self.model, self.processor = get_model_tokenizer(
             model_id_or_path,
             torch_dtype,
@@ -73,7 +87,8 @@ class PtEngine(InferEngine):
             quantization_config=quantization_config,
             attn_impl=attn_impl,
             model_kwargs=model_kwargs,
-            **kwargs)
+            **kwargs,
+        )
         self.max_batch_size = max_batch_size
         if isinstance(adapters, str):
             adapters = [adapters]
@@ -97,9 +112,10 @@ class PtEngine(InferEngine):
     def _fetch_infer_requests(self):
         while not self._queue.empty():
             infer_request, kwargs, queue = self._queue.get()
-            template = kwargs['template']
-            info = hashlib.sha256(pickle.dumps((kwargs['request_config'], template
-                                                and template.template_meta))).hexdigest()
+            template = kwargs["template"]
+            info = hashlib.sha256(
+                pickle.dumps((kwargs["request_config"], template and template.template_meta))
+            ).hexdigest()
             if info not in self._task_pool:
                 self._task_pool[info] = kwargs, []
             self._task_pool[info][1].append((infer_request, queue))
@@ -115,7 +131,7 @@ class PtEngine(InferEngine):
         else:
             self._task_pool.pop(key)
         kwargs = kwargs.copy()
-        kwargs['infer_requests'] = [d[0] for d in data]
+        kwargs["infer_requests"] = [d[0] for d in data]
         queue_list = [d[1] for d in data]
         return kwargs, queue_list
 
@@ -125,7 +141,7 @@ class PtEngine(InferEngine):
             item = self._fetch_infer_requests()
             if item is not None:
                 kwargs, queue_list = item
-                request_config = kwargs['request_config']
+                request_config = kwargs["request_config"]
                 res_list_or_gen = self._infer(**kwargs)
                 if request_config.stream:
                     finished = False
@@ -162,14 +178,16 @@ class PtEngine(InferEngine):
         generation_config.num_return_sequences = request_config.n
         return _GenerationConfig(**generation_config.to_dict())
 
-    def _add_stop_words(self, generation_config: _GenerationConfig, request_config: RequestConfig,
-                        template_meta: TemplateMeta) -> None:
+    def _add_stop_words(
+        self, generation_config: _GenerationConfig, request_config: RequestConfig, template_meta: TemplateMeta
+    ) -> None:
         stop_words = (request_config.stop or []) + template_meta.stop_words
         generation_config.stop_words = self._get_stop_words(stop_words)
 
     @staticmethod
-    def preprocess_logits(batched_logits: Optional[List[torch.Tensor]], batched_generate_ids: torch.Tensor,
-                          top_logprobs: Optional[int]):
+    def preprocess_logits(
+        batched_logits: Optional[List[torch.Tensor]], batched_generate_ids: torch.Tensor, top_logprobs: Optional[int]
+    ):
         top_logprobs = top_logprobs or 1
         batch_size = batched_generate_ids.shape[0]
         if batched_logits is None:
@@ -187,8 +205,12 @@ class PtEngine(InferEngine):
         return batched_logprobs
 
     @staticmethod
-    def _update_batched_logprobs(batched_logprobs: List[torch.Tensor], logits_streamer: Optional[LogitsStreamer],
-                                 generate_ids: torch.Tensor, top_logprobs: int) -> None:
+    def _update_batched_logprobs(
+        batched_logprobs: List[torch.Tensor],
+        logits_streamer: Optional[LogitsStreamer],
+        generate_ids: torch.Tensor,
+        top_logprobs: int,
+    ) -> None:
         seq_len = generate_ids.shape[1] - len(batched_logprobs[0])
         if logits_streamer is None or seq_len == 0:
             return
@@ -200,31 +222,32 @@ class PtEngine(InferEngine):
         for logprobs, new_logprobs in zip(batched_logprobs, new_batched_logprobs):
             logprobs += new_logprobs
 
-    def _infer_stream(self,
-                      template: Template,
-                      inputs: Dict[str, Any],
-                      *,
-                      generation_config: GenerationConfig,
-                      adapter_request: Optional[AdapterRequest] = None,
-                      **kwargs) -> Iterator[List[Optional[ChatCompletionStreamResponse]]]:
-
+    def _infer_stream(
+        self,
+        template: Template,
+        inputs: Dict[str, Any],
+        *,
+        generation_config: GenerationConfig,
+        adapter_request: Optional[AdapterRequest] = None,
+        **kwargs,
+    ) -> Iterator[List[Optional[ChatCompletionStreamResponse]]]:
         if generation_config.num_beams != 1:
-            error_msg = 'Streaming generation does not support beam search.'
+            error_msg = "Streaming generation does not support beam search."
             raise ValueError(error_msg)
         streamer = TokensIteratorStreamer()
         generate_kwargs = {
-            'generation_config': generation_config,
-            'streamer': streamer,
+            "generation_config": generation_config,
+            "streamer": streamer,
             **inputs,
         }
         adapter_names = self._get_adapter_names(adapter_request)
         if adapter_names is not None:
-            generate_kwargs['adapter_names'] = adapter_names
+            generate_kwargs["adapter_names"] = adapter_names
         num_prompt_tokens = self._get_num_tokens(inputs)
 
         logits_streamer = None
         if generation_config.output_logits:
-            generate_kwargs['logits_processor'] = LogitsProcessorList([LogitsStreamer()])
+            generate_kwargs["logits_processor"] = LogitsProcessorList([LogitsStreamer()])
 
         def _model_generate(**kwargs):
             if is_torch_npu_available():
@@ -234,11 +257,11 @@ class PtEngine(InferEngine):
         generate_kwargs = template.prepare_generate_kwargs(generate_kwargs, model=self.model)
         thread = Thread(target=_model_generate, kwargs=generate_kwargs)
         thread.start()
-        batch_size = inputs['attention_mask'].shape[0]
+        batch_size = inputs["attention_mask"].shape[0]
         all_is_finished = False
         is_finished = [False] * batch_size
         infer_streamers = [InferStreamer(template) for _ in range(batch_size)]
-        request_id_list = [f'chatcmpl-{random_uuid()}' for _ in range(batch_size)]
+        request_id_list = [f"chatcmpl-{random_uuid()}" for _ in range(batch_size)]
         token_idxs = [0] * batch_size
 
         raw_batched_generate_ids = None  # or torch.Tensor: [batch_size, seq_len]
@@ -251,14 +274,17 @@ class PtEngine(InferEngine):
 
                 raw_batched_generate_ids = torch.concat(
                     [batched_tokens]
-                    if raw_batched_generate_ids is None else [raw_batched_generate_ids, batched_tokens],
-                    dim=1)
+                    if raw_batched_generate_ids is None
+                    else [raw_batched_generate_ids, batched_tokens],
+                    dim=1,
+                )
             except StopIteration:
                 all_is_finished = True
 
             batched_generate_ids = template.get_generate_ids(raw_batched_generate_ids, num_prompt_tokens)
-            self._update_batched_logprobs(batched_logprobs, logits_streamer, batched_generate_ids,
-                                          generation_config.top_logprobs)
+            self._update_batched_logprobs(
+                batched_logprobs, logits_streamer, batched_generate_ids, generation_config.top_logprobs
+            )
 
             res = []
             for i in range(batched_generate_ids.shape[0]):
@@ -275,40 +301,48 @@ class PtEngine(InferEngine):
                     logprobs_list = [logprobs for m, logprobs in zip(masks, batched_logprobs[i]) if m.item()]
 
                 is_finished[i] = (
-                    all_is_finished or is_finished[i]
-                    or len(generate_ids) > 0 and generate_ids[-1] == self.tokenizer.pad_token_id)
+                    all_is_finished
+                    or is_finished[i]
+                    or len(generate_ids) > 0
+                    and generate_ids[-1] == self.tokenizer.pad_token_id
+                )
                 delta_text = infer_streamers[i].get_printable_text(generate_ids, is_finished[i])
                 if not delta_text and not is_finished[i]:
                     res.append(None)
                     continue
-                logprobs = self._get_logprobs(logprobs_list, generate_ids[token_idxs[i]:],
-                                              generation_config.top_logprobs)
+                logprobs = self._get_logprobs(
+                    logprobs_list, generate_ids[token_idxs[i] :], generation_config.top_logprobs
+                )
                 token_idxs[i] = len(generate_ids)
 
                 usage_info = self._get_usage_info(num_prompt_tokens, len(generate_ids))
                 toolcall = None
                 if is_finished[i]:
                     toolcall = self._get_toolcall(template.decode(generate_ids), template)
-                finish_reason = self._get_finish_reason(generation_config.max_new_tokens, num_prompt_tokens,
-                                                        is_finished[i])
+                finish_reason = self._get_finish_reason(
+                    generation_config.max_new_tokens, num_prompt_tokens, is_finished[i]
+                )
 
                 choices = [
                     ChatCompletionResponseStreamChoice(
                         index=0,
-                        delta=DeltaMessage(role='assistant', content=delta_text, tool_calls=toolcall),
+                        delta=DeltaMessage(role="assistant", content=delta_text, tool_calls=toolcall),
                         finish_reason=finish_reason,
-                        logprobs=logprobs)
+                        logprobs=logprobs,
+                    )
                 ]
                 res.append(
                     ChatCompletionStreamResponse(
-                        model=self.model_name, choices=choices, usage=usage_info, id=request_id_list[i]))
+                        model=self.model_name, choices=choices, usage=usage_info, id=request_id_list[i]
+                    )
+                )
             if any(res):
                 yield res
 
     def _get_adapter_names(self, adapter_request: Optional[AdapterRequest]) -> Optional[List[str]]:
         if adapter_request is None:
             if self._adapters_pool:
-                return ['__base__']
+                return ["__base__"]
             return
         adapter_name = adapter_request.name
         if adapter_name not in self._adapters_pool:
@@ -316,26 +350,24 @@ class PtEngine(InferEngine):
             self._add_adapter(adapter_request.path, adapter_name)
         return [adapter_name]
 
-    def _infer_forward(self,
-                       template: Template,
-                       inputs: Dict[str, Any],
-                       adapter_request: Optional[AdapterRequest] = None,
-                       **kwargs):
+    def _infer_forward(
+        self, template: Template, inputs: Dict[str, Any], adapter_request: Optional[AdapterRequest] = None, **kwargs
+    ):
         call_kwargs = {}
-        top_logprobs = getattr(kwargs.get('generation_config'), 'top_logprobs', None) or 20
+        top_logprobs = getattr(kwargs.get("generation_config"), "top_logprobs", None) or 20
         adapter_names = self._get_adapter_names(adapter_request)
         if adapter_names is not None:
-            call_kwargs['adapter_names'] = adapter_names
+            call_kwargs["adapter_names"] = adapter_names
         num_prompt_tokens = self._get_num_tokens(inputs)
-        inputs.pop('labels', None)
+        inputs.pop("labels", None)
         logits = self.model(**inputs, **call_kwargs).logits
-        if template.mode == 'seq_cls':
+        if template.mode == "seq_cls":
             preds, logprobs = template.decode_seq_cls(logits, top_logprobs)
-        elif template.mode == 'prm':
-            preds = template.decode_prm(inputs['input_ids'], logits)
+        elif template.mode == "prm":
+            preds = template.decode_prm(inputs["input_ids"], logits)
             logprobs = [None] * len(preds)
         else:
-            raise ValueError(f'Unsupported mode: {template.mode}')
+            raise ValueError(f"Unsupported mode: {template.mode}")
 
         res = []
         for i, pred in enumerate(preds):
@@ -343,38 +375,42 @@ class PtEngine(InferEngine):
             choices = [
                 ChatCompletionResponseChoice(
                     index=0,
-                    message=ChatMessage(role='assistant', content=pred, tool_calls=None),
-                    finish_reason='stop',
-                    logprobs=logprobs[i])
+                    message=ChatMessage(role="assistant", content=pred, tool_calls=None),
+                    finish_reason="stop",
+                    logprobs=logprobs[i],
+                )
             ]
             res.append(ChatCompletionResponse(model=self.model_name, choices=choices, usage=usage_info))
         return res
 
-    def _infer_full(self,
-                    template: Template,
-                    inputs: Dict[str, Any],
-                    *,
-                    generation_config: GenerationConfig,
-                    adapter_request: Optional[AdapterRequest] = None,
-                    template_inputs=None) -> List[ChatCompletionResponse]:
+    def _infer_full(
+        self,
+        template: Template,
+        inputs: Dict[str, Any],
+        *,
+        generation_config: GenerationConfig,
+        adapter_request: Optional[AdapterRequest] = None,
+        template_inputs=None,
+    ) -> List[ChatCompletionResponse]:
         # bos_token TODO: encoder-decoder
-        generate_kwargs = {'generation_config': generation_config, **inputs}
+        generate_kwargs = {"generation_config": generation_config, **inputs}
         adapter_names = self._get_adapter_names(adapter_request)
         if adapter_names is not None:
-            generate_kwargs['adapter_names'] = adapter_names
+            generate_kwargs["adapter_names"] = adapter_names
         num_prompt_tokens = self._get_num_tokens(inputs)
         generate_kwargs = template.prepare_generate_kwargs(generate_kwargs, model=self.model)
         output = dict(template.generate(self.model, **generate_kwargs))
-        output.pop('past_key_values', None)
-        batched_generate_ids = output['sequences']
+        output.pop("past_key_values", None)
+        batched_generate_ids = output["sequences"]
         batched_generate_ids = template.get_generate_ids(batched_generate_ids, num_prompt_tokens)
-        template.debug_logger({'generate_ids': batched_generate_ids})  # debug
+        template.debug_logger({"generate_ids": batched_generate_ids})  # debug
         batched_logprobs = self.preprocess_logits(
-            output.get('logits'), batched_generate_ids, generation_config.top_logprobs)
+            output.get("logits"), batched_generate_ids, generation_config.top_logprobs
+        )
 
         res = []
         num_return_sequences = generation_config.num_return_sequences
-        for i in range(inputs['attention_mask'].shape[0]):
+        for i in range(inputs["attention_mask"].shape[0]):
             choices = []
             usage_info = self._get_usage_info(num_prompt_tokens, 0)
             for j in range(num_return_sequences):
@@ -398,9 +434,11 @@ class PtEngine(InferEngine):
                 choices.append(
                     ChatCompletionResponseChoice(
                         index=j,
-                        message=ChatMessage(role='assistant', content=response, tool_calls=toolcall),
+                        message=ChatMessage(role="assistant", content=response, tool_calls=toolcall),
                         finish_reason=finish_reason,
-                        logprobs=logprobs))
+                        logprobs=logprobs,
+                    )
+                )
             res.append(ChatCompletionResponse(model=self.model_name, choices=choices, usage=usage_info))
         return res
 
@@ -416,12 +454,18 @@ class PtEngine(InferEngine):
         if request_config is None:
             request_config = RequestConfig()
         queue = asyncio.Queue()
-        self._queue.put((infer_request, {
-            'request_config': request_config,
-            'template': template,
-            'adapter_request': adapter_request,
-            'pre_infer_hook': pre_infer_hook
-        }, (queue, asyncio.get_event_loop())))
+        self._queue.put(
+            (
+                infer_request,
+                {
+                    "request_config": request_config,
+                    "template": template,
+                    "adapter_request": adapter_request,
+                    "pre_infer_hook": pre_infer_hook,
+                },
+                (queue, asyncio.get_event_loop()),
+            )
+        )
         await asyncio.sleep(0)
         if self._task_thread is None:
             self._start_infer_worker()
@@ -464,18 +508,19 @@ class PtEngine(InferEngine):
             template.model = self.model
 
         generation_config = None
-        if self.model_info.task_type == 'causal_lm':
-            template.set_mode('pt')
+        if self.model_info.task_type == "causal_lm":
+            template.set_mode("pt")
 
         batched_inputs, error_list = self._batch_encode(
-            infer_requests, template=template, strict=getattr(self, 'strict', True))
+            infer_requests, template=template, strict=getattr(self, "strict", True)
+        )
         if len(batched_inputs) > 0:
-            template_inputs = [inputs.pop('template_inputs') for inputs in batched_inputs]
+            template_inputs = [inputs.pop("template_inputs") for inputs in batched_inputs]
             inputs = to_device(template.data_collator(batched_inputs), self.model.device)
             template.debug_logger(inputs)  # debug
             if self.model.model_meta.is_multimodal:
                 _, inputs = template.pre_forward_hook(self.model, None, inputs)
-            if self.model_info.task_type == 'causal_lm':
+            if self.model_info.task_type == "causal_lm":
                 self.set_default_max_tokens(request_config, inputs)
                 generation_config = self._prepare_generation_config(request_config)
                 self._add_stop_words(generation_config, request_config, template.template_meta)
@@ -483,11 +528,11 @@ class PtEngine(InferEngine):
                 generation_config = request_config
 
             kwargs = {
-                'template': template,
-                'inputs': inputs,
-                'generation_config': generation_config,
-                'adapter_request': adapter_request,
-                'template_inputs': template_inputs
+                "template": template,
+                "inputs": inputs,
+                "generation_config": generation_config,
+                "adapter_request": adapter_request,
+                "template_inputs": template_inputs,
             }
             if pre_infer_hook:
                 kwargs = pre_infer_hook(kwargs)
@@ -505,7 +550,7 @@ class PtEngine(InferEngine):
             return _gen_wrapper()
         else:
             if len(kwargs) > 0:
-                infer_func = self._infer_forward if template.mode in ('seq_cls', 'prm') else self._infer_full
+                infer_func = self._infer_forward if template.mode in ("seq_cls", "prm") else self._infer_full
                 res = infer_func(**kwargs)
             else:
                 res = []
@@ -519,7 +564,7 @@ class PtEngine(InferEngine):
         *,
         template: Optional[Template] = None,
         use_tqdm: Optional[bool] = None,
-        adapter_request: Optional[AdapterRequest] = None
+        adapter_request: Optional[AdapterRequest] = None,
     ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
         if request_config is None:
             request_config = RequestConfig()
@@ -530,7 +575,8 @@ class PtEngine(InferEngine):
                 metrics,
                 template=template,
                 use_tqdm=use_tqdm,
-                adapter_request=adapter_request)
+                adapter_request=adapter_request,
+            )
         # Has higher stability than calling super().infer
         if use_tqdm is None:
             use_tqdm = not request_config.stream and len(infer_requests) > 1
@@ -542,9 +588,10 @@ class PtEngine(InferEngine):
         res = []
         i = 0
         while i < len(infer_requests):
-            infer_requests_samples = infer_requests[i:i + max_batch_size]
+            infer_requests_samples = infer_requests[i : i + max_batch_size]
             res += self._infer(
-                infer_requests_samples, request_config, template=template, adapter_request=adapter_request)
+                infer_requests_samples, request_config, template=template, adapter_request=adapter_request
+            )
             i += max_batch_size
             prog_bar.update(len(infer_requests_samples))
         self._update_metrics(res, metrics)

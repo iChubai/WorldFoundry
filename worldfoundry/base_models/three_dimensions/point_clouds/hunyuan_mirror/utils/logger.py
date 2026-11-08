@@ -57,12 +57,12 @@ def setup_logging():
     """Configure logging levels to suppress redundant output"""
     import logging
     import warnings
-    
+
     # Suppress Lightning's distributed initialization logs
     logging.getLogger("lightning.pytorch.utilities.rank_zero").setLevel(logging.WARNING)
     logging.getLogger("lightning.pytorch.strategies").setLevel(logging.WARNING)
     logging.getLogger("lightning.pytorch.accelerators").setLevel(logging.WARNING)
     logging.getLogger("lightning.fabric.utilities.distributed").setLevel(logging.WARNING)
-    
+
     # Suppress all warnings
     warnings.filterwarnings("ignore")

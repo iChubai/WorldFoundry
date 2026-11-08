@@ -7,21 +7,21 @@ import matplotlib.pyplot as plt
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 Item = Dict[str, float]
-TB_COLOR, TB_COLOR_SMOOTH = '#FFE2D9', '#FF7043'
+TB_COLOR, TB_COLOR_SMOOTH = "#FFE2D9", "#FF7043"
 
 
 def read_tensorboard_file(fpath: str) -> Dict[str, List[Item]]:
     if not os.path.isfile(fpath):
-        raise FileNotFoundError(f'fpath: {fpath}')
+        raise FileNotFoundError(f"fpath: {fpath}")
     ea = EventAccumulator(fpath)
     ea.Reload()
     res: Dict[str, List[Item]] = {}
-    tags = ea.Tags()['scalars']
+    tags = ea.Tags()["scalars"]
     for tag in tags:
         values = ea.Scalars(tag)
         r: List[Item] = []
         for v in values:
-            r.append({'step': v.step, 'value': v.value})
+            r.append({"step": v.step, "value": v.value})
         res[tag] = r
     return res
 
@@ -38,12 +38,14 @@ def tensorboard_smoothing(values: List[float], smooth: float = 0.9) -> List[floa
     return res
 
 
-def plot_images(images_dir: str,
-                tb_dir: str,
-                smooth_key: Optional[List[str]] = None,
-                smooth_val: float = 0.9,
-                figsize: Tuple[int, int] = (8, 5),
-                dpi: int = 100) -> None:
+def plot_images(
+    images_dir: str,
+    tb_dir: str,
+    smooth_key: Optional[List[str]] = None,
+    smooth_val: float = 0.9,
+    figsize: Tuple[int, int] = (8, 5),
+    dpi: int = 100,
+) -> None:
     """Using tensorboard's data content to plot images"""
     if not os.path.exists(tb_dir):
         return
@@ -55,8 +57,8 @@ def plot_images(images_dir: str,
 
     for k in data.keys():
         _data = data[k]
-        steps = [d['step'] for d in _data]
-        values = [d['value'] for d in _data]
+        steps = [d["step"] for d in _data]
+        values = [d["value"] for d in _data]
         if len(values) == 0:
             continue
         _, ax = plt.subplots(1, 1, squeeze=True, figsize=figsize, dpi=dpi)
@@ -69,6 +71,6 @@ def plot_images(images_dir: str,
             ax.plot(steps, values_s, color=TB_COLOR_SMOOTH)
         else:
             ax.plot(steps, values, color=TB_COLOR_SMOOTH)
-        fpath = os.path.join(images_dir, k.replace('/', '_').replace('.', '_'))
-        plt.savefig(fpath, dpi=dpi, bbox_inches='tight')
+        fpath = os.path.join(images_dir, k.replace("/", "_").replace(".", "_"))
+        plt.savefig(fpath, dpi=dpi, bbox_inches="tight")
         plt.close()

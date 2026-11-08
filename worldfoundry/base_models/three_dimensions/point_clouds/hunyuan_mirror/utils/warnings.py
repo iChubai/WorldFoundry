@@ -12,6 +12,7 @@ def suppress_traceback(fn):
     Args:
         fn: The fn.
     """
+
     @wraps(fn)
     def wrapper(*args, **kwargs):
         """Wrapper."""
@@ -26,6 +27,7 @@ def suppress_traceback(fn):
 
 class no_warnings:
     """No warnings implementation."""
+
     def __init__(self, action: str = "ignore", **kwargs):
         """Init.
 
@@ -41,6 +43,7 @@ class no_warnings:
         Args:
             fn: The fn.
         """
+
         @wraps(fn)
         def wrapper(*args, **kwargs):
             """Wrapper."""

@@ -7,6 +7,7 @@ from transformers import HfArgumentParser
 from dataclasses import dataclass, field
 from transformers import TrainingArguments
 
+
 @dataclass
 class DataConfig:
     train_json_list: List[str] = field(default_factory=lambda: ["/path/to/dataset/meta_data.json"])
@@ -18,6 +19,7 @@ class DataConfig:
     min_pixels: Optional[int] = 256 * 28 * 28
     with_instruction: bool = True
     tied_threshold: Optional[float] = None
+
 
 @dataclass
 class TrainingConfig(TrainingArguments):
@@ -41,10 +43,11 @@ class TrainingConfig(TrainingArguments):
     remove_unused_columns: Optional[bool] = False
 
     save_full_model: Optional[bool] = False
-    
+
     # Visualization parameters
     visualization_steps: Optional[int] = 100
     max_viz_samples: Optional[int] = 4
+
 
 @dataclass
 class PEFTLoraConfig:
@@ -61,16 +64,10 @@ class PEFTLoraConfig:
     num_lora_modules: int = -1
 
     def __post_init__(self):
-        if (
-            isinstance(self.lora_target_modules, list)
-            and len(self.lora_target_modules) == 1
-        ):
+        if isinstance(self.lora_target_modules, list) and len(self.lora_target_modules) == 1:
             self.lora_target_modules = self.lora_target_modules[0]
 
-        if (
-            isinstance(self.lora_namespan_exclude, list)
-            and len(self.lora_namespan_exclude) == 1
-        ):
+        if isinstance(self.lora_namespan_exclude, list) and len(self.lora_namespan_exclude) == 1:
             self.lora_namespan_exclude = self.lora_namespan_exclude[0]
 
 
@@ -97,12 +94,10 @@ class ModelConfig:
     bnb_4bit_quant_type: Literal["fp4", "nf4"] = "nf4"
     use_bnb_nested_quant: bool = False
     reward_token: Literal["last", "mean", "special"] = "last"
-    loss_type: Literal["bt", "reg", "btt", "margin", "constant_margin", "scaled"] = (
-        "regular"
-    )
+    loss_type: Literal["bt", "reg", "btt", "margin", "constant_margin", "scaled"] = "regular"
     loss_hyperparameters: dict = field(default_factory=lambda: {})
     checkpoint_path: Optional[str] = None
-    
+
     def __post_init__(self):
         if self.load_in_8bit and self.load_in_4bit:
             raise ValueError("You can't use 8 bit and 4 bit precision at the same time")
@@ -116,20 +111,21 @@ class ModelConfig:
 
 ########## Functions for get trainable modules' parameters ##########
 
+
 def parse_args_with_yaml(
-    dataclass_types: Tuple[type, ...], 
+    dataclass_types: Tuple[type, ...],
     config_path: str = None,
     allow_extra_keys: bool = True,
     is_train: bool = True,
 ) -> Tuple[Any, ...]:
     """
     Parse arguments using HfArgumentParser with OmegaConf for YAML support.
-    
+
     Args:
         dataclass_types: Tuple of dataclass types for HfArgumentParser
         args: Optional arguments (if None, will read from sys.argv)
         allow_extra_keys: Whether to allow extra keys in config
-    
+
     Returns:
         Tuple of parsed dataclass instances
     """
@@ -137,7 +133,7 @@ def parse_args_with_yaml(
     # Load YAML config and merge with command line overrides
     args = OmegaConf.to_container(OmegaConf.load(config_path))
     if not is_train:
-        args.pop('deepspeed', None)
+        args.pop("deepspeed", None)
 
     # Parse with HfArgumentParser
     parser = HfArgumentParser(dataclass_types)

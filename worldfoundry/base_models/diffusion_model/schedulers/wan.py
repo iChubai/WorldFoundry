@@ -289,15 +289,9 @@ class FastVideoCausalWanSelfForcingScheduler:
         del dtype
         unsupported = set(sampling.scheduler_options) - {"shift"}
         if unsupported:
-            raise ValueError(
-                "unsupported FastVideoCausalWanSelfForcingScheduler options: "
-                f"{sorted(unsupported)}"
-            )
+            raise ValueError(f"unsupported FastVideoCausalWanSelfForcingScheduler options: {sorted(unsupported)}")
         if sampling.num_inference_steps != len(self.raw_timesteps):
-            raise ValueError(
-                "FastVideo CausalWan requires exactly "
-                f"{len(self.raw_timesteps)} inference steps"
-            )
+            raise ValueError(f"FastVideo CausalWan requires exactly {len(self.raw_timesteps)} inference steps")
         shift = float(sampling.scheduler_options.get("shift", self.shift))
         raw = torch.tensor(
             (*self.raw_timesteps, 0),
@@ -317,8 +311,7 @@ class FastVideoCausalWanSelfForcingScheduler:
             shift,
         )
         boundary_index = torch.argmin(
-            (training_sigmas * self.num_train_timesteps
-             - self.boundary_ratio * self.num_train_timesteps).abs()
+            (training_sigmas * self.num_train_timesteps - self.boundary_ratio * self.num_train_timesteps).abs()
         )
         boundary_sigma = training_sigmas[boundary_index]
         return tuple(

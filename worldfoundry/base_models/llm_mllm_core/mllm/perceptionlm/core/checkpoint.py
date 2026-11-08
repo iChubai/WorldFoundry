@@ -59,4 +59,3 @@ def load_consolidated_checkpoint(
         logger.warning("Missing keys when loading PerceptionLM: %s", missing_keys)
     if unexpected_keys:
         logger.warning("Unexpected keys when loading PerceptionLM: %s", unexpected_keys)
-

@@ -29,6 +29,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras imp
 @dataclass(kw_only=True)
 class SLAMMap:
     """Slam map implementation."""
+
     # (M, 3) tensor of XYZ coordinates
     dense_disp_xyz: torch.Tensor
     # (M, 3) tensor of RGB colors (0-1)
@@ -218,6 +219,7 @@ class SLAMMap:
 @dataclass(kw_only=True)
 class SLAMOutput:
     """Slam output implementation."""
+
     trajectory: SE3  # (N,)
     intrinsics: torch.Tensor  # (V, 4)
 

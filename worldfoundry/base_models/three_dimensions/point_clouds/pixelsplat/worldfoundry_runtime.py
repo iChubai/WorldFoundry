@@ -192,9 +192,7 @@ class PixelSplatRuntime:
                 )
                 buffer = BytesIO()
                 image.save(buffer, format="PNG")
-            encoded_images.append(
-                torch.frombuffer(buffer.getbuffer(), dtype=torch.uint8).clone()
-            )
+            encoded_images.append(torch.frombuffer(buffer.getbuffer(), dtype=torch.uint8).clone())
             # RE10K stores normalized intrinsics followed by a 3x4 world-to-camera
             # matrix.  Sequential demo frames do not ship poses, so use a small,
             # explicit linear baseline and record that fact in result metadata.
@@ -232,15 +230,10 @@ class PixelSplatRuntime:
             ],
             test_root / chunk_name,
         )
-        (test_root / "index.json").write_text(
-            json.dumps({scene: chunk_name}, indent=2) + "\n", encoding="utf-8"
-        )
+        (test_root / "index.json").write_text(json.dumps({scene: chunk_name}, indent=2) + "\n", encoding="utf-8")
         evaluation_index = stage_root / "evaluation_index.json"
         evaluation_index.write_text(
-            json.dumps(
-                {scene: {"context": [0, 1], "target": [2]}}, indent=2
-            )
-            + "\n",
+            json.dumps({scene: {"context": [0, 1], "target": [2]}}, indent=2) + "\n",
             encoding="utf-8",
         )
         return stage_root, evaluation_index, [str(path) for path in selected]
@@ -317,8 +310,7 @@ class PixelSplatRuntime:
             staged_images = []
             if not index_path.is_file():
                 raise FileNotFoundError(
-                    "pixelSplat demo index is missing and no input images were provided: "
-                    f"{index_path}"
+                    f"pixelSplat demo index is missing and no input images were provided: {index_path}"
                 )
         overrides = [
             f"+experiment={kwargs.get('experiment') or self.experiment}",

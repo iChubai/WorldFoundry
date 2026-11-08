@@ -20,20 +20,20 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 
-from transformers import AutoConfig, AutoModelForCausalLM, \
-                         LlamaConfig, LlamaModel, LlamaForCausalLM
+from transformers import AutoConfig, AutoModelForCausalLM, LlamaConfig, LlamaModel, LlamaForCausalLM
 
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 
+
 @dataclass
 class ModelArguments:
     tune_mm_mlp_adapter: bool = field(default=False)
-    vision_tower: Optional[str] = field(default='openai/clip-vit-large-patch14-336')
-    mm_vision_select_layer: Optional[int] = field(default=-2)   # default to the second last layer in llava1.5
+    vision_tower: Optional[str] = field(default="openai/clip-vit-large-patch14-336")
+    mm_vision_select_layer: Optional[int] = field(default=-2)  # default to the second last layer in llava1.5
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
-    mm_projector_type: Optional[str] = field(default='mlp2x_gelu')
+    mm_projector_type: Optional[str] = field(default="mlp2x_gelu")
     mm_vision_select_feature: Optional[str] = field(default="patch")
 
 
@@ -82,7 +82,9 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
-        input_ids, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
+        input_ids, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(
+            input_ids, attention_mask, past_key_values, labels, images
+        )
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = self.model(
@@ -93,7 +95,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             use_cache=use_cache,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
-            return_dict=return_dict
+            return_dict=return_dict,
         )
 
         hidden_states = outputs[0]
@@ -146,6 +148,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             }
         )
         return model_inputs
+
 
 AutoConfig.register("llava-v1.5", LlavaConfig)
 AutoModelForCausalLM.register(LlavaConfig, LlavaLlamaForCausalLM)

@@ -46,14 +46,18 @@ def _infer_decoder_layers_attr_name(model: nn.Module):
         if k.lower() in model.__class__.__name__.lower():
             return __KNOWN_DECODER_LAYERS_ATTR_NAMES[k]
 
-    raise ValueError(f"We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually.")
+    raise ValueError(
+        f"We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually."
+    )
 
 
 def extend_instance(obj, mixin):
     """Apply mixins to a class instance after creation"""
     base_cls = obj.__class__
     base_cls_name = obj.__class__.__name__
-    obj.__class__ = type(base_cls_name, (mixin, base_cls), {})  # mixin needs to go first for our forward() logic to work
+    obj.__class__ = type(
+        base_cls_name, (mixin, base_cls), {}
+    )  # mixin needs to go first for our forward() logic to work
 
 
 def getattr_recursive(obj, att):
@@ -432,7 +436,16 @@ class FlamingoLMMixin(nn.Module):
                 for layer_idx, _ in enumerate(self._get_decoder_layers())
             ]
         )
-        self._set_decoder_layers(nn.ModuleList([FlamingoLayer(gated_cross_attn_layer, decoder_layer) for gated_cross_attn_layer, decoder_layer in zip(gated_cross_attn_layers, self._get_decoder_layers())]))
+        self._set_decoder_layers(
+            nn.ModuleList(
+                [
+                    FlamingoLayer(gated_cross_attn_layer, decoder_layer)
+                    for gated_cross_attn_layer, decoder_layer in zip(
+                        gated_cross_attn_layers, self._get_decoder_layers()
+                    )
+                ]
+            )
+        )
         self.media_token_id = media_token_id
         self.use_media_placement_augmentation = use_media_placement_augmentation
         self.initialized_flamingo = True
@@ -530,7 +543,9 @@ class FlamingoModel(FlamingoPreTrainedModel):
         lang_encoder.set_decoder_layers_attr_name(decoder_layers_attr_name)
         self.lang_encoder = lang_encoder
 
-        self.cross_attn_every_n_layers = config.cross_attn_every_n_layers if hasattr(config, "cross_attn_every_n_layers") else 4
+        self.cross_attn_every_n_layers = (
+            config.cross_attn_every_n_layers if hasattr(config, "cross_attn_every_n_layers") else 4
+        )
         self.use_media_placement_augmentation = config.use_media_placement_augmentation
 
         vision_encoder.output_tokens = True
@@ -588,7 +603,9 @@ class FlamingoModel(FlamingoPreTrainedModel):
             param.requires_grad = False
 
         if "lora_config" in self.config.__dict__:
-            print(f"LoRA trainable param: {(sum(p.numel() for p in self.lang_encoder.parameters() if p.requires_grad)) / 1e9:.3f} B")
+            print(
+                f"LoRA trainable param: {(sum(p.numel() for p in self.lang_encoder.parameters() if p.requires_grad)) / 1e9:.3f} B"
+            )
             # Unfreeze gated_cross_attn_layers
             for layer in self.lang_encoder._get_decoder_layers():
                 if layer.gated_cross_attn_layer is not None:
@@ -640,7 +657,9 @@ class FlamingoModel(FlamingoPreTrainedModel):
             use_cache: whether to use cached key values. See use_cache
                 documentation in Hugging Face CausalLM models.
         """
-        assert (vision_x is not None) or use_cached_vision_x, "Must provide either vision_x or use_cached_vision_x to True."
+        assert (vision_x is not None) or use_cached_vision_x, (
+            "Must provide either vision_x or use_cached_vision_x to True."
+        )
 
         if use_cached_vision_x:
             # Case: use cached; vision_x should be cached and other
@@ -741,7 +760,9 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
         lang_encoder.set_decoder_layers_attr_name(decoder_layers_attr_name)
         self.lang_encoder = lang_encoder
 
-        self.cross_attn_every_n_layers = config.cross_attn_every_n_layers if hasattr(config, "cross_attn_every_n_layers") else 4
+        self.cross_attn_every_n_layers = (
+            config.cross_attn_every_n_layers if hasattr(config, "cross_attn_every_n_layers") else 4
+        )
         self.use_media_placement_augmentation = config.use_media_placement_augmentation
 
         vision_encoder.output_tokens = True
@@ -796,7 +817,9 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
 
         if "lora_config" in self.config.__dict__:
             # Use another logic to unfreeze gated_cross_attn_layers and perceivers
-            master_print(f"LoRA trainable param: {(sum(param.numel() for name, param in self.lang_encoder.named_parameters() if 'lora' in name)) / 1e6:.3f} M")
+            master_print(
+                f"LoRA trainable param: {(sum(param.numel() for name, param in self.lang_encoder.named_parameters() if 'lora' in name)) / 1e6:.3f} M"
+            )
             for name, param in self.lang_encoder.named_parameters():
                 if "lora" in name:
                     param.requires_grad = True
@@ -820,7 +843,9 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
             if param.requires_grad:
                 total_params += param.numel()
                 master_print(f"{name}: {param.numel() / 1e6:.3f} M")
-        master_print(f"Total Trainable param: {(sum(p.numel() for p in self.parameters() if p.requires_grad)) / 1e9:.3f} B")
+        master_print(
+            f"Total Trainable param: {(sum(p.numel() for p in self.parameters() if p.requires_grad)) / 1e9:.3f} B"
+        )
 
     def forward(
         self,
@@ -854,7 +879,9 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
             use_cache: whether to use cached key values. See use_cache
                 documentation in Hugging Face CausalLM models.
         """
-        assert (vision_x is not None) or use_cached_vision_x, "Must provide either vision_x or use_cached_vision_x to True."
+        assert (vision_x is not None) or use_cached_vision_x, (
+            "Must provide either vision_x or use_cached_vision_x to True."
+        )
 
         if use_cached_vision_x:
             # Case: use cached; vision_x should be cached and other

@@ -8,6 +8,7 @@ from worldfoundry.core.model_loading import hash_state_dict_keys
 
 class BlockWiseControlBlock(torch.nn.Module):
     """Block wise control block implementation."""
+
     # [linear, gelu, linear]
     def __init__(self, dim: int = 3072):
         """Init.
@@ -44,6 +45,7 @@ class BlockWiseControlBlock(torch.nn.Module):
 
 class QwenImageBlockWiseControlNet(torch.nn.Module):
     """Qwen image block wise control net implementation."""
+
     def __init__(
         self,
         num_layers: int = 60,
@@ -61,12 +63,7 @@ class QwenImageBlockWiseControlNet(torch.nn.Module):
         """
         super().__init__()
         self.img_in = nn.Linear(in_dim + additional_in_dim, dim)
-        self.controlnet_blocks = nn.ModuleList(
-            [
-                BlockWiseControlBlock(dim)
-                for _ in range(num_layers)
-            ]
-        )
+        self.controlnet_blocks = nn.ModuleList([BlockWiseControlBlock(dim) for _ in range(num_layers)])
 
     def init_weight(self):
         """Init weight."""
@@ -99,8 +96,9 @@ class QwenImageBlockWiseControlNet(torch.nn.Module):
         return QwenImageBlockWiseControlNetStateDictConverter()
 
 
-class QwenImageBlockWiseControlNetStateDictConverter():
+class QwenImageBlockWiseControlNetStateDictConverter:
     """Qwen image block wise control net state dict converter implementation."""
+
     def __init__(self):
         """Init."""
         pass

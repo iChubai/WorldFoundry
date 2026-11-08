@@ -4,6 +4,7 @@
 
 Kernel adapter for DreamZero blocks.  No action math here.
 """
+
 import contextlib
 import torch
 from torch.profiler import profile, ProfilerActivity
@@ -20,12 +21,14 @@ try:
             return False
         device_name = torch.cuda.get_device_name(0).lower()
         return "h100" in device_name or "hopper" in device_name
+
     FLASH_ATTN_3_AVAILABLE = is_hopper_gpu()
 except ModuleNotFoundError:
     FLASH_ATTN_3_AVAILABLE = False
 
 try:
     import flash_attn
+
     FLASH_ATTN_2_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
@@ -33,6 +36,7 @@ except ModuleNotFoundError:
 try:
     import transformer_engine
     from .cudnn_attention import DotProductAttention
+
     TRANSFORMER_ENGINE_AVAILABLE = True
 except ModuleNotFoundError:
     TRANSFORMER_ENGINE_AVAILABLE = False
@@ -56,10 +60,12 @@ def _gpu_supports_flash_attention():
 
 
 def _sdpa_attention_fallback(
-    q, k, v,
+    q,
+    k,
+    v,
     q_lens=None,
     k_lens=None,
-    dropout_p=0.,
+    dropout_p=0.0,
     softmax_scale=None,
     q_scale=None,
     causal=False,
@@ -68,8 +74,8 @@ def _sdpa_attention_fallback(
     """PyTorch SDPA fallback for GPUs that don't support FlashAttention (e.g. pre-Ampere)."""
     if q_lens is not None or k_lens is not None:
         warnings.warn(
-            'Padding mask is disabled when using scaled_dot_product_attention on this GPU. '
-            'It can have a slight impact on quality.'
+            "Padding mask is disabled when using scaled_dot_product_attention on this GPU. "
+            "It can have a slight impact on quality."
         )
     q = q.transpose(1, 2).to(dtype)
     k = k.transpose(1, 2).to(dtype)
@@ -78,9 +84,7 @@ def _sdpa_attention_fallback(
         q = q * q_scale
     if softmax_scale is not None:
         q = q * softmax_scale
-    out = _worldfoundry_scaled_dot_product_attention(
-        q, k, v, attn_mask=None, is_causal=causal, dropout_p=dropout_p
-    )
+    out = _worldfoundry_scaled_dot_product_attention(q, k, v, attn_mask=None, is_causal=causal, dropout_p=dropout_p)
     return out.transpose(1, 2).contiguous()
 
 
@@ -90,7 +94,7 @@ def flash_attention(
     v: torch.Tensor,
     q_lens: Optional[torch.Tensor] = None,
     k_lens: Optional[torch.Tensor] = None,
-    dropout_p: float = 0.,
+    dropout_p: float = 0.0,
     softmax_scale: Optional[float] = None,
     q_scale: Optional[float] = None,
     causal: bool = False,
@@ -123,19 +127,17 @@ def flash_attention(
 
     half_dtypes = (torch.float16, torch.bfloat16)
     assert dtype in half_dtypes
-    assert q.device.type == 'cuda' and q.size(-1) <= 256
+    assert q.device.type == "cuda" and q.size(-1) <= 256
 
     # The shared dispatcher handles the current FlashAttention 3 Python ABI
     # (including seqused_q/seqused_k) and preserves variable lengths. The
     # older in-tree FA3 call below targets an obsolete ABI. It also supplies
     # the SDPA fallback when an optional FlashAttention package is absent.
-    if (
-        version == 3
-        or not _gpu_supports_flash_attention()
-        or (version == 2 and not FLASH_ATTN_2_AVAILABLE)
-    ):
+    if version == 3 or not _gpu_supports_flash_attention() or (version == 2 and not FLASH_ATTN_2_AVAILABLE):
         return _worldfoundry_varlen_attention(
-            q, k, v,
+            q,
+            k,
+            v,
             q_lens=q_lens,
             k_lens=k_lens,
             dropout_p=dropout_p,
@@ -182,9 +184,7 @@ def flash_attention(
         q = q * q_scale
 
     if version == 3 and not FLASH_ATTN_3_AVAILABLE:
-        warnings.warn(
-            'Flash attention 3 is not available, use flash attention 2 instead.'
-        )
+        warnings.warn("Flash attention 3 is not available, use flash attention 2 instead.")
     zeros = torch.zeros([1], dtype=torch.int32, device=q.device)
     cu_seqlens_q = torch.cat([zeros, q_lens]).cumsum(0).to(torch.int32)
     cu_seqlens_k = torch.cat([zeros, k_lens]).cumsum(0).to(torch.int32)
@@ -202,7 +202,8 @@ def flash_attention(
             max_seqlen_k=lk,
             softmax_scale=softmax_scale,
             causal=causal,
-            deterministic=deterministic)[0].unflatten(0, (b, lq))
+            deterministic=deterministic,
+        )[0].unflatten(0, (b, lq))
     elif FLASH_ATTN_2_AVAILABLE:
         x = flash_attn.flash_attn_varlen_func(
             q=q,
@@ -216,7 +217,8 @@ def flash_attention(
             softmax_scale=softmax_scale,
             causal=causal,
             window_size=window_size,
-            deterministic=deterministic).unflatten(0, (b, lq))
+            deterministic=deterministic,
+        ).unflatten(0, (b, lq))
     else:
         raise ValueError(f"Invalid version: {version}")
 
@@ -226,11 +228,12 @@ def flash_attention(
 
 class AttentionModule(torch.nn.Module):
     """DreamZero packed-sequence attention wrapper."""
+
     def __init__(
         self,
         num_heads: int,
         head_dim: int,
-        dropout_p: float = 0.,
+        dropout_p: float = 0.0,
         softmax_scale: Optional[float] = None,
         q_scale: Optional[float] = None,
         causal: bool = False,
@@ -275,6 +278,7 @@ class AttentionModule(torch.nn.Module):
         self.backend = backend
 
         if backend == "torch":
+
             def _torch_impl(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
                 """Helper function to torch impl.
 
@@ -292,7 +296,9 @@ class AttentionModule(torch.nn.Module):
                 v = v.transpose(1, 2).to(dtype)
 
                 out = _worldfoundry_scaled_dot_product_attention(
-                    q, k, v,
+                    q,
+                    k,
+                    v,
                     attn_mask=None,
                     is_causal=causal,
                     dropout_p=dropout_p,
@@ -301,9 +307,11 @@ class AttentionModule(torch.nn.Module):
 
                 out = out.transpose(1, 2).contiguous()
                 return out.to(out_dtype)
+
             self.attn_func = _torch_impl
 
-        elif  backend == "torch_onnx":
+        elif backend == "torch_onnx":
+
             def _torch_onnx_impl(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
                 """Helper function to torch onnx impl.
 
@@ -330,7 +338,9 @@ class AttentionModule(torch.nn.Module):
                     v = v.repeat(q.shape[0], 1, 1, 1)
 
                 out = _worldfoundry_scaled_dot_product_attention(
-                    q, k, v,
+                    q,
+                    k,
+                    v,
                     attn_mask=None,
                     is_causal=causal,
                     dropout_p=dropout_p,
@@ -340,6 +350,7 @@ class AttentionModule(torch.nn.Module):
                 # Transpose back to (b, s, n, d) format.
                 out = out.transpose(1, 2).contiguous()
                 return out.to(out_dtype)
+
             self.attn_func = _torch_onnx_impl
 
         elif backend == "TE" and TRANSFORMER_ENGINE_AVAILABLE:
@@ -369,12 +380,17 @@ class AttentionModule(torch.nn.Module):
                     key_layer=k.to(dtype),
                     value_layer=v.to(dtype),
                 ).to(out_dtype)
+
             self.attn_func = _te_impl
 
         elif backend == "FA2" or backend == "FA3":
+
             def _flash_attn_impl(
-                q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
-                q_lens: Optional[torch.Tensor], k_lens: Optional[torch.Tensor],
+                q: torch.Tensor,
+                k: torch.Tensor,
+                v: torch.Tensor,
+                q_lens: Optional[torch.Tensor],
+                k_lens: Optional[torch.Tensor],
             ) -> torch.Tensor:
                 """Helper function to flash attn impl.
 
@@ -389,8 +405,11 @@ class AttentionModule(torch.nn.Module):
                     The return value.
                 """
                 return flash_attention(
-                    q=q, k=k, v=v,
-                    q_lens=q_lens, k_lens=k_lens,
+                    q=q,
+                    k=k,
+                    v=v,
+                    q_lens=q_lens,
+                    k_lens=k_lens,
                     dropout_p=dropout_p,
                     softmax_scale=softmax_scale,
                     q_scale=q_scale,
@@ -400,6 +419,7 @@ class AttentionModule(torch.nn.Module):
                     dtype=dtype,
                     version=3 if backend == "FA3" else 2,
                 )
+
             self.attn_func = _flash_attn_impl
 
         else:
@@ -423,13 +443,13 @@ class AttentionModule(torch.nn.Module):
             k_lens: The k lens.
         """
         if (
-            self.backend == "torch" or
-            self.backend == "torch_onnx" or
-            (self.backend == "TE" and TRANSFORMER_ENGINE_AVAILABLE)
+            self.backend == "torch"
+            or self.backend == "torch_onnx"
+            or (self.backend == "TE" and TRANSFORMER_ENGINE_AVAILABLE)
         ):
             if q_lens is not None or k_lens is not None:
                 warnings.warn(
-                    'Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance.'
+                    "Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance."
                 )
             return self.attn_func(q, k, v)  # type: ignore[call-arg]
         else:

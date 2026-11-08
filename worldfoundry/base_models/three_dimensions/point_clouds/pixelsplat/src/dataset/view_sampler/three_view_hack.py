@@ -5,9 +5,7 @@ from jaxtyping import Int
 from torch import Tensor
 
 
-def add_third_context_index(
-    indices: Int[Tensor, "*batch 2"]
-) -> Int[Tensor, "*batch 3"]:
+def add_third_context_index(indices: Int[Tensor, "*batch 2"]) -> Int[Tensor, "*batch 3"]:
     """Add third context index.
 
     Args:

@@ -6,7 +6,11 @@ from typing import Literal, Optional, Union
 
 import torch.distributed as dist
 
-from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import get_logger, init_process_group, is_dist
+from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils import (
+    get_logger,
+    init_process_group,
+    is_dist,
+)
 from .base_args import BaseArguments, to_abspath
 from .base_args.model_args import ModelArguments
 from .merge_args import MergeArguments
@@ -36,14 +40,14 @@ class LmdeployArguments:
 
     def get_lmdeploy_engine_kwargs(self):
         kwargs = {
-            'tp': self.tp,
-            'session_len': self.session_len,
-            'cache_max_entry_count': self.cache_max_entry_count,
-            'quant_policy': self.quant_policy,
-            'vision_batch_size': self.vision_batch_size
+            "tp": self.tp,
+            "session_len": self.session_len,
+            "cache_max_entry_count": self.cache_max_entry_count,
+            "quant_policy": self.quant_policy,
+            "vision_batch_size": self.vision_batch_size,
         }
         if dist.is_initialized():
-            kwargs.update({'devices': [dist.get_rank()]})
+            kwargs.update({"devices": [dist.get_rank()]})
         return kwargs
 
 
@@ -64,6 +68,7 @@ class VllmArguments:
         vllm_max_lora_rank (int): Maximum LoRA rank. Default is 16.
         enable_prefix_caching (bool): Flag to enable automatic prefix caching. Default is False.
     """
+
     # vllm
     gpu_memory_utilization: float = 0.9
     tensor_parallel_size: int = 1
@@ -79,30 +84,30 @@ class VllmArguments:
     vllm_quantization: Optional[str] = None
     # rollout
     data_parallel_size: int = 1
-    log_level: Literal['critical', 'error', 'warning', 'info', 'debug', 'trace'] = 'info'
+    log_level: Literal["critical", "error", "warning", "info", "debug", "trace"] = "info"
 
     def __post_init__(self):
         self.limit_mm_per_prompt = ModelArguments.parse_to_dict(self.limit_mm_per_prompt)
 
     def get_vllm_engine_kwargs(self):
         adapters = self.adapters
-        if hasattr(self, 'adapter_mapping'):
+        if hasattr(self, "adapter_mapping"):
             adapters = adapters + list(self.adapter_mapping.values())
         kwargs = {
-            'gpu_memory_utilization': self.gpu_memory_utilization,
-            'tensor_parallel_size': self.tensor_parallel_size,
-            'pipeline_parallel_size': self.pipeline_parallel_size,
-            'max_num_seqs': self.max_num_seqs,
-            'max_model_len': self.max_model_len,
-            'disable_custom_all_reduce': self.disable_custom_all_reduce,
-            'enforce_eager': self.enforce_eager,
-            'limit_mm_per_prompt': self.limit_mm_per_prompt,
-            'max_lora_rank': self.vllm_max_lora_rank,
-            'enable_lora': len(adapters) > 0,
-            'max_loras': max(len(adapters), 1),
-            'enable_prefix_caching': self.enable_prefix_caching,
-            'use_async_engine': self.use_async_engine,
-            'quantization': self.vllm_quantization,
+            "gpu_memory_utilization": self.gpu_memory_utilization,
+            "tensor_parallel_size": self.tensor_parallel_size,
+            "pipeline_parallel_size": self.pipeline_parallel_size,
+            "max_num_seqs": self.max_num_seqs,
+            "max_model_len": self.max_model_len,
+            "disable_custom_all_reduce": self.disable_custom_all_reduce,
+            "enforce_eager": self.enforce_eager,
+            "limit_mm_per_prompt": self.limit_mm_per_prompt,
+            "max_lora_rank": self.vllm_max_lora_rank,
+            "enable_lora": len(adapters) > 0,
+            "max_loras": max(len(adapters), 1),
+            "enable_prefix_caching": self.enable_prefix_caching,
+            "use_async_engine": self.use_async_engine,
+            "quantization": self.vllm_quantization,
         }
         return kwargs
 
@@ -121,11 +126,12 @@ class InferArguments(MergeArguments, VllmArguments, LmdeployArguments, BaseArgum
         max_batch_size (int): Maximum batch size for the pt engine. Default is 1.
         val_dataset_sample (Optional[int]): Sample size for validation dataset. Default is None.
     """
-    infer_backend: Literal['vllm', 'pt', 'lmdeploy'] = 'pt'
+
+    infer_backend: Literal["vllm", "pt", "lmdeploy"] = "pt"
 
     result_path: Optional[str] = None
     write_batch_size: int = 1000
-    metric: Literal['acc', 'rouge'] = None
+    metric: Literal["acc", "rouge"] = None
     # for pt engine
     max_batch_size: int = 1
 
@@ -133,40 +139,41 @@ class InferArguments(MergeArguments, VllmArguments, LmdeployArguments, BaseArgum
     val_dataset_sample: Optional[int] = None
 
     def _get_result_path(self, folder_name: str) -> str:
-        result_dir = self.ckpt_dir or f'result/{self.model_suffix}'
+        result_dir = self.ckpt_dir or f"result/{self.model_suffix}"
         os.makedirs(result_dir, exist_ok=True)
         result_dir = to_abspath(os.path.join(result_dir, folder_name))
         os.makedirs(result_dir, exist_ok=True)
-        time = dt.datetime.now().strftime('%Y%m%d-%H%M%S')
-        return os.path.join(result_dir, f'{time}.jsonl')
+        time = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        return os.path.join(result_dir, f"{time}.jsonl")
 
     def _init_result_path(self, folder_name: str) -> None:
         if self.result_path is not None:
             self.result_path = to_abspath(self.result_path)
             return
         self.result_path = self._get_result_path(folder_name)
-        logger.info(f'args.result_path: {self.result_path}')
+        logger.info(f"args.result_path: {self.result_path}")
 
     def _init_stream(self):
         self.eval_human = not (self.dataset and self.split_dataset_ratio > 0 or self.val_dataset)
 
         if self.stream and self.num_beams != 1:
             self.stream = False
-            logger.info('Setting args.stream: False')
+            logger.info("Setting args.stream: False")
 
     def _init_ddp(self):
         if not is_dist():
             return
         assert not self.eval_human and not self.stream, (
-            'In DDP scenarios, interactive interfaces and streaming output are not supported.'
-            f'args.eval_human: {self.eval_human}, args.stream: {self.stream}')
+            "In DDP scenarios, interactive interfaces and streaming output are not supported."
+            f"args.eval_human: {self.eval_human}, args.stream: {self.stream}"
+        )
         self._init_device()
         init_process_group(backend=self.ddp_backend, timeout=self.ddp_timeout)
 
     def __post_init__(self) -> None:
         BaseArguments.__post_init__(self)
         VllmArguments.__post_init__(self)
-        self._init_result_path('infer_result')
+        self._init_result_path("infer_result")
         self._init_eval_human()
         self._init_stream()
         self._init_ddp()
@@ -177,4 +184,4 @@ class InferArguments(MergeArguments, VllmArguments, LmdeployArguments, BaseArgum
         else:
             eval_human = False
         self.eval_human = eval_human
-        logger.info(f'Setting args.eval_human: {self.eval_human}')
+        logger.info(f"Setting args.eval_human: {self.eval_human}")

@@ -25,7 +25,10 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.generation.utils import GenerateOutput
 
 # from ...constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.llava_arch import (
+    LlavaMetaModel,
+    LlavaMetaForCausalLM,
+)
 from transformers import Qwen2MoeConfig, Qwen2MoeModel, Qwen2MoeForCausalLM
 
 # from .qwen.modeling_qwen import QWenLMHeadModel, QWenModel
@@ -78,9 +81,12 @@ class LlavaQwenMoeForCausalLM(Qwen2MoeForCausalLM, LlavaMetaForCausalLM):
         dpo_forward: Optional[bool] = False,
         cache_position=None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
-
         if inputs_embeds is None:
-            (input_ids, position_ids, attention_mask, past_key_values, inputs_embeds, labels) = self.prepare_inputs_labels_for_multimodal(input_ids, position_ids, attention_mask, past_key_values, labels, images, modalities, image_sizes)
+            (input_ids, position_ids, attention_mask, past_key_values, inputs_embeds, labels) = (
+                self.prepare_inputs_labels_for_multimodal(
+                    input_ids, position_ids, attention_mask, past_key_values, labels, images, modalities, image_sizes
+                )
+            )
 
         if dpo_forward:
             outputs = self.model(
@@ -128,16 +134,22 @@ class LlavaQwenMoeForCausalLM(Qwen2MoeForCausalLM, LlavaMetaForCausalLM):
             raise NotImplementedError("`inputs_embeds` is not supported")
 
         if images is not None:
-            (inputs, position_ids, attention_mask, _, inputs_embeds, _) = self.prepare_inputs_labels_for_multimodal(inputs, position_ids, attention_mask, None, None, images, modalities, image_sizes=image_sizes)
+            (inputs, position_ids, attention_mask, _, inputs_embeds, _) = self.prepare_inputs_labels_for_multimodal(
+                inputs, position_ids, attention_mask, None, None, images, modalities, image_sizes=image_sizes
+            )
         else:
             inputs_embeds = self.get_model().embed_tokens(inputs)
 
-        return super().generate(position_ids=position_ids, attention_mask=attention_mask, inputs_embeds=inputs_embeds, **kwargs)
+        return super().generate(
+            position_ids=position_ids, attention_mask=attention_mask, inputs_embeds=inputs_embeds, **kwargs
+        )
 
     def prepare_inputs_for_generation(self, input_ids, past_key_values=None, inputs_embeds=None, **kwargs):
         images = kwargs.pop("images", None)
         image_sizes = kwargs.pop("image_sizes", None)
-        inputs = super().prepare_inputs_for_generation(input_ids, past_key_values=past_key_values, inputs_embeds=inputs_embeds, **kwargs)
+        inputs = super().prepare_inputs_for_generation(
+            input_ids, past_key_values=past_key_values, inputs_embeds=inputs_embeds, **kwargs
+        )
         if images is not None:
             inputs["images"] = images
         if image_sizes is not None:

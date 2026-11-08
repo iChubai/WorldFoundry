@@ -104,6 +104,7 @@ class IntrinsicEstimationProcessor(StreamProcessor):
 
 class GeoCalibIntrinsicsProcessor(IntrinsicEstimationProcessor):
     """Geo calib intrinsics processor implementation."""
+
     def __init__(
         self,
         video_stream: VideoStream,

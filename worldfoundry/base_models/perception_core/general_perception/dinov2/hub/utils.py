@@ -34,6 +34,7 @@ def _make_dinov2_model_name(arch_name: str, patch_size: int, num_register_tokens
 
 class CenterPadding(nn.Module):
     """Center padding implementation."""
+
     def __init__(self, multiple):
         """Init.
 

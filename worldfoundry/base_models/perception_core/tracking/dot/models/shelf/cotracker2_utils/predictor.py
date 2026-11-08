@@ -56,7 +56,7 @@ class CoTrackerPredictor(torch.nn.Module):
                 add_support_grid=(grid_size == 0 or segm_mask is not None),
                 grid_query_frame=grid_query_frame,
                 backward_tracking=backward_tracking,
-                cache_features=cache_features
+                cache_features=cache_features,
             )
 
         return tracks, visibilities
@@ -74,9 +74,7 @@ class CoTrackerPredictor(torch.nn.Module):
             ox = offset % grid_step
             oy = offset // grid_step
             grid_pts[0, :, 1] = torch.arange(grid_width).repeat(grid_height) * grid_step + ox
-            grid_pts[0, :, 2] = (
-                torch.arange(grid_height).repeat_interleave(grid_width) * grid_step + oy
-            )
+            grid_pts[0, :, 2] = torch.arange(grid_height).repeat_interleave(grid_width) * grid_step + oy
             tracks_step, visibilities_step = self._compute_sparse_tracks(
                 video=video,
                 queries=grid_pts,
@@ -138,29 +136,22 @@ class CoTrackerPredictor(torch.nn.Module):
             )
 
         if add_support_grid:
-            grid_pts = get_points_on_a_grid(
-                self.support_grid_size, self.interp_shape, device=video.device
-            )
+            grid_pts = get_points_on_a_grid(self.support_grid_size, self.interp_shape, device=video.device)
             grid_pts = torch.cat([torch.zeros_like(grid_pts[:, :, :1]), grid_pts], dim=2)
             grid_pts = grid_pts.repeat(B, 1, 1)
             queries = torch.cat([queries, grid_pts], dim=1)
 
         tracks, visibilities, __ = self.model.forward(
-            video=video,
-            queries=queries,
-            iters=6,
-            cached_feat=self.cached_feat
+            video=video, queries=queries, iters=6, cached_feat=self.cached_feat
         )
 
         if backward_tracking:
-            tracks, visibilities = self._compute_backward_tracks(
-                video, queries, tracks, visibilities
-            )
+            tracks, visibilities = self._compute_backward_tracks(video, queries, tracks, visibilities)
             if add_support_grid:
-                queries[:, -self.support_grid_size**2 :, 0] = T - 1
+                queries[:, -(self.support_grid_size**2) :, 0] = T - 1
         if add_support_grid:
-            tracks = tracks[:, :, : -self.support_grid_size**2]
-            visibilities = visibilities[:, :, : -self.support_grid_size**2]
+            tracks = tracks[:, :, : -(self.support_grid_size**2)]
+            visibilities = visibilities[:, :, : -(self.support_grid_size**2)]
         thr = 0.9
         visibilities = visibilities > thr
 
@@ -178,9 +169,7 @@ class CoTrackerPredictor(torch.nn.Module):
             # correct visibilities, the query points should be visible
             visibilities[i, queries_t, arange] = True
 
-        tracks *= tracks.new_tensor(
-            [(W - 1) / (self.interp_shape[1] - 1), (H - 1) / (self.interp_shape[0] - 1)]
-        )
+        tracks *= tracks.new_tensor([(W - 1) / (self.interp_shape[1] - 1), (H - 1) / (self.interp_shape[0] - 1)])
         return tracks, visibilities
 
     def _compute_backward_tracks(self, video, queries, tracks, visibilities):
@@ -194,10 +183,7 @@ class CoTrackerPredictor(torch.nn.Module):
             inv_feat = None
 
         inv_tracks, inv_visibilities, __ = self.model(
-            video=inv_video,
-            queries=inv_queries,
-            iters=6,
-            cached_feat=inv_feat
+            video=inv_video, queries=inv_queries, iters=6, cached_feat=inv_feat
         )
 
         inv_tracks = inv_tracks.flip(1)
@@ -246,26 +232,20 @@ class CoTrackerOnlinePredictor(torch.nn.Module):
                     ]
                 )
             elif grid_size > 0:
-                grid_pts = get_points_on_a_grid(
-                    grid_size, self.interp_shape, device=video_chunk.device
-                )
+                grid_pts = get_points_on_a_grid(grid_size, self.interp_shape, device=video_chunk.device)
                 queries = torch.cat(
                     [torch.ones_like(grid_pts[:, :, :1]) * grid_query_frame, grid_pts],
                     dim=2,
                 )
             if add_support_grid:
-                grid_pts = get_points_on_a_grid(
-                    self.support_grid_size, self.interp_shape, device=video_chunk.device
-                )
+                grid_pts = get_points_on_a_grid(self.support_grid_size, self.interp_shape, device=video_chunk.device)
                 grid_pts = torch.cat([torch.zeros_like(grid_pts[:, :, :1]), grid_pts], dim=2)
                 queries = torch.cat([queries, grid_pts], dim=1)
             self.queries = queries
             return (None, None)
         B, T, C, H, W = video_chunk.shape
         video_chunk = video_chunk.reshape(B * T, C, H, W)
-        video_chunk = F.interpolate(
-            video_chunk, tuple(self.interp_shape), mode="bilinear", align_corners=True
-        )
+        video_chunk = F.interpolate(video_chunk, tuple(self.interp_shape), mode="bilinear", align_corners=True)
         video_chunk = video_chunk.reshape(B, T, 3, self.interp_shape[0], self.interp_shape[1])
 
         tracks, visibilities, __ = self.model(

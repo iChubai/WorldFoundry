@@ -45,9 +45,7 @@ class V3DetDataset(CocoDataset):
         Returns:
             List[dict]: A list of annotation.
         """  # noqa: E501
-        with get_local_path(
-            self.ann_file, backend_args=self.backend_args
-        ) as local_path:
+        with get_local_path(self.ann_file, backend_args=self.backend_args) as local_path:
             self.coco = self.COCOAPI(local_path)
 
         # 'categories' list in objects365_train.json and objects365_val.json
@@ -83,14 +81,10 @@ class V3DetDataset(CocoDataset):
             if file_name in v3det_ignore_list:
                 continue
 
-            parsed_data_info = self.parse_data_info(
-                {"raw_ann_info": raw_ann_info, "raw_img_info": raw_img_info}
-            )
+            parsed_data_info = self.parse_data_info({"raw_ann_info": raw_ann_info, "raw_img_info": raw_img_info})
             data_list.append(parsed_data_info)
         if self.ANN_ID_UNIQUE:
-            assert len(set(total_ann_ids)) == len(total_ann_ids), (
-                f"Annotation ids in '{self.ann_file}' are not unique!"
-            )
+            assert len(set(total_ann_ids)) == len(total_ann_ids), f"Annotation ids in '{self.ann_file}' are not unique!"
 
         del self.coco
 

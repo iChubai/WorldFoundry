@@ -14,6 +14,7 @@ from ..layers.transformer import LongShortTermTransformer
 
 class AOT(nn.Module):
     """Aot implementation."""
+
     def __init__(self, cfg, encoder="mobilenetv2", decoder="fpn"):
         """Init.
 

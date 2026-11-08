@@ -13,6 +13,7 @@ T = TypeVar("T")
 
 class Backbone(nn.Module, ABC, Generic[T]):
     """Backbone implementation."""
+
     cfg: T
 
     def __init__(self, cfg: T) -> None:

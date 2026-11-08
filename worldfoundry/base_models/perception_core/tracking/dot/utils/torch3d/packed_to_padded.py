@@ -60,9 +60,7 @@ class _PackedToPadded(Function):
         return grad_input, None, None
 
 
-def packed_to_padded(
-    inputs: torch.Tensor, first_idxs: torch.LongTensor, max_size: int
-) -> torch.Tensor:
+def packed_to_padded(inputs: torch.Tensor, first_idxs: torch.LongTensor, max_size: int) -> torch.Tensor:
     """
     Torch wrapper that handles allowed input shapes. See description below.
 

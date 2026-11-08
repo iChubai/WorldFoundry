@@ -13,6 +13,7 @@ from .aot import AOT
 
 class DeAOT(AOT):
     """De aot implementation."""
+
     def __init__(self, cfg, encoder="mobilenetv2", decoder="fpn"):
         """Init.
 

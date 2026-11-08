@@ -56,9 +56,7 @@ def create_model_and_transforms(
         cache_dir=cache_dir,
     )
     # add Flamingo special tokens to the tokenizer
-    text_tokenizer.add_special_tokens(
-        {"additional_special_tokens": ["<|endofchunk|>", "<image>", "<action>"]}
-    )
+    text_tokenizer.add_special_tokens({"additional_special_tokens": ["<|endofchunk|>", "<image>", "<action>"]})
     if text_tokenizer.pad_token is None:
         # Issue: GPT models don't have a pad token, which we use to
         # modify labels for the loss.
@@ -76,6 +74,7 @@ def create_model_and_transforms(
 
         class EmbeddingFnMixin:
             """Embedding fn mixin implementation."""
+
             def get_input_embeddings(self):
                 """Get input embeddings."""
                 return self.transformer.wte
@@ -103,9 +102,7 @@ def create_model_and_transforms(
         lang_encoder,
         text_tokenizer.encode("<|endofchunk|>")[-1],
         text_tokenizer.encode("<image>")[-1],
-        vis_dim=open_clip.get_model_config(clip_vision_encoder_path)["vision_cfg"][
-            "width"
-        ],
+        vis_dim=open_clip.get_model_config(clip_vision_encoder_path)["vision_cfg"]["width"],
         cross_attn_every_n_layers=cross_attn_every_n_layers,
         **flamingo_kwargs,
     )

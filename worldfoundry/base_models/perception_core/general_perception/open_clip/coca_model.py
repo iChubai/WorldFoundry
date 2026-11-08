@@ -23,6 +23,7 @@ from .model import CLIPTextCfg, CLIPVisionCfg, _build_vision_tower, _build_text_
 @dataclass
 class MultimodalCfg(CLIPTextCfg):
     """Multimodal cfg implementation."""
+
     mlp_ratio: int = 4
     dim_head: int = 64
     heads: int = 8
@@ -31,10 +32,10 @@ class MultimodalCfg(CLIPTextCfg):
 
 
 def _build_text_decoder_tower(
-        embed_dim,
-        multimodal_cfg,
-        quick_gelu: bool = False,
-        cast_dtype: Optional[torch.dtype] = None,
+    embed_dim,
+    multimodal_cfg,
+    quick_gelu: bool = False,
+    cast_dtype: Optional[torch.dtype] = None,
 ):
     """Helper function to build text decoder tower.
 
@@ -46,9 +47,7 @@ def _build_text_decoder_tower(
     """
     multimodal_cfg = MultimodalCfg(**multimodal_cfg) if isinstance(multimodal_cfg, dict) else multimodal_cfg
     act_layer = QuickGELU if quick_gelu else nn.GELU
-    norm_layer = (
-        LayerNormFp32 if cast_dtype in (torch.float16, torch.bfloat16) else LayerNorm
-    )
+    norm_layer = LayerNormFp32 if cast_dtype in (torch.float16, torch.bfloat16) else LayerNorm
 
     decoder = MultimodalTransformer(
         context_length=multimodal_cfg.context_length,
@@ -66,18 +65,19 @@ def _build_text_decoder_tower(
 
 class CoCa(nn.Module):
     """Co ca implementation."""
+
     def __init__(
-            self,
-            embed_dim,
-            multimodal_cfg: MultimodalCfg,
-            text_cfg: CLIPTextCfg,
-            vision_cfg: CLIPVisionCfg,
-            quick_gelu: bool = False,
-            init_logit_scale: float = np.log(1 / 0.07),
-            init_logit_bias: Optional[float] = None,
-            nonscalar_logit_scale: bool = False,
-            cast_dtype: Optional[torch.dtype] = None,
-            pad_id: int = 0,
+        self,
+        embed_dim,
+        multimodal_cfg: MultimodalCfg,
+        text_cfg: CLIPTextCfg,
+        vision_cfg: CLIPVisionCfg,
+        quick_gelu: bool = False,
+        init_logit_scale: float = np.log(1 / 0.07),
+        init_logit_bias: Optional[float] = None,
+        nonscalar_logit_scale: bool = False,
+        cast_dtype: Optional[torch.dtype] = None,
+        pad_id: int = 0,
     ):
         """Init.
 
@@ -135,7 +135,7 @@ class CoCa(nn.Module):
 
         self.context_length = multimodal_cfg.context_length
 
-    def set_grad_checkpointing(self, enable: bool = True, impl: str = 'inline'):
+    def set_grad_checkpointing(self, enable: bool = True, impl: str = "inline"):
         """Set grad checkpointing.
 
         Args:
@@ -189,23 +189,23 @@ class CoCa(nn.Module):
         return text_latent
 
     def forward_intermediates(
-            self,
-            image: Optional[torch.Tensor] = None,
-            text: Optional[torch.Tensor] = None,
-            image_indices: Optional[Union[int, List[int]]] = None,
-            text_indices: Optional[Union[int, List[int]]] = None,
-            stop_early: bool = False,
-            normalize: bool = True,
-            normalize_intermediates: bool = False,
-            intermediates_only: bool = False,
-            image_output_fmt: str = 'NCHW',
-            image_output_extra_tokens: bool = False,
-            text_output_fmt: str = 'NLC',
-            text_output_extra_tokens: bool = False,
-            output_logits: bool = False,
-            output_logit_scale_bias: bool = False,
+        self,
+        image: Optional[torch.Tensor] = None,
+        text: Optional[torch.Tensor] = None,
+        image_indices: Optional[Union[int, List[int]]] = None,
+        text_indices: Optional[Union[int, List[int]]] = None,
+        stop_early: bool = False,
+        normalize: bool = True,
+        normalize_intermediates: bool = False,
+        intermediates_only: bool = False,
+        image_output_fmt: str = "NCHW",
+        image_output_extra_tokens: bool = False,
+        text_output_fmt: str = "NLC",
+        text_output_extra_tokens: bool = False,
+        output_logits: bool = False,
+        output_logit_scale_bias: bool = False,
     ) -> Dict[str, Union[torch.Tensor, List[torch.Tensor]]]:
-        """ Forward features that returns intermediates.
+        """Forward features that returns intermediates.
 
         Args:
             image: Input image tensor
@@ -231,7 +231,7 @@ class CoCa(nn.Module):
             normalize = False
             output_logits = False
         if output_logits:
-            assert False, 'FIXME, needs implementing'
+            assert False, "FIXME, needs implementing"
 
         if image is not None:
             image_output = self.visual.forward_intermediates(
@@ -266,16 +266,16 @@ class CoCa(nn.Module):
         if output_logit_scale_bias:
             output["logit_scale"] = logit_scale_exp
             if self.logit_bias is not None:
-                output['logit_bias'] = self.logit_bias
+                output["logit_bias"] = self.logit_bias
 
         return output
 
     def forward(
-            self,
-            image: Optional[torch.Tensor] = None,
-            text: Optional[torch.Tensor] = None,
-            image_latent: Optional[torch.Tensor] = None,
-            image_embs: Optional[torch.Tensor] = None,
+        self,
+        image: Optional[torch.Tensor] = None,
+        text: Optional[torch.Tensor] = None,
+        image_latent: Optional[torch.Tensor] = None,
+        image_embs: Optional[torch.Tensor] = None,
     ):
         """Forward.
 
@@ -314,7 +314,7 @@ class CoCa(nn.Module):
         text=None,
         seq_len=30,
         max_seq_len=77,
-        temperature=1.,
+        temperature=1.0,
         generation_type="beam_search",
         top_p=0.1,
         top_k=1,
@@ -354,6 +354,7 @@ class CoCa(nn.Module):
         assert seq_len > min_seq_len, "seq_len must be larger than min_seq_len"
         if stopping_criteria is not None:
             import warnings
+
             warnings.warn(
                 "stopping_criteria is deprecated and ignored. Use "
                 "generation_config=GenerationConfig(...) for full control.",
@@ -365,8 +366,7 @@ class CoCa(nn.Module):
             from transformers import GenerationConfig as GC
         except (ImportError, Exception) as e:
             raise RuntimeError(
-                "Please install transformers for generate functionality. "
-                "`pip install transformers`."
+                "Please install transformers for generate functionality. `pip install transformers`."
             ) from e
 
         device = image.device
@@ -380,8 +380,10 @@ class CoCa(nn.Module):
             squeeze_output = False
             if text is None:
                 text = torch.full(
-                    (image.shape[0], 1), sot_token_id,
-                    device=device, dtype=torch.long,
+                    (image.shape[0], 1),
+                    sot_token_id,
+                    device=device,
+                    dtype=torch.long,
                 )
             elif text.dim() == 1:
                 text = text.unsqueeze(0)
@@ -431,8 +433,7 @@ class CoCa(nn.Module):
                     gen_kwargs.update(do_sample=True, top_k=top_k, temperature=temperature)
                 else:
                     raise ValueError(
-                        f"generation_type must be one of 'beam_search', 'top_p', 'top_k', "
-                        f"got {generation_type!r}"
+                        f"generation_type must be one of 'beam_search', 'top_p', 'top_k', got {generation_type!r}"
                     )
                 generation_config = GC(**gen_kwargs)
             else:
@@ -449,10 +450,15 @@ class CoCa(nn.Module):
             if fixed_output_length and output.shape[1] < seq_len:
                 pad_len = seq_len - output.shape[1]
                 output = torch.cat(
-                    (output, torch.full(
-                        (output.shape[0], pad_len), pad_token_id,
-                        device=device, dtype=output.dtype,
-                    )),
+                    (
+                        output,
+                        torch.full(
+                            (output.shape[0], pad_len),
+                            pad_token_id,
+                            device=device,
+                            dtype=output.dtype,
+                        ),
+                    ),
                     dim=1,
                 )
 

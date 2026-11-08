@@ -12,4 +12,5 @@ class YOLOv5LVISV1Dataset(BatchShapePolicyDataset, LVISV1Dataset):
     We only add `BatchShapePolicy` function compared with Objects365V1Dataset.
     See `mmyolo/datasets/utils.py#BatchShapePolicy` for details
     """
+
     pass

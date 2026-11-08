@@ -45,6 +45,7 @@ def spatial_correlation_sample(
 
 class SpatialCorrelationSamplerFunction(Function):
     """Spatial correlation sampler function implementation."""
+
     @staticmethod
     def forward(ctx, input1, input2, kernel_size=1, patch_size=1, stride=1, padding=0, dilation=1, dilation_patch=1):
         """Forward.
@@ -127,6 +128,7 @@ class SpatialCorrelationSamplerFunction(Function):
 
 class SpatialCorrelationSampler(nn.Module):
     """Spatial correlation sampler implementation."""
+
     def __init__(self, kernel_size=1, patch_size=1, stride=1, padding=0, dilation=1, dilation_patch=1):
         """Init.
 

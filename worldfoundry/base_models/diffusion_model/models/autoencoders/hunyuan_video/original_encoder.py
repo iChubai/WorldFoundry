@@ -85,16 +85,21 @@ class DownEncoderBlockCausal3D(nn.Module):
                     groups=num_groups,
                     dropout=dropout,
                     eps=eps,
-                ))
+                )
+            )
         self.resnets = nn.ModuleList(resnets)
 
         self.downsamplers = None
         if add_downsample:
-            self.downsamplers = nn.ModuleList([DownsampleCausal3D(
-                out_channels,
-                out_channels,
-                stride=downsample_stride,
-            )])
+            self.downsamplers = nn.ModuleList(
+                [
+                    DownsampleCausal3D(
+                        out_channels,
+                        out_channels,
+                        stride=downsample_stride,
+                    )
+                ]
+            )
 
     def forward(self, hidden_states):
         """Forward.
@@ -156,7 +161,9 @@ class EncoderCausal3D(nn.Module):
             num_time_downsample_layers = int(np.log2(time_compression_ratio))
 
             add_spatial_downsample = bool(i < num_spatial_downsample_layers)
-            add_time_downsample = bool(i >= (len(block_out_channels) - 1 - num_time_downsample_layers) and not is_final_block)
+            add_time_downsample = bool(
+                i >= (len(block_out_channels) - 1 - num_time_downsample_layers) and not is_final_block
+            )
 
             downsample_stride_HW = (2, 2) if add_spatial_downsample else (1, 1)
             downsample_stride_T = (2,) if add_time_downsample else (1,)
@@ -283,7 +290,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         self.quant_conv = nn.Conv3d(2 * out_channels, 2 * out_channels, kernel_size=1)
         self.scaling_factor = 0.476986
 
-
     def forward(self, images):
         """Forward.
 
@@ -295,7 +301,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         latents = latents[:, :16]
         latents = latents * self.scaling_factor
         return latents
-    
 
     def build_1d_mask(self, length, left_bound, right_bound, border_width):
         """Build 1d mask.
@@ -312,7 +317,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         if not right_bound:
             x[-border_width:] = torch.flip((torch.arange(border_width) + 1) / border_width, dims=(0,))
         return x
-    
 
     def build_mask(self, data, is_bound, border_width):
         """Build mask.
@@ -334,7 +338,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         mask = torch.stack([t, h, w]).min(dim=0).values
         mask = rearrange(mask, "T H W -> 1 1 T H W")
         return mask
-    
 
     def tile_forward(self, hidden_states, tile_size, tile_stride):
         """Tile forward.
@@ -351,11 +354,14 @@ class HunyuanVideoVAEEncoder(nn.Module):
         # Split tasks
         tasks = []
         for t in range(0, T, stride_t):
-            if (t-stride_t >= 0 and t-stride_t+size_t >= T): continue
+            if t - stride_t >= 0 and t - stride_t + size_t >= T:
+                continue
             for h in range(0, H, stride_h):
-                if (h-stride_h >= 0 and h-stride_h+size_h >= H): continue
+                if h - stride_h >= 0 and h - stride_h + size_h >= H:
+                    continue
                 for w in range(0, W, stride_w):
-                    if (w-stride_w >= 0 and w-stride_w+size_w >= W): continue
+                    if w - stride_w >= 0 and w - stride_w + size_w >= W:
+                        continue
                     t_, h_, w_ = t + size_t, h + size_h, w + size_w
                     tasks.append((t, t_, h, h_, w, w_))
 
@@ -364,7 +370,7 @@ class HunyuanVideoVAEEncoder(nn.Module):
         data_device = hidden_states.device
         computation_device = self.quant_conv.weight.device
 
-        weight = torch.zeros((1, 1,  (T - 1) // 4 + 1, H // 8, W // 8), dtype=torch_dtype, device=data_device)
+        weight = torch.zeros((1, 1, (T - 1) // 4 + 1, H // 8, W // 8), dtype=torch_dtype, device=data_device)
         values = torch.zeros((B, 16, (T - 1) // 4 + 1, H // 8, W // 8), dtype=torch_dtype, device=data_device)
 
         for t, t_, h, h_, w, w_ in tasks:
@@ -375,29 +381,28 @@ class HunyuanVideoVAEEncoder(nn.Module):
 
             mask = self.build_mask(
                 hidden_states_batch,
-                is_bound=(t==0, t_>=T, h==0, h_>=H, w==0, w_>=W),
-                border_width=((size_t - stride_t) // 4, (size_h - stride_h) // 8, (size_w - stride_w) // 8)
+                is_bound=(t == 0, t_ >= T, h == 0, h_ >= H, w == 0, w_ >= W),
+                border_width=((size_t - stride_t) // 4, (size_h - stride_h) // 8, (size_w - stride_w) // 8),
             ).to(dtype=torch_dtype, device=data_device)
 
-            target_t = 0 if t==0 else t // 4 + 1
+            target_t = 0 if t == 0 else t // 4 + 1
             target_h = h // 8
             target_w = w // 8
             values[
                 :,
                 :,
-                target_t: target_t + hidden_states_batch.shape[2],
-                target_h: target_h + hidden_states_batch.shape[3],
-                target_w: target_w + hidden_states_batch.shape[4],
+                target_t : target_t + hidden_states_batch.shape[2],
+                target_h : target_h + hidden_states_batch.shape[3],
+                target_w : target_w + hidden_states_batch.shape[4],
             ] += hidden_states_batch * mask
             weight[
                 :,
                 :,
-                target_t: target_t + hidden_states_batch.shape[2],
-                target_h: target_h + hidden_states_batch.shape[3],
-                target_w: target_w + hidden_states_batch.shape[4],
+                target_t : target_t + hidden_states_batch.shape[2],
+                target_h : target_h + hidden_states_batch.shape[3],
+                target_w : target_w + hidden_states_batch.shape[4],
             ] += mask
         return values / weight
-
 
     def encode_video(self, latents, tile_size=(65, 256, 256), tile_stride=(48, 192, 192)):
         """Encode video.
@@ -409,7 +414,6 @@ class HunyuanVideoVAEEncoder(nn.Module):
         """
         latents = latents.to(self.quant_conv.weight.dtype)
         return self.tile_forward(latents, tile_size=tile_size, tile_stride=tile_stride)
-
 
     @staticmethod
     def state_dict_converter():
@@ -432,6 +436,6 @@ class HunyuanVideoVAEEncoderStateDictConverter:
         """
         state_dict_ = {}
         for name in state_dict:
-            if name.startswith('encoder.') or name.startswith('quant_conv.'):
+            if name.startswith("encoder.") or name.startswith("quant_conv."):
                 state_dict_[name] = state_dict[name]
         return state_dict_

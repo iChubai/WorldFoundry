@@ -13,9 +13,7 @@ class InitArgs:
     no_init: bool = False
 
 
-def get_init_fn(
-    args: InitArgs, input_dim: int, init_depth: Optional[int]
-) -> Callable[[torch.Tensor], torch.Tensor]:
+def get_init_fn(args: InitArgs, input_dim: int, init_depth: Optional[int]) -> Callable[[torch.Tensor], torch.Tensor]:
     """
     Init functions.
     """
@@ -32,9 +30,7 @@ def get_init_fn(
 
     # gaussian vs uniform
     if args.use_gaussian:
-        return partial(
-            torch.nn.init.trunc_normal_, mean=0.0, std=std, a=-3 * std, b=3 * std
-        )
+        return partial(torch.nn.init.trunc_normal_, mean=0.0, std=std, a=-3 * std, b=3 * std)
     else:
         bound = math.sqrt(3) * std  # ensure the standard deviation is `std`
         return partial(torch.nn.init.uniform_, a=-bound, b=bound)

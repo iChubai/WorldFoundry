@@ -12,6 +12,7 @@ from worldfoundry.base_models.perception_core.segment.sam_v1 import SamAutomatic
 
 class Segmentor:
     """Segmentor implementation."""
+
     def __init__(self, sam_args):
         """
         sam_args:

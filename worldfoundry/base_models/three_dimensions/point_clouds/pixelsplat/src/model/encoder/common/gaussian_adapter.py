@@ -16,6 +16,7 @@ from .gaussians import build_covariance, quaternion_to_matrix
 @dataclass
 class Gaussians:
     """Gaussians implementation."""
+
     means: Float[Tensor, "*batch 3"]
     covariances: Float[Tensor, "*batch 3 3"]
     scales: Float[Tensor, "*batch 3"]
@@ -27,6 +28,7 @@ class Gaussians:
 @dataclass
 class GaussianAdapterCfg:
     """Gaussian adapter cfg implementation."""
+
     gaussian_scale_min: float
     gaussian_scale_max: float
     sh_degree: int
@@ -34,6 +36,7 @@ class GaussianAdapterCfg:
 
 class GaussianAdapter(nn.Module):
     """Gaussian adapter implementation."""
+
     cfg: GaussianAdapterCfg
 
     def __init__(self, cfg: GaussianAdapterCfg):
@@ -110,9 +113,7 @@ class GaussianAdapter(nn.Module):
         means = origins + directions * depths[..., None]
 
         # PLY export needs the same world-space orientation as the renderer.
-        world_rotations = rotation_matrix_to_quaternion_xyzw(
-            c2w_rotations @ quaternion_to_matrix(rotations)
-        )
+        world_rotations = rotation_matrix_to_quaternion_xyzw(c2w_rotations @ quaternion_to_matrix(rotations))
 
         return Gaussians(
             means=means,

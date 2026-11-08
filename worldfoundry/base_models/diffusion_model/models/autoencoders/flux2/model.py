@@ -138,6 +138,7 @@ class Encoder(nn.Module):
 
 class Flux2Autoencoder(nn.Module):
     """FLUX.2 2-D AE with official encode/decode and latent scale."""
+
     def __init__(self, params: Flux2AutoencoderConfig) -> None:
         super().__init__()
         self.encoder = Encoder(

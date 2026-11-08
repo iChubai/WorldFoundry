@@ -14,6 +14,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.head
 
 class CameraHead(nn.Module):
     """Camera head implementation."""
+
     def __init__(
         self,
         dim_in: int = 2048,
@@ -51,7 +52,7 @@ class CameraHead(nn.Module):
         self.fl_act = fl_act
         self.trunk_depth = trunk_depth
 
-        self.enable_cache_merge = True 
+        self.enable_cache_merge = True
         self.cache_merge_ratio = 0.5
 
         # Build the trunk using a sequence of transformer blocks.
@@ -87,7 +88,13 @@ class CameraHead(nn.Module):
             drop=0,
         )
 
-    def forward(self, aggregated_tokens_list: list, num_iterations: int = 4, past_key_values_camera = None, use_cache: bool = False) -> list:
+    def forward(
+        self,
+        aggregated_tokens_list: list,
+        num_iterations: int = 4,
+        past_key_values_camera=None,
+        use_cache: bool = False,
+    ) -> list:
         """
         Forward pass to predict camera parameters.
 
@@ -107,10 +114,14 @@ class CameraHead(nn.Module):
         pose_tokens = self.token_norm(pose_tokens)
 
         if use_cache:
-            pred_pose_enc_list, past_key_values_camera = self.trunk_fn(pose_tokens, num_iterations, past_key_values_camera, use_cache)
+            pred_pose_enc_list, past_key_values_camera = self.trunk_fn(
+                pose_tokens, num_iterations, past_key_values_camera, use_cache
+            )
             return pred_pose_enc_list, past_key_values_camera
         else:
-            pred_pose_enc_list = self.trunk_fn(pose_tokens, num_iterations, past_key_values_camera=None, use_cache=use_cache)
+            pred_pose_enc_list = self.trunk_fn(
+                pose_tokens, num_iterations, past_key_values_camera=None, use_cache=use_cache
+            )
             return pred_pose_enc_list
 
     def trunk_fn(self, pose_tokens: torch.Tensor, num_iterations: int, past_key_values_camera, use_cache: bool) -> list:
@@ -157,14 +168,16 @@ class CameraHead(nn.Module):
                     pose_tokens_modulated, block_kv, scores = self.trunk[idx](
                         pose_tokens_modulated,
                         attn_mask=attn_mask,
-                        past_key_values=past_key_values_camera[idx] if past_key_values_camera[idx] is not None else None,
-                        use_cache=True
+                        past_key_values=past_key_values_camera[idx]
+                        if past_key_values_camera[idx] is not None
+                        else None,
+                        use_cache=True,
                     )
                     past_key_values_camera[idx] = block_kv
             else:
                 for idx in range(self.trunk_depth):
                     pose_tokens_modulated = self.trunk[idx](pose_tokens_modulated, attn_mask=attn_mask)
-                    
+
             # Compute the delta update for the pose encoding.
             pred_pose_enc_delta = self.pose_branch(self.trunk_norm(pose_tokens_modulated))
 
@@ -181,7 +194,7 @@ class CameraHead(nn.Module):
                 fl_act=self.fl_act,
             )
             pred_pose_enc_list.append(activated_pose)
-            
+
         if use_cache:
             return pred_pose_enc_list, past_key_values_camera
         return pred_pose_enc_list

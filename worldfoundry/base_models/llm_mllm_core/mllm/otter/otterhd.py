@@ -29,7 +29,9 @@ import math
 
 
 class OtterHD(BaseModel):
-    def __init__(self, model_path: str = "Otter-AI/OtterHD-8B", cuda_id: int = 0, resolution: int = -1, max_new_tokens=256):
+    def __init__(
+        self, model_path: str = "Otter-AI/OtterHD-8B", cuda_id: int = 0, resolution: int = -1, max_new_tokens=256
+    ):
         super().__init__("otterhd", model_path)
         self.resolution = resolution
         self.device = f"cuda:{cuda_id}" if torch.cuda.is_available() else "cpu"
@@ -55,10 +57,18 @@ class OtterHD(BaseModel):
         formated_prompt = f"User: {text_prompt} Assistant:"
         model_inputs = self.processor(text=formated_prompt, images=[raw_image_data], device=self.device)
         for k, v in model_inputs.items():
-            model_inputs[k] = v.to(self.device, non_blocking=True) if isinstance(v, torch.Tensor) else [vv.to(self.device, non_blocking=True) for vv in v]
+            model_inputs[k] = (
+                v.to(self.device, non_blocking=True)
+                if isinstance(v, torch.Tensor)
+                else [vv.to(self.device, non_blocking=True) for vv in v]
+            )
 
-        model_inputs["image_patches"][0] = model_inputs["image_patches"][0].to(dtype=next(self.model.parameters()).dtype)
-        generation_output = self.model.generate(**model_inputs, max_new_tokens=self.max_new_tokens, pad_token_id=self.tokenizer.eos_token_id)
+        model_inputs["image_patches"][0] = model_inputs["image_patches"][0].to(
+            dtype=next(self.model.parameters()).dtype
+        )
+        generation_output = self.model.generate(
+            **model_inputs, max_new_tokens=self.max_new_tokens, pad_token_id=self.tokenizer.eos_token_id
+        )
         generation_text = self.processor.batch_decode(generation_output, skip_special_tokens=True)
         response = generation_text[0].split("\x04")[1].strip(" ").strip("\n")
         return response

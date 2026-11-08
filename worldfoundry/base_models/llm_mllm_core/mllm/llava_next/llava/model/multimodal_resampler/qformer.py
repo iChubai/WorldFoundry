@@ -1,11 +1,11 @@
 """
- * Copyright (c) 2023, salesforce.com, inc.
- * All rights reserved.
- * SPDX-License-Identifier: BSD-3-Clause
- * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
- * By Junnan Li
- * Based on huggingface code base
- * https://github.com/huggingface/transformers/blob/v4.15.0/src/transformers/models/bert
+* Copyright (c) 2023, salesforce.com, inc.
+* All rights reserved.
+* SPDX-License-Identifier: BSD-3-Clause
+* For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+* By Junnan Li
+* Based on huggingface code base
+* https://github.com/huggingface/transformers/blob/v4.15.0/src/transformers/models/bert
 """
 
 import math
@@ -37,6 +37,7 @@ from transformers.modeling_outputs import (
     TokenClassifierOutput,
 )
 from transformers.modeling_utils import PreTrainedModel
+
 try:
     from transformers.pytorch_utils import (
         apply_chunking_to_forward,
@@ -116,7 +117,10 @@ class BertSelfAttention(nn.Module):
         super().__init__()
         self.config = config
         if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
-            raise ValueError("The hidden size (%d) is not a multiple of the number of attention " "heads (%d)" % (config.hidden_size, config.num_attention_heads))
+            raise ValueError(
+                "The hidden size (%d) is not a multiple of the number of attention "
+                "heads (%d)" % (config.hidden_size, config.num_attention_heads)
+            )
 
         self.num_attention_heads = config.num_attention_heads
         self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
@@ -167,7 +171,6 @@ class BertSelfAttention(nn.Module):
         past_key_value=None,
         output_attentions=False,
     ):
-
         # If this is instantiated as a cross-attention module, the keys
         # and values come from an encoder; the attention mask needs to be
         # such that the encoder's padding tokens are not attended to.
@@ -387,7 +390,9 @@ class BertLayer(nn.Module):
             query_attention_output = attention_output[:, :query_length, :]
 
             if self.has_cross_attention:
-                assert encoder_hidden_states is not None, "encoder_hidden_states must be given for cross-attention layers"
+                assert encoder_hidden_states is not None, (
+                    "encoder_hidden_states must be given for cross-attention layers"
+                )
                 cross_attention_outputs = self.crossattention(
                     query_attention_output,
                     attention_mask,
@@ -472,9 +477,10 @@ class BertEncoder(nn.Module):
             past_key_value = past_key_values[i] if past_key_values is not None else None
 
             if getattr(self.config, "gradient_checkpointing", False) and self.training:
-
                 if use_cache:
-                    logger.warn("`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...")
+                    logger.warn(
+                        "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+                    )
                     use_cache = False
 
                 def create_custom_forward(module):
@@ -724,7 +730,11 @@ class BertModel(BertPreTrainedModel):
             else:
                 extended_attention_mask = attention_mask[:, None, None, :]
         else:
-            raise ValueError("Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(input_shape, attention_mask.shape))
+            raise ValueError(
+                "Wrong shape for input_ids (shape {}) or attention_mask (shape {})".format(
+                    input_shape, attention_mask.shape
+                )
+            )
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
         # masked positions, this operation will create a tensor which is 0.0 for
@@ -770,7 +780,9 @@ class BertModel(BertPreTrainedModel):
             decoding (see :obj:`past_key_values`).
         """
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         # use_cache = use_cache if use_cache is not None else self.config.use_cache
@@ -779,7 +791,9 @@ class BertModel(BertPreTrainedModel):
             assert query_embeds is not None, "You have to specify query_embeds when input_ids is None"
 
         # past_key_values_length
-        past_key_values_length = past_key_values[0][0].shape[2] - self.config.query_length if past_key_values is not None else 0
+        past_key_values_length = (
+            past_key_values[0][0].shape[2] - self.config.query_length if past_key_values is not None else 0
+        )
 
         query_length = query_embeds.shape[1] if query_embeds is not None else 0
 
@@ -870,7 +884,6 @@ class BertModel(BertPreTrainedModel):
 
 
 class BertLMHeadModel(BertPreTrainedModel):
-
     _keys_to_ignore_on_load_unexpected = [r"pooler"]
     _keys_to_ignore_on_load_missing = [r"position_ids", r"predictions.decoder.bias"]
 
@@ -1025,7 +1038,6 @@ class BertLMHeadModel(BertPreTrainedModel):
 
 
 class BertForMaskedLM(BertPreTrainedModel):
-
     _keys_to_ignore_on_load_unexpected = [r"pooler"]
     _keys_to_ignore_on_load_missing = [r"position_ids", r"predictions.decoder.bias"]
 
@@ -1114,7 +1126,9 @@ class Qformer(nn.Module):
         self.num_latents = model_args.mm_qformer_latents
         self.pretrained = model_args.mm_qformer_pretrained
 
-        self.Qformer, self.query_tokens, self.ln_vision = self.build_Qformer(vision_tower.hidden_size, self.depth, self.num_latents)
+        self.Qformer, self.query_tokens, self.ln_vision = self.build_Qformer(
+            vision_tower.hidden_size, self.depth, self.num_latents
+        )
 
         if self.pretrained is not None:
             pretrained_dict = torch.load(self.pretrained, map_location="cpu")["model"]

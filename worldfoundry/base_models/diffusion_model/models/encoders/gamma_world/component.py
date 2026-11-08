@@ -56,11 +56,7 @@ class GammaWorldConditioner:
     ) -> Conditioning:
         encoded = self.prompt_encoder.encode(request, device=device, dtype=dtype)
         positive = {"crossattn_emb": encoded.positive["context"]}
-        negative = (
-            {"crossattn_emb": encoded.negative["context"]}
-            if "context" in encoded.negative
-            else {}
-        )
+        negative = {"crossattn_emb": encoded.negative["context"]} if "context" in encoded.negative else {}
 
         actions = []
         sources = _action_sources(request)
@@ -70,9 +66,7 @@ class GammaWorldConditioner:
             for source in sources:
                 keyboard, camera = action_track_tensors(source, num_frames=request.num_frames)
                 if camera is None:
-                    camera = torch.zeros(
-                        keyboard.shape[0], keyboard.shape[1], 2, dtype=keyboard.dtype
-                    )
+                    camera = torch.zeros(keyboard.shape[0], keyboard.shape[1], 2, dtype=keyboard.dtype)
                 actions.append(
                     {
                         "keyboard": keyboard.to(device=device),

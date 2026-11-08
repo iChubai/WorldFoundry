@@ -173,7 +173,6 @@ class CausalSelfAttention(nn.Module):
         k: torch.Tensor,
         rope_emb: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-
         original_dtype = q.dtype
         if self.use_wan_fp32_strategy:
             q = q.to(torch.float32)
@@ -201,7 +200,6 @@ class CausalSelfAttention(nn.Module):
         disable_kv_cache: bool = False,
         disable_kv_cache_update: bool = False,
     ) -> torch.Tensor:
-
         del context
 
         b, s, _ = x.shape
@@ -371,7 +369,6 @@ class CausalSelfAttention(nn.Module):
         current_end: int,
         disable_kv_cache_update: bool,
     ) -> torch.Tensor:
-
         b, total_s, n, d = roped_q.shape
         V = self.num_views
         z_num = self.z_num
@@ -511,7 +508,6 @@ class CausalSelfAttention(nn.Module):
         disable_kv_cache_update: bool,
         use_window_read: bool,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-
         assert current_start % V == 0 and current_end % V == 0, (
             f"sparse_hub: current_start={current_start} or current_end={current_end} not divisible by V={V}"
         )
@@ -638,7 +634,6 @@ class CausalSelfAttention(nn.Module):
         V: int,
         z_num: int,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-
         sink_p = self.sink_size * frame_seqlen
         sink_z = self.sink_size * z_num
         cache_size_p = kv_cache["k_players"].shape[2]
@@ -763,6 +758,7 @@ class CausalSelfAttention(nn.Module):
 
 class CausalCosmosBlock(nn.Module):
     """AdaLN DiT block with causal self-attn (and optional i2v / action cross-attn)."""
+
     def __init__(
         self,
         x_dim: int,
@@ -899,7 +895,6 @@ class CausalCosmosBlock(nn.Module):
         video_size: VideoSize | None = None,
         action_bias_B_L_D: torch.Tensor | None = None,
     ) -> torch.Tensor:
-
         if extra_per_block_pos_emb is not None:
             x_B_L_D = x_B_L_D + extra_per_block_pos_emb
 
@@ -983,6 +978,7 @@ class CausalCosmosBlock(nn.Module):
 
 class CosmosCausalDiT(nn.Module):
     """Causal Gamma-World transformer: patchify ``B C T H W``, chunk-causal stack, unpatchify."""
+
     def __init__(
         self,
         max_img_h: int,
@@ -1321,7 +1317,6 @@ class CosmosCausalDiT(nn.Module):
         device: torch.device,
         start_frame_for_rope: int = 0,
     ) -> torch.Tensor:
-
         if self.freqs_4d is None:
             head_dim = self.model_channels // self.num_heads
             self.freqs_4d = precompute_freqs_cis_4d(
@@ -1361,7 +1356,6 @@ class CosmosCausalDiT(nn.Module):
         device: torch.device,
         start_frame_for_rope: int = 0,
     ) -> torch.Tensor:
-
         assert self.freqs_4d is not None, (
             "_generate_z_rope must be called after _generate_multi_agent_rope so freqs_4d is initialized"
         )
@@ -1388,7 +1382,6 @@ class CosmosCausalDiT(nn.Module):
         return torch.cat([angles, angles], dim=-1).to(device=device, dtype=torch.float32)
 
     def _infer_n_views(self, view_indices_B_T: torch.Tensor | None) -> int:
-
         if view_indices_B_T is not None:
             max_idx = int(view_indices_B_T.max().item())
             min_idx = int(view_indices_B_T.min().item())
@@ -1400,7 +1393,6 @@ class CosmosCausalDiT(nn.Module):
         return self.num_agents
 
     def _resolve_agent_pool_indices(self, n_views: int) -> list[int]:
-
         if self._override_agent_pool_indices is not None:
             indices = list(self._override_agent_pool_indices)
             assert len(indices) == n_views, (
@@ -1419,7 +1411,6 @@ class CosmosCausalDiT(nn.Module):
         return list(range(n_views))
 
     def _add_view_embedding(self, x_B_T_H_W_D: torch.Tensor, view_indices_B_T: torch.Tensor) -> torch.Tensor:
-
         view_emb_B_T_D = self.view_embedding(view_indices_B_T)
         return x_B_T_H_W_D + view_emb_B_T_D[:, :, None, None, :]
 
@@ -1431,7 +1422,6 @@ class CosmosCausalDiT(nn.Module):
         start_frame: int = 0,
         agent_pool_indices: list[int] | None = None,
     ) -> torch.Tensor:
-
         if isinstance(self.multi_agent_action_control, MultiAgentActionControlSpatialConcatModule):
             assert n_views == 1, f"spatial-concat action control expects n_views=1, got n_views={n_views}"
         else:
@@ -1461,7 +1451,6 @@ class CosmosCausalDiT(nn.Module):
         cp_size: int = 1,
         num_interleave: int = 0,
     ) -> BlockMask:
-
         log.info(
             f"Constructing block mask: num_frames={num_frames}, frame_seqlen={frame_seqlen}, "
             f"num_frame_per_block={num_frame_per_block}, cp_size={cp_size}"
@@ -1485,7 +1474,6 @@ class CosmosCausalDiT(nn.Module):
                 ends[idx : idx + frame_seqlen * num_frame_per_block] = idx + frame_seqlen * num_frame_per_block
 
             def attention_mask(b, h, q_idx, kv_idx):
-
                 q_rank = q_idx // local_padded_len
                 q_off = q_idx % local_padded_len
                 q_logical = q_rank * local_len + q_off
@@ -1525,7 +1513,6 @@ class CosmosCausalDiT(nn.Module):
             attend_frame_type = num_interleaved_frames_per_time - 1
 
             def attention_mask(b, h, q_idx, kv_idx):
-
                 q_rank = q_idx // local_padded_len
                 q_off = q_idx % local_padded_len
                 q_logical = q_rank * local_len + q_off
@@ -1574,7 +1561,6 @@ class CosmosCausalDiT(nn.Module):
         z_num: int,
         cp_size: int = 1,
     ) -> BlockMask:
-
         npb_HW = num_frame_per_block * frame_seqlen
         z_seg = num_frame_per_block * z_num
         block_size = n_views * npb_HW + z_seg
@@ -1601,7 +1587,6 @@ class CosmosCausalDiT(nn.Module):
         _local_len = local_len
 
         def attention_mask(b, h, q_idx, kv_idx):
-
             q_rank = q_idx // _local_padded_len
             q_off = q_idx % _local_padded_len
             q_logical = q_rank * _local_len + q_off
@@ -1667,7 +1652,6 @@ class CosmosCausalDiT(nn.Module):
         action_inputs: dict | None = None,
         **kwargs,
     ) -> torch.Tensor:
-
         del kwargs
         if data_type == DataType.VIDEO:
             x_B_C_T_H_W = torch.cat([x_B_C_T_H_W, condition_video_input_mask_B_C_T_H_W.type_as(x_B_C_T_H_W)], dim=1)
@@ -1713,7 +1697,6 @@ class CosmosCausalDiT(nn.Module):
         view_indices_B_T: torch.Tensor | None = None,
         action_inputs: dict | None = None,
     ) -> torch.Tensor:
-
         if self.concat_padding_mask and padding_mask is not None:
             padding_mask = F.interpolate(
                 padding_mask,
@@ -1933,7 +1916,6 @@ class CosmosCausalDiT(nn.Module):
         device: torch.device,
         dtype: torch.dtype = torch.bfloat16,
     ) -> list[dict]:
-
         kv_caches = []
         for _ in range(self.num_blocks):
             cache = {
@@ -1960,7 +1942,6 @@ class CosmosCausalDiT(nn.Module):
         return kv_caches
 
     def reset_kv_cache(self, kv_caches: list[dict]) -> None:
-
         for cache in kv_caches:
             cache["k"].zero_()
             cache["v"].zero_()
@@ -1968,7 +1949,6 @@ class CosmosCausalDiT(nn.Module):
             cache["local_end_index"].zero_()
 
     def fully_shard(self, mesh, **fsdp_kwargs) -> None:
-
         for block in self.blocks:
             fully_shard(block, mesh=mesh, reshard_after_forward=True, **fsdp_kwargs)
         fully_shard(self.final_layer, mesh=mesh, reshard_after_forward=True, **fsdp_kwargs)
@@ -1976,7 +1956,6 @@ class CosmosCausalDiT(nn.Module):
         fully_shard(self.x_embedder, mesh=mesh, reshard_after_forward=True, **fsdp_kwargs)
 
     def enable_context_parallel(self, process_group: ProcessGroup | None = None) -> None:
-
         cp_ranks = get_process_group_ranks(process_group)
         for block in self.blocks:
             block.set_context_parallel_group(
@@ -1989,7 +1968,6 @@ class CosmosCausalDiT(nn.Module):
         self.cp_group = process_group
 
     def disable_context_parallel(self) -> None:
-
         for block in self.blocks:
             block.set_context_parallel_group(
                 process_group=None,

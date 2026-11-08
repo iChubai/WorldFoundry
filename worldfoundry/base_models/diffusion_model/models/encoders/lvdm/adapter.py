@@ -42,9 +42,7 @@ class Downsample(nn.Module):
         self.dims = dims
         stride = 2 if dims != 3 else (1, 2, 2)
         if use_conv:
-            self.op = conv_nd(
-                dims, self.channels, self.out_channels, 3, stride=stride, padding=padding
-            )
+            self.op = conv_nd(dims, self.channels, self.out_channels, 3, stride=stride, padding=padding)
         else:
             assert self.channels == self.out_channels
             self.op = avg_pool_nd(dims, kernel_size=stride, stride=stride)
@@ -61,6 +59,7 @@ class Downsample(nn.Module):
 
 class ResnetBlock(nn.Module):
     """Resnet block implementation."""
+
     def __init__(self, in_c, out_c, down, ksize=3, sk=False, use_conv=True):
         """Init.
 
@@ -114,6 +113,7 @@ class ResnetBlock(nn.Module):
 
 class Adapter(nn.Module):
     """Adapter implementation."""
+
     def __init__(self, channels=[320, 640, 1280, 1280], nums_rb=3, cin=64, ksize=3, sk=False, use_conv=True):
         """Init.
 
@@ -134,10 +134,12 @@ class Adapter(nn.Module):
             for j in range(nums_rb):
                 if (i != 0) and (j == 0):
                     self.body.append(
-                        ResnetBlock(channels[i - 1], channels[i], down=True, ksize=ksize, sk=sk, use_conv=use_conv))
+                        ResnetBlock(channels[i - 1], channels[i], down=True, ksize=ksize, sk=sk, use_conv=use_conv)
+                    )
                 else:
                     self.body.append(
-                        ResnetBlock(channels[i], channels[i], down=False, ksize=ksize, sk=sk, use_conv=use_conv))
+                        ResnetBlock(channels[i], channels[i], down=False, ksize=ksize, sk=sk, use_conv=use_conv)
+                    )
         self.body = nn.ModuleList(self.body)
         self.conv_in = nn.Conv2d(cin, channels[0], 3, 1, 1)
 

@@ -22,6 +22,7 @@ import torch
 
 class CameraType(Enum):
     """Camera type implementation."""
+
     PINHOLE = "pinhole"
     PANORAMA = "panorama"
     SIMPLE_DIVISIONAL = "simple_divisional"
@@ -159,6 +160,7 @@ class BaseCameraModel:
 
 class PinholeCameraModel(BaseCameraModel):
     """Pinhole camera model implementation."""
+
     def __init__(self, intrinsics: torch.Tensor):
         """Init.
 
@@ -302,6 +304,7 @@ class PinholeCameraModel(BaseCameraModel):
 
 class MeiCameraModel(BaseCameraModel):
     """Mei camera model implementation."""
+
     def __init__(self, intrinsics: torch.Tensor):
         """Init.
 
@@ -489,6 +492,7 @@ class MeiCameraModel(BaseCameraModel):
 
 class PanoramaCameraModel(BaseCameraModel):
     """Panorama camera model implementation."""
+
     def __init__(self, intrinsics: torch.Tensor):
         """Init.
 

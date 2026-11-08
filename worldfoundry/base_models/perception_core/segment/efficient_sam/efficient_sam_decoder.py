@@ -18,6 +18,7 @@ from .mlp import MLPBlock
 
 class PromptEncoder(nn.Module):
     """Prompt encoder implementation."""
+
     def __init__(
         self,
         embed_dim: int,
@@ -62,17 +63,15 @@ class PromptEncoder(nn.Module):
     ) -> torch.Tensor:
         """Embeds point prompts."""
         points = points + 0.5  # Shift to center of pixel
-        point_embedding = self.pe_layer.forward_with_coords(
-            points, self.input_image_size
-        )
-        invalid_label_ids = torch.eq(labels, -1)[:,:,None]
-        point_label_ids = torch.eq(labels, 1)[:,:,None]
-        topleft_label_ids = torch.eq(labels, 2)[:,:,None]
-        bottomright_label_ids = torch.eq(labels, 3)[:,:,None]
-        point_embedding = point_embedding + self.invalid_points.weight[:,None,:] * invalid_label_ids
-        point_embedding = point_embedding + self.point_embeddings.weight[:,None,:] * point_label_ids
-        point_embedding = point_embedding + self.bbox_top_left_embeddings.weight[:,None,:] * topleft_label_ids
-        point_embedding = point_embedding + self.bbox_bottom_right_embeddings.weight[:,None,:] * bottomright_label_ids
+        point_embedding = self.pe_layer.forward_with_coords(points, self.input_image_size)
+        invalid_label_ids = torch.eq(labels, -1)[:, :, None]
+        point_label_ids = torch.eq(labels, 1)[:, :, None]
+        topleft_label_ids = torch.eq(labels, 2)[:, :, None]
+        bottomright_label_ids = torch.eq(labels, 3)[:, :, None]
+        point_embedding = point_embedding + self.invalid_points.weight[:, None, :] * invalid_label_ids
+        point_embedding = point_embedding + self.point_embeddings.weight[:, None, :] * point_label_ids
+        point_embedding = point_embedding + self.bbox_top_left_embeddings.weight[:, None, :] * topleft_label_ids
+        point_embedding = point_embedding + self.bbox_bottom_right_embeddings.weight[:, None, :] * bottomright_label_ids
         return point_embedding
 
     def forward(
@@ -111,9 +110,7 @@ class PositionEmbeddingRandom(nn.Module):
             The return value.
         """
         super().__init__()
-        self.register_buffer(
-            "positional_encoding_gaussian_matrix", torch.randn((2, num_pos_feats))
-        )
+        self.register_buffer("positional_encoding_gaussian_matrix", torch.randn((2, num_pos_feats)))
 
     def _pe_encoding(self, coords: torch.Tensor) -> torch.Tensor:
         """Positionally encode points that are normalized to [0,1]."""
@@ -137,9 +134,7 @@ class PositionEmbeddingRandom(nn.Module):
         pe = self._pe_encoding(torch.stack([x_embed, y_embed], dim=-1))
         return pe.permute(2, 0, 1)  # C x H x W
 
-    def forward_with_coords(
-        self, coords_input: torch.Tensor, image_size: Tuple[int, int]
-    ) -> torch.Tensor:
+    def forward_with_coords(self, coords_input: torch.Tensor, image_size: Tuple[int, int]) -> torch.Tensor:
         """Positionally encode points that are not normalized to [0,1]."""
         coords = coords_input.clone()
         coords[:, :, 0] = coords[:, :, 0] / image_size[1]
@@ -149,6 +144,7 @@ class PositionEmbeddingRandom(nn.Module):
 
 class MaskDecoder(nn.Module):
     """Mask decoder implementation."""
+
     def __init__(
         self,
         *,
@@ -202,9 +198,7 @@ class MaskDecoder(nn.Module):
                         kernel_size=2,
                         stride=2,
                     ),
-                    nn.GroupNorm(1, layer_dims)
-                    if idx < len(upscaling_layer_dims) - 1
-                    else nn.Identity(),
+                    nn.GroupNorm(1, layer_dims) if idx < len(upscaling_layer_dims) - 1 else nn.Identity(),
                     activation(),
                 )
             )
@@ -268,9 +262,7 @@ class MaskDecoder(nn.Module):
         ) = image_embeddings.shape
 
         # Tile the image embedding for all queries.
-        image_embeddings_tiled = torch.tile(
-            image_embeddings[:, None, :, :, :], [1, max_num_queries, 1, 1, 1]
-        ).view(
+        image_embeddings_tiled = torch.tile(image_embeddings[:, None, :, :, :], [1, max_num_queries, 1, 1, 1]).view(
             batch_size * max_num_queries,
             image_embed_dim_c,
             image_embed_dim_h,
@@ -297,12 +289,8 @@ class MaskDecoder(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Predicts masks. See 'forward' for more details."""
         # Concatenate output tokens
-        output_tokens = torch.cat(
-            [self.iou_token.weight, self.mask_tokens.weight], dim=0
-        )
-        output_tokens = output_tokens.unsqueeze(0).expand(
-            sparse_prompt_embeddings.size(0), -1, -1
-        )
+        output_tokens = torch.cat([self.iou_token.weight, self.mask_tokens.weight], dim=0)
+        output_tokens = output_tokens.unsqueeze(0).expand(sparse_prompt_embeddings.size(0), -1, -1)
         tokens = torch.cat((output_tokens, sparse_prompt_embeddings), dim=1)
         # Expand per-image data in batch direction to be per-mask
         pos_src = torch.repeat_interleave(image_pe, tokens.shape[0], dim=0)

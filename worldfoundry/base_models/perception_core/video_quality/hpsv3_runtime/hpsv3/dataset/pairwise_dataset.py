@@ -5,6 +5,7 @@ import json
 import os
 from tqdm import tqdm
 
+
 class PairwiseOriginalDataset(Dataset):
     def __init__(
         self,
@@ -23,9 +24,7 @@ class PairwiseOriginalDataset(Dataset):
 
         if confidence_threshold is not None:
             new_samples = []
-            for sample in tqdm(
-                self.samples, desc="Filtering samples according to confidence threshold"
-            ):
+            for sample in tqdm(self.samples, desc="Filtering samples according to confidence threshold"):
                 if sample.get("confidence", float("inf")) >= confidence_threshold:
                     new_samples.append(sample)
             self.samples = new_samples
@@ -41,6 +40,7 @@ class PairwiseOriginalDataset(Dataset):
             except Exception as e:
                 print(f"Error processing sample at index {idx}: {e}")
                 import traceback
+
                 traceback.print_exc()
                 index = random.randint(0, len(self.samples) - 1)
                 if index == idx:
@@ -52,16 +52,14 @@ class PairwiseOriginalDataset(Dataset):
         # Load image paths
         image_1 = sample["path1"]
         image_2 = sample["path2"]
-        assert os.path.exists(image_1) and os.path.exists(image_2), f'{image_1} or {image_2}'
+        assert os.path.exists(image_1) and os.path.exists(image_2), f"{image_1} or {image_2}"
         text_1 = sample["prompt"]
         text_2 = sample["prompt"]
 
         # Process Label
         if self.soft_label:
             choice_dist = sorted(sample["choice_dist"], reverse=True)
-            assert (
-                torch.sum(torch.tensor(choice_dist)) > 0
-            ), "Choice distribution cannot be zero."
+            assert torch.sum(torch.tensor(choice_dist)) > 0, "Choice distribution cannot be zero."
             label = torch.tensor(choice_dist[0]) / torch.sum(torch.tensor(choice_dist))
         else:
             label = torch.tensor(1).float()

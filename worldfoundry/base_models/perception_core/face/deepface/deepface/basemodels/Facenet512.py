@@ -7,7 +7,6 @@ from worldfoundry.base_models.perception_core.face.deepface.deepface.commons imp
 def loadModel(
     url="https://github.com/serengil/deepface_models/releases/download/v1.0/facenet512_weights.h5",
 ):
-
     model = Facenet.InceptionResNetV2(dimension=512)
 
     # -------------------------

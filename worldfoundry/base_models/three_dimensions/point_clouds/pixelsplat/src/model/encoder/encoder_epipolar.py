@@ -23,6 +23,7 @@ from .epipolar.epipolar_transformer import EpipolarTransformer, EpipolarTransfor
 @dataclass
 class OpacityMappingCfg:
     """Opacity mapping cfg implementation."""
+
     initial: float
     final: float
     warm_up: int
@@ -31,6 +32,7 @@ class OpacityMappingCfg:
 @dataclass
 class EncoderEpipolarCfg:
     """Encoder epipolar cfg implementation."""
+
     name: Literal["epipolar"]
     d_feature: int
     num_monocular_samples: int
@@ -50,6 +52,7 @@ class EncoderEpipolarCfg:
 
 class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
     """Encoder epipolar implementation."""
+
     backbone: Backbone
     backbone_projection: nn.Sequential
     epipolar_transformer: EpipolarTransformer | None
@@ -206,12 +209,8 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
 
         # Dump visualizations if needed.
         if visualization_dump is not None:
-            visualization_dump["depth"] = rearrange(
-                depths, "b v (h w) srf s -> b v h w srf s", h=h, w=w
-            )
-            visualization_dump["scales"] = rearrange(
-                gaussians.scales, "b v r srf spp xyz -> b (v r srf spp) xyz"
-            )
+            visualization_dump["depth"] = rearrange(depths, "b v (h w) srf s -> b v h w srf s", h=h, w=w)
+            visualization_dump["scales"] = rearrange(gaussians.scales, "b v r srf spp xyz -> b (v r srf spp) xyz")
             visualization_dump["rotations"] = rearrange(
                 gaussians.rotations, "b v r srf spp xyzw -> b (v r srf spp) xyzw"
             )
@@ -220,9 +219,7 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
 
         # Optionally apply a per-pixel opacity.
         opacity_multiplier = (
-            rearrange(self.to_opacity(features), "b v r () -> b v r () ()")
-            if self.cfg.predict_opacity
-            else 1
+            rearrange(self.to_opacity(features), "b v r () -> b v r () ()") if self.cfg.predict_opacity else 1
         )
 
         return Gaussians(
@@ -258,6 +255,7 @@ class EncoderEpipolar(Encoder[EncoderEpipolarCfg]):
         Returns:
             The return value.
         """
+
         def data_shim(batch: BatchedExample) -> BatchedExample:
             """Data shim.
 

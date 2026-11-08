@@ -8,7 +8,9 @@ import torch
 import torch.nn.functional as F
 from typing import Tuple
 
-from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker2_utils.models.core.cotracker.cotracker import CoTracker2
+from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker2_utils.models.core.cotracker.cotracker import (
+    CoTracker2,
+)
 from worldfoundry.base_models.perception_core.tracking.cotracker.models.core.model_utils import get_points_on_a_grid
 
 
@@ -86,9 +88,7 @@ class EvaluationPredictor(torch.nn.Module):
                 [query[0, 0, 2].item(), query[0, 0, 1].item()],
             )
 
-            xy_target = torch.cat([torch.zeros_like(xy_target[:, :, :1]), xy_target], dim=2).to(
-                device
-            )  #
+            xy_target = torch.cat([torch.zeros_like(xy_target[:, :, :1]), xy_target], dim=2).to(device)  #
             query = torch.cat([query, xy_target], dim=1)  #
 
         if self.grid_size > 0:
@@ -97,8 +97,6 @@ class EvaluationPredictor(torch.nn.Module):
             query = torch.cat([query, xy], dim=1)  #
         # crop the video to start from the queried frame
         query[0, 0, 0] = 0
-        traj_e_pind, vis_e_pind, __ = self.model(
-            video=video[:, t:], queries=query, iters=self.n_iters
-        )
+        traj_e_pind, vis_e_pind, __ = self.model(video=video[:, t:], queries=query, iters=self.n_iters)
 
         return traj_e_pind, vis_e_pind

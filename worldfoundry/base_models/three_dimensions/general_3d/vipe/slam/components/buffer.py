@@ -54,6 +54,7 @@ logger = logging.getLogger(__name__)
 
 class GraphBuffer:
     """Graph buffer implementation."""
+
     def __init__(
         self,
         height: int,
@@ -452,6 +453,7 @@ class GraphBuffer:
         Returns:
             The return value.
         """
+
         def fail(reason: str) -> None:
             """Fail.
 

@@ -54,9 +54,9 @@ def batch_iterator(batch_size: int, *args) -> Generator[List[Any], None, None]:
     Returns:
         The return value.
     """
-    assert len(args) > 0 and all(
-        len(a) == len(args[0]) for a in args
-    ), "Batched iteration must have inputs of all the same size."
+    assert len(args) > 0 and all(len(a) == len(args[0]) for a in args), (
+        "Batched iteration must have inputs of all the same size."
+    )
     n_batches = len(args[0]) // batch_size + int(len(args[0]) % batch_size != 0)
     for b in range(n_batches):
         yield [arg[b * batch_size : (b + 1) * batch_size] for arg in args]
@@ -119,9 +119,7 @@ def area_from_rle(rle: Dict[str, Any]) -> int:
     return sum(rle["counts"][1::2])
 
 
-def calculate_stability_score(
-    masks: torch.Tensor, mask_threshold: float, threshold_offset: float
-) -> torch.Tensor:
+def calculate_stability_score(masks: torch.Tensor, mask_threshold: float, threshold_offset: float) -> torch.Tensor:
     """
     Computes the stability score for a batch of masks. The stability
     score is the IoU between the binary masks obtained by thresholding
@@ -129,16 +127,8 @@ def calculate_stability_score(
     """
     # One mask is always contained inside the other.
     # Save memory by preventing unnecessary cast to torch.int64
-    intersections = (
-        (masks > (mask_threshold + threshold_offset))
-        .sum(-1, dtype=torch.int16)
-        .sum(-1, dtype=torch.int32)
-    )
-    unions = (
-        (masks > (mask_threshold - threshold_offset))
-        .sum(-1, dtype=torch.int16)
-        .sum(-1, dtype=torch.int32)
-    )
+    intersections = (masks > (mask_threshold + threshold_offset)).sum(-1, dtype=torch.int16).sum(-1, dtype=torch.int32)
+    unions = (masks > (mask_threshold - threshold_offset)).sum(-1, dtype=torch.int16).sum(-1, dtype=torch.int32)
     return intersections / unions
 
 
@@ -152,9 +142,7 @@ def build_point_grid(n_per_side: int) -> np.ndarray:
     return points
 
 
-def build_all_layer_point_grids(
-    n_per_side: int, n_layers: int, scale_per_layer: int
-) -> List[np.ndarray]:
+def build_all_layer_point_grids(n_per_side: int, n_layers: int, scale_per_layer: int) -> List[np.ndarray]:
     """Generates point grids for all crop layers."""
     points_by_layer = []
     for i in range(n_layers + 1):
@@ -243,9 +231,7 @@ def uncrop_points(points: torch.Tensor, crop_box: List[int]) -> torch.Tensor:
     return points + offset
 
 
-def uncrop_masks(
-    masks: torch.Tensor, crop_box: List[int], orig_h: int, orig_w: int
-) -> torch.Tensor:
+def uncrop_masks(masks: torch.Tensor, crop_box: List[int], orig_h: int, orig_w: int) -> torch.Tensor:
     """Uncrop masks.
 
     Args:
@@ -266,9 +252,7 @@ def uncrop_masks(
     return torch.nn.functional.pad(masks, pad, value=0)
 
 
-def remove_small_regions(
-    mask: np.ndarray, area_thresh: float, mode: str
-) -> Tuple[np.ndarray, bool]:
+def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str) -> Tuple[np.ndarray, bool]:
     """
     Removes small disconnected regions and holes in a mask. Returns the
     mask and an indicator of if the mask has been modified.

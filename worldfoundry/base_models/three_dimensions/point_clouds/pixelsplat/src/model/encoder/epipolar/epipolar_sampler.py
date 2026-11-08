@@ -20,6 +20,7 @@ from ....misc.heterogeneous_pairings import (
 @dataclass
 class EpipolarSampling:
     """Epipolar sampling implementation."""
+
     features: Float[Tensor, "batch view other_view ray sample channel"]
     valid: Bool[Tensor, "batch view other_view ray"]
     xy_ray: Float[Tensor, "batch view ray 2"]
@@ -32,6 +33,7 @@ class EpipolarSampling:
 
 class EpipolarSampler(nn.Module):
     """Epipolar sampler implementation."""
+
     num_samples: int
     index_v: Index
     transpose_v: Index
@@ -85,9 +87,7 @@ class EpipolarSampler(nn.Module):
         b, v, _, _, _ = images.shape
 
         # Generate the rays that are projected onto other views.
-        xy_ray, origins, directions = self.generate_image_rays(
-            images, extrinsics, intrinsics
-        )
+        xy_ray, origins, directions = self.generate_image_rays(images, extrinsics, intrinsics)
 
         # Select the camera extrinsics and intrinsics to project onto. For each context
         # view, this means all other context views in the batch.
@@ -127,9 +127,7 @@ class EpipolarSampler(nn.Module):
             padding_mode="zeros",
             align_corners=False,
         )
-        samples = rearrange(
-            samples, "(b v) c (ov r s) () -> b v ov r s c", b=b, v=v, ov=v - 1, s=s
-        )
+        samples = rearrange(samples, "(b v) c (ov r s) () -> b v ov r s c", b=b, v=v, ov=v - 1, s=s)
         samples = self.transpose(samples)
 
         # Zero out invalid samples.

@@ -25,15 +25,15 @@ def random_uuid() -> str:
 class Model:
     id: str  # model_type
 
-    object: str = 'model'
+    object: str = "model"
     created: int = field(default_factory=lambda: int(time.time()))
-    owned_by: str = 'ms-swift'
+    owned_by: str = "ms-swift"
 
 
 @dataclass
 class ModelList:
     data: List[Model]
-    object: str = 'list'
+    object: str = "list"
 
 
 @dataclass
@@ -51,14 +51,14 @@ class ChatCompletionRequestMixin:
 
     def __post_init__(self):
         if self.tool_choice is None:
-            self.tool_choice = 'none' if self.tools is None else 'auto'
+            self.tool_choice = "none" if self.tools is None else "auto"
 
         if self.tools:
-            if self.tool_choice == 'none':
+            if self.tool_choice == "none":
                 self.tools = None
             elif isinstance(self.tool_choice, dict):
-                name = self.tool_choice['function']['name']
-                tool = next(tool for tool in self.tools if tool['function']['name'] == name)
+                name = self.tool_choice["function"]["name"]
+                tool = next(tool for tool in self.tools if tool["function"]["name"] == name)
                 if tool is None:
                     raise ValueError(f"Tool choice '{name}' not found in tools.")
                 self.tools = [tool]
@@ -73,26 +73,26 @@ class MultiModalRequestMixin:
 
     @staticmethod
     def to_base64(mm_data: Union[str, Image.Image, bytes]) -> str:
-        if isinstance(mm_data, dict) and 'bytes' in mm_data:
-            mm_data = mm_data['bytes'] or mm_data['path']
+        if isinstance(mm_data, dict) and "bytes" in mm_data:
+            mm_data = mm_data["bytes"] or mm_data["path"]
         if isinstance(mm_data, str) and not os.path.isfile(mm_data):
             # base64 or url
             return mm_data
         if isinstance(mm_data, str):
             # local_path
-            with open(mm_data, 'rb') as f:
+            with open(mm_data, "rb") as f:
                 bytes_ = f.read()
         elif isinstance(mm_data, Image.Image):
             bytes_io = io.BytesIO()
-            mm_data.save(bytes_io, format='png')
+            mm_data.save(bytes_io, format="png")
             bytes_ = bytes_io.getvalue()
         else:
             bytes_ = mm_data
-        img_base64: str = base64.b64encode(bytes_).decode('utf-8')
+        img_base64: str = base64.b64encode(bytes_).decode("utf-8")
         return img_base64
 
     def __post_init__(self):
-        for key in ['images', 'audios', 'videos']:
+        for key in ["images", "audios", "videos"]:
             values = getattr(self, key)
             if isinstance(values, str):
                 values = [values]
@@ -103,7 +103,6 @@ class MultiModalRequestMixin:
 
 @dataclass
 class CompletionRequest(RequestConfig, MultiModalRequestMixin, CompletionRequestMixin):
-
     def __post_init__(self):
         RequestConfig.__post_init__(self)
         MultiModalRequestMixin.__post_init__(self)
@@ -111,7 +110,6 @@ class CompletionRequest(RequestConfig, MultiModalRequestMixin, CompletionRequest
 
 @dataclass
 class ChatCompletionRequest(RequestConfig, MultiModalRequestMixin, ChatCompletionRequestMixin):
-
     def __post_init__(self):
         RequestConfig.__post_init__(self)
         MultiModalRequestMixin.__post_init__(self)
@@ -120,40 +118,41 @@ class ChatCompletionRequest(RequestConfig, MultiModalRequestMixin, ChatCompletio
 
     def convert_to_base64(self):
         for message in self.messages:
-            content = message['content']
+            content = message["content"]
             if isinstance(content, str):
                 continue
             for item in content:
-                key: str = item['type']
-                if key == 'text':
+                key: str = item["type"]
+                if key == "text":
                     continue
 
                 key_origin = key
                 value = item[key]
-                if key.endswith('_url'):
-                    key = key[:-len('_url')]
+                if key.endswith("_url"):
+                    key = key[: -len("_url")]
                 is_dict = False
                 if isinstance(value, dict):
                     is_dict = True
-                    value = value['url']
-                if isinstance(value, str) and (value.startswith('data:') or value.startswith('http')
-                                               or len(value) > 200):
+                    value = value["url"]
+                if isinstance(value, str) and (
+                    value.startswith("data:") or value.startswith("http") or len(value) > 200
+                ):
                     continue
 
                 # local_path / PIL.Image
                 if isinstance(value, str) and os.path.isfile(value):
                     suffix = os.path.splitext(value)[1][1:].lower()
                 elif isinstance(value, Image.Image):
-                    suffix = 'jpeg'
+                    suffix = "jpeg"
                 else:
-                    raise ValueError(f'value: {value}')
+                    raise ValueError(f"value: {value}")
                 mm_data_base64 = self.to_base64(value)
-                new_value = f'data:{key}/{suffix};base64,{mm_data_base64}'
+                new_value = f"data:{key}/{suffix};base64,{mm_data_base64}"
                 if is_dict:
-                    new_value = {'url': new_value}
+                    new_value = {"url": new_value}
                 item[key_origin] = new_value
 
-    def parse(self) -> Tuple['InferRequest', 'RequestConfig']:
+    def parse(self) -> Tuple["InferRequest", "RequestConfig"]:
         data = asdict(self)
         res = []
         for cls_type in [InferRequest, RequestConfig]:
@@ -163,10 +162,10 @@ class ChatCompletionRequest(RequestConfig, MultiModalRequestMixin, ChatCompletio
         return tuple(res)
 
     @classmethod
-    def from_cmpl_request(cls, cmpl_request: CompletionRequest) -> 'ChatCompletionRequest':
+    def from_cmpl_request(cls, cmpl_request: CompletionRequest) -> "ChatCompletionRequest":
         cmpl_request = asdict(cmpl_request)
-        prompt = cmpl_request.pop('prompt')
-        cmpl_request['messages'] = [{'role': 'user', 'content': prompt}]
+        prompt = cmpl_request.pop("prompt")
+        cmpl_request["messages"] = [{"role": "user", "content": prompt}]
         return cls(**cmpl_request)
 
 
@@ -192,13 +191,13 @@ class Function:
 @dataclass
 class ChatCompletionMessageToolCall:
     function: Function
-    type: str = 'function'
-    id: str = field(default_factory=lambda: f'toolcall-{random_uuid()}')
+    type: str = "function"
+    id: str = field(default_factory=lambda: f"toolcall-{random_uuid()}")
 
 
 @dataclass
 class ChatMessage:
-    role: Literal['system', 'user', 'assistant']
+    role: Literal["system", "user", "assistant"]
     content: Union[str, List[Dict[str, Any]], int, float]
     tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
 
@@ -207,12 +206,12 @@ class ChatMessage:
 class ChatCompletionResponseChoice:
     index: int
     message: ChatMessage
-    finish_reason: Literal['stop', 'length', None]
+    finish_reason: Literal["stop", "length", None]
     logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
-    def to_cmpl_choice(self) -> 'CompletionResponseChoice':
+    def to_cmpl_choice(self) -> "CompletionResponseChoice":
         self = deepcopy(self)
-        assert not self.message.tool_calls, f'message: {self.message}'
+        assert not self.message.tool_calls, f"message: {self.message}"
         return CompletionResponseChoice(self.index, self.message.content, self.finish_reason, self.logprobs)
 
 
@@ -220,7 +219,7 @@ class ChatCompletionResponseChoice:
 class CompletionResponseChoice:
     index: int
     text: str
-    finish_reason: Literal['stop', 'length', None]
+    finish_reason: Literal["stop", "length", None]
     logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
 
@@ -229,14 +228,14 @@ class ChatCompletionResponse:
     model: str
     choices: List[ChatCompletionResponseChoice]
     usage: UsageInfo
-    id: str = field(default_factory=lambda: f'chatcmpl-{random_uuid()}')
-    object: str = 'chat.completion'
+    id: str = field(default_factory=lambda: f"chatcmpl-{random_uuid()}")
+    object: str = "chat.completion"
     created: int = field(default_factory=lambda: int(time.time()))
 
-    def to_cmpl_response(self) -> 'CompletionResponse':
+    def to_cmpl_response(self) -> "CompletionResponse":
         self = deepcopy(self)
         choices = [choice.to_cmpl_choice() for choice in self.choices]
-        id_ = f'cmpl{self.id[len("chatcmpl"):]}'
+        id_ = f"cmpl{self.id[len('chatcmpl') :]}"
         return CompletionResponse(self.model, choices, self.usage, id_, created=self.created)
 
 
@@ -245,14 +244,14 @@ class CompletionResponse:
     model: str
     choices: List[CompletionResponseChoice]
     usage: UsageInfo
-    id: str = field(default_factory=lambda: f'cmpl-{random_uuid()}')
-    object: str = 'text_completion'
+    id: str = field(default_factory=lambda: f"cmpl-{random_uuid()}")
+    object: str = "text_completion"
     created: int = field(default_factory=lambda: int(time.time()))
 
 
 @dataclass
 class DeltaMessage:
-    role: Literal['system', 'user', 'assistant', None] = None
+    role: Literal["system", "user", "assistant", None] = None
     content: Optional[str] = None
     tool_calls: Optional[List[ChatCompletionMessageToolCall]] = None
 
@@ -261,10 +260,10 @@ class DeltaMessage:
 class ChatCompletionResponseStreamChoice:
     index: int
     delta: DeltaMessage
-    finish_reason: Literal['stop', 'length', None]
+    finish_reason: Literal["stop", "length", None]
     logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
-    def to_cmpl_choice(self) -> 'CompletionResponseStreamChoice':
+    def to_cmpl_choice(self) -> "CompletionResponseStreamChoice":
         self = deepcopy(self)
         assert not self.delta.tool_calls
         return CompletionResponseStreamChoice(self.index, self.delta.content, self.finish_reason, self.logprobs)
@@ -274,7 +273,7 @@ class ChatCompletionResponseStreamChoice:
 class CompletionResponseStreamChoice:
     index: int
     text: str
-    finish_reason: Literal['stop', 'length', None]
+    finish_reason: Literal["stop", "length", None]
     logprobs: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
 
@@ -283,14 +282,14 @@ class ChatCompletionStreamResponse:
     model: str
     choices: List[ChatCompletionResponseStreamChoice]
     usage: Optional[UsageInfo] = None
-    id: str = field(default_factory=lambda: f'chatcmpl-{random_uuid()}')
-    object: str = 'chat.completion.chunk'
+    id: str = field(default_factory=lambda: f"chatcmpl-{random_uuid()}")
+    object: str = "chat.completion.chunk"
     created: int = field(default_factory=lambda: int(time.time()))
 
-    def to_cmpl_response(self) -> 'CompletionStreamResponse':
+    def to_cmpl_response(self) -> "CompletionStreamResponse":
         self = deepcopy(self)
         choices = [choice.to_cmpl_choice() for choice in self.choices]
-        id_ = f'cmpl{self.id[len("chatcmpl"):]}'
+        id_ = f"cmpl{self.id[len('chatcmpl') :]}"
         return CompletionStreamResponse(self.model, choices, self.usage, id_, created=self.created)
 
 
@@ -299,8 +298,8 @@ class CompletionStreamResponse:
     model: str
     choices: List[CompletionResponseStreamChoice]
     usage: Optional[UsageInfo] = None
-    id: str = field(default_factory=lambda: f'cmpl-{random_uuid()}')
-    object: str = 'text_completion.chunk'
+    id: str = field(default_factory=lambda: f"cmpl-{random_uuid()}")
+    object: str = "text_completion.chunk"
     created: int = field(default_factory=lambda: int(time.time()))
 
 

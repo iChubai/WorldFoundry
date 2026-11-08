@@ -38,6 +38,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 class FactorGraph:
     """Factor graph implementation."""
+
     @staticmethod
     def coords_grid(ht, wd, **kwargs):
         """Coords grid.

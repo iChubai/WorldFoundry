@@ -25,7 +25,9 @@ class EvaClipVisionTower(nn.Module):
             rank0_print(f"The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True.")
             self.load_model()
         elif hasattr(args, "mm_tunable_parts") and "mm_vision_tower" in args.mm_tunable_parts:
-            rank0_print(f"The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`.")
+            rank0_print(
+                f"The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
+            )
             self.load_model()
         else:
             self.cfg_only = self.config
@@ -42,7 +44,9 @@ class EvaClipVisionTower(nn.Module):
         if type(images) is list:
             image_features = []
             for image in images:
-                image_feature = self.vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0)).to(image.dtype)
+                image_feature = self.vision_tower(image.to(device=self.device, dtype=self.dtype).unsqueeze(0)).to(
+                    image.dtype
+                )
                 image_features.append(image_feature)
         else:
             image_features = self.vision_tower(images.to(device=self.device, dtype=self.dtype)).to(images.dtype)

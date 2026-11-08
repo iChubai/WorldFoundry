@@ -91,4 +91,3 @@ def get_model_config(config):
             return_list.append(cfg)
 
     return return_list
-

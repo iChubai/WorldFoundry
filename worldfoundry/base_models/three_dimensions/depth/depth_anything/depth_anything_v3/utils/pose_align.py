@@ -20,7 +20,10 @@ from typing import List
 import numpy as np
 import torch
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import affine_inverse, affine_inverse_np
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    affine_inverse,
+    affine_inverse_np,
+)
 
 
 def batch_apply_alignment_to_enc(
@@ -37,9 +40,7 @@ def batch_apply_alignment_to_enc(
     pass
 
 
-def batch_apply_alignment_to_ext(
-    rots: torch.Tensor, trans: torch.Tensor, scales: torch.Tensor, ext: torch.Tensor
-):
+def batch_apply_alignment_to_ext(rots: torch.Tensor, trans: torch.Tensor, scales: torch.Tensor, ext: torch.Tensor):
     """Batch apply alignment to ext.
 
     Args:
@@ -56,9 +57,7 @@ def batch_apply_alignment_to_ext(
         ext = pad
     pose_est = affine_inverse(ext)
     pose_new_align_rot = rots[:, None] @ pose_est[..., :3, :3]
-    pose_new_align_trans = (
-        scales[:, None, None] * (rots[:, None] @ pose_est[..., :3, 3:])[..., 0] + trans[:, None]
-    )
+    pose_new_align_trans = scales[:, None, None] * (rots[:, None] @ pose_est[..., :3, 3:])[..., 0] + trans[:, None]
     pose_new_align = torch.zeros_like(ext)
     pose_new_align[..., :3, :3] = pose_new_align_rot
     pose_new_align[..., :3, 3] = pose_new_align_trans
@@ -194,9 +193,7 @@ def _median_nn_thresh(pose_ref, pose_est_aligned):
     return float(np.median(dists)) if dists else 0.0
 
 
-def _ransac_align_sim3(
-    pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_iters=10, random_state=None
-):
+def _ransac_align_sim3(pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_iters=10, random_state=None):
     """Helper function to ransac align sim3.
 
     Args:

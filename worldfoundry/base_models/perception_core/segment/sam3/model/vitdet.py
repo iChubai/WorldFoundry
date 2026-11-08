@@ -29,7 +29,10 @@ except ModuleNotFoundError:
 from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
 from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import AttentionType, LayerScale
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.fused import addmm_act
-from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import apply_rotary_enc_real, VisionRotaryEmbeddingVE
+from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import (
+    apply_rotary_enc_real,
+    VisionRotaryEmbeddingVE,
+)
 from torch import Tensor
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
@@ -74,9 +77,7 @@ class Mlp(nn.Module):
         self.fc1 = linear_layer(in_features, hidden_features, bias=bias[0])
         self.act = act_layer()
         self.drop1 = nn.Dropout(drop_probs[0])
-        self.norm = (
-            norm_layer(hidden_features) if norm_layer is not None else nn.Identity()
-        )
+        self.norm = norm_layer(hidden_features) if norm_layer is not None else nn.Identity()
         self.fc2 = linear_layer(hidden_features, out_features, bias=bias[1])
         self.drop2 = nn.Dropout(drop_probs[1])
 
@@ -94,9 +95,7 @@ class Mlp(nn.Module):
         return x
 
 
-def init_t_xy(
-    end_x: int, end_y: int, scale: float = 1.0, offset: int = 0
-) -> Tuple[torch.Tensor, torch.Tensor]:
+def init_t_xy(end_x: int, end_y: int, scale: float = 1.0, offset: int = 0) -> Tuple[torch.Tensor, torch.Tensor]:
     """Init t xy.
 
     Args:
@@ -181,11 +180,7 @@ def apply_rotary_enc(
         The return value.
     """
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2))
-    xk_ = (
-        torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2))
-        if xk.shape[-2] != 0
-        else None
-    )
+    xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2)) if xk.shape[-2] != 0 else None
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)
     xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(3)
     if xk_ is None:
@@ -222,9 +217,7 @@ def window_partition(x: Tensor, window_size: int) -> Tuple[Tensor, Tuple[int, in
     return windows, (Hp, Wp)
 
 
-def window_unpartition(
-    windows: Tensor, window_size: int, pad_hw: Tuple[int, int], hw: Tuple[int, int]
-) -> Tensor:
+def window_unpartition(windows: Tensor, window_size: int, pad_hw: Tuple[int, int], hw: Tuple[int, int]) -> Tensor:
     """
     Window unpartition into original sequences and removing padding.
     Args:
@@ -238,9 +231,7 @@ def window_unpartition(
     Hp, Wp = pad_hw
     H, W = hw
     B = windows.shape[0] // (Hp * Wp // window_size // window_size)
-    x = windows.reshape(
-        B, Hp // window_size, Wp // window_size, window_size, window_size, -1
-    )
+    x = windows.reshape(B, Hp // window_size, Wp // window_size, window_size, window_size, -1)
     x = x.permute(0, 1, 3, 2, 4, 5).reshape(B, Hp, Wp, -1)
 
     if Hp > H or Wp > W:
@@ -316,9 +307,9 @@ def get_abs_pos(
     if size != h or size != w:
         new_abs_pos = abs_pos.reshape(1, size, size, -1).permute(0, 3, 1, 2)
         if tiling:
-            new_abs_pos = new_abs_pos.tile(
-                [1, 1] + [x // y + 1 for x, y in zip((h, w), new_abs_pos.shape[2:])]
-            )[:, :, :h, :w]
+            new_abs_pos = new_abs_pos.tile([1, 1] + [x // y + 1 for x, y in zip((h, w), new_abs_pos.shape[2:])])[
+                :, :, :h, :w
+            ]
         else:
             new_abs_pos = F.interpolate(
                 new_abs_pos,
@@ -398,9 +389,7 @@ def concat_rel_pos(
     eye_w = eye_w.view(1, 1, k_w, k_w).expand([B, k_h, k_w, k_w])
 
     q = torch.cat([r_q * scale_ratio, rel_h, rel_w], dim=-1).view(B, q_h * q_w, -1)
-    k = torch.cat([k.view(B, k_h, k_w, -1), eye_h, eye_w], dim=-1).view(
-        B, k_h * k_w, -1
-    )
+    k = torch.cat([k.view(B, k_h, k_w, -1), eye_h, eye_w], dim=-1).view(B, k_h * k_w, -1)
 
     return q, k
 
@@ -537,12 +526,8 @@ class Attention(nn.Module):
         assert self.input_size is not None
         assert self.cls_token is False, "not supported"
         # initialize relative positional embeddings
-        self.rel_pos_h = nn.Parameter(
-            torch.zeros(2 * self.input_size[0] - 1, self.head_dim)
-        )
-        self.rel_pos_w = nn.Parameter(
-            torch.zeros(2 * self.input_size[1] - 1, self.head_dim)
-        )
+        self.rel_pos_h = nn.Parameter(torch.zeros(2 * self.input_size[0] - 1, self.head_dim))
+        self.rel_pos_w = nn.Parameter(torch.zeros(2 * self.input_size[1] - 1, self.head_dim))
 
         if not rel_pos_zero_init:
             trunc_normal_(self.rel_pos_h, std=0.02)
@@ -589,19 +574,14 @@ class Attention(nn.Module):
         if self.rope_pt_size != self.input_size and self.rope_tiled:
             assert not self.rope_interp
             # window/tiled rope
-            freqs_cis = self.compute_cis(
-                end_x=self.rope_pt_size[0], end_y=self.rope_pt_size[1]
-            )
+            freqs_cis = self.compute_cis(end_x=self.rope_pt_size[0], end_y=self.rope_pt_size[1])
             # check dims are tileable
             rh, rw = (
                 self.input_size[0] // self.rope_pt_size[0],
                 self.input_size[1] // self.rope_pt_size[1],
             )
             assert rh >= 1, rw >= 1
-            assert (
-                self.input_size[0] % self.rope_pt_size[0] == 0
-                and self.input_size[1] % self.rope_pt_size[1] == 0
-            )
+            assert self.input_size[0] % self.rope_pt_size[0] == 0 and self.input_size[1] % self.rope_pt_size[1] == 0
 
             # restore spatial shape, tile and then flatten spatial dims
             freqs_cis = (
@@ -710,20 +690,14 @@ class Attention(nn.Module):
             if self.use_fa3:
                 from worldfoundry.base_models.perception_core.segment.sam3.perflib.fa3 import flash_attn_func
 
-                x = flash_attn_func(
-                    q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
-                ).transpose(1, 2)
+                x = flash_attn_func(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)).transpose(1, 2)
             else:
                 x = _worldfoundry_scaled_dot_product_attention(q, k, v)
         else:
             raise NotImplementedError
 
         if ndim == 4:
-            x = (
-                x.view(B, self.num_heads, H, W, -1)
-                .permute(0, 2, 3, 1, 4)
-                .reshape(B, H, W, -1)
-            )
+            x = x.view(B, self.num_heads, H, W, -1).permute(0, 2, 3, 1, 4).reshape(B, H, W, -1)
         else:
             x = x.view(B, self.num_heads, L, -1).permute(0, 2, 1, 3).reshape(B, L, -1)
 
@@ -803,9 +777,7 @@ class Block(nn.Module):
             use_fa3=use_fa3,
             use_rope_real=use_rope_real,
         )
-        self.ls1 = (
-            LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
-        )
+        self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
         self.norm2 = norm_layer(dim)
@@ -815,9 +787,7 @@ class Block(nn.Module):
             act_layer=act_layer,
             drop=(dropout, 0.0),
         )
-        self.ls2 = (
-            LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
-        )
+        self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.dropout = nn.Dropout(dropout)
         self.window_size = window_size
 
@@ -946,9 +916,7 @@ class ViT(nn.Module):
         self.retain_cls_token = retain_cls_token
         if self.retain_cls_token:
             assert pretrain_use_cls_token
-            assert len(window_block_indexes) == 0, (
-                "windowing not supported with cls token"
-            )
+            assert len(window_block_indexes) == 0, "windowing not supported with cls token"
 
             assert sum(self.rel_pos_blocks) == 0, "rel pos not supported with cls token"
 
@@ -974,9 +942,7 @@ class ViT(nn.Module):
 
         if self.use_abs_pos:
             # Initialize absolute positional embedding with pretrain image size.
-            num_patches = (pretrain_img_size // patch_size) * (
-                pretrain_img_size // patch_size
-            )
+            num_patches = (pretrain_img_size // patch_size) * (pretrain_img_size // patch_size)
             num_positions = (num_patches + 1) if pretrain_use_cls_token else num_patches
             self.pos_embed = nn.Parameter(torch.zeros(1, num_positions, embed_dim))
         else:
@@ -1001,11 +967,7 @@ class ViT(nn.Module):
                 window_size=window_size if i in window_block_indexes else 0,
                 input_size=(img_size // patch_size, img_size // patch_size),
                 use_rope=use_rope,
-                rope_pt_size=(
-                    (window_size, window_size)
-                    if rope_pt_size is None
-                    else (rope_pt_size, rope_pt_size)
-                ),
+                rope_pt_size=((window_size, window_size) if rope_pt_size is None else (rope_pt_size, rope_pt_size)),
                 rope_tiled=use_tiled_rope,
                 use_ve_rope=use_ve_rope,
                 rope_interp=use_interp_rope,
@@ -1025,11 +987,7 @@ class ViT(nn.Module):
             self.blocks.append(block)
 
         self.return_interm_layers = return_interm_layers
-        self.channel_list = (
-            [embed_dim] * len(self.full_attn_ids)
-            if return_interm_layers
-            else [embed_dim]
-        )
+        self.channel_list = [embed_dim] * len(self.full_attn_ids) if return_interm_layers else [embed_dim]
 
         if self.pos_embed is not None:
             trunc_normal_(self.pos_embed, std=0.02)
@@ -1040,9 +998,7 @@ class ViT(nn.Module):
         self.apply(self._init_weights)
 
         if compile_mode is not None:
-            self.forward = torch.compile(
-                self.forward, mode=compile_mode, fullgraph=True
-            )
+            self.forward = torch.compile(self.forward, mode=compile_mode, fullgraph=True)
             if self.use_act_checkpoint and self.training:
                 torch._dynamo.config.optimize_ddp = False
 
@@ -1104,9 +1060,7 @@ class ViT(nn.Module):
                 x = checkpoint.checkpoint(blk, x, use_reentrant=False)
             else:
                 x = blk(x)
-            if (i == self.full_attn_ids[-1]) or (
-                self.return_interm_layers and i in self.full_attn_ids
-            ):
+            if (i == self.full_attn_ids[-1]) or (self.return_interm_layers and i in self.full_attn_ids):
                 if i == self.full_attn_ids[-1]:
                     x = self.ln_post(x)
 
@@ -1116,16 +1070,12 @@ class ViT(nn.Module):
                 else:
                     assert feats.ndim == 3
                     h = w = math.sqrt(feats.shape[1])
-                    feats = feats.reshape(
-                        feats.shape[0], h, w, feats.shape[-1]
-                    ).permute(0, 3, 1, 2)
+                    feats = feats.reshape(feats.shape[0], h, w, feats.shape[-1]).permute(0, 3, 1, 2)
 
                 if isinstance(tensor_list, NestedTensor):
                     # Optimization, if the mask is all False, just ignore it
                     if mask is not None and mask.any() and masks is None:
-                        masks = F.interpolate(
-                            mask[None].float(), size=feats.shape[-2:]
-                        ).bool()[0]
+                        masks = F.interpolate(mask[None].float(), size=feats.shape[-2:]).bool()[0]
                     outputs.append(NestedTensor(feats, masks))
                 else:
                     outputs.append(feats)

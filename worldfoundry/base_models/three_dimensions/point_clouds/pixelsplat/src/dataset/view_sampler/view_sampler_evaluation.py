@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 import torch
+
 try:
     from dacite import Config, from_dict
 except ImportError:
@@ -21,6 +22,7 @@ from .view_sampler import ViewSampler
 @dataclass
 class ViewSamplerEvaluationCfg:
     """View sampler evaluation cfg implementation."""
+
     name: Literal["evaluation"]
     index_path: Path
     num_context_views: int
@@ -34,6 +36,7 @@ class IndexEntry:
 
 class ViewSamplerEvaluation(ViewSampler[ViewSamplerEvaluationCfg]):
     """View sampler evaluation implementation."""
+
     index: dict[str, IndexEntry | None]
 
     def __init__(
@@ -59,8 +62,7 @@ class ViewSamplerEvaluation(ViewSampler[ViewSamplerEvaluationCfg]):
         dacite_config = Config(cast=[tuple])
         with cfg.index_path.open("r") as f:
             self.index = {
-                k: None if v is None else from_dict(IndexEntry, v, dacite_config)
-                for k, v in json.load(f).items()
+                k: None if v is None else from_dict(IndexEntry, v, dacite_config) for k, v in json.load(f).items()
             }
 
     def sample(

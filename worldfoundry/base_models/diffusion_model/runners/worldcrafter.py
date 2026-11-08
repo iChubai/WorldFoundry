@@ -46,9 +46,11 @@ from ..models.networks.worldcrafter.transformer import WorldCrafterTransformer3D
 
 
 from .helios import HeliosPipeline, XLA_AVAILABLE, optimized_scale, calculate_shift, EXAMPLE_DOC_STRING
+
 logger = logging.get_logger(__name__)
 if XLA_AVAILABLE:
     from .helios import xm
+
 
 def _render_repencoder_memory_latents(
     *,
@@ -63,14 +65,10 @@ def _render_repencoder_memory_latents(
     if chunk_index <= 0:
         raise ValueError("RepEncoder rendering is only valid after chunk 0")
     if generated_latents.ndim != 5 or generated_latents.shape[2] == 0:
-        raise RuntimeError(
-            "RepEncoder requires a non-empty [B,C,T,H,W] bank of already generated WorldCrafter latents"
-        )
+        raise RuntimeError("RepEncoder requires a non-empty [B,C,T,H,W] bank of already generated WorldCrafter latents")
     render_memory = getattr(memory_provider, "render_memory", None)
     if not callable(render_memory):
-        raise TypeError(
-            "memory_provider must expose a callable render_memory(...) method"
-        )
+        raise TypeError("memory_provider must expose a callable render_memory(...) method")
 
     recent_latents = generated_latents[:, :, -1:, :, :]
     try:
@@ -84,9 +82,7 @@ def _render_repencoder_memory_latents(
             generator=generator,
         )
     except Exception as exc:
-        raise RuntimeError(
-            f"RepEncoder memory rendering failed for chunk_index={chunk_index}"
-        ) from exc
+        raise RuntimeError(f"RepEncoder memory rendering failed for chunk_index={chunk_index}") from exc
 
     expected_shape = (
         generated_latents.shape[0],
@@ -96,10 +92,7 @@ def _render_repencoder_memory_latents(
         generated_latents.shape[4],
     )
     if not isinstance(memory_latents, torch.Tensor):
-        raise TypeError(
-            "memory_provider.render_memory(...) must return a torch.Tensor, "
-            f"got {type(memory_latents)!r}"
-        )
+        raise TypeError(f"memory_provider.render_memory(...) must return a torch.Tensor, got {type(memory_latents)!r}")
     if tuple(memory_latents.shape) != expected_shape:
         raise ValueError(
             "RepEncoder memory must have shape [B,C,4,H,W]; "
@@ -111,18 +104,15 @@ def _render_repencoder_memory_latents(
             f"expected {generated_latents.device}, got {memory_latents.device}"
         )
     if not memory_latents.is_floating_point():
-        raise TypeError(
-            f"RepEncoder memory must be floating point, got {memory_latents.dtype}"
-        )
+        raise TypeError(f"RepEncoder memory must be floating point, got {memory_latents.dtype}")
     if not torch.isfinite(memory_latents).all():
-        raise FloatingPointError(
-            f"RepEncoder memory contains non-finite values at chunk_index={chunk_index}"
-        )
+        raise FloatingPointError(f"RepEncoder memory contains non-finite values at chunk_index={chunk_index}")
     return memory_latents
 
 
 class WorldCrafterPipeline(HeliosPipeline):
     """Camera-queryable memory rollout over the shared Helios components."""
+
     @torch.no_grad()
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
@@ -143,12 +133,7 @@ class WorldCrafterPipeline(HeliosPipeline):
         output_type: str | None = "np",
         return_dict: bool = True,
         attention_kwargs: dict[str, Any] | None = None,
-        callback_on_step_end: (
-            Callable[[int, int], None]
-            | PipelineCallback
-            | MultiPipelineCallbacks
-            | None
-        ) = None,
+        callback_on_step_end: (Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None) = None,
         callback_on_step_end_tensor_inputs: list[str] = ["latents"],
         callback_on_chunk_end: Callable[[int, torch.Tensor], None] | None = None,
         callback_on_chunk_state: Callable[[int, dict[str, Any]], None] | None = None,
@@ -268,37 +253,30 @@ class WorldCrafterPipeline(HeliosPipeline):
         elif camera_trajectory is not None and is_enable_stage2:
             raise ValueError("Base camera inference requires stage1 sampling")
         if memory_size != 4:
-            raise ValueError(
-                f"RepEncoder memory contract requires memory_size=4, got {memory_size}"
-            )
+            raise ValueError(f"RepEncoder memory contract requires memory_size=4, got {memory_size}")
         if num_latent_frames_per_chunk != 9:
             raise ValueError(
                 "RepEncoder target slots [2,4,6,8] require num_latent_frames_per_chunk=9, "
                 f"got {num_latent_frames_per_chunk}"
             )
 
-        requested_window_num_frames = (
-            num_latent_frames_per_chunk - 1
-        ) * self.vae_scale_factor_temporal + 1
+        requested_window_num_frames = (num_latent_frames_per_chunk - 1) * self.vae_scale_factor_temporal + 1
         requested_num_chunks = max(
             1,
-            (max(num_frames, 1) + requested_window_num_frames - 1)
-            // requested_window_num_frames,
+            (max(num_frames, 1) + requested_window_num_frames - 1) // requested_window_num_frames,
         )
         if use_interpolate_prompt:
             requested_num_chunks = max(requested_num_chunks, sum(interpolate_time_list))
         if requested_num_chunks > 1:
             if camera_trajectory is None:
-                raise ValueError(
-                    "Multi-chunk RepEncoder inference requires a global metric camera trajectory"
-                )
+                raise ValueError("Multi-chunk RepEncoder inference requires a global metric camera trajectory")
             if memory_provider is None:
                 raise ValueError("Multi-chunk inference requires memory_provider")
 
         history_sizes = sorted(history_sizes, reverse=True)  # From big to small
-        assert (
-            memory_size <= num_latent_frames_per_chunk
-        ), f"memory_size={memory_size} must be <= num_latent_frames_per_chunk={num_latent_frames_per_chunk}"
+        assert memory_size <= num_latent_frames_per_chunk, (
+            f"memory_size={memory_size} must be <= num_latent_frames_per_chunk={num_latent_frames_per_chunk}"
+        )
 
         if isinstance(callback_on_step_end, (PipelineCallback, MultiPipelineCallbacks)):
             callback_on_step_end_tensor_inputs = callback_on_step_end.tensor_inputs
@@ -336,9 +314,9 @@ class WorldCrafterPipeline(HeliosPipeline):
             .view(1, self.vae.config.z_dim, 1, 1, 1)
             .to(device, self.vae.dtype)
         )
-        latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(
-            1, self.vae.config.z_dim, 1, 1, 1
-        ).to(device, self.vae.dtype)
+        latents_std = 1.0 / torch.tensor(self.vae.config.latents_std).view(1, self.vae.config.z_dim, 1, 1, 1).to(
+            device, self.vae.dtype
+        )
 
         # 2. Define call parameters
         if use_interpolate_prompt or (prompt is not None and isinstance(prompt, str)):
@@ -389,32 +367,24 @@ class WorldCrafterPipeline(HeliosPipeline):
 
         if image_latents is not None and add_noise_to_image_latents:
             image_noise_sigma = (
-                torch.rand(1, device=device, generator=generator)
-                * (image_noise_sigma_max - image_noise_sigma_min)
+                torch.rand(1, device=device, generator=generator) * (image_noise_sigma_max - image_noise_sigma_min)
                 + image_noise_sigma_min
             )
             image_latents = (
-                image_noise_sigma
-                * randn_tensor(image_latents.shape, generator=generator, device=device)
+                image_noise_sigma * randn_tensor(image_latents.shape, generator=generator, device=device)
                 + (1 - image_noise_sigma) * image_latents
             )
             fake_image_noise_sigma = (
-                torch.rand(1, device=device, generator=generator)
-                * (video_noise_sigma_max - video_noise_sigma_min)
+                torch.rand(1, device=device, generator=generator) * (video_noise_sigma_max - video_noise_sigma_min)
                 + video_noise_sigma_min
             )
             fake_image_latents = (
-                fake_image_noise_sigma
-                * randn_tensor(
-                    fake_image_latents.shape, generator=generator, device=device
-                )
+                fake_image_noise_sigma * randn_tensor(fake_image_latents.shape, generator=generator, device=device)
                 + (1 - fake_image_noise_sigma) * fake_image_latents
             )
 
         if video is not None:
-            video = self.video_processor.preprocess_video(
-                video, height=height, width=width
-            )
+            video = self.video_processor.preprocess_video(video, height=height, width=width)
             image_latents, video_latents = self.prepare_video_latents(
                 video,
                 latents_mean=latents_mean,
@@ -428,13 +398,11 @@ class WorldCrafterPipeline(HeliosPipeline):
 
         if video_latents is not None and add_noise_to_video_latents:
             image_noise_sigma = (
-                torch.rand(1, device=device, generator=generator)
-                * (image_noise_sigma_max - image_noise_sigma_min)
+                torch.rand(1, device=device, generator=generator) * (image_noise_sigma_max - image_noise_sigma_min)
                 + image_noise_sigma_min
             )
             image_latents = (
-                image_noise_sigma
-                * randn_tensor(image_latents.shape, generator=generator, device=device)
+                image_noise_sigma * randn_tensor(image_latents.shape, generator=generator, device=device)
                 + (1 - image_noise_sigma) * image_latents
             )
 
@@ -454,10 +422,7 @@ class WorldCrafterPipeline(HeliosPipeline):
                 frame_sigmas = frame_sigmas.view(1, 1, chunk_frames, 1, 1)
 
                 noisy_chunk = (
-                    frame_sigmas
-                    * randn_tensor(
-                        latent_chunk.shape, generator=generator, device=device
-                    )
+                    frame_sigmas * randn_tensor(latent_chunk.shape, generator=generator, device=device)
                     + (1 - frame_sigmas) * latent_chunk
                 )
                 noisy_latents_chunks.append(noisy_chunk)
@@ -465,12 +430,8 @@ class WorldCrafterPipeline(HeliosPipeline):
 
         # 5. Prepare latent variables
         num_channels_latents = self.transformer.config.in_channels
-        window_num_frames = (
-            num_latent_frames_per_chunk - 1
-        ) * self.vae_scale_factor_temporal + 1
-        num_latent_chunk = max(
-            1, (num_frames + window_num_frames - 1) // window_num_frames
-        )
+        window_num_frames = (num_latent_frames_per_chunk - 1) * self.vae_scale_factor_temporal + 1
+        num_latent_chunk = max(1, (num_frames + window_num_frames - 1) // window_num_frames)
         history_video = None
         total_generated_latent_frames = 0
 
@@ -493,9 +454,7 @@ class WorldCrafterPipeline(HeliosPipeline):
             video_frames = video_latents.shape[2]
             if video_frames < history_frames:
                 keep_frames = history_frames - video_frames
-                history_latents = torch.cat(
-                    [history_latents[:, :, :keep_frames, :, :], video_latents], dim=2
-                )
+                history_latents = torch.cat([history_latents[:, :, :keep_frames, :, :], video_latents], dim=2)
             else:
                 history_latents = video_latents
             total_generated_latent_frames += video_latents.shape[2]
@@ -508,12 +467,8 @@ class WorldCrafterPipeline(HeliosPipeline):
                 raise ValueError("unsupported WorldCrafter resume-state format")
             start_chunk = int(resume_state["next_chunk_index"])
             if start_chunk <= 0 or start_chunk >= num_latent_chunk:
-                raise ValueError(
-                    f"resume next_chunk_index must be in [1, {num_latent_chunk - 1}], got {start_chunk}"
-                )
-            generated_memory_latents = resume_state["generated_memory_latents"].to(
-                device=device, dtype=torch.float32
-            )
+                raise ValueError(f"resume next_chunk_index must be in [1, {num_latent_chunk - 1}], got {start_chunk}")
+            generated_memory_latents = resume_state["generated_memory_latents"].to(device=device, dtype=torch.float32)
             expected_generated = start_chunk * num_latent_frames_per_chunk
             if tuple(generated_memory_latents.shape) != (
                 batch_size,
@@ -526,9 +481,7 @@ class WorldCrafterPipeline(HeliosPipeline):
                     "resume generated_memory_latents shape does not match next_chunk_index: "
                     f"{tuple(generated_memory_latents.shape)}"
                 )
-            history_latents = resume_state["history_latents"].to(
-                device=device, dtype=torch.float32
-            )
+            history_latents = resume_state["history_latents"].to(device=device, dtype=torch.float32)
             expected_history = (
                 batch_size,
                 num_channels_latents,
@@ -538,8 +491,7 @@ class WorldCrafterPipeline(HeliosPipeline):
             )
             if tuple(history_latents.shape) != expected_history:
                 raise ValueError(
-                    f"resume history_latents must have shape {expected_history}, "
-                    f"got {tuple(history_latents.shape)}"
+                    f"resume history_latents must have shape {expected_history}, got {tuple(history_latents.shape)}"
                 )
             saved_image_latents = resume_state.get("image_latents")
             if saved_image_latents is None:
@@ -547,13 +499,9 @@ class WorldCrafterPipeline(HeliosPipeline):
                     raise ValueError("resume state is missing fixed image_latents")
                 image_latents = None
             else:
-                image_latents = saved_image_latents.to(
-                    device=device, dtype=torch.float32
-                )
+                image_latents = saved_image_latents.to(device=device, dtype=torch.float32)
             if not isinstance(generator, torch.Generator):
-                raise TypeError(
-                    "resumable WorldCrafter inference requires one torch.Generator"
-                )
+                raise TypeError("resumable WorldCrafter inference requires one torch.Generator")
             generator.set_state(resume_state["generator_state"].cpu())
             total_generated_latent_frames = expected_generated
 
@@ -577,11 +525,7 @@ class WorldCrafterPipeline(HeliosPipeline):
                 * (width // self.vae_scale_factor_spatial)
                 // (patch_size[0] * patch_size[1] * patch_size[2])
             )
-            sigmas = (
-                np.linspace(0.999, 0.0, num_inference_steps + 1)[:-1]
-                if sigmas is None
-                else sigmas
-            )
+            sigmas = np.linspace(0.999, 0.0, num_inference_steps + 1)[:-1] if sigmas is None else sigmas
             mu = calculate_shift(
                 image_seq_len,
                 self.scheduler.config.get("base_image_seq_len", 256),
@@ -603,32 +547,21 @@ class WorldCrafterPipeline(HeliosPipeline):
                 if current_interval_idx == 0:
                     prompt_embeds = all_prompt_embeds[0].unsqueeze(0)
                 else:
-                    interval_start = interpolate_cumulative_list[
-                        current_interval_idx - 1
-                    ]
+                    interval_start = interpolate_cumulative_list[current_interval_idx - 1]
                     position_in_interval = k - interval_start
 
                     if position_in_interval < interpolation_steps:
-                        if (
-                            interpolate_embeds is None
-                            or interpolate_interval_idx != current_interval_idx
-                        ):
+                        if interpolate_embeds is None or interpolate_interval_idx != current_interval_idx:
                             interpolate_embeds = self.interpolate_prompt_embeds(
-                                prompt_embeds_1=all_prompt_embeds[
-                                    current_interval_idx - 1
-                                ].unsqueeze(0),
-                                prompt_embeds_2=all_prompt_embeds[
-                                    current_interval_idx
-                                ].unsqueeze(0),
+                                prompt_embeds_1=all_prompt_embeds[current_interval_idx - 1].unsqueeze(0),
+                                prompt_embeds_2=all_prompt_embeds[current_interval_idx].unsqueeze(0),
                                 interpolation_steps=interpolation_steps,
                             )
                             interpolate_interval_idx = current_interval_idx
 
                         prompt_embeds = interpolate_embeds[position_in_interval]
                     else:
-                        prompt_embeds = all_prompt_embeds[
-                            current_interval_idx
-                        ].unsqueeze(0)
+                        prompt_embeds = all_prompt_embeds[current_interval_idx].unsqueeze(0)
             else:
                 prompt_embeds = all_prompt_embeds
 
@@ -675,9 +608,7 @@ class WorldCrafterPipeline(HeliosPipeline):
                             keep_frames = history_frames - video_frames
                             history_latents_first_chunk = torch.cat(
                                 [
-                                    history_latents_first_chunk[
-                                        :, :, :keep_frames, :, :
-                                    ],
+                                    history_latents_first_chunk[:, :, :keep_frames, :, :],
                                     video_latents,
                                 ],
                                 dim=2,
@@ -706,21 +637,15 @@ class WorldCrafterPipeline(HeliosPipeline):
                         [1, memory_size, *history_sizes, num_latent_frames_per_chunk],
                         dim=0,
                     )
-                    indices_latents_history_short = torch.cat(
-                        [indices_prefix, indices_latents_history_1x], dim=0
-                    )
+                    indices_latents_history_short = torch.cat([indices_prefix, indices_latents_history_1x], dim=0)
 
                     latents_memory = first_memory_latents
-                    latents_prefix, latents_history_mid, latents_history_1x = (
-                        history_latents_first_chunk[
-                            :, :, -sum(history_sizes_first_chunk) :
-                        ].split(history_sizes_first_chunk, dim=2)
-                    )
+                    latents_prefix, latents_history_mid, latents_history_1x = history_latents_first_chunk[
+                        :, :, -sum(history_sizes_first_chunk) :
+                    ].split(history_sizes_first_chunk, dim=2)
                     if image_latents is not None:
                         latents_prefix = image_latents
-                    latents_history_short = torch.cat(
-                        [latents_prefix, latents_history_1x], dim=2
-                    )
+                    latents_history_short = torch.cat([latents_prefix, latents_history_1x], dim=2)
                 else:
                     indices = torch.arange(
                         0,
@@ -743,34 +668,26 @@ class WorldCrafterPipeline(HeliosPipeline):
                         [1, memory_size, *history_sizes, num_latent_frames_per_chunk],
                         dim=0,
                     )
-                    indices_latents_history_short = torch.cat(
-                        [indices_prefix, indices_latents_history_1x], dim=0
-                    )
+                    indices_latents_history_short = torch.cat([indices_prefix, indices_latents_history_1x], dim=0)
 
                     latents_prefix = image_latents
                     latents_memory = first_memory_latents
-                    latents_history_mid, latents_history_1x = history_latents[
-                        :, :, -sum(history_sizes) :
-                    ].split(history_sizes, dim=2)
-                    latents_history_short = torch.cat(
-                        [latents_prefix, latents_history_1x], dim=2
+                    latents_history_mid, latents_history_1x = history_latents[:, :, -sum(history_sizes) :].split(
+                        history_sizes, dim=2
                     )
+                    latents_history_short = torch.cat([latents_prefix, latents_history_1x], dim=2)
             else:
-                indices = torch.arange(
-                    0, sum([memory_size, *history_sizes, num_latent_frames_per_chunk])
-                )
+                indices = torch.arange(0, sum([memory_size, *history_sizes, num_latent_frames_per_chunk]))
                 (
                     indices_latents_memory,
                     indices_latents_history_mid,
                     indices_latents_history_short,
                     indices_hidden_states,
-                ) = indices.split(
-                    [memory_size, *history_sizes, num_latent_frames_per_chunk], dim=0
-                )
+                ) = indices.split([memory_size, *history_sizes, num_latent_frames_per_chunk], dim=0)
                 latents_memory = first_memory_latents
-                latents_history_mid, latents_history_short = history_latents[
-                    :, :, -sum(history_sizes) :
-                ].split(history_sizes, dim=2)
+                latents_history_mid, latents_history_short = history_latents[:, :, -sum(history_sizes) :].split(
+                    history_sizes, dim=2
+                )
 
             indices_hidden_states = indices_hidden_states.unsqueeze(0)
             indices_latents_history_short = indices_latents_history_short.unsqueeze(0)
@@ -790,13 +707,9 @@ class WorldCrafterPipeline(HeliosPipeline):
             )
 
             if not is_enable_stage2:
-                self.scheduler.set_timesteps(
-                    num_inference_steps, device=device, sigmas=sigmas, mu=mu
-                )
+                self.scheduler.set_timesteps(num_inference_steps, device=device, sigmas=sigmas, mu=mu)
                 timesteps = self.scheduler.timesteps
-                num_warmup_steps = (
-                    len(timesteps) - num_inference_steps * self.scheduler.order
-                )
+                num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
                 self._num_timesteps = len(timesteps)
             else:
                 if use_fast:
@@ -895,26 +808,17 @@ class WorldCrafterPipeline(HeliosPipeline):
                     )
 
                 if keep_first_frame and (
-                    (is_first_chunk and image_latents is None)
-                    or (is_skip_first_chunk and is_second_chunk)
+                    (is_first_chunk and image_latents is None) or (is_skip_first_chunk and is_second_chunk)
                 ):
                     image_latents = latents[:, :, 0:1, :, :]
 
-                generated_memory_latents = torch.cat(
-                    [generated_memory_latents, latents], dim=2
-                )
+                generated_memory_latents = torch.cat([generated_memory_latents, latents], dim=2)
 
                 total_generated_latent_frames += latents.shape[2]
                 history_latents = torch.cat([history_latents, latents], dim=2)
-                real_history_latents = history_latents[
-                    :, :, -total_generated_latent_frames:
-                ]
+                real_history_latents = history_latents[:, :, -total_generated_latent_frames:]
                 current_latents = (
-                    real_history_latents[:, :, -num_latent_frames_per_chunk:].to(
-                        vae_dtype
-                    )
-                    / latents_std
-                    + latents_mean
+                    real_history_latents[:, :, -num_latent_frames_per_chunk:].to(vae_dtype) / latents_std + latents_mean
                 )
                 current_video = self.vae.decode(current_latents, return_dict=False)[0]
 
@@ -923,9 +827,7 @@ class WorldCrafterPipeline(HeliosPipeline):
 
                 if callback_on_chunk_state is not None:
                     if not isinstance(generator, torch.Generator):
-                        raise TypeError(
-                            "resumable WorldCrafter inference requires one torch.Generator"
-                        )
+                        raise TypeError("resumable WorldCrafter inference requires one torch.Generator")
                     callback_on_chunk_state(
                         k,
                         {
@@ -933,16 +835,8 @@ class WorldCrafterPipeline(HeliosPipeline):
                             "completed_chunk_index": int(k),
                             "next_chunk_index": int(k + 1),
                             "generated_memory_latents": generated_memory_latents.detach().cpu(),
-                            "history_latents": history_latents[
-                                :, :, -sum(history_sizes) :
-                            ]
-                            .detach()
-                            .cpu(),
-                            "image_latents": (
-                                image_latents.detach().cpu()
-                                if image_latents is not None
-                                else None
-                            ),
+                            "history_latents": history_latents[:, :, -sum(history_sizes) :].detach().cpu(),
+                            "image_latents": (image_latents.detach().cpu() if image_latents is not None else None),
                             "generator_state": generator.get_state().cpu(),
                         },
                     )
@@ -963,15 +857,10 @@ class WorldCrafterPipeline(HeliosPipeline):
                 # length rule again would drop valid RGB frames (330 -> 329).
                 generated_frames = history_video.size(2)
                 generated_frames = (
-                    (generated_frames - 1)
-                    // self.vae_scale_factor_temporal
-                    * self.vae_scale_factor_temporal
-                    + 1
-                )
+                    generated_frames - 1
+                ) // self.vae_scale_factor_temporal * self.vae_scale_factor_temporal + 1
                 history_video = history_video[:, :, :generated_frames]
-            video = self.video_processor.postprocess_video(
-                history_video, output_type=output_type
-            )
+            video = self.video_processor.postprocess_video(history_video, output_type=output_type)
         else:
             video = real_history_latents
 

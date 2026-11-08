@@ -25,6 +25,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter impor
 @dataclass(kw_only=True)
 class RavelMapping:
     """Ravel mapping implementation."""
+
     mapping: torch.Tensor  # From i/j_inds to ravel index
     back_mapping: torch.Tensor  # From ravel index to i/j_inds
     n_variables: int
@@ -34,6 +35,7 @@ class RavelMapping:
 @dataclass(kw_only=True)
 class SparseBlockVector:
     """Sparse block vector implementation."""
+
     inds: torch.Tensor
     data: torch.Tensor
 
@@ -92,6 +94,7 @@ class SparseBlockVector:
 @dataclass(kw_only=True)
 class SparseNullVector(SparseBlockVector):
     """Sparse null vector implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__(inds=torch.tensor([]), data=torch.tensor([]).reshape(0, 1))
@@ -118,6 +121,7 @@ SparseVectorDict = dict[str, SparseBlockVector]
 @dataclass
 class SparseVectorSubview:
     """Sparse vector subview implementation."""
+
     vectors: SparseVectorDict
     group_names: list[str]
 

@@ -230,10 +230,7 @@ class Image2PanoramaDemo:
         self.pipe.enable_model_cpu_offload()
         self.pipe.enable_vae_tiling()
 
-        self.general_negative_prompt = (
-            "human, person, people, messy,"
-            "low-quality, blur, noise, low-resolution"
-        )
+        self.general_negative_prompt = "human, person, people, messy,low-quality, blur, noise, low-resolution"
         self.general_positive_prompt = "high-quality,  high-resolution, sharp, clear, 8k"
 
         if self.args.fp8_attention:
@@ -265,20 +262,16 @@ class Image2PanoramaDemo:
             ratio = width_fov / height_fov
             w = int((self.FOV / 360) * self.width)
             h = int(w / ratio)
-            perspective_img = cv2.resize(
-                perspective_img, (w, h), interpolation=cv2.INTER_AREA)
+            perspective_img = cv2.resize(perspective_img, (w, h), interpolation=cv2.INTER_AREA)
         else:
             ratio = height_fov / width_fov
             h = int((self.FOV / 180) * self.height)
             w = int(h / ratio)
-            perspective_img = cv2.resize(
-                perspective_img, (w, h), interpolation=cv2.INTER_AREA)
+            perspective_img = cv2.resize(perspective_img, (w, h), interpolation=cv2.INTER_AREA)
 
-        equ = Perspective(perspective_img, self.FOV,
-                          self.THETA, self.PHI, crop_bound=False)
+        equ = Perspective(perspective_img, self.FOV, self.THETA, self.PHI, crop_bound=False)
         img, mask = equ.GetEquirec(self.height, self.width)
-        mask = cv2.erode(mask.astype(np.uint8), np.ones(
-            (3, 3), np.uint8), iterations=5)
+        mask = cv2.erode(mask.astype(np.uint8), np.ones((3, 3), np.uint8), iterations=5)
 
         img = img * mask
 

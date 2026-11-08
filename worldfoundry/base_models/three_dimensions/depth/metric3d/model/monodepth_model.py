@@ -12,6 +12,7 @@ from .dense_pipeline import BaseDepthModel
 
 class DepthModel(BaseDepthModel):
     """Depth model implementation."""
+
     def __init__(self, cfg, **kwards):
         """Init.
 

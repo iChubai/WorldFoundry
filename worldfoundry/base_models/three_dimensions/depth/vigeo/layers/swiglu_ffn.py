@@ -31,6 +31,7 @@ class SwiGLUFFN(nn.Module):
         hidden = F.silu(x1) * x2
         return self.w3(hidden)
 
+
 class SwiGLUFFNFused(SwiGLUFFN):
     def __init__(
         self,

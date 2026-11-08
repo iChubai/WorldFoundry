@@ -187,7 +187,7 @@ class CameraCausalHead(nn.Module):
         trans_act: str = "linear",
         quat_act: str = "linear",
         fl_act: str = "relu",  # Field of view activations: ensures FOV values are positive.
-        num_iterations = 4,
+        num_iterations=4,
         elementwise_attn_output_gate: bool = False,
         sliding_window_size: int = -1,
         attend_to_scale_frames: bool = False,
@@ -264,7 +264,21 @@ class CameraCausalHead(nn.Module):
         # Build the trunk using a sequence of transformer blocks.
         self.trunk = nn.Sequential(
             *[
-                CameraBlock(dim=dim_in, num_heads=num_heads, mlp_ratio=mlp_ratio, init_values=init_values, elementwise_attn_output_gate=elementwise_attn_output_gate, sliding_window_size=sliding_window_size, attend_to_scale_frames=attend_to_scale_frames, num_random_frames=num_random_frames, kv_cache_sliding_window=kv_cache_sliding_window, kv_cache_scale_frames=kv_cache_scale_frames, kv_cache_cross_frame_special=kv_cache_cross_frame_special, kv_cache_include_scale_frames=kv_cache_include_scale_frames, kv_cache_camera_only=kv_cache_camera_only)
+                CameraBlock(
+                    dim=dim_in,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    init_values=init_values,
+                    elementwise_attn_output_gate=elementwise_attn_output_gate,
+                    sliding_window_size=sliding_window_size,
+                    attend_to_scale_frames=attend_to_scale_frames,
+                    num_random_frames=num_random_frames,
+                    kv_cache_sliding_window=kv_cache_sliding_window,
+                    kv_cache_scale_frames=kv_cache_scale_frames,
+                    kv_cache_cross_frame_special=kv_cache_cross_frame_special,
+                    kv_cache_include_scale_frames=kv_cache_include_scale_frames,
+                    kv_cache_camera_only=kv_cache_camera_only,
+                )
                 for _ in range(trunk_depth)
             ]
         )
@@ -296,7 +310,17 @@ class CameraCausalHead(nn.Module):
         self.kv_cache = None
         self.frame_idx = 0
 
-    def forward(self, aggregated_tokens_list: list, mask=None, num_iterations: int = None, causal_inference=False, num_frame_per_block=1, num_frame_for_scale=-1, sliding_window_size=None, **kwargs) -> list:
+    def forward(
+        self,
+        aggregated_tokens_list: list,
+        mask=None,
+        num_iterations: int = None,
+        causal_inference=False,
+        num_frame_per_block=1,
+        num_frame_for_scale=-1,
+        sliding_window_size=None,
+        **kwargs,
+    ) -> list:
         """
         Forward pass to predict camera parameters.
 
@@ -315,7 +339,9 @@ class CameraCausalHead(nn.Module):
             num_iterations = self.num_iterations
 
         # Use passed sliding_window_size if provided, otherwise use default
-        effective_sliding_window_size = sliding_window_size if sliding_window_size is not None else self.sliding_window_size
+        effective_sliding_window_size = (
+            sliding_window_size if sliding_window_size is not None else self.sliding_window_size
+        )
 
         # Use tokens from the last block for camera prediction.
         tokens = aggregated_tokens_list[-1]
@@ -333,10 +359,25 @@ class CameraCausalHead(nn.Module):
                         self.kv_cache[i][f"k_{j}"] = None
                         self.kv_cache[i][f"v_{j}"] = None
 
-        pred_pose_enc_list = self.trunk_fn(pose_tokens, mask, num_iterations, num_frame_per_block=num_frame_per_block, num_frame_for_scale=num_frame_for_scale, sliding_window_size=effective_sliding_window_size)
+        pred_pose_enc_list = self.trunk_fn(
+            pose_tokens,
+            mask,
+            num_iterations,
+            num_frame_per_block=num_frame_per_block,
+            num_frame_for_scale=num_frame_for_scale,
+            sliding_window_size=effective_sliding_window_size,
+        )
         return pred_pose_enc_list
 
-    def trunk_fn(self, pose_tokens: torch.Tensor, mask=None, num_iterations: int=4, num_frame_per_block=1, num_frame_for_scale=-1, sliding_window_size=None) -> list:
+    def trunk_fn(
+        self,
+        pose_tokens: torch.Tensor,
+        mask=None,
+        num_iterations: int = 4,
+        num_frame_per_block=1,
+        num_frame_for_scale=-1,
+        sliding_window_size=None,
+    ) -> list:
         """
         Iteratively refine camera pose predictions.
 
@@ -354,7 +395,7 @@ class CameraCausalHead(nn.Module):
 
         # Check if this is the first call (processing scale frames)
         # Scale frames should use batch mode attention for numerical consistency
-        is_scale_frames = (self.kv_cache is not None and self.frame_idx == 0)
+        is_scale_frames = self.kv_cache is not None and self.frame_idx == 0
 
         # Generate 3D RoPE positions if enabled
         pos3d = None
@@ -372,10 +413,10 @@ class CameraCausalHead(nn.Module):
                 f_end = None  # Will use ppf as frame count
 
             pos3d = self.rope3d(
-                ppf=S,                  # Total frames
-                pph=1,                  # height = 1 (camera token)
-                ppw=1,                  # width = 1 (camera token)
-                patch_start_idx=0,      # No special tokens before
+                ppf=S,  # Total frames
+                pph=1,  # height = 1 (camera token)
+                ppw=1,  # width = 1 (camera token)
+                patch_start_idx=0,  # No special tokens before
                 device=pose_tokens.device,
                 f_start=f_start,
                 f_end=f_end,
@@ -398,7 +439,20 @@ class CameraCausalHead(nn.Module):
             pose_tokens_modulated = pose_tokens_modulated + pose_tokens
 
             for idx in range(self.trunk_depth):
-                pose_tokens_modulated = self.trunk[idx](pose_tokens_modulated, pos=pos3d, video_mask=mask, num_frames=S, frame_seqlen=1, kv_cache=self.kv_cache[i] if self.kv_cache is not None else None, global_idx=idx, num_frame_per_block=num_frame_per_block, num_frame_for_scale=num_frame_for_scale, sliding_window_size=sliding_window_size, enable_3d_rope=self.enable_3d_rope, is_scale_frames=is_scale_frames)
+                pose_tokens_modulated = self.trunk[idx](
+                    pose_tokens_modulated,
+                    pos=pos3d,
+                    video_mask=mask,
+                    num_frames=S,
+                    frame_seqlen=1,
+                    kv_cache=self.kv_cache[i] if self.kv_cache is not None else None,
+                    global_idx=idx,
+                    num_frame_per_block=num_frame_per_block,
+                    num_frame_for_scale=num_frame_for_scale,
+                    sliding_window_size=sliding_window_size,
+                    enable_3d_rope=self.enable_3d_rope,
+                    is_scale_frames=is_scale_frames,
+                )
             # Compute the delta update for the pose encoding.
             pred_pose_enc_delta = self.pose_branch(self.trunk_norm(pose_tokens_modulated))
 
@@ -428,10 +482,9 @@ def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor) -> torch
     return x * (1 + scale) + shift
 
 
-
-
 class CameraDecoder(nn.Module):
     """Camera decoder implementation."""
+
     def __init__(
         self,
         in_dim,
@@ -462,23 +515,27 @@ class CameraDecoder(nn.Module):
         self.projects = nn.Linear(in_dim, dec_embed_dim) if need_project else nn.Identity()
         self.use_checkpoint = use_checkpoint
 
-        self.blocks = nn.ModuleList([
-            Block(
-                dim=dec_embed_dim,
-                num_heads=dec_num_heads,
-                mlp_ratio=mlp_ratio,
-                qkv_bias=True,
-                proj_bias=True,
-                ffn_bias=True,
-                drop_path=0.0,
-                norm_layer=partial(nn.LayerNorm, eps=1e-6),
-                act_layer=nn.GELU,
-                ffn_layer=Mlp,
-                init_values=None,
-                qk_norm=False,
-                # attn_class=MemEffAttentionRope,
-                rope=rope
-            ) for _ in range(depth)])
+        self.blocks = nn.ModuleList(
+            [
+                Block(
+                    dim=dec_embed_dim,
+                    num_heads=dec_num_heads,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=True,
+                    proj_bias=True,
+                    ffn_bias=True,
+                    drop_path=0.0,
+                    norm_layer=partial(nn.LayerNorm, eps=1e-6),
+                    act_layer=nn.GELU,
+                    ffn_layer=Mlp,
+                    init_values=None,
+                    qk_norm=False,
+                    # attn_class=MemEffAttentionRope,
+                    rope=rope,
+                )
+                for _ in range(depth)
+            ]
+        )
 
         self.linear_out = nn.Linear(dec_embed_dim, out_dim)
 
@@ -491,12 +548,12 @@ class CameraDecoder(nn.Module):
         """
         hidden = self.projects(hidden)
         B, V, P, C = hidden.shape
-        hidden = hidden.view(hidden.shape[0]*hidden.shape[1], hidden.shape[2], hidden.shape[3])
+        hidden = hidden.view(hidden.shape[0] * hidden.shape[1], hidden.shape[2], hidden.shape[3])
         for i, blk in enumerate(self.blocks):
             if self.use_checkpoint and self.training:
                 hidden = checkpoint(blk, hidden, pos=xpos, use_reentrant=False)
             else:
                 hidden = blk(hidden, pos=xpos)
         out = self.linear_out(hidden).view(B, V, P, -1)
-        
+
         return out

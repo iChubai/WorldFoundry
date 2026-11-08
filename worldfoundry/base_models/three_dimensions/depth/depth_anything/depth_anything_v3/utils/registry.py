@@ -21,6 +21,7 @@ from addict import Dict as AttrDict
 
 class Registry(dict[str, Any]):
     """Registry implementation."""
+
     def __init__(self):
         """Init."""
         super().__init__()
@@ -32,6 +33,7 @@ class Registry(dict[str, Any]):
         Args:
             name: The name.
         """
+
         def decorator(cls):
             """Decorator."""
             key = name or cls.__name__

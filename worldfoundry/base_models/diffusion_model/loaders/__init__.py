@@ -36,6 +36,7 @@ def __getattr__(name):
     globals()[name] = value
     return value
 
+
 __all__ = [
     "CheckpointSpec",
     "CheckpointConfigResolver",

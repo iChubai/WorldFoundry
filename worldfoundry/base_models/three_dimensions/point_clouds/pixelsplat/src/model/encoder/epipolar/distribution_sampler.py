@@ -12,6 +12,7 @@ from ....misc.discrete_probability_distribution import (
 
 class DistributionSampler:
     """Distribution sampler implementation."""
+
     def sample(
         self,
         pdf: Float[Tensor, "*batch bucket"],

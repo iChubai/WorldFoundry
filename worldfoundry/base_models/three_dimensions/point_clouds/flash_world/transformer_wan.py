@@ -45,6 +45,7 @@ try:
     if _disable_sageattention:
         raise ImportError("disabled by WORLDFOUNDRY_DISABLE_SAGEATTENTION")
     from sageattention import sageattn
+
     print("SageAttention is available")
 except ImportError as exc:
     sageattn = None
@@ -55,8 +56,10 @@ except ImportError as exc:
 
 # sageattn = None
 
+
 class FP32LayerNorm(nn.LayerNorm):
     """Layer norm implementation."""
+
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """Forward.
 
@@ -73,11 +76,14 @@ class FP32LayerNorm(nn.LayerNorm):
             self.bias if self.bias is not None else None,
             self.eps,
         ).to(inputs.dtype)
-    
+
+
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
+
 
 class WanAttnProcessor2_0:
     """Wan attn processor implementation."""
+
     def __init__(self):
         """Init."""
         if not hasattr(F, "scaled_dot_product_attention"):
@@ -168,14 +174,12 @@ class WanAttnProcessor2_0:
                     query = query.to(target_dtype)
                     key_img = key_img.to(target_dtype)
                     value_img = value_img.to(target_dtype)
-                hidden_states_img = sageattn(
-                    query, key_img, value_img, attn_mask=None, dropout_p=0.0, is_causal=False
-                )
+                hidden_states_img = sageattn(query, key_img, value_img, attn_mask=None, dropout_p=0.0, is_causal=False)
             else:
                 hidden_states_img = _worldfoundry_scaled_dot_product_attention(
                     query, key_img, value_img, attn_mask=None, dropout_p=0.0, is_causal=False
                 )
-            
+
             hidden_states_img = hidden_states_img.transpose(1, 2).flatten(2, 3)
             hidden_states_img = hidden_states_img.type_as(query)
 
@@ -187,14 +191,12 @@ class WanAttnProcessor2_0:
                 query = query.to(target_dtype)
                 key = key.to(target_dtype)
                 value = value.to(target_dtype)
-            hidden_states = sageattn(
-                query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
-            )
+            hidden_states = sageattn(query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False)
         else:
             hidden_states = _worldfoundry_scaled_dot_product_attention(
                 query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
             )
-        
+
         hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
         hidden_states = hidden_states.type_as(query)
 
@@ -208,6 +210,7 @@ class WanAttnProcessor2_0:
 
 class WanImageEmbedding(torch.nn.Module):
     """Wan image embedding implementation."""
+
     def __init__(self, in_features: int, out_features: int, pos_embed_seq_len=None):
         """Init.
 
@@ -248,6 +251,7 @@ class WanImageEmbedding(torch.nn.Module):
 
 class WanTimeTextImageEmbedding(nn.Module):
     """Wan time text image embedding implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -313,6 +317,7 @@ class WanTimeTextImageEmbedding(nn.Module):
 
 class WanRotaryPosEmbed(nn.Module):
     """Wan rotary pos embed implementation."""
+
     def __init__(
         self,
         attention_head_dim: int,
@@ -395,6 +400,7 @@ class WanRotaryPosEmbed(nn.Module):
 @maybe_allow_in_graph
 class WanTransformerBlock(nn.Module):
     """Wan transformer block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -495,7 +501,7 @@ class WanTransformerBlock(nn.Module):
         # print(hidden_states.dtype)
 
         # 1. Self-attention
-        norm_hidden_states = (self.norm1(hidden_states).mul_(1 + scale_msa).add_(shift_msa))
+        norm_hidden_states = self.norm1(hidden_states).mul_(1 + scale_msa).add_(shift_msa)
         attn_output = self.attn1(hidden_states=norm_hidden_states, rotary_emb=rotary_emb)
         hidden_states += attn_output.mul_(gate_msa)
         # hidden_states = hidden_states.type_as(hidden_states)
@@ -510,7 +516,7 @@ class WanTransformerBlock(nn.Module):
         # print(hidden_states.dtype)
 
         # 3. Feed-forward
-        norm_hidden_states = (self.norm3(hidden_states).mul_(1 + c_scale_msa).add_(c_shift_msa))
+        norm_hidden_states = self.norm3(hidden_states).mul_(1 + c_scale_msa).add_(c_shift_msa)
         ff_output = self.ffn(norm_hidden_states)
         hidden_states += ff_output.mul_(c_gate_msa)
         # hidden_states = hidden_states.type_as(hidden_states)
@@ -675,9 +681,7 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
             scale_lora_layers(self, lora_scale)
         else:
             if attention_kwargs is not None and attention_kwargs.get("scale", None) is not None:
-                logger.warning(
-                    "Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective."
-                )
+                logger.warning("Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective.")
 
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
         p_t, p_h, p_w = self.config.patch_size

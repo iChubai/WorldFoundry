@@ -252,7 +252,8 @@ class ResidentMegaSamPipeline:
         checkpoint = self.droid_checkpoint
         net = DroidNet()
         state_dict = OrderedDict(
-            (key.replace("module.", ""), value) for key, value in self.torch.load(checkpoint, map_location="cpu", weights_only=True).items()
+            (key.replace("module.", ""), value)
+            for key, value in self.torch.load(checkpoint, map_location="cpu", weights_only=True).items()
         )
         for key in (
             "update.weight.2.weight",
@@ -352,8 +353,13 @@ class ResidentMegaSamPipeline:
 
         try:
             run_tracking(
-                frames_dir, mono_root, metric_root, scene_name, output,
-                buffer_size=buffer_size, droid_factory=resident_droid,
+                frames_dir,
+                mono_root,
+                metric_root,
+                scene_name,
+                output,
+                buffer_size=buffer_size,
+                droid_factory=resident_droid,
             )
         finally:
             gc.collect()

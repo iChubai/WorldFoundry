@@ -788,7 +788,14 @@ class SanaMSVideo(Sana):
             raise ValueError(f"Attention type is not available due to _xformers_available={_xformers_available}.")
 
         x = run_sana_blocks(
-            self.blocks, x, y, t0, y_lens, (self.f, self.h, self.w), image_pos_embed, **kwargs,
+            self.blocks,
+            x,
+            y,
+            t0,
+            y_lens,
+            (self.f, self.h, self.w),
+            image_pos_embed,
+            **kwargs,
         )
 
         x = self.final_layer(x, t)  # (N, T, patch_size ** 2 * out_channels)

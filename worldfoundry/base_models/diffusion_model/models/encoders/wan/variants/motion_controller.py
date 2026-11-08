@@ -16,9 +16,9 @@ import torch.nn as nn
 from worldfoundry.core.nn import sinusoidal_embedding_1d
 
 
-
 class WanMotionControllerModel(torch.nn.Module):
     """Wan motion controller model implementation."""
+
     def __init__(self, freq_dim=256, dim=1536):
         """Init.
 
@@ -56,11 +56,11 @@ class WanMotionControllerModel(torch.nn.Module):
     def state_dict_converter():
         """State dict converter."""
         return WanMotionControllerModelDictConverter()
-    
-    
+
 
 class WanMotionControllerModelDictConverter:
     """Wan motion controller model dict converter implementation."""
+
     def __init__(self):
         """Init."""
         pass
@@ -72,7 +72,7 @@ class WanMotionControllerModelDictConverter:
             state_dict: The state dict.
         """
         return state_dict
-    
+
     def from_civitai(self, state_dict):
         """From civitai.
 

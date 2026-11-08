@@ -6,7 +6,9 @@
 
 import torch
 
-from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker_utils.models.core.cotracker.cotracker import CoTracker
+from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker_utils.models.core.cotracker.cotracker import (
+    CoTracker,
+)
 
 
 def build_cotracker(

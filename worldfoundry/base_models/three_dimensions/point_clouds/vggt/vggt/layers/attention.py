@@ -23,6 +23,7 @@ XFORMERS_AVAILABLE = False
 
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -88,7 +89,9 @@ class Attention(nn.Module):
             k = self.rope(k, pos)
 
         if self.fused_attn:
-            x = _worldfoundry_scaled_dot_product_attention(q, k, v, dropout_p=self.attn_drop.p if self.training else 0.0)
+            x = _worldfoundry_scaled_dot_product_attention(
+                q, k, v, dropout_p=self.attn_drop.p if self.training else 0.0
+            )
         else:
             q = q * self.scale
             attn = q @ k.transpose(-2, -1)
@@ -104,6 +107,7 @@ class Attention(nn.Module):
 
 class MemEffAttention(Attention):
     """Mem eff attention implementation."""
+
     def forward(self, x: Tensor, attn_bias=None, pos=None) -> Tensor:
         """Forward.
 

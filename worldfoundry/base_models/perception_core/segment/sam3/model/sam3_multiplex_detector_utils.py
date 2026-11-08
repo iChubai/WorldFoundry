@@ -49,13 +49,9 @@ def nms_masks(
             fullgraph=True,
             # dynamic=False,
         )
-        return compiled_fn(
-            pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom
-        )
+        return compiled_fn(pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom)
     else:
-        return _nms_masks_core(
-            pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom
-        )
+        return _nms_masks_core(pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom)
 
 
 def _nms_masks_core(
@@ -78,14 +74,10 @@ def _nms_masks_core(
     is_batched = pred_probs.dim() == 2
 
     if is_batched:
-        return _nms_masks_core_batched(
-            pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom
-        )
+        return _nms_masks_core_batched(pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom)
     else:
         # Single-frame input: use original logic
-        return _nms_masks_core_single(
-            pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom
-        )
+        return _nms_masks_core_single(pred_probs, pred_masks, prob_threshold, iou_threshold, nms_use_iom)
 
 
 def _nms_masks_core_batched(
@@ -226,9 +218,7 @@ def _batched_generic_nms_mask(
     for i in range(N):
         # For each position i, suppress later detections with high overlap
         # Only suppress if current detection is kept
-        suppress = (
-            threshold_mask[:, i, :] & triu[i].unsqueeze(0) & keep[:, i].unsqueeze(1)
-        )
+        suppress = threshold_mask[:, i, :] & triu[i].unsqueeze(0) & keep[:, i].unsqueeze(1)
         keep = keep & ~suppress
 
     # Return keep mask in original order: (B, N)
@@ -292,9 +282,7 @@ def _nms_masks_core_single(
     return keep
 
 
-def generic_nms_cpu(
-    ious: torch.Tensor, scores: torch.Tensor, iou_threshold=0.5
-) -> torch.Tensor:
+def generic_nms_cpu(ious: torch.Tensor, scores: torch.Tensor, iou_threshold=0.5) -> torch.Tensor:
     """
     A generic version of `torchvision.ops.nms` that takes a pairwise IoU matrix. (CPU implementation
     based on https://github.com/jwyang/faster-rcnn.pytorch/blob/master/lib/model/nms/nms_cpu.py)

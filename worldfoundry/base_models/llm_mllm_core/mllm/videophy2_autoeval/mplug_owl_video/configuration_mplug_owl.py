@@ -12,7 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" MplugOwl model configuration """
+"""MplugOwl model configuration"""
+
 import copy
 import os
 from typing import Union
@@ -217,6 +218,7 @@ class MplugOwlConfig(PretrainedConfig):
 
     >>> config = MplugOwlConfig.from_text_vision_configs(vision_config, visual_abstractor_config, text_config)
     ```"""
+
     model_type = "mplug-owl"
     is_composition = True
 

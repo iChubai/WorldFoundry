@@ -65,6 +65,7 @@ def pos_interpolate(pos, seq_len):
 
 class QuickGELU(nn.Module):
     """Quick gelu implementation."""
+
     def forward(self, x):
         """Forward.
 
@@ -76,6 +77,7 @@ class QuickGELU(nn.Module):
 
 class LayerNorm(nn.LayerNorm):
     """Layer norm implementation."""
+
     def forward(self, x):
         """Forward.
 
@@ -87,6 +89,7 @@ class LayerNorm(nn.LayerNorm):
 
 class SelfAttention(nn.Module):
     """Self attention implementation."""
+
     def __init__(self, dim, num_heads, causal=False, attn_dropout=0.0, proj_dropout=0.0):
         """Init.
 
@@ -132,6 +135,7 @@ class SelfAttention(nn.Module):
 
 class SwiGLU(nn.Module):
     """Swi glu implementation."""
+
     def __init__(self, dim, mid_dim):
         """Init.
 
@@ -161,6 +165,7 @@ class SwiGLU(nn.Module):
 
 class AttentionBlock(nn.Module):
     """Attention block implementation."""
+
     def __init__(
         self,
         dim,
@@ -226,6 +231,7 @@ class AttentionBlock(nn.Module):
 
 class AttentionPool(nn.Module):
     """Attention pool implementation."""
+
     def __init__(self, dim, mlp_ratio, num_heads, activation="gelu", proj_dropout=0.0, norm_eps=1e-5):
         """Init.
 
@@ -285,6 +291,7 @@ class AttentionPool(nn.Module):
 
 class VisionTransformer(nn.Module):
     """Vision transformer implementation."""
+
     def __init__(
         self,
         image_size=224,
@@ -402,6 +409,7 @@ class VisionTransformer(nn.Module):
 
 class XLMRobertaWithHead(XLMRoberta):
     """Xlm roberta with head implementation."""
+
     def __init__(self, **kwargs):
         """Init."""
         self.out_dim = kwargs.pop("out_dim")
@@ -433,6 +441,7 @@ class XLMRobertaWithHead(XLMRoberta):
 
 class XLMRobertaCLIP(nn.Module):
     """Xlm roberta clip implementation."""
+
     def __init__(
         self,
         embed_dim=1024,
@@ -653,6 +662,7 @@ def clip_xlm_roberta_vit_h_14(pretrained=False, pretrained_name="open-clip-xlm-r
 
 class CLIPModel:
     """Clip model implementation."""
+
     def __init__(self, dtype, device, checkpoint_path, tokenizer_path):
         """Init.
 

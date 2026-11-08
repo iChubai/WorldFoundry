@@ -37,6 +37,7 @@ from .utils.amg import (
 
 class SamAutomaticMaskGenerator:
     """Sam automatic mask generator implementation."""
+
     def __init__(
         self,
         model: Sam,
@@ -99,9 +100,9 @@ class SamAutomaticMaskGenerator:
             memory.
         """
 
-        assert (points_per_side is None) != (
-            point_grids is None
-        ), "Exactly one of points_per_side or point_grid must be provided."
+        assert (points_per_side is None) != (point_grids is None), (
+            "Exactly one of points_per_side or point_grid must be provided."
+        )
         if points_per_side is not None:
             self.point_grids = build_all_layer_point_grids(
                 points_per_side,
@@ -208,9 +209,7 @@ class SamAutomaticMaskGenerator:
             The return value.
         """
         orig_size = image.shape[:2]
-        crop_boxes, layer_idxs = generate_crop_boxes(
-            orig_size, self.crop_n_layers, self.crop_overlap_ratio
-        )
+        crop_boxes, layer_idxs = generate_crop_boxes(orig_size, self.crop_n_layers, self.crop_overlap_ratio)
 
         # Iterate over image crops
         data = MaskData()
@@ -355,9 +354,7 @@ class SamAutomaticMaskGenerator:
         return data
 
     @staticmethod
-    def postprocess_small_regions(
-        mask_data: MaskData, min_area: int, nms_thresh: float
-    ) -> MaskData:
+    def postprocess_small_regions(mask_data: MaskData, min_area: int, nms_thresh: float) -> MaskData:
         """
         Removes small disconnected regions and holes in masks, then reruns
         box NMS to remove any new duplicates.

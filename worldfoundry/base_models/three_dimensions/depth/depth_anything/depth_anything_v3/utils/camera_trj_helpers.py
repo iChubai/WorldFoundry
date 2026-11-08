@@ -27,7 +27,9 @@ except ImportError:
 
     logger.warn("Dependency 'scipy' not found. Required for interpolating camera trajectory.")
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import as_homogeneous
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    as_homogeneous,
+)
 
 
 @torch.no_grad()
@@ -61,9 +63,7 @@ def render_stabilization_path(poses, k_size=45):
 
     input_poses = []
     for i in range(num_frames):
-        input_poses.append(
-            torch.cat([poses[i, :3, 0:1], poses[i, :3, 1:2], poses[i, :3, 3:4]], dim=-1)
-        )
+        input_poses.append(torch.cat([poses[i, :3, 0:1], poses[i, :3, 1:2], poses[i, :3, 3:4]], dim=-1))
     input_poses = torch.stack(input_poses)  # (num_frames, 3, 3)
 
     # Prepare Gaussian kernel
@@ -73,9 +73,7 @@ def render_stabilization_path(poses, k_size=45):
 
     output_vectors = []
     for idx in range(3):  # For r1, r2, t
-        vec = (
-            input_poses[:, :, idx].T.unsqueeze(0).unsqueeze(0)
-        )  # (1, 1, 3, num_frames) -> (1, 1, 3, num_frames)
+        vec = input_poses[:, :, idx].T.unsqueeze(0).unsqueeze(0)  # (1, 1, 3, num_frames) -> (1, 1, 3, num_frames)
         # But actually, we want (batch=3, channel=1, width=num_frames)
         # So:
         vec = input_poses[:, :, idx].T.unsqueeze(1)  # (3, 1, num_frames)
@@ -524,9 +522,7 @@ def generate_wobble_transformation(
 
 
 @torch.no_grad()
-def render_wobble_inter_path(
-    cam2world: torch.Tensor, intr_normed: torch.Tensor, inter_len: int, n_skip: int = 3
-):
+def render_wobble_inter_path(cam2world: torch.Tensor, intr_normed: torch.Tensor, inter_len: int, n_skip: int = 3):
     """
     cam2world: [batch, 4, 4],
     intr_normed: [batch, 3, 3]

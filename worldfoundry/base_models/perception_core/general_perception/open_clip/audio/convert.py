@@ -79,8 +79,8 @@ def _map_audio_block_key(key: str) -> str:
 
 
 def _convert_hf_clap_qkv(
-        state_dict: Mapping[str, torch.Tensor],
-        output: MutableMapping[str, torch.Tensor],
+    state_dict: Mapping[str, torch.Tensor],
+    output: MutableMapping[str, torch.Tensor],
 ) -> None:
     """Helper function to convert hf clap qkv.
 

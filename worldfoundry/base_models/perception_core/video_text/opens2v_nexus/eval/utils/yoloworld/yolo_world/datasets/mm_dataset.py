@@ -27,9 +27,7 @@ class MultiModalDataset:
         elif isinstance(dataset, BaseDataset):
             self.dataset = dataset
         else:
-            raise TypeError(
-                f"dataset must be a dict or a BaseDataset, but got {dataset}"
-            )
+            raise TypeError(f"dataset must be a dict or a BaseDataset, but got {dataset}")
 
         if class_text_path is not None:
             self.class_texts = json.load(open(class_text_path, "r"))

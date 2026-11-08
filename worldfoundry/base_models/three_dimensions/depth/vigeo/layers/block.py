@@ -30,6 +30,7 @@ try:
 except ImportError:
     XFORMERS_AVAILABLE = False
 
+
 class Block(nn.Module):
     def __init__(
         self,
@@ -78,22 +79,35 @@ class Block(nn.Module):
 
         self.sample_drop_ratio = drop_path
 
-    def forward(self, x: Tensor, pos=None, attn_mask=None, segment_lengths=None, use_cache=False, past_key_value=None,
-                cache_budget=None, tokens_per_frame=None):
+    def forward(
+        self,
+        x: Tensor,
+        pos=None,
+        attn_mask=None,
+        segment_lengths=None,
+        use_cache=False,
+        past_key_value=None,
+        cache_budget=None,
+        tokens_per_frame=None,
+    ):
         current_kv = None
         scores = None
+
         def attn_residual_func(x: Tensor, pos=pos, attn_mask=attn_mask, segment_lengths=segment_lengths) -> Tensor:
             nonlocal current_kv, scores
             if use_cache:
                 attn_out, current_kv, scores = self.attn(
-                    self.norm1(x), pos=pos, use_cache=True, past_key_value=past_key_value,
-                    cache_budget=cache_budget, tokens_per_frame=tokens_per_frame
+                    self.norm1(x),
+                    pos=pos,
+                    use_cache=True,
+                    past_key_value=past_key_value,
+                    cache_budget=cache_budget,
+                    tokens_per_frame=tokens_per_frame,
                 )
                 return self.ls1(attn_out)
             else:
-                return self.ls1(self.attn(
-                    self.norm1(x), pos=pos, attn_mask=attn_mask, segment_lengths=segment_lengths
-                ))
+                return self.ls1(self.attn(self.norm1(x), pos=pos, attn_mask=attn_mask, segment_lengths=segment_lengths))
+
         def ffn_residual_func(x: Tensor) -> Tensor:
             return self.ls2(self.mlp(self.norm2(x)))
 
@@ -101,18 +115,20 @@ class Block(nn.Module):
         x = x + ffn_residual_func(x)
         return (x, current_kv, scores) if use_cache else x
 
+
 class NestedTensorBlock(Block):
     def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
         """
         assert isinstance(self.attn, MemEffAttention)
+
         def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
             return self.ls1(self.attn(self.norm1(x), attn_bias=attn_bias))
 
         def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
             return self.ls2(self.mlp(self.norm2(x)))
-            
+
         attn_bias, x = get_attn_bias_and_cat(x_list)
         x = x + attn_residual_func(x, attn_bias=attn_bias)
         x = x + ffn_residual_func(x)
@@ -128,7 +144,9 @@ class NestedTensorBlock(Block):
         else:
             raise AssertionError
 
+
 attn_bias_cache: dict[tuple, Any] = {}
+
 
 def get_attn_bias_and_cat(x_list, branges=None):
     """

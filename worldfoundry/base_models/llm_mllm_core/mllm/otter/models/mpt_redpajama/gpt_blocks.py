@@ -39,7 +39,7 @@ class GPTBlock(nn.Module):
         resid_pdrop: float = 0.0,
         low_precision_layernorm: bool = False,
         device: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         del kwargs  # unused, just to capture any extra args from the config
         super().__init__()

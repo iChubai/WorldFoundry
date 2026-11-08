@@ -1,4 +1,5 @@
 """A HuggingFace-style model configuration."""
+
 from typing import Dict, Optional, Union
 from transformers import PretrainedConfig
 
@@ -151,7 +152,9 @@ class MPTConfig(PretrainedConfig):
                 ]
             )
         ):
-            raise ValueError("self.attn_config['attn_pdrop'], resid_pdrop, emb_pdrop are probabilities and must be between 0 and 1")
+            raise ValueError(
+                "self.attn_config['attn_pdrop'], resid_pdrop, emb_pdrop are probabilities and must be between 0 and 1"
+            )
         if self.attn_config["attn_impl"] not in ["torch", "flash", "triton"]:
             raise ValueError(f"Unknown attn_impl={self.attn_config['attn_impl']}")
         if self.attn_config["prefix_lm"] and self.attn_config["attn_impl"] not in [
@@ -169,8 +172,12 @@ class MPTConfig(PretrainedConfig):
         if self.embedding_fraction > 1 or self.embedding_fraction <= 0:
             raise ValueError("model.embedding_fraction must be between 0 (exclusive) and 1 (inclusive)!")
         if isinstance(self.logit_scale, str) and self.logit_scale != "inv_sqrt_d_model":
-            raise ValueError(f"self.logit_scale={self.logit_scale!r} is not recognized as an option; use numeric value or 'inv_sqrt_d_model'.")
+            raise ValueError(
+                f"self.logit_scale={self.logit_scale!r} is not recognized as an option; use numeric value or 'inv_sqrt_d_model'."
+            )
         if self.init_config.get("name", None) is None:
             raise ValueError(f"self.init_config={self.init_config!r} 'name' needs to be set.")
         if not self.learned_pos_emb and (not self.attn_config["alibi"]):
-            raise ValueError(f"Positional information must be provided to the model using either learned_pos_emb or alibi.")
+            raise ValueError(
+                f"Positional information must be provided to the model using either learned_pos_emb or alibi."
+            )

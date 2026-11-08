@@ -24,6 +24,7 @@ from worldfoundry.core.nn import ModuleDeviceDtypeMixin
 
 class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
     """Fun-Control name for the canonical Wan CLIP encoder."""
+
     def __init__(self) -> None:
         super().__init__()
         self.model, self.transforms = clip_xlm_roberta_vit_h_14(
@@ -71,8 +72,7 @@ class CLIPModel(ModuleDeviceDtypeMixin, nn.Module):
             torch_dtype=torch.float32,
             device="cpu",
             state_dict_converter=lambda state: {
-                (key if key.startswith("model.") else f"model.{key}"): value
-                for key, value in state.items()
+                (key if key.startswith("model.") else f"model.{key}"): value for key, value in state.items()
             },
         )
 

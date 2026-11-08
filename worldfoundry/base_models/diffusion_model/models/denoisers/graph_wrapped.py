@@ -122,14 +122,10 @@ def resolve_teacache_threshold(context: Any) -> float | None:
     builds never cache (``validate_runtime_policy_for_purpose`` forbids the key).
     """
 
-    raw = context.component_options.get(
-        "teacache", context.policy.options.get("teacache", None)
-    )
+    raw = context.component_options.get("teacache", context.policy.options.get("teacache", None))
     if raw is None or raw is False:
         return None
-    thresh = context.component_options.get(
-        "teacache_thresh", context.policy.options.get("teacache_thresh", None)
-    )
+    thresh = context.component_options.get("teacache_thresh", context.policy.options.get("teacache_thresh", None))
     if thresh is not None:
         return float(thresh)
     if raw is True:
@@ -244,8 +240,7 @@ class FeatureCacheDenoiserMixin:
                         (
                             candidate
                             for candidate in requests.values()
-                            if bool(candidate.get("complete"))
-                            and candidate.get("request_id") != request_id
+                            if bool(candidate.get("complete")) and candidate.get("request_id") != request_id
                         ),
                         key=lambda candidate: int(candidate["request_epoch"]),
                     )
@@ -284,9 +279,7 @@ class FeatureCacheDenoiserMixin:
             cache = caches.get(branch)
             if cache is None:
                 if step != 0:
-                    raise ValueError(
-                        "a request-local feature-cache branch must begin at step 0"
-                    )
+                    raise ValueError("a request-local feature-cache branch must begin at step 0")
                 if config is None:
                     # Backwards-compatible direct-constructor path used by
                     # older callers. Public builds use calibrated config.
@@ -321,14 +314,10 @@ class FeatureCacheDenoiserMixin:
                         raise ValueError("EasyCache branch steps must be unique and contiguous")
                     reset = getattr(cache, "reset", None)
                     if not callable(reset):
-                        raise TypeError(
-                            "request-local feature cache must implement reset()"
-                        )
+                        raise TypeError("request-local feature cache must implement reset()")
                     reset()
                 elif previous_step is None or step != int(previous_step) + 1:
-                    raise ValueError(
-                        "feature-cache branch steps must be unique and contiguous"
-                    )
+                    raise ValueError("feature-cache branch steps must be unique and contiguous")
             if getattr(cache, "algorithm", None) == "easycache":
                 cache.observe_conditioning(model_input.conditioning)
             state["branch_steps"][branch] = step
@@ -346,11 +335,7 @@ class FeatureCacheDenoiserMixin:
         config = getattr(self, "_feature_cache_config", None)
         threshold = getattr(self, "_teacache_threshold", None)
         enabled = config is not None or threshold is not None
-        algorithm = (
-            str(config.algorithm)
-            if config is not None
-            else ("adaptive-residual-legacy" if enabled else "none")
-        )
+        algorithm = str(config.algorithm) if config is not None else ("adaptive-residual-legacy" if enabled else "none")
         branches: dict[str, dict[str, Any]] = {}
         total_hits = 0
         total_events = 0
@@ -358,15 +343,9 @@ class FeatureCacheDenoiserMixin:
         total_skipped_block_calls = 0
         if request_id is None:
             request_id = self._feature_cache_context_var().get()
-        state = (
-            self._feature_request_state(request_id, create=False)
-            if isinstance(request_id, str)
-            else None
-        )
+        state = self._feature_request_state(request_id, create=False) if isinstance(request_id, str) else None
         if state is None and isinstance(request_id, str):
-            encoded = self.__dict__.get("_feature_cache_receipt_snapshots", {}).get(
-                request_id
-            )
+            encoded = self.__dict__.get("_feature_cache_receipt_snapshots", {}).get(request_id)
             if isinstance(encoded, str):
                 decoded = json.loads(encoded)
                 if not isinstance(decoded, dict):
@@ -389,11 +368,7 @@ class FeatureCacheDenoiserMixin:
                 receipt = None
             dense_block_calls = getattr(cache, "dense_block_calls", 0)
             skipped_block_calls = getattr(cache, "skipped_block_calls", 0)
-            if (
-                isinstance(dense_block_calls, bool)
-                or not isinstance(dense_block_calls, int)
-                or dense_block_calls < 0
-            ):
+            if isinstance(dense_block_calls, bool) or not isinstance(dense_block_calls, int) or dense_block_calls < 0:
                 dense_block_calls = 0
             if (
                 isinstance(skipped_block_calls, bool)
@@ -447,10 +422,7 @@ class FeatureCacheDenoiserMixin:
             "request_epoch": request_epoch,
             "request_local": state is not None
             and bool(branches)
-            and all(
-                    bool(branch_report.get("request_local"))
-                    for branch_report in branches.values()
-                ),
+            and all(bool(branch_report.get("request_local")) for branch_report in branches.values()),
             "effective": effective,
             "events": total_events,
             "hits": total_hits,
@@ -508,12 +480,8 @@ class FeatureCacheDenoiserMixin:
 
         with self._feature_cache_lock():
             return {
-                "live_requests": len(
-                    self.__dict__.get("_feature_cache_requests", {})
-                ),
-                "receipt_snapshots": len(
-                    self.__dict__.get("_feature_cache_receipt_snapshots", {})
-                ),
+                "live_requests": len(self.__dict__.get("_feature_cache_requests", {})),
+                "receipt_snapshots": len(self.__dict__.get("_feature_cache_receipt_snapshots", {})),
                 "max_receipt_snapshots": 32,
             }
 
@@ -531,9 +499,7 @@ class GraphWrappedDenoiserMixin:
     _graph_runner: InferenceCUDAGraphRunner | None = None
 
     def _init_graph_runner(self, model: Any, *, enabled: bool, extra_key: str) -> None:
-        self._graph_runner = (
-            InferenceCUDAGraphRunner(model, extra_key=extra_key) if enabled else None
-        )
+        self._graph_runner = InferenceCUDAGraphRunner(model, extra_key=extra_key) if enabled else None
         register_acceleration_runtime(model, self)
 
     @contextmanager

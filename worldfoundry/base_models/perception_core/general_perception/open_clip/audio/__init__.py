@@ -18,9 +18,7 @@ def require_audio():
     """Require audio."""
     missing = [package for module, package in _AUDIO_DEPS.items() if importlib.util.find_spec(module) is None]
     if missing:
-        raise RuntimeError(
-            "CLAP audio support requires optional audio dependencies: " + ", ".join(missing)
-        )
+        raise RuntimeError("CLAP audio support requires optional audio dependencies: " + ", ".join(missing))
 
 
 __all__ = [

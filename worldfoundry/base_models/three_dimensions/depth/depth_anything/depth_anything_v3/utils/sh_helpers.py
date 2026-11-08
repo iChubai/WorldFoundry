@@ -80,9 +80,7 @@ def rotate_sh(
     """
     # https://github.com/graphdeco-inria/gaussian-splatting/issues/176#issuecomment-2452412653
     if matrix_to_angles is None or wigner_D is None:
-        raise ImportError(
-            "DepthAnything3 Gaussian SH rotation requires the optional dependency `e3nn`."
-        )
+        raise ImportError("DepthAnything3 Gaussian SH rotation requires the optional dependency `e3nn`.")
     device = sh_coefficients.device
     dtype = sh_coefficients.dtype
 

@@ -10,7 +10,6 @@ def build_model():
 
 
 def detect_face(face_detector, img, align=True):
-
     resp = []
 
     detected_face = None
@@ -20,7 +19,6 @@ def detect_face(face_detector, img, align=True):
     detections = face_detector.detect_faces(img_rgb)
 
     if len(detections) > 0:
-
         for detection in detections:
             x, y, w, h = detection["box"]
             detected_face = img[int(y) : int(y + h), int(x) : int(x + w)]

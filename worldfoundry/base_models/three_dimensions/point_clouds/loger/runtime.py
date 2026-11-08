@@ -37,6 +37,7 @@ class LoGeRRepresentation:
         conf_threshold  : float confidence sigmoid threshold for mask (default 0.1)
         edge_rtol       : float relative tolerance for depth-edge filter (default 0.03)
     """
+
     def __init__(
         self,
         model: Optional[Pi3] = None,
@@ -74,7 +75,7 @@ class LoGeRRepresentation:
         if not os.path.exists(pretrained_model_path):
             from huggingface_hub import hf_hub_download
 
-            ckpt_filename   = f"{subfolder}/latest.pt"            if subfolder else "latest.pt"
+            ckpt_filename = f"{subfolder}/latest.pt" if subfolder else "latest.pt"
             config_filename = f"{subfolder}/original_config.yaml" if subfolder else "original_config.yaml"
 
             # 先查本地缓存，没有再联网
@@ -143,20 +144,12 @@ class LoGeRRepresentation:
 
         print(f"Loading checkpoint from {ckpt_file} ...")
         checkpoint = load_torch_checkpoint(ckpt_file, map_location="cpu", weights_only=False)
-        state_dict = (
-            checkpoint["model_state_dict"]
-            if "model_state_dict" in checkpoint
-            else checkpoint
-        )
-        state_dict = {
-            (k[7:] if k.startswith("module.") else k): v
-            for k, v in state_dict.items()
-        }
+        state_dict = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint
+        state_dict = {(k[7:] if k.startswith("module.") else k): v for k, v in state_dict.items()}
         model.load_state_dict(state_dict, strict=True)
         print("Checkpoint loaded successfully.")
 
         return cls(model=model, device=device, inference_defaults=inference_defaults)
-
 
     @staticmethod
     def _to_numpy(tensor: Optional[torch.Tensor]) -> Optional[np.ndarray]:
@@ -185,12 +178,13 @@ class LoGeRRepresentation:
 
             # ── Model init kwargs ──────────────────────────────────
             model_cfg = config.get("model", {})
-            pi3_sig   = inspect.signature(Pi3.__init__)
+            pi3_sig = inspect.signature(Pi3.__init__)
             valid_init_keys = {
                 name
                 for name, param in pi3_sig.parameters.items()
                 if name not in {"self", "args", "kwargs"}
-                and param.kind in (
+                and param.kind
+                in (
                     inspect.Parameter.POSITIONAL_OR_KEYWORD,
                     inspect.Parameter.KEYWORD_ONLY,
                 )
@@ -228,20 +222,19 @@ class LoGeRRepresentation:
                 return config.get(key, default)
 
             inference_defaults = {
-                "se3":             bool(_get("se3",             True)),
-                "sim3":            bool(_get("sim3",            False)),
-                "window_size":     int(_get("window_size",      32)),
-                "overlap_size":    int(_get("overlap_size",     3)),
-                "reset_every":     int(_get("reset_every",      0)),
-                "num_iterations":  int(_get("num_iterations",   1)),
-                "sim3_scale_mode": str(_get("sim3_scale_mode",  "median")),
-                "turn_off_ttt":    bool(_get("turn_off_ttt",    False)),
-                "turn_off_swa":    bool(_get("turn_off_swa",    False)),
+                "se3": bool(_get("se3", True)),
+                "sim3": bool(_get("sim3", False)),
+                "window_size": int(_get("window_size", 32)),
+                "overlap_size": int(_get("overlap_size", 3)),
+                "reset_every": int(_get("reset_every", 0)),
+                "num_iterations": int(_get("num_iterations", 1)),
+                "sim3_scale_mode": str(_get("sim3_scale_mode", "median")),
+                "turn_off_ttt": bool(_get("turn_off_ttt", False)),
+                "turn_off_swa": bool(_get("turn_off_swa", False)),
             }
 
         except Exception as exc:
-            print(f"Warning: could not parse config {config_path}: {exc}. "
-                  "Using default Pi3 init parameters.")
+            print(f"Warning: could not parse config {config_path}: {exc}. Using default Pi3 init parameters.")
 
         return model_kwargs, inference_defaults
 
@@ -273,11 +266,9 @@ class LoGeRRepresentation:
 
         imgs = data["images"]
         if not isinstance(imgs, torch.Tensor):
-            raise TypeError(
-                f"data['images'] must be a torch.Tensor, got {type(imgs)}"
-            )
+            raise TypeError(f"data['images'] must be a torch.Tensor, got {type(imgs)}")
         if imgs.dim() == 4:
-            imgs = imgs.unsqueeze(0)   # add batch dim if missing
+            imgs = imgs.unsqueeze(0)  # add batch dim if missing
         imgs = imgs.to(self.device)
 
         # ── Build forward kwargs ───────────────────────────────────
@@ -293,59 +284,64 @@ class LoGeRRepresentation:
             return fallback
 
         forward_kwargs = dict(
-            window_size      = int(_get("window_size",      32)),
-            overlap_size     = int(_get("overlap_size",      3)),
-            num_iterations   = int(_get("num_iterations",    1)),
-            sim3             = bool(_get("sim3",             False)),
-            se3              = bool(_get("se3",              False)),
-            reset_every      = int(_get("reset_every",       0)),
-            turn_off_ttt     = bool(_get("turn_off_ttt",     False)),
-            turn_off_swa     = bool(_get("turn_off_swa",     False)),
-            sim3_scale_mode  = str(_get("sim3_scale_mode",   "median")),
+            window_size=int(_get("window_size", 32)),
+            overlap_size=int(_get("overlap_size", 3)),
+            num_iterations=int(_get("num_iterations", 1)),
+            sim3=bool(_get("sim3", False)),
+            se3=bool(_get("se3", False)),
+            reset_every=int(_get("reset_every", 0)),
+            turn_off_ttt=bool(_get("turn_off_ttt", False)),
+            turn_off_swa=bool(_get("turn_off_swa", False)),
+            sim3_scale_mode=str(_get("sim3_scale_mode", "median")),
         )
 
         conf_threshold = float(_get("conf_threshold", 0.1))
-        edge_rtol      = float(_get("edge_rtol",      0.03))
+        edge_rtol = float(_get("edge_rtol", 0.03))
 
         # ── Forward pass ───────────────────────────────────────────
-        autocast_enabled = (self.device == "cuda")
+        autocast_enabled = self.device == "cuda"
         with torch.amp.autocast("cuda", dtype=self.dtype, enabled=autocast_enabled):
             raw = self.model(imgs, **forward_kwargs)
 
         # ── Core geometry outputs ──────────────────────────────────
         results: Dict[str, Any] = {}
-        results["points"]       = self._to_numpy(raw.get("points"))
+        results["points"] = self._to_numpy(raw.get("points"))
         results["local_points"] = self._to_numpy(raw.get("local_points"))
         results["camera_poses"] = self._to_numpy(raw.get("camera_poses"))
-        results["conf"]         = self._to_numpy(raw.get("conf"))
+        results["conf"] = self._to_numpy(raw.get("conf"))
 
         # ── Quality mask: sigmoid(conf) > threshold AND non-depth-edge ─
         conf_tensor = raw.get("conf")
         if conf_tensor is not None:
             conf_prob = torch.sigmoid(conf_tensor[..., 0])
-            masks     = conf_prob > conf_threshold
+            masks = conf_prob > conf_threshold
             lp = raw.get("local_points")
             if lp is not None:
                 non_edge = ~depth_edge(lp[..., 2], rtol=edge_rtol)
-                masks    = torch.logical_and(masks, non_edge)
-            results["masks"]     = masks.cpu().numpy()
-            results["depth_map"] = self._to_numpy(
-                lp[..., 2] if lp is not None else None
-            )
+                masks = torch.logical_and(masks, non_edge)
+            results["masks"] = masks.cpu().numpy()
+            results["depth_map"] = self._to_numpy(lp[..., 2] if lp is not None else None)
         else:
             # use_conf=False model: accept everything
             B, N, C, H, W = imgs.shape
-            results["masks"]     = np.ones((B, N, H, W), dtype=bool)
+            results["masks"] = np.ones((B, N, H, W), dtype=bool)
             lp = raw.get("local_points")
             results["depth_map"] = self._to_numpy(lp[..., 2]) if lp is not None else None
 
         # ── Optional / diagnostic outputs ─────────────────────────
         _scalar_keys = ("avg_gate_scale", "attn_gate_scale", "alignment_mode")
         _tensor_keys = (
-            "chunk_sim3_scales", "chunk_sim3_poses", "chunk_se3_poses",
-            "metric", "local_camera_poses", "camera_qvec",
-            "overlap_prev_cam", "overlap_next_cam",
-            "overlap_prev_pcd", "overlap_next_pcd", "overlap_next_conf",
+            "chunk_sim3_scales",
+            "chunk_sim3_poses",
+            "chunk_se3_poses",
+            "metric",
+            "local_camera_poses",
+            "camera_qvec",
+            "overlap_prev_cam",
+            "overlap_next_cam",
+            "overlap_prev_pcd",
+            "overlap_next_pcd",
+            "overlap_next_conf",
         )
 
         for key in _scalar_keys:

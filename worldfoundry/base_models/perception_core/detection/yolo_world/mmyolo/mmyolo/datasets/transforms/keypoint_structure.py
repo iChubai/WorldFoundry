@@ -8,9 +8,10 @@ import torch
 from torch import Tensor
 
 DeviceType = Union[str, torch.device]
-T = TypeVar('T')
-IndexType = Union[slice, int, list, torch.LongTensor, torch.cuda.LongTensor,
-                  torch.BoolTensor, torch.cuda.BoolTensor, np.ndarray]
+T = TypeVar("T")
+IndexType = Union[
+    slice, int, list, torch.LongTensor, torch.cuda.LongTensor, torch.BoolTensor, torch.cuda.BoolTensor, np.ndarray
+]
 
 
 class Keypoints(metaclass=ABCMeta):
@@ -32,13 +33,14 @@ class Keypoints(metaclass=ABCMeta):
         K: the number of keypoints.
     """
 
-    def __init__(self,
-                 keypoints: Union[Tensor, np.ndarray],
-                 keypoints_visible: Union[Tensor, np.ndarray],
-                 device: Optional[DeviceType] = None,
-                 clone: bool = True,
-                 flip_indices: Optional[List] = None) -> None:
-
+    def __init__(
+        self,
+        keypoints: Union[Tensor, np.ndarray],
+        keypoints_visible: Union[Tensor, np.ndarray],
+        device: Optional[DeviceType] = None,
+        clone: bool = True,
+        flip_indices: Optional[List] = None,
+    ) -> None:
         assert len(keypoints_visible) == len(keypoints)
         assert keypoints.ndim == 3
         assert keypoints_visible.ndim == 2
@@ -58,9 +60,7 @@ class Keypoints(metaclass=ABCMeta):
         self.keypoints_visible = keypoints_visible
         self.flip_indices = flip_indices
 
-    def flip_(self,
-              img_shape: Tuple[int, int],
-              direction: str = 'horizontal') -> None:
+    def flip_(self, img_shape: Tuple[int, int], direction: str = "horizontal") -> None:
         """Flip boxes & kpts horizontally in-place.
 
         Args:
@@ -68,7 +68,7 @@ class Keypoints(metaclass=ABCMeta):
             direction (str): Flip direction, options are "horizontal",
                 "vertical" and "diagonal". Defaults to "horizontal"
         """
-        assert direction == 'horizontal'
+        assert direction == "horizontal"
         self.keypoints[..., 0] = img_shape[1] - self.keypoints[..., 0]
         self.keypoints = self.keypoints[:, self.flip_indices]
         self.keypoints_visible = self.keypoints_visible[:, self.flip_indices]
@@ -111,10 +111,9 @@ class Keypoints(metaclass=ABCMeta):
         """
 
         kpt_outside = torch.logical_or(
-            torch.logical_or(self.keypoints[..., 0] < 0,
-                             self.keypoints[..., 1] < 0),
-            torch.logical_or(self.keypoints[..., 0] > img_shape[1],
-                             self.keypoints[..., 1] > img_shape[0]))
+            torch.logical_or(self.keypoints[..., 0] < 0, self.keypoints[..., 1] < 0),
+            torch.logical_or(self.keypoints[..., 0] > img_shape[1], self.keypoints[..., 1] > img_shape[0]),
+        )
         self.keypoints_visible[kpt_outside] *= 0
 
     def project_(self, homography_matrix: Union[Tensor, np.ndarray]) -> None:
@@ -130,11 +129,7 @@ class Keypoints(metaclass=ABCMeta):
             homography_matrix = keypoints.new_tensor(homography_matrix)
 
         # Convert keypoints to homogeneous coordinates
-        keypoints = torch.cat([
-            self.keypoints,
-            self.keypoints.new_ones(*self.keypoints.shape[:-1], 1)
-        ],
-                              dim=-1)
+        keypoints = torch.cat([self.keypoints, self.keypoints.new_ones(*self.keypoints.shape[:-1], 1)], dim=-1)
 
         # Transpose keypoints for matrix multiplication
         keypoints_T = torch.transpose(keypoints, -1, 0).contiguous().flatten(1)
@@ -167,21 +162,15 @@ class Keypoints(metaclass=ABCMeta):
         """
         assert isinstance(kps_list, Sequence)
         if len(kps_list) == 0:
-            raise ValueError('kps_list should not be a empty list.')
+            raise ValueError("kps_list should not be a empty list.")
 
         assert dim == 0
         assert all(isinstance(keypoints, cls) for keypoints in kps_list)
 
-        th_kpt_list = torch.cat(
-            [keypoints.keypoints for keypoints in kps_list], dim=dim)
-        th_kpt_vis_list = torch.cat(
-            [keypoints.keypoints_visible for keypoints in kps_list], dim=dim)
+        th_kpt_list = torch.cat([keypoints.keypoints for keypoints in kps_list], dim=dim)
+        th_kpt_vis_list = torch.cat([keypoints.keypoints_visible for keypoints in kps_list], dim=dim)
         flip_indices = kps_list[0].flip_indices
-        return cls(
-            th_kpt_list,
-            th_kpt_vis_list,
-            clone=False,
-            flip_indices=flip_indices)
+        return cls(th_kpt_list, th_kpt_vis_list, clone=False, flip_indices=flip_indices)
 
     def __getitem__(self: T, index: IndexType) -> T:
         """Rewrite getitem to protect the last dimension shape."""
@@ -201,15 +190,11 @@ class Keypoints(metaclass=ABCMeta):
         if self.keypoints.dim() == 2:
             keypoints = keypoints.reshape(1, -1, 2)
             keypoints_visible = keypoints_visible.reshape(1, -1)
-        return type(self)(
-            keypoints,
-            keypoints_visible,
-            flip_indices=self.flip_indices,
-            clone=False)
+        return type(self)(keypoints, keypoints_visible, flip_indices=self.flip_indices, clone=False)
 
     def __repr__(self) -> str:
         """Return a strings that describes the object."""
-        return self.__class__.__name__ + '(\n' + str(self.keypoints) + ')'
+        return self.__class__.__name__ + "(\n" + str(self.keypoints) + ")"
 
     @property
     def num_keypoints(self) -> Tensor:
@@ -228,11 +213,7 @@ class Keypoints(metaclass=ABCMeta):
 
     def clone(self: T) -> T:
         """Reload ``clone`` for tensors."""
-        return type(self)(
-            self.keypoints,
-            self.keypoints_visible,
-            flip_indices=self.flip_indices,
-            clone=True)
+        return type(self)(self.keypoints, self.keypoints_visible, flip_indices=self.flip_indices, clone=True)
 
     def to(self: T, *args, **kwargs) -> T:
         """Reload ``to`` for tensors."""
@@ -240,7 +221,8 @@ class Keypoints(metaclass=ABCMeta):
             self.keypoints.to(*args, **kwargs),
             self.keypoints_visible.to(*args, **kwargs),
             flip_indices=self.flip_indices,
-            clone=False)
+            clone=False,
+        )
 
     @property
     def device(self) -> torch.device:

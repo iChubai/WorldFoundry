@@ -25,6 +25,7 @@ from .enums import PaddingModeType
 
 class SpaceToDepthDownsample(nn.Module):
     """Pack spatial (and optional temporal) pixels into channels."""
+
     def __init__(
         self,
         dims: Union[int, Tuple[int, int]],
@@ -82,6 +83,7 @@ class SpaceToDepthDownsample(nn.Module):
 
 class DepthToSpaceUpsample(nn.Module):
     """Unpack channels back to spatial/temporal resolution."""
+
     def __init__(
         self,
         dims: int | Tuple[int, int],

@@ -21,6 +21,7 @@ DepthRenderingMode = Literal[
 @dataclass
 class DecoderOutput:
     """Decoder output implementation."""
+
     color: Float[Tensor, "batch view 3 height width"]
     depth: Float[Tensor, "batch view height width"] | None
 
@@ -30,6 +31,7 @@ T = TypeVar("T")
 
 class Decoder(nn.Module, ABC, Generic[T]):
     """Decoder implementation."""
+
     cfg: T
     dataset_cfg: DatasetCfg
 

@@ -17,8 +17,18 @@ from ..utils import sh_utils, act_gs
 
 class Rasterizer:
     """Rasterizer implementation."""
-    def __init__(self, rasterization_mode="classic", packed=True, abs_grad=True, with_eval3d=False,
-                 camera_model="pinhole", sparse_grad=False, distributed=False, grad_strategy=DefaultStrategy):
+
+    def __init__(
+        self,
+        rasterization_mode="classic",
+        packed=True,
+        abs_grad=True,
+        with_eval3d=False,
+        camera_model="pinhole",
+        sparse_grad=False,
+        distributed=False,
+        grad_strategy=DefaultStrategy,
+    ):
         """Init.
 
         Args:
@@ -80,11 +90,7 @@ class Rasterizer:
             width=width,
             height=height,
             packed=self.packed,
-            absgrad=(
-                self.abs_grad
-                if isinstance(self.grad_strategy, DefaultStrategy)
-                else False
-            ),
+            absgrad=(self.abs_grad if isinstance(self.grad_strategy, DefaultStrategy) else False),
             sparse_grad=self.sparse_grad,
             rasterize_mode=self.rasterization_mode,
             distributed=self.distributed,
@@ -111,7 +117,7 @@ class Rasterizer:
         """
         rendered_colors, rendered_depths, rendered_alphas = [], [], []
         batch_size = len(means)
-        
+
         for i in range(batch_size):
             means_i = means[i]  # [N, 4]
             quats_i = quats[i]  # [N, 4]
@@ -120,30 +126,31 @@ class Rasterizer:
             colors_i = colors[i]  # [N, 3]
             viewmats_i = viewmats[i]  # [V, 4, 4]
             Ks_i = Ks[i]  # [V, 3, 3]
-            
+
             render_colors_i, render_depths_i, render_alphas_i = self.rasterize_splats(
                 means_i, quats_i, scales_i, opacities_i, colors_i, viewmats_i, Ks_i, width, height, **kwargs
             )
-            
+
             rendered_colors.append(render_colors_i)  # V H W 3
             rendered_depths.append(render_depths_i)  # V H W 1
             rendered_alphas.append(render_alphas_i)  # V H W 1
-            
+
         rendered_colors = torch.stack(rendered_colors, dim=0)  # B V H W 3
         rendered_depths = torch.stack(rendered_depths, dim=0)  # B V H W 1
         rendered_alphas = torch.stack(rendered_alphas, dim=0)  # B V H W 1
-        
+
         return rendered_colors, rendered_depths, rendered_alphas
-    
+
 
 class GaussianSplatRenderer(nn.Module):
     """Gaussian splat renderer implementation."""
+
     def __init__(
         self,
-        feature_dim: int = 256,       # Output channels of gs_feat_head
+        feature_dim: int = 256,  # Output channels of gs_feat_head
         sh_degree: int = 0,
         enable_prune: bool = True,
-        voxel_size: float = 0.002,    # Default voxel size for prune_gs
+        voxel_size: float = 0.002,  # Default voxel size for prune_gs
         enable_conf_filter: bool = False,  # Enable confidence filtering
         conf_threshold_percent: float = 30.0,  # Confidence threshold percentage
         max_gaussians: int = 5000000,  # Maximum number of Gaussians
@@ -172,11 +179,11 @@ class GaussianSplatRenderer(nn.Module):
 
         # Predict Gaussian parameters from GS features (quaternions/scales/opacities/SH/weights)
         splits_and_inits = [
-            (4, 1.0, 0.0),                # quats
-            (3, 0.00003, -7.0),           # scales
-            (1, 1.0, -2.0),               # opacities
-            (3 * self.nums_sh, 1.0, 0.0), # residual_sh
-            (1, 1.0, -2.0),               # weights
+            (4, 1.0, 0.0),  # quats
+            (3, 0.00003, -7.0),  # scales
+            (1, 1.0, -2.0),  # opacities
+            (3 * self.nums_sh, 1.0, 0.0),  # residual_sh
+            (1, 1.0, -2.0),  # weights
         ]
         gaussian_raw_channels = 4 + 3 + 1 + self.nums_sh * 3 + 1
 
@@ -189,8 +196,8 @@ class GaussianSplatRenderer(nn.Module):
         final_conv_layer = self.gs_head[-1]
         start_channels = 0
         for out_channel, s, b in splits_and_inits:
-            nn.init.xavier_uniform_(final_conv_layer.weight[start_channels:start_channels+out_channel], s)
-            nn.init.constant_(final_conv_layer.bias[start_channels:start_channels+out_channel], b)
+            nn.init.xavier_uniform_(final_conv_layer.weight[start_channels : start_channels + out_channel], s)
+            nn.init.constant_(final_conv_layer.bias[start_channels : start_channels + out_channel], b)
             start_channels += out_channel
 
         # Rasterizer
@@ -199,12 +206,12 @@ class GaussianSplatRenderer(nn.Module):
     # ======== Main entry point: Complete GS rendering and fill results back to predictions ========
     def render(
         self,
-        gs_feats: torch.Tensor,                    # [B, S, 3, H, W]
-        images: torch.Tensor,                      # [B, S+V, 3, H, W]
-        predictions: Dict[str, torch.Tensor],      # From WorldMirror: pose/depth/pts3d etc
+        gs_feats: torch.Tensor,  # [B, S, 3, H, W]
+        images: torch.Tensor,  # [B, S+V, 3, H, W]
+        predictions: Dict[str, torch.Tensor],  # From WorldMirror: pose/depth/pts3d etc
         views: Dict[str, torch.Tensor],
         context_predictions: Dict[str, torch.Tensor],
-        is_inference: bool=True,
+        is_inference: bool = True,
     ) -> Dict[str, torch.Tensor]:
         """
         Returns predictions with the following fields filled:
@@ -213,21 +220,21 @@ class GaussianSplatRenderer(nn.Module):
         - splats / rendered_extrinsics / rendered_intrinsics
         """
         B, _, _, H, W = images.shape
-        S = context_predictions.get("imgs", images).shape[1] # context view nums
-        V = images.shape[1] - S                              # target view nums
+        S = context_predictions.get("imgs", images).shape[1]  # context view nums
+        V = images.shape[1] - S  # target view nums
 
         # 1) Predict GS features from tokens, then convert to Gaussian parameters
         gs_feats_reshape = rearrange(gs_feats, "b s c h w -> (b s) c h w")
         gs_params = self.gs_head(gs_feats_reshape)
         gt_colors = images.permute(0, 1, 3, 4, 2)
-        
+
         # 2) Select rendering cameras
         if self.training:
-            # Using all gt cameras 
+            # Using all gt cameras
             render_viewmats, render_Ks = self.prepare_cameras(views, S + V)
-            gt_valid_masks_src = views["valid_mask"][:, :S]      # [B, S, H, W]
-            gt_valid_masks_tgt = views["valid_mask"][:, S:]     # [B, V, H, W]
-            unproject_masks = calculate_unprojected_mask(views, S)     # [B, V, H, W]
+            gt_valid_masks_src = views["valid_mask"][:, :S]  # [B, S, H, W]
+            gt_valid_masks_tgt = views["valid_mask"][:, S:]  # [B, V, H, W]
+            unproject_masks = calculate_unprojected_mask(views, S)  # [B, V, H, W]
             valid_masks = torch.cat([gt_valid_masks_src, (gt_valid_masks_tgt & unproject_masks)], dim=1)
         else:
             # Re-predict the camera for novel views and perform translation scale alignment
@@ -242,26 +249,28 @@ class GaussianSplatRenderer(nn.Module):
             pred_all_extrinsic[..., :3, 3] = pred_all_extrinsic[..., :3, 3] * scale_factor
             render_viewmats, render_Ks = pred_all_extrinsic, pred_all_intrinsic
             valid_masks = views.get("valid_mask", torch.ones(B, S + V, H, W, dtype=bool, device=images.device))
-        
+
         # 3) Generate splats from gs_params + predictions, and perform voxel merging
         if self.training:
             splats = self.prepare_splats(views, predictions, images, gs_params, S, position_from="gsdepth+gtcamera")
         elif not is_inference:
-            splats = self.prepare_splats(views, predictions, images, gs_params, S, context_predictions, position_from="gsdepth+predcamera")
+            splats = self.prepare_splats(
+                views, predictions, images, gs_params, S, context_predictions, position_from="gsdepth+predcamera"
+            )
         else:
             splats = self.prepare_splats(views, predictions, images, gs_params, S, position_from="gsdepth+predcamera")
 
         # Apply confidence filtering before pruning
         if self.enable_conf_filter and "gs_depth_conf" in predictions:
             splats = self.apply_confidence_filter(splats, predictions["gs_depth_conf"])
-        
+
         if self.enable_prune:
             splats = self.prune_gs(splats, voxel_size=self.voxel_size)
-        
+
         predictions["splats"] = splats
         if is_inference:
             return predictions
-        
+
         # 4) Rasterization rendering (training: chunked rendering + novel view valid mask correction; evaluation: view-by-view)
 
         # Prevent OOM by using chunked rendering
@@ -273,10 +282,15 @@ class GaussianSplatRenderer(nn.Module):
             Ks_i = render_Ks[:, i:end_idx]
 
             rendered_colors, rendered_depths, rendered_alphas = self.rasterizer.rasterize_batches(
-                splats["means"], splats["quats"], splats["scales"], splats["opacities"],
+                splats["means"],
+                splats["quats"],
+                splats["scales"],
+                splats["opacities"],
                 splats["sh"] if "sh" in splats else splats["colors"],
-                viewmats_i.detach(), Ks_i.detach(),
-                width=images.shape[-1], height=images.shape[-2],
+                viewmats_i.detach(),
+                Ks_i.detach(),
+                width=images.shape[-1],
+                height=images.shape[-2],
                 sh_degree=min(self.sh_degree, 0) if "sh" in splats else None,
             )
             rendered_colors_list.append(rendered_colors)
@@ -300,18 +314,17 @@ class GaussianSplatRenderer(nn.Module):
         predictions["rendered_extrinsics"] = render_viewmats
         predictions["rendered_intrinsics"] = render_Ks
 
-
         return predictions
 
     def apply_confidence_filter(self, splats, gs_depth_conf):
         """
         Apply confidence filtering to Gaussian splats before pruning.
         Discard bottom p% confidence points, keep top (100-p)%.
-        
+
         Args:
             splats: Dictionary containing Gaussian parameters
             gs_depth_conf: Confidence tensor [B, S, H, W]
-        
+
         Returns:
             Filtered splats dictionary
         """
@@ -335,10 +348,10 @@ class GaussianSplatRenderer(nn.Module):
 
         # Select top-K indices for each batch (deterministic, no randomness)
         topk_idx = torch.topk(conf, K, dim=1, largest=True, sorted=False).indices  # [B, K]
-        
+
         filtered = {}
         mask_keys = ["means", "quats", "scales", "opacities", "sh", "weights"]
-        
+
         for key in splats.keys():
             if key in mask_keys and key in splats:
                 x = splats[key]
@@ -359,11 +372,11 @@ class GaussianSplatRenderer(nn.Module):
     def prune_gs(self, splats, voxel_size=0.002):
         """
         Prune Gaussian splats by merging those in the same voxel.
-        
+
         Args:
             splats: Dictionary containing Gaussian parameters
             voxel_size: Size of voxels for spatial grouping
-            
+
         Returns:
             Dictionary with pruned splats
         """
@@ -374,19 +387,21 @@ class GaussianSplatRenderer(nn.Module):
         for i in range(B):
             # Extract splats for current batch
             splats_i = {k: splats[k][i] for k in ["means", "quats", "scales", "opacities", "sh", "weights"]}
-            
+
             # Compute voxel indices
             coords = splats_i["means"]
             voxel_indices = (coords / voxel_size).floor().long()
             min_indices = voxel_indices.min(dim=0)[0]
             voxel_indices = voxel_indices - min_indices
             max_dims = voxel_indices.max(dim=0)[0] + 1
-            
+
             # Flatten 3D voxel indices to 1D
-            flat_indices = (voxel_indices[:, 0] * max_dims[1] * max_dims[2] + 
-                           voxel_indices[:, 1] * max_dims[2] + 
-                           voxel_indices[:, 2])
-            
+            flat_indices = (
+                voxel_indices[:, 0] * max_dims[1] * max_dims[2]
+                + voxel_indices[:, 1] * max_dims[2]
+                + voxel_indices[:, 2]
+            )
+
             # Find unique voxels and inverse mapping
             unique_voxels, inverse_indices = torch.unique(flat_indices, return_inverse=True)
             K = len(unique_voxels)
@@ -397,9 +412,9 @@ class GaussianSplatRenderer(nn.Module):
                 "quats": torch.zeros((K, 4), device=device),
                 "scales": torch.zeros((K, 3), device=device),
                 "opacities": torch.zeros(K, device=device),
-                "sh": torch.zeros((K, self.nums_sh, 3), device=device)
+                "sh": torch.zeros((K, self.nums_sh, 3), device=device),
             }
-            
+
             # Get weights and compute weight sums per voxel
             weights = splats_i["weights"]
             weight_sums = torch.zeros(K, device=device)
@@ -408,14 +423,12 @@ class GaussianSplatRenderer(nn.Module):
 
             # Merge means (weighted average)
             for d in range(3):
-                merged["means"][:, d].scatter_add_(0, inverse_indices, 
-                                                 splats_i["means"][:, d] * weights)
+                merged["means"][:, d].scatter_add_(0, inverse_indices, splats_i["means"][:, d] * weights)
             merged["means"] = merged["means"] / weight_sums.unsqueeze(1)
 
             # Merge spherical harmonics (weighted average)
             for d in range(3):
-                merged["sh"][:, 0, d].scatter_add_(0, inverse_indices, 
-                                                  splats_i["sh"][:, 0, d] * weights)
+                merged["sh"][:, 0, d].scatter_add_(0, inverse_indices, splats_i["sh"][:, 0, d] * weights)
             merged["sh"] = merged["sh"] / weight_sums.unsqueeze(-1).unsqueeze(-1)
 
             # Merge opacities (weighted sum of squares)
@@ -424,14 +437,12 @@ class GaussianSplatRenderer(nn.Module):
 
             # Merge scales (weighted average)
             for d in range(3):
-                merged["scales"][:, d].scatter_add_(0, inverse_indices, 
-                                                  splats_i["scales"][:, d] * weights)
+                merged["scales"][:, d].scatter_add_(0, inverse_indices, splats_i["scales"][:, d] * weights)
             merged["scales"] = merged["scales"] / weight_sums.unsqueeze(1)
 
             # Merge quaternions (weighted average + normalization)
             for d in range(4):
-                merged["quats"][:, d].scatter_add_(0, inverse_indices, 
-                                                 splats_i["quats"][:, d] * weights)
+                merged["quats"][:, d].scatter_add_(0, inverse_indices, splats_i["quats"][:, d] * weights)
             quat_norms = torch.norm(merged["quats"], dim=1, keepdim=True)
             merged["quats"] = merged["quats"] / torch.clamp(quat_norms, min=1e-8)
 
@@ -441,14 +452,22 @@ class GaussianSplatRenderer(nn.Module):
         output = {}
         for key in ["means", "sh", "opacities", "scales", "quats"]:
             output[key] = [merged[key] for merged in merged_splats_list]
-        
+
         return output
 
-    def prepare_splats(self, views, predictions, images, gs_params, context_nums, 
-                       context_predictions={}, position_from="gsdepth+gtcamera"):
+    def prepare_splats(
+        self,
+        views,
+        predictions,
+        images,
+        gs_params,
+        context_nums,
+        context_predictions={},
+        position_from="gsdepth+gtcamera",
+    ):
         """
         Prepare Gaussian splats from model predictions and input data.
-        
+
         Args:
             views: Dictionary containing view data (camera poses, intrinsics, etc.)
             predictions: Model predictions including depth, pose_enc, etc.
@@ -457,22 +476,20 @@ class GaussianSplatRenderer(nn.Module):
             context_predictions: Optional context predictions for camera poses
             position_from: Method to compute 3D positions ("pts3d", "gsdepth+gtcamera", "gsdepth+predcamera)
             debug: Whether to use debug mode with ground truth data
-            
+
         Returns:
             splats: Dictionary containing prepared Gaussian splat parameters
         """
         B, _, _, H, W = images.shape
         S = context_nums
         splats = {}
-        
+
         # Only take parameters from source view branch
         gs_params = rearrange(gs_params, "(b s) c h w -> b s h w c", b=B)
-        splats["gs_feats"] = gs_params.reshape(B, S*H*W, -1)
+        splats["gs_feats"] = gs_params.reshape(B, S * H * W, -1)
 
         # Split Gaussian parameters
-        quats, scales, opacities, residual_sh, weights = torch.split(
-            gs_params, [4, 3, 1, self.nums_sh * 3, 1], dim=-1
-        )
+        quats, scales, opacities, residual_sh, weights = torch.split(gs_params, [4, 3, 1, self.nums_sh * 3, 1], dim=-1)
 
         # Apply activation functions to Gaussian parameters
         splats["quats"] = act_gs.reg_dense_rotation(quats.reshape(B, S * H * W, 4))
@@ -482,11 +499,9 @@ class GaussianSplatRenderer(nn.Module):
 
         # Handle spherical harmonics (SH) coefficients
         new_sh = torch.zeros_like(residual_sh)
-        new_sh[..., 0, :] = sh_utils.RGB2SH(
-            images[:, :S].permute(0, 1, 3, 4, 2).reshape(B, S * H * W, 3)
-        )
-        splats['sh'] = new_sh + residual_sh
-        splats['residual_sh'] = residual_sh
+        new_sh[..., 0, :] = sh_utils.RGB2SH(images[:, :S].permute(0, 1, 3, 4, 2).reshape(B, S * H * W, 3))
+        splats["sh"] = new_sh + residual_sh
+        splats["residual_sh"] = residual_sh
 
         splats["weights"] = act_gs.reg_dense_weights(weights.reshape(B, S * H * W))
 
@@ -494,7 +509,7 @@ class GaussianSplatRenderer(nn.Module):
         if position_from == "pts3d":
             pts3d = predictions["pts3d"][:, :S].reshape(B, S * H * W, 3)
             splats["means"] = pts3d
-            
+
         elif position_from == "gsdepth+gtcamera":
             depth = predictions["gs_depth"][:, :S].reshape(B * S, H, W)
             pose4x4 = views["camera_poses"][:, :S].reshape(B * S, 4, 4)
@@ -502,15 +517,15 @@ class GaussianSplatRenderer(nn.Module):
             pts3d, _, _ = depth_to_world_coords_points(depth, pose4x4, intrinsic)
             pts3d = pts3d.reshape(B, S * H * W, 3)
             splats["means"] = pts3d
-        
+
         elif position_from == "gsdepth+predcamera":
-            depth = predictions["gs_depth"][:, :S].reshape(B * S , H, W)
+            depth = predictions["gs_depth"][:, :S].reshape(B * S, H, W)
             pose4x4 = context_predictions.get("camera_poses", predictions["camera_poses"])[:, :S].reshape(B * S, 4, 4)
             intrinsic = context_predictions.get("camera_intrs", predictions["camera_intrs"])[:, :S].reshape(B * S, 3, 3)
             pts3d, _, _ = depth_to_world_coords_points(depth, pose4x4.detach(), intrinsic.detach())
             pts3d = pts3d.reshape(B, S * H * W, 3)
             splats["means"] = pts3d
-            
+
         else:
             raise ValueError(f"Invalid position_from={position_from}")
 
@@ -523,23 +538,23 @@ class GaussianSplatRenderer(nn.Module):
             views: The views.
             nums: The nums.
         """
-        viewmats = views['camera_poses'][:, :nums]
-        Ks = views['camera_intrs'][:, :nums]
+        viewmats = views["camera_poses"][:, :nums]
+        Ks = views["camera_intrs"][:, :nums]
         return viewmats, Ks
-            
-        
-        
+
+
 if __name__ == "__main__":
     device = "cuda:0"
     means = torch.randn((100, 3), device=device)
     quats = torch.randn((100, 4), device=device)
-    scales = torch.rand((100, 3), device=device) * 0.1  
+    scales = torch.rand((100, 3), device=device) * 0.1
     opacities = torch.rand((100,), device=device)
     colors = torch.rand((100, 3), device=device)
 
     viewmats = torch.eye(4, device=device)[None, :, :].repeat(10, 1, 1)
-    Ks = torch.tensor([
-    [300., 0., 150.], [0., 300., 100.], [0., 0., 1.]], device=device)[None, :, :].repeat(10, 1, 1)
+    Ks = torch.tensor([[300.0, 0.0, 150.0], [0.0, 300.0, 100.0], [0.0, 0.0, 1.0]], device=device)[None, :, :].repeat(
+        10, 1, 1
+    )
     width, height = 300, 200
 
     rasterizer = Rasterizer()
@@ -551,4 +566,3 @@ if __name__ == "__main__":
         "colors": colors,
     }
     colors, alphas, _ = rasterizer.rasterize_splats(splats, viewmats, Ks, width, height)
-    

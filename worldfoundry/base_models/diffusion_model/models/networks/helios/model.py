@@ -67,9 +67,7 @@ def _shard_history_and_main(
     global_main_length = int(global_main_length)
     history_length = total_length - global_main_length
     if history_length < 0:
-        raise ValueError(
-            f"Main sequence length {global_main_length} exceeds tensor length {total_length}."
-        )
+        raise ValueError(f"Main sequence length {global_main_length} exceeds tensor length {total_length}.")
     history_start, history_size = _balanced_slice(history_length, rank, world_size)
     main_start, main_size = _balanced_slice(global_main_length, rank, world_size)
     history = tensor.narrow(dim, history_start, history_size)
@@ -500,8 +498,13 @@ class HeliosTransformerBlock(nn.Module):
         self.guidance_cross_attn = guidance_cross_attn
 
     def _self_attention_residual(
-        self, hidden_states, norm_hidden_states, gate_msa, rotary_emb,
-        original_context_length, **attention_kwargs,
+        self,
+        hidden_states,
+        norm_hidden_states,
+        gate_msa,
+        rotary_emb,
+        original_context_length,
+        **attention_kwargs,
     ):
         attn_output = self.attn1(
             norm_hidden_states,
@@ -542,8 +545,12 @@ class HeliosTransformerBlock(nn.Module):
         # 1. Self-attention
         norm_hidden_states = (self.norm1(hidden_states.float()) * (1 + scale_msa) + shift_msa).type_as(hidden_states)
         hidden_states = self._self_attention_residual(
-            hidden_states, norm_hidden_states, gate_msa, rotary_emb,
-            original_context_length, **attention_kwargs,
+            hidden_states,
+            norm_hidden_states,
+            gate_msa,
+            rotary_emb,
+            original_context_length,
+            **attention_kwargs,
         )
 
         # 2. Cross-attention
@@ -695,12 +702,16 @@ class HeliosTransformer3DModel(
                 kernel_size=tuple(2 * p for p in patch_size),
                 stride=tuple(2 * p for p in patch_size),
             )
-            setattr(self, self._history_patch_name, nn.Conv3d(
-                in_channels,
-                self.inner_dim,
-                kernel_size=tuple(self._history_patch_scale * p for p in patch_size),
-                stride=tuple(self._history_patch_scale * p for p in patch_size),
-            ))
+            setattr(
+                self,
+                self._history_patch_name,
+                nn.Conv3d(
+                    in_channels,
+                    self.inner_dim,
+                    kernel_size=tuple(self._history_patch_scale * p for p in patch_size),
+                    stride=tuple(self._history_patch_scale * p for p in patch_size),
+                ),
+            )
 
         # 3. Condition embeddings
         self.condition_embedder = HeliosTimeTextEmbedding(
@@ -832,8 +843,10 @@ class HeliosTransformer3DModel(
         # 5. Process long history latents
         if latents_history_long is not None and indices_latents_history_long is not None:
             latents_history_long, rotary_emb_history_long = self._long_history_tokens(
-                latents_history_long.to(hidden_states), indices_latents_history_long,
-                H1, W1,
+                latents_history_long.to(hidden_states),
+                indices_latents_history_long,
+                H1,
+                W1,
             )
 
             hidden_states = torch.cat([latents_history_long, hidden_states], dim=1)

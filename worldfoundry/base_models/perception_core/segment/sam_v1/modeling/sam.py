@@ -19,6 +19,7 @@ from .prompt_encoder import PromptEncoder
 
 class Sam(nn.Module):
     """Sam implementation."""
+
     mask_threshold: float = 0.0
     image_format: str = "RGB"
 

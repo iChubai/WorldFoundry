@@ -24,6 +24,7 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.nor
 
 class Upsample(torch.nn.Module):
     """Causal 2-D upsample block for the LTX audio decoder."""
+
     def __init__(
         self,
         in_channels: int,

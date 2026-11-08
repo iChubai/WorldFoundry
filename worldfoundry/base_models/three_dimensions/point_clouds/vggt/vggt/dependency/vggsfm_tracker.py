@@ -26,6 +26,7 @@ from .track_modules.base_track_predictor import BaseTrackerPredictor
 
 class TrackerPredictor(nn.Module):
     """Tracker predictor implementation."""
+
     def __init__(self, **extra_args):
         """Init."""
         super(TrackerPredictor, self).__init__()

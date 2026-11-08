@@ -41,6 +41,7 @@ def _scaled_residual_add(residual, x, scale):
 
 class FeedForward(nn.Module):
     """Transformer FFN (optional gated SiLU) for the H3 ViT decoder."""
+
     def __init__(
         self,
         dim: int,
@@ -72,12 +73,8 @@ class FeedForward(nn.Module):
             raise ValueError(f"Unsupported activation function: {activation_fn}")
 
         self.w2 = nn.Linear(inner_dim, dim_out, bias=bias)
-        self._compile_forward_enabled = _env_flag(
-            "MINIMAX_H3_VAE_DECODER_VIT_FF_TORCH_COMPILE", "0"
-        )
-        self._compile_forward_fatal = _env_flag(
-            "MINIMAX_H3_VAE_DECODER_VIT_FF_TORCH_COMPILE_FATAL", "0"
-        )
+        self._compile_forward_enabled = _env_flag("MINIMAX_H3_VAE_DECODER_VIT_FF_TORCH_COMPILE", "0")
+        self._compile_forward_fatal = _env_flag("MINIMAX_H3_VAE_DECODER_VIT_FF_TORCH_COMPILE_FATAL", "0")
         self._compiled_forward = None
 
     def _forward_impl(self, hidden_states: torch.Tensor) -> torch.Tensor:
@@ -101,18 +98,14 @@ class FeedForward(nn.Module):
         if self._compiled_forward is not None:
             return self._compiled_forward
         if not hasattr(torch, "compile"):
-            message = (
-                "torch.compile is unavailable; falling back to eager ViT FeedForward"
-            )
+            message = "torch.compile is unavailable; falling back to eager ViT FeedForward"
             if self._compile_forward_fatal:
                 raise RuntimeError(message)
             logger.warning(f"[ViTFeedForward] {message}")
             self._compile_forward_enabled = False
             return self._forward_impl
 
-        kwargs = _vit_torch_compile_kwargs(
-            "MINIMAX_H3_VAE_DECODER_VIT_FF_TORCH_COMPILE"
-        )
+        kwargs = _vit_torch_compile_kwargs("MINIMAX_H3_VAE_DECODER_VIT_FF_TORCH_COMPILE")
         try:
             self._compiled_forward = torch.compile(self._forward_impl, **kwargs)
             logger.info(f"[ViTFeedForward] torch.compile enabled kwargs={kwargs}")
@@ -120,8 +113,7 @@ class FeedForward(nn.Module):
             if self._compile_forward_fatal:
                 raise
             logger.warning(
-                f"[ViTFeedForward] torch.compile setup failed: {type(exc).__name__}: {exc}; "
-                "falling back to eager"
+                f"[ViTFeedForward] torch.compile setup failed: {type(exc).__name__}: {exc}; falling back to eager"
             )
             self._compile_forward_enabled = False
             self._compiled_forward = None
@@ -151,24 +143,21 @@ class FeedForward(nn.Module):
 
 class RotaryEmbeddingND(nn.Module):
     """N-D rotary position embedding table for video patches."""
+
     def __init__(self, dim, rotary_base=10000, n_dim=3, use_angle=False):
         super().__init__()
         self.dim = dim
         self.n_dim = n_dim
 
         if dim % (2 * n_dim) != 0:
-            raise ValueError(
-                f"head_dim {dim} must be divisible by 2 * n_dim {2 * n_dim}"
-            )
+            raise ValueError(f"head_dim {dim} must be divisible by 2 * n_dim {2 * n_dim}")
 
         if use_angle:
             self.angle_scale = 2.0 * math.pi
         else:
             self.angle_scale = 1.0
 
-        inv_freq = 1 / rotary_base ** torch.arange(
-            0, 1, 2 * n_dim / dim, dtype=torch.float32
-        )
+        inv_freq = 1 / rotary_base ** torch.arange(0, 1, 2 * n_dim / dim, dtype=torch.float32)
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
     def forward(self, img_ids):
@@ -177,11 +166,7 @@ class RotaryEmbeddingND(nn.Module):
             raise ValueError(f"Expected {self.n_dim} dimensions, got {D}")
 
         with torch.autocast("cuda", enabled=False):
-            angles = (
-                self.angle_scale
-                * img_ids[:, :, :, None]
-                * self.inv_freq.to(img_ids.device)[None, None, None, :]
-            )
+            angles = self.angle_scale * img_ids[:, :, :, None] * self.inv_freq.to(img_ids.device)[None, None, None, :]
             angles = angles.flatten(2, 3)
             angles = angles.tile(2)
             angles = angles.unsqueeze(2)
@@ -194,6 +179,7 @@ class RotaryEmbeddingND(nn.Module):
 
 class TransformerBlock(nn.Module):
     """Pre-norm attention + FFN block used by :class:`ViT3DDecoder`."""
+
     def __init__(
         self,
         heads: int,
@@ -261,20 +247,14 @@ class TransformerBlock(nn.Module):
         rotary_pos_emb: Optional[torch.FloatTensor] = None,
         pack_info: dict = {},
     ):
-        norm_hidden_states = self.norm1(_vit_norm_input(self.norm1, hidden_states)).to(
-            hidden_states.dtype
-        )
+        norm_hidden_states = self.norm1(_vit_norm_input(self.norm1, hidden_states)).to(hidden_states.dtype)
         attn_output = self.attn(norm_hidden_states, rotary_pos_emb, pack_info)
         if self.use_scale:
-            hidden_states = _scaled_residual_add(
-                hidden_states, attn_output, self.scale1
-            )
+            hidden_states = _scaled_residual_add(hidden_states, attn_output, self.scale1)
         else:
             hidden_states = hidden_states + attn_output
 
-        norm_hidden_states = self.norm2(_vit_norm_input(self.norm2, hidden_states)).to(
-            hidden_states.dtype
-        )
+        norm_hidden_states = self.norm2(_vit_norm_input(self.norm2, hidden_states)).to(hidden_states.dtype)
         ff_output = self.ff(norm_hidden_states)
         if self.use_scale:
             hidden_states = _scaled_residual_add(hidden_states, ff_output, self.scale2)

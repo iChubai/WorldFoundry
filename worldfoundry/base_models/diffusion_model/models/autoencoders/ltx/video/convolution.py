@@ -105,6 +105,7 @@ def make_linear_nd(
 
 class DualConv3d(nn.Module):
     """Factorized 2-D + 1-D convolution used by some LTX checkpoints."""
+
     def __init__(
         self,
         in_channels: int,
@@ -282,6 +283,7 @@ class DualConv3d(nn.Module):
 
 class CausalConv3d(nn.Module):
     """3-D convolution that pads time so future frames do not leak."""
+
     def __init__(
         self,
         in_channels: int,

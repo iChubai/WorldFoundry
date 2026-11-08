@@ -3,6 +3,7 @@
 The model implementation and this high-level inference wrapper both live in
 ``base_models`` so downstream integrations share one SAM3 stack.
 """
+
 from __future__ import annotations
 
 import gc
@@ -41,6 +42,7 @@ _NULL_PROMPT_PHRASES = (
 @dataclass
 class Sam3VideoSegmenter:
     """SAM3 video segmenter."""
+
     gpus_to_use: Optional[list[int]] = None
     propagation_direction: str = "both"
     score_threshold_detection: Optional[float] = None
@@ -60,9 +62,7 @@ class Sam3VideoSegmenter:
         model = getattr(self.predictor, "model", None)
         if model is None:
             return
-        if self.score_threshold_detection is not None and hasattr(
-            model, "score_threshold_detection"
-        ):
+        if self.score_threshold_detection is not None and hasattr(model, "score_threshold_detection"):
             model.score_threshold_detection = float(self.score_threshold_detection)
         if self.new_det_thresh is not None and hasattr(model, "new_det_thresh"):
             model.new_det_thresh = float(self.new_det_thresh)
@@ -288,7 +288,7 @@ class Sam3VideoSegmenter:
         for frame in frames:
             resized = cv2.resize(frame, (new_w, new_h), interpolation=interp)
             canvas = np.zeros((target_size, target_size, 3), dtype=resized.dtype)
-            canvas[pad_y: pad_y + new_h, pad_x: pad_x + new_w] = resized
+            canvas[pad_y : pad_y + new_h, pad_x : pad_x + new_w] = resized
             padded_frames.append(canvas)
         return padded_frames, (orig_h, orig_w), (new_h, new_w), (pad_y, pad_x)
 
@@ -303,7 +303,7 @@ class Sam3VideoSegmenter:
         resized_h, resized_w = resized_hw
         if masks.size == 0:
             return masks
-        cropped = masks[:, pad_y: pad_y + resized_h, pad_x: pad_x + resized_w]
+        cropped = masks[:, pad_y : pad_y + resized_h, pad_x : pad_x + resized_w]
         return self._resize_masks_to_hw(cropped, orig_hw)
 
     def _release_gpu_memory(self) -> None:
@@ -330,9 +330,7 @@ class Sam3VideoSegmenter:
         owned_frames: list[Image.Image] | None = None
         if self.resize_input_to and isinstance(video_path, (str, Path)):
             frames = load_video_frames(video_path)
-            padded, original_hw, resized_hw, padding = self._letterbox_frames(
-                frames, self.resize_input_to
-            )
+            padded, original_hw, resized_hw, padding = self._letterbox_frames(frames, self.resize_input_to)
             owned_frames = [Image.fromarray(frame) for frame in padded]
             video_resource = owned_frames
             expected_frames = len(owned_frames)
@@ -353,9 +351,7 @@ class Sam3VideoSegmenter:
                     continue
                 if resize_meta is not None:
                     original_hw, resized_hw, padding = resize_meta
-                    masks = self._restore_masks_from_letterbox(
-                        masks, original_hw, resized_hw, padding
-                    )
+                    masks = self._restore_masks_from_letterbox(masks, original_hw, resized_hw, padding)
                 masks_by_category[prompt] = masks
         finally:
             if owned_frames is not None:
@@ -396,9 +392,7 @@ class Sam3VideoSegmenter:
         pil_frames: list[Image.Image] | None = None
         if self.resize_input_to:
             frames = load_video_frames(video_path)
-            padded_frames, orig_hw, resized_hw, pad_xy = self._letterbox_frames(
-                frames, self.resize_input_to
-            )
+            padded_frames, orig_hw, resized_hw, pad_xy = self._letterbox_frames(frames, self.resize_input_to)
             pil_frames = [Image.fromarray(frame) for frame in padded_frames]
             video_resource = pil_frames
             expected_frames = len(pil_frames)
@@ -467,9 +461,7 @@ class Sam3VideoSegmenter:
         if resize_meta is not None and instance_masks:
             orig_hw, resized_hw, pad_xy = resize_meta
             stacked = np.stack(instance_masks, axis=0)
-            restored = self._restore_masks_from_letterbox(
-                stacked, orig_hw, resized_hw, pad_xy
-            )
+            restored = self._restore_masks_from_letterbox(stacked, orig_hw, resized_hw, pad_xy)
             instance_masks = [restored[i] for i in range(restored.shape[0])]
 
         return instance_masks
@@ -507,9 +499,7 @@ class Sam3VideoSegmenter:
             pil_frames_input = video_path
             if self.resize_input_to:
                 frames_np = [np.asarray(img) for img in pil_frames_input]
-                padded, orig_hw, resized_hw, pad_xy = self._letterbox_frames(
-                    frames_np, self.resize_input_to
-                )
+                padded, orig_hw, resized_hw, pad_xy = self._letterbox_frames(frames_np, self.resize_input_to)
                 resize_meta = (orig_hw, resized_hw, pad_xy)
                 pil_frames = [Image.fromarray(f) for f in padded]
                 video_resource = pil_frames
@@ -520,9 +510,7 @@ class Sam3VideoSegmenter:
                     expected_frames = len(pil_frames_input)
         elif self.resize_input_to:
             frames_np = load_video_frames(video_path)
-            padded, orig_hw, resized_hw, pad_xy = self._letterbox_frames(
-                frames_np, self.resize_input_to
-            )
+            padded, orig_hw, resized_hw, pad_xy = self._letterbox_frames(frames_np, self.resize_input_to)
             resize_meta = (orig_hw, resized_hw, pad_xy)
             pil_frames = [Image.fromarray(f) for f in padded]
             video_resource = pil_frames
@@ -585,9 +573,7 @@ class Sam3VideoSegmenter:
 
                         if resize_meta is not None:
                             orig_hw, resized_hw, pad_xy = resize_meta
-                            masks = self._restore_masks_from_letterbox(
-                                masks, orig_hw, resized_hw, pad_xy
-                            )
+                            masks = self._restore_masks_from_letterbox(masks, orig_hw, resized_hw, pad_xy)
 
                         for i, local_id in enumerate(obj_ids.tolist()):
                             mask = masks[i]
@@ -663,9 +649,7 @@ class Sam3VideoSegmenter:
         pil_frames: list[Image.Image] | None = None
         if self.resize_input_to:
             frames = load_video_frames(video_path)
-            padded_frames, orig_hw, resized_hw, pad_xy = self._letterbox_frames(
-                frames, self.resize_input_to
-            )
+            padded_frames, orig_hw, resized_hw, pad_xy = self._letterbox_frames(frames, self.resize_input_to)
             pil_frames = [Image.fromarray(frame) for frame in padded_frames]
             video_resource = pil_frames
             expected_frames = len(pil_frames)
@@ -712,9 +696,7 @@ class Sam3VideoSegmenter:
 
         if resize_meta is not None:
             orig_hw, resized_hw, pad_xy = resize_meta
-            merged_masks = self._restore_masks_from_letterbox(
-                merged_masks, orig_hw, resized_hw, pad_xy
-            )
+            merged_masks = self._restore_masks_from_letterbox(merged_masks, orig_hw, resized_hw, pad_xy)
 
         if output_dir is not None:
             output_dir = Path(output_dir)

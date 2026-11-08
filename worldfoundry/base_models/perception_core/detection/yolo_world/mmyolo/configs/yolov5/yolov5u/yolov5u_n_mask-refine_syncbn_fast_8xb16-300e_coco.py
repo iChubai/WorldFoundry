@@ -1,4 +1,4 @@
-_base_ = './yolov5u_s_mask-refine_syncbn_fast_8xb16-300e_coco.py'
+_base_ = "./yolov5u_s_mask-refine_syncbn_fast_8xb16-300e_coco.py"
 
 # This config will refine bbox by mask while loading annotations and
 # transforming after `YOLOv5RandomAffine`
@@ -17,4 +17,5 @@ model = dict(
         deepen_factor=deepen_factor,
         widen_factor=widen_factor,
     ),
-    bbox_head=dict(head_module=dict(widen_factor=widen_factor)))
+    bbox_head=dict(head_module=dict(widen_factor=widen_factor)),
+)

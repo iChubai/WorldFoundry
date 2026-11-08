@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import einops
 import torch
-import torch.utils.checkpoint   # used explicitly by the self-check below
+import torch.utils.checkpoint  # used explicitly by the self-check below
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
@@ -154,7 +154,7 @@ def _compute_noise_slots(
         slots: List[Tuple[int, int]] = []
         _off = 0
         _rev = original_context_length_list[::-1]
-        _wrev = (warp_len_list[::-1] if warp_len_list is not None else [0] * len(_rev))
+        _wrev = warp_len_list[::-1] if warp_len_list is not None else [0] * len(_rev)
         for cur_len, w_len in zip(_rev, _wrev):
             _off += history_context_length + w_len
             slots.append((_off, _off + cur_len))
@@ -316,7 +316,9 @@ class EvokeAttnProcessor:
                 # Use explicit override; avoids mis-inference when warp segment is removed from hidden_states.
                 history_seq_len = int(history_seq_len_override) // max(1, len(original_context_length_list))
             else:
-                history_seq_len = (hidden_states.shape[1] - original_context_length) // len(original_context_length_list)
+                history_seq_len = (hidden_states.shape[1] - original_context_length) // len(
+                    original_context_length_list
+                )
 
         if attn.restrict_self_attn:
             use_cache = self.cache_enabled and not is_first_denoising_step and self.kv_cache is not None
@@ -543,6 +545,7 @@ class EvokeAttnProcessor:
         _sp_a2a = (sp_plan is not None) and (not enable_cross)
         if _sp_a2a:
             from worldfoundry.base_models.diffusion_model.models.networks.evoke import student_sp as _stu_sp
+
             query = _stu_sp.a2a_seq_to_head(query.contiguous(), sp_plan.ctx)
             key = _stu_sp.a2a_seq_to_head(key.contiguous(), sp_plan.ctx)
             value = _stu_sp.a2a_seq_to_head(value.contiguous(), sp_plan.ctx)
@@ -880,7 +883,7 @@ class EvokeRotaryPosEmbed(nn.Module):
         # COPY so the lru_cached integer meshgrid is never mutated; fractional coords are fine (freqs are float-safe).
         if spatial_scale is not None:
             _sy, _sx = spatial_scale
-            _oy, _ox = (spatial_offset if spatial_offset is not None else (0.0, 0.0))
+            _oy, _ox = spatial_offset if spatial_offset is not None else (0.0, 0.0)
             GY = GY * float(_sy) + float(_oy)
             GX = GX * float(_sx) + float(_ox)
 
@@ -957,7 +960,10 @@ class EvokeTransformerBlock(nn.Module):
 
         self.cam_ctrl = cam_ctrl
         if cam_ctrl:
-            from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import build_camera_modulation_lowrank_submodules
+            from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import (
+                build_camera_modulation_lowrank_submodules,
+            )
+
             build_camera_modulation_lowrank_submodules(self, dim=dim, cam_rank=cam_rank)
 
     def forward(
@@ -1021,13 +1027,21 @@ class EvokeTransformerBlock(nn.Module):
 
         # Camera control modulation (lingbot AdaLN): applies affine scale/shift to noise tokens only.
         if self.cam_ctrl and cam_token_seq is not None and cam_noise_slots is not None:
-            from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import apply_cam_modulation
+            from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import (
+                apply_cam_modulation,
+            )
+
             hidden_states = apply_cam_modulation(
-                hidden_states, cam_token_seq.to(hidden_states.dtype),
-                self.cam_inj1_down_proj, self.cam_inj1_up_proj,
-                self.cam_inj2_down_proj, self.cam_inj2_up_proj,
-                self.cam_scale_down_proj, self.cam_scale_up_proj,
-                self.cam_shift_down_proj, self.cam_shift_up_proj,
+                hidden_states,
+                cam_token_seq.to(hidden_states.dtype),
+                self.cam_inj1_down_proj,
+                self.cam_inj1_up_proj,
+                self.cam_inj2_down_proj,
+                self.cam_inj2_up_proj,
+                self.cam_scale_down_proj,
+                self.cam_scale_up_proj,
+                self.cam_shift_down_proj,
+                self.cam_shift_up_proj,
                 cam_noise_slots,
             )
 
@@ -1035,17 +1049,16 @@ class EvokeTransformerBlock(nn.Module):
             # Per-stage layout [shared_history | warp_s | noise_s]; strip (history + warp_s) so attn2 sees noise only.
             # Subtract warp tokens before deriving the uniform shared-history length.
             _warp_total = sum(warp_len_list) if warp_len_list is not None else 0
-            history_seq_len = (
-                hidden_states.shape[1] - original_context_length - _warp_total
-            ) // len(original_context_length_list)
+            history_seq_len = (hidden_states.shape[1] - original_context_length - _warp_total) // len(
+                original_context_length_list
+            )
             # Once sharded, hidden_states.shape[1] is this rank's token count while
             #   original_context_length is the global noise token count, so the expression above
             #   would give a wrong -- possibly negative -- boundary. Use b_local instead, which
             #   model.forward derives from the global boundary b.
             if sp_plan is not None:
                 history_seq_len = sp_plan.hist_local
-            _wl_rev = (warp_len_list[::-1] if warp_len_list is not None
-                       else [0] * len(original_context_length_list))
+            _wl_rev = warp_len_list[::-1] if warp_len_list is not None else [0] * len(original_context_length_list)
 
             if enable_navit:
                 num_seqs = len(original_context_length_list)
@@ -1101,7 +1114,8 @@ class EvokeTransformerBlock(nn.Module):
                 assert not (sp_plan is not None and hidden_states.shape[1] == 0), (
                     "[STU-SP] attn2 input is empty: the two-region split should leave every rank noise tokens. "
                     f"hist_local={getattr(sp_plan, 'hist_local', None)} lh={getattr(sp_plan, 'lh', None)} "
-                    f"ln={getattr(sp_plan, 'ln', None)} -> the split plan is wrong; continuing would make the group's graphs differ and deadlock")
+                    f"ln={getattr(sp_plan, 'ln', None)} -> the split plan is wrong; continuing would make the group's graphs differ and deadlock"
+                )
                 norm_hidden_states = self.norm2(hidden_states.float()).type_as(hidden_states)
                 attn_output = self.attn2(
                     norm_hidden_states,
@@ -1317,9 +1331,12 @@ class EvokeTransformer3DModel(
                 build_camera_plucker_encoder_submodules,
                 get_plucker_input_dim,
             )
+
             plucker_input_dim = get_plucker_input_dim(patch_size=tuple(patch_size))
             build_camera_plucker_encoder_submodules(
-                self, dim=inner_dim, plucker_input_dim=plucker_input_dim,
+                self,
+                dim=inner_dim,
+                plucker_input_dim=plucker_input_dim,
             )
 
         self.zero_history_timestep = zero_history_timestep
@@ -1427,18 +1444,27 @@ class EvokeTransformer3DModel(
         if _warp_mlp is not None:
             lhs = lhs + self.gradient_checkpointing_method(_warp_mlp, lhs)
         rope_s = self.rope(
-            frame_indices=indices_latents_history_short, height=H1, width=W1, device=lhs.device,
+            frame_indices=indices_latents_history_short,
+            height=H1,
+            width=W1,
+            device=lhs.device,
         )
         rope_s = rope_s.flatten(2).transpose(1, 2)
         if history_visible_mask_short is not None:
             keep_mask = pool_history_visible_mask(history_visible_mask_short, mask_pool_factor)
             if history_invisible_token_mode == "global":
                 lhs = replace_history_tokens_by_mask(
-                    lhs, keep_mask, getattr(self, "history_invisible_token", None), threshold=history_threshold,
+                    lhs,
+                    keep_mask,
+                    getattr(self, "history_invisible_token", None),
+                    threshold=history_threshold,
                 )
             else:
                 lhs, rope_s = filter_history_tokens_by_mask(
-                    lhs, rope_s, keep_mask, threshold=history_threshold,
+                    lhs,
+                    rope_s,
+                    keep_mask,
+                    threshold=history_threshold,
                 )
         return lhs, rope_s, int(lhs.shape[1])
 
@@ -1452,15 +1478,15 @@ class EvokeTransformer3DModel(
         latents_history_short=None,
         latents_history_mid=None,
         latents_history_long=None,
-        sink_latents=None,           # [B, 16, 1, H, W] first-sink frame embedded with main patch_embedding
-        nearby_sink_latents=None,    # [B, 16, K, H, W] nearby-sink frames embedded with main patch_embedding
-        nearby_sink_indices=None,    # [B, K] explicit frame indices for nearby sink
+        sink_latents=None,  # [B, 16, 1, H, W] first-sink frame embedded with main patch_embedding
+        nearby_sink_latents=None,  # [B, 16, K, H, W] nearby-sink frames embedded with main patch_embedding
+        nearby_sink_indices=None,  # [B, K] explicit frame indices for nearby sink
         # GEO visibility masks [B,1,T,H,W] per tier; None = skip filtering.
         history_visible_mask_short=None,
         history_visible_mask_mid=None,
         history_visible_mask_long=None,
         attention_kwargs=None,
-        cam_plucker_emb=None,        # [B, 384, F, H, W]; additive Plucker on warp+noise (geo_warp_plucker_enabled)
+        cam_plucker_emb=None,  # [B, 384, F, H, W]; additive Plucker on warp+noise (geo_warp_plucker_enabled)
     ):
         # Read visibility filter settings from attention_kwargs with safe defaults.
         history_threshold = 0.5
@@ -1496,9 +1522,16 @@ class EvokeTransformer3DModel(
             if _noise_center_on and _nc_full_hpp is not None and (_H < _nc_full_hpp or _W < _nc_full_wpp):
                 _sch = _nc_full_hpp / max(1, _H)
                 _scw = _nc_full_wpp / max(1, _W)
-                return self.rope(frame_indices=_fi, height=_H, width=_W, device=_dev,
-                                 spatial_scale=(_sch, _scw), spatial_offset=((_sch - 1.0) / 2.0, (_scw - 1.0) / 2.0))
+                return self.rope(
+                    frame_indices=_fi,
+                    height=_H,
+                    width=_W,
+                    device=_dev,
+                    spatial_scale=(_sch, _scw),
+                    spatial_offset=((_sch - 1.0) / 2.0, (_scw - 1.0) / 2.0),
+                )
             return self.rope(frame_indices=_fi, height=_H, width=_W, device=_dev)
+
         # Stage2 synchronized warp: build per-stage warp (matching each pyramid stage's resolution) instead of
         # prepending one shared short-tier prefix. Only active for pyramid (list latents) + GEO + synchronized.
         _sync_warp = bool(
@@ -1572,11 +1605,15 @@ class EvokeTransformer3DModel(
                 if not getattr(self, "_geo_plk_pyramid_warned", False):
                     print(
                         "[GEO-plucker] WARNING: additive plucker is not wired for the pyramid/list path yet; "
-                        "skipping injection (non-pyramid path is unaffected).", flush=True,
+                        "skipping injection (non-pyramid path is unaffected).",
+                        flush=True,
                     )
                     self._geo_plk_pyramid_warned = True
             else:
-                from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import process_cam_plucker_to_tokens
+                from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import (
+                    process_cam_plucker_to_tokens,
+                )
+
                 _geo_plk_token_seq = process_cam_plucker_to_tokens(
                     cam_plucker_emb.to(hidden_states.device, dtype=hidden_states.dtype),
                     self.patch_embedding_wancamctrl,
@@ -1591,7 +1628,8 @@ class EvokeTransformer3DModel(
                 else:
                     print(
                         f"[GEO-plucker] WARNING: cam_token_seq len {_geo_plk_token_seq.shape[1]} != noise "
-                        f"token count {_n_noise}; skipping noise add.", flush=True,
+                        f"token count {_n_noise}; skipping noise add.",
+                        flush=True,
                     )
                     _geo_plk_token_seq = None
 
@@ -1613,7 +1651,10 @@ class EvokeTransformer3DModel(
                 # Fallback: use last T_ns frames of short history indices.
                 nearby_indices = indices_latents_history_short[:, -T_ns:].to(nearby_sink_lat.device)
             nearby_rope = self.rope(
-                frame_indices=nearby_indices, height=H_ns, width=W_ns, device=nearby_sink_lat.device,
+                frame_indices=nearby_indices,
+                height=H_ns,
+                width=W_ns,
+                device=nearby_sink_lat.device,
             )
             nearby_rope = nearby_rope.flatten(2).transpose(1, 2)
             hidden_states = torch.cat([nearby_tokens, hidden_states], dim=1)
@@ -1627,16 +1668,20 @@ class EvokeTransformer3DModel(
             if _geo_warp_frames > 0:
                 # [prefix(_Pf) | warp(W) | prev_short(Sp)]: extract the middle warp, reassemble anchor = prefix+prev_short.
                 _Pf = _T_full - _geo_warp_frames - _geo_prev_short_frames
-                _warp_lat = latents_history_short[:, :, _Pf:_Pf + _geo_warp_frames]
-                _warp_idx = indices_latents_history_short[:, _Pf:_Pf + _geo_warp_frames]
+                _warp_lat = latents_history_short[:, :, _Pf : _Pf + _geo_warp_frames]
+                _warp_idx = indices_latents_history_short[:, _Pf : _Pf + _geo_warp_frames]
                 _anchor_lat = torch.cat(
-                    [latents_history_short[:, :, :_Pf], latents_history_short[:, :, _Pf + _geo_warp_frames:]], dim=2
+                    [latents_history_short[:, :, :_Pf], latents_history_short[:, :, _Pf + _geo_warp_frames :]], dim=2
                 )
                 _anchor_idx = torch.cat(
-                    [indices_latents_history_short[:, :_Pf], indices_latents_history_short[:, _Pf + _geo_warp_frames:]], dim=1
+                    [
+                        indices_latents_history_short[:, :_Pf],
+                        indices_latents_history_short[:, _Pf + _geo_warp_frames :],
+                    ],
+                    dim=1,
                 )
                 if history_visible_mask_short is not None:
-                    _warp_vis = history_visible_mask_short[:, :, _Pf:_Pf + _geo_warp_frames]
+                    _warp_vis = history_visible_mask_short[:, :, _Pf : _Pf + _geo_warp_frames]
                 else:
                     _warp_vis = None
             else:
@@ -1646,7 +1691,9 @@ class EvokeTransformer3DModel(
                 _anchor_idx = indices_latents_history_short[:, :_anchor_n]
                 _warp_lat = latents_history_short[:, :, _anchor_n:]
                 _warp_idx = indices_latents_history_short[:, _anchor_n:]
-                _warp_vis = history_visible_mask_short[:, :, _anchor_n:] if history_visible_mask_short is not None else None
+                _warp_vis = (
+                    history_visible_mask_short[:, :, _anchor_n:] if history_visible_mask_short is not None else None
+                )
 
             # (1) anchor -> full-res patch_short (NO warp_mlp), prepend to shared history. H1/W1 = full short grid
             #     (also reused by mid/long below). Anchor is clean (visible ones) -> no visibility filtering.
@@ -1655,9 +1702,16 @@ class EvokeTransformer3DModel(
             )
             _, _, _, H1, W1 = _anchor_emb.shape
             _anchor_tok = _anchor_emb.flatten(2).transpose(1, 2)
-            _anchor_rope = self.rope(
-                frame_indices=_anchor_idx, height=H1, width=W1, device=_anchor_tok.device,
-            ).flatten(2).transpose(1, 2)
+            _anchor_rope = (
+                self.rope(
+                    frame_indices=_anchor_idx,
+                    height=H1,
+                    width=W1,
+                    device=_anchor_tok.device,
+                )
+                .flatten(2)
+                .transpose(1, 2)
+            )
             hidden_states = torch.cat([_anchor_tok.to(hidden_states), hidden_states], dim=1)
             rope_freqs = torch.cat([_anchor_rope, rope_freqs], dim=1)
 
@@ -1682,8 +1736,11 @@ class EvokeTransformer3DModel(
                 warp_tokens_list.append(_wt)
                 warp_rope_list.append(_wr)
                 warp_len_list.append(_wl)
-            print(f"[GEO-sync] synchronized: anchor={int(_anchor_lat.shape[2])}f (prefix+prev_short, full-res, shared) "
-                  f"+ per-stage warp_len={warp_len_list} (noise seq={seq_list})", flush=True)
+            print(
+                f"[GEO-sync] synchronized: anchor={int(_anchor_lat.shape[2])}f (prefix+prev_short, full-res, shared) "
+                f"+ per-stage warp_len={warp_len_list} (noise seq={seq_list})",
+                flush=True,
+            )
 
         if latents_history_short is not None and indices_latents_history_short is not None and not _sync_warp:
             latents_history_short = latents_history_short.to(hidden_states)
@@ -1699,9 +1756,9 @@ class EvokeTransformer3DModel(
                     _Pf = T_short - _geo_warp_frames - _geo_prev_short_frames
                     _w0 = int(_Pf * _tokens_per_frame)
                     _w1 = int((_Pf + _geo_warp_frames) * _tokens_per_frame)
-                    _pre_part = latents_history_short[:, :_w0, :]              # prefix (leading)
-                    _warp_part = latents_history_short[:, _w0:_w1, :]          # warp (middle)
-                    _post_part = latents_history_short[:, _w1:, :]             # prev_short (trailing)
+                    _pre_part = latents_history_short[:, :_w0, :]  # prefix (leading)
+                    _warp_part = latents_history_short[:, _w0:_w1, :]  # warp (middle)
+                    _post_part = latents_history_short[:, _w1:, :]  # prev_short (trailing)
                     _warp_part = _warp_part + self.gradient_checkpointing_method(_warp_mlp, _warp_part)
                     latents_history_short = torch.cat([_pre_part, _warp_part, _post_part], dim=1)
                 else:
@@ -1734,7 +1791,8 @@ class EvokeTransformer3DModel(
                 else:
                     print(
                         f"[GEO-plucker] WARNING: warp slice len {_warp_len} != cam_token_seq len "
-                        f"{_geo_plk_token_seq.shape[1]}; skipping warp add.", flush=True,
+                        f"{_geo_plk_token_seq.shape[1]}; skipping warp add.",
+                        flush=True,
                     )
 
             rope_freqs_history_short = self.rope(
@@ -1845,7 +1903,10 @@ class EvokeTransformer3DModel(
             sink_tokens = sink_emb.flatten(2).transpose(1, 2)
             sink_indices = torch.zeros(B_s, T_sink, device=sink_lat.device, dtype=torch.long)
             sink_rope = self.rope(
-                frame_indices=sink_indices, height=H_sink, width=W_sink, device=sink_lat.device,
+                frame_indices=sink_indices,
+                height=H_sink,
+                width=W_sink,
+                device=sink_lat.device,
             )
             sink_rope = sink_rope.flatten(2).transpose(1, 2)
             hidden_states = torch.cat([sink_tokens, hidden_states], dim=1)
@@ -1876,15 +1937,15 @@ class EvokeTransformer3DModel(
         latents_history_short=None,
         latents_history_mid=None,
         latents_history_long=None,
-        sink_latents=None,           # [B, 16, 1, H, W] first-sink frame
-        nearby_sink_latents=None,    # [B, 16, K, H, W] nearby-sink frames
-        nearby_sink_indices=None,    # [B, K] frame indices for nearby sink
+        sink_latents=None,  # [B, 16, 1, H, W] first-sink frame
+        nearby_sink_latents=None,  # [B, 16, K, H, W] nearby-sink frames
+        nearby_sink_indices=None,  # [B, K] frame indices for nearby sink
         # GEO visibility masks per tier; None = pass-through.
         history_visible_mask_short=None,
         history_visible_mask_mid=None,
         history_visible_mask_long=None,
         is_first_denoising_step: bool = False,
-        cam_plucker_emb=None,        # [B, 384, F, H, W] or list for NaViT; None = skip cam path
+        cam_plucker_emb=None,  # [B, 384, F, H, W] or list for NaViT; None = skip cam path
         gan_mode: bool = False,
         return_dict: bool = True,
         attention_kwargs: dict[str, Any] | None = None,
@@ -2117,7 +2178,10 @@ class EvokeTransformer3DModel(
         cam_token_seq = None
         cam_noise_slots = None
         if getattr(self, "enable_cam_control", False) and cam_plucker_emb is not None:
-            from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import process_cam_plucker_to_tokens
+            from worldfoundry.base_models.diffusion_model.models.networks.evoke.camera_control import (
+                process_cam_plucker_to_tokens,
+            )
+
             ps = tuple(self.config.patch_size)
             if isinstance(cam_plucker_emb, list):
                 assert len(cam_plucker_emb) == len(original_context_length_list), (
@@ -2166,19 +2230,23 @@ class EvokeTransformer3DModel(
         _sp_plan = None
         if sf_student_sp_ctx is not None:
             from worldfoundry.base_models.diffusion_model.models.networks.evoke import student_sp as _stu_sp
+
             # S is derived per forward: the warp short tier drops tokens by visibility in
             #   filter_history_tokens_by_mask, so S is data-dependent and moves every step. A group
             #   that disagrees on S gets mismatched all-to-all shapes -- an NCCL hang or silently
             #   wrong data, not numerical drift -- so fail fast.
             _S_real = int(hidden_states.shape[1])
-            assert not enable_navit, "[STU-SP] mechanism B does not support the NAViT path (absolute-position splits throughout the processor)"
-            assert len(original_context_length_list) == 1, \
+            assert not enable_navit, (
+                "[STU-SP] mechanism B does not support the NAViT path (absolute-position splits throughout the processor)"
+            )
+            assert len(original_context_length_list) == 1, (
                 f"[STU-SP] mechanism B requires a single-stage sequence, got {len(original_context_length_list)}"
-            assert self.config.num_attention_heads % sf_student_sp_ctx.size == 0, \
-                (f"[STU-SP] num_attention_heads={self.config.num_attention_heads} "
-                 f"is not divisible by G_u={sf_student_sp_ctx.size}")
-            _b_global = _S_real - original_context_length - (
-                sum(warp_len_list) if warp_len_list is not None else 0)
+            )
+            assert self.config.num_attention_heads % sf_student_sp_ctx.size == 0, (
+                f"[STU-SP] num_attention_heads={self.config.num_attention_heads} "
+                f"is not divisible by G_u={sf_student_sp_ctx.size}"
+            )
+            _b_global = _S_real - original_context_length - (sum(warp_len_list) if warp_len_list is not None else 0)
             _sp_plan = _stu_sp.ShardPlan(sf_student_sp_ctx, _S_real, _b_global)
             # Unconditional, not gated on diag: for a warp section S and b are data-dependent
             #   (filter_history_tokens_by_mask drops tokens by visibility), and a group that
@@ -2188,15 +2256,17 @@ class EvokeTransformer3DModel(
             _stu_sp.assert_same_in_group(_b_global, "history boundary b", sf_student_sp_ctx.group)
             # After the permute the shape is [B, S, 6, D], so dim=1 is the token axis (dim=2 before it).
             assert timestep_proj.ndim == 4, (
-                f"[STU-SP] mechanism B needs a per-token timestep_proj (ndim=4 after permute), got ndim={timestep_proj.ndim}")
+                f"[STU-SP] mechanism B needs a per-token timestep_proj (ndim=4 after permute), got ndim={timestep_proj.ndim}"
+            )
             assert int(timestep_proj.shape[1]) == _S_real, (
                 f"[STU-SP] timestep_proj token count {timestep_proj.shape[1]} != hidden_states {_S_real}"
-                " -> AdaLN would be misaligned once sharded")
+                " -> AdaLN would be misaligned once sharded"
+            )
             # The self-check (SF_STUSP_SELFCHECK=1) needs the pre-shard full-length input to re-run an
             #   unsharded reference; None when it is off.
             _sc_h, _sc_tsp, _sc_rot = (
-                (hidden_states, timestep_proj, rotary_emb)
-                if _stu_sp.selfcheck_pending() else (None, None, None))
+                (hidden_states, timestep_proj, rotary_emb) if _stu_sp.selfcheck_pending() else (None, None, None)
+            )
             hidden_states = _stu_sp.scatter_tokens(hidden_states, _sp_plan)
             rotary_emb = _stu_sp.scatter_tokens(rotary_emb, _sp_plan)
             timestep_proj = _stu_sp.scatter_tokens(timestep_proj, _sp_plan)
@@ -2246,6 +2316,7 @@ class EvokeTransformer3DModel(
         #   reshape) is an absolute-position operation and is covered by it.
         if _sp_plan is not None:
             from worldfoundry.base_models.diffusion_model.models.networks.evoke import student_sp as _stu_sp
+
             hidden_states = _stu_sp.gather_tokens(hidden_states, _sp_plan)
             # The tail (temb modulation / norm_out / proj_out / unpatchify) sees full-length input after
             #   the gather, so its parameter gradients are redundantly complete within the sub-group
@@ -2262,6 +2333,7 @@ class EvokeTransformer3DModel(
             #   max|delta|/max|ref| should sit at bf16 noise level (<~1e-2); O(1) means a real bug.
             #   Runs on the first call only, then no-ops; off by default, so zero cost.
             if _stu_sp.selfcheck_pending():
+
                 def _sc_run(_h, _t, _r, _plan, _upto=None):
                     """Run the block region (with per-block checkpointing to save memory); _plan=None
                     means unsharded. The sharded path gathers back to full length, so both return the
@@ -2269,24 +2341,41 @@ class EvokeTransformer3DModel(
                     _hh = _stu_sp.scatter_tokens(_h, _plan) if _plan is not None else _h
                     _tt = _stu_sp.scatter_tokens(_t, _plan) if _plan is not None else _t
                     _rr = _stu_sp.scatter_tokens(_r, _plan) if _plan is not None else _r
-                    for _blk in (self.blocks if _upto is None else self.blocks[:_upto]):
+                    for _blk in self.blocks if _upto is None else self.blocks[:_upto]:
                         _hh = torch.utils.checkpoint.checkpoint(
-                            _blk, _hh, encoder_hidden_states, _tt, _rr,
-                            navit_hidden_attention_mask, navit_encoder_attention_mask,
-                            original_context_length, original_context_length_list,
-                            is_first_denoising_step, cam_token_seq, cam_noise_slots,
-                            warp_len_list, _plan, use_reentrant=False)
+                            _blk,
+                            _hh,
+                            encoder_hidden_states,
+                            _tt,
+                            _rr,
+                            navit_hidden_attention_mask,
+                            navit_encoder_attention_mask,
+                            original_context_length,
+                            original_context_length_list,
+                            is_first_denoising_step,
+                            cam_token_seq,
+                            cam_noise_slots,
+                            warp_len_list,
+                            _plan,
+                            use_reentrant=False,
+                        )
                     return _stu_sp.gather_tokens(_hh, _plan) if _plan is not None else _hh
 
                 _sc_full = (_sc_h, _sc_tsp, _sc_rot)
                 with torch.no_grad():
-                    _stu_sp.selfcheck_report(hidden_states, _sc_run(*_sc_full, None),
-                                             _sp_plan, tag=f"S={_S_real}")
+                    _stu_sp.selfcheck_report(hidden_states, _sc_run(*_sc_full, None), _sp_plan, tag=f"S={_S_real}")
                 _sc_ps = [p for p in self.blocks.parameters() if p.requires_grad]
                 _stu_sp.set_param_names([(n, p) for n, p in self.blocks.named_parameters() if p.requires_grad])
-                _stu_sp.selfcheck_grad(_sc_run, _sc_full, _sc_full, _sp_plan, _sc_ps,
-                                       tag=f"S={_S_real}", depths=(1, 5, 10, 20),
-                                       n_layers=len(self.blocks))
+                _stu_sp.selfcheck_grad(
+                    _sc_run,
+                    _sc_full,
+                    _sc_full,
+                    _sp_plan,
+                    _sc_ps,
+                    tag=f"S={_S_real}",
+                    depths=(1, 5, 10, 20),
+                    n_layers=len(self.blocks),
+                )
 
         if temb.ndim == 3:
             if not enable_navit:
@@ -2308,8 +2397,9 @@ class EvokeTransformer3DModel(
 
             output = []
             seq_start = 0
-            _warp_len_rev = (warp_len_list[::-1] if warp_len_list is not None
-                             else [0] * len(original_context_length_list))
+            _warp_len_rev = (
+                warp_len_list[::-1] if warp_len_list is not None else [0] * len(original_context_length_list)
+            )
             for (
                 cur_original_context_length,
                 cur_warp_len,
@@ -2326,7 +2416,7 @@ class EvokeTransformer3DModel(
                 # Per-stage segment = [shared_history | warp_s | noise_s]; keep only noise_s.
                 _seg = cur_original_context_length + history_context_length + cur_warp_len
                 cur_hidden_states = hidden_states[:, seq_start : seq_start + _seg, :]  # (B, hist+warp+noise, C)
-                cur_hidden_states = cur_hidden_states[:, history_context_length + cur_warp_len:, :]
+                cur_hidden_states = cur_hidden_states[:, history_context_length + cur_warp_len :, :]
                 cur_hidden_states = self.proj_out(cur_hidden_states)
                 seq_start += _seg
 
@@ -2620,7 +2710,7 @@ if __name__ == "__main__":
         "is_use_gan_hooks": is_use_gan_hooks,
         "gan_hooks": [13, 21, 29],
         "gan_cond_map_dim": 768,
-            # "gan_hooks": [10, 20, 30],
+        # "gan_hooks": [10, 20, 30],
         # "gan_cond_map_dim": 512,
     }
     device = "cuda"

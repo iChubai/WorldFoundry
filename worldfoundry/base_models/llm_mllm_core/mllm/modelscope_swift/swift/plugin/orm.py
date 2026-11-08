@@ -8,13 +8,11 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
 
 
 class ORM:
-
     def __call__(self, **kwargs) -> List[float]:
         raise NotImplementedError
 
 
 class ReactORM(ORM):
-
     @staticmethod
     def evaluate_action_reward(action_pred: list, action_ref: list, cand_list: list, ref_list: list):
         f1 = []
@@ -88,20 +86,20 @@ class ReactORM(ORM):
 
     @staticmethod
     def parse_action(text):
-        if 'Action Input:' in text:
-            input_idx = text.rindex('Action Input:')
-            action_input = text[input_idx + len('Action Input:'):].strip()
+        if "Action Input:" in text:
+            input_idx = text.rindex("Action Input:")
+            action_input = text[input_idx + len("Action Input:") :].strip()
         else:
-            action_input = '{}'
+            action_input = "{}"
 
-        if 'Action:' in text:
-            action_idx = text.rindex('Action:')
-            action = text[action_idx + len('Action:'):].strip()
-            if 'Action Input:' in action:
-                input_idx = action.index('Action Input:')
+        if "Action:" in text:
+            action_idx = text.rindex("Action:")
+            action = text[action_idx + len("Action:") :].strip()
+            if "Action Input:" in action:
+                input_idx = action.index("Action Input:")
                 action = action[:input_idx].strip()
         else:
-            action = 'none'
+            action = "none"
         return action, action_input
 
     @staticmethod
@@ -112,29 +110,29 @@ class ReactORM(ORM):
     def __call__(self, infer_requests: List[Union[InferRequest, Dict]], solution: List[str], **kwargs) -> List[float]:
         rewards = []
         if not isinstance(infer_requests[0], str):
-            predictions = [request['messages'][-1]['content'] for request in infer_requests]
+            predictions = [request["messages"][-1]["content"] for request in infer_requests]
         else:
             predictions = infer_requests
         for prediction, ground_truth in zip(predictions, solution):
-            if prediction.endswith('Observation:'):
-                prediction = prediction[:prediction.index('Observation:')].strip()
+            if prediction.endswith("Observation:"):
+                prediction = prediction[: prediction.index("Observation:")].strip()
             action_ref = []
             action_input_ref = []
             action_pred = []
             action_input_pred = []
             reference = ground_truth
-            prediction = prediction.replace('<|endoftext|>', '').replace('<|im_end|>', '').strip()
+            prediction = prediction.replace("<|endoftext|>", "").replace("<|im_end|>", "").strip()
             ref_action, ref_input = ReactORM.parse_output(reference)
             pred_action, pred_input = ReactORM.parse_output(prediction)
             action_ref.append(ref_action)
             action_input_ref.append(ref_input)
             if pred_action is None:
-                action_pred.append('none')
+                action_pred.append("none")
             else:
                 action_pred.append(pred_action)
 
             if pred_input is None:
-                action_input_pred.append('{}')
+                action_input_pred.append("{}")
             else:
                 action_input_pred.append(pred_input)
 
@@ -148,21 +146,23 @@ class ReactORM(ORM):
             return None
         try:
             from rouge import Rouge
+
             rouge = Rouge()
             rouge_score = rouge.get_scores(hyps=cand_list, refs=ref_list, avg=True)
-            rougel = rouge_score['rouge-l']['f']
+            rougel = rouge_score["rouge-l"]["f"]
             return rougel
         except Exception:
             return None
 
 
 class MathORM(ORM):
-
     def __init__(self):
         from transformers.utils import strtobool
-        self.use_opencompass = strtobool(os.environ.get('USE_OPENCOMPASS_EVALUATOR', 'False'))
+
+        self.use_opencompass = strtobool(os.environ.get("USE_OPENCOMPASS_EVALUATOR", "False"))
         if self.use_opencompass:
             from opencompass.datasets.math import MATHEvaluator
+
             self.evaluator = MATHEvaluator()
 
     @staticmethod
@@ -171,12 +171,12 @@ class MathORM(ORM):
             answers = [answers]
         results = []
         for answer in answers:
-            results.append('\\boxed' in answer)
+            results.append("\\boxed" in answer)
         return results
 
     @staticmethod
     def extract_boxed_result(text):
-        pattern = r'\\boxed{([^}]*)}'
+        pattern = r"\\boxed{([^}]*)}"
         match = re.search(pattern, text)
         if match:
             return match.group(1).strip()
@@ -185,14 +185,15 @@ class MathORM(ORM):
 
     @staticmethod
     def clean_latex(latex_str):
-        latex_str = re.sub(r'\\\(|\\\)|\\\[|\\]', '', latex_str)
-        latex_str = latex_str.replace('}}', '}').replace('{', '').replace('}', '')
+        latex_str = re.sub(r"\\\(|\\\)|\\\[|\\]", "", latex_str)
+        latex_str = latex_str.replace("}}", "}").replace("{", "").replace("}", "")
         return latex_str.strip()
 
     @staticmethod
     def parse_expression(latex_str):
         from sympy import simplify
         from sympy.parsing.latex import parse_latex
+
         try:
             expr = parse_latex(latex_str)
             return simplify(expr)
@@ -203,7 +204,7 @@ class MathORM(ORM):
     def compare_consecutive(first, second):
         cleaned_list = [MathORM.clean_latex(latex) for latex in [first, second]]
         parsed_exprs = [MathORM.parse_expression(latex) for latex in cleaned_list]
-        if hasattr(parsed_exprs[0], 'equals') and hasattr(parsed_exprs[1], 'equals'):
+        if hasattr(parsed_exprs[0], "equals") and hasattr(parsed_exprs[1], "equals"):
             value = parsed_exprs[0].equals(parsed_exprs[1])
         else:
             value = parsed_exprs[0] == parsed_exprs[1]
@@ -211,15 +212,16 @@ class MathORM(ORM):
             value = False
         return value
 
-    def __call__(self, infer_requests: List[Union[InferRequest, Dict]], ground_truths: List[str],
-                 **kwargs) -> List[float]:
+    def __call__(
+        self, infer_requests: List[Union[InferRequest, Dict]], ground_truths: List[str], **kwargs
+    ) -> List[float]:
         rewards = []
-        predictions = [request.messages[-1]['content'] for request in infer_requests]
+        predictions = [request.messages[-1]["content"] for request in infer_requests]
         for prediction, ground_truth in zip(predictions, ground_truths):
-            if '# Answer' in prediction:
-                prediction = prediction.split('# Answer')[1]
-            if '# Answer' in ground_truth:
-                ground_truth = ground_truth.split('# Answer')[1]
+            if "# Answer" in prediction:
+                prediction = prediction.split("# Answer")[1]
+            if "# Answer" in ground_truth:
+                ground_truth = ground_truth.split("# Answer")[1]
             prediction = prediction.strip()
             ground_truth = ground_truth.strip()
             prediction = MathORM.extract_boxed_result(prediction)
@@ -233,18 +235,20 @@ class MathORM(ORM):
 
 
 class MathAccuracy(ORM):
-
     def __init__(self):
         import importlib.util
-        assert importlib.util.find_spec('math_verify') is not None, (
-            "The math_verify package is required but not installed. Please install it using 'pip install math_verify'.")
+
+        assert importlib.util.find_spec("math_verify") is not None, (
+            "The math_verify package is required but not installed. Please install it using 'pip install math_verify'."
+        )
 
     def __call__(self, completions, solution, **kwargs) -> List[float]:
         from latex2sympy2_extended import NormalizationConfig
         from math_verify import LatexExtractionConfig, parse, verify
+
         rewards = []
         for content, sol in zip(completions, solution):
-            gold_parsed = parse(sol, extraction_mode='first_match')
+            gold_parsed = parse(sol, extraction_mode="first_match")
             if len(gold_parsed) != 0:
                 # We require the answer to be provided in correct latex (no malformed operators)
                 answer_parsed = parse(
@@ -264,7 +268,7 @@ class MathAccuracy(ORM):
                             try_extract_without_anchor=False,
                         )
                     ],
-                    extraction_mode='first_match',
+                    extraction_mode="first_match",
                 )
                 # edge case
                 try:
@@ -279,33 +283,33 @@ class MathAccuracy(ORM):
 
 
 class Format(ORM):
-
     def __call__(self, completions, **kwargs) -> List[float]:
         """Reward function that checks if the completion has a specific format."""
-        pattern = r'^<think>.*?</think>\s*<answer>.*?</answer>(?![\s\S])'
+        pattern = r"^<think>.*?</think>\s*<answer>.*?</answer>(?![\s\S])"
         matches = [re.match(pattern, content, re.DOTALL | re.MULTILINE) for content in completions]
         return [1.0 if match else 0.0 for match in matches]
 
 
 class ReActFormat(ORM):
-
     def __call__(self, completions, **kwargs) -> List[float]:
         """Reward function that checks if the completion has a specific format."""
-        pattern = r'^<think>.*?</think>\s*Action:.*?Action Input:.*?$'
+        pattern = r"^<think>.*?</think>\s*Action:.*?Action Input:.*?$"
         matches = [re.match(pattern, content, re.DOTALL | re.MULTILINE) for content in completions]
         return [1.0 if match else 0.0 for match in matches]
 
 
 class CosineReward(ORM):
     # https://arxiv.org/abs/2502.03373
-    def __init__(self,
-                 tokenizer=None,
-                 cosine_min_len_value_wrong: float = -0.5,
-                 cosine_max_len_value_wrong: float = 0.0,
-                 cosine_min_len_value_correct: float = 1.0,
-                 cosine_max_len_value_correct: float = 0.5,
-                 cosine_max_len: int = 1000,
-                 accuracy_orm=None):
+    def __init__(
+        self,
+        tokenizer=None,
+        cosine_min_len_value_wrong: float = -0.5,
+        cosine_max_len_value_wrong: float = 0.0,
+        cosine_min_len_value_correct: float = 1.0,
+        cosine_max_len_value_correct: float = 0.5,
+        cosine_max_len: int = 1000,
+        accuracy_orm=None,
+    ):
         self.tokenizer = tokenizer
         self.min_len_value_wrong = cosine_min_len_value_wrong
         self.max_len_value_wrong = cosine_max_len_value_wrong
@@ -317,13 +321,14 @@ class CosineReward(ORM):
     @staticmethod
     def cosfn(t, T, min_value, max_value):
         import math
+
         return max_value - (max_value - min_value) * (1 - math.cos(t * math.pi / T)) / 2
 
     def __call__(self, completions, solution, **kwargs) -> List[float]:
         acc_rewards = self.accuracy_orm(completions, solution, **kwargs)
         rewards = []
         for content, acc_reward in zip(completions, acc_rewards):
-            is_correct = acc_reward >= 1.
+            is_correct = acc_reward >= 1.0
             if is_correct:
                 # Swap min/max for correct answers
                 min_value = self.max_len_value_correct
@@ -357,7 +362,7 @@ class RepetitionPenalty(ORM):
         """
         rewards = []
         for completion in completions:
-            if completion == '':
+            if completion == "":
                 rewards.append(0.0)
                 continue
             if len(completion.split()) < self.ngram_size:
@@ -377,7 +382,6 @@ class RepetitionPenalty(ORM):
 
 
 class SoftOverlong(ORM):
-
     def __init__(self, tokenizer, soft_max_length, soft_cache_length):
         self.tokenizer = tokenizer
         assert soft_cache_length < soft_max_length
@@ -395,12 +399,12 @@ class SoftOverlong(ORM):
 
 
 orms = {
-    'toolbench': ReactORM,
-    'math': MathORM,
-    'accuracy': MathAccuracy,
-    'format': Format,
-    'react_format': ReActFormat,
-    'cosine': CosineReward,
-    'repetition': RepetitionPenalty,
-    'soft_overlong': SoftOverlong,
+    "toolbench": ReactORM,
+    "math": MathORM,
+    "accuracy": MathAccuracy,
+    "format": Format,
+    "react_format": ReActFormat,
+    "cosine": CosineReward,
+    "repetition": RepetitionPenalty,
+    "soft_overlong": SoftOverlong,
 }

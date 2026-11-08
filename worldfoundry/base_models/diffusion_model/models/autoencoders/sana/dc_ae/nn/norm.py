@@ -39,6 +39,7 @@ __all__ = ["LayerNorm2d", "TritonRMSNorm2d", "build_norm", "set_norm_eps"]
 
 class LayerNorm2d(nn.LayerNorm):
     """Layer norm d implementation."""
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward.
 
@@ -61,6 +62,7 @@ class TritonRMSNorm2d(nn.LayerNorm):
     The class name is retained because released DC-AE configs use ``trms2d``;
     inference does not need the original custom backward kernel.
     """
+
     def zero_out(self):
         """Zero out."""
         nn.init.constant_(self.weight, 0)
@@ -85,6 +87,7 @@ class TritonRMSNorm2d(nn.LayerNorm):
 
 class RMSNorm2d(nn.Module):
     """Rms norm d implementation."""
+
     def __init__(
         self, num_features: int, eps: float = 1e-5, elementwise_affine: bool = True, bias: bool = True
     ) -> None:
@@ -130,6 +133,7 @@ class RMSNorm2d(nn.Module):
 
 class RMSNorm3d(RMSNorm2d):
     """Rms norm d implementation."""
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward.
 

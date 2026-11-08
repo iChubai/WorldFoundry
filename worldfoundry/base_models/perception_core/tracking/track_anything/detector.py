@@ -23,6 +23,7 @@ from worldfoundry.base_models.perception_core.detection.grounding_dino.util.slco
 
 class Detector:
     """Detector implementation."""
+
     def __init__(self, device, checkpoint_path: str | None = None):
         """Init.
 

@@ -43,9 +43,7 @@ def _checkpoint_roots() -> list[Path]:
 def checkpoint_path(model: str = "vits") -> Path | None:
     filename = VDA_FILENAMES[model]
     env_key = (
-        "WORLDFOUNDRY_VIDEO_DEPTH_ANYTHING_CKPT"
-        if model == "vits"
-        else "WORLDFOUNDRY_VIDEO_DEPTH_ANYTHING_VITL_CKPT"
+        "WORLDFOUNDRY_VIDEO_DEPTH_ANYTHING_CKPT" if model == "vits" else "WORLDFOUNDRY_VIDEO_DEPTH_ANYTHING_VITL_CKPT"
     )
     explicit = os.environ.get(env_key, "").strip()
     if explicit:

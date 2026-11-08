@@ -41,6 +41,7 @@ try:
         Upsample,
         CACHE_T as WAN_CACHE_T,
     )
+
     # Use CACHE_T from wan_2p1 if available
     CACHE_T = WAN_CACHE_T
 except ImportError:
@@ -54,8 +55,10 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 # Adapter classes to make wan_2p1 components compatible with autoencoder_kl_wan interface
 if CausalConv3d is not None:
+
     class WanCausalConv3d(CausalConv3d):
         """Adapter for CausalConv3d from wan_2p1 with compatibility improvements."""
+
         def forward(self, x, cache_x=None):
             """Forward.
 
@@ -77,6 +80,7 @@ else:
         r"""
         A custom 3D causal convolution layer with feature caching support.
         """
+
         def __init__(
             self,
             in_channels: int,
@@ -123,10 +127,15 @@ else:
                 x = F.pad(x, padding)
             return super().forward(x)
 
+
 if RMS_norm is not None:
+
     class WanRMS_norm(RMS_norm):
         """Adapter for RMS_norm from wan_2p1 with weight parameter support."""
-        def __init__(self, dim: int, channel_first: bool = True, images: bool = True, weight: bool = True, bias: bool = False) -> None:
+
+        def __init__(
+            self, dim: int, channel_first: bool = True, images: bool = True, weight: bool = True, bias: bool = False
+        ) -> None:
             """Init.
 
             Args:
@@ -142,7 +151,7 @@ if RMS_norm is not None:
             super().__init__(dim, channel_first=channel_first, images=images, bias=bias)
             if not weight:
                 self.gamma = 1.0
-        
+
         def forward(self, x):
             """Forward.
 
@@ -156,7 +165,10 @@ else:
         r"""
         A custom RMS normalization layer.
         """
-        def __init__(self, dim: int, channel_first: bool = True, images: bool = True, weight: bool = True, bias: bool = False) -> None:
+
+        def __init__(
+            self, dim: int, channel_first: bool = True, images: bool = True, weight: bool = True, bias: bool = False
+        ) -> None:
             """Init.
 
             Args:
@@ -185,9 +197,12 @@ else:
             """
             return F.normalize(x, dim=(1 if self.channel_first else -1)).mul_(self.scale * self.gamma).add_(self.bias)
 
+
 if Upsample is not None:
+
     class WanUpsample(Upsample):
         """Adapter for Upsample from wan_2p1."""
+
         pass
 else:
     # Fallback: define WanUpsample locally if import failed
@@ -195,6 +210,7 @@ else:
         r"""
         Perform upsampling while ensuring the output tensor has the same data type as the input.
         """
+
         def forward(self, x):
             """Forward.
 
@@ -202,6 +218,7 @@ else:
                 x: The x.
             """
             return super().forward(x.float()).type_as(x)
+
 
 class AvgDown3D(nn.Module):
     """Avg down d implementation."""
@@ -241,7 +258,7 @@ class AvgDown3D(nn.Module):
             The return value.
         """
         if not ((x.shape[2] == 1 and self.group_size >= self.factor) or self.factor_t == 1):
-            pad_t = (self.factor_t - x.shape[2] % self.factor_t) 
+            pad_t = self.factor_t - x.shape[2] % self.factor_t
             pad = (0, 0, 0, 0, pad_t, 0)
             x = F.pad(x, pad)
             B, C, T, H, W = x.shape
@@ -308,6 +325,7 @@ class AvgDown3D(nn.Module):
             x = x.mean(dim=2) / (pad_t + 1)
             return x
 
+
 class DupUp3D(nn.Module):
     """Dup up d implementation."""
 
@@ -368,7 +386,7 @@ class DupUp3D(nn.Module):
                 x.size(6) * self.factor_s,
             )
             if first_chunk:
-                x = x[:, :, self.factor_t - 1:, :, :]
+                x = x[:, :, self.factor_t - 1 :, :, :]
             return x
         else:
             # print(1)
@@ -392,6 +410,7 @@ class DupUp3D(nn.Module):
                 x.size(6) * self.factor_s,
             )
             return x
+
 
 class WanResample(nn.Module):
     r"""
@@ -429,11 +448,13 @@ class WanResample(nn.Module):
         # layers
         if mode == "upsample2d":
             self.resample = nn.Sequential(
-                WanUpsample(scale_factor=(2.0, 2.0), mode="nearest-exact"), nn.Conv2d(dim, upsample_out_dim, 3, padding=1)
+                WanUpsample(scale_factor=(2.0, 2.0), mode="nearest-exact"),
+                nn.Conv2d(dim, upsample_out_dim, 3, padding=1),
             )
         elif mode == "upsample3d":
             self.resample = nn.Sequential(
-                WanUpsample(scale_factor=(2.0, 2.0), mode="nearest-exact"), nn.Conv2d(dim, upsample_out_dim, 3, padding=1)
+                WanUpsample(scale_factor=(2.0, 2.0), mode="nearest-exact"),
+                nn.Conv2d(dim, upsample_out_dim, 3, padding=1),
             )
             self.time_conv = WanCausalConv3d(dim, dim * 2, (3, 1, 1), padding=(1, 0, 0))
 
@@ -703,13 +724,7 @@ class WanMidBlock(nn.Module):
 class WanResidualDownBlock(nn.Module):
     """Wan residual down block implementation."""
 
-    def __init__(self,
-                 in_dim,
-                 out_dim,
-                 dropout,
-                 num_res_blocks,
-                 temperal_downsample=False,
-                 down_flag=False):
+    def __init__(self, in_dim, out_dim, dropout, num_res_blocks, temperal_downsample=False, down_flag=False):
         """Init.
 
         Args:
@@ -760,6 +775,7 @@ class WanResidualDownBlock(nn.Module):
 
         return self.avg_shortcut(x_copy).add_(x)
 
+
 class WanEncoder3d(nn.Module):
     r"""
     A 3D encoder module.
@@ -786,7 +802,7 @@ class WanEncoder3d(nn.Module):
         temperal_downsample=[True, True, False],
         dropout=0.0,
         non_linearity: str = "silu",
-        is_residual: bool = False, # wan 2.2 vae use a residual downblock
+        is_residual: bool = False,  # wan 2.2 vae use a residual downblock
     ):
         """Init.
 
@@ -831,8 +847,8 @@ class WanEncoder3d(nn.Module):
                         num_res_blocks,
                         temperal_downsample=temperal_downsample[i] if i != len(dim_mult) - 1 else False,
                         down_flag=i != len(dim_mult) - 1,
-                        )
-                        )
+                    )
+                )
             else:
                 for _ in range(num_res_blocks):
                     self.down_blocks.append(WanResidualBlock(in_dim, out_dim, dropout))
@@ -901,6 +917,7 @@ class WanEncoder3d(nn.Module):
         else:
             x = self.conv_out(x)
         return x
+
 
 class WanResidualUpBlock(nn.Module):
     """
@@ -1000,6 +1017,7 @@ class WanResidualUpBlock(nn.Module):
             x = x + self.avg_shortcut(x_copy, first_chunk=first_chunk)
 
         return x
+
 
 class WanUpBlock(nn.Module):
     """
@@ -1165,7 +1183,7 @@ class WanDecoder3d(nn.Module):
                     num_res_blocks=num_res_blocks,
                     dropout=dropout,
                     temperal_upsample=temperal_upsample[i] if up_flag else False,
-                    up_flag= up_flag,
+                    up_flag=up_flag,
                     non_linearity=non_linearity,
                 )
             else:
@@ -1213,7 +1231,7 @@ class WanDecoder3d(nn.Module):
 
         ## upsamples
         for up_block in self.up_blocks:
-            x = up_block(x, feat_cache, feat_idx, first_chunk = first_chunk)
+            x = up_block(x, feat_cache, feat_idx, first_chunk=first_chunk)
 
         ## head
         x = self.norm_out(x)
@@ -1241,11 +1259,11 @@ def patchify(x, patch_size):
     """
     # YiYi TODO: refactor this
     from einops import rearrange
+
     if patch_size == 1:
         return x
     if x.dim() == 4:
-        x = rearrange(
-            x, "b c (h q) (w r) -> b (c r q) h w", q=patch_size, r=patch_size)
+        x = rearrange(x, "b c (h q) (w r) -> b (c r q) h w", q=patch_size, r=patch_size)
     elif x.dim() == 5:
         x = rearrange(
             x,
@@ -1268,12 +1286,12 @@ def unpatchify(x, patch_size):
     """
     # YiYi TODO: refactor this
     from einops import rearrange
+
     if patch_size == 1:
         return x
 
     if x.dim() == 4:
-        x = rearrange(
-            x, "b (c r q) h w -> b c (h q) (w r)", q=patch_size, r=patch_size)
+        x = rearrange(x, "b (c r q) h w -> b c (h q) (w r)", q=patch_size, r=patch_size)
     elif x.dim() == 5:
         x = rearrange(
             x,
@@ -1282,6 +1300,7 @@ def unpatchify(x, patch_size):
             r=patch_size,
         )
     return x
+
 
 class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     r"""
@@ -1383,13 +1402,29 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
             decoder_base_dim = base_dim
 
         self.encoder = WanEncoder3d(
-            in_channels=in_channels, dim=base_dim, z_dim=z_dim * 2, dim_mult=dim_mult, num_res_blocks=num_res_blocks, attn_scales=attn_scales, temperal_downsample=temperal_downsample, dropout=dropout, is_residual=is_residual
+            in_channels=in_channels,
+            dim=base_dim,
+            z_dim=z_dim * 2,
+            dim_mult=dim_mult,
+            num_res_blocks=num_res_blocks,
+            attn_scales=attn_scales,
+            temperal_downsample=temperal_downsample,
+            dropout=dropout,
+            is_residual=is_residual,
         )
         self.quant_conv = WanCausalConv3d(z_dim * 2, z_dim * 2, 1)
         self.post_quant_conv = WanCausalConv3d(z_dim, z_dim, 1)
 
         self.decoder = WanDecoder3d(
-            dim=decoder_base_dim, z_dim=z_dim, dim_mult=dim_mult, num_res_blocks=num_res_blocks, attn_scales=attn_scales, temperal_upsample=self.temperal_upsample, dropout=dropout, out_channels=out_channels, is_residual=is_residual
+            dim=decoder_base_dim,
+            z_dim=z_dim,
+            dim_mult=dim_mult,
+            num_res_blocks=num_res_blocks,
+            attn_scales=attn_scales,
+            temperal_upsample=self.temperal_upsample,
+            dropout=dropout,
+            out_channels=out_channels,
+            is_residual=is_residual,
         )
 
         self.spatial_compression_ratio = 2 ** len(self.temperal_downsample)
@@ -1498,7 +1533,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         if self.config.patch_size is not None:
             x = patchify(x, patch_size=self.config.patch_size)
         iter_ = 1 + (num_frame - 1) // 4
-        self._enc_feat_map = None if iter_ == 1 else self._enc_feat_map 
+        self._enc_feat_map = None if iter_ == 1 else self._enc_feat_map
         for i in range(iter_):
             self._enc_conv_idx = [0]
             if i == 0:
@@ -1557,12 +1592,14 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
             return self.tiled_decode(z, return_dict=return_dict)
 
         self.clear_cache()
-        self._feat_map = None if num_frame == 1 else self._feat_map 
+        self._feat_map = None if num_frame == 1 else self._feat_map
         x = self.post_quant_conv(z)
         for i in range(num_frame):
             self._conv_idx = [0]
             if i == 0:
-                out = self.decoder(x[:, :, i : i + 1, :, :], feat_cache=self._feat_map, feat_idx=self._conv_idx, first_chunk=True)
+                out = self.decoder(
+                    x[:, :, i : i + 1, :, :], feat_cache=self._feat_map, feat_idx=self._conv_idx, first_chunk=True
+                )
             else:
                 out_ = self.decoder(x[:, :, i : i + 1, :, :], feat_cache=self._feat_map, feat_idx=self._conv_idx)
                 out = torch.cat([out, out_], 2)

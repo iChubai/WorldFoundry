@@ -114,6 +114,7 @@ def custom_conv3d(
 
 class ConvLayer3d(nn.Module):
     """Conv layer d implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -326,7 +327,7 @@ class ConvLayer3d(nn.Module):
 
     def __repr__(self):
         """Repr."""
-        _str = f"{self.__class__.__name__}(\n" f"  (conv): {self.conv}\n"
+        _str = f"{self.__class__.__name__}(\n  (conv): {self.conv}\n"
         if self.norm:
             _str += f"  (norm): {self.norm}\n"
         if self.act:
@@ -340,6 +341,7 @@ class ConvLayer3d(nn.Module):
 
 class ResBlock3d(nn.Module):
     """Res block d implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -454,9 +456,9 @@ def pixel_unshuffle_3d(x: torch.Tensor, spatial_factor: int, temporal_factor: in
     """
     # x: (B, C, T, H, W)
     B, C, T, H, W = x.shape
-    assert (
-        T % temporal_factor == 0 and W % spatial_factor == 0 and H % spatial_factor == 0
-    ), f"T:{T} {temporal_factor} W:{W} {spatial_factor} H:{H} {spatial_factor}"
+    assert T % temporal_factor == 0 and W % spatial_factor == 0 and H % spatial_factor == 0, (
+        f"T:{T} {temporal_factor} W:{W} {spatial_factor} H:{H} {spatial_factor}"
+    )
     x = (
         x.reshape(
             (
@@ -506,6 +508,7 @@ def pixel_shuffle_3d(x: torch.Tensor, spatial_factor: int, temporal_factor: int)
 
 class ConvPixelUnshuffleDownSampleLayer3d(nn.Module):
     """Conv pixel unshuffle down sample layer d implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -584,6 +587,7 @@ class ConvPixelUnshuffleDownSampleLayer3d(nn.Module):
 
 class PixelUnshuffleChannelAveragingDownSampleLayer3d(nn.Module):
     """Pixel unshuffle channel averaging down sample layer d implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -634,6 +638,7 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3d(nn.Module):
 
 class ConvPixelShuffleUpSampleLayer3d(nn.Module):
     """Conv pixel shuffle up sample layer d implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -713,6 +718,7 @@ class ConvPixelShuffleUpSampleLayer3d(nn.Module):
 
 class ChannelDuplicatingPixelShuffleUpSampleLayer3d(nn.Module):
     """Channel duplicating pixel shuffle up sample layer d implementation."""
+
     def __init__(
         self,
         in_channels: int,
@@ -761,6 +767,7 @@ class ChannelDuplicatingPixelShuffleUpSampleLayer3d(nn.Module):
 
 class ResidualBlock3d(ResidualBlock):
     """Residual block d implementation."""
+
     def load_state_dict_from_2d(self, state_dict: dict[str, torch.Tensor], method: str):
         """Load state dict from 2d.
 
@@ -825,6 +832,7 @@ class ResidualBlock3d(ResidualBlock):
 
 class OpSequential3d(OpSequential):
     """Op sequential d implementation."""
+
     def load_state_dict_from_2d(self, state_dict: dict[str, torch.Tensor], method: str):
         """Load state dict from 2d.
 

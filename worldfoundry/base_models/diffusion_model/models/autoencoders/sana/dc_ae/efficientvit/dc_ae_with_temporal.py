@@ -54,6 +54,7 @@ from ..nn.ops_3d import (
 @dataclass
 class DCAEWithTemporalEncoderConfig:
     """Dcae with temporal encoder config implementation."""
+
     in_channels: int = MISSING
     latent_channels: int = MISSING
 
@@ -63,9 +64,7 @@ class DCAEWithTemporalEncoderConfig:
     block_type: Any = "ResBlock3d@3@1"  # spatial kernel size 3, temporal kernel size 1
     norm: Any = "trms2d"
     act: str = "silu"
-    downsample_block_type: Any = (
-        "ConvPixelUnshuffle@2@1@3@1"  # spatial factor 2, temporal factor 1, spatial kernel size 3, temporal kernel size 1
-    )
+    downsample_block_type: Any = "ConvPixelUnshuffle@2@1@3@1"  # spatial factor 2, temporal factor 1, spatial kernel size 3, temporal kernel size 1
     downsample_shortcut: Optional[str] = "averaging"
     project_out_block_type: str = "ConvLayer3d@3@1"  # spatial kernel size 3, temporal kernel size 1
 
@@ -75,6 +74,7 @@ class DCAEWithTemporalEncoderConfig:
 @dataclass
 class DCAEWithTemporalDecoderConfig:
     """Dcae with temporal decoder config implementation."""
+
     in_channels: int = MISSING
     latent_channels: int = MISSING
 
@@ -99,6 +99,7 @@ class DCAEWithTemporalDecoderConfig:
 @dataclass
 class DCAEWithTemporalConfig:
     """Dcae with temporal config implementation."""
+
     in_channels: int = 3
     latent_channels: int = 32
     encoder: DCAEWithTemporalEncoderConfig = field(
@@ -462,6 +463,7 @@ def build_decoder_project_out_block(
 
 class DCAEWithTemporalEncoder(nn.Module):
     """Dcae with temporal encoder implementation."""
+
     def __init__(self, cfg: DCAEWithTemporalEncoderConfig):
         """Init.
 
@@ -552,6 +554,7 @@ class DCAEWithTemporalEncoder(nn.Module):
 
 class DCAEWithTemporalDecoder(nn.Module):
     """Dcae with temporal decoder implementation."""
+
     def __init__(self, cfg: DCAEWithTemporalDecoderConfig):
         """Init.
 
@@ -650,6 +653,7 @@ class DCAEWithTemporalDecoder(nn.Module):
 
 class DCAEWithTemporal(nn.Module):
     """Dcae with temporal implementation."""
+
     def __init__(self, cfg: DCAEWithTemporalConfig):
         """Init.
 
@@ -1018,17 +1022,17 @@ def st_dc_ae_f32t4c32_chunked_causal(name: str, pretrained_path: str) -> DCAEWit
         raise ValueError(f"model {name} is not supported")
 
     cfg_str = (
-        f"latent_channels=32 use_feature_cache=True encode_temporal_tile_size={chunk_size} encode_temporal_tile_latent_size={chunk_size//4} decode_temporal_tile_size={chunk_size} decode_temporal_tile_latent_size={chunk_size//4} "
+        f"latent_channels=32 use_feature_cache=True encode_temporal_tile_size={chunk_size} encode_temporal_tile_latent_size={chunk_size // 4} decode_temporal_tile_size={chunk_size} decode_temporal_tile_latent_size={chunk_size // 4} "
         f"spatial_tile_size={spatial_tile_size} spatial_tile_overlap_factor={spatial_tile_overlap_factor} "
         f"encoder.project_in_block_type=ChunkedCausalConvPixelUnshuffle@2@1@3@3@{chunk_size} "
         f"encoder.depth_list={depth_list} encoder.width_list=[128,256,512,512,1024,1024,1024] "
-        f"encoder.block_type=[ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size//4}] "
+        f"encoder.block_type=[ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size // 4}] "
         f"encoder.downsample_block_type=[ChunkedCausalConvPixelUnshuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelUnshuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelUnshuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelUnshuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelUnshuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelUnshuffle@1@4@3@3@{chunk_size}] "
-        f"encoder.project_out_block_type=ChunkedCausalConvLayer3d@3@3@{chunk_size//4} "
+        f"encoder.project_out_block_type=ChunkedCausalConvLayer3d@3@3@{chunk_size // 4} "
         f"decoder.depth_list={depth_list} decoder.width_list=[128,256,512,512,1024,1024,1024] "
-        f"decoder.project_in_block_type=ChunkedCausalConvLayer3d@3@3@{chunk_size//4} "
-        f"decoder.block_type=[ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size//4}] "
-        f"decoder.upsample_block_type=[ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@1@4@3@3@{chunk_size//4}] "
+        f"decoder.project_in_block_type=ChunkedCausalConvLayer3d@3@3@{chunk_size // 4} "
+        f"decoder.block_type=[ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size},ChunkedCausalResBlock3d@3@3@{chunk_size // 4}] "
+        f"decoder.upsample_block_type=[ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size},ChunkedCausalConvPixelShuffle@1@4@3@3@{chunk_size // 4}] "
         f"decoder.project_out_block_type=ChunkedCausalConvPixelShuffle@2@1@3@3@{chunk_size} "
         f"scaling_factor={scaling_factor}"
     )

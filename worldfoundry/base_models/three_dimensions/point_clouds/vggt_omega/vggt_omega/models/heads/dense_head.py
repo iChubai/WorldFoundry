@@ -338,6 +338,7 @@ def _make_scratch(in_shape: list[int], out_shape: int) -> nn.Module:
 
 class ResidualConvUnit(nn.Module):
     """Residual conv unit implementation."""
+
     def __init__(self, features: int, activation: nn.Module) -> None:
         """Init.
 
@@ -371,6 +372,7 @@ class ResidualConvUnit(nn.Module):
 
 class FeatureFusionBlock(nn.Module):
     """Feature fusion block implementation."""
+
     def __init__(self, features: int, activation: nn.Module, has_residual: bool = True) -> None:
         """Init.
 
@@ -389,7 +391,9 @@ class FeatureFusionBlock(nn.Module):
             self.resConfUnit1 = ResidualConvUnit(features, activation)
         self.resConfUnit2 = ResidualConvUnit(features, activation)
 
-    def forward(self, x: torch.Tensor, residual: torch.Tensor | None = None, size: Tuple[int, int] | None = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, residual: torch.Tensor | None = None, size: Tuple[int, int] | None = None
+    ) -> torch.Tensor:
         """Forward.
 
         Args:

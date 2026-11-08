@@ -68,10 +68,10 @@ def mel_filters(device, n_mels: int = N_MELS) -> torch.Tensor:
 
 
 def log_mel_spectrogram(
-        audio: Union[np.ndarray, torch.Tensor],
-        n_mels: int = N_MELS,
-        padding: int = 0,
-        device: Optional[Union[str, torch.device]] = None,
+    audio: Union[np.ndarray, torch.Tensor],
+    n_mels: int = N_MELS,
+    padding: int = 0,
+    device: Optional[Union[str, torch.device]] = None,
 ) -> torch.Tensor:
     """Compute the log-Mel spectrogram of a waveform.
 
@@ -116,6 +116,7 @@ def log_mel_spectrogram(
 
 class LayerNorm(nn.LayerNorm):
     """Layer norm implementation."""
+
     def forward(self, x: Tensor) -> Tensor:
         """Forward.
 
@@ -130,6 +131,7 @@ class LayerNorm(nn.LayerNorm):
 
 class Linear(nn.Linear):
     """Linear implementation."""
+
     def forward(self, x: Tensor) -> Tensor:
         """Forward.
 
@@ -148,6 +150,7 @@ class Linear(nn.Linear):
 
 class Conv1d(nn.Conv1d):
     """Conv d implementation."""
+
     def _conv_forward(self, x: Tensor, weight: Tensor, bias: Optional[Tensor]) -> Tensor:
         """Helper function to conv forward.
 
@@ -182,6 +185,7 @@ def sinusoids(length, channels, max_timescale=10000):
 
 class MultiHeadAttention(nn.Module):
     """Multi head attention implementation."""
+
     use_sdpa = True
 
     def __init__(self, n_state: int, n_head: int):
@@ -199,11 +203,11 @@ class MultiHeadAttention(nn.Module):
         self.out = Linear(n_state, n_state)
 
     def forward(
-            self,
-            x: Tensor,
-            xa: Optional[Tensor] = None,
-            mask: Optional[Tensor] = None,
-            kv_cache: Optional[dict] = None,
+        self,
+        x: Tensor,
+        xa: Optional[Tensor] = None,
+        mask: Optional[Tensor] = None,
+        kv_cache: Optional[dict] = None,
     ):
         """Forward.
 
@@ -224,11 +228,11 @@ class MultiHeadAttention(nn.Module):
         return self.out(wv), qk
 
     def qkv_attention(
-            self,
-            q: Tensor,
-            k: Tensor,
-            v: Tensor,
-            mask: Optional[Tensor] = None,
+        self,
+        q: Tensor,
+        k: Tensor,
+        v: Tensor,
+        mask: Optional[Tensor] = None,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         """Qkv attention.
 
@@ -270,6 +274,7 @@ class MultiHeadAttention(nn.Module):
 
 class ResidualAttentionBlock(nn.Module):
     """Residual attention block implementation."""
+
     def __init__(self, n_state: int, n_head: int, cross_attention: bool = False):
         """Init.
 
@@ -290,11 +295,11 @@ class ResidualAttentionBlock(nn.Module):
         self.mlp_ln = LayerNorm(n_state)
 
     def forward(
-            self,
-            x: Tensor,
-            xa: Optional[Tensor] = None,
-            mask: Optional[Tensor] = None,
-            kv_cache: Optional[dict] = None,
+        self,
+        x: Tensor,
+        xa: Optional[Tensor] = None,
+        mask: Optional[Tensor] = None,
+        kv_cache: Optional[dict] = None,
     ):
         """Forward.
 
@@ -324,16 +329,16 @@ class WhisperEncoder(nn.Module):
     """
 
     def __init__(
-            self,
-            n_mels: int,
-            n_ctx: int,
-            n_state: int,
-            n_head: int,
-            n_layer: int,
-            output_dim: int = 512,
-            avg_pool: bool = True,
-            add_audio_bos_eos_token: bool = True,
-            **kwargs,
+        self,
+        n_mels: int,
+        n_ctx: int,
+        n_state: int,
+        n_head: int,
+        n_layer: int,
+        output_dim: int = 512,
+        avg_pool: bool = True,
+        add_audio_bos_eos_token: bool = True,
+        **kwargs,
     ):
         """Init.
 

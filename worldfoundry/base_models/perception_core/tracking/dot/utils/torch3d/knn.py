@@ -100,9 +100,7 @@ class _knn_points(Function):
             p1 = p1.float()
         if not (p2.dtype == torch.float32):
             p2 = p2.float()
-        grad_p1, grad_p2 = _C.knn_points_backward(
-            p1, p2, lengths1, lengths2, idx, norm, grad_dists
-        )
+        grad_p1, grad_p2 = _C.knn_points_backward(p1, p2, lengths1, lengths2, idx, norm, grad_dists)
         return grad_p1, grad_p2, None, None, None, None, None, None
 
 
@@ -174,9 +172,7 @@ def knn_points(
         lengths2 = torch.full((p1.shape[0],), P2, dtype=torch.int64, device=p1.device)
 
     # pyre-fixme[16]: `_knn_points` has no attribute `apply`.
-    p1_dists, p1_idx = _knn_points.apply(
-        p1, p2, lengths1, lengths2, K, version, norm, return_sorted
-    )
+    p1_dists, p1_idx = _knn_points.apply(p1, p2, lengths1, lengths2, K, version, norm, return_sorted)
 
     p2_nn = None
     if return_nn:
@@ -185,9 +181,7 @@ def knn_points(
     return _KNN(dists=p1_dists, idx=p1_idx, knn=p2_nn if return_nn else None)
 
 
-def knn_gather(
-    x: torch.Tensor, idx: torch.Tensor, lengths: Union[torch.Tensor, None] = None
-):
+def knn_gather(x: torch.Tensor, idx: torch.Tensor, lengths: Union[torch.Tensor, None] = None):
     """
     A helper function for knn that allows indexing a tensor x with the indices `idx`
     returned by `knn_points`.

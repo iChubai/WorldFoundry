@@ -13,6 +13,7 @@ from ..layers.basic import ConvGN
 
 class FPNSegmentationHead(nn.Module):
     """Fpn segmentation head implementation."""
+
     def __init__(
         self,
         in_dim,

@@ -220,9 +220,7 @@ def apply_wan_qk_norm_rope(
         return output
     q = attention.norm_q(q)
     k = attention.norm_k(k)
-    compute_dtype = (
-        torch.float32 if normalized_precision == "fp32" else torch.float64
-    )
+    compute_dtype = torch.float32 if normalized_precision == "fp32" else torch.float64
     return (
         rope_apply(q, freqs, attention.num_heads, compute_dtype=compute_dtype),
         rope_apply(k, freqs, attention.num_heads, compute_dtype=compute_dtype),
@@ -327,9 +325,7 @@ class CrossAttentionProcessor:
         prepared = kwargs.pop("_worldfoundry_cross_kv", None)
         if prepared is not None and len(prepared) != (4 if attention.has_image_input else 2):
             raise ValueError("Wan prepared cross-KV must contain text K/V and, for I2V, image K/V")
-        key, value, *image_kv = (
-            reuse_cross_kv(attention, context, store, project) if prepared is None else prepared
-        )
+        key, value, *image_kv = reuse_cross_kv(attention, context, store, project) if prepared is None else prepared
         sizes = kwargs.pop("_worldfoundry_request_batch_sizes", ())
         attention_options = {"request_batch_sizes": sizes} if sizes else {}
         output = attention.attn(query, key, value, **attention_options)
@@ -621,15 +617,10 @@ class DiTBlock(nn.Module):
         phase_names = {"self_attn_out", "cross_attn_out", "ffn_out"}
         if cached_phases is not None:
             if set(cached_phases) != phase_names:
-                raise ValueError(
-                    "Wan BlockTaylorSeer requires self_attn_out, "
-                    "cross_attn_out, and ffn_out"
-                )
+                raise ValueError("Wan BlockTaylorSeer requires self_attn_out, cross_attn_out, and ffn_out")
             for name, value in cached_phases.items():
                 if not isinstance(value, torch.Tensor) or value.shape != x.shape:
-                    raise ValueError(
-                        f"Wan BlockTaylorSeer cached {name} must match hidden shape"
-                    )
+                    raise ValueError(f"Wan BlockTaylorSeer cached {name} must match hidden shape")
             self_attn_out = cached_phases["self_attn_out"]
         else:
             input_x = layer_norm_scale_shift(
@@ -773,20 +764,12 @@ class Head(nn.Module):
                     )
                     + t_mod.float().unsqueeze(2)
                 ).chunk(2, dim=2)
-                x = self.head(
-                    (
-                        self.norm(x.float()) * (1 + scale.squeeze(2))
-                        + shift.squeeze(2)
-                    ).to(dtype=head_dtype)
-                )
+                x = self.head((self.norm(x.float()) * (1 + scale.squeeze(2)) + shift.squeeze(2)).to(dtype=head_dtype))
             else:
                 shift, scale = (
-                    self.modulation.to(device=t_mod.device, dtype=torch.float32)
-                    + t_mod.float().unsqueeze(1)
+                    self.modulation.to(device=t_mod.device, dtype=torch.float32) + t_mod.float().unsqueeze(1)
                 ).chunk(2, dim=1)
-                x = self.head(
-                    (self.norm(x.float()) * (1 + scale) + shift).to(dtype=head_dtype)
-                )
+                x = self.head((self.norm(x.float()) * (1 + scale) + shift).to(dtype=head_dtype))
         return x
 
 
@@ -885,10 +868,7 @@ class WanModel(torch.nn.Module):
         block_class = block_class or DiTBlock
         block_kwargs = dict(block_kwargs or {})
         if "vsa_gate_compress" in block_kwargs:
-            raise ValueError(
-                "WanModel.block_kwargs cannot override checkpoint-derived "
-                "vsa_gate_compress"
-            )
+            raise ValueError("WanModel.block_kwargs cannot override checkpoint-derived vsa_gate_compress")
         if vsa_gate_compress:
             block_kwargs["vsa_gate_compress"] = True
         self.blocks = nn.ModuleList(
@@ -1041,6 +1021,7 @@ class WanModel(torch.nn.Module):
         del kwargs
         if context is None:
             raise ValueError("Wan text-conditioned inference requires a context tensor")
+
         def project_single(source: torch.Tensor, clip: torch.Tensor | None) -> torch.Tensor:
             projected = self.text_embedding(source)
             if self.has_image_input:
@@ -1113,11 +1094,7 @@ class WanModel(torch.nn.Module):
             .reshape(f * h * w, 1, -1)
             .to(
                 device=device,
-                dtype=(
-                    torch.complex64
-                    if normalized == "fp32"
-                    else torch.complex128
-                ),
+                dtype=(torch.complex64 if normalized == "fp32" else torch.complex128),
             )
         )
         cache[key] = assembled
@@ -1257,11 +1234,7 @@ class WanModel(torch.nn.Module):
         # denoiser only supplies the flag for no-grad, cache-free inference,
         # but feature caches retain block inputs to form residuals and must
         # never observe those tensors after an in-place mutation.
-        inplace_residual = bool(
-            inplace_residual
-            and not torch.is_grad_enabled()
-            and feature_cache is None
-        )
+        inplace_residual = bool(inplace_residual and not torch.is_grad_enabled() and feature_cache is None)
         with torch.autocast(device_type=x.device.type, enabled=False):
             # Native Wan checkpoints can be loaded directly in BF16 (SCOPE
             # does this to fit the full 14B model).  Hard-casting the
@@ -1294,9 +1267,7 @@ class WanModel(torch.nn.Module):
                     t = self.time_embedding(features).unflatten(0, (batch, sequence))
                     t_mod = self.time_projection(t).unflatten(2, (6, self.dim))
             else:
-                raise ValueError(
-                    "Wan timestep must be [B], or [B,L] when per-token timesteps are enabled"
-                )
+                raise ValueError("Wan timestep must be [B], or [B,L] when per-token timesteps are enabled")
         if self.inject_sample_info:
             if fps is None:
                 raise ValueError("Wan sample-info conditioning requires fps ids")
@@ -1340,9 +1311,7 @@ class WanModel(torch.nn.Module):
                 memory_context=memory_context,
             )
 
-        rope_precision = str(
-            getattr(self, "_worldfoundry_rope_precision", "fp64")
-        ).strip().casefold()
+        rope_precision = str(getattr(self, "_worldfoundry_rope_precision", "fp64")).strip().casefold()
         freqs = self.rotary_frequencies(
             (f, h, w),
             device=x.device,
@@ -1406,9 +1375,7 @@ class WanModel(torch.nn.Module):
             block_kwargs["_worldfoundry_rope_grid"] = (f, h, w)
             block_kwargs["_worldfoundry_rope_table"] = self.fused_rope_table(
                 device=x.device,
-                precision=str(
-                    getattr(self, "_worldfoundry_rope_precision", "fp32")
-                ),
+                precision=str(getattr(self, "_worldfoundry_rope_precision", "fp32")),
             )
         if memory_context is not None:
             block_kwargs["memory_context"] = memory_context
@@ -1458,10 +1425,7 @@ class WanModel(torch.nn.Module):
             block = self.blocks[block_id]
             phase_forward = getattr(block, "forward_with_phase_cache", None)
             if not callable(phase_forward):
-                raise TypeError(
-                    "Wan BlockTaylorSeer requires blocks implementing "
-                    "forward_with_phase_cache"
-                )
+                raise TypeError("Wan BlockTaylorSeer requires blocks implementing forward_with_phase_cache")
             hidden, phase_outputs = phase_forward(
                 hidden,
                 context,
@@ -1502,17 +1466,13 @@ class WanModel(torch.nn.Module):
                     total_steps=feature_cache_total_steps,
                 )
             else:
-                signal_kind = str(
-                    getattr(feature_cache, "signal_kind", "timestep-modulation")
-                )
+                signal_kind = str(getattr(feature_cache, "signal_kind", "timestep-modulation"))
                 if signal_kind == "time-embedding":
                     cache_signal = t
                 elif signal_kind == "timestep-modulation":
                     cache_signal = t_mod
                 else:
-                    raise ValueError(
-                        f"unsupported Wan feature-cache signal kind: {signal_kind!r}"
-                    )
+                    raise ValueError(f"unsupported Wan feature-cache signal kind: {signal_kind!r}")
                 residual = feature_cache.run(
                     int(feature_cache_step),
                     cache_signal,
@@ -1531,10 +1491,12 @@ class WanModel(torch.nn.Module):
 
         x, auxiliary = self.finalize_token_sequence(x, token_state, **kwargs)
         if request_batch_sizes:
-            x = torch.cat([
-                self.project_output(part, time_part, **kwargs)
-                for part, time_part in zip(x.split(request_batch_sizes), t.split(request_batch_sizes))
-            ])
+            x = torch.cat(
+                [
+                    self.project_output(part, time_part, **kwargs)
+                    for part, time_part in zip(x.split(request_batch_sizes), t.split(request_batch_sizes))
+                ]
+            )
         else:
             x = self.project_output(x, t, **kwargs)
         x = self.unpatchify(x, (f, h, w))
@@ -1565,10 +1527,7 @@ class WanModel(torch.nn.Module):
             if provided != expected:
                 missing = sorted(expected - provided)
                 unexpected = sorted(provided - expected)
-                raise ValueError(
-                    f"Wan attention processor paths mismatch; missing={missing}, "
-                    f"unexpected={unexpected}"
-                )
+                raise ValueError(f"Wan attention processor paths mismatch; missing={missing}, unexpected={unexpected}")
             for index, block in enumerate(self.blocks):
                 path = f"blocks.{index}.cross_attn.processor"
                 if path in processor:

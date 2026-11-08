@@ -156,6 +156,7 @@ class SanaBlock(nn.Module):
         self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         # to be compatible with lower version pytorch
         if ffn_type == "dwmlp":
+
             def approx_gelu():
                 return nn.GELU(approximate="tanh")
 
@@ -180,6 +181,7 @@ class SanaBlock(nn.Module):
                 dilation=2,
             )
         elif ffn_type == "mlp":
+
             def approx_gelu():
                 return nn.GELU(approximate="tanh")
 

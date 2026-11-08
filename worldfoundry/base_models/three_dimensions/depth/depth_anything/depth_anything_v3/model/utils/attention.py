@@ -25,6 +25,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -99,6 +100,7 @@ class Attention(nn.Module):
 
 class LayerScale(nn.Module):
     """Layer scale implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -133,6 +135,7 @@ class LayerScale(nn.Module):
 
 class Mlp(nn.Module):
     """Mlp implementation."""
+
     def __init__(
         self,
         in_features: int,

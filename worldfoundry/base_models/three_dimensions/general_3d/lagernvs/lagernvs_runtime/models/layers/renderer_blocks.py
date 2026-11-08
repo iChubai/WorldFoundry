@@ -157,9 +157,7 @@ class CrossAttentionBlock(nn.Module):
         """
         # x: (B v_target) x P x C
         # cond_tokens: (B v_target) x (P v_input) x C
-        assert (
-            x.ndim == 3 and cond_tokens.ndim == 3
-        ), f"Unexpected number of dimensions, {x.ndim}, {cond_tokens.ndim}"
+        assert x.ndim == 3 and cond_tokens.ndim == 3, f"Unexpected number of dimensions, {x.ndim}, {cond_tokens.ndim}"
 
         # self-attention
         y = self.norm1(x)
@@ -273,9 +271,7 @@ class BidirectionalCrossAttentionBlock(nn.Module):
         """
         # x: (B v_target) x P x C
         # cond_tokens: (B v_target) x (P v_input) x C
-        assert (
-            x.ndim == 3 and cond_tokens.ndim == 3
-        ), f"Unexpected number of dimensions, {x.ndim}, {cond_tokens.ndim}"
+        assert x.ndim == 3 and cond_tokens.ndim == 3, f"Unexpected number of dimensions, {x.ndim}, {cond_tokens.ndim}"
 
         # self-attention
         x = x + self.self_attn(self.norm1_x(x), kv=None)

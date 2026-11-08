@@ -306,8 +306,7 @@ def analyze(
     for action in actions:
         if action not in ("emotion", "age", "gender", "race"):
             raise ValueError(
-                f"Invalid action passed ({repr(action)})). "
-                "Valid actions are `emotion`, `age`, `gender`, `race`."
+                f"Invalid action passed ({repr(action)})). Valid actions are `emotion`, `age`, `gender`, `race`."
             )
     # ---------------------------------
     # build models
@@ -456,7 +455,6 @@ def find(
     file_name = file_name.replace("-", "_").lower()
 
     if path.exists(db_path + "/" + file_name):
-
         if not silent:
             print(
                 f"WARNING: Representations for images in {db_path} folder were previously stored"
@@ -475,11 +473,7 @@ def find(
 
         for r, _, f in os.walk(db_path):
             for file in f:
-                if (
-                    (".jpg" in file.lower())
-                    or (".jpeg" in file.lower())
-                    or (".png" in file.lower())
-                ):
+                if (".jpg" in file.lower()) or (".jpeg" in file.lower()) or (".png" in file.lower()):
                     exact_path = r + "/" + file
                     employees.append(exact_path)
 
@@ -600,9 +594,7 @@ def find(
         threshold = dst.findThreshold(model_name, distance_metric)
         result_df = result_df.drop(columns=[f"{model_name}_representation"])
         result_df = result_df[result_df[f"{model_name}_{distance_metric}"] <= threshold]
-        result_df = result_df.sort_values(
-            by=[f"{model_name}_{distance_metric}"], ascending=True
-        ).reset_index(drop=True)
+        result_df = result_df.sort_values(by=[f"{model_name}_{distance_metric}"], ascending=True).reset_index(drop=True)
 
         resp_obj.append(result_df)
 
@@ -741,15 +733,10 @@ def stream(
     """
 
     if time_threshold < 1:
-        raise ValueError(
-            "time_threshold must be greater than the value 1 but you passed " + str(time_threshold)
-        )
+        raise ValueError("time_threshold must be greater than the value 1 but you passed " + str(time_threshold))
 
     if frame_threshold < 1:
-        raise ValueError(
-            "frame_threshold must be greater than the value 1 but you passed "
-            + str(frame_threshold)
-        )
+        raise ValueError("frame_threshold must be greater than the value 1 but you passed " + str(frame_threshold))
 
     realtime.analysis(
         db_path,
@@ -830,9 +817,7 @@ def extract_faces(
 
 
 @deprecated(version="0.0.78", reason="Use DeepFace.extract_faces instead of DeepFace.detectFace")
-def detectFace(
-    img_path, target_size=(224, 224), detector_backend="opencv", enforce_detection=True, align=True
-):
+def detectFace(img_path, target_size=(224, 224), detector_backend="opencv", enforce_detection=True, align=True):
     """
     Deprecated function. Use extract_faces for same functionality.
 

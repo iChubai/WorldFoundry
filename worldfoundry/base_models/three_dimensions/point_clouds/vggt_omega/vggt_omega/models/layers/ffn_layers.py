@@ -21,6 +21,7 @@ from .utils import cat_keep_shapes, uncat_with_shapes
 
 class ListForwardMixin(object):
     """List forward mixin implementation."""
+
     def forward(self, x: Tensor):
         """Forward.
 
@@ -45,6 +46,7 @@ class ListForwardMixin(object):
 
 class Mlp(nn.Module, ListForwardMixin):
     """Mlp implementation."""
+
     def __init__(
         self,
         in_features: int,
@@ -96,6 +98,7 @@ class Mlp(nn.Module, ListForwardMixin):
 
 class SwiGLUFFN(nn.Module, ListForwardMixin):
     """Swi gluffn implementation."""
+
     def __init__(
         self,
         in_features: int,

@@ -36,6 +36,7 @@ class Gaussians:
 @dataclass
 class Prediction:
     """Prediction implementation."""
+
     depth: np.ndarray  # N, H, W
     is_metric: int
     sky: np.ndarray | None = None  # N, H, W

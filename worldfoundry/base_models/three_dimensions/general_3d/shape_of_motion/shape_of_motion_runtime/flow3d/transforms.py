@@ -7,9 +7,7 @@ import torch
 import torch.nn.functional as F
 
 
-def rt_to_mat4(
-    R: torch.Tensor, t: torch.Tensor, s: torch.Tensor | None = None
-) -> torch.Tensor:
+def rt_to_mat4(R: torch.Tensor, t: torch.Tensor, s: torch.Tensor | None = None) -> torch.Tensor:
     """
     Args:
         R (torch.Tensor): (..., 3, 3).
@@ -118,9 +116,7 @@ def solve_procrustes(
     t = dst_mean / s - src_mean @ R.T
     sim3 = rot, t, s
     # Debug: error.
-    procrustes_dst = torch.einsum(
-        "ij,nj->ni", rt_to_mat4(R, t, s), F.pad(src, (0, 1), value=1.0)
-    )
+    procrustes_dst = torch.einsum("ij,nj->ni", rt_to_mat4(R, t, s), F.pad(src, (0, 1), value=1.0))
     procrustes_dst = procrustes_dst[:, :3] / procrustes_dst[:, 3:]
     error_before = (torch.linalg.norm(dst - src, dim=-1) * weights[:, 0]).sum()
     error = (torch.linalg.norm(dst - procrustes_dst, dim=-1) * weights[:, 0]).sum()

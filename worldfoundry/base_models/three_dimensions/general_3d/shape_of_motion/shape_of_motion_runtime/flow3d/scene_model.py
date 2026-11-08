@@ -13,6 +13,7 @@ from flow3d.params import GaussianParams, MotionBases, CameraScales, CameraPoses
 
 class SceneModel(nn.Module):
     """Scene model implementation."""
+
     def __init__(
         self,
         Ks: Tensor,
@@ -105,9 +106,7 @@ class SceneModel(nn.Module):
         assert self.bg is not None
         return self.bg.params["means"], self.bg.get_quats()
 
-    def compute_transforms(
-        self, ts: torch.Tensor, inds: torch.Tensor | None = None
-    ) -> torch.Tensor:
+    def compute_transforms(self, ts: torch.Tensor, inds: torch.Tensor | None = None) -> torch.Tensor:
         """Compute transforms.
 
         Args:
@@ -155,9 +154,7 @@ class SceneModel(nn.Module):
             quats = quats[:, None]
         return means, quats
 
-    def compute_poses_all(
-        self, ts: torch.Tensor | None
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    def compute_poses_all(self, ts: torch.Tensor | None) -> tuple[torch.Tensor, torch.Tensor]:
         """Compute poses all.
 
         Args:
@@ -169,12 +166,8 @@ class SceneModel(nn.Module):
         means, quats = self.compute_poses_fg(ts)
         if self.has_bg:
             bg_means, bg_quats = self.compute_poses_bg()
-            means = torch.cat(
-                [means, bg_means[:, None].expand(-1, means.shape[1], -1)], dim=0
-            ).contiguous()
-            quats = torch.cat(
-                [quats, bg_quats[:, None].expand(-1, means.shape[1], -1)], dim=0
-            ).contiguous()
+            means = torch.cat([means, bg_means[:, None].expand(-1, means.shape[1], -1)], dim=0).contiguous()
+            quats = torch.cat([quats, bg_quats[:, None].expand(-1, means.shape[1], -1)], dim=0).contiguous()
         return means, quats
 
     def get_colors_all(self) -> torch.Tensor:
@@ -205,9 +198,7 @@ class SceneModel(nn.Module):
         """
         opacities = self.fg.get_opacities()
         if self.bg is not None:
-            opacities = torch.cat(
-                [opacities, self.bg.get_opacities()], dim=0
-            ).contiguous()
+            opacities = torch.cat([opacities, self.bg.get_opacities()], dim=0).contiguous()
         return opacities
 
     @staticmethod
@@ -218,33 +209,18 @@ class SceneModel(nn.Module):
             state_dict: The state dict.
             prefix: The prefix.
         """
-        fg = GaussianParams.init_from_state_dict(
-            state_dict, prefix=f"{prefix}fg.params."
-        )
+        fg = GaussianParams.init_from_state_dict(state_dict, prefix=f"{prefix}fg.params.")
         bg = None
         if any("bg." in k for k in state_dict):
-            bg = GaussianParams.init_from_state_dict(
-                state_dict, prefix=f"{prefix}bg.params."
-            )
-        motion_bases = MotionBases.init_from_state_dict(
-            state_dict, prefix=f"{prefix}motion_bases.params."
-        )
+            bg = GaussianParams.init_from_state_dict(state_dict, prefix=f"{prefix}bg.params.")
+        motion_bases = MotionBases.init_from_state_dict(state_dict, prefix=f"{prefix}motion_bases.params.")
         Ks = state_dict[f"{prefix}Ks"]
         w2cs = state_dict[f"{prefix}w2cs"]
         camera_poses = None
         if any("camera_poses." in k for k in state_dict):
-            camera_poses = CameraPoses.init_from_state_dict(
-                state_dict, prefix=f"{prefix}camera_poses.params."
-            )
+            camera_poses = CameraPoses.init_from_state_dict(state_dict, prefix=f"{prefix}camera_poses.params.")
 
-        return SceneModel(
-            Ks, 
-            w2cs, 
-            fg, 
-            motion_bases, 
-            camera_poses,
-            bg
-        )
+        return SceneModel(Ks, w2cs, fg, motion_bases, camera_poses, bg)
 
     def render(
         self,
@@ -303,17 +279,13 @@ class SceneModel(nn.Module):
         N = self.num_fg_gaussians if fg_only else self.num_gaussians
 
         if means is None or quats is None:
-            means, quats = pose_fnc(
-                torch.tensor([t], device=device) if t is not None else None
-            )
+            means, quats = pose_fnc(torch.tensor([t], device=device) if t is not None else None)
             means = means[:, 0]
             quats = quats[:, 0]
 
         if colors_override is None:
             if return_color:
-                colors_override = (
-                    self.fg.get_colors() if fg_only else self.get_colors_all()
-                )
+                colors_override = self.fg.get_colors() if fg_only else self.get_colors_all()
             else:
                 colors_override = torch.zeros(N, 0, device=device)
 
@@ -406,7 +378,7 @@ class SceneModel(nn.Module):
                 _,
                 info,
             ) = outputs
-        
+
         else:
             render_colors, alphas, info = rasterization(
                 means=means,

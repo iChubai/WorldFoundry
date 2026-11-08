@@ -94,9 +94,7 @@ class Bottleneck(namedtuple("Block", ["in_channel", "depth", "stride"])):
 
 
 def get_block(in_channel, depth, num_units, stride=2):
-    return [Bottleneck(in_channel, depth, stride)] + [
-        Bottleneck(depth, depth, 1) for i in range(num_units - 1)
-    ]
+    return [Bottleneck(in_channel, depth, stride)] + [Bottleneck(depth, depth, 1) for i in range(num_units - 1)]
 
 
 def get_blocks(num_layers):
@@ -154,16 +152,10 @@ class Backbone(Module):
         mode: support ir or irse
         """
         super(Backbone, self).__init__()
-        assert input_size[0] in [112, 224], (
-            "input_size should be [112, 112] or [224, 224]"
-        )
-        assert num_layers in [18, 34, 50, 100, 152, 200], (
-            "num_layers should be 18, 34, 50, 100 or 152"
-        )
+        assert input_size[0] in [112, 224], "input_size should be [112, 112] or [224, 224]"
+        assert num_layers in [18, 34, 50, 100, 152, 200], "num_layers should be 18, 34, 50, 100 or 152"
         assert mode in ["ir", "ir_se"], "mode should be ir or ir_se"
-        self.input_layer = Sequential(
-            Conv2d(3, 64, (3, 3), 1, 1, bias=False), BatchNorm2d(64), PReLU(64)
-        )
+        self.input_layer = Sequential(Conv2d(3, 64, (3, 3), 1, 1, bias=False), BatchNorm2d(64), PReLU(64))
         blocks = get_blocks(num_layers)
         if num_layers <= 100:
             if mode == "ir":
@@ -203,11 +195,7 @@ class Backbone(Module):
             else:
                 mid_layer_indices.append(len(block) + mid_layer_indices[-1])
             for bottleneck in block:
-                modules.append(
-                    unit_module(
-                        bottleneck.in_channel, bottleneck.depth, bottleneck.stride
-                    )
-                )
+                modules.append(unit_module(bottleneck.in_channel, bottleneck.depth, bottleneck.stride))
         self.body = Sequential(*modules)
         self.mid_layer_indices = mid_layer_indices[-4:]
 

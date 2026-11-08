@@ -17,12 +17,24 @@ from torch.nn import functional as F
 from torch.nn.attention.flex_attention import create_block_mask
 from tqdm import tqdm
 
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.tokenizer import PLMTokenizer, Tokenizer, build_tokenizer
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.transformer import LMTransformer, LMTransformerArgs
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.tokenizer import (
+    PLMTokenizer,
+    Tokenizer,
+    build_tokenizer,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.transformer import (
+    LMTransformer,
+    LMTransformerArgs,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.args import dataclass_from_dict
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.checkpoint import load_consolidated_checkpoint
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transformer import (Attention, causal_mask, generate_doc_mask_mod,
-                              lengths_to_local_ids, lengths_to_start_ids)
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transformer import (
+    Attention,
+    causal_mask,
+    generate_doc_mask_mod,
+    lengths_to_local_ids,
+    lengths_to_start_ids,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.image_transform import get_image_transform
 from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.video_transform import get_video_transform
 
@@ -248,9 +260,7 @@ class PackedCausalTransformerGenerator:
         # We make sure to skip the empty cache positions
         # and only attend to positions within the same sequence
         doc_mask_mod = generate_doc_mask_mod(causal_mask, lengths, padded_lengths)
-        self.prefill_mask = create_block_mask(
-            doc_mask_mod, 1, None, lengths.sum(), max_tokens
-        )
+        self.prefill_mask = create_block_mask(doc_mask_mod, 1, None, lengths.sum(), max_tokens)
 
         # This creates the prefilling token ids which look like
         # the following for the packed sequence abcdefg1234
@@ -283,19 +293,13 @@ class PackedCausalTransformerGenerator:
         self.current_doc_id = torch.arange(lengths.size(0), device=lengths.device)
 
     @torch.compiler.disable
-    def prepare_media_inputs(
-        self, tokens, lengths, images, image_patch_text_ids, num_image_chunks
-    ):
+    def prepare_media_inputs(self, tokens, lengths, images, image_patch_text_ids, num_image_chunks):
         image_pos_index = None
         num_chunks = []
         if images is not None and len(images) > 0:
-            assert image_patch_text_ids is not None and len(
-                image_patch_text_ids
-            ) == len(images)
+            assert image_patch_text_ids is not None and len(image_patch_text_ids) == len(images)
             assert num_image_chunks is not None and len(num_image_chunks) == len(images)
-            image_pos_index = torch.full(tokens.shape, -1, dtype=torch.int).to(
-                self.device
-            )
+            image_pos_index = torch.full(tokens.shape, -1, dtype=torch.int).to(self.device)
             assert tokens.shape[0] == 1
             offsets = torch.roll(lengths.cpu(), shifts=1, dims=-1).numpy()
             offsets[0] = 0
@@ -303,10 +307,7 @@ class PackedCausalTransformerGenerator:
             image_id_offset = 0
             for image_id, offset in enumerate(offsets):
                 num_image_tokens = len(image_patch_text_ids[image_id])
-                image_indices = (
-                    torch.arange(num_image_tokens, dtype=torch.int).to(self.device)
-                    + image_id_offset
-                )
+                image_indices = torch.arange(num_image_tokens, dtype=torch.int).to(self.device) + image_id_offset
                 text_indices = [i + offset for i in image_patch_text_ids[image_id]]
                 image_pos_index[0, text_indices] = image_indices
                 image_id_offset += num_image_tokens
@@ -383,9 +384,7 @@ class PackedCausalTransformerGenerator:
                 question, image = p
 
                 images.append(image)
-                text_ids, image_pos = self.tokenizer._tokenize_for_generation(
-                    question, image
-                )
+                text_ids, image_pos = self.tokenizer._tokenize_for_generation(question, image)
                 num_chunks = image.size(0)
 
                 encoded_prompts.append(text_ids)
@@ -393,9 +392,7 @@ class PackedCausalTransformerGenerator:
                 num_image_chunks.append(num_chunks)
             prompts = encoded_prompts
         else:
-            prompts = [
-                self.tokenizer.encode(p, add_bos=False, add_eos=False) for p in prompts
-            ]
+            prompts = [self.tokenizer.encode(p, add_bos=False, add_eos=False) for p in prompts]
 
         # Account for the generation in lengths
         padded_lengths = [len(p) + self.max_gen_len for p in prompts]
@@ -428,9 +425,7 @@ class PackedCausalTransformerGenerator:
                 num_image_chunks=current_num_image_chunks,
             )
             # Selecting last token in each prompt
-            all_tokens = sample_tokens(
-                prompt_logits, self.temperature, self.top_p, self.top_k
-            )
+            all_tokens = sample_tokens(prompt_logits, self.temperature, self.top_p, self.top_k)
             start_token = all_tokens[:, lengths.cumsum(0) - 1]
 
             for seq_id, tok in enumerate(start_token.squeeze(0).tolist()):
@@ -438,25 +433,16 @@ class PackedCausalTransformerGenerator:
 
             current_token = start_token
             for i in range(1, self.max_gen_len):
-
                 next_logits = self.generate_next_token(current_token)
-                next_token = sample_tokens(
-                    next_logits.clone(), self.temperature, self.top_p, self.top_k
-                )
+                next_token = sample_tokens(next_logits.clone(), self.temperature, self.top_p, self.top_k)
 
                 for seq_id, tok in enumerate(next_token.squeeze(0).tolist()):
                     if not is_done[seq_id]:
                         generated_tokens[seq_id].append(tok)
-                        current_end_str = self.tokenizer.decode(
-                            generated_tokens[seq_id][-self.max_until_size :]
-                        )
-                        contains_end_string = any(
-                            [e in current_end_str for e in self.until]
-                        )
+                        current_end_str = self.tokenizer.decode(generated_tokens[seq_id][-self.max_until_size :])
+                        contains_end_string = any([e in current_end_str for e in self.until])
                         is_done[seq_id] = (
-                            contains_end_string
-                            or tok == self.tokenizer.eot_id
-                            or tok == self.tokenizer.eos_id
+                            contains_end_string or tok == self.tokenizer.eot_id or tok == self.tokenizer.eos_id
                         )
                 if all(is_done):
                     break
@@ -465,18 +451,13 @@ class PackedCausalTransformerGenerator:
 
             generation.extend([self.tokenizer.decode(g) for g in generated_tokens])
 
-            for p, logit in zip(
-                batch, prompt_logits.squeeze(0).split(lengths.tolist())
-            ):
+            for p, logit in zip(batch, prompt_logits.squeeze(0).split(lengths.tolist())):
                 x = logit[:-1]
                 y = torch.tensor(p[1:], device=x.device)
                 loglikelihood.append(-F.cross_entropy(x, y, reduction="none").cpu())
                 greedy.append((x.argmax(dim=-1) == y).cpu())
 
-        generation = [
-            response.replace("<|eot_id|>", "").replace("<|end_of_text|>", "")
-            for response in generation
-        ]
+        generation = [response.replace("<|eot_id|>", "").replace("<|end_of_text|>", "") for response in generation]
         return generation, loglikelihood, greedy
 
 
@@ -515,9 +496,7 @@ def load_consolidated_model_and_tokenizer(ckpt, cache_dir=None):
     model_args = dataclass_from_dict(LMTransformerArgs, config.model, strict=False)
     model = LMTransformer(model_args)
     load_consolidated_checkpoint(model, ckpt_path)
-    param_dtype = dict(fp32=torch.float32, fp16=torch.float16, bf16=torch.bfloat16)[
-        config.distributed.model_dtype
-    ]
+    param_dtype = dict(fp32=torch.float32, fp16=torch.float16, bf16=torch.bfloat16)[config.distributed.model_dtype]
     model = model.cuda().eval()
     for param in model.parameters():
         param.data = param.data.to(dtype=param_dtype)
@@ -550,14 +529,10 @@ def main(args):
         frames, _ = transform(video_info)
         prompts.append((question, frames))
     else:
-        raise NotImplementedError(
-            f"The provided generate function only supports image and video."
-        )
+        raise NotImplementedError(f"The provided generate function only supports image and video.")
 
     # Create generator
-    gen_cfg = dataclass_from_dict(
-        PackedCausalTransformerGeneratorArgs, {}, strict=False
-    )
+    gen_cfg = dataclass_from_dict(PackedCausalTransformerGeneratorArgs, {}, strict=False)
     generator = PackedCausalTransformerGenerator(gen_cfg, model, tokenizer)
 
     # Run generation
@@ -567,13 +542,11 @@ def main(args):
 
     for i, gen in enumerate(generation):
         # Calculate tokens per second
-        total_tokens = sum(
-            len(tokenizer.encode(gen, False, False)) for gen in generation
-        )
+        total_tokens = sum(len(tokenizer.encode(gen, False, False)) for gen in generation)
         tokens_per_second = total_tokens / (end_time - start_time)
 
         print("==============================================")
-        print(f"\nPrompt {i+1}: {prompts[i][0]}")
+        print(f"\nPrompt {i + 1}: {prompts[i][0]}")
         print(f"Generated Text: {gen}")
         print(f"Tokens per second: {tokens_per_second:.2f}")
         print("==============================================")
@@ -583,9 +556,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run a multimodal language model")
 
     # Define CLI arguments that will be used to override YAML config
-    parser.add_argument(
-        "--ckpt", type=str, required=True, help="Path to the checkpoint directory."
-    )
+    parser.add_argument("--ckpt", type=str, required=True, help="Path to the checkpoint directory.")
     parser.add_argument(
         "--media_type",
         type=str,
@@ -593,12 +564,8 @@ def parse_args():
         required=True,
         help="Type of media (image or video)",
     )
-    parser.add_argument(
-        "--media_path", type=str, required=True, help="Path to the media file"
-    )
-    parser.add_argument(
-        "--question", type=str, required=True, help="Question or prompt for the model."
-    )
+    parser.add_argument("--media_path", type=str, required=True, help="Path to the media file")
+    parser.add_argument("--question", type=str, required=True, help="Question or prompt for the model.")
     return parser.parse_args()
 
 

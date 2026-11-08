@@ -20,6 +20,7 @@ from .aot.utils.checkpoint import load_network
 
 class AOTTracker(object):
     """Aot tracker implementation."""
+
     def __init__(self, cfg, gpu_id=0):
         """Init.
 
@@ -133,6 +134,7 @@ class AOTTracker(object):
 
 class AOTTrackerInferEngine(AOTInferEngine):
     """Aot tracker infer engine implementation."""
+
     def __init__(
         self,
         aot_model,
@@ -192,6 +194,7 @@ class AOTTrackerInferEngine(AOTInferEngine):
 
 class DeAOTTrackerInferEngine(DeAOTInferEngine):
     """De aot tracker infer engine implementation."""
+
     def __init__(
         self,
         aot_model,

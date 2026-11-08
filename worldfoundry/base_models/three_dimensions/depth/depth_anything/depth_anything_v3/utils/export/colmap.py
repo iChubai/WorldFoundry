@@ -24,7 +24,9 @@ from PIL import Image
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.export_glb import _depths_to_world_points_with_colors
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.export_glb import (
+    _depths_to_world_points_with_colors,
+)
 
 
 def export_to_colmap(
@@ -83,9 +85,7 @@ def export_to_colmap(
         else:
             raise ValueError(f"Unknown process_res_method: {process_res_method}")
 
-        pycolmap_intri = np.array(
-            [intrinsic[0, 0], intrinsic[1, 1], intrinsic[0, 2], intrinsic[1, 2]]
-        )
+        pycolmap_intri = np.array([intrinsic[0, 0], intrinsic[1, 1], intrinsic[0, 2], intrinsic[1, 2]])
 
         extrinsic = prediction.extrinsics[fidx]
         cam_from_world = pycolmap.Rigid3d(pycolmap.Rotation3d(extrinsic[:3, :3]), extrinsic[:3, 3])
@@ -127,9 +127,7 @@ def export_to_colmap(
             point2d[1] *= orig_h / h
             point3d_id = point3d_ids[vidx]
             point2d_list.append(pycolmap.Point2D(point2d, point3d_id))
-            reconstruction.point3D(point3d_id).track.add_element(
-                image.image_id, len(point2d_list) - 1
-            )
+            reconstruction.point3D(point3d_id).track.add_element(image.image_id, len(point2d_list) - 1)
 
         # set and add image
         image.frame_id = image.image_id

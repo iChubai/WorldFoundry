@@ -14,9 +14,9 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 XFORMERS_AVAILABLE = False
 
 
-
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -68,11 +68,7 @@ class Attention(nn.Module):
         self.num_anchor_tokens = 0
 
     def eviction(
-        self, 
-        k: torch.Tensor, 
-        v: torch.Tensor, 
-        cache_budget: int,
-        num_anchor_tokens: int
+        self, k: torch.Tensor, v: torch.Tensor, cache_budget: int, num_anchor_tokens: int
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Evicts tokens from the key-value cache based on key cosine similarity.
@@ -104,7 +100,7 @@ class Attention(nn.Module):
 
         _, top_indices = torch.topk(-scores, k=num_to_keep_from_candidates, dim=-1)
         top_indices = top_indices.sort(dim=-1).values
-        
+
         expanded_indices = top_indices.unsqueeze(-1).expand(B, H, num_to_keep_from_candidates, D)
         kept_candidate_k = torch.gather(candidate_k, 2, expanded_indices)
         kept_candidate_v = torch.gather(candidate_v, 2, expanded_indices)
@@ -114,13 +110,8 @@ class Attention(nn.Module):
 
         return final_k, final_v, avg_scores
 
-    def forward(self, 
-        x: torch.Tensor, 
-        pos=None, 
-        attn_mask=None, 
-        past_key_values=None, 
-        use_cache=False,
-        cache_budget = None
+    def forward(
+        self, x: torch.Tensor, pos=None, attn_mask=None, past_key_values=None, use_cache=False, cache_budget=None
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, Tuple]]:
         """Forward.
 
@@ -146,7 +137,7 @@ class Attention(nn.Module):
             k = self.rope(k, pos)
 
         if use_cache and self.num_anchor_tokens == 0:
-            self.num_anchor_tokens = k.shape[2] 
+            self.num_anchor_tokens = k.shape[2]
 
         if use_cache:
             if past_key_values is not None:
@@ -184,12 +175,13 @@ class Attention(nn.Module):
         x = self.proj(x)
         x = self.proj_drop(x)
         if use_cache:
-                return x, new_kv, scores
+            return x, new_kv, scores
         return x
 
 
 class MemEffAttention(Attention):
     """Mem eff attention implementation."""
+
     def forward(self, x: Tensor, attn_bias=None, pos=None) -> Tensor:
         """Forward.
 

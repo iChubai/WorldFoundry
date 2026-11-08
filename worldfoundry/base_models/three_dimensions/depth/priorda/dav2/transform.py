@@ -10,6 +10,7 @@ import torch
 
 class Resize(object):
     """Resize implementation."""
+
     def __init__(
         self,
         width,
@@ -100,6 +101,7 @@ class Resize(object):
 
 class NormalizeImage(object):
     """Normalize image implementation."""
+
     def __init__(self, mean, std, device="cpu"):
         """Init.
 

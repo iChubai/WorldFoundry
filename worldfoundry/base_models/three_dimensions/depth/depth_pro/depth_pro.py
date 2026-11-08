@@ -56,9 +56,7 @@ DEFAULT_MONODEPTH_CONFIG_DICT = DepthProConfig(
 )
 
 
-def create_backbone_model(
-    preset: ViTPreset
-) -> Tuple[nn.Module, ViTPreset]:
+def create_backbone_model(preset: ViTPreset) -> Tuple[nn.Module, ViTPreset]:
     """Create and load a backbone model given a config.
 
     Args:
@@ -97,12 +95,8 @@ def create_model_and_transforms(
         The Torch DepthPro model and associated Transform.
 
     """
-    patch_encoder, patch_encoder_config = create_backbone_model(
-        preset=config.patch_encoder_preset
-    )
-    image_encoder, _ = create_backbone_model(
-        preset=config.image_encoder_preset
-    )
+    patch_encoder, patch_encoder_config = create_backbone_model(preset=config.patch_encoder_preset)
+    image_encoder, _ = create_backbone_model(preset=config.image_encoder_preset)
 
     fov_encoder = None
     if config.use_fov_head and config.fov_encoder_preset is not None:
@@ -150,14 +144,10 @@ def create_model_and_transforms(
         )
     if checkpoint_uri is not None:
         state_dict = torch.load(checkpoint_uri, map_location="cpu")
-        missing_keys, unexpected_keys = model.load_state_dict(
-            state_dict=state_dict, strict=True
-        )
+        missing_keys, unexpected_keys = model.load_state_dict(state_dict=state_dict, strict=True)
 
         if len(unexpected_keys) != 0:
-            raise KeyError(
-                f"Found unexpected keys when loading monodepth: {unexpected_keys}"
-            )
+            raise KeyError(f"Found unexpected keys when loading monodepth: {unexpected_keys}")
 
         # fc_norm is only for the classification head,
         # which we would not use. We only use the encoding.
@@ -197,9 +187,7 @@ class DepthPro(nn.Module):
 
         dim_decoder = decoder.dim_decoder
         self.head = nn.Sequential(
-            nn.Conv2d(
-                dim_decoder, dim_decoder // 2, kernel_size=3, stride=1, padding=1
-            ),
+            nn.Conv2d(dim_decoder, dim_decoder // 2, kernel_size=3, stride=1, padding=1),
             nn.ConvTranspose2d(
                 in_channels=dim_decoder // 2,
                 out_channels=dim_decoder // 2,

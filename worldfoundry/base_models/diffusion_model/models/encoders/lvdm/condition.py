@@ -628,7 +628,10 @@ class FrozenOpenCLIPImageEmbedderV2(AbstractEncoder):
         """
         # Video runtimes supply images in [-1, 1]; CLIP normalization expects [0, 1].
         x = kornia.geometry.resize(
-            x, (224, 224), interpolation="bicubic", align_corners=True,
+            x,
+            (224, 224),
+            interpolation="bicubic",
+            align_corners=True,
             antialias=self.antialias,
         )
         x = (x + 1.0) / 2.0

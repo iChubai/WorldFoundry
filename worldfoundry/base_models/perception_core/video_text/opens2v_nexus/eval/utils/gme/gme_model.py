@@ -68,9 +68,7 @@ class GmeQwen2VL:
             inputs_embeds = self.base.model.embed_tokens(input_ids)
             if pixel_values is not None:
                 pixel_values = pixel_values.type(self.base.visual.get_dtype())
-                image_embeds = self.base.visual(
-                    pixel_values, grid_thw=image_grid_thw
-                ).to(inputs_embeds.device)
+                image_embeds = self.base.visual(pixel_values, grid_thw=image_grid_thw).to(inputs_embeds.device)
                 image_mask = input_ids == self.base.config.image_token_id
                 inputs_embeds[image_mask] = image_embeds
             # if pixel_values_videos is not None:
@@ -144,9 +142,7 @@ class GmeQwen2VL:
         return embeddings
 
     def encode(self, sentences: list[str], *, prompt_name=None, **kwargs):
-        return self.get_fused_embeddings(
-            texts=sentences, prompt_name=prompt_name, **kwargs
-        )
+        return self.get_fused_embeddings(texts=sentences, prompt_name=prompt_name, **kwargs)
 
     def encode_queries(self, queries: List[str], **kwargs):
         embeddings = self.encode(queries, **kwargs)
@@ -162,9 +158,7 @@ class GmeQwen2VL:
             ]
         else:
             sentences = [
-                (doc["title"] + self.sep + doc["text"]).strip()
-                if "title" in doc
-                else doc["text"].strip()
+                (doc["title"] + self.sep + doc["text"]).strip() if "title" in doc else doc["text"].strip()
                 for doc in corpus
             ]
         embeddings = self.encode(sentences, is_query=False, **kwargs)
@@ -216,9 +210,7 @@ class GmeQwen2VL:
             miniters=10,
             desc="encode",
         )
-        for n, img_batch in zip(
-            range(0, n_batch * batch_size, batch_size), image_loader
-        ):
+        for n, img_batch in zip(range(0, n_batch * batch_size, batch_size), image_loader):
             text_batch = none_batch if texts is None else texts[n : n + batch_size]
             img_batch = none_batch if img_batch is None else img_batch
             embeddings = self.embed(texts=text_batch, images=img_batch, **kwargs)
@@ -292,9 +284,7 @@ def smart_resize(
     return h_bar, w_bar
 
 
-def fetch_image(
-    image: str | Image.Image, size_factor: int = IMAGE_FACTOR
-) -> Image.Image:
+def fetch_image(image: str | Image.Image, size_factor: int = IMAGE_FACTOR) -> Image.Image:
     image_obj = None
     if isinstance(image, Image.Image):
         image_obj = image
@@ -310,9 +300,7 @@ def fetch_image(
     else:
         image_obj = Image.open(image)
     if image_obj is None:
-        raise ValueError(
-            f"Unrecognized image input, support local path, http url, base64 and PIL.Image, got {image}"
-        )
+        raise ValueError(f"Unrecognized image input, support local path, http url, base64 and PIL.Image, got {image}")
     image = image_obj.convert("RGB")
     ## resize
     # if "resized_height" in ele and "resized_width" in ele:

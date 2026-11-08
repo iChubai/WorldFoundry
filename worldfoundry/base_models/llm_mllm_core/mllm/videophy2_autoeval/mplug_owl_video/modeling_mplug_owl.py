@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" PyTorch MplugOwl model. """
+"""PyTorch MplugOwl model."""
 
 import logging
 import math
@@ -37,7 +37,7 @@ import einops
 from transformers.modeling_outputs import (
     BaseModelOutput,
     BaseModelOutputWithPooling,
-    BaseModelOutputWithPastAndCrossAttentions
+    BaseModelOutputWithPastAndCrossAttentions,
 )
 from transformers.modeling_utils import PreTrainedModel
 from transformers.pytorch_utils import find_pruneable_heads_and_indices, prune_linear_layer
@@ -147,7 +147,7 @@ class MplugOwlVisionEmbeddings(nn.Module):
         batch_size = pixel_values.size(0)
         T = pixel_values.size(2) if pixel_values.dim() > 4 else 1
         if T > 1:
-            pixel_values = einops.rearrange(pixel_values, 'b c t h w -> (b t) c h w')
+            pixel_values = einops.rearrange(pixel_values, "b c t h w -> (b t) c h w")
         image_embeds = self.patch_embed(pixel_values)
         image_embeds = image_embeds.flatten(2).transpose(1, 2)
 
@@ -155,7 +155,7 @@ class MplugOwlVisionEmbeddings(nn.Module):
         embeddings = torch.cat([class_embeds, image_embeds], dim=1)
         embeddings = embeddings + self.position_embedding[:, : embeddings.size(1)].to(image_embeds.dtype)
         embeddings = self.pre_layernorm(embeddings)
-        embeddings = einops.rearrange(embeddings, '(b t) n d -> b t n d', b=batch_size)
+        embeddings = einops.rearrange(embeddings, "(b t) n d -> b t n d", b=batch_size)
         return embeddings
 
 
@@ -190,10 +190,12 @@ class MplugOwlVisionLocalTemporal(nn.Module):
         self.num_patches = 1 + (self.image_size // self.patch_size) ** 2
         self.hidden_size = config.hidden_size
         d_bottleneck = self.hidden_size // 2
-        
+
         self.ln = LayerNormFp32(self.hidden_size)
         self.down_proj = nn.Conv3d(self.hidden_size, d_bottleneck, kernel_size=1, stride=1, padding=0)
-        self.conv = nn.Conv3d(d_bottleneck, d_bottleneck, kernel_size=(3, 1, 1), stride=1, padding=(1, 0, 0), groups=d_bottleneck)
+        self.conv = nn.Conv3d(
+            d_bottleneck, d_bottleneck, kernel_size=(3, 1, 1), stride=1, padding=(1, 0, 0), groups=d_bottleneck
+        )
         self.up_proj = nn.Conv3d(d_bottleneck, self.hidden_size, kernel_size=1, stride=1, padding=0)
 
         nn.init.constant_(self.up_proj.weight, 0)
@@ -204,21 +206,21 @@ class MplugOwlVisionLocalTemporal(nn.Module):
     def forward(self, x):
         # [b, t, s, c]
         T = x.size(1)
-        H = int((self.num_patches - 1)**0.5) 
+        H = int((self.num_patches - 1) ** 0.5)
         cls_token, x = x[:, :, 0:1], x[:, :, 1:]
         x = self.ln(x)
-        x = einops.rearrange(x, 'b t (h w) c -> b c t h w', h=H)
+        x = einops.rearrange(x, "b t (h w) c -> b c t h w", h=H)
         x = self.down_proj(x)
         _device = x.device
-        self = self.to('cpu') # hack: cpu offloading since bfloat16 on gpu gives error with conv_depthwise3d 
-        x = x.to('cpu')
+        self = self.to("cpu")  # hack: cpu offloading since bfloat16 on gpu gives error with conv_depthwise3d
+        x = x.to("cpu")
         x = self.conv(x)
         self = self.to(_device)
         x = x.to(_device)
         x = self.activation_func(x)
         x = self.up_proj(x)
-        x = einops.rearrange(x, 'b c t h w -> b t (h w) c')
-        x = torch.cat([cls_token, x], dim = 2)
+        x = einops.rearrange(x, "b c t h w -> b t (h w) c")
+        x = torch.cat([cls_token, x], dim=2)
         return x
 
 
@@ -369,8 +371,8 @@ class MplugOwlVisionEncoderLayer(nn.Module):
         B, T = hidden_states.size(0), hidden_states.size(1)
         if T > 1:
             hidden_states = hidden_states + self.temporal(hidden_states)
-        hidden_states = einops.rearrange(hidden_states, 'b t n d -> (b t) n d')
-        
+        hidden_states = einops.rearrange(hidden_states, "b t n d -> (b t) n d")
+
         residual = hidden_states
 
         hidden_states = self.input_layernorm(hidden_states)
@@ -385,7 +387,7 @@ class MplugOwlVisionEncoderLayer(nn.Module):
         hidden_states = self.mlp(hidden_states)
 
         hidden_states = hidden_states + residual
-        hidden_states = einops.rearrange(hidden_states, '(b t) n d -> b t n d', b=B)
+        hidden_states = einops.rearrange(hidden_states, "(b t) n d -> b t n d", b=B)
 
         outputs = (hidden_states,)
 
@@ -646,9 +648,7 @@ class MplugOwlVisionEncoder(nn.Module):
 
         if not return_dict:
             return tuple(v for v in [hidden_states, encoder_states, all_attentions] if v is not None)
-        return BaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=encoder_states, attentions=all_attentions
-        )
+        return BaseModelOutput(last_hidden_state=hidden_states, hidden_states=encoder_states, attentions=all_attentions)
 
 
 class MplugOwlVisionModel(MplugOwlPreTrainedModel):
@@ -688,7 +688,7 @@ class MplugOwlVisionModel(MplugOwlPreTrainedModel):
         if pixel_values is None:
             raise ValueError("You have to specify pixel_values")
 
-        hidden_states = self.embeddings(pixel_values) # [B, T, N, D]
+        hidden_states = self.embeddings(pixel_values)  # [B, T, N, D]
 
         encoder_outputs = self.encoder(
             inputs_embeds=hidden_states,
@@ -1107,7 +1107,7 @@ class MplugOwlVisualAbstractorModel(MplugOwlPreTrainedModel):
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
-        
+
         T = encoder_hidden_states.size(1)
         if T == 1 or temporal_query_embeds is None:
             embedding_output = query_embeds
@@ -1117,9 +1117,7 @@ class MplugOwlVisualAbstractorModel(MplugOwlPreTrainedModel):
         batch_size, seq_length = input_shape
         device = embedding_output.device
 
-        encoder_hidden_states = einops.rearrange(
-            encoder_hidden_states, 'b t n d -> b (t n) d'
-        )
+        encoder_hidden_states = einops.rearrange(encoder_hidden_states, "b t n d -> b (t n) d")
 
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
@@ -1176,8 +1174,8 @@ class MplugOwlVisualAbstractorModel(MplugOwlPreTrainedModel):
         if T == 1 or temporal_query_embeds is None:
             temporal_sequence_output = None
         else:
-            temporal_sequence_output = sequence_output[:, query_embeds.size(1):]
-            sequence_output = sequence_output[:, :query_embeds.size(1)]
+            temporal_sequence_output = sequence_output[:, query_embeds.size(1) :]
+            sequence_output = sequence_output[:, : query_embeds.size(1)]
 
         sequence_output = self.visual_fc(sequence_output)
         if temporal_sequence_output is not None:
@@ -1213,9 +1211,7 @@ class MplugOwlModel(MplugOwlPreTrainedModel):
         self.temporal_query_tokens = nn.Parameter(
             torch.zeros(1, config.num_query_tokens, config.visual_abstractor_config.hidden_size)
         )
-        self.abstractor = MplugOwlVisualAbstractorModel(
-            config.visual_abstractor_config, config.text_config.hidden_size
-        )
+        self.abstractor = MplugOwlVisualAbstractorModel(config.visual_abstractor_config, config.text_config.hidden_size)
 
         # if config.use_decoder_only_language_model:
         # from llama.modeling_llama import LlamaForCausalLM
@@ -1325,6 +1321,7 @@ def get_media_indices(my_list):
             result.append(i)
     return result
 
+
 def get_media_types(tensors, positions):
     if isinstance(tensors, torch.Tensor):
         tensors = tensors.cpu().tolist()
@@ -1355,9 +1352,7 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
         self.temporal_query_tokens = nn.Parameter(
             torch.zeros(1, config.num_query_tokens, config.visual_abstractor_config.hidden_size)
         )
-        self.abstractor = MplugOwlVisualAbstractorModel(
-            config.visual_abstractor_config, config.text_config.hidden_size
-        )
+        self.abstractor = MplugOwlVisualAbstractorModel(config.visual_abstractor_config, config.text_config.hidden_size)
 
         # if config.use_decoder_only_language_model:
         # from llama.modeling_llama import LlamaForCausalLM
@@ -1376,9 +1371,11 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
         )
 
         # Hack Bloom
-        if config.text_config.model_type == 'bloom':
-            bound_method = bloom_forward.__get__(self.language_model.transformer, self.language_model.transformer.__class__)
-            setattr(self.language_model.transformer, 'forward', bound_method)
+        if config.text_config.model_type == "bloom":
+            bound_method = bloom_forward.__get__(
+                self.language_model.transformer, self.language_model.transformer.__class__
+            )
+            setattr(self.language_model.transformer, "forward", bound_method)
 
     def get_input_embeddings(self):
         return self.language_model.get_input_embeddings()
@@ -1520,15 +1517,14 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
             for i in range(batch_size)
         ]
 
-        media_token_types = [
-            get_media_types(text_tokens_[i][:-1], media_token_indices[i])
-            for i in range(batch_size)
-        ]
+        media_token_types = [get_media_types(text_tokens_[i][:-1], media_token_indices[i]) for i in range(batch_size)]
 
         text_tokens_[text_tokens_ < 0] = 1  # Not used
         inputs_embeds = self.get_input_embeddings()(text_tokens_)  # Temporally Embedding
 
-        if hasattr(self.language_model, 'transformer') and hasattr(self.language_model.transformer, 'word_embeddings_layernorm'):
+        if hasattr(self.language_model, "transformer") and hasattr(
+            self.language_model.transformer, "word_embeddings_layernorm"
+        ):
             inputs_embeds = self.language_model.transformer.word_embeddings_layernorm(inputs_embeds)
 
         if pixel_values is not None:
@@ -1549,9 +1545,7 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
             video_embeds = self.vision_model(video_pixel_values, return_dict=True).last_hidden_state
 
             video_attention_mask = torch.ones(video_embeds.size()[:-1], dtype=torch.long, device=video_embeds.device)
-            video_attention_mask = einops.rearrange(
-                video_attention_mask, 'b t n -> b (t n)'
-            )
+            video_attention_mask = einops.rearrange(video_attention_mask, "b t n -> b (t n)")
             query_tokens = self.query_tokens.expand(video_embeds.shape[0], -1, -1)
             temporal_query_tokens = self.temporal_query_tokens.expand(video_embeds.shape[0], -1, -1)
 
@@ -1561,7 +1555,7 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
                 encoder_hidden_states=video_embeds,
                 encoder_attention_mask=video_attention_mask,
             )["last_hidden_state"]
-            video_embeds   = video_query_features
+            video_embeds = video_query_features
             vid_seq_length = video_query_features.shape[1]
 
         num_images_per_sample = num_images.long().cpu().tolist()
@@ -1582,12 +1576,16 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
                     result_attn.append(attention_mask[b, start:pos])
                 if media_token_types[b][i] == -1:
                     result.append(image_embeds[img_idx + curr_image_idx])
-                    result_attn.append(torch.ones(image_embeds[img_idx + curr_image_idx].shape[0], device=inputs_embeds.device))
+                    result_attn.append(
+                        torch.ones(image_embeds[img_idx + curr_image_idx].shape[0], device=inputs_embeds.device)
+                    )
                     start = pos + img_seq_length
                     curr_image_idx += 1
                 else:
                     result.append(video_embeds[vid_idx + curr_video_idx])
-                    result_attn.append(torch.ones(video_embeds[vid_idx + curr_video_idx].shape[0], device=inputs_embeds.device))
+                    result_attn.append(
+                        torch.ones(video_embeds[vid_idx + curr_video_idx].shape[0], device=inputs_embeds.device)
+                    )
                     start = pos + vid_seq_length
                     curr_video_idx += 1
             if start < inputs_embeds.shape[1]:
@@ -1599,9 +1597,9 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
             text_chunk_embeds.append(torch.cat(result, dim=0))
             text_chunk_attns.append(torch.cat(result_attn, dim=0))
 
-        inputs_embeds  = torch.stack(text_chunk_embeds, dim=0)
+        inputs_embeds = torch.stack(text_chunk_embeds, dim=0)
         attention_mask = torch.stack(text_chunk_attns, dim=0)
-        
+
         if labels is not None:
             # Create causal mask and position ids
             _, loss_mask, position_ids = get_ltor_masks_and_position_ids_from_embeddings(inputs_embeds)
@@ -1614,7 +1612,7 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
 
             loss_mask = loss_mask * non_padding_mask * non_media_mask * prompt_mask
             labels[:, 1:][loss_mask != 1] = -100
-                
+
         # Forward into GPT
         outputs = self.language_model(
             inputs_embeds=inputs_embeds,
@@ -1659,12 +1657,9 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
 
         batch_size = input_ids.size(0)
         media_token_indices = [get_media_indices(input_ids[i]) for i in range(batch_size)]
-        media_token_types = [
-            get_media_types(input_ids[i], media_token_indices[i])
-            for i in range(batch_size)
-        ]
-        num_images_per_sample = [len([y for y in x if y==-1]) for x in media_token_types]
-        num_videos_per_sample = [len([y for y in x if y<-1]) for x in media_token_types]
+        media_token_types = [get_media_types(input_ids[i], media_token_indices[i]) for i in range(batch_size)]
+        num_images_per_sample = [len([y for y in x if y == -1]) for x in media_token_types]
+        num_videos_per_sample = [len([y for y in x if y < -1]) for x in media_token_types]
         input_ids = input_ids.clone()  # prevent inplace modify
         input_ids[input_ids < 0] = 0  # Not used
 
@@ -1675,7 +1670,9 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
         batch_size = input_ids.shape[0]
         # get text embedding
         inputs_embeds = self.get_input_embeddings()(input_ids)
-        if hasattr(self.language_model, 'transformer') and hasattr(self.language_model.transformer, 'word_embeddings_layernorm'):
+        if hasattr(self.language_model, "transformer") and hasattr(
+            self.language_model.transformer, "word_embeddings_layernorm"
+        ):
             inputs_embeds = self.language_model.transformer.word_embeddings_layernorm(inputs_embeds)
         # get visual embedding
         if pixel_values is not None:
@@ -1703,9 +1700,7 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
                 video_attention_mask = torch.ones(
                     video_embeds.size()[:-1], dtype=torch.long, device=video_embeds.device
                 )
-                video_attention_mask = einops.rearrange(
-                    video_attention_mask, 'b t n -> b (t n)'
-                )
+                video_attention_mask = einops.rearrange(video_attention_mask, "b t n -> b (t n)")
                 query_tokens = self.query_tokens.expand(video_embeds.shape[0], -1, -1)
                 temporal_query_tokens = self.temporal_query_tokens.expand(video_embeds.shape[0], -1, -1)
                 query_outputs = self.abstractor(
@@ -1738,12 +1733,16 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
                     result_attn.append(attention_mask[b, start:pos])
                 if media_token_types[b][i] == -1:
                     result.append(image_embeds[img_idx + curr_image_idx])
-                    result_attn.append(torch.ones(image_embeds[img_idx + curr_image_idx].shape[0], device=inputs_embeds.device))
+                    result_attn.append(
+                        torch.ones(image_embeds[img_idx + curr_image_idx].shape[0], device=inputs_embeds.device)
+                    )
                     start = pos + img_seq_length
                     curr_image_idx += 1
                 else:
                     result.append(video_embeds[vid_idx + curr_video_idx])
-                    result_attn.append(torch.ones(video_embeds[vid_idx + curr_video_idx].shape[0], device=inputs_embeds.device))
+                    result_attn.append(
+                        torch.ones(video_embeds[vid_idx + curr_video_idx].shape[0], device=inputs_embeds.device)
+                    )
                     start = pos + vid_seq_length
                     curr_video_idx += 1
             if start < inputs_embeds.shape[1]:
@@ -1759,23 +1758,28 @@ class MplugOwlForConditionalGeneration(MplugOwlPreTrainedModel):
 
         if get_logits_only:
             outputs = self.language_model(
-                        inputs_embeds=inputs_embeds,
-                        attention_mask=attention_mask,
-                        return_dict=True,
-                        output_attentions=self.config.output_attentions,
-                    )
+                inputs_embeds=inputs_embeds,
+                attention_mask=attention_mask,
+                return_dict=True,
+                output_attentions=self.config.output_attentions,
+            )
         else:
             outputs = self.language_model.generate(
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 **generate_kwargs,
             )
-            
+
         return outputs
 
     def prepare_inputs_for_generation(
-        self, input_ids, pixel_values=None, video_pixel_values=None,
-        past_key_values=None, attention_mask=None, **model_kwargs
+        self,
+        input_ids,
+        pixel_values=None,
+        video_pixel_values=None,
+        past_key_values=None,
+        attention_mask=None,
+        **model_kwargs,
     ):
         input_shape = input_ids.shape
         # if model is used as a decoder in encoder-decoder model, the decoder attention mask is created on the fly
@@ -1849,7 +1853,7 @@ def bloom_forward(
     if inputs_embeds is None:
         inputs_embeds = self.word_embeddings(input_ids)
         inputs_embeds = self.word_embeddings_layernorm(inputs_embeds)
-    
+
     hidden_states = inputs_embeds
 
     presents = () if use_cache else None

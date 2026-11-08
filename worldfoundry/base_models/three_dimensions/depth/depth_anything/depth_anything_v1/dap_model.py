@@ -39,10 +39,7 @@ class DepthAnythingV2(nn.Module):
     ) -> None:
         super().__init__()
         if encoder not in _MODEL_CONFIGS:
-            raise ValueError(
-                f"Unsupported DAP model type {encoder!r}; "
-                f"expected one of {sorted(_MODEL_CONFIGS)}."
-            )
+            raise ValueError(f"Unsupported DAP model type {encoder!r}; expected one of {sorted(_MODEL_CONFIGS)}.")
         out_channels = out_channels or list(_MODEL_CONFIGS[encoder]["out_channels"])
         self.intermediate_layer_idx = _INTERMEDIATE_LAYERS
         self.max_depth = max_depth
@@ -85,12 +82,15 @@ class DepthAnythingV2(nn.Module):
         """Decode cached DINO features into depth and invalid-mask maps."""
         patch_height = image_size[0] // self.patch_size
         patch_width = image_size[1] // self.patch_size
-        depth = self.depth_head(
-            features,
-            patch_height,
-            patch_width,
-            self.patch_size,
-        ) * self.max_depth
+        depth = (
+            self.depth_head(
+                features,
+                patch_height,
+                patch_width,
+                self.patch_size,
+            )
+            * self.max_depth
+        )
         mask = self.mask_head(
             features,
             patch_height,
@@ -100,9 +100,7 @@ class DepthAnythingV2(nn.Module):
         return depth, mask
 
     def forward(self, image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        depth, mask = self.decode_features(
-            self.extract_features(image), image.shape[-2:]
-        )
+        depth, mask = self.decode_features(self.extract_features(image), image.shape[-2:])
         return depth.squeeze(1), mask.squeeze(1)
 
 
@@ -112,10 +110,7 @@ class DAP(nn.Module):
     def __init__(self, model_type: str = "vitl", max_depth: float = 1.0) -> None:
         super().__init__()
         if model_type not in _MODEL_CONFIGS:
-            raise ValueError(
-                f"Unsupported DAP model type {model_type!r}; "
-                f"expected one of {sorted(_MODEL_CONFIGS)}."
-            )
+            raise ValueError(f"Unsupported DAP model type {model_type!r}; expected one of {sorted(_MODEL_CONFIGS)}.")
         config = _MODEL_CONFIGS[model_type]
         self.max_depth = max_depth
         self.core = DepthAnythingV2(

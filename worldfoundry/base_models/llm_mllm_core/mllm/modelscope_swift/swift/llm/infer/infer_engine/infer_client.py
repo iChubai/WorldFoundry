@@ -10,20 +10,27 @@ from dacite import from_dict
 from requests.exceptions import HTTPError
 
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.plugin import Metric
-from ..protocol import (ChatCompletionRequest, ChatCompletionResponse, ChatCompletionStreamResponse, InferRequest,
-                        ModelList, RequestConfig)
+from ..protocol import (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    ChatCompletionStreamResponse,
+    InferRequest,
+    ModelList,
+    RequestConfig,
+)
 from .infer_engine import InferEngine
 
 
 class InferClient(InferEngine):
-
-    def __init__(self,
-                 host: str = '127.0.0.1',
-                 port: int = 8000,
-                 api_key: str = 'EMPTY',
-                 *,
-                 base_url: Optional[str] = None,
-                 timeout: Optional[int] = 3600) -> None:
+    def __init__(
+        self,
+        host: str = "127.0.0.1",
+        port: int = 8000,
+        api_key: str = "EMPTY",
+        *,
+        base_url: Optional[str] = None,
+        timeout: Optional[int] = 3600,
+    ) -> None:
         """
         Initialize the InferClient.
 
@@ -38,7 +45,7 @@ class InferClient(InferEngine):
         self.port = port
         self.timeout = timeout
         if base_url is None:
-            base_url = f'http://{self.host}:{self.port}/v1'
+            base_url = f"http://{self.host}:{self.port}/v1"
         self.base_url = base_url
         self._models = None
 
@@ -48,22 +55,21 @@ class InferClient(InferEngine):
             models = []
             for model in self.get_model_list().data:
                 models.append(model.id)
-            assert len(models) > 0, f'models: {models}'
+            assert len(models) > 0, f"models: {models}"
             self._models = models
         return self._models
 
     def get_model_list(self) -> ModelList:
-        """Get model list from the inference server.
-        """
+        """Get model list from the inference server."""
         coro = self.get_model_list_async()
         return self.safe_asyncio_run(coro)
 
     def _get_request_kwargs(self) -> Dict[str, Any]:
         request_kwargs = {}
         if isinstance(self.timeout, (int, float)) and self.timeout > 0:
-            request_kwargs['timeout'] = self.timeout
+            request_kwargs["timeout"] = self.timeout
         if self.api_key is not None:
-            request_kwargs['headers'] = {'Authorization': f'Bearer {self.api_key}'}
+            request_kwargs["headers"] = {"Authorization": f"Bearer {self.api_key}"}
         return request_kwargs
 
     async def get_model_list_async(self) -> ModelList:
@@ -74,13 +80,13 @@ class InferClient(InferEngine):
         return from_dict(ModelList, resp_obj)
 
     def infer(
-            self,
-            infer_requests: List[InferRequest],
-            request_config: Optional[RequestConfig] = None,
-            metrics: Optional[List[Metric]] = None,
-            *,
-            model: Optional[str] = None,
-            use_tqdm: Optional[bool] = None
+        self,
+        infer_requests: List[InferRequest],
+        request_config: Optional[RequestConfig] = None,
+        metrics: Optional[List[Metric]] = None,
+        *,
+        model: Optional[str] = None,
+        use_tqdm: Optional[bool] = None,
     ) -> List[Union[ChatCompletionResponse, Iterator[ChatCompletionStreamResponse]]]:
         """
         Perform inference using the specified model.
@@ -104,7 +110,7 @@ class InferClient(InferEngine):
             infer_request = asdict(infer_request)
         res = asdict(ChatCompletionRequest(model, **infer_request, **asdict(request_config)))
         # ignore empty
-        empty_request = ChatCompletionRequest('', [])
+        empty_request = ChatCompletionRequest("", [])
         for k in list(res.keys()):
             if res[k] == getattr(empty_request, k):
                 res.pop(k)
@@ -112,11 +118,11 @@ class InferClient(InferEngine):
 
     @staticmethod
     def _parse_stream_data(data: bytes) -> Optional[str]:
-        data = data.decode(encoding='utf-8')
+        data = data.decode(encoding="utf-8")
         data = data.strip()
         if len(data) == 0:
             return
-        assert data.startswith('data:'), f'data: {data}'
+        assert data.startswith("data:"), f"data: {data}"
         return data[5:].strip()
 
     async def infer_async(
@@ -131,7 +137,7 @@ class InferClient(InferEngine):
             if len(self.models) == 1:
                 model = self.models[0]
             else:
-                raise ValueError(f'Please explicitly specify the model. Available models: {self.models}.')
+                raise ValueError(f"Please explicitly specify the model. Available models: {self.models}.")
         url = f"{self.base_url.rstrip('/')}/chat/completions"
 
         request_data = self._prepare_request_data(model, infer_request, request_config)
@@ -142,12 +148,12 @@ class InferClient(InferEngine):
                     async with session.post(url, json=request_data, **self._get_request_kwargs()) as resp:
                         async for data in resp.content:
                             data = self._parse_stream_data(data)
-                            if data == '[DONE]':
+                            if data == "[DONE]":
                                 break
                             if data is not None:
                                 resp_obj = json.loads(data)
-                                if resp_obj['object'] == 'error':
-                                    raise HTTPError(resp_obj['message'])
+                                if resp_obj["object"] == "error":
+                                    raise HTTPError(resp_obj["message"])
                                 yield from_dict(ChatCompletionStreamResponse, resp_obj)
 
             return _gen_stream()
@@ -155,6 +161,6 @@ class InferClient(InferEngine):
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=request_data, **self._get_request_kwargs()) as resp:
                     resp_obj = await resp.json()
-                    if resp_obj['object'] == 'error':
-                        raise HTTPError(resp_obj['message'])
+                    if resp_obj["object"] == "error":
+                        raise HTTPError(resp_obj["message"])
                     return from_dict(ChatCompletionResponse, resp_obj)

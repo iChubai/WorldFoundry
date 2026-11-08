@@ -175,9 +175,7 @@ def actp(Gij, X0, jacobian=False):
     return X1, None
 
 
-def projective_transform(
-    poses, depths, intrinsics, ii, jj, jacobian=False, return_depth=False
-):
+def projective_transform(poses, depths, intrinsics, ii, jj, jacobian=False, return_depth=False):
     """map points from ii->jj"""
 
     # inverse project (pinhole)
@@ -222,7 +220,7 @@ def induced_flow(poses, disps, intrinsics, ii, jj):
         torch.arange(wd, device=disps.device, dtype=torch.float),
         indexing="ij",
     )
-    
+
     coords0 = torch.stack([x, y], dim=-1)
     coords1, valid = projective_transform(poses, disps, intrinsics, ii, jj, False)
 

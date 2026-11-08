@@ -16,8 +16,12 @@ _ROOT = Path(__file__).resolve().parent
 
 
 def config_path() -> Path:
-    return _ROOT / "configs" / "recognition" / "videomaev2" / (
-        "vit-base-p16_videomaev2-vit-g-dist-k710-pre_16x4x1_kinetics-400.py"
+    return (
+        _ROOT
+        / "configs"
+        / "recognition"
+        / "videomaev2"
+        / ("vit-base-p16_videomaev2-vit-g-dist-k710-pre_16x4x1_kinetics-400.py")
     )
 
 

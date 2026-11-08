@@ -41,6 +41,7 @@ from .triton_lite_mla_kernels.vk_q_mm_relu_bwd import vk_q_mm_relu_bwd
 
 class TritonLiteMLAFunction(torch.autograd.Function):
     """Autograd wrapper around the fused LiteMLA Triton kernels."""
+
     @staticmethod
     def forward(
         ctx,
@@ -135,6 +136,7 @@ class TritonLiteMLAFunction(torch.autograd.Function):
 
 class TritonLiteMLA(nn.Module):
     """Drop-in LiteLA with fused Triton QKV+ReLU+VK+proj (training + inference)."""
+
     def __init__(
         self,
         dim: int,

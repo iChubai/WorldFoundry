@@ -17,23 +17,23 @@ if TYPE_CHECKING:
 
 else:
     _import_structure = {
-        'callback': ['extra_callbacks'],
-        'loss': ['LOSS_MAPPING', 'get_loss_func'],
-        'loss_scale': ['loss_scale_map'],
-        'metric': ['InferStats', 'MeanMetric', 'Metric', 'compute_acc', 'get_metric', 'compute_rouge_bleu'],
-        'agent_template': ['agent_templates'],
-        'tuner': ['Tuner', 'extra_tuners', 'PeftTuner'],
-        'prm': ['prms', 'PRM'],
-        'orm': ['orms', 'ORM'],
-        'multi_turn': ['multi_turns'],
-        'rm_plugin': ['rm_plugins']
+        "callback": ["extra_callbacks"],
+        "loss": ["LOSS_MAPPING", "get_loss_func"],
+        "loss_scale": ["loss_scale_map"],
+        "metric": ["InferStats", "MeanMetric", "Metric", "compute_acc", "get_metric", "compute_rouge_bleu"],
+        "agent_template": ["agent_templates"],
+        "tuner": ["Tuner", "extra_tuners", "PeftTuner"],
+        "prm": ["prms", "PRM"],
+        "orm": ["orms", "ORM"],
+        "multi_turn": ["multi_turns"],
+        "rm_plugin": ["rm_plugins"],
     }
 
     import sys
 
     sys.modules[__name__] = _LazyModule(
         __name__,
-        globals()['__file__'],
+        globals()["__file__"],
         _import_structure,
         module_spec=__spec__,
         extra_objects={},

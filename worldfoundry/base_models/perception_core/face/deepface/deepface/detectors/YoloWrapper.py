@@ -20,6 +20,7 @@ def build_model():
     from ultralytics import YOLO
 
     from worldfoundry.base_models.perception_core.face.deepface.deepface.commons.functions import get_deepface_home
+
     weight_path = f"{get_deepface_home()}{PATH}"
 
     # Download the model's weights if they don't exist
@@ -35,8 +36,7 @@ def detect_face(face_detector, img, align=False):
     resp = []
 
     # Detect faces
-    results = face_detector.predict(
-        img, verbose=False, show=False, conf=0.25)[0]
+    results = face_detector.predict(img, verbose=False, show=False, conf=0.25)[0]
 
     # For each face, extract the bounding box, the landmarks and confidence
     for result in results:
@@ -45,7 +45,7 @@ def detect_face(face_detector, img, align=False):
         confidence = result.boxes.conf.tolist()[0]
 
         x, y, w, h = int(x - w / 2), int(y - h / 2), int(w), int(h)
-        detected_face = img[y: y + h, x: x + w].copy()
+        detected_face = img[y : y + h, x : x + w].copy()
 
         if align:
             # Tuple of x,y and confidence for left eye
@@ -54,11 +54,8 @@ def detect_face(face_detector, img, align=False):
             right_eye = result.keypoints.xy[0][1], result.keypoints.conf[0][1]
 
             # Check the landmarks confidence before alignment
-            if (left_eye[1] > LANDMARKS_CONFIDENCE_THRESHOLD and
-                    right_eye[1] > LANDMARKS_CONFIDENCE_THRESHOLD):
-                detected_face = FaceDetector.alignment_procedure(
-                    detected_face, left_eye[0].cpu(), right_eye[0].cpu()
-                )
+            if left_eye[1] > LANDMARKS_CONFIDENCE_THRESHOLD and right_eye[1] > LANDMARKS_CONFIDENCE_THRESHOLD:
+                detected_face = FaceDetector.alignment_procedure(detected_face, left_eye[0].cpu(), right_eye[0].cpu())
         resp.append((detected_face, [x, y, w, h], confidence))
 
     return resp

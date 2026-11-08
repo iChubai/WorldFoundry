@@ -33,8 +33,10 @@ logger = logging.get_logger(__name__)
 
 _CONFIG_FOR_DOC = "Qwen3Config"
 
+
 class Qwen3RMSNorm(nn.Module):
     """Qwen rms norm implementation."""
+
     def __init__(self, hidden_size, eps=1e-6):
         """
         Qwen3RMSNorm is equivalent to T5LayerNorm
@@ -62,6 +64,7 @@ class Qwen3RMSNorm(nn.Module):
 
 class Qwen3MLP(nn.Module):
     """Qwen mlp implementation."""
+
     def __init__(self, config):
         """Init.
 
@@ -191,7 +194,7 @@ class Qwen3Attention(nn.Module):
         self.scaling = self.head_dim**-0.5
         self.attention_dropout = config.attention_dropout
         self.is_causal = True
-        
+
         self.q_proj = nn.Linear(
             config.hidden_size, config.num_attention_heads * self.head_dim, bias=config.attention_bias
         )
@@ -204,7 +207,7 @@ class Qwen3Attention(nn.Module):
         self.o_proj = nn.Linear(
             config.num_attention_heads * self.head_dim, config.hidden_size, bias=config.attention_bias
         )
-        
+
         self.q_norm = Qwen3RMSNorm(self.head_dim, eps=config.rms_norm_eps)  # unlike olmo, only on the head dim!
         self.k_norm = Qwen3RMSNorm(self.head_dim, eps=config.rms_norm_eps)  # thus post q_norm does not need reshape
         self.sliding_window = config.sliding_window
@@ -280,6 +283,7 @@ class Qwen3Attention(nn.Module):
 
 class Qwen3DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
+
     def __init__(self, config: Qwen3Config, layer_idx: int):
         """Init.
 
@@ -361,6 +365,7 @@ class Qwen3DecoderLayer(nn.Module):
 
 class Qwen3RotaryEmbedding(nn.Module):
     """Qwen rotary embedding implementation."""
+
     def __init__(self, config: Qwen3Config, device=None):
         """Init.
 
@@ -429,6 +434,7 @@ QWEN3_START_DOCSTRING = r"""
 )
 class Qwen3PreTrainedModel(PreTrainedModel):
     """Qwen pre trained model implementation."""
+
     config_class = Qwen3Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
@@ -829,9 +835,7 @@ class Qwen3Model(Qwen3PreTrainedModel):
             causal_mask = attention_mask
         else:
             min_dtype = torch.finfo(dtype).min
-            causal_mask = torch.full(
-                (sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device
-            )
+            causal_mask = torch.full((sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device)
             diagonal_attend_mask = torch.arange(target_length, device=device) > cache_position.reshape(-1, 1)
             if config.sliding_window is not None:
                 # if we have sliding window, we should not attend to tokens beyond sliding window length, so we mask them out also
@@ -858,11 +862,12 @@ class Qwen3Model(Qwen3PreTrainedModel):
         return causal_mask
 
 
-#class KwargsForCausalLM(FlashAttentionKwargs, LossKwargs): ...
+# class KwargsForCausalLM(FlashAttentionKwargs, LossKwargs): ...
 
 
 class Qwen3ForCausalLM(Qwen3PreTrainedModel, GenerationMixin):
     """Qwen for causal lm implementation."""
+
     _tied_weights_keys = ["lm_head.weight"]
     _tp_plan = {"lm_head": "colwise_rep"}
     _pp_plan = {"lm_head": (["hidden_states"], ["logits"])}

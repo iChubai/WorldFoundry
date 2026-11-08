@@ -62,9 +62,7 @@ def pca_to_rgb_4d_bf16_percentile(
     np.ndarray
         Array of shape (49, 27, 36, 3), float32[0,1] or uint8[0,255].
     """
-    assert (
-        x_np.ndim == 4
-    )  # and x_np.shape[-1] == 3072, f"expect (49,27,36,3072), got {x_np.shape}"
+    assert x_np.ndim == 4  # and x_np.shape[-1] == 3072, f"expect (49,27,36,3072), got {x_np.shape}"
     B1, B2, B3, D = x_np.shape
     N = B1 * B2 * B3
 
@@ -80,9 +78,7 @@ def pca_to_rgb_4d_bf16_percentile(
     q = max(int(q_oversample), k)
     clip_percent = float(clip_percent)
     if not (0.0 <= clip_percent < 50.0):
-        raise ValueError(
-            "clip_percent must be in [0, 50), e.g. 5.0 means clip 5% from top and bottom"
-        )
+        raise ValueError("clip_percent must be in [0, 50), e.g. 5.0 means clip 5% from top and bottom")
     low = clip_percent / 100.0
     high = 1.0 - low
 

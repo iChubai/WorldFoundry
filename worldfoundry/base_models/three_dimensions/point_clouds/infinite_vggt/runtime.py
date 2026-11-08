@@ -89,7 +89,6 @@ class InfiniteVGGTRepresentation:
         instance.resolution = kwargs.get("resolution", 518)
         return instance
 
-
     def _prepare_images(self, images_input: Any) -> torch.Tensor:
         """Build batched image tensor (N, C, H, W) from paths or arrays."""
         if isinstance(images_input, list):
@@ -127,9 +126,7 @@ class InfiniteVGGTRepresentation:
                 new_h = round(h * (target / w) / 14) * 14
                 if new_h > target and self.preprocess_mode == "crop":
                     new_h = target
-                images = F.interpolate(
-                    images, size=(new_h, new_w), mode="bilinear", align_corners=False
-                )
+                images = F.interpolate(images, size=(new_h, new_w), mode="bilinear", align_corners=False)
             if images.shape[-2] > target or images.shape[-1] > target:
                 start_h = (images.shape[-2] - target) // 2
                 start_w = (images.shape[-1] - target) // 2
@@ -196,9 +193,7 @@ class InfiniteVGGTRepresentation:
         depth_conf = torch.stack(all_depth_conf, dim=0)
         pose_enc = torch.stack(all_camera_pose, dim=0)
 
-        extrinsic, intrinsic = pose_encoding_to_extri_intri(
-            pose_enc.unsqueeze(0), images.shape[-2:]
-        )
+        extrinsic, intrinsic = pose_encoding_to_extri_intri(pose_enc.unsqueeze(0), images.shape[-2:])
         extrinsic = extrinsic.squeeze(0).cpu().numpy()
         intrinsic = intrinsic.squeeze(0).cpu().numpy() if intrinsic is not None else None
 

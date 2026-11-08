@@ -44,8 +44,10 @@ def _load_audio_checkpoint(path: Union[str, Path], weights_only: bool = True):
         weights_only=weights_only,
         allow_unsafe_pickle_fallback=True,
     )
-    if weights_only is True and isinstance(checkpoint, Mapping) and not all(
-        isinstance(value, torch.Tensor) for value in checkpoint.values()
+    if (
+        weights_only is True
+        and isinstance(checkpoint, Mapping)
+        and not all(isinstance(value, torch.Tensor) for value in checkpoint.values())
     ):
         _logger.warning(
             "Audio encoder checkpoint %s contains non-tensor payload after safe loading.",

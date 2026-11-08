@@ -18,11 +18,7 @@ def forward_swin(pretrained, x):
     return forward_default(pretrained, x)
 
 
-def _make_swin_backbone(
-        model,
-        hooks=[1, 1, 17, 1],
-        patch_grid=[96, 96]
-):
+def _make_swin_backbone(model, hooks=[1, 1, 17, 1], patch_grid=[96, 96]):
     """Helper function to make swin backbone.
 
     Args:
@@ -47,21 +43,15 @@ def _make_swin_backbone(
 
     patch_grid_size = np.array(used_patch_grid, dtype=int)
 
-    pretrained.act_postprocess1 = nn.Sequential(
-        Transpose(1, 2),
-        nn.Unflatten(2, torch.Size(patch_grid_size.tolist()))
-    )
+    pretrained.act_postprocess1 = nn.Sequential(Transpose(1, 2), nn.Unflatten(2, torch.Size(patch_grid_size.tolist())))
     pretrained.act_postprocess2 = nn.Sequential(
-        Transpose(1, 2),
-        nn.Unflatten(2, torch.Size((patch_grid_size // 2).tolist()))
+        Transpose(1, 2), nn.Unflatten(2, torch.Size((patch_grid_size // 2).tolist()))
     )
     pretrained.act_postprocess3 = nn.Sequential(
-        Transpose(1, 2),
-        nn.Unflatten(2, torch.Size((patch_grid_size // 4).tolist()))
+        Transpose(1, 2), nn.Unflatten(2, torch.Size((patch_grid_size // 4).tolist()))
     )
     pretrained.act_postprocess4 = nn.Sequential(
-        Transpose(1, 2),
-        nn.Unflatten(2, torch.Size((patch_grid_size // 8).tolist()))
+        Transpose(1, 2), nn.Unflatten(2, torch.Size((patch_grid_size // 8).tolist()))
     )
 
     return pretrained

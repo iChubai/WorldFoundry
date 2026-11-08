@@ -41,16 +41,13 @@ import numpy as np
 
 CameraModel = collections.namedtuple("CameraModel", ["model_id", "model_name", "num_params"])
 Camera = collections.namedtuple("Camera", ["id", "model", "width", "height", "params"])
-BaseImage = collections.namedtuple(
-    "Image", ["id", "qvec", "tvec", "camera_id", "name", "xys", "point3D_ids"]
-)
-Point3D = collections.namedtuple(
-    "Point3D", ["id", "xyz", "rgb", "error", "image_ids", "point2D_idxs"]
-)
+BaseImage = collections.namedtuple("Image", ["id", "qvec", "tvec", "camera_id", "name", "xys", "point3D_ids"])
+Point3D = collections.namedtuple("Point3D", ["id", "xyz", "rgb", "error", "image_ids", "point2D_idxs"])
 
 
 class Image(BaseImage):
     """Image implementation."""
+
     def qvec2rotmat(self):
         """Qvec2rotmat."""
         return qvec2rotmat(self.qvec)
@@ -250,9 +247,7 @@ def read_images_binary(path_to_model_file):
     with open(path_to_model_file, "rb") as fid:
         num_reg_images = read_next_bytes(fid, 8, "Q")[0]
         for _ in range(num_reg_images):
-            binary_image_properties = read_next_bytes(
-                fid, num_bytes=64, format_char_sequence="idddddddi"
-            )
+            binary_image_properties = read_next_bytes(fid, num_bytes=64, format_char_sequence="idddddddi")
             image_id = binary_image_properties[0]
             qvec = np.array(binary_image_properties[1:5])
             tvec = np.array(binary_image_properties[5:8])
@@ -302,9 +297,7 @@ def write_images_text(images, path):
         "# Image list with two lines of data per image:\n"
         + "#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n"
         + "#   POINTS2D[] as (X, Y, POINT3D_ID)\n"
-        + "# Number of images: {}, mean observations per image: {}\n".format(
-            len(images), mean_observations
-        )
+        + "# Number of images: {}, mean observations per image: {}\n".format(len(images), mean_observations)
     )
 
     with open(path, "w") as fid:
@@ -389,9 +382,7 @@ def read_points3D_binary(path_to_model_file):
     with open(path_to_model_file, "rb") as fid:
         num_points = read_next_bytes(fid, 8, "Q")[0]
         for _ in range(num_points):
-            binary_point_line_properties = read_next_bytes(
-                fid, num_bytes=43, format_char_sequence="QdddBBBd"
-            )
+            binary_point_line_properties = read_next_bytes(fid, num_bytes=43, format_char_sequence="QdddBBBd")
             point3D_id = binary_point_line_properties[0]
             xyz = np.array(binary_point_line_properties[1:4])
             rgb = np.array(binary_point_line_properties[4:7])
@@ -428,9 +419,7 @@ def write_points3D_text(points3D, path):
     HEADER = (
         "# 3D point list with one line of data per point:\n"
         + "#   POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)\n"
-        + "# Number of points: {}, mean track length: {}\n".format(
-            len(points3D), mean_track_length
-        )
+        + "# Number of points: {}, mean track length: {}\n".format(len(points3D), mean_track_length)
     )
 
     with open(path, "w") as fid:

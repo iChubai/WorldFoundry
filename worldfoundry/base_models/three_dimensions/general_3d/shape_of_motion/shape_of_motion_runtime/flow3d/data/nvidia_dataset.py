@@ -32,26 +32,28 @@ from flow3d.data.utils import (
 )
 from flow3d.transforms import rt_to_mat4
 # hold
- 
+
+
 @dataclass
 class NvidiaDataConfig:
     """Nvidia data config implementation."""
+
     data_dir: str
     start: int = 0
     end: int = -1
     split: Literal["train", "val"] = "train"
-    depth_type: Literal[
-        "depth_anything_colmap", 
-    ] = "depth_anything_colmap"
+    depth_type: Literal["depth_anything_colmap",] = "depth_anything_colmap"
     camera_type: Literal["original"] = "original"
     use_median_filter: bool = False
     num_targets_per_frame: int = 4
     scene_norm_dict: tyro.conf.Suppress[SceneNormDict | None] = None
     load_from_cache: bool = False
     skip_load_imgs: bool = False
-    
+
+
 class NvidiaDataset(BaseDataset):
     """Nvidia dataset implementation."""
+
     def __init__(
         self,
         data_dir: str,
@@ -59,9 +61,7 @@ class NvidiaDataset(BaseDataset):
         end: int = -1,
         factor: int = 2,
         split: Literal["train", "val"] = "train",
-        depth_type: Literal[
-            "depth_anything_colmap",
-        ] = "depth_anything_colmap",
+        depth_type: Literal["depth_anything_colmap",] = "depth_anything_colmap",
         camera_type: Literal["original"] = "original",
         use_median_filter: bool = False,
         num_targets_per_frame: int = 1,
@@ -103,12 +103,12 @@ class NvidiaDataset(BaseDataset):
         self.load_from_cache = load_from_cache
         self.cache_dir = osp.join(data_dir, "flow3d_preprocessed", "cache")
         os.makedirs(self.cache_dir, exist_ok=True)
-        
+
         # Test if the current data has validation set.
         with open(osp.join(data_dir, "splits", "val.json")) as f:
             split_dict = json.load(f)
         self.has_validation = len(split_dict["frame_names"]) > 0
-        
+
         # Load metadata.
         with open(osp.join(data_dir, "splits", f"{split}.json")) as f:
             split_dict = json.load(f)
@@ -119,43 +119,38 @@ class NvidiaDataset(BaseDataset):
         time_ids = [t for t in split_dict["time_ids"] if t >= start and t < end]
         self.time_ids = torch.tensor(time_ids) - start
         guru.info(f"{self.time_ids.min()=} {self.time_ids.max()=}")
-        
+
         self.fps = 15
-        
+
         # Load cameras.
         if self.camera_type == "original":
-            
             curr_img = np.array(
-                    [
-                        iio.imread(
-                            osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png")
-                        )
-                        for frame_name in tqdm(
-                            self.frame_names,
-                            desc=f"Loading {self.split} images",
-                            leave=False,
-                        )
-                    ],
-                )
-            
+                [
+                    iio.imread(osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png"))
+                    for frame_name in tqdm(
+                        self.frame_names,
+                        desc=f"Loading {self.split} images",
+                        leave=False,
+                    )
+                ],
+            )
+
             orig_img = np.array(
-                    [
-                        iio.imread(
-                            osp.join(self.data_dir, f"rgb/1x/{frame_name}.png")
-                        )
-                        for frame_name in tqdm(
-                            self.frame_names,
-                            desc=f"Loading {self.split} images",
-                            leave=False,
-                        )
-                    ],
-                )
-            
-            H, W  = curr_img.shape[1:3]
+                [
+                    iio.imread(osp.join(self.data_dir, f"rgb/1x/{frame_name}.png"))
+                    for frame_name in tqdm(
+                        self.frame_names,
+                        desc=f"Loading {self.split} images",
+                        leave=False,
+                    )
+                ],
+            )
+
+            H, W = curr_img.shape[1:3]
             H_, W_ = orig_img.shape[1:3]
-            
+
             w_ratio, h_ratio = W / W_, H / H_
-            
+
             Ks, w2cs = [], []
             for frame_name in self.frame_names:
                 with open(osp.join(data_dir, "camera", f"{frame_name}.json")) as f:
@@ -163,10 +158,10 @@ class NvidiaDataset(BaseDataset):
                 focal_length = camera_dict["focal_length"]
                 principal_point = camera_dict["principal_point"]
                 K = [
-                        [focal_length, 0.0, principal_point[0]],
-                        [0.0, focal_length, principal_point[1]],
-                        [0.0, 0.0, 1.0],
-                    ]
+                    [focal_length, 0.0, principal_point[0]],
+                    [0.0, focal_length, principal_point[1]],
+                    [0.0, 0.0, 1.0],
+                ]
                 Ks.append(K)
                 orientation = np.array(camera_dict["orientation"])
                 position = np.array(camera_dict["position"])
@@ -181,18 +176,16 @@ class NvidiaDataset(BaseDataset):
             self.Ks = torch.tensor(Ks)
             self.Ks[:, 0] *= w_ratio
             self.Ks[:, 1] *= h_ratio
-            
+
             w2cs = np.array(w2cs)
             self.w2cs = torch.from_numpy(w2cs)
-        
+
         if not skip_load_imgs:
             # Load images.
             imgs = torch.from_numpy(
                 np.array(
                     [
-                        iio.imread(
-                            osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png")
-                        )
+                        iio.imread(osp.join(self.data_dir, f"rgb/{factor}x/{frame_name}.png"))
                         for frame_name in tqdm(
                             self.frame_names,
                             desc=f"Loading {self.split} images",
@@ -205,7 +198,7 @@ class NvidiaDataset(BaseDataset):
 
             # TODO (WZ): nvidia-dataset doesn't have valid_mask as forth channel of the images
             self.valid_masks = torch.ones_like(imgs[..., 0]).float()
-            
+
             # Load masks.
             self.masks = (
                 torch.from_numpy(
@@ -229,8 +222,7 @@ class NvidiaDataset(BaseDataset):
                 / 255.0
             )
             self.masks = (torch.sum(self.masks, dim=-1) != 0).float()
-            
-            
+
             if self.training:
                 # Load depths
                 def load_depth(i, frame_name):
@@ -249,44 +241,35 @@ class NvidiaDataset(BaseDataset):
                     depth[depth < 1e-3] = 1e-3
                     # depth = 1.0 / depth
                     return depth
+
                 self.depths = torch.from_numpy(
                     np.array(
                         [
                             load_depth(i, frame_name)
-                            for i, frame_name in enumerate(tqdm(
-                                self.frame_names,
-                                desc=f"Loading {self.split} depths",
-                                leave=False,
-                            ))
+                            for i, frame_name in enumerate(
+                                tqdm(
+                                    self.frame_names,
+                                    desc=f"Loading {self.split} depths",
+                                    leave=False,
+                                )
+                            )
                         ],
                         np.float32,
                     )
                 )
                 self.depths = self.depths.squeeze(-1)
-                max_depth_values_per_frame = self.depths.reshape(
-                    self.num_frames, -1
-                ).max(1)[0]
+                max_depth_values_per_frame = self.depths.reshape(self.num_frames, -1).max(1)[0]
                 max_depth_value = max_depth_values_per_frame.median() * 2.5
                 self.depths = torch.clamp(self.depths, 0, max_depth_value)
                 # Median filter depths.
                 # Note(hangg): This operator is very expensive.
                 if self.use_median_filter:
-                    for i in tqdm(
-                        range(self.num_frames), desc="Processing depths", leave=False
-                    ):
+                    for i in tqdm(range(self.num_frames), desc="Processing depths", leave=False):
                         depth = masked_median_blur(
                             self.depths[[i]].unsqueeze(1).to("cuda"),
-                            (
-                                self.masks[[i]]
-                                * self.valid_masks[[i]]
-                                * (self.depths[[i]] > 0)
-                            )
-                            .unsqueeze(1)
-                            .to("cuda"),
+                            (self.masks[[i]] * self.valid_masks[[i]] * (self.depths[[i]] > 0)).unsqueeze(1).to("cuda"),
                         )[0, 0].cpu()
-                        self.depths[i] = depth * self.masks[i] + self.depths[i] * (
-                            1 - self.masks[i]
-                        )
+                        self.depths[i] = depth * self.masks[i] + self.depths[i] * (1 - self.masks[i])
                 # Load the query pixels from 2D tracks.
                 self.query_tracks_2d = [
                     torch.from_numpy(
@@ -300,9 +283,7 @@ class NvidiaDataset(BaseDataset):
                     )
                     for frame_name in self.frame_names
                 ]
-                guru.info(
-                    f"{len(self.query_tracks_2d)=} {self.query_tracks_2d[0].shape=}"
-                )     
+                guru.info(f"{len(self.query_tracks_2d)=} {self.query_tracks_2d[0].shape=}")
             else:
                 # Load covisible masks.
                 self.covisible_masks = (
@@ -326,16 +307,12 @@ class NvidiaDataset(BaseDataset):
                     )
                     / 255.0
                 )
-        
+
         if self.scene_norm_dict is None:
-            cached_scene_norm_dict_path = osp.join(
-                self.cache_dir, "scene_norm_dict.pth"
-            )
+            cached_scene_norm_dict_path = osp.join(self.cache_dir, "scene_norm_dict.pth")
             if osp.exists(cached_scene_norm_dict_path) and self.load_from_cache:
                 print("loading cached scene norm dict...")
-                self.scene_norm_dict = torch.load(
-                    osp.join(self.cache_dir, "scene_norm_dict.pth")
-                )
+                self.scene_norm_dict = torch.load(osp.join(self.cache_dir, "scene_norm_dict.pth"))
             elif self.training:
                 # Compute the scene scale and transform for normalization.
                 # Normalize the scene based on the foreground 3D tracks.
@@ -350,15 +327,14 @@ class NvidiaDataset(BaseDataset):
                 original_up = -F.normalize(self.w2cs[:, 1, :3].mean(0), dim=-1)
                 target_up = original_up.new_tensor([0.0, 0.0, 1.0])
                 R = roma.rotvec_to_rotmat(
-                    F.normalize(original_up.cross(target_up, dim=-1), dim=-1)
-                    * original_up.dot(target_up).acos_()
+                    F.normalize(original_up.cross(target_up, dim=-1), dim=-1) * original_up.dot(target_up).acos_()
                 )
                 transfm = rt_to_mat4(R, torch.einsum("ij,j->i", -R, scene_center))
                 self.scene_norm_dict = SceneNormDict(scale=scale, transfm=transfm)
                 torch.save(self.scene_norm_dict, cached_scene_norm_dict_path)
             else:
                 raise ValueError("scene_norm_dict must be provided for validation.")
-        
+
         # Normalize the scene.
         scale = self.scene_norm_dict["scale"]
         transfm = self.scene_norm_dict["transfm"]
@@ -366,12 +342,10 @@ class NvidiaDataset(BaseDataset):
         self.w2cs[:, :3, 3] /= scale
         if self.training and not skip_load_imgs:
             self.depths /= scale
-        
+
         if not skip_load_imgs:
-            guru.info(
-                f"{self.imgs.shape=} {self.valid_masks.shape=} {self.masks.shape=}"
-            )
-    
+            guru.info(f"{self.imgs.shape=} {self.valid_masks.shape=} {self.masks.shape=}")
+
     @property
     def num_frames(self) -> int:
         """Num frames.
@@ -422,7 +396,7 @@ class NvidiaDataset(BaseDataset):
             The return value.
         """
         return self.depths[index]
-    
+
     def get_mask(self, index: int) -> torch.Tensor:
         """Get mask.
 
@@ -433,17 +407,15 @@ class NvidiaDataset(BaseDataset):
             The return value.
         """
         return self.masks[index]
-    
+
     def get_img_wh(self) -> tuple[int, int]:
         """Get img wh.
 
         Returns:
             The return value.
         """
-        return iio.imread(
-            osp.join(self.data_dir, f"rgb/{self.factor}x/{self.frame_names[0]}.png")
-        ).shape[1::-1]
-    
+        return iio.imread(osp.join(self.data_dir, f"rgb/{self.factor}x/{self.frame_names[0]}.png")).shape[1::-1]
+
     def get_tracks_3d(
         self, num_samples: int, step: int = 1, show_pbar: bool = True, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -456,9 +428,7 @@ class NvidiaDataset(BaseDataset):
                 number of samples less than what is specified.
             step (int): The step to temporally subsample the track.
         """
-        assert (
-            self.split == "train"
-        ), "fetch_tracks_3d is only available for the training split."
+        assert self.split == "train", "fetch_tracks_3d is only available for the training split."
         cached_track_3d_path = osp.join(self.cache_dir, f"tracks_3d_{num_samples}.pth")
         if osp.exists(cached_track_3d_path) and step == 1 and self.load_from_cache:
             print("loading cached 3d tracks data...")
@@ -477,23 +447,15 @@ class NvidiaDataset(BaseDataset):
         raw_tracks_2d = []
         candidate_frames = list(range(0, self.num_frames, step))
         num_sampled_frames = len(candidate_frames)
-        for i in (
-            tqdm(candidate_frames, desc="Loading 2D tracks", leave=False)
-            if show_pbar
-            else candidate_frames
-        ):
+        for i in tqdm(candidate_frames, desc="Loading 2D tracks", leave=False) if show_pbar else candidate_frames:
             curr_num_samples = self.query_tracks_2d[i].shape[0]
             num_samples_per_frame = (
                 int(np.floor(num_samples / num_sampled_frames))
                 if i != candidate_frames[-1]
-                else num_samples
-                - (num_sampled_frames - 1)
-                * int(np.floor(num_samples / num_sampled_frames))
+                else num_samples - (num_sampled_frames - 1) * int(np.floor(num_samples / num_sampled_frames))
             )
             if num_samples_per_frame < curr_num_samples:
-                track_sels = np.random.choice(
-                    curr_num_samples, (num_samples_per_frame,), replace=False
-                )
+                track_sels = np.random.choice(curr_num_samples, (num_samples_per_frame,), replace=False)
             else:
                 track_sels = np.arange(0, curr_num_samples)
             curr_tracks_2d = []
@@ -506,9 +468,7 @@ class NvidiaDataset(BaseDataset):
                             osp.join(
                                 self.data_dir,
                                 "flow3d_preprocessed/2d_tracks/",
-                                f"{self.factor}x/"
-                                f"{self.frame_names[i]}_"
-                                f"{self.frame_names[j]}.npy",
+                                f"{self.factor}x/{self.frame_names[i]}_{self.frame_names[j]}.npy",
                             )
                         ).astype(np.float32)
                     )
@@ -522,7 +482,7 @@ class NvidiaDataset(BaseDataset):
         H, W = self.imgs.shape[1:3]
         filtered_tracks_3d, filtered_visibles, filtered_track_colors = [], [], []
         filtered_invisibles, filtered_confidences = [], []
-        
+
         masks = self.masks * self.valid_masks * (self.depths > 0)
         masks = (masks > 0.5).float()
         for i, tracks_2d in enumerate(raw_tracks_2d):
@@ -549,9 +509,7 @@ class NvidiaDataset(BaseDataset):
                 )
                 * track_depths
             )
-            tracks_3d = torch.einsum(
-                "nij,npj->npi", c2ws, F.pad(tracks_3d, (0, 1), value=1.0)
-            )[..., :3]
+            tracks_3d = torch.einsum("nij,npj->npi", c2ws, F.pad(tracks_3d, (0, 1), value=1.0))[..., :3]
             # Filter out out-of-mask tracks.
             is_in_masks = (
                 F.grid_sample(
@@ -611,10 +569,8 @@ class NvidiaDataset(BaseDataset):
             filtered_confidences,
             filtered_track_colors,
         )
-        
-    def get_bkgd_points(
-        self, num_samples: int, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+
+    def get_bkgd_points(self, num_samples: int, **kwargs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Get bkgd points.
 
         Args:
@@ -638,9 +594,7 @@ class NvidiaDataset(BaseDataset):
         for i in tqdm(candidate_frames, desc="Loading bkgd points", leave=False):
             img = self.imgs[i]
             depth = self.depths[i]
-            bool_mask = ((1.0 - self.masks[i]) * self.valid_masks[i] * (depth > 0)).to(
-                torch.bool
-            )
+            bool_mask = ((1.0 - self.masks[i]) * self.valid_masks[i] * (depth > 0)).to(torch.bool)
             w2c = self.w2cs[i]
             K = self.Ks[i]
             points = (
@@ -651,23 +605,17 @@ class NvidiaDataset(BaseDataset):
                 )
                 * depth[bool_mask][:, None]
             )
-            points = torch.einsum(
-                "ij,pj->pi", torch.linalg.inv(w2c)[:3], F.pad(points, (0, 1), value=1.0)
-            )
+            points = torch.einsum("ij,pj->pi", torch.linalg.inv(w2c)[:3], F.pad(points, (0, 1), value=1.0))
             point_normals = normal_from_depth_image(depth, K, w2c)[bool_mask]
             point_colors = img[bool_mask]
             curr_num_samples = points.shape[0]
             num_samples_per_frame = (
                 int(np.floor(num_samples / num_sampled_frames))
                 if i != candidate_frames[-1]
-                else num_samples
-                - (num_sampled_frames - 1)
-                * int(np.floor(num_samples / num_sampled_frames))
+                else num_samples - (num_sampled_frames - 1) * int(np.floor(num_samples / num_sampled_frames))
             )
             if num_samples_per_frame < curr_num_samples:
-                point_sels = np.random.choice(
-                    curr_num_samples, (num_samples_per_frame,), replace=False
-                )
+                point_sels = np.random.choice(curr_num_samples, (num_samples_per_frame,), replace=False)
             else:
                 point_sels = np.arange(0, curr_num_samples)
             bkgd_points.append(points[point_sels])
@@ -685,7 +633,6 @@ class NvidiaDataset(BaseDataset):
             The return value.
         """
         return iPhoneDatasetVideoView(self)
-    
 
     def __getitem__(self, index: int):
         """Getitem.
@@ -717,9 +664,7 @@ class NvidiaDataset(BaseDataset):
             # (P, 2).
             data["query_tracks_2d"] = self.query_tracks_2d[index][:, :2]
             target_inds = torch.from_numpy(
-                np.random.choice(
-                    self.num_frames, (self.num_targets_per_frame,), replace=False
-                )
+                np.random.choice(self.num_frames, (self.num_targets_per_frame,), replace=False)
             )
             # (N, P, 4).
             target_tracks_2d = torch.stack(
@@ -729,9 +674,7 @@ class NvidiaDataset(BaseDataset):
                             osp.join(
                                 self.data_dir,
                                 "flow3d_preprocessed/2d_tracks/",
-                                f"{self.factor}x/"
-                                f"{self.frame_names[index]}_"
-                                f"{self.frame_names[target_index.item()]}.npy",
+                                f"{self.factor}x/{self.frame_names[index]}_{self.frame_names[target_index.item()]}.npy",
                             )
                         ).astype(np.float32)
                     )
@@ -753,9 +696,7 @@ class NvidiaDataset(BaseDataset):
                 data["target_visibles"],
                 data["target_invisibles"],
                 data["target_confidences"],
-            ) = parse_tapir_track_info(
-                target_tracks_2d[..., 2], target_tracks_2d[..., 3]
-            )
+            ) = parse_tapir_track_info(target_tracks_2d[..., 2], target_tracks_2d[..., 3])
             # (N, P).
             data["target_track_depths"] = F.grid_sample(
                 self.depths[target_inds, None],
@@ -779,9 +720,11 @@ class NvidiaDataset(BaseDataset):
             data: The data.
         """
         return data
-    
+
+
 class NvidiaDatasetVideoView(Dataset):
     """Return a dataset view of the video trajectory."""
+
     def __init__(self, dataset: NvidiaDataset):
         """Init.
 
@@ -792,11 +735,11 @@ class NvidiaDatasetVideoView(Dataset):
         self.dataset = dataset
         self.fps = self.dataset.fps
         assert self.dataset.split == "train"
-    
+
     def __len__(self):
         """Len."""
         return self.dataset.num_frames
-    
+
     def __getitem__(self, index):
         """Getitem.
 
@@ -811,4 +754,4 @@ class NvidiaDatasetVideoView(Dataset):
             "imgs": self.dataset.imgs[index],
             "depths": self.dataset.depths[index],
             "masks": self.dataset.masks[index],
-        }    
+        }

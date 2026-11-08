@@ -41,9 +41,13 @@ class GSFeatHead(_BaseDPTHead):
             The return value.
         """
         super().__init__(
-            dim_in=dim_in, patch_size=patch_size, features=features,
-            out_channels=out_channels, pos_embed=pos_embed,
-            down_ratio=down_ratio, gradient_checkpoint=gradient_checkpoint,
+            dim_in=dim_in,
+            patch_size=patch_size,
+            features=features,
+            out_channels=out_channels,
+            pos_embed=pos_embed,
+            down_ratio=down_ratio,
+            gradient_checkpoint=gradient_checkpoint,
             _cast_pos_embed_dtype=False,
         )
         conv2_in_channels = features // 2
@@ -79,9 +83,7 @@ class GSFeatHead(_BaseDPTHead):
         gs_chunks = []
         for frame_start in range(0, S, frames_chunk_size):
             frame_end = min(frame_start + frames_chunk_size, S)
-            gs = self._forward_impl(
-                token_list, images, patch_start_idx, frame_start, frame_end
-            )
+            gs = self._forward_impl(token_list, images, patch_start_idx, frame_start, frame_end)
             gs_chunks.append(gs)
 
         return torch.cat(gs_chunks, dim=1)
@@ -111,9 +113,7 @@ class GSFeatHead(_BaseDPTHead):
 
         B, S, _, H, W = images.shape
 
-        fused = self._extract_fused_features(
-            token_list, B, S, H, W, patch_start_idx, frame_start, frame_end
-        )
+        fused = self._extract_fused_features(token_list, B, S, H, W, patch_start_idx, frame_start, frame_end)
 
         img_flat = images.reshape(B * S, -1, H, W)
         img_feat = self.input_merger(img_flat)

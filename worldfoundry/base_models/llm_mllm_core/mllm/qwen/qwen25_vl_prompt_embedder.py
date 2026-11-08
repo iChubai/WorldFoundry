@@ -5,6 +5,7 @@ import torch
 
 class Qwen25VL_7b_Embedder(torch.nn.Module):
     """Qwen b embedder implementation."""
+
     def __init__(self, model_path, max_length=640, dtype=torch.bfloat16, device="cuda"):
         """Init.
 
@@ -18,7 +19,7 @@ class Qwen25VL_7b_Embedder(torch.nn.Module):
         self.max_length = max_length
         self.dtype = dtype
         self.device = device
-        
+
         from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
@@ -27,21 +28,19 @@ class Qwen25VL_7b_Embedder(torch.nn.Module):
         ).to(torch.cuda.current_device())
 
         self.model.requires_grad_(False)
-        self.processor = AutoProcessor.from_pretrained(
-            model_path, min_pixels=256 * 28 * 28, max_pixels=324 * 28 * 28
-        )
-        
-        Qwen25VL_7b_PREFIX = '''Given a user prompt, generate an "Enhanced prompt" that provides detailed visual descriptions suitable for image generation. Evaluate the level of detail in the user prompt:
+        self.processor = AutoProcessor.from_pretrained(model_path, min_pixels=256 * 28 * 28, max_pixels=324 * 28 * 28)
+
+        Qwen25VL_7b_PREFIX = """Given a user prompt, generate an "Enhanced prompt" that provides detailed visual descriptions suitable for image generation. Evaluate the level of detail in the user prompt:
 - If the prompt is simple, focus on adding specifics about colors, shapes, sizes, textures, and spatial relationships to create vivid and concrete scenes.
 - If the prompt is already detailed, refine and enhance the existing details slightly without overcomplicating.\n
 Here are examples of how to transform or refine prompts:
 - User Prompt: A cat sleeping -> Enhanced: A small, fluffy white cat curled up in a round shape, sleeping peacefully on a warm sunny windowsill, surrounded by pots of blooming red flowers.
 - User Prompt: A busy city street -> Enhanced: A bustling city street scene at dusk, featuring glowing street lamps, a diverse crowd of people in colorful clothing, and a double-decker bus passing by towering glass skyscrapers.\n
 Please generate only the enhanced description for the prompt below and avoid including any additional commentary or evaluations:
-User Prompt:'''
+User Prompt:"""
 
         self.prefix = Qwen25VL_7b_PREFIX
-        
+
     @staticmethod
     def from_pretrained(path, torch_dtype=torch.bfloat16, device="cuda"):
         """From pretrained.
@@ -96,8 +95,8 @@ User Prompt:'''
             in_quotes = False
             temp = ""
 
-            for idx,char in enumerate(s):
-                if char == '"' and idx>155:
+            for idx, char in enumerate(s):
+                if char == '"' and idx > 155:
                     temp += char
                     if not in_quotes:
                         result.append(temp)
@@ -119,7 +118,6 @@ User Prompt:'''
             return result
 
         for idx, (txt, imgs) in enumerate(zip(text_list, ref_images)):
-
             messages = [{"role": "user", "content": []}]
 
             messages[0]["content"].append({"type": "text", "text": f"{self.prefix}"})
@@ -169,9 +167,7 @@ User Prompt:'''
             idx1 = (old_inputs_ids == 151653).nonzero(as_tuple=True)[1][0]
             idx2 = (new_txt_ids == 151653).nonzero(as_tuple=True)[1][0]
             inputs.input_ids = (
-                torch.cat([old_inputs_ids[0, :idx1], new_txt_ids[0, idx2:]], dim=0)
-                .unsqueeze(0)
-                .to("cuda")
+                torch.cat([old_inputs_ids[0, :idx1], new_txt_ids[0, idx2:]], dim=0).unsqueeze(0).to("cuda")
             )
             inputs.attention_mask = (inputs.input_ids > 0).long().to("cuda")
             outputs = self.model(
@@ -184,9 +180,7 @@ User Prompt:'''
 
             emb = outputs["hidden_states"][-1]
 
-            embs[idx, : min(self.max_length, emb.shape[1] - 217)] = emb[0, 217:][
-                : self.max_length
-            ]
+            embs[idx, : min(self.max_length, emb.shape[1] - 217)] = emb[0, 217:][: self.max_length]
 
             masks[idx, : min(self.max_length, emb.shape[1] - 217)] = torch.ones(
                 (min(self.max_length, emb.shape[1] - 217)),

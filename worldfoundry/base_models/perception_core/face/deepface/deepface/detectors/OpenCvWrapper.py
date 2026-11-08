@@ -49,9 +49,7 @@ def detect_face(detector, img, align=True):
         # faces = detector["face_detector"].detectMultiScale(img, 1.3, 5)
 
         # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
-        faces, _, scores = detector["face_detector"].detectMultiScale3(
-            img, 1.1, 10, outputRejectLevels=True
-        )
+        faces, _, scores = detector["face_detector"].detectMultiScale3(img, 1.1, 10, outputRejectLevels=True)
     except:
         pass
 
@@ -70,9 +68,7 @@ def detect_face(detector, img, align=True):
 
 
 def align_face(eye_detector, img):
-    detected_face_gray = cv2.cvtColor(
-        img, cv2.COLOR_BGR2GRAY
-    )  # eye detector expects gray scale image
+    detected_face_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # eye detector expects gray scale image
 
     # eyes = eye_detector.detectMultiScale(detected_face_gray, 1.3, 5)
     eyes = eye_detector.detectMultiScale(detected_face_gray, 1.1, 10)

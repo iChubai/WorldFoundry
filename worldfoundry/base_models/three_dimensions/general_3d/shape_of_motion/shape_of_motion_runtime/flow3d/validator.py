@@ -29,19 +29,25 @@ from flow3d.vis.utils import (
 try:
     from nerfview import CameraState, Viewer
 except ModuleNotFoundError:
+
     class CameraState:  # type: ignore[no-redef]
         """Camera state implementation."""
+
         pass
 
     class Viewer:  # type: ignore[no-redef]
         """Viewer implementation."""
+
         pass
+
 
 try:
     from pytorch_msssim import SSIM
 except ModuleNotFoundError:
+
     class SSIM(torch.nn.Module):  # type: ignore[no-redef]
         """Ssim implementation."""
+
         def __init__(self, *_, **__):
             """Init."""
             super().__init__()
@@ -61,6 +67,7 @@ except ModuleNotFoundError:
 
 class Validator:
     """Validator implementation."""
+
     def __init__(
         self,
         model: SceneModel,
@@ -141,9 +148,7 @@ class Validator:
             # (1, H, W, 3).
             img = batch["imgs"]
             # (1, H, W).
-            valid_mask = batch.get(
-                "valid_masks", torch.ones_like(batch["imgs"][..., 0])
-            )
+            valid_mask = batch.get("valid_masks", torch.ones_like(batch["imgs"][..., 0]))
             # (1, H, W).
             fg_mask = batch["masks"]
 
@@ -155,7 +160,6 @@ class Validator:
             W, H = img_wh = img[0].shape[-2::-1]
             rendered = self.model.render(t, w2c, K, img_wh, return_depth=True)
 
-            
             # Compute metrics.
             valid_mask *= covisible_mask
             fg_valid_mask = fg_mask * valid_mask
@@ -232,9 +236,7 @@ class Validator:
             )
             pred_tracks_3d = rendered["tracks_3d"][0, ..., 0, :]
             pred_tracks_2d = torch.einsum("ij,hwj->hwi", Ks[1], pred_tracks_3d)
-            pred_tracks_2d = pred_tracks_2d[..., :2] / torch.clamp(
-                pred_tracks_2d[..., -1:], min=1e-6
-            )
+            pred_tracks_2d = pred_tracks_2d[..., :2] / torch.clamp(pred_tracks_2d[..., -1:], min=1e-6)
             pred_keypoints = F.grid_sample(
                 pred_tracks_2d[None].permute(0, 3, 1, 2),
                 normalize_coords(src_keypoints, H, W)[None, None],
@@ -259,9 +261,7 @@ class Validator:
             padded_keypoints_3d[keypoint_masks] = pred_keypoints_3d
             # Cache predicted keypoints.
             pred_keypoints_3d_all.append(padded_keypoints_3d.cpu().numpy())
-            pred_train_depths[time_ids.index(ts[0].item())] = (
-                rendered["depth"][0, ..., 0].cpu().numpy()
-            )
+            pred_train_depths[time_ids.index(ts[0].item())] = rendered["depth"][0, ..., 0].cpu().numpy()
 
         # Dump unified results.
         all_Ks = self.val_kpt_loader.dataset.dataset.Ks
@@ -280,9 +280,7 @@ class Validator:
             osp.join(results_dir, "keypoints.npz"),
             **keypoint_result_dict,
         )
-        guru.info(
-            f"Dumped keypoint results to {results_dir=} {keypoint_result_dict['pred_keypoints_3d'].shape=}"
-        )
+        guru.info(f"Dumped keypoint results to {results_dir=} {keypoint_result_dict['pred_keypoints_3d'].shape=}")
 
         return {"val/pck": self.pck_metric.compute()}
 
@@ -304,13 +302,8 @@ class Validator:
         masks = []
         depth_min, depth_max = 1e6, 0
         normals = []
-        for batch_idx, batch in enumerate(
-            tqdm(self.train_loader, desc="Rendering video", leave=False)
-        ):
-            batch = {
-                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                for k, v in batch.items()
-            }
+        for batch_idx, batch in enumerate(tqdm(self.train_loader, desc="Rendering video", leave=False)):
+            batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
             # ().
             t = batch["ts"][0]
             # (4, 4).
@@ -323,15 +316,11 @@ class Validator:
             depth = batch["depths"][0]
 
             img_wh = img.shape[-2::-1]
-            rendered = self.model.render(
-                t, w2c[None], K[None], img_wh, return_depth=True, return_mask=True
-            )
+            rendered = self.model.render(t, w2c[None], K[None], img_wh, return_depth=True, return_mask=True)
             # Putting results onto CPU since it will consume unnecessarily
             # large GPU memory for long sequence OW.
             video.append(torch.cat([img, rendered["img"][0]], dim=1).cpu())
-            ref_pred_depth = torch.cat(
-                (depth[..., None], rendered["depth"][0]), dim=1
-            ).cpu()
+            ref_pred_depth = torch.cat((depth[..., None], rendered["depth"][0]), dim=1).cpu()
             ref_pred_depths.append(ref_pred_depth)
             depth_min = min(depth_min, ref_pred_depth.min().item())
             depth_max = max(depth_max, ref_pred_depth.quantile(0.99).item())
@@ -350,9 +339,7 @@ class Validator:
         # depth video
         depth_video = torch.stack(
             [
-                apply_depth_colormap(
-                    ref_pred_depth, near_plane=depth_min, far_plane=depth_max
-                )
+                apply_depth_colormap(ref_pred_depth, near_plane=depth_min, far_plane=depth_max)
                 for ref_pred_depth in ref_pred_depths
             ],
             dim=0,
@@ -365,6 +352,7 @@ class Validator:
 
         # surf normal video
         from flow3d.normal_utils import depth_to_normal
+
         surf_normals = []
         for depth in ref_pred_depths:
             c2w = torch.linalg.inv(w2c)
@@ -386,7 +374,7 @@ class Validator:
         if len(normals) != 0:
             rend_normals = []
             for rend_n in normals:
-                rend_n = (rend_n * 0.5 + 0.5)
+                rend_n = rend_n * 0.5 + 0.5
                 rend_n = (rend_n - torch.min(rend_n)) / (torch.max(rend_n) - torch.min(rend_n))
                 rend_normals.append(rend_n.squeeze(0))
             rend_normal_video = torch.stack(rend_normals, dim=0)
@@ -395,8 +383,6 @@ class Validator:
                 make_video_divisble((rend_normal_video.numpy() * 255).astype(np.uint8)),
                 fps=fps,
             )
-
-            
 
         if len(masks) > 0:
             # mask video
@@ -411,8 +397,7 @@ class Validator:
         tracks_2d, target_imgs = [], []
         sample_interval = 10
         batch0 = {
-            k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-            for k, v in self.train_loader.dataset[0].items()
+            k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in self.train_loader.dataset[0].items()
         }
         # ().
         t = batch0["ts"]
@@ -425,13 +410,8 @@ class Validator:
         # (H, W).
         bool_mask = batch0["masks"] > 0.5
         img_wh = img.shape[-2::-1]
-        for batch in tqdm(
-            self.train_loader, desc="Rendering 2D track video", leave=False
-        ):
-            batch = {
-                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                for k, v in batch.items()
-            }
+        for batch in tqdm(self.train_loader, desc="Rendering 2D track video", leave=False):
+            batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
             # Putting results onto CPU since it will consume unnecessarily
             # large GPU memory for long sequence OW.
             # (1, H, W, 3).
@@ -450,13 +430,11 @@ class Validator:
                 target_ts=target_ts,
                 target_w2cs=target_w2cs,
             )
-            pred_tracks_3d = rendered["tracks_3d"][0][
-                ::sample_interval, ::sample_interval
-            ][bool_mask[::sample_interval, ::sample_interval]].swapaxes(0, 1)
+            pred_tracks_3d = rendered["tracks_3d"][0][::sample_interval, ::sample_interval][
+                bool_mask[::sample_interval, ::sample_interval]
+            ].swapaxes(0, 1)
             pred_tracks_2d = torch.einsum("bij,bpj->bpi", target_Ks, pred_tracks_3d)
-            pred_tracks_2d = pred_tracks_2d[..., :2] / torch.clamp(
-                pred_tracks_2d[..., 2:], min=1e-6
-            )
+            pred_tracks_2d = pred_tracks_2d[..., :2] / torch.clamp(pred_tracks_2d[..., 2:], min=1e-6)
             tracks_2d.append(pred_tracks_2d.cpu())
         tracks_2d = torch.cat(tracks_2d, dim=0)
         target_imgs = torch.cat(target_imgs, dim=0)
@@ -480,17 +458,10 @@ class Validator:
         motion_coef_colors = (motion_coef_colors - motion_coef_colors.min(0)[0]) / (
             motion_coef_colors.max(0)[0] - motion_coef_colors.min(0)[0]
         )
-        motion_coef_colors = F.pad(
-            motion_coef_colors, (0, 0, 0, self.model.bg.num_gaussians), value=0.5
-        )
+        motion_coef_colors = F.pad(motion_coef_colors, (0, 0, 0, self.model.bg.num_gaussians), value=0.5)
         video = []
-        for batch in tqdm(
-            self.train_loader, desc="Rendering motion coefficient video", leave=False
-        ):
-            batch = {
-                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                for k, v in batch.items()
-            }
+        for batch in tqdm(self.train_loader, desc="Rendering motion coefficient video", leave=False):
+            batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
             # ().
             t = batch["ts"][0]
             # (4, 4).
@@ -500,9 +471,7 @@ class Validator:
             # (3, 3).
             img = batch["imgs"][0]
             img_wh = img.shape[-2::-1]
-            rendered = self.model.render(
-                t, w2c[None], K[None], img_wh, colors_override=motion_coef_colors
-            )
+            rendered = self.model.render(t, w2c[None], K[None], img_wh, colors_override=motion_coef_colors)
             # Putting results onto CPU since it will consume unnecessarily
             # large GPU memory for long sequence OW.
             video.append(torch.cat([img, rendered["img"][0]], dim=1).cpu())

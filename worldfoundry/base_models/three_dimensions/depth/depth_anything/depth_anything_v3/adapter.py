@@ -24,7 +24,9 @@ import torch
 import torch.nn.functional as F
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.api import DepthAnything3
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import logger as dav3_logger
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.logger import (
+    logger as dav3_logger,
+)
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras import CameraType
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.misc import unpack_optional
 

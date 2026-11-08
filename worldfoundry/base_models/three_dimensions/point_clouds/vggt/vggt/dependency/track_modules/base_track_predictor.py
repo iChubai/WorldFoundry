@@ -16,6 +16,7 @@ from .utils import sample_features4d, get_2d_embedding, get_2d_sincos_pos_embed
 
 class BaseTrackerPredictor(nn.Module):
     """Base tracker predictor implementation."""
+
     def __init__(
         self,
         stride=4,

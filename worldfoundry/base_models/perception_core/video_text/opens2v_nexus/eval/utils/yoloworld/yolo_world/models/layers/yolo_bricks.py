@@ -147,9 +147,7 @@ class RepMatrixMaxSigmoidAttnBlock(BaseModule):
             else None
         )
         self.bias = nn.Parameter(torch.zeros(num_heads))
-        self.guide_weight = nn.Parameter(
-            torch.zeros(guide_channels, embed_channels // num_heads, num_heads)
-        )
+        self.guide_weight = nn.Parameter(torch.zeros(guide_channels, embed_channels // num_heads, num_heads))
         self.project_conv = conv(
             in_channels,
             out_channels,
@@ -234,8 +232,7 @@ class RepConvMaxSigmoidAttnBlock(BaseModule):
         self.num_heads = num_heads
         self.split_channels = embed_channels // num_heads
         self.guide_convs = nn.ModuleList(
-            nn.Conv2d(self.split_channels, guide_channels, 1, bias=False)
-            for _ in range(num_heads)
+            nn.Conv2d(self.split_channels, guide_channels, 1, bias=False) for _ in range(num_heads)
         )
         self.project_conv = conv(
             in_channels,
@@ -255,9 +252,7 @@ class RepConvMaxSigmoidAttnBlock(BaseModule):
         embed = self.embed_conv(x) if self.embed_conv is not None else x
         embed = list(embed.split(self.split_channels, 1))
         # Bx(MxN)xHxW (H*c=C, H: heads)
-        attn_weight = torch.cat(
-            [conv(x) for conv, x in zip(self.guide_convs, embed)], dim=1
-        )
+        attn_weight = torch.cat([conv(x) for conv, x in zip(self.guide_convs, embed)], dim=1)
         # BxMxNxHxW
         attn_weight = attn_weight.view(B, self.num_heads, -1, H, W)
         # attn_weight = torch.stack(
@@ -492,25 +487,14 @@ class ImagePoolingAttentionModule(nn.Module):
         else:
             self.scale = 1.0
         self.projections = nn.ModuleList(
-            [
-                ConvModule(in_channels, embed_channels, 1, act_cfg=None)
-                for in_channels in image_channels
-            ]
+            [ConvModule(in_channels, embed_channels, 1, act_cfg=None) for in_channels in image_channels]
         )
-        self.query = nn.Sequential(
-            nn.LayerNorm(text_channels), Linear(text_channels, embed_channels)
-        )
-        self.key = nn.Sequential(
-            nn.LayerNorm(embed_channels), Linear(embed_channels, embed_channels)
-        )
-        self.value = nn.Sequential(
-            nn.LayerNorm(embed_channels), Linear(embed_channels, embed_channels)
-        )
+        self.query = nn.Sequential(nn.LayerNorm(text_channels), Linear(text_channels, embed_channels))
+        self.key = nn.Sequential(nn.LayerNorm(embed_channels), Linear(embed_channels, embed_channels))
+        self.value = nn.Sequential(nn.LayerNorm(embed_channels), Linear(embed_channels, embed_channels))
         self.proj = Linear(embed_channels, text_channels)
 
-        self.image_pools = nn.ModuleList(
-            [nn.AdaptiveMaxPool2d((pool_size, pool_size)) for _ in range(num_feats)]
-        )
+        self.image_pools = nn.ModuleList([nn.AdaptiveMaxPool2d((pool_size, pool_size)) for _ in range(num_feats)])
 
     def forward(self, text_features, image_features):
         B = image_features[0].shape[0]
@@ -518,9 +502,7 @@ class ImagePoolingAttentionModule(nn.Module):
         num_patches = self.pool_size**2
         mlvl_image_features = [
             pool(proj(x)).view(B, -1, num_patches)
-            for (x, proj, pool) in zip(
-                image_features, self.projections, self.image_pools
-            )
+            for (x, proj, pool) in zip(image_features, self.projections, self.image_pools)
         ]
         mlvl_image_features = torch.cat(mlvl_image_features, dim=-1).transpose(1, 2)
         q = self.query(text_features)

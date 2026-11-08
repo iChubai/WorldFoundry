@@ -10,7 +10,7 @@ from torch import _assert
 from torchvision.ops.misc import FrozenBatchNorm2d
 
 
-def freeze_batch_norm_2d(module, module_match={}, name=''):
+def freeze_batch_norm_2d(module, module_match={}, name=""):
     """
     Converts all `BatchNorm2d` and `SyncBatchNorm` layers of provided module into `FrozenBatchNorm2d`. If `module` is
     itself an instance of either `BatchNorm2d` or `SyncBatchNorm`, it is converted into `FrozenBatchNorm2d` and
@@ -42,7 +42,7 @@ def freeze_batch_norm_2d(module, module_match={}, name=''):
         res.eps = module.eps
     else:
         for child_name, child in module.named_children():
-            full_child_name = '.'.join([name, child_name]) if name else child_name
+            full_child_name = ".".join([name, child_name]) if name else child_name
             new_child = freeze_batch_norm_2d(child, module_match, full_child_name)
             if new_child is not child:
                 res.add_module(child_name, new_child)
@@ -56,6 +56,7 @@ def _ntuple(n):
     Args:
         n: The n.
     """
+
     def parse(x):
         """Parse.
 
@@ -65,6 +66,7 @@ def _ntuple(n):
         if isinstance(x, collections.abc.Iterable):
             return x
         return tuple(repeat(x, n))
+
     return parse
 
 
@@ -74,9 +76,10 @@ to_3tuple = _ntuple(3)
 to_4tuple = _ntuple(4)
 to_ntuple = lambda n, x: _ntuple(n)(x)
 
+
 # Replaces all linear layers with linear_replacement
 # TODO: add int8 support for other linear layers including attn and convnets
-def replace_linear(model, linear_replacement, include_modules=['c_fc', 'c_proj'], copy_weights=True):
+def replace_linear(model, linear_replacement, include_modules=["c_fc", "c_proj"], copy_weights=True):
     """Replace linear.
 
     Args:
@@ -103,6 +106,7 @@ def replace_linear(model, linear_replacement, include_modules=['c_fc', 'c_proj']
 
     return model
 
+
 def convert_int8_model_to_inference_mode(model):
     """Convert int8 model to inference mode.
 
@@ -110,18 +114,18 @@ def convert_int8_model_to_inference_mode(model):
         model: The model.
     """
     for m in model.modules():
-        if hasattr(m, 'prepare_for_eval'):
+        if hasattr(m, "prepare_for_eval"):
             int8_original_dtype = m.weight.dtype
             m.prepare_for_eval()
             m.int8_original_dtype = int8_original_dtype
 
 
 def feature_take_indices(
-        num_features: int,
-        indices: Optional[Union[int, List[int]]] = None,
-        as_set: bool = False,
+    num_features: int,
+    indices: Optional[Union[int, List[int]]] = None,
+    as_set: bool = False,
 ) -> Tuple[List[int], int]:
-    """ Determine the absolute feature indices to 'take' from.
+    """Determine the absolute feature indices to 'take' from.
 
     Args:
         num_features: total number of features to select from
@@ -139,13 +143,13 @@ def feature_take_indices(
 
     if isinstance(indices, int):
         # convert int -> last n indices
-        _assert(0 < indices <= num_features, f'last-n ({indices}) is out of range (1 to {num_features})')
+        _assert(0 < indices <= num_features, f"last-n ({indices}) is out of range (1 to {num_features})")
         take_indices = [num_features - indices + i for i in range(indices)]
     else:
         take_indices: List[int] = []
         for i in indices:
             idx = num_features + i if i < 0 else i
-            _assert(0 <= idx < num_features, f'feature index {idx} is out of range (0 to {num_features - 1})')
+            _assert(0 <= idx < num_features, f"feature index {idx} is out of range (0 to {num_features - 1})")
             take_indices.append(idx)
 
     if as_set:

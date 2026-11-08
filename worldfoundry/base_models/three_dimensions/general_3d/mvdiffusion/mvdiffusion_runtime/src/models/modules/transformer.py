@@ -8,6 +8,7 @@ from einops import rearrange
 
 class GEGLU(nn.Module):
     """Geglu implementation."""
+
     def __init__(self, dim_in, dim_out):
         """Init.
 
@@ -30,7 +31,8 @@ class GEGLU(nn.Module):
 
 class FeedForward(nn.Module):
     """Feed forward implementation."""
-    def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.):
+
+    def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.0):
         """Init.
 
         Args:
@@ -43,19 +45,12 @@ class FeedForward(nn.Module):
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = dim
-        project_in = nn.Sequential(
-            nn.Linear(dim, inner_dim),
-            nn.GELU()
-        ) if not glu else GEGLU(dim, inner_dim)
+        project_in = nn.Sequential(nn.Linear(dim, inner_dim), nn.GELU()) if not glu else GEGLU(dim, inner_dim)
 
         linear = nn.Linear(inner_dim, dim_out)
         linear.weight.data.fill_(0)
         linear.bias.data.fill_(0)
-        self.net = nn.Sequential(
-            project_in,
-            nn.Dropout(dropout),
-            linear
-        )
+        self.net = nn.Sequential(project_in, nn.Dropout(dropout), linear)
 
     def forward(self, x):
         """Forward.
@@ -68,7 +63,8 @@ class FeedForward(nn.Module):
 
 class CrossAttention(nn.Module):
     """Cross attention implementation."""
-    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.):
+
+    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.0):
         """Init.
 
         Args:
@@ -82,7 +78,7 @@ class CrossAttention(nn.Module):
         inner_dim = dim_head * heads
         context_dim = context_dim
 
-        self.scale = dim_head ** -0.5
+        self.scale = dim_head**-0.5
         self.heads = heads
 
         self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
@@ -108,18 +104,16 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(lambda t: rearrange(
-            t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (q, k, v))
 
-
-        sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+        sim = einsum("b i d, b j d -> b i j", q, k) * self.scale
 
         del q, k
 
         sim = sim.softmax(dim=-1)
 
-        out = einsum('b i j, b j d -> b i d', sim, v)
-        out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        out = einsum("b i j, b j d -> b i d", sim, v)
+        out = rearrange(out, "(b h) n d -> b n (h d)", h=h)
         return self.to_out(out)
 
 
@@ -142,6 +136,7 @@ def checkpoint(func, inputs, params, flag):
 
 class CheckpointFunction(torch.autograd.Function):
     """Checkpoint function implementation."""
+
     @staticmethod
     def forward(ctx, run_function, length, *args):
         """Forward.
@@ -154,9 +149,11 @@ class CheckpointFunction(torch.autograd.Function):
         ctx.run_function = run_function
         ctx.input_tensors = list(args[:length])
         ctx.input_params = list(args[length:])
-        ctx.gpu_autocast_kwargs = {"enabled": torch.is_autocast_enabled(),
-                                   "dtype": torch.get_autocast_gpu_dtype(),
-                                   "cache_enabled": torch.is_autocast_cache_enabled()}
+        ctx.gpu_autocast_kwargs = {
+            "enabled": torch.is_autocast_enabled(),
+            "dtype": torch.get_autocast_gpu_dtype(),
+            "cache_enabled": torch.is_autocast_cache_enabled(),
+        }
         with torch.no_grad():
             output_tensors = ctx.run_function(*ctx.input_tensors)
         return output_tensors
@@ -168,10 +165,8 @@ class CheckpointFunction(torch.autograd.Function):
         Args:
             ctx: The ctx.
         """
-        ctx.input_tensors = [x.detach().requires_grad_(True)
-                             for x in ctx.input_tensors]
-        with torch.enable_grad(), \
-                torch.cuda.amp.autocast(**ctx.gpu_autocast_kwargs):
+        ctx.input_tensors = [x.detach().requires_grad_(True) for x in ctx.input_tensors]
+        with torch.enable_grad(), torch.cuda.amp.autocast(**ctx.gpu_autocast_kwargs):
             # Fixes a bug where the first op in run_function modifies the
             # Tensor storage in place, which is not allowed for detach()'d
             # Tensors.
@@ -192,8 +187,17 @@ class CheckpointFunction(torch.autograd.Function):
 class BasicTransformerBlock(nn.Module):
     """Basic transformer block implementation."""
 
-    def __init__(self, dim, n_heads, d_head, dropout=0., context_dim=None, gated_ff=True,
-                 disable_self_attn=False, use_checkpoint=True):
+    def __init__(
+        self,
+        dim,
+        n_heads,
+        d_head,
+        dropout=0.0,
+        context_dim=None,
+        gated_ff=True,
+        disable_self_attn=False,
+        use_checkpoint=True,
+    ):
         """Init.
 
         Args:
@@ -208,14 +212,15 @@ class BasicTransformerBlock(nn.Module):
         """
         super().__init__()
 
-        self.attn1 = CrossAttention(query_dim=dim, heads=n_heads, dim_head=d_head, dropout=dropout,
-                                    context_dim=context_dim)  # is a self-attention if not self.disable_self_attn
+        self.attn1 = CrossAttention(
+            query_dim=dim, heads=n_heads, dim_head=d_head, dropout=dropout, context_dim=context_dim
+        )  # is a self-attention if not self.disable_self_attn
         self.ff = FeedForward(dim, dropout=dropout, glu=gated_ff)
         self.norm1 = nn.LayerNorm(dim)
         self.norm2 = nn.LayerNorm(dim)
 
         self.checkpoint = checkpoint
-        self.use_checkpoint=use_checkpoint
+        self.use_checkpoint = use_checkpoint
 
     def forward(self, x, context=None, query_pe=None):
         """Forward.
@@ -225,7 +230,7 @@ class BasicTransformerBlock(nn.Module):
             context: The context.
             query_pe: The query pe.
         """
-        if self. use_checkpoint:
+        if self.use_checkpoint:
             return checkpoint(self._forward, (x, context, query_pe), self.parameters(), self.checkpoint)
         else:
             return self._forward(x, context, query_pe)
@@ -240,13 +245,12 @@ class BasicTransformerBlock(nn.Module):
         """
         if context is None:
             context = x
-        query=x
+        query = x
         if query_pe is not None:
-            query=query+query_pe
-        query=self.norm1(query)
-        context=self.norm1(context)
-        x = self.attn1(query,
-                       context=context) + x
+            query = query + query_pe
+        query = self.norm1(query)
+        context = self.norm1(context)
+        x = self.attn1(query, context=context) + x
         x = self.ff(self.norm2(x)) + x
 
         return x
@@ -254,6 +258,7 @@ class BasicTransformerBlock(nn.Module):
 
 class PosEmbedding(nn.Module):
     """Pos embedding implementation."""
+
     def __init__(self, in_channels, N_freqs, logscale=True):
         """
         Defines a function that embeds x to (x, sin(2^k x), cos(2^k x), ...)
@@ -267,17 +272,16 @@ class PosEmbedding(nn.Module):
         if N_freqs <= 80:
             base = 2
         else:
-            base = 5000**(1/(N_freqs/2.5))
+            base = 5000 ** (1 / (N_freqs / 2.5))
         if logscale:
-            freq_bands = base**torch.linspace(0,
-                                              N_freqs-1, N_freqs)[None, None]
+            freq_bands = base ** torch.linspace(0, N_freqs - 1, N_freqs)[None, None]
         else:
-            freq_bands = torch.linspace(1, 2**(N_freqs-1), N_freqs)
-        self.register_buffer('freq_bands', freq_bands)
+            freq_bands = torch.linspace(1, 2 ** (N_freqs - 1), N_freqs)
+        self.register_buffer("freq_bands", freq_bands)
 
     def forward(self, x):
         """
-        Embeds x to (x, sin(2^k x), cos(2^k x), ...) 
+        Embeds x to (x, sin(2^k x), cos(2^k x), ...)
         Different from the paper, "x" is also in the output
         See https://github.com/bmild/nerf/issues/12
         Inputs:

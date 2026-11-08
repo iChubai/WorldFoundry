@@ -5,11 +5,15 @@ from torch import nn
 from .optical_flow import OpticalFlow
 from .shelf import CoTracker, CoTracker2, CoTracker3
 from worldfoundry.base_models.perception_core.tracking.dot.utils.io import read_config
-from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import sample_points, sample_mask_points, get_grid
+from worldfoundry.base_models.perception_core.tracking.dot.utils.torch import (
+    sample_points,
+    sample_mask_points,
+    get_grid,
+)
 
 
 class PointTracker(nn.Module):
-    def __init__(self,  height, width, tracker_config, tracker_path, estimator_config, estimator_path):
+    def __init__(self, height, width, tracker_config, tracker_path, estimator_config, estimator_path):
         super().__init__()
         model_args = read_config(tracker_config)
         model_dict = {

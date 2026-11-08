@@ -3,6 +3,7 @@
 V2-specific causal backbone; common Wan layers come from WorldFoundry.
 Adds causal / fast-attention hooks.  Licensed CC BY-NC-SA 4.0 upstream.
 """
+
 import math
 
 import torch
@@ -178,13 +179,29 @@ class CausalWanSelfAttention(nn.Module):
         if backend == "scaled_int8_fp8":
             from worldfoundry.core.attention.sequence.key_centering import streaming_scaled_attention
 
-            x = streaming_scaled_attention(roped_query, k_cache, v_cache, kv_cache, current_start=current_start,
-                                           local_start=local_start_index, local_end=local_end_index, maximum=max_attention_size)
+            x = streaming_scaled_attention(
+                roped_query,
+                k_cache,
+                v_cache,
+                kv_cache,
+                current_start=current_start,
+                local_start=local_start_index,
+                local_end=local_end_index,
+                maximum=max_attention_size,
+            )
         elif backend == "torch":
             from worldfoundry.core.attention.backends.dispatch import attention_forward
 
-            x = attention_forward(roped_query, k_cache, v_cache, q_pattern="b s n d", k_pattern="b s n d",
-                                  v_pattern="b s n d", out_pattern="b s n d", backend="torch")
+            x = attention_forward(
+                roped_query,
+                k_cache,
+                v_cache,
+                q_pattern="b s n d",
+                k_pattern="b s n d",
+                v_pattern="b s n d",
+                out_pattern="b s n d",
+                backend="torch",
+            )
         else:
             x = attention(roped_query, k_cache, v_cache)
 
@@ -628,7 +645,11 @@ class WanModelFast(nn.Module, NativeConfigMixin):
         )
 
         # Prepared camera tensors belong to this chunk, not to the model.
-        if dit_cond_dict is not None and "c2ws_plucker_emb" in dit_cond_dict and "_camera_modulations" not in dit_cond_dict:
+        if (
+            dit_cond_dict is not None
+            and "c2ws_plucker_emb" in dit_cond_dict
+            and "_camera_modulations" not in dit_cond_dict
+        ):
             dit_cond_dict = dict(dit_cond_dict)
             dit_cond_dict["c2ws_plucker_emb"] = embed_wan_camera_condition(self, dit_cond_dict["c2ws_plucker_emb"])
 

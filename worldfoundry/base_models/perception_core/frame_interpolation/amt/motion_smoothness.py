@@ -27,10 +27,14 @@ MINIMUM_MODEL_SIDE = 128
 
 
 def _output_offload_mode() -> str:
-    value = os.environ.get(
-        OUTPUT_OFFLOAD_ENV,
-        os.environ.get(LEGACY_OUTPUT_OFFLOAD_ENV, "auto"),
-    ).strip().lower()
+    value = (
+        os.environ.get(
+            OUTPUT_OFFLOAD_ENV,
+            os.environ.get(LEGACY_OUTPUT_OFFLOAD_ENV, "auto"),
+        )
+        .strip()
+        .lower()
+    )
     aliases = {
         "1": "always",
         "true": "always",
@@ -43,9 +47,7 @@ def _output_offload_mode() -> str:
     }
     value = aliases.get(value, value)
     if value not in {"auto", "always", "never"}:
-        raise ValueError(
-            f"{OUTPUT_OFFLOAD_ENV} must be one of auto, always, or never; got {value!r}"
-        )
+        raise ValueError(f"{OUTPUT_OFFLOAD_ENV} must be one of auto, always, or never; got {value!r}")
     return value
 
 
@@ -304,8 +306,7 @@ class MotionSmoothness:
         trailing_targets = len(original) - len(interpolated)
         if trailing_targets not in {0, 1}:
             raise ValueError(
-                "The original and interpolated frame counts do not match: "
-                f"{len(original)} != {len(interpolated)}"
+                f"The original and interpolated frame counts do not match: {len(original)} != {len(interpolated)}"
             )
         if trailing_targets:
             original = original[:-trailing_targets]

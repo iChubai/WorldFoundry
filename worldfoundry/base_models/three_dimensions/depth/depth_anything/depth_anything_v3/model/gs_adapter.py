@@ -19,10 +19,18 @@ import torch
 from einops import einsum, rearrange, repeat
 from torch import nn
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.transform import cam_quat_xyzw_to_world_quat_wxyz
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.transform import (
+    cam_quat_xyzw_to_world_quat_wxyz,
+)
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Gaussians
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import affine_inverse, get_world_rays, sample_image_grid
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.pose_align import batch_align_poses_umeyama
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    affine_inverse,
+    get_world_rays,
+    sample_image_grid,
+)
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.pose_align import (
+    batch_align_poses_umeyama,
+)
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.sh_helpers import rotate_sh
 
 
@@ -123,9 +131,7 @@ class GaussianAdapter(nn.Module):
             except Exception:
                 pose_scales = torch.ones_like(extrinsics[:, 0, 0, 0])
             pose_scales = torch.clamp(pose_scales, min=1 / 3.0, max=3.0)
-            cam2worlds[:, :, :3, 3] = cam2worlds[:, :, :3, 3] * rearrange(
-                pose_scales, "b -> b () ()"
-            )  # [b, i, j]
+            cam2worlds[:, :, :3, 3] = cam2worlds[:, :, :3, 3] * rearrange(pose_scales, "b -> b () ()")  # [b, i, j]
             gs_depths = gs_depths * rearrange(pose_scales, "b -> b () () ()")  # [b, v, h, w]
         # 1.3) casting xy in image space
         xy_ray, _ = sample_image_grid((H, W), device)

@@ -9,6 +9,7 @@ import torch.nn as nn
 import numpy as np
 from einops import rearrange
 import torch.nn.functional as F
+
 # import pytorch_lightning as pl
 from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import Encoder, Decoder
 from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
@@ -17,20 +18,22 @@ from worldfoundry.core.model_loading.factory import instantiate_from_config
 
 class AutoencoderKL(nn.Module):
     """Autoencoder kl implementation."""
-    def __init__(self,
-                 ddconfig,
-                 lossconfig,
-                 embed_dim,
-                 ckpt_path=None,
-                 ignore_keys=[],
-                 image_key="image",
-                 colorize_nlabels=None,
-                 monitor=None,
-                 test=False,
-                 logdir=None,
-                 input_dim=4,
-                 test_args=None,
-                 ):
+
+    def __init__(
+        self,
+        ddconfig,
+        lossconfig,
+        embed_dim,
+        ckpt_path=None,
+        ignore_keys=[],
+        image_key="image",
+        colorize_nlabels=None,
+        monitor=None,
+        test=False,
+        logdir=None,
+        input_dim=4,
+        test_args=None,
+    ):
         """Init.
 
         Args:
@@ -53,7 +56,7 @@ class AutoencoderKL(nn.Module):
         self.decoder = Decoder(**ddconfig)
         self.loss = instantiate_from_config(lossconfig)
         assert ddconfig["double_z"]
-        self.quant_conv = torch.nn.Conv2d(2*ddconfig["z_channels"], 2*embed_dim, 1)
+        self.quant_conv = torch.nn.Conv2d(2 * ddconfig["z_channels"], 2 * embed_dim, 1)
         self.post_quant_conv = torch.nn.Conv2d(embed_dim, ddconfig["z_channels"], 1)
         self.embed_dim = embed_dim
         self.input_dim = input_dim
@@ -61,7 +64,7 @@ class AutoencoderKL(nn.Module):
         self.test_args = test_args
         self.logdir = logdir
         if colorize_nlabels is not None:
-            assert type(colorize_nlabels)==int
+            assert type(colorize_nlabels) == int
             self.register_buffer("colorize", torch.randn(3, colorize_nlabels, 1, 1))
         if monitor is not None:
             self.monitor = monitor
@@ -69,17 +72,19 @@ class AutoencoderKL(nn.Module):
             self.init_from_ckpt(ckpt_path, ignore_keys=ignore_keys)
         if self.test:
             self.init_test()
-    
-    def init_test(self,):
+
+    def init_test(
+        self,
+    ):
         """Init test."""
         self.test = True
         save_dir = os.path.join(self.logdir, "test")
-        if 'ckpt' in self.test_args:
-            ckpt_name = os.path.basename(self.test_args.ckpt).split('.ckpt')[0] + f'_epoch{self._cur_epoch}'
+        if "ckpt" in self.test_args:
+            ckpt_name = os.path.basename(self.test_args.ckpt).split(".ckpt")[0] + f"_epoch{self._cur_epoch}"
             self.root = os.path.join(save_dir, ckpt_name)
         else:
             self.root = save_dir
-        if 'test_subdir' in self.test_args:
+        if "test_subdir" in self.test_args:
             self.root = os.path.join(save_dir, self.test_args.test_subdir)
 
         self.root_zs = os.path.join(self.root, "zs")
@@ -93,8 +98,8 @@ class AutoencoderKL(nn.Module):
             os.makedirs(self.root_dec, exist_ok=True)
         if self.test_args.save_input:
             os.makedirs(self.root_inputs, exist_ok=True)
-        assert(self.test_args is not None)
-        self.test_maximum = getattr(self.test_args, 'test_maximum', None) 
+        assert self.test_args is not None
+        self.test_maximum = getattr(self.test_args, "test_maximum", None)
         self.count = 0
         self.eval_metrics = {}
         self.decodes = []
@@ -109,10 +114,10 @@ class AutoencoderKL(nn.Module):
         """
         sd = torch.load(path, map_location="cpu")
         if "epoch" in sd and "state_dict" in sd:
-            self._cur_epoch = sd['epoch']
+            self._cur_epoch = sd["epoch"]
             sd = sd["state_dict"]
         else:
-            self._cur_epoch = 'null'
+            self._cur_epoch = "null"
         keys = list(sd.keys())
         for k in keys:
             for ik in ignore_keys:
@@ -129,7 +134,7 @@ class AutoencoderKL(nn.Module):
         Args:
             x: The x.
         """
-        
+
         h = self.encoder(x)
         moments = self.quant_conv(h)
         posterior = DiagonalGaussianDistribution(moments)
@@ -169,10 +174,10 @@ class AutoencoderKL(nn.Module):
         """
         x = batch[k]
         if x.dim() == 5 and self.input_dim == 4:
-            b,c,t,h,w = x.shape
+            b, c, t, h, w = x.shape
             self.b = b
-            self.t = t 
-            x = rearrange(x, 'b c t h w -> (b t) c h w')
+            self.t = t
+            x = rearrange(x, "b c t h w -> (b t) c h w")
 
         return x
 
@@ -189,16 +194,30 @@ class AutoencoderKL(nn.Module):
 
         if optimizer_idx == 0:
             # train encoder+decoder+logvar
-            aeloss, log_dict_ae = self.loss(inputs, reconstructions, posterior, optimizer_idx, self.global_step,
-                                            last_layer=self.get_last_layer(), split="train")
+            aeloss, log_dict_ae = self.loss(
+                inputs,
+                reconstructions,
+                posterior,
+                optimizer_idx,
+                self.global_step,
+                last_layer=self.get_last_layer(),
+                split="train",
+            )
             self.log("aeloss", aeloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
             self.log_dict(log_dict_ae, prog_bar=False, logger=True, on_step=True, on_epoch=False)
             return aeloss
 
         if optimizer_idx == 1:
             # train the discriminator
-            discloss, log_dict_disc = self.loss(inputs, reconstructions, posterior, optimizer_idx, self.global_step,
-                                                last_layer=self.get_last_layer(), split="train")
+            discloss, log_dict_disc = self.loss(
+                inputs,
+                reconstructions,
+                posterior,
+                optimizer_idx,
+                self.global_step,
+                last_layer=self.get_last_layer(),
+                split="train",
+            )
 
             self.log("discloss", discloss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
             self.log_dict(log_dict_disc, prog_bar=False, logger=True, on_step=True, on_epoch=False)
@@ -213,27 +232,31 @@ class AutoencoderKL(nn.Module):
         """
         inputs = self.get_input(batch, self.image_key)
         reconstructions, posterior = self(inputs)
-        aeloss, log_dict_ae = self.loss(inputs, reconstructions, posterior, 0, self.global_step,
-                                        last_layer=self.get_last_layer(), split="val")
+        aeloss, log_dict_ae = self.loss(
+            inputs, reconstructions, posterior, 0, self.global_step, last_layer=self.get_last_layer(), split="val"
+        )
 
-        discloss, log_dict_disc = self.loss(inputs, reconstructions, posterior, 1, self.global_step,
-                                            last_layer=self.get_last_layer(), split="val")
+        discloss, log_dict_disc = self.loss(
+            inputs, reconstructions, posterior, 1, self.global_step, last_layer=self.get_last_layer(), split="val"
+        )
 
         self.log("val/rec_loss", log_dict_ae["val/rec_loss"])
         self.log_dict(log_dict_ae)
         self.log_dict(log_dict_disc)
         return self.log_dict
-    
+
     def configure_optimizers(self):
         """Configure optimizers."""
         lr = self.learning_rate
-        opt_ae = torch.optim.Adam(list(self.encoder.parameters())+
-                                  list(self.decoder.parameters())+
-                                  list(self.quant_conv.parameters())+
-                                  list(self.post_quant_conv.parameters()),
-                                  lr=lr, betas=(0.5, 0.9))
-        opt_disc = torch.optim.Adam(self.loss.discriminator.parameters(),
-                                    lr=lr, betas=(0.5, 0.9))
+        opt_ae = torch.optim.Adam(
+            list(self.encoder.parameters())
+            + list(self.decoder.parameters())
+            + list(self.quant_conv.parameters())
+            + list(self.post_quant_conv.parameters()),
+            lr=lr,
+            betas=(0.5, 0.9),
+        )
+        opt_disc = torch.optim.Adam(self.loss.discriminator.parameters(), lr=lr, betas=(0.5, 0.9))
         return [opt_ae, opt_disc], []
 
     def get_last_layer(self):
@@ -273,11 +296,13 @@ class AutoencoderKL(nn.Module):
         if not hasattr(self, "colorize"):
             self.register_buffer("colorize", torch.randn(3, x.shape[1], 1, 1).to(x))
         x = F.conv2d(x, weight=self.colorize)
-        x = 2.*(x-x.min())/(x.max()-x.min()) - 1.
+        x = 2.0 * (x - x.min()) / (x.max() - x.min()) - 1.0
         return x
+
 
 class IdentityFirstStage(torch.nn.Module):
     """Identity first stage implementation."""
+
     def __init__(self, *args, vq_interface=False, **kwargs):
         """Init."""
         self.vq_interface = vq_interface  # TODO: Should be true by default but check to not break older stuff

@@ -41,6 +41,7 @@ than CUDA forward + backward.
 - Triton version doesn't support different sequence lengths in a batch (i.e., RaggedTensor/NestedTensor).
 - Triton version supports attention bias, while CUDA version doesn't.
 """
+
 import math
 import torch
 import triton_pre_mlir as triton
@@ -766,7 +767,7 @@ def _flash_attn_forward(q, k, v, bias=None, causal=False, softmax_scale=None):
         BLOCK_M=BLOCK,
         BLOCK_N=BLOCK,
         num_warps=num_warps,
-        num_stages=1
+        num_stages=1,
     )
     return (o, lse, softmax_scale)
 
@@ -865,7 +866,7 @@ def _flash_attn_backward(do, q, k, v, o, lse, dq, dk, dv, bias=None, causal=Fals
         seqlen_k // 32,
         bias_type,
         causal,
-        BLOCK_HEADDIM
+        BLOCK_HEADDIM,
     )
     dq.copy_(dq_accum)
 
@@ -981,7 +982,9 @@ class FlashAttnFunc(torch.autograd.Function):
             ALiBi mask for non-causal would have shape (1, nheads, seqlen_q, seqlen_k)
         """
         (q, k, v) = [x if x.stride(-1) == 1 else x.contiguous() for x in [q, k, v]]
-        (o, lse, ctx.softmax_scale) = _flash_attn_forward(q, k, v, bias=bias, causal=causal, softmax_scale=softmax_scale)
+        (o, lse, ctx.softmax_scale) = _flash_attn_forward(
+            q, k, v, bias=bias, causal=causal, softmax_scale=softmax_scale
+        )
         ctx.save_for_backward(q, k, v, o, lse, bias)
         ctx.causal = causal
         return o

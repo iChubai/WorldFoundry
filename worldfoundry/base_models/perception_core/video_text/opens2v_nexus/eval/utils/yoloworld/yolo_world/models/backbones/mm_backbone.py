@@ -70,9 +70,7 @@ class HuggingCLIPLanguageBackbone(BaseModule):
         self.frozen_modules = frozen_modules
         self.training_use_cache = training_use_cache
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        clip_config = CLIPTextConfig.from_pretrained(
-            model_name, attention_dropout=dropout
-        )
+        clip_config = CLIPTextConfig.from_pretrained(model_name, attention_dropout=dropout)
         self.model = CLIPTP.from_pretrained(model_name, config=clip_config)
         self._freeze_modules()
 
@@ -85,9 +83,7 @@ class HuggingCLIPLanguageBackbone(BaseModule):
 
     def forward(self, text: List[List[str]]) -> Tensor:
         num_per_batch = [len(t) for t in text]
-        assert max(num_per_batch) == min(num_per_batch), (
-            "number of sequences not equal in batch"
-        )
+        assert max(num_per_batch) == min(num_per_batch), "number of sequences not equal in batch"
         text = list(itertools.chain(*text))
         text = self.tokenizer(text=text, return_tensors="pt", padding=True)
         text = text.to(device=self.model.device)
@@ -163,9 +159,7 @@ class PseudoLanguageBackbone(BaseModule):
 
     def forward_text(self, text: List[List[str]]) -> Tensor:
         num_per_batch = [len(t) for t in text]
-        assert max(num_per_batch) == min(num_per_batch), (
-            "number of sequences not equal in batch"
-        )
+        assert max(num_per_batch) == min(num_per_batch), "number of sequences not equal in batch"
         text = list(itertools.chain(*text))
         if self.training:
             text_embed_dict = self.text_embed
@@ -214,9 +208,7 @@ class MultiModalYOLOBackbone(BaseModule):
         super().train(mode)
         self._freeze_stages()
 
-    def forward(
-        self, image: Tensor, text: List[List[str]]
-    ) -> Tuple[Tuple[Tensor], Tensor]:
+    def forward(self, image: Tensor, text: List[List[str]]) -> Tuple[Tuple[Tensor], Tensor]:
         img_feats = self.image_model(image)
         if text is not None and self.with_text_model:
             txt_feats = self.text_model(text)

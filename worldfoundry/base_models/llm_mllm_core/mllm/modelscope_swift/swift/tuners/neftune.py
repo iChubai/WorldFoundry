@@ -21,15 +21,16 @@ class NEFTuneConfig(SwiftConfig):
     Args:
         noise_alpha(`float`): The noise alpha value used for the NEFTune, default 5.0
     """
-    noise_alpha: float = field(default=5.0, metadata={'help': 'The noise alpha value used for the NEFTune'})
+
+    noise_alpha: float = field(default=5.0, metadata={"help": "The noise alpha value used for the NEFTune"})
 
     def __post_init__(self):
         from .mapping import SwiftTuners
+
         self.swift_type = SwiftTuners.NEFTUNE
 
 
 class NEFTune(SwiftAdapter):
-
     @staticmethod
     def prepare_model(model: nn.Module, config: NEFTuneConfig, adapter_name: str) -> SwiftOutput:
         """Prepare a model with `NEFTuneConfig`"""
@@ -37,14 +38,14 @@ class NEFTune(SwiftAdapter):
             if isinstance(sub_module, torch.nn.Embedding):
 
                 def neftune_hook(module, args, output):
-                    if module.training and getattr(module, 'nef_activated'):
+                    if module.training and getattr(module, "nef_activated"):
                         dims = torch.tensor(output.size(-1) * output.size(-2))
                         mag_norm = config.noise_alpha / torch.sqrt(dims)
                         output = output + torch.zeros_like(output).uniform_(-mag_norm, mag_norm)
                     return output
 
-                if hasattr(sub_module, 'nef_activated'):
-                    raise ValueError('NEFTune does not support a second tuner.')
+                if hasattr(sub_module, "nef_activated"):
+                    raise ValueError("NEFTune does not support a second tuner.")
 
                 sub_module.register_forward_hook(neftune_hook)
                 sub_module.nef_activated = True
@@ -56,7 +57,8 @@ class NEFTune(SwiftAdapter):
             return
 
         return SwiftOutput(
-            config=config, state_dict_callback=state_dict_callback, mark_trainable_callback=mark_trainable_callback)
+            config=config, state_dict_callback=state_dict_callback, mark_trainable_callback=mark_trainable_callback
+        )
 
     @staticmethod
     def activate_adapter(module: torch.nn.Module, adapter_name: str, activate: bool, offload: str = None):

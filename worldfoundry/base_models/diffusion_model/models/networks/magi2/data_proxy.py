@@ -74,9 +74,7 @@ def sinusoidal_embedding_1d(dim: int, position: torch.Tensor) -> torch.Tensor:
     position = position.to(torch.float32) * 1000.0
     half = dim // 2
     freqs = torch.exp(
-        -math.log(10000)
-        * torch.arange(start=0, end=half, dtype=torch.float32, device=position.device)
-        / half
+        -math.log(10000) * torch.arange(start=0, end=half, dtype=torch.float32, device=position.device) / half
     )
     args = position[:, None].float() * freqs[None]
     embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
@@ -91,18 +89,13 @@ def _to_int(value: int | torch.Tensor) -> int:
     return int(value)
 
 
-def _pad_cat(
-    tensors: list[torch.Tensor], device: torch.device, dtype: torch.dtype
-) -> torch.Tensor:
+def _pad_cat(tensors: list[torch.Tensor], device: torch.device, dtype: torch.dtype) -> torch.Tensor:
     """Right-pad each token block to the widest channel count, then row-concat."""
     if not tensors:
         return torch.empty(0, 0, device=device, dtype=dtype)
     max_channel = max(t.shape[-1] for t in tensors)
     return torch.cat(
-        [
-            F.pad(t.to(device=device, dtype=dtype), (0, max_channel - t.shape[-1]))
-            for t in tensors
-        ],
+        [F.pad(t.to(device=device, dtype=dtype), (0, max_channel - t.shape[-1])) for t in tensors],
         dim=0,
     )
 
@@ -122,9 +115,7 @@ def _segment_paint(
     return mapping
 
 
-def _seqlens2cu_seqlens(
-    seqlens: list[int], device: torch.device | None = None
-) -> torch.Tensor:
+def _seqlens2cu_seqlens(seqlens: list[int], device: torch.device | None = None) -> torch.Tensor:
     seqlens_tensor = torch.tensor(seqlens, dtype=torch.int32, device=device)
     return F.pad(torch.cumsum(seqlens_tensor, dim=0), (1, 0))
 
@@ -205,13 +196,8 @@ class SingleData:
         self.ref_image_special_tokens = self.ref_image_special_tokens or []
         # feat_lens holds the patch-grid (H, W) per image, so their product is the
         # token count that survived img2tokens for that image.
-        self.ref_image_token_nums: list[int] = [
-            int(math.prod(feat_len)) for feat_len in self.ref_image_feat_lens
-        ]
-        self.ref_image_feats = [
-            feat[:num]
-            for feat, num in zip(self.ref_image_feats, self.ref_image_token_nums)
-        ]
+        self.ref_image_token_nums: list[int] = [int(math.prod(feat_len)) for feat_len in self.ref_image_feat_lens]
+        self.ref_image_feats = [feat[:num] for feat, num in zip(self.ref_image_feats, self.ref_image_token_nums)]
         self.num_ref_images = len(self.ref_image_feats)
         self.total_ref_image_feat_len = sum(self.ref_image_token_nums)
 
@@ -244,11 +230,7 @@ class SingleData:
             tensors.append(self.ref_image_special_tokens[k])
             tensors.append(self.ref_image_feats[k])
         if self.add_time_token:
-            tensors.append(
-                self.diffusion_t.to(
-                    device=self.device, dtype=self.default_dtype
-                ).reshape(1, 1)
-            )
+            tensors.append(self.diffusion_t.to(device=self.device, dtype=self.default_dtype).reshape(1, 1))
         return tensors
 
     @property
@@ -310,9 +292,7 @@ class SingleData:
             video_h_ref, video_w_ref = h_steps, w_steps
 
         # Video: 3D grid over (T, H, W).
-        video_coords = self._default_coords(
-            (t_steps, h_steps, w_steps), (t_steps, video_h_ref, video_w_ref)
-        )
+        video_coords = self._default_coords((t_steps, h_steps, w_steps), (t_steps, video_h_ref, video_w_ref))
         # Audio: 1D along time, (audio_len, 1, 1); ref time is the "magic" /8+1.
         magic_audio_ref_t = (self.audio_feat_len - 1) // 8 + 1
         audio_coords = self._default_coords(
@@ -348,11 +328,7 @@ class SingleData:
                     dtype=self.default_dtype,
                 )
             )
-            coords.append(
-                self._default_coords(
-                    (1, h_i, w_i), (1, h_i, w_i), offset_thw=(t_off, 0, 0)
-                )[:token_len]
-            )
+            coords.append(self._default_coords((1, h_i, w_i), (1, h_i, w_i), offset_thw=(t_off, 0, 0))[:token_len])
 
         if self.add_time_token:
             coords.append(self._default_coords((1, 1, 1), (1, 1, 1))[:1])
@@ -366,9 +342,7 @@ class SingleData:
     def time_token_sequence(self) -> torch.Tensor:
         if self.time_channel_dim == 0:
             return torch.empty(self.total_token_num, 0, device=self.device)
-        assert (
-            self.per_token_video_t is not None and self.per_token_audio_t is not None
-        )
+        assert self.per_token_video_t is not None and self.per_token_audio_t is not None
         parts = [
             self.per_token_video_t.squeeze(-1),
             self.per_token_audio_t.squeeze(-1),
@@ -458,18 +432,14 @@ class SimplePackedData:
     def __getitem__(self, index: int) -> SingleData:
         return self.items[index]
 
-    def depack_token_sequence(
-        self, token_sequence: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    def depack_token_sequence(self, token_sequence: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         videos, audios = [], []
         for item, token_slice in zip(
             self.items,
             torch.split(token_sequence, [i.total_token_num for i in self.items], dim=0),
         ):
             video_flat = token_slice[: item.video_token_num, : item.video_channel]
-            c_out = item.video_channel // (
-                item.t_patch_size * item.patch_size * item.patch_size
-            )
+            c_out = item.video_channel // (item.t_patch_size * item.patch_size * item.patch_size)
             video = rearrange(
                 video_flat,
                 "(T H W) (pT pH pW C) -> C (T pT) (H pH) (W pW)",
@@ -597,9 +567,7 @@ class Magi2PreviewDataProxy:
                 ref_image_feats_i.append(feat)
                 ref_image_feat_lens_i.append(_len_to_list(ref_image_feat_len[i, k]))
                 ref_image_special_tokens_i.append(
-                    ref_image_special_token_embedding[i, k]
-                    .to(device=ref_device, dtype=ref_dtype)
-                    .unsqueeze(0)
+                    ref_image_special_token_embedding[i, k].to(device=ref_device, dtype=ref_dtype).unsqueeze(0)
                 )
 
             items.append(
@@ -619,9 +587,7 @@ class Magi2PreviewDataProxy:
                     t_patch_size=self.t_patch_size,
                     spatial_rope_interpolation=self.config.spatial_rope_interpolation,
                     diffusion_t=data.t[i] if self.config.add_time_token else None,
-                    per_token_video_t=(
-                        ptv_tokens[i] if ptv_tokens is not None else None
-                    ),
+                    per_token_video_t=(ptv_tokens[i] if ptv_tokens is not None else None),
                     per_token_audio_t=pta[i] if pta is not None else None,
                     time_channel_dim=self.config.time_channel_dim,
                     time_pos_fps=self.config.time_pos_fps,
@@ -693,18 +659,12 @@ class Magi2PreviewDataProxy:
         if audio_feat_len is None:
             audio_feat_len = torch.full((b,), audio_len, device=device, dtype=torch.long)
         if txt_feat_len is None:
-            txt_feat_len = torch.full(
-                (b,), context.shape[1], device=device, dtype=torch.long
-            )
+            txt_feat_len = torch.full((b,), context.shape[1], device=device, dtype=torch.long)
 
         # Per-token diffusion time: synthesise from ``t`` when not supplied so the
         # time_token_sequence can always be built when time_channel_dim > 0.
         if self.config.time_channel_dim > 0 and per_token_video_t is None:
-            t_src = (
-                t
-                if t is not None
-                else torch.zeros(b, device=device, dtype=dtype)
-            )
+            t_src = t if t is not None else torch.zeros(b, device=device, dtype=dtype)
             t_src = t_src.to(device=device, dtype=dtype).reshape(b, 1, 1, 1, 1)
             per_token_video_t = t_src.expand(b, 1, vt, vh, vw).clone()
             per_token_audio_t = t_src.reshape(b, 1, 1).expand(b, audio_len, 1).clone()
@@ -737,9 +697,7 @@ class Magi2PreviewDataProxy:
             "time_token_sequence": time_token_sequence,
         }
 
-    def unpack_output(
-        self, dit_out: torch.Tensor, shapes: Any = None
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    def unpack_output(self, dit_out: torch.Tensor, shapes: Any = None) -> tuple[torch.Tensor, torch.Tensor]:
         """Unpack DiT output ``(total_tokens, 64)`` -> ``(x_video, x_audio)``.
 
         Relies on the packing metadata saved by the most recent
@@ -871,9 +829,7 @@ def _smoke() -> None:
     assert x_audio.shape == (b, audio_len, 64), x_audio.shape
     assert torch.isfinite(x_video).all() and torch.isfinite(x_audio).all()
 
-    grid, audio_l = Magi2PreviewDataProxy.latent_grid_dims(
-        seconds=2.0, fps=12.5, resolution=(256, 256)
-    )
+    grid, audio_l = Magi2PreviewDataProxy.latent_grid_dims(seconds=2.0, fps=12.5, resolution=(256, 256))
     print(
         f"[smoke] dit_out={tuple(dit_out.shape)} -> video={tuple(x_video.shape)} "
         f"audio={tuple(x_audio.shape)} finite=True; "

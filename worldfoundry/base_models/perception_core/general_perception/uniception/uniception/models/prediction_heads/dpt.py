@@ -197,9 +197,9 @@ class DPTFeature(nn.Module):
 
         # check input dimensions
         for hook_idx, hook in enumerate(self.hooks):
-            assert (
-                layered_feats[hook].shape[1] == self.input_feature_dims[hook_idx]
-            ), f"Input feature dimension mismatch at hook {hook}. Expected BCHW"
+            assert layered_feats[hook].shape[1] == self.input_feature_dims[hook_idx], (
+                f"Input feature dimension mismatch at hook {hook}. Expected BCHW"
+            )
 
         if not self.checkpoint_gradient:
             # Hook decoder onto 4 layers from specified ViT layers
@@ -542,9 +542,9 @@ class DPTFeatureDoubleUpsampling(nn.Module):
 
         # check input dimensions
         for hook_idx, hook in enumerate(self.hooks):
-            assert (
-                layered_feats[hook].shape[1] == self.input_feature_dims[hook_idx]
-            ), f"Input feature dimension mismatch at hook {hook}. Expected BCHW"
+            assert layered_feats[hook].shape[1] == self.input_feature_dims[hook_idx], (
+                f"Input feature dimension mismatch at hook {hook}. Expected BCHW"
+            )
 
         if not self.checkpoint_gradient:
             # Hook decoder onto 4 layers from specified ViT layers

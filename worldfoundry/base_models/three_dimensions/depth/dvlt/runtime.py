@@ -12,7 +12,6 @@ from worldfoundry.base_models.three_dimensions.depth.dvlt import runtime_root as
 from worldfoundry.core.io import jsonable, write_json
 
 
-
 DEFAULT_DVLT_CHECKPOINT = "nvidia/dvlt"
 DEFAULT_DVLT_IMAGE_SIZE = 504
 DEFAULT_DVLT_PATCH_SIZE = 14
@@ -84,7 +83,9 @@ class DVLTRuntime:
             options["checkpoint_path"] = str(pretrained_model_path)
         options.update(kwargs)
         if "plan_only" in options:
-            raise ValueError("DVLT no longer supports plan_only; provide inputs, dependencies, and run the real runtime.")
+            raise ValueError(
+                "DVLT no longer supports plan_only; provide inputs, dependencies, and run the real runtime."
+            )
         return cls(
             model_id=str(options.get("model_id") or options.get("profile_id") or model_id or cls.MODEL_ID),
             device=str(device or options.get("device") or "cuda"),
@@ -284,7 +285,9 @@ class DVLTRuntime:
         actions = tuple(interactions or ())
         allow_cpu = bool(kwargs.get("allow_cpu", False))
         if "plan_only" in kwargs:
-            raise ValueError("DVLT no longer supports plan_only; provide inputs, dependencies, and run the real runtime.")
+            raise ValueError(
+                "DVLT no longer supports plan_only; provide inputs, dependencies, and run the real runtime."
+            )
         reason = self._blocked_reason(images, video, allow_cpu=allow_cpu)
         if reason is not None:
             raise RuntimeError(f"DVLT cannot run: {reason}")

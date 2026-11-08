@@ -7,7 +7,6 @@ from .base import BaseAgentTemplate
 
 
 class ToolBenchAgentTemplate(BaseAgentTemplate):
-
     def _format_tools(self, tools: List[Union[str, dict]], system: str, user_message=None) -> str:
         for i, tool in enumerate(tools):
             tools[i] = self.unwrap_tool(tool)

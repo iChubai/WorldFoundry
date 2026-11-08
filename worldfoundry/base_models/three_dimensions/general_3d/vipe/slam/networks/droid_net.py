@@ -32,6 +32,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter impor
 
 class CorrSampler(torch.autograd.Function):
     """Corr sampler implementation."""
+
     @staticmethod
     def forward(ctx, volume, coords, radius) -> torch.Tensor:
         """Forward.
@@ -146,6 +147,7 @@ class CorrBlock:
 
 class CorrLayer(torch.autograd.Function):
     """Corr layer implementation."""
+
     @staticmethod
     def forward(ctx, fmap1, fmap2, coords, r):
         """Forward.
@@ -291,6 +293,7 @@ class AltCorrBlock:
 
 class ResidualBlock(nn.Module):
     """Residual block implementation."""
+
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
         """Init.
 
@@ -356,6 +359,7 @@ class ResidualBlock(nn.Module):
 
 class BottleneckBlock(nn.Module):
     """Bottleneck block implementation."""
+
     def __init__(self, in_planes, planes, norm_fn="group", stride=1):
         """Init.
 
@@ -430,6 +434,7 @@ DIM = 32
 
 class BasicEncoder(nn.Module):
     """Basic encoder implementation."""
+
     def __init__(self, output_dim=128, norm_fn="batch", dropout=0.0, multidim=False):
         """Init.
 
@@ -533,6 +538,7 @@ class BasicEncoder(nn.Module):
 
 class ConvGRU(nn.Module):
     """Conv gru implementation."""
+
     def __init__(self, h_planes=128, i_planes=128):
         """Init.
 
@@ -575,6 +581,7 @@ class ConvGRU(nn.Module):
 
 class GraphAgg(nn.Module):
     """Graph agg implementation."""
+
     def __init__(self):
         """Init."""
         super(GraphAgg, self).__init__()
@@ -612,6 +619,7 @@ class GraphAgg(nn.Module):
 
 class UpdateModule(nn.Module):
     """Update module implementation."""
+
     def __init__(self):
         """Init."""
         super(UpdateModule, self).__init__()
@@ -684,6 +692,7 @@ class UpdateModule(nn.Module):
 
 class DroidNet(nn.Module):
     """Droid net implementation."""
+
     def __init__(self):
         """Init."""
         super(DroidNet, self).__init__()

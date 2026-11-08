@@ -97,9 +97,7 @@ def load_image(img):
 
     # The image is a url
     if img.startswith("http"):
-        return np.array(Image.open(requests.get(img, stream=True, timeout=60).raw).convert("RGB"))[
-            :, :, ::-1
-        ]
+        return np.array(Image.open(requests.get(img, stream=True, timeout=60).raw).convert("RGB"))[:, :, ::-1]
 
     # The image is a path
     if os.path.isfile(img) is not True:
@@ -114,6 +112,7 @@ def load_image(img):
 
     # This causes troubles when reading files with non english names
     # return cv2.imread(img)
+
 
 # --------------------------------------------------
 
@@ -230,9 +229,7 @@ def extract_faces(
             extracted_faces.append(extracted_face)
 
     if len(extracted_faces) == 0 and enforce_detection == True:
-        raise ValueError(
-            f"Detected face shape is {img.shape}. Consider to set enforce_detection arg to False."
-        )
+        raise ValueError(f"Detected face shape is {img.shape}. Consider to set enforce_detection arg to False.")
 
     return extracted_faces
 

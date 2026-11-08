@@ -267,13 +267,16 @@ def map_pdf_to_opacity(
     # Map the probability density to an opacity.
     return 0.5 * (1 - (1 - pdf) ** exponent + pdf ** (1 / exponent))
 
+
 def normalize_homogenous_points(points):
     """Normalize the point vectors"""
     return points / points[..., -1:]
 
+
 def inverse_intrinsic_matrix(ixts):
     """ """
     return torch.inverse(ixts)
+
 
 def pixel_space_to_camera_space(pixel_space_points, depth, intrinsics):
     """
@@ -326,9 +329,7 @@ def camera_space_to_pixel_space(camera_space_points, intrinsics):
         torch.Tensor: World space points with shape (b, v1, v2, h, w, 2).
     """
     camera_space_points = normalize_homogenous_points(camera_space_points)
-    pixel_space_points = torch.einsum(
-        "b u i j , b v u h w j -> b v u h w i", intrinsics, camera_space_points
-    )
+    pixel_space_points = torch.einsum("b u i j , b v u h w j -> b v u h w i", intrinsics, camera_space_points)
     return pixel_space_points[..., :2]
 
 
@@ -344,15 +345,11 @@ def world_space_to_camera_space(world_space_points, c2w):
         torch.Tensor: Camera space points with shape (b, v1, v2, h, w, 3).
     """
     world_space_points = homogenize_points(world_space_points)
-    camera_space_points = torch.einsum(
-        "b u i j , b v h w j -> b v u h w i", c2w.inverse(), world_space_points
-    )
+    camera_space_points = torch.einsum("b u i j , b v h w j -> b v u h w i", c2w.inverse(), world_space_points)
     return camera_space_points[..., :3]
 
 
-def unproject_depth(
-    depth, intrinsics, c2w=None, ixt_normalized=False, num_patches_x=None, num_patches_y=None
-):
+def unproject_depth(depth, intrinsics, c2w=None, ixt_normalized=False, num_patches_x=None, num_patches_y=None):
     """
     Turn the depth map into a 3D point cloud in world space
 
@@ -407,9 +404,7 @@ def unproject_depth(
 
     # Compute coordinates of pixels in camera space
     pixel_space_points = torch.stack((x_grid, y_grid), dim=-1)  # (..., h, w, 2)
-    camera_points = pixel_space_to_camera_space(
-        pixel_space_points, depth, intrinsics
-    )  # (..., h, w, 3)
+    camera_points = pixel_space_to_camera_space(pixel_space_points, depth, intrinsics)  # (..., h, w, 3)
 
     # Convert points to world space
     world_points = camera_space_to_world_space(camera_points, c2w)  # (..., h, w, 3)

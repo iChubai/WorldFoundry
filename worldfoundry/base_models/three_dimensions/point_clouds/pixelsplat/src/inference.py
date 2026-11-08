@@ -22,11 +22,7 @@ from .model.ply_export import export_ply
 
 
 def _load_component_state(module: nn.Module, state: dict[str, torch.Tensor], prefix: str) -> None:
-    component = {
-        key.removeprefix(prefix): value
-        for key, value in state.items()
-        if key.startswith(prefix)
-    }
+    component = {key.removeprefix(prefix): value for key, value in state.items() if key.startswith(prefix)}
     if not component:
         if not module.state_dict():
             return

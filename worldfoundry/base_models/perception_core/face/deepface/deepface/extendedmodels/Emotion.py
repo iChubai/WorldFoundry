@@ -31,7 +31,6 @@ labels = ["angry", "disgust", "fear", "happy", "sad", "surprise", "neutral"]
 def loadModel(
     url="https://github.com/serengil/deepface_models/releases/download/v1.0/facial_expression_model_weights.h5",
 ):
-
     num_classes = 7
 
     model = Sequential()

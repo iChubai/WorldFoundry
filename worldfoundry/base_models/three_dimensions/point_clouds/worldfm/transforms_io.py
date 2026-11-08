@@ -19,7 +19,7 @@ class CameraFrame:
     id: int
     width: int
     height: int
-    K_3x3: np.ndarray   # float64 (3,3)
+    K_3x3: np.ndarray  # float64 (3,3)
     c2w_4x4: np.ndarray  # float64 (4,4)
 
 
@@ -58,11 +58,14 @@ def _frame_K(frame: Dict[str, Any]) -> np.ndarray:
         if K.shape != (3, 3):
             raise ValueError(f"frame['K'] must be (3,3), got {K.shape}")
         return K
-    return np.asarray([
-        [float(frame["fx"]), 0.0, float(frame["cx"])],
-        [0.0, float(frame["fy"]), float(frame["cy"])],
-        [0.0, 0.0, 1.0],
-    ], dtype=np.float64)
+    return np.asarray(
+        [
+            [float(frame["fx"]), 0.0, float(frame["cx"])],
+            [0.0, float(frame["fy"]), float(frame["cy"])],
+            [0.0, 0.0, 1.0],
+        ],
+        dtype=np.float64,
+    )
 
 
 def load_camera_frames(transforms_json_path: str) -> List[CameraFrame]:

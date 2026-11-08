@@ -2,6 +2,7 @@
 
 from lietorch import SE3
 
+
 def align_pose_fragements(pose0, pose1):
     """Align pose fragements.
 

@@ -30,13 +30,14 @@ from transformers import T5Config, T5ForConditionalGeneration
 
 IMAGE_TOKEN_INDEX = -200
 
+
 @dataclass
 class ModelArguments:
     tune_mm_mlp_adapter: bool = field(default=False)
-    vision_tower: Optional[str] = field(default='openai/clip-vit-large-patch14-336')
-    mm_vision_select_layer: Optional[int] = field(default=-2)   # default to the second last layer in llava1.5
+    vision_tower: Optional[str] = field(default="openai/clip-vit-large-patch14-336")
+    mm_vision_select_layer: Optional[int] = field(default=-2)  # default to the second last layer in llava1.5
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
-    mm_projector_type: Optional[str] = field(default='mlp2x_gelu')
+    mm_projector_type: Optional[str] = field(default="mlp2x_gelu")
     mm_vision_select_feature: Optional[str] = field(default="patch")
 
 
@@ -56,14 +57,14 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             self.mm_projector = build_vision_projector(config)
 
     def get_vision_tower(self):
-        vision_tower = getattr(self, 'vision_tower', None)
+        vision_tower = getattr(self, "vision_tower", None)
         if type(vision_tower) is list:
             vision_tower = vision_tower[0]
         return vision_tower
 
     def get_model(self):
-        return self # for compatibility with LlavaMetaForCausalLM
-    
+        return self  # for compatibility with LlavaMetaForCausalLM
+
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, attention_mask, decoder_attention_mask, past_key_values, labels, images
     ):
@@ -80,7 +81,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             image_features = [x.flatten(0, 1) for x in image_features]
         else:
             image_features = self.encode_images(images)
-        
+
         new_input_embeds = []
         cur_image_idx = 0
         for _, cur_input_ids in enumerate(input_ids):
@@ -95,7 +96,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
                 cur_new_input_embeds.append(self.embed_tokens(cur_input_ids[:image_token_start]))
                 cur_new_input_embeds.append(cur_image_features)
                 cur_image_idx += 1
-                cur_input_ids = cur_input_ids[image_token_start+1:]
+                cur_input_ids = cur_input_ids[image_token_start + 1 :]
                 image_token_indices = torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0]
             if cur_input_ids.numel() > 0:
                 cur_new_input_embeds.append(self.embed_tokens(cur_input_ids))
@@ -110,16 +111,38 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             _input_embeds_lengths = []
             for cur_new_embed in new_input_embeds:
                 _input_embeds_lengths.append(cur_new_embed.shape[0])
-                cur_new_embed = torch.cat((cur_new_embed, torch.zeros((max_len - cur_new_embed.shape[0], cur_new_embed.shape[1]), dtype=cur_new_embed.dtype, device=cur_new_embed.device)), dim=0)
+                cur_new_embed = torch.cat(
+                    (
+                        cur_new_embed,
+                        torch.zeros(
+                            (max_len - cur_new_embed.shape[0], cur_new_embed.shape[1]),
+                            dtype=cur_new_embed.dtype,
+                            device=cur_new_embed.device,
+                        ),
+                    ),
+                    dim=0,
+                )
                 new_input_embeds_align.append(cur_new_embed)
             new_input_embeds = torch.stack(new_input_embeds_align, dim=0)
-            
+
             if attention_mask is not None:
                 new_attention_mask = []
                 for cur_attention_mask, _input_embeds_length in zip(attention_mask, _input_embeds_lengths):
-                    new_attn_mask_pad_left = torch.full((_input_embeds_length - input_ids.shape[1],), True, dtype=attention_mask.dtype, device=attention_mask.device)
-                    new_attn_mask_pad_right = torch.full((new_input_embeds.shape[1] - _input_embeds_length,), False, dtype=attention_mask.dtype, device=attention_mask.device)
-                    cur_new_attention_mask = torch.cat((new_attn_mask_pad_left, cur_attention_mask, new_attn_mask_pad_right), dim=0)
+                    new_attn_mask_pad_left = torch.full(
+                        (_input_embeds_length - input_ids.shape[1],),
+                        True,
+                        dtype=attention_mask.dtype,
+                        device=attention_mask.device,
+                    )
+                    new_attn_mask_pad_right = torch.full(
+                        (new_input_embeds.shape[1] - _input_embeds_length,),
+                        False,
+                        dtype=attention_mask.dtype,
+                        device=attention_mask.device,
+                    )
+                    cur_new_attention_mask = torch.cat(
+                        (new_attn_mask_pad_left, cur_attention_mask, new_attn_mask_pad_right), dim=0
+                    )
                     new_attention_mask.append(cur_new_attention_mask)
                 attention_mask = torch.stack(new_attention_mask, dim=0)
                 assert attention_mask.shape == new_input_embeds.shape[:2]
@@ -127,7 +150,12 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             new_input_embeds = torch.stack(new_input_embeds, dim=0)
 
             if attention_mask is not None:
-                new_attn_mask_pad_left = torch.full((attention_mask.shape[0], new_input_embeds.shape[1] - input_ids.shape[1]), True, dtype=attention_mask.dtype, device=attention_mask.device)
+                new_attn_mask_pad_left = torch.full(
+                    (attention_mask.shape[0], new_input_embeds.shape[1] - input_ids.shape[1]),
+                    True,
+                    dtype=attention_mask.dtype,
+                    device=attention_mask.device,
+                )
                 attention_mask = torch.cat((new_attn_mask_pad_left, attention_mask), dim=1)
                 assert attention_mask.shape == new_input_embeds.shape[:2]
 
@@ -137,7 +165,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
         image_features = self.get_vision_tower()(images)
         image_features = self.mm_projector(image_features)
         return image_features
-    
+
     def initialize_vision_modules(self, model_args, fsdp=None):
         vision_tower = model_args.vision_tower
         mm_vision_select_layer = model_args.mm_vision_select_layer
@@ -163,20 +191,21 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
                 vision_tower.load_model()
 
         self.config.use_mm_proj = True
-        self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'mlp2x_gelu')
+        self.config.mm_projector_type = getattr(model_args, "mm_projector_type", "mlp2x_gelu")
         self.config.mm_hidden_size = vision_tower.hidden_size
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
 
-        if getattr(self, 'mm_projector', None) is None:
+        if getattr(self, "mm_projector", None) is None:
             self.mm_projector = build_vision_projector(self.config)
 
         if pretrain_mm_mlp_adapter is not None:
-            mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
-            def get_w(weights, keyword):
-                return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
+            mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location="cpu")
 
-            self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
+            def get_w(weights, keyword):
+                return {k.split(keyword + ".")[1]: v for k, v in weights.items() if keyword in k}
+
+            self.mm_projector.load_state_dict(get_w(mm_projector_weights, "mm_projector"))
 
     def forward(
         self,
@@ -200,12 +229,15 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if inputs_embeds is None:
-            _, attention_mask, decoder_attention_mask, past_key_values, inputs_embeds, labels = \
-                self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, decoder_attention_mask, past_key_values, labels, images)
+            _, attention_mask, decoder_attention_mask, past_key_values, inputs_embeds, labels = (
+                self.prepare_inputs_labels_for_multimodal(
+                    input_ids, attention_mask, decoder_attention_mask, past_key_values, labels, images
+                )
+            )
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = super(CLIPT5ForConditionalGeneration, self).forward(
-            input_ids=None, # will be None if inputs_embeds is not None
+            input_ids=None,  # will be None if inputs_embeds is not None
             attention_mask=attention_mask,
             decoder_attention_mask=decoder_attention_mask,
             labels=labels,
@@ -219,7 +251,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
         )
 
         return outputs
-    
+
     @torch.no_grad()
     def generate(
         self,
@@ -231,11 +263,12 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
         assert images is not None, "images must be provided"
         assert inputs is not None, "inputs must be provided"
         assert attention_mask is not None, "attention_mask must be provided"
-        _, attention_mask, _, _, inputs_embeds, _ = \
-            self.prepare_inputs_labels_for_multimodal(inputs, attention_mask, None, None, None, images)
+        _, attention_mask, _, _, inputs_embeds, _ = self.prepare_inputs_labels_for_multimodal(
+            inputs, attention_mask, None, None, None, images
+        )
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = super(CLIPT5ForConditionalGeneration, self).generate(
-            input_ids=None, # will be None if inputs_embeds is not None
+            input_ids=None,  # will be None if inputs_embeds is not None
             attention_mask=attention_mask,
             inputs_embeds=inputs_embeds,
         )
@@ -274,17 +307,19 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
         else:
             model_inputs = {"input_ids": input_ids}
 
-        model_inputs.update({
-            "decoder_input_ids": input_ids,
-            "past_key_values": past_key_values,
-            "encoder_outputs": encoder_outputs,
-            "attention_mask": attention_mask,
-            "head_mask": head_mask,
-            "decoder_head_mask": decoder_head_mask,
-            "decoder_attention_mask": decoder_attention_mask,
-            "cross_attn_head_mask": cross_attn_head_mask,
-            "use_cache": use_cache,
-        })
+        model_inputs.update(
+            {
+                "decoder_input_ids": input_ids,
+                "past_key_values": past_key_values,
+                "encoder_outputs": encoder_outputs,
+                "attention_mask": attention_mask,
+                "head_mask": head_mask,
+                "decoder_head_mask": decoder_head_mask,
+                "decoder_attention_mask": decoder_attention_mask,
+                "cross_attn_head_mask": cross_attn_head_mask,
+                "use_cache": use_cache,
+            }
+        )
         return model_inputs
 
 

@@ -30,9 +30,7 @@ def _candidate_config_dirs(package_file: str | Path) -> tuple[Path, ...]:
         The return value.
     """
     package_configs = Path(package_file).resolve().parent / "configs"
-    runtime_configs = resolve_data_path(
-        "models", "runtime", "configs", "depth_anything_v3", "configs"
-    )
+    runtime_configs = resolve_data_path("models", "runtime", "configs", "depth_anything_v3", "configs")
     return (package_configs, runtime_configs)
 
 

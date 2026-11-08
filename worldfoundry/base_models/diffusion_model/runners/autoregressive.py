@@ -245,13 +245,9 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         )
         scale = context.request.sampling.guidance_scale
         if self.guidance_mode == "positive":
-            guided = positive_output.sample + scale * (
-                positive_output.sample - negative_output.sample
-            )
+            guided = positive_output.sample + scale * (positive_output.sample - negative_output.sample)
         else:
-            guided = negative_output.sample + scale * (
-                positive_output.sample - negative_output.sample
-            )
+            guided = negative_output.sample + scale * (positive_output.sample - negative_output.sample)
         return DenoiserOutput(
             sample=guided,
             extras={"positive": positive_output.extras, "negative": negative_output.extras},
@@ -321,9 +317,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         positive: Mapping[str, object],
     ) -> Tensor:
         if context.request.sampling.num_inference_steps != len(self.fixed_timesteps):
-            raise ValueError(
-                f"this distilled checkpoint requires {len(self.fixed_timesteps)} inference steps"
-            )
+            raise ValueError(f"this distilled checkpoint requires {len(self.fixed_timesteps)} inference steps")
         noisy = block_noise.clone()
         shift = float(context.request.sampling.scheduler_options.get("shift", 5.0))
         for index, timestep in enumerate(self.fixed_timesteps):
@@ -335,10 +329,13 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             # network (approximately [1000, 937.5, 833.33, 625] for shift=5).
             # Keep recipes expressed in the released schedule while matching
             # the exact model-time semantics here.
-            model_timestep = shift_flow_sigmas(
-                torch.tensor(timestep / 1000.0, device=self.device),
-                shift,
-            ) * 1000.0
+            model_timestep = (
+                shift_flow_sigmas(
+                    torch.tensor(timestep / 1000.0, device=self.device),
+                    shift,
+                )
+                * 1000.0
+            )
             next_model_timestep = (
                 shift_flow_sigmas(
                     torch.tensor(next_timestep / 1000.0, device=self.device),
@@ -366,9 +363,9 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     shift,
                 )
                 reference = clean if self.renoise_dtype is None else clean.to(self.renoise_dtype)
-                noisy = add_flow_noise(
-                    reference, self._noise_like(reference, context.generator), sigma
-                ).to(block_noise.dtype)
+                noisy = add_flow_noise(reference, self._noise_like(reference, context.generator), sigma).to(
+                    block_noise.dtype
+                )
         return clean
 
     @torch.no_grad()
@@ -424,9 +421,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             shared = dict(context.conditioning.shared)
             shared["kv_prefix_frames"] = prefix_frames
             positive_base = {**shared, **context.conditioning.positive}
-            negative_base = (
-                {**shared, **context.conditioning.negative} if use_negative else None
-            )
+            negative_base = {**shared, **context.conditioning.negative} if use_negative else None
 
             if prefix is not None:
                 context.step = SchedulerStep(
@@ -441,14 +436,23 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     if base is None:
                         continue
                     conditioning = self._window_conditioning(
-                        base, n_views=1, frames_per_view=frames_per_view,
-                        start=0, end=prefix_frames, cache=cache,
-                        frame_sequence_length=frame_sequence_length, block_noise=prefix,
+                        base,
+                        n_views=1,
+                        frames_per_view=frames_per_view,
+                        start=0,
+                        end=prefix_frames,
+                        cache=cache,
+                        frame_sequence_length=frame_sequence_length,
+                        block_noise=prefix,
                     )
-                    conditioning.update(current_start=0, current_end=prefix_frames * frame_sequence_length,
-                                        start_frame_for_rope=0)
+                    conditioning.update(
+                        current_start=0, current_end=prefix_frames * frame_sequence_length, start_frame_for_rope=0
+                    )
                     self._call_denoiser_with_conditioning(
-                        context, latents=prefix, branch=branch, conditioning=conditioning,
+                        context,
+                        latents=prefix,
+                        branch=branch,
+                        conditioning=conditioning,
                     )
 
             start_frame = 0
@@ -539,9 +543,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                         block_noise,
                         positive=positive,
                     )
-                output_by_view[:, :, :, start:end] = rearrange(
-                    block, "B C (V T) H W -> B C V T H W", V=n_views
-                )
+                output_by_view[:, :, :, start:end] = rearrange(block, "B C (V T) H W -> B C V T H W", V=n_views)
 
                 commit = block
                 commit_timestep = self.context_timestep if self.prediction_mode == "distilled-x0" else 0
@@ -589,7 +591,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             if output_frames is not None and not request.inputs.get("return_latent", False):
                 if sample.ndim != 5 or not 0 < int(output_frames) <= sample.shape[2]:
                     raise ValueError("output_num_frames must fit the decoded BCTHW video")
-                sample = sample[:, :, :int(output_frames)]
+                sample = sample[:, :, : int(output_frames)]
             for extension in self.extensions:
                 sample = extension.after_decode(context, sample)
             result = DiffusionOutput(

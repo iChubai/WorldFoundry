@@ -20,6 +20,7 @@ import sys
 
 class Color:
     """Color implementation."""
+
     RED = "\033[91m"
     YELLOW = "\033[93m"
     WHITE = "\033[97m"
@@ -40,6 +41,7 @@ def get_env_log_level():
 
 class Logger:
     """Logger implementation."""
+
     def __init__(self):
         """Init."""
         self.level = get_env_log_level()

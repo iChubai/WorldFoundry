@@ -88,8 +88,7 @@ class QWen2VLDataCollator:
                         {
                             "type": "text",
                             "text": (
-                                INSTRUCTION.format(text_prompt=text)
-                                + prompt_with_special_token
+                                INSTRUCTION.format(text_prompt=text) + prompt_with_special_token
                                 if use_special_tokens
                                 else prompt_without_special_token
                             ),
@@ -116,9 +115,7 @@ class QWen2VLDataCollator:
         sequences_padded = torch.nn.functional.pad(
             sequences, padding, "constant", self.processor.tokenizer.pad_token_id
         )
-        attention_mask_padded = torch.nn.functional.pad(
-            attention_mask, padding, "constant", 0
-        )
+        attention_mask_padded = torch.nn.functional.pad(attention_mask, padding, "constant", 0)
 
         return sequences_padded, attention_mask_padded
 
@@ -153,18 +150,12 @@ class QWen2VLDataCollator:
         # import pdb; pdb.set_trace()
         image_inputs_1, _ = process_vision_info(messages_batch_1)
         image_inputs_2, _ = process_vision_info(messages_batch_2)
-        image_inputs_1 = [
-            np.array(image_inputs_1[i]) / 255.0 for i in range(len(image_inputs_1))
-        ]
-        image_inputs_2 = [
-            np.array(image_inputs_2[i]) / 255.0 for i in range(len(image_inputs_2))
-        ]
+        image_inputs_1 = [np.array(image_inputs_1[i]) / 255.0 for i in range(len(image_inputs_1))]
+        image_inputs_2 = [np.array(image_inputs_2[i]) / 255.0 for i in range(len(image_inputs_2))]
         do_rescale = False
 
         batch_1 = self.processor(
-            text=self.processor.apply_chat_template(
-                messages_batch_1, tokenize=False, add_generation_prompt=True
-            ),
+            text=self.processor.apply_chat_template(messages_batch_1, tokenize=False, add_generation_prompt=True),
             images=image_inputs_1,
             videos=None,
             padding=True,
@@ -172,9 +163,7 @@ class QWen2VLDataCollator:
             images_kwargs={"do_rescale": do_rescale},
         )
         batch_2 = self.processor(
-            text=self.processor.apply_chat_template(
-                messages_batch_2, tokenize=False, add_generation_prompt=True
-            ),
+            text=self.processor.apply_chat_template(messages_batch_2, tokenize=False, add_generation_prompt=True),
             images=image_inputs_2,
             videos=None,
             padding=True,

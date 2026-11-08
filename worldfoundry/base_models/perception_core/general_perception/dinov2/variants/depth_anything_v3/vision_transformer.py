@@ -28,7 +28,9 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
     reorder_by_reference,
     restore_original_order,
 )
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.constants import THRESH_FOR_REF_SELECTION
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.constants import (
+    THRESH_FOR_REF_SELECTION,
+)
 
 # logger = logging.getLogger("dinov2")
 
@@ -56,6 +58,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 
 class BlockChunk(nn.ModuleList):
     """Block chunk implementation."""
+
     def forward(self, x):
         """Forward.
 
@@ -69,6 +72,7 @@ class BlockChunk(nn.ModuleList):
 
 class DinoVisionTransformer(nn.Module):
     """Dino vision transformer implementation."""
+
     def __init__(
         self,
         img_size=224,
@@ -127,9 +131,7 @@ class DinoVisionTransformer(nn.Module):
         super().__init__()
         self.patch_start_idx = 1
         norm_layer = nn.LayerNorm
-        self.num_features = self.embed_dim = (
-            embed_dim  # num_features for consistency with other models
-        )
+        self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
         self.alt_start = alt_start
         self.qknorm_start = qknorm_start
         self.rope_start = rope_start
@@ -142,9 +144,7 @@ class DinoVisionTransformer(nn.Module):
         self.interpolate_antialias = interpolate_antialias
         self.interpolate_offset = interpolate_offset
 
-        self.patch_embed = embed_layer(
-            img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim
-        )
+        self.patch_embed = embed_layer(img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
         num_patches = self.patch_embed.num_patches
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         if self.alt_start != -1:
@@ -152,17 +152,13 @@ class DinoVisionTransformer(nn.Module):
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + self.num_tokens, embed_dim))
         assert num_register_tokens >= 0
         self.register_tokens = (
-            nn.Parameter(torch.zeros(1, num_register_tokens, embed_dim))
-            if num_register_tokens
-            else None
+            nn.Parameter(torch.zeros(1, num_register_tokens, embed_dim)) if num_register_tokens else None
         )
 
         if drop_path_uniform is True:
             dpr = [drop_path_rate] * depth
         else:
-            dpr = [
-                x.item() for x in torch.linspace(0, drop_path_rate, depth)
-            ]  # stochastic depth decay rule
+            dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         if ffn_layer == "mlp":
             logger.info("using MLP layer as FFN")
             ffn_layer = Mlp
@@ -301,9 +297,7 @@ class DinoVisionTransformer(nn.Module):
         pos = None
         pos_nodiff = None
         if self.rope is not None:
-            pos = self.position_getter(
-                B * S, H // self.patch_size, W // self.patch_size, device=device
-            )
+            pos = self.position_getter(B * S, H // self.patch_size, W // self.patch_size, device=device)
             pos = rearrange(pos, "(b s) n c -> b s n c", b=B)
             pos_nodiff = torch.zeros_like(pos).to(pos.dtype)
             if self.patch_start_idx > 0:
@@ -336,7 +330,12 @@ class DinoVisionTransformer(nn.Module):
                 g_pos = pos_nodiff
                 l_pos = pos
 
-            if self.alt_start != -1 and (i == self.alt_start - 1) and x.shape[1] >= THRESH_FOR_REF_SELECTION and kwargs.get("cam_token", None) is None:
+            if (
+                self.alt_start != -1
+                and (i == self.alt_start - 1)
+                and x.shape[1] >= THRESH_FOR_REF_SELECTION
+                and kwargs.get("cam_token", None) is None
+            ):
                 # Select reference view using configured strategy
                 strategy = kwargs.get("ref_view_strategy", "saddle_balanced")
                 logger.info(f"Selecting reference view using strategy: {strategy}")
@@ -356,9 +355,7 @@ class DinoVisionTransformer(nn.Module):
                 x[:, :, 0] = cam_token
 
             if self.alt_start != -1 and i >= self.alt_start and i % 2 == 1:
-                x = self.process_attention(
-                    x, blk, "global", pos=g_pos, attn_mask=kwargs.get("attn_mask", None)
-                )
+                x = self.process_attention(x, blk, "global", pos=g_pos, attn_mask=kwargs.get("attn_mask", None))
             else:
                 x = self.process_attention(x, blk, "local", pos=l_pos)
                 local_x = x
@@ -366,7 +363,7 @@ class DinoVisionTransformer(nn.Module):
             if i in blocks_to_take:
                 out_x = torch.cat([local_x, x], dim=-1) if self.cat_token else x
                 # Restore original view order if reordering was applied
-                if x.shape[1] >= THRESH_FOR_REF_SELECTION and self.alt_start != -1 and 'b_idx' in locals():
+                if x.shape[1] >= THRESH_FOR_REF_SELECTION and self.alt_start != -1 and "b_idx" in locals():
                     out_x = restore_original_order(out_x, b_idx)
                 output.append((out_x[:, :, 0], out_x))
             if i in export_feat_layers:

@@ -14,6 +14,7 @@ from ...transformer.transformer import Transformer
 @dataclass
 class ImageSelfAttentionCfg:
     """Image self attention cfg implementation."""
+
     patch_size: int
     num_octaves: int
     num_layers: int
@@ -25,6 +26,7 @@ class ImageSelfAttentionCfg:
 
 class ImageSelfAttention(nn.Module):
     """Image self attention implementation."""
+
     positional_encoding: nn.Sequential
     patch_embedder: nn.Sequential
     transformer: Transformer

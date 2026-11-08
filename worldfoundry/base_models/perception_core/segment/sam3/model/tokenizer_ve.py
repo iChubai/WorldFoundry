@@ -39,11 +39,7 @@ def bytes_to_unicode():
     To avoid that, we want lookup tables between utf-8 bytes and unicode strings.
     And avoids mapping to whitespace/control characters the bpe code barfs on.
     """
-    bs = (
-        list(range(ord("!"), ord("~") + 1))
-        + list(range(ord("¡"), ord("¬") + 1))
-        + list(range(ord("®"), ord("ÿ") + 1))
-    )
+    bs = list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1))
     cs = bs[:]
     n = 0
     for b in range(2**8):
@@ -159,6 +155,7 @@ def canonicalize_text(text, *, keep_punctuation_exact_string=None):
 
 class SimpleTokenizer(object):
     """Simple tokenizer implementation."""
+
     def __init__(
         self,
         bpe_path: Union[str, os.PathLike],
@@ -259,9 +256,7 @@ class SimpleTokenizer(object):
         text = self.clean_fn(text)
         for token in re.findall(self.pat, text):
             token = "".join(self.byte_encoder[b] for b in token.encode("utf-8"))
-            bpe_tokens.extend(
-                self.encoder[bpe_token] for bpe_token in self.bpe(token).split(" ")
-            )
+            bpe_tokens.extend(self.encoder[bpe_token] for bpe_token in self.bpe(token).split(" "))
         return bpe_tokens
 
     def decode(self, tokens):
@@ -271,16 +266,10 @@ class SimpleTokenizer(object):
             tokens: The tokens.
         """
         text = "".join([self.decoder[token] for token in tokens])
-        text = (
-            bytearray([self.byte_decoder[c] for c in text])
-            .decode("utf-8", errors="replace")
-            .replace("</w>", " ")
-        )
+        text = bytearray([self.byte_decoder[c] for c in text]).decode("utf-8", errors="replace").replace("</w>", " ")
         return text
 
-    def __call__(
-        self, texts: Union[str, List[str]], context_length: Optional[int] = None
-    ) -> torch.LongTensor:
+    def __call__(self, texts: Union[str, List[str]], context_length: Optional[int] = None) -> torch.LongTensor:
         """Returns the tokenized representation of given input string(s)
         Parameters
         ----------
@@ -296,10 +285,7 @@ class SimpleTokenizer(object):
             texts = [texts]
         context_length = context_length or self.context_length
         assert context_length, "Please set a valid context length"
-        all_tokens = [
-            [self.sot_token_id] + self.encode(text) + [self.eot_token_id]
-            for text in texts
-        ]
+        all_tokens = [[self.sot_token_id] + self.encode(text) + [self.eot_token_id] for text in texts]
         result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
         for i, tokens in enumerate(all_tokens):
             if len(tokens) > context_length:

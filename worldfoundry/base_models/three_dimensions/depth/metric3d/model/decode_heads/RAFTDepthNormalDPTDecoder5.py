@@ -14,6 +14,7 @@ import torch.nn.functional as F
 # LORA finetuning originally by edwardjhu
 class LoRALayer:
     """Lo ra layer implementation."""
+
     def __init__(
         self,
         r: int,
@@ -43,6 +44,7 @@ class LoRALayer:
 
 class LoRALinear(nn.Linear, LoRALayer):
     """Lo ra linear implementation."""
+
     # LoRA implemented in a dense layer
     def __init__(
         self,
@@ -119,6 +121,7 @@ class LoRALinear(nn.Linear, LoRALayer):
         Args:
             x: The x.
         """
+
         def T(w):
             """T.
 
@@ -137,6 +140,7 @@ class LoRALinear(nn.Linear, LoRALayer):
 
 class ConvLoRA(nn.Conv2d, LoRALayer):
     """Conv lo ra implementation."""
+
     def __init__(
         self, in_channels, out_channels, kernel_size, r=0, lora_alpha=1, lora_dropout=0.0, merge_weights=True, **kwargs
     ):
@@ -235,6 +239,7 @@ class ConvLoRA(nn.Conv2d, LoRALayer):
 
 class ConvTransposeLoRA(nn.ConvTranspose2d, LoRALayer):
     """Conv transpose lo ra implementation."""
+
     def __init__(
         self, in_channels, out_channels, kernel_size, r=0, lora_alpha=1, lora_dropout=0.0, merge_weights=True, **kwargs
     ):
@@ -330,6 +335,7 @@ class ConvTransposeLoRA(nn.ConvTranspose2d, LoRALayer):
 
 class Conv2dLoRA(ConvLoRA):
     """Conv d lo ra implementation."""
+
     def __init__(self, *args, **kwargs):
         """Init."""
         super(Conv2dLoRA, self).__init__(*args, **kwargs)
@@ -337,6 +343,7 @@ class Conv2dLoRA(ConvLoRA):
 
 class ConvTranspose2dLoRA(ConvTransposeLoRA):
     """Conv transpose d lo ra implementation."""
+
     def __init__(self, *args, **kwargs):
         """Init."""
         super(ConvTranspose2dLoRA, self).__init__(*args, **kwargs)
@@ -506,6 +513,7 @@ def sample_points(init_normal, gt_norm_mask, sampling_ratio, beta):
 
 class FlowHead(nn.Module):
     """Flow head implementation."""
+
     def __init__(
         self,
         input_dim=128,
@@ -568,6 +576,7 @@ class FlowHead(nn.Module):
 
 class ConvGRU(nn.Module):
     """Conv gru implementation."""
+
     def __init__(self, hidden_dim, input_dim, kernel_size=3, tuning_mode=None):
         """Init.
 
@@ -655,6 +664,7 @@ def interp(x, dest):
 
 class BasicMultiUpdateBlock(nn.Module):
     """Basic multi update block implementation."""
+
     def __init__(self, args, hidden_dims=[], out_dims=2, tuning_mode=None):
         """Init.
 
@@ -757,6 +767,7 @@ class BasicMultiUpdateBlock(nn.Module):
 
 class LayerNorm2d(nn.LayerNorm):
     """Layer norm d implementation."""
+
     def __init__(self, dim):
         """Init.
 
@@ -779,6 +790,7 @@ class LayerNorm2d(nn.LayerNorm):
 
 class ResidualBlock(nn.Module):
     """Residual block implementation."""
+
     def __init__(self, in_planes, planes, norm_fn="group", stride=1, tuning_mode=None):
         """Init.
 
@@ -945,6 +957,7 @@ class ContextFeatureEncoder(nn.Module):
 
 class ConvBlock(nn.Module):
     """Conv block implementation."""
+
     # reimplementation of DPT
     def __init__(self, channels, tuning_mode=None):
         """Init.
@@ -988,6 +1001,7 @@ class ConvBlock(nn.Module):
 
 class FuseBlock(nn.Module):
     """Fuse block implementation."""
+
     # reimplementation of DPT
     def __init__(
         self,
@@ -1047,6 +1061,7 @@ class FuseBlock(nn.Module):
 
 class Readout(nn.Module):
     """Readout implementation."""
+
     # From DPT
     def __init__(self, in_features, use_cls_token=True, num_register_tokens=0, tuning_mode=None):
         """Init.
@@ -1089,6 +1104,7 @@ class Readout(nn.Module):
 
 class Token2Feature(nn.Module):
     """Token feature implementation."""
+
     # From DPT
     def __init__(
         self,
@@ -1172,6 +1188,7 @@ class Token2Feature(nn.Module):
 
 class EncoderFeature(nn.Module):
     """Encoder feature implementation."""
+
     def __init__(
         self,
         vit_channel,
@@ -1242,6 +1259,7 @@ class EncoderFeature(nn.Module):
 
 class DecoderFeature(nn.Module):
     """Decoder feature implementation."""
+
     def __init__(
         self,
         vit_channel,
@@ -1300,6 +1318,7 @@ class DecoderFeature(nn.Module):
 
 class RAFTDepthNormalDPT5(nn.Module):
     """Raft depth normal implementation."""
+
     def __init__(self, cfg):
         """Init.
 

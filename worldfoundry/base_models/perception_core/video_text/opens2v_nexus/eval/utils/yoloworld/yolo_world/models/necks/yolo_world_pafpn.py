@@ -66,13 +66,9 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
                     (self.in_channels[idx - 1] + self.in_channels[idx]),
                     self.widen_factor,
                 ),
-                out_channels=make_divisible(
-                    self.out_channels[idx - 1], self.widen_factor
-                ),
+                out_channels=make_divisible(self.out_channels[idx - 1], self.widen_factor),
                 guide_channels=self.guide_channels,
-                embed_channels=make_round(
-                    self.embed_channels[idx - 1], self.widen_factor
-                ),
+                embed_channels=make_round(self.embed_channels[idx - 1], self.widen_factor),
                 num_heads=make_round(self.num_heads[idx - 1], self.widen_factor),
                 num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
                 add_identity=False,
@@ -98,13 +94,9 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
                     (self.out_channels[idx] + self.out_channels[idx + 1]),
                     self.widen_factor,
                 ),
-                out_channels=make_divisible(
-                    self.out_channels[idx + 1], self.widen_factor
-                ),
+                out_channels=make_divisible(self.out_channels[idx + 1], self.widen_factor),
                 guide_channels=self.guide_channels,
-                embed_channels=make_round(
-                    self.embed_channels[idx + 1], self.widen_factor
-                ),
+                embed_channels=make_round(self.embed_channels[idx + 1], self.widen_factor),
                 num_heads=make_round(self.num_heads[idx + 1], self.widen_factor),
                 num_blocks=make_round(self.num_csp_blocks, self.deepen_factor),
                 add_identity=False,
@@ -129,16 +121,12 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         for idx in range(len(self.in_channels) - 1, 0, -1):
             feat_high = inner_outs[0]
             feat_low = reduce_outs[idx - 1]
-            upsample_feat = self.upsample_layers[len(self.in_channels) - 1 - idx](
-                feat_high
-            )
+            upsample_feat = self.upsample_layers[len(self.in_channels) - 1 - idx](feat_high)
             if self.upsample_feats_cat_first:
                 top_down_layer_inputs = torch.cat([upsample_feat, feat_low], 1)
             else:
                 top_down_layer_inputs = torch.cat([feat_low, upsample_feat], 1)
-            inner_out = self.top_down_layers[len(self.in_channels) - 1 - idx](
-                top_down_layer_inputs, txt_feats
-            )
+            inner_out = self.top_down_layers[len(self.in_channels) - 1 - idx](top_down_layer_inputs, txt_feats)
             inner_outs.insert(0, inner_out)
 
         # bottom-up path
@@ -147,9 +135,7 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
             feat_low = outs[-1]
             feat_high = inner_outs[idx + 1]
             downsample_feat = self.downsample_layers[idx](feat_low)
-            out = self.bottom_up_layers[idx](
-                torch.cat([downsample_feat, feat_high], 1), txt_feats
-            )
+            out = self.bottom_up_layers[idx](torch.cat([downsample_feat, feat_high], 1), txt_feats)
             outs.append(out)
 
         # out_layers
@@ -225,16 +211,12 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
         for idx in range(len(self.in_channels) - 1, 0, -1):
             feat_high = inner_outs[0]
             feat_low = reduce_outs[idx - 1]
-            upsample_feat = self.upsample_layers[len(self.in_channels) - 1 - idx](
-                feat_high
-            )
+            upsample_feat = self.upsample_layers[len(self.in_channels) - 1 - idx](feat_high)
             if self.upsample_feats_cat_first:
                 top_down_layer_inputs = torch.cat([upsample_feat, feat_low], 1)
             else:
                 top_down_layer_inputs = torch.cat([feat_low, upsample_feat], 1)
-            inner_out = self.top_down_layers[len(self.in_channels) - 1 - idx](
-                top_down_layer_inputs, txt_feats
-            )
+            inner_out = self.top_down_layers[len(self.in_channels) - 1 - idx](top_down_layer_inputs, txt_feats)
             inner_outs.insert(0, inner_out)
 
         txt_feats = self.text_enhancer(txt_feats, inner_outs)
@@ -244,9 +226,7 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
             feat_low = outs[-1]
             feat_high = inner_outs[idx + 1]
             downsample_feat = self.downsample_layers[idx](feat_low)
-            out = self.bottom_up_layers[idx](
-                torch.cat([downsample_feat, feat_high], 1), txt_feats
-            )
+            out = self.bottom_up_layers[idx](torch.cat([downsample_feat, feat_high], 1), txt_feats)
             outs.append(out)
 
         # out_layers

@@ -81,6 +81,7 @@ class TensorDataclass:
 @dataclass
 class TrackObservations(TensorDataclass):
     """Track observations implementation."""
+
     xyz: torch.Tensor
     visibles: torch.Tensor
     invisibles: torch.Tensor
@@ -118,6 +119,7 @@ class TrackObservations(TensorDataclass):
 @dataclass
 class StaticObservations(TensorDataclass):
     """Static observations implementation."""
+
     xyz: torch.Tensor
     normals: torch.Tensor
     colors: torch.Tensor

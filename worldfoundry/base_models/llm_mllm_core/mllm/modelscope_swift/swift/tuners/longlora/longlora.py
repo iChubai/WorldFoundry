@@ -6,13 +6,16 @@ from typing import List, Tuple, Union
 
 import torch.nn as nn
 
-from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners.lora import lora_state_dict, mark_lora_as_trainable
+from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners.lora import (
+    lora_state_dict,
+    mark_lora_as_trainable,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners.lora_layers import LoraModel
 from .. import LoRA, LoRAConfig, SwiftOutput
 
 
 class LongLoRAModelType:
-    LLAMA = 'llama'
+    LLAMA = "llama"
 
 
 @dataclass
@@ -30,22 +33,23 @@ class LongLoRAConfig(LoRAConfig):
     """
 
     embedder_and_normalizer: Union[str, List[str], Tuple[str]] = field(
-        default=('embed', 'norm'),
+        default=("embed", "norm"),
         metadata={
-            'help': 'The names of embedder and normalizer, regex format if is a str, else will match with sub sequences'
-        })
+            "help": "The names of embedder and normalizer, regex format if is a str, else will match with sub sequences"
+        },
+    )
 
-    model_type: str = field(default=None, metadata={'help': 'The model type, now only support `llama` structure.'})
+    model_type: str = field(default=None, metadata={"help": "The model type, now only support `llama` structure."})
 
-    group_size_ratio: float = field(default=0.25, metadata={'help': 'The S2 attention group ratio'})
+    group_size_ratio: float = field(default=0.25, metadata={"help": "The S2 attention group ratio"})
 
     def __post_init__(self):
         from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.tuners.mapping import SwiftTuners
+
         self.swift_type = SwiftTuners.LONGLORA
 
 
 class LongLoRA(LoRA):
-
     @staticmethod
     def prepare_model(model: nn.Module, config: LongLoRAConfig, adapter_name: str):
         """Prepare a model with `LongLoRAConfig`"""
@@ -68,16 +72,19 @@ class LongLoRA(LoRA):
 
         if config.model_type == LongLoRAModelType.LLAMA:
             from .llama import replace_llama_attn
+
             replace_llama_attn(model)
             # only support code base from transformers
             model.config.group_size_ratio = config.group_size_ratio
 
         return SwiftOutput(
-            config=config, state_dict_callback=state_dict_callback, mark_trainable_callback=mark_trainable_callback)
+            config=config, state_dict_callback=state_dict_callback, mark_trainable_callback=mark_trainable_callback
+        )
 
 
-def mark_embedding_normalizer_as_trainable(model: nn.Module, extra_parameters: Union[str, List[str],
-                                                                                     Tuple[str]]) -> None:
+def mark_embedding_normalizer_as_trainable(
+    model: nn.Module, extra_parameters: Union[str, List[str], Tuple[str]]
+) -> None:
     for name, sub_module in model.named_parameters():
         if isinstance(extra_parameters, str):
             target_module_found = re.fullmatch(extra_parameters, name)

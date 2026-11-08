@@ -71,6 +71,7 @@ def get_sha():
 
 class CosineScheduler(object):
     """Cosine scheduler implementation."""
+
     def __init__(self, base_value, final_value, total_iters, warmup_iters=0, start_warmup_value=0, freeze_iters=0):
         """Init.
 
@@ -106,4 +107,3 @@ class CosineScheduler(object):
             return self.final_value
         else:
             return self.schedule[it]
-

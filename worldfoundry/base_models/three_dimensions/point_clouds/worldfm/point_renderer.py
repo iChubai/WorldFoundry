@@ -13,13 +13,13 @@ import torch
 
 @dataclass(frozen=True)
 class RenderOutput:
-    rgb_u8: np.ndarray       # (H,W,3) uint8
-    depth_f32: np.ndarray    # (H,W) float32, 0 = invalid
+    rgb_u8: np.ndarray  # (H,W,3) uint8
+    depth_f32: np.ndarray  # (H,W) float32, 0 = invalid
 
 
 @dataclass(frozen=True)
 class RenderOutputTorch:
-    rgb_u8: torch.Tensor     # (H,W,3) uint8 on device
+    rgb_u8: torch.Tensor  # (H,W,3) uint8 on device
     depth_f32: torch.Tensor  # (H,W) float32 on device
 
 
@@ -127,8 +127,11 @@ class TorchPointCloudRenderer:
             if not parts_xyz:
                 z_img = torch.zeros((self.height, self.width, 3), device=self.device, dtype=torch.uint8)
                 z_d = torch.zeros((self.height, self.width), device=self.device, dtype=torch.float32)
-                return RenderOutputTorch(rgb_u8=z_img, depth_f32=z_d) if return_torch else RenderOutput(
-                    rgb_u8=z_img.cpu().numpy(), depth_f32=z_d.cpu().numpy())
+                return (
+                    RenderOutputTorch(rgb_u8=z_img, depth_f32=z_d)
+                    if return_torch
+                    else RenderOutput(rgb_u8=z_img.cpu().numpy(), depth_f32=z_d.cpu().numpy())
+                )
             xyz = parts_xyz[0] if len(parts_xyz) == 1 else torch.cat(parts_xyz)
             rgb0 = parts_rgb[0] if len(parts_rgb) == 1 else torch.cat(parts_rgb)
 
@@ -200,9 +203,11 @@ class TorchPointCloudRenderer:
         point_ranges: Optional[Sequence[Tuple[int, int]]] = None,
     ) -> RenderOutputTorch:
         out = self.render(
-            K_3x3=K_3x3, c2w_4x4=c2w_4x4,
+            K_3x3=K_3x3,
+            c2w_4x4=c2w_4x4,
             c2w_is_camera_to_world=c2w_is_camera_to_world,
-            return_torch=True, point_ranges=point_ranges,
+            return_torch=True,
+            point_ranges=point_ranges,
         )
         assert isinstance(out, RenderOutputTorch)
         return out

@@ -33,9 +33,7 @@ def sample_box_points(
     device = masks.device
     box_coords = mask_to_box(masks)
     B, _, H, W = masks.shape
-    box_labels = torch.tensor(
-        [top_left_label, bottom_right_label], dtype=torch.int, device=device
-    ).repeat(B)
+    box_labels = torch.tensor([top_left_label, bottom_right_label], dtype=torch.int, device=device).repeat(B)
     if noise > 0.0:
         if not isinstance(noise_bound, torch.Tensor):
             noise_bound = torch.tensor(noise_bound, device=device)
@@ -47,9 +45,7 @@ def sample_box_points(
         box_noise = box_noise * torch.stack((max_dx, max_dy, max_dx, max_dy), dim=-1)
 
         box_coords = box_coords + box_noise
-        img_bounds = (
-            torch.tensor([W, H, W, H], device=device) - 1
-        )  # uncentered pixel coords
+        img_bounds = torch.tensor([W, H, W, H], device=device) - 1  # uncentered pixel coords
         box_coords.clamp_(torch.zeros_like(img_bounds), img_bounds)  # In place clamping
 
     box_coords = box_coords.reshape(-1, 2, 2)  # always 2 points
@@ -80,9 +76,7 @@ def mask_to_box(masks: torch.Tensor):
     min_ys, _ = torch.min(torch.where(masks, grid_ys, h).flatten(-2), dim=-1)
     max_ys, _ = torch.max(torch.where(masks, grid_ys, -1).flatten(-2), dim=-1)
     bbox_coords = torch.stack((min_xs, min_ys, max_xs, max_ys), dim=-1)
-    bbox_coords = torch.where(
-        mask_area[..., None] > 0, bbox_coords, torch.zeros_like(bbox_coords)
-    )
+    bbox_coords = torch.where(mask_area[..., None] > 0, bbox_coords, torch.zeros_like(bbox_coords))
     return bbox_coords
 
 
@@ -166,13 +160,9 @@ def sample_one_point_from_error_center(gt_masks, pred_masks, padding=True):
     fn_masks = (gt_masks & ~pred_masks).squeeze(1)
 
     if padding:
-        padded_fp_masks = torch.zeros(
-            B, H + 2, W + 2, dtype=fp_masks.dtype, device=fp_masks.device
-        )
+        padded_fp_masks = torch.zeros(B, H + 2, W + 2, dtype=fp_masks.dtype, device=fp_masks.device)
         padded_fp_masks[:, 1 : H + 1, 1 : W + 1] = fp_masks
-        padded_fn_masks = torch.zeros(
-            B, H + 2, W + 2, dtype=fp_masks.dtype, device=fp_masks.device
-        )
+        padded_fn_masks = torch.zeros(B, H + 2, W + 2, dtype=fp_masks.dtype, device=fp_masks.device)
         padded_fn_masks[:, 1 : H + 1, 1 : W + 1] = fn_masks
     else:
         padded_fp_masks = fp_masks
@@ -277,9 +267,7 @@ def get_next_point(gt_masks, pred_masks, method):
         raise ValueError(f"unknown sampling method {method}")
 
 
-def select_closest_cond_frames(
-    frame_idx, cond_frame_outputs, max_cond_frame_num, keep_first_cond_frame=False
-):
+def select_closest_cond_frames(frame_idx, cond_frame_outputs, max_cond_frame_num, keep_first_cond_frame=False):
     """
     Select up to `max_cond_frame_num` conditioning frames from `cond_frame_outputs`
     that are temporally closest to the current frame at `frame_idx`. Here, we take
@@ -299,14 +287,10 @@ def select_closest_cond_frames(
         assert max_cond_frame_num >= 2, "we should allow using 2+ conditioning frames"
         selected_outputs = {}
         if keep_first_cond_frame:
-            idx_first = min(
-                (t for t in cond_frame_outputs if t < frame_idx), default=None
-            )
+            idx_first = min((t for t in cond_frame_outputs if t < frame_idx), default=None)
             if idx_first is None:
                 # Maybe we are tracking in reverse
-                idx_first = max(
-                    (t for t in cond_frame_outputs if t > frame_idx), default=None
-                )
+                idx_first = max((t for t in cond_frame_outputs if t > frame_idx), default=None)
             if idx_first is not None:
                 selected_outputs[idx_first] = cond_frame_outputs[idx_first]
         # the closest conditioning frame before `frame_idx` (if any)
@@ -327,9 +311,7 @@ def select_closest_cond_frames(
             key=lambda x: abs(x - frame_idx),
         )[:num_remain]
         selected_outputs.update((t, cond_frame_outputs[t]) for t in inds_remain)
-        unselected_outputs = {
-            t: v for t, v in cond_frame_outputs.items() if t not in selected_outputs
-        }
+        unselected_outputs = {t: v for t, v in cond_frame_outputs.items() if t not in selected_outputs}
 
     return selected_outputs, unselected_outputs
 

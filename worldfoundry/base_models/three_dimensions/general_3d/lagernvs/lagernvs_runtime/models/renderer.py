@@ -25,6 +25,7 @@ from models.layers.renderer_blocks import (
 
 class Renderer(nn.Module):
     """Renderer implementation."""
+
     def __init__(
         self,
         depth,
@@ -63,21 +64,13 @@ class Renderer(nn.Module):
 
         self.attention_to_features_type = attention_to_features_type
         if attention_to_features_type == "cross_attention":
-            self.renderer_core = CrossAttentionRendererCore(
-                hidden_size, num_heads, depth
-            )
+            self.renderer_core = CrossAttentionRendererCore(hidden_size, num_heads, depth)
         elif attention_to_features_type == "bidirectional_cross_attention":
-            self.renderer_core = BidirectionalCrossAttentionRendererCore(
-                hidden_size, num_heads, depth
-            )
+            self.renderer_core = BidirectionalCrossAttentionRendererCore(hidden_size, num_heads, depth)
         elif attention_to_features_type == "full_attention":
-            self.renderer_core = FullAttentionRendererCore(
-                hidden_size, num_heads, depth
-            )
+            self.renderer_core = FullAttentionRendererCore(hidden_size, num_heads, depth)
         else:
-            raise ValueError(
-                f"Unknown attention_to_features_type {attention_to_features_type}"
-            )
+            raise ValueError(f"Unknown attention_to_features_type {attention_to_features_type}")
         self.patch_start_idx = self.n_registers
 
         self.final_layer = FinalLayer(
@@ -117,9 +110,7 @@ class Renderer(nn.Module):
         target_tokens = self.tgt_embedder(target_rays)
         target_tokens = self.tgt_norm(target_tokens)
 
-        register_tokens_target = einops.repeat(
-            self.per_view_register_tokens, "n p c -> (n b1) p c", b1=b * v_target
-        )
+        register_tokens_target = einops.repeat(self.per_view_register_tokens, "n p c -> (n b1) p c", b1=b * v_target)
 
         x = torch.cat([register_tokens_target, target_tokens], dim=1)
 
@@ -259,10 +250,7 @@ class FullAttentionRendererCore(nn.Module):
         super().__init__()
         self.depth = depth
         self.renderer_blocks = nn.ModuleList(
-            [
-                FullAttentionBlock(hidden_dim=hidden_size, num_heads=num_heads)
-                for _ in range(self.depth)
-            ]
+            [FullAttentionBlock(hidden_dim=hidden_size, num_heads=num_heads) for _ in range(self.depth)]
         )
 
     def forward(self, x, rec_tokens):

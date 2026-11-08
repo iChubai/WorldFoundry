@@ -66,12 +66,11 @@ def get_lookat_w2cs(positions: torch.Tensor, lookat: torch.Tensor, up: torch.Ten
     """
     forward_vectors = F.normalize(lookat - positions, dim=-1)
     right_vectors = F.normalize(torch.cross(forward_vectors, up[None], dim=-1), dim=-1)
-    down_vectors = F.normalize(
-        torch.cross(forward_vectors, right_vectors, dim=-1), dim=-1
-    )
+    down_vectors = F.normalize(torch.cross(forward_vectors, right_vectors, dim=-1), dim=-1)
     Rs = torch.stack([right_vectors, down_vectors, forward_vectors], dim=-1)
     w2cs = torch.linalg.inv(rt_to_mat4(Rs, positions))
     return w2cs
+
 
 def get_complex_w2cs(
     ref_w2c: torch.Tensor,
@@ -91,10 +90,10 @@ def get_complex_w2cs(
     Returns:
         The return value.
     """
-    
+
     def linear_interpolate_camera(
-        cam1: torch.Tensor, 
-        cam2: torch.Tensor, 
+        cam1: torch.Tensor,
+        cam2: torch.Tensor,
         nframes: int,
     ) -> torch.Tensor:
         """Linear interpolate camera.
@@ -112,31 +111,31 @@ def get_complex_w2cs(
             interp_pos = cam1 * (nframes - i) / nframes + cam2 * (i / nframes)
             out_pos.append(interp_pos)
         return out_pos
-    
+
     ref_position = torch.linalg.inv(ref_w2c)[:3, 3]
-    
+
     # Define zoom in/out radius, use DGM's default radius for now
     radius = 0.05
-    
+
     positions = []
-    
+
     # First zoom in
     zoomed_in_camera = ref_position.clone()
     zoomed_in_camera[1] += radius
     positions += linear_interpolate_camera(ref_position, zoomed_in_camera, 10)
     positions += linear_interpolate_camera(zoomed_in_camera, ref_position, 10)
-    
+
     # Then zoom out
     zoomed_out_camera = ref_position.clone()
     zoomed_out_camera[1] -= radius
     positions += linear_interpolate_camera(ref_position, zoomed_out_camera, 10)
     positions += linear_interpolate_camera(zoomed_out_camera, ref_position, 10)
-    
+
     # Then move camera right quickly
     move_right_camera = ref_position.clone()
     move_right_camera[0] += radius
     positions += linear_interpolate_camera(ref_position, move_right_camera, 5)
-    
+
     # Next spiral camera
     spiral_frames = 20
     for i in range(spiral_frames):
@@ -145,14 +144,15 @@ def get_complex_w2cs(
         spiral_camera[0] += radius * np.cos(angle)
         spiral_camera[2] += radius * np.sin(angle)
         positions.append(spiral_camera)
-    
+
     # move camera back to center
     positions += linear_interpolate_camera(move_right_camera, ref_position, 5)
     positions = torch.stack(positions)
-    
+
     lookat = -ref_w2c[:3, 2]
-    
+
     return get_lookat_w2cs(positions, lookat, up)
+
 
 def get_arc_w2cs(
     ref_w2c: torch.Tensor,
@@ -176,11 +176,7 @@ def get_arc_w2cs(
     """
     ref_position = torch.linalg.inv(ref_w2c)[:3, 3]
     thetas = (
-        torch.sin(
-            torch.linspace(0.0, torch.pi * 2.0, num_frames + 1, device=ref_w2c.device)[
-                :-1
-            ]
-        )
+        torch.sin(torch.linspace(0.0, torch.pi * 2.0, num_frames + 1, device=ref_w2c.device)[:-1])
         * (degree / 2.0)
         / 180.0
         * torch.pi
@@ -218,10 +214,7 @@ def get_lemniscate_w2cs(
     ref_c2w = torch.linalg.inv(ref_w2c)
     a = torch.linalg.norm(ref_c2w[:3, 3] - lookat) * np.tan(degree / 360 * np.pi)
     # Lemniscate curve in camera space. Starting at the origin.
-    thetas = (
-        torch.linspace(0, 2 * torch.pi, num_frames + 1, device=ref_w2c.device)[:-1]
-        + torch.pi / 2
-    )
+    thetas = torch.linspace(0, 2 * torch.pi, num_frames + 1, device=ref_w2c.device)[:-1] + torch.pi / 2
     positions = torch.stack(
         [
             a * torch.cos(thetas) / (1 + torch.sin(thetas) ** 2),
@@ -231,9 +224,7 @@ def get_lemniscate_w2cs(
         dim=-1,
     )
     # Transform to world space.
-    positions = torch.einsum(
-        "ij,nj->ni", ref_c2w[:3], F.pad(positions, (0, 1), value=1.0)
-    )
+    positions = torch.einsum("ij,nj->ni", ref_c2w[:3], F.pad(positions, (0, 1), value=1.0))
     return get_lookat_w2cs(positions, lookat, up)
 
 
@@ -262,9 +253,7 @@ def get_spiral_w2cs(
         The return value.
     """
     ref_c2w = torch.linalg.inv(ref_w2c)
-    thetas = torch.linspace(
-        0, 2 * torch.pi * rots, num_frames + 1, device=ref_w2c.device
-    )[:-1]
+    thetas = torch.linspace(0, 2 * torch.pi * rots, num_frames + 1, device=ref_w2c.device)[:-1]
     # Spiral curve in camera space. Starting at the origin.
     if isinstance(rads, torch.Tensor):
         rads = rads.reshape(-1, 3).to(ref_w2c.device)
@@ -280,9 +269,7 @@ def get_spiral_w2cs(
         * rads
     )
     # Transform to world space.
-    positions = torch.einsum(
-        "ij,nj->ni", ref_c2w[:3], F.pad(positions, (0, 1), value=1.0)
-    )
+    positions = torch.einsum("ij,nj->ni", ref_c2w[:3], F.pad(positions, (0, 1), value=1.0))
 
     return get_lookat_w2cs(positions, lookat, up)
 
@@ -323,9 +310,7 @@ def get_wander_w2cs(ref_w2c, focal_length, num_frames, **_):
 
         i_pose = np.linalg.inv(i_pose)
 
-        ref_pose = np.concatenate(
-            [c2w[:3, :4], np.array([0.0, 0.0, 0.0, 1.0])[np.newaxis, :]], axis=0
-        )
+        ref_pose = np.concatenate([c2w[:3, :4], np.array([0.0, 0.0, 0.0, 1.0])[np.newaxis, :]], axis=0)
 
         render_pose = np.dot(ref_pose, i_pose)
         output_poses.append(render_pose)

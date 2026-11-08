@@ -29,9 +29,7 @@ class FinalLayer(nn.Module):
         """
         super().__init__()
         self.norm_final = nn.LayerNorm(hidden_size, bias=False)
-        self.linear = nn.Linear(
-            hidden_size, patch_size * patch_size * out_channels, bias=False
-        )
+        self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels, bias=False)
 
     def forward(self, x):
         """Forward.

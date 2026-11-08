@@ -58,10 +58,7 @@ def _unwrap_state_dict(checkpoint: Any) -> Dict[str, torch.Tensor]:
             checkpoint = checkpoint["state_dict"]
     if not isinstance(checkpoint, dict):
         raise TypeError(f"Unsupported checkpoint payload type: {type(checkpoint)!r}")
-    return {
-        (key[7:] if key.startswith("module.") else key): value
-        for key, value in checkpoint.items()
-    }
+    return {(key[7:] if key.startswith("module.") else key): value for key, value in checkpoint.items()}
 
 
 def _infer_encoder_from_state_dict(state_dict: Dict[str, torch.Tensor]) -> Optional[str]:
@@ -191,8 +188,7 @@ class DepthAnything2Representation:
 
         if all(f"depth_head.projects.{idx}.weight" in state_dict for idx in range(4)):
             model_config["out_channels"] = [
-                int(state_dict[f"depth_head.projects.{idx}.weight"].shape[0])
-                for idx in range(4)
+                int(state_dict[f"depth_head.projects.{idx}.weight"].shape[0]) for idx in range(4)
             ]
 
         model = DepthAnythingV2(**model_config)

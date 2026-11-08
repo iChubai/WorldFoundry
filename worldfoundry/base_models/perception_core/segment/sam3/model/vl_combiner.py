@@ -38,9 +38,7 @@ class SAM3VLBackbone(nn.Module):
         :param text: The text encoder to use
         """
         super().__init__()
-        self.vision_backbone: Sam3DualViTDetNeck = (
-            torch.compile(visual) if compile_visual else visual
-        )
+        self.vision_backbone: Sam3DualViTDetNeck = torch.compile(visual) if compile_visual else visual
         self.language_backbone = text
         self.scalp = scalp
         # allow running activation checkpointing on the entire vision and language backbones
@@ -95,9 +93,7 @@ class SAM3VLBackbone(nn.Module):
             samples: The samples.
         """
         # Forward through backbone
-        sam3_features, sam3_pos, sam2_features, sam2_pos = self.vision_backbone.forward(
-            samples
-        )
+        sam3_features, sam3_pos, sam2_features, sam2_pos = self.vision_backbone.forward(samples)
         if self.scalp > 0:
             # Discard the lowest resolution features
             sam3_features, sam3_pos = (
@@ -130,9 +126,7 @@ class SAM3VLBackbone(nn.Module):
 
         return output
 
-    def forward_text(
-        self, captions, input_boxes=None, additional_text=None, device="cuda"
-    ):
+    def forward_text(self, captions, input_boxes=None, additional_text=None, device="cuda"):
         """Forward text.
 
         Args:
@@ -180,18 +174,14 @@ class SAM3VLBackbone(nn.Module):
 
         if additional_text is not None:
             output["additional_text_features"] = text_memory[:, -len(additional_text) :]
-            output["additional_text_mask"] = text_attention_mask[
-                -len(additional_text) :
-            ]
+            output["additional_text_mask"] = text_attention_mask[-len(additional_text) :]
 
         text_memory = text_memory[:, : len(captions)]
         text_attention_mask = text_attention_mask[: len(captions)]
         text_embeds = text_embeds[:, : len(captions)]
         output["language_features"] = text_memory
         output["language_mask"] = text_attention_mask
-        output["language_embeds"] = (
-            text_embeds  # Text embeddings before forward to the encoder
-        )
+        output["language_embeds"] = text_embeds  # Text embeddings before forward to the encoder
 
         return output
 
@@ -208,9 +198,7 @@ class SAM3VLBackboneTri(SAM3VLBackbone):
             compile_visual: The compile visual.
             scalp: The scalp.
         """
-        super().__init__(
-            visual=visual, text=text, compile_visual=compile_visual, scalp=scalp
-        )
+        super().__init__(visual=visual, text=text, compile_visual=compile_visual, scalp=scalp)
         assert isinstance(self.vision_backbone, Sam3TriViTDetNeck), (
             f"Expected vision backbone to be of type Sam3TriViTDetNeck, got {type(self.vision_backbone)}"
         )
@@ -310,6 +298,7 @@ class SAM3VLBackboneTri(SAM3VLBackbone):
 
 class VisionOnly(nn.Module):
     """Vision only implementation."""
+
     def __init__(
         self,
         visual,
@@ -402,6 +391,7 @@ class VisionOnly(nn.Module):
 
 class TriHeadVisionOnly(VisionOnly):
     """Tri head vision only implementation."""
+
     def __init__(
         self,
         visual,

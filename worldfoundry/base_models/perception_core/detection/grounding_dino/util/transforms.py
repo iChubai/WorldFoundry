@@ -62,13 +62,9 @@ def resize(image, target, size: int | Sequence[int], max_size: int | None = None
         return resized, None
 
     target = target.copy()
-    ratio_width, ratio_height = (
-        float(new) / float(old) for new, old in zip(resized.size, image.size)
-    )
+    ratio_width, ratio_height = (float(new) / float(old) for new, old in zip(resized.size, image.size))
     if "boxes" in target:
-        target["boxes"] = target["boxes"] * torch.as_tensor(
-            [ratio_width, ratio_height, ratio_width, ratio_height]
-        )
+        target["boxes"] = target["boxes"] * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
     if "area" in target:
         target["area"] = target["area"] * (ratio_width * ratio_height)
     target["size"] = torch.tensor(resolved_size)
@@ -77,6 +73,7 @@ def resize(image, target, size: int | Sequence[int], max_size: int | None = None
 
 class RandomResize:
     """Random resize implementation."""
+
     def __init__(self, sizes: Sequence[int], max_size: int | None = None) -> None:
         """Init.
 
@@ -102,6 +99,7 @@ class RandomResize:
 
 class ToTensor:
     """To tensor implementation."""
+
     def __call__(self, image, target):
         """Call.
 
@@ -114,6 +112,7 @@ class ToTensor:
 
 class Normalize:
     """Normalize implementation."""
+
     def __init__(self, mean: Sequence[float], std: Sequence[float]) -> None:
         """Init.
 
@@ -151,6 +150,7 @@ class Normalize:
 
 class Compose:
     """Compose implementation."""
+
     def __init__(self, transforms) -> None:
         """Init.
 

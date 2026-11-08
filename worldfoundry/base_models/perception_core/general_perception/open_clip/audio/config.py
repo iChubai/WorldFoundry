@@ -6,6 +6,7 @@ from dataclasses import dataclass
 @dataclass
 class CLIPAudioCfg:
     """Clip audio cfg implementation."""
+
     model_type: str = "HTSAT"
     model_name: str = "tiny"
     audio_length: int = 1024

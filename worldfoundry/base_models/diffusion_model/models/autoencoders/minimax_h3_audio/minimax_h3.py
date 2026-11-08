@@ -24,6 +24,7 @@ class MiniMaxH3AudioVAE(DacAudioVAE):
     # forward hooks (BigVGAN keeps each executable upsampler in a one-element
     # ModuleList), retained here only as informational metadata.
     """Encode/decode MiniMax H3 audio with published latent statistics."""
+
     layer_names = [
         "encoder.block",
         *(f"decoder.ups.{index}" for index in range(7)),

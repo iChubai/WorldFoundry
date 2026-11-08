@@ -4,6 +4,7 @@ Misc functions, including distributed helpers.
 
 Mostly copy-paste from torchvision references.
 """
+
 import colorsys
 import datetime
 import functools
@@ -263,6 +264,7 @@ def reduce_dict(input_dict, average=True):
 
 class MetricLogger(object):
     """Metric logger implementation."""
+
     def __init__(self, delimiter="\t"):
         """Init.
 
@@ -397,11 +399,7 @@ class MetricLogger(object):
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print_func(
-            "{} Total time: {} ({:.4f} s / it)".format(
-                header, total_time_str, total_time / len(iterable)
-            )
-        )
+        print_func("{} Total time: {} ({:.4f} s / it)".format(header, total_time_str, total_time / len(iterable)))
 
 
 def get_sha():
@@ -459,6 +457,7 @@ def _max_by_axis(the_list):
 
 class NestedTensor(object):
     """Nested tensor implementation."""
+
     def __init__(self, tensors, mask: Optional[Tensor]):
         """Init.
 
@@ -475,11 +474,7 @@ class NestedTensor(object):
             elif self.mask.dim() == 4:
                 self.mask = self.mask.sum(1).to(bool)
             else:
-                raise ValueError(
-                    "tensors dim must be 3 or 4 but {}({})".format(
-                        self.tensors.dim(), self.tensors.shape
-                    )
-                )
+                raise ValueError("tensors dim must be 3 or 4 but {}({})".format(self.tensors.dim(), self.tensors.shape))
 
     def imgsize(self):
         """Imgsize."""
@@ -599,9 +594,7 @@ def _onnx_nested_tensor_from_tensor_list(tensor_list: List[Tensor]) -> NestedTen
     """
     max_size = []
     for i in range(tensor_list[0].dim()):
-        max_size_i = torch.max(
-            torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)
-        ).to(torch.int64)
+        max_size_i = torch.max(torch.stack([img.shape[i] for img in tensor_list]).to(torch.float32)).to(torch.int64)
         max_size.append(max_size_i)
     max_size = tuple(max_size)
 
@@ -699,11 +692,7 @@ def init_distributed_mode(args):
         # args.world_size = args.world_size * local_world_size
         # args.gpu = args.local_rank = int(os.environ['LOCAL_RANK'])
         # args.rank = args.rank * local_world_size + args.local_rank
-        print(
-            "world size: {}, rank: {}, local rank: {}".format(
-                args.world_size, args.rank, args.local_rank
-            )
-        )
+        print("world size: {}, rank: {}, local rank: {}".format(args.world_size, args.rank, args.local_rank))
     elif "SLURM_PROCID" in os.environ:
         args.rank = int(os.environ["SLURM_PROCID"])
         args.gpu = args.local_rank = int(os.environ["SLURM_LOCALID"])
@@ -793,6 +782,7 @@ def interpolate(input, size=None, scale_factor=None, mode="nearest", align_corne
 
 class color_sys:
     """Color sys implementation."""
+
     def __init__(self, num_colors) -> None:
         """Init.
 
@@ -808,9 +798,7 @@ class color_sys:
             hue = i / 360.0
             lightness = (50 + np.random.rand() * 10) / 100.0
             saturation = (90 + np.random.rand() * 10) / 100.0
-            colors.append(
-                tuple([int(j * 255) for j in colorsys.hls_to_rgb(hue, lightness, saturation)])
-            )
+            colors.append(tuple([int(j * 255) for j in colorsys.hls_to_rgb(hue, lightness, saturation)]))
         self.colors = colors
 
     def __call__(self, idx):
@@ -863,7 +851,7 @@ def get_phrases_from_posmap(
 
     assert isinstance(posmap, torch.Tensor), "posmap must be torch.Tensor"
     if posmap.dim() == 1:
-        posmap[0: left_idx + 1] = False
+        posmap[0 : left_idx + 1] = False
         posmap[right_idx:] = False
         non_zero_idx = posmap.nonzero(as_tuple=True)[0].tolist()
         token_ids = [tokenized["input_ids"][i] for i in non_zero_idx]

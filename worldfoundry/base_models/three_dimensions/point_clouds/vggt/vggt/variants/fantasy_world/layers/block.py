@@ -18,10 +18,9 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 XFORMERS_AVAILABLE = False
 
 
-
-
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -96,7 +95,7 @@ class Block(nn.Module):
 
         self.sample_drop_ratio = drop_path
 
-    def attn_residual_func(self,x: Tensor, pos=None, e = None) -> Tensor:
+    def attn_residual_func(self, x: Tensor, pos=None, e=None) -> Tensor:
         """Attn residual func.
 
         Args:
@@ -111,7 +110,7 @@ class Block(nn.Module):
             return self.ls1(self.attn(self.norm1(x), pos=pos))
         return self.ls1(self.attn(self.norm1(x) * (1 + e[1]) + e[0], pos=pos))
 
-    def ffn_residual_func(self,x: Tensor, e = None) -> Tensor:
+    def ffn_residual_func(self, x: Tensor, e=None) -> Tensor:
         """Ffn residual func.
 
         Args:
@@ -121,14 +120,18 @@ class Block(nn.Module):
         Returns:
             The return value.
         """
-        if e is None: 
-            return self.ls2(self.mlp(self.norm2(x)))       
-        return self.ls2(self.mlp(self.norm2(x)) * (1 + e[4])+ e[3]) * e[5]   
+        if e is None:
+            return self.ls2(self.mlp(self.norm2(x)))
+        return self.ls2(self.mlp(self.norm2(x)) * (1 + e[4]) + e[3]) * e[5]
+
     def forward(
-        self, x: Tensor, pos=None, e0=None,
+        self,
+        x: Tensor,
+        pos=None,
+        e0=None,
         return_partial: bool = False,
-        run_remaining:  bool = False,
-        modifiers:      tuple | None = None,   # e_mod
+        run_remaining: bool = False,
+        modifiers: tuple | None = None,  # e_mod
     ) -> Tensor | tuple[Tensor, tuple]:
         """Forward.
 
@@ -164,10 +167,10 @@ class Block(nn.Module):
 
         x = x + self.attn_residual_func(x, pos=pos, e=e_mod)
 
-        if return_partial:                 
+        if return_partial:
             return x, e_mod
 
-        if modifiers is not None:            
+        if modifiers is not None:
             e_mod = modifiers
 
         x = x + self.ffn_residual_func(x, e=e_mod)
@@ -184,9 +187,8 @@ class Block(nn.Module):
             x: The x.
             e: The e.
         """
-        return self.forward(x,
-                            run_remaining=True,
-                            modifiers=e)
+        return self.forward(x, run_remaining=True, modifiers=e)
+
 
 def drop_add_residual_stochastic_depth(
     x: Tensor, residual_func: Callable[[Tensor], Tensor], sample_drop_ratio: float = 0.0, pos=None
@@ -224,8 +226,6 @@ def drop_add_residual_stochastic_depth(
     # 3) add the residual
     x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
     return x_plus_residual.view_as(x)
-
-
 
 
 def get_branges_scales(x, sample_drop_ratio=0.0):
@@ -326,6 +326,7 @@ def drop_add_residual_stochastic_depth_list(
 
 class NestedTensorBlock(Block):
     """Nested tensor block implementation."""
+
     def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
@@ -417,8 +418,10 @@ class NestedTensorBlock(Block):
         else:
             raise AssertionError
 
+
 class CamTokenProjector(nn.Module):
     """Cam token projector implementation."""
+
     def __init__(self, out_dim: int, hidden: int = 128):
         """Init.
 
@@ -428,11 +431,7 @@ class CamTokenProjector(nn.Module):
         """
         super().__init__()
         self.out_dim = out_dim
-        self.mlp = nn.Sequential(
-            nn.Linear(36, hidden),
-            nn.GELU(),
-            nn.Linear(hidden, out_dim)
-        )
+        self.mlp = nn.Sequential(nn.Linear(36, hidden), nn.GELU(), nn.Linear(hidden, out_dim))
 
     def forward(self, cam: torch.Tensor) -> torch.Tensor:
         """Forward.
@@ -445,13 +444,13 @@ class CamTokenProjector(nn.Module):
         """
         B, V_in, _ = cam.shape
         repeat = 3
-        pad = cam[:, :1, :].repeat(1, repeat, 1)  
+        pad = cam[:, :1, :].repeat(1, repeat, 1)
         cam = torch.cat([cam, pad], dim=1)
-        V_pad = cam.size(1)  
+        V_pad = cam.size(1)
         cam = cam.view(B, V_pad // 4, 4, 9).reshape(B, V_pad // 4, 36)
 
-        cam = cam.flatten(0, 1)         
-        cam = self.mlp(cam).view(-1, 1, self.out_dim )      
+        cam = cam.flatten(0, 1)
+        cam = self.mlp(cam).view(-1, 1, self.out_dim)
 
         return cam
 
@@ -459,10 +458,12 @@ class CamTokenProjector(nn.Module):
 class Projection_Head(nn.Module):
     """Projection head implementation."""
 
-    def __init__(self,
-                 mode: str = "conv",
-                 in_channels: int = 5120,
-                 out_channels: int = 1024,):
+    def __init__(
+        self,
+        mode: str = "conv",
+        in_channels: int = 5120,
+        out_channels: int = 1024,
+    ):
         """Init.
 
         Args:
@@ -475,8 +476,7 @@ class Projection_Head(nn.Module):
         self.mode = mode
 
         if mode == "conv":
-            self.proj = nn.Conv3d(in_channels, out_channels,
-                                  kernel_size=1, stride=1, padding=0, bias=False)
+            self.proj = nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
         else:
             self.proj = nn.Linear(in_channels, out_channels, bias=False)
 
@@ -495,10 +495,10 @@ class Projection_Head(nn.Module):
         if self.mode == "conv":
             x = x.permute(0, 4, 1, 2, 3).contiguous()
             x = self.proj(x)
-            x = x.permute(0, 2, 3, 4, 1).contiguous()   
+            x = x.permute(0, 2, 3, 4, 1).contiguous()
         else:  # linear
             B, T, H, W, C_in = x.shape
-            x = self.proj(x.view(B * T * H * W, C_in))   
+            x = self.proj(x.view(B * T * H * W, C_in))
             x = x.view(B, T, H, W, -1)
 
         B, T, H, W, C = x.shape

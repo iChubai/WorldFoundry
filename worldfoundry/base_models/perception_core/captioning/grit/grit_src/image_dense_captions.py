@@ -17,7 +17,7 @@ import sys
 
 from worldfoundry.core.io.filesystem.disk import default_worldfoundry_cache_dir
 
-sys.path.append(os.path.join(CUR_DIR, './centernet2/'))
+sys.path.append(os.path.join(CUR_DIR, "./centernet2/"))
 from centernet.config import add_centernet_config
 
 from .grit.config import add_grit_config
@@ -46,19 +46,24 @@ class ObjDescription:
     def __repr__(self):
         return "ObjDescription({})".format(self.data)
 
+
 def dense_pred_to_caption(predictions):
     boxes = predictions["instances"].pred_boxes if predictions["instances"].has("pred_boxes") else None
     object_description = predictions["instances"].pred_object_descriptions.data
     new_caption = ""
     for i in range(len(object_description)):
-        new_caption += (object_description[i] + ": " + str([int(a) for a in boxes[i].tensor.cpu().detach().numpy()[0]])) + "; "
+        new_caption += (
+            object_description[i] + ": " + str([int(a) for a in boxes[i].tensor.cpu().detach().numpy()[0]])
+        ) + "; "
     return new_caption
+
 
 def dense_pred_to_caption_only_name(predictions):
     object_description = predictions["instances"].pred_object_descriptions.data
     new_caption = ",".join(object_description)
     del predictions
     return new_caption
+
 
 def dense_pred_to_caption_tuple(predictions):
     boxes = predictions["instances"].pred_boxes if predictions["instances"].has("pred_boxes") else None
@@ -67,13 +72,16 @@ def dense_pred_to_caption_tuple(predictions):
     new_caption = []
     for i in range(len(object_description)):
         # new_caption += (object_description[i] + ": " + str([int(a) for a in boxes[i].tensor.cpu().detach().numpy()[0]])) + "; "
-        new_caption.append((object_description[i], [int(a) for a in boxes[i].tensor.cpu().detach().numpy()[0]], object_type))
+        new_caption.append(
+            (object_description[i], [int(a) for a in boxes[i].tensor.cpu().detach().numpy()[0]], object_type)
+        )
     return new_caption
+
 
 def setup_cfg(args):
     cfg = get_cfg()
     if args["cpu"]:
-        cfg.MODEL.DEVICE="cpu"
+        cfg.MODEL.DEVICE = "cpu"
     add_centernet_config(cfg)
     add_grit_config(cfg)
     cfg.merge_from_file(args["config_file"])
@@ -91,17 +99,28 @@ def setup_cfg(args):
 
 
 def _default_model_weight():
-    cache_dir = Path(os.environ.get("WORLDFOUNDRY_VBENCH_CACHE_DIR", "")) if os.environ.get("WORLDFOUNDRY_VBENCH_CACHE_DIR") else default_worldfoundry_cache_dir() / "models" / "vbench"
+    cache_dir = (
+        Path(os.environ.get("WORLDFOUNDRY_VBENCH_CACHE_DIR", ""))
+        if os.environ.get("WORLDFOUNDRY_VBENCH_CACHE_DIR")
+        else default_worldfoundry_cache_dir() / "models" / "vbench"
+    )
     return str(cache_dir / "grit_model" / "grit_b_densecap_objectdet.pth")
 
 
 def get_parser(device, model_weight=None):
     if model_weight is None:
         model_weight = _default_model_weight()
-    arg_dict = {'config_file': str(package_data_path('models', 'runtime', 'configs', 'grit', 'GRiT_B_DenseCap_ObjectDet.yaml')), 'cpu': False, 'confidence_threshold': 0.5, 'test_task': 'DenseCap', 'opts': ["MODEL.WEIGHTS", model_weight]}
+    arg_dict = {
+        "config_file": str(package_data_path("models", "runtime", "configs", "grit", "GRiT_B_DenseCap_ObjectDet.yaml")),
+        "cpu": False,
+        "confidence_threshold": 0.5,
+        "test_task": "DenseCap",
+        "opts": ["MODEL.WEIGHTS", model_weight],
+    }
     if device.type == "cpu":
         arg_dict["cpu"] = True
     return arg_dict
+
 
 def image_caption_api(image_src, device, model_weight):
     args2 = get_parser(device, model_weight)
@@ -113,11 +132,12 @@ def image_caption_api(image_src, device, model_weight):
         new_caption = dense_pred_to_caption(predictions)
     return new_caption
 
+
 def init_demo(device, model_weight, task="DenseCap"):
     args2 = get_parser(device, model_weight)
-    if task!="DenseCap":
-        args2["test_task"]=task
+    if task != "DenseCap":
+        args2["test_task"] = task
     cfg = setup_cfg(args2)
-    
+
     demo = VisualizationDemo(cfg)
     return demo

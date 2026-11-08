@@ -11,6 +11,7 @@ from ....misc.discrete_probability_distribution import (
 
 class Sampler(nn.Module):
     """Sampler implementation."""
+
     def forward(
         self,
         probabilities: Float[Tensor, "*batch bucket"],

@@ -72,7 +72,10 @@ def init_on_device(device: torch.device, include_buffers: bool = False):
             module._buffers[name] = module._buffers[name].to(device)
 
     if include_buffers:
-        tensor_constructors_to_patch = {torch_function_name: getattr(torch, torch_function_name) for torch_function_name in ["empty", "zeros", "ones", "full"]}
+        tensor_constructors_to_patch = {
+            torch_function_name: getattr(torch, torch_function_name)
+            for torch_function_name in ["empty", "zeros", "ones", "full"]
+        }
     else:
         tensor_constructors_to_patch = {}
 

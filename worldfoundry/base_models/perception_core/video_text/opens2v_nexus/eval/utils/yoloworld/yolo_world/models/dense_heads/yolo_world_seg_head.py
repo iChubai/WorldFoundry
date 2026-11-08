@@ -53,9 +53,7 @@ class YOLOWorldSegHeadModule(YOLOv8HeadModule):
     def init_weights(self, prior_prob=0.01):
         """Initialize the weight and bias of PPYOLOE head."""
         super().init_weights()
-        for cls_pred, cls_contrast, stride in zip(
-            self.cls_preds, self.cls_contrasts, self.featmap_strides
-        ):
+        for cls_pred, cls_contrast, stride in zip(self.cls_preds, self.cls_contrasts, self.featmap_strides):
             cls_pred[-1].bias.data[:] = 0.0  # reset bias
             if hasattr(cls_contrast, "bias"):
                 nn.init.constant_(
@@ -165,9 +163,7 @@ class YOLOWorldSegHeadModule(YOLOv8HeadModule):
             )
 
             if self.use_bn_head:
-                self.cls_contrasts.append(
-                    BNContrastiveHead(self.embed_dims, self.norm_cfg)
-                )
+                self.cls_contrasts.append(BNContrastiveHead(self.embed_dims, self.norm_cfg))
             else:
                 self.cls_contrasts.append(ContrastiveHead(self.embed_dims))
 
@@ -237,16 +233,12 @@ class YOLOWorldSegHeadModule(YOLOv8HeadModule):
         bbox_dist_preds = reg_pred(img_feat)
         coeff_pred = seg_pred(img_feat)
         if self.reg_max > 1:
-            bbox_dist_preds = bbox_dist_preds.reshape(
-                [-1, 4, self.reg_max, h * w]
-            ).permute(0, 3, 1, 2)
+            bbox_dist_preds = bbox_dist_preds.reshape([-1, 4, self.reg_max, h * w]).permute(0, 3, 1, 2)
 
             # TODO: The get_flops script cannot handle the situation of
             #  matmul, and needs to be fixed later
             # bbox_preds = bbox_dist_preds.softmax(3).matmul(self.proj)
-            bbox_preds = (
-                bbox_dist_preds.softmax(3).matmul(self.proj.view([-1, 1])).squeeze(-1)
-            )
+            bbox_preds = bbox_dist_preds.softmax(3).matmul(self.proj.view([-1, 1])).squeeze(-1)
             bbox_preds = bbox_preds.transpose(1, 2).reshape(b, -1, h, w)
         else:
             bbox_preds = bbox_dist_preds
@@ -261,9 +253,7 @@ class YOLOWorldSegHead(YOLOv5InsHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = dict(
-            type="mmdet.MlvlPointGenerator", offset=0.5, strides=[8, 16, 32]
-        ),
+        prior_generator: ConfigType = dict(type="mmdet.MlvlPointGenerator", offset=0.5, strides=[8, 16, 32]),
         bbox_coder: ConfigType = dict(type="DistancePointBBoxCoder"),
         loss_cls: ConfigType = dict(
             type="mmdet.CrossEntropyLoss",
@@ -279,13 +269,9 @@ class YOLOWorldSegHead(YOLOv5InsHead):
             loss_weight=7.5,
             return_iou=False,
         ),
-        loss_dfl=dict(
-            type="mmdet.DistributionFocalLoss", reduction="mean", loss_weight=1.5 / 4
-        ),
+        loss_dfl=dict(type="mmdet.DistributionFocalLoss", reduction="mean", loss_weight=1.5 / 4),
         mask_overlap: bool = True,
-        loss_mask: ConfigType = dict(
-            type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="none"
-        ),
+        loss_mask: ConfigType = dict(type="mmdet.CrossEntropyLoss", use_sigmoid=True, reduction="none"),
         loss_mask_weight=0.05,
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
@@ -365,9 +351,7 @@ class YOLOWorldSegHead(YOLOv5InsHead):
         )
         losses = self.loss_by_feat(*loss_inputs)
 
-        predictions = self.predict_by_feat(
-            *outs, batch_img_metas=batch_img_metas, cfg=proposal_cfg
-        )
+        predictions = self.predict_by_feat(*outs, batch_img_metas=batch_img_metas, cfg=proposal_cfg)
         return losses, predictions
 
     def forward(self, img_feats: Tuple[Tensor], txt_feats: Tensor) -> Tuple[List]:
@@ -386,9 +370,7 @@ class YOLOWorldSegHead(YOLOv5InsHead):
         """
         batch_img_metas = [data_samples.metainfo for data_samples in batch_data_samples]
         outs = self(img_feats, txt_feats)
-        predictions = self.predict_by_feat(
-            *outs, batch_img_metas=batch_img_metas, rescale=rescale
-        )
+        predictions = self.predict_by_feat(*outs, batch_img_metas=batch_img_metas, rescale=rescale)
         return predictions
 
     def aug_test(
@@ -464,23 +446,16 @@ class YOLOWorldSegHead(YOLOv5InsHead):
 
         # pred info
         flatten_cls_preds = [
-            cls_pred.permute(0, 2, 3, 1).reshape(num_imgs, -1, self.num_classes)
-            for cls_pred in cls_scores
+            cls_pred.permute(0, 2, 3, 1).reshape(num_imgs, -1, self.num_classes) for cls_pred in cls_scores
         ]
-        flatten_pred_bboxes = [
-            bbox_pred.permute(0, 2, 3, 1).reshape(num_imgs, -1, 4)
-            for bbox_pred in bbox_preds
-        ]
+        flatten_pred_bboxes = [bbox_pred.permute(0, 2, 3, 1).reshape(num_imgs, -1, 4) for bbox_pred in bbox_preds]
         # (bs, n, 4 * reg_max)
         flatten_pred_dists = [
-            bbox_pred_org.reshape(num_imgs, -1, self.head_module.reg_max * 4)
-            for bbox_pred_org in bbox_dist_preds
+            bbox_pred_org.reshape(num_imgs, -1, self.head_module.reg_max * 4) for bbox_pred_org in bbox_dist_preds
         ]
 
         flatten_pred_coeffs = [
-            coeff_pred.permute(0, 2, 3, 1).reshape(
-                num_imgs, -1, self.head_module.mask_channels
-            )
+            coeff_pred.permute(0, 2, 3, 1).reshape(num_imgs, -1, self.head_module.mask_channels)
             for coeff_pred in coeff_preds
         ]
 
@@ -524,19 +499,10 @@ class YOLOWorldSegHead(YOLOv5InsHead):
             # will not report an error
             # iou loss
             prior_bbox_mask = fg_mask_pre_prior.unsqueeze(-1).repeat([1, 1, 4])
-            pred_bboxes_pos = torch.masked_select(
-                flatten_pred_bboxes, prior_bbox_mask
-            ).reshape([-1, 4])
-            assigned_bboxes_pos = torch.masked_select(
-                assigned_bboxes, prior_bbox_mask
-            ).reshape([-1, 4])
-            bbox_weight = torch.masked_select(
-                assigned_scores.sum(-1), fg_mask_pre_prior
-            ).unsqueeze(-1)
-            loss_bbox = (
-                self.loss_bbox(pred_bboxes_pos, assigned_bboxes_pos, weight=bbox_weight)
-                / assigned_scores_sum
-            )
+            pred_bboxes_pos = torch.masked_select(flatten_pred_bboxes, prior_bbox_mask).reshape([-1, 4])
+            assigned_bboxes_pos = torch.masked_select(assigned_bboxes, prior_bbox_mask).reshape([-1, 4])
+            bbox_weight = torch.masked_select(assigned_scores.sum(-1), fg_mask_pre_prior).unsqueeze(-1)
+            loss_bbox = self.loss_bbox(pred_bboxes_pos, assigned_bboxes_pos, weight=bbox_weight) / assigned_scores_sum
 
             # dfl loss
             pred_dist_pos = flatten_dist_preds[fg_mask_pre_prior]
@@ -546,9 +512,7 @@ class YOLOWorldSegHead(YOLOv5InsHead):
                 max_dis=self.head_module.reg_max - 1,
                 eps=0.01,
             )
-            assigned_ltrb_pos = torch.masked_select(
-                assigned_ltrb, prior_bbox_mask
-            ).reshape([-1, 4])
+            assigned_ltrb_pos = torch.masked_select(assigned_ltrb, prior_bbox_mask).reshape([-1, 4])
             loss_dfl = self.loss_dfl(
                 pred_dist_pos.reshape(-1, self.head_module.reg_max),
                 assigned_ltrb_pos.reshape(-1),
@@ -558,16 +522,12 @@ class YOLOWorldSegHead(YOLOv5InsHead):
 
             _, c, mask_h, mask_w = proto_preds.shape
             if batch_gt_masks.shape[-2:] != (mask_h, mask_w):
-                batch_gt_masks = F.interpolate(
-                    batch_gt_masks[None], (mask_h, mask_w), mode="nearest"
-                )[0]
+                batch_gt_masks = F.interpolate(batch_gt_masks[None], (mask_h, mask_w), mode="nearest")[0]
 
             loss_mask = torch.zeros(1, device=loss_dfl.device)
             box_sum_flag = pad_bbox_flag.long().sum(dim=1).squeeze(1)
 
-            batch_inds = torch.zeros(
-                num_imgs, dtype=torch.int64, device=assigned_gt_idxs.device
-            )[:, None]
+            batch_inds = torch.zeros(num_imgs, dtype=torch.int64, device=assigned_gt_idxs.device)[:, None]
             batch_inds[1:] = box_sum_flag.cumsum(dim=0)[:-1][..., None]
             _assigned_gt_idxs = assigned_gt_idxs + batch_inds
 
@@ -576,21 +536,13 @@ class YOLOWorldSegHead(YOLOv5InsHead):
                 bbox_match_inds = assigned_gt_idxs[bs]
                 mask_match_inds = _assigned_gt_idxs[bs]
 
-                bbox_match_inds = torch.masked_select(
-                    bbox_match_inds, fg_mask_pre_prior[bs]
-                )
-                mask_match_inds = torch.masked_select(
-                    mask_match_inds, fg_mask_pre_prior[bs]
-                )
+                bbox_match_inds = torch.masked_select(bbox_match_inds, fg_mask_pre_prior[bs])
+                mask_match_inds = torch.masked_select(mask_match_inds, fg_mask_pre_prior[bs])
 
                 # mask
                 mask_dim = coeff_preds[0].shape[1]
-                prior_mask_mask = (
-                    fg_mask_pre_prior[bs].unsqueeze(-1).repeat([1, mask_dim])
-                )
-                pred_coeffs_pos = torch.masked_select(
-                    flatten_pred_coeffs[bs], prior_mask_mask
-                ).reshape([-1, mask_dim])
+                prior_mask_mask = fg_mask_pre_prior[bs].unsqueeze(-1).repeat([1, mask_dim])
+                pred_coeffs_pos = torch.masked_select(flatten_pred_coeffs[bs], prior_mask_mask).reshape([-1, mask_dim])
 
                 match_boxes = gt_bboxes[bs][bbox_match_inds] / 4
                 normed_boxes = gt_bboxes[bs][bbox_match_inds] / 640
@@ -600,14 +552,9 @@ class YOLOWorldSegHead(YOLOv5InsHead):
                     continue
                 assert not self.mask_overlap
                 mask_gti = batch_gt_masks[mask_match_inds]
-                mask_preds = (pred_coeffs_pos @ proto_preds[bs].view(c, -1)).view(
-                    -1, mask_h, mask_w
-                )
+                mask_preds = (pred_coeffs_pos @ proto_preds[bs].view(c, -1)).view(-1, mask_h, mask_w)
                 loss_mask_full = self.loss_mask(mask_preds, mask_gti)
-                _loss_mask = (
-                    self.crop_mask(loss_mask_full[None], match_boxes).mean(dim=(2, 3))
-                    / bbox_area
-                )
+                _loss_mask = self.crop_mask(loss_mask_full[None], match_boxes).mean(dim=(2, 3)) / bbox_area
 
                 loss_mask += _loss_mask.mean()
 

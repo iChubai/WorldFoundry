@@ -3,7 +3,7 @@
 import torch.nn as nn
 
 
-__all__ = ['repvit_m1']
+__all__ = ["repvit_m1"]
 
 
 def _make_divisible(v, divisor, min_value=None):
@@ -25,15 +25,17 @@ def _make_divisible(v, divisor, min_value=None):
         new_v += divisor
     return new_v
 
+
 from timm.models.layers import SqueezeExcite
 
 import torch
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d
 
+
 class Conv2d_BN(torch.nn.Sequential):
     """Conv d bn implementation."""
-    def __init__(self, a, b, ks=1, stride=1, pad=0, dilation=1,
-                 groups=1, bn_weight_init=1, resolution=-10000):
+
+    def __init__(self, a, b, ks=1, stride=1, pad=0, dilation=1, groups=1, bn_weight_init=1, resolution=-10000):
         """Init.
 
         Args:
@@ -48,9 +50,8 @@ class Conv2d_BN(torch.nn.Sequential):
             resolution: The resolution.
         """
         super().__init__()
-        self.add_module('c', torch.nn.Conv2d(
-            a, b, ks, stride, pad, dilation, groups, bias=False))
-        self.add_module('bn', torch.nn.BatchNorm2d(b))
+        self.add_module("c", torch.nn.Conv2d(a, b, ks, stride, pad, dilation, groups, bias=False))
+        self.add_module("bn", torch.nn.BatchNorm2d(b))
         torch.nn.init.constant_(self.bn.weight, bn_weight_init)
         torch.nn.init.constant_(self.bn.bias, 0)
 
@@ -58,20 +59,28 @@ class Conv2d_BN(torch.nn.Sequential):
     def fuse(self):
         """Fuse."""
         c, bn = self._modules.values()
-        w = bn.weight / (bn.running_var + bn.eps)**0.5
+        w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = c.weight * w[:, None, None, None]
-        b = bn.bias - bn.running_mean * bn.weight / \
-            (bn.running_var + bn.eps)**0.5
-        m = torch.nn.Conv2d(w.size(1) * self.c.groups, w.size(
-            0), w.shape[2:], stride=self.c.stride, padding=self.c.padding, dilation=self.c.dilation, groups=self.c.groups,
-            device=c.weight.device)
+        b = bn.bias - bn.running_mean * bn.weight / (bn.running_var + bn.eps) ** 0.5
+        m = torch.nn.Conv2d(
+            w.size(1) * self.c.groups,
+            w.size(0),
+            w.shape[2:],
+            stride=self.c.stride,
+            padding=self.c.padding,
+            dilation=self.c.dilation,
+            groups=self.c.groups,
+            device=c.weight.device,
+        )
         m.weight.data.copy_(w)
         m.bias.data.copy_(b)
         return m
 
+
 class Residual(torch.nn.Module):
     """Residual implementation."""
-    def __init__(self, m, drop=0.):
+
+    def __init__(self, m, drop=0.0):
         """Init.
 
         Args:
@@ -89,26 +98,28 @@ class Residual(torch.nn.Module):
             x: The x.
         """
         if self.training and self.drop > 0:
-            return x + self.m(x) * torch.rand(x.size(0), 1, 1, 1,
-                                              device=x.device).ge_(self.drop).div(1 - self.drop).detach()
+            return (
+                x
+                + self.m(x) * torch.rand(x.size(0), 1, 1, 1, device=x.device).ge_(self.drop).div(1 - self.drop).detach()
+            )
         else:
             return x + self.m(x)
-    
+
     @torch.no_grad()
     def fuse(self):
         """Fuse."""
         if isinstance(self.m, Conv2d_BN):
             m = self.m.fuse()
-            assert(m.groups == m.in_channels)
+            assert m.groups == m.in_channels
             identity = torch.ones(m.weight.shape[0], m.weight.shape[1], 1, 1)
-            identity = torch.nn.functional.pad(identity, [1,1,1,1])
+            identity = torch.nn.functional.pad(identity, [1, 1, 1, 1])
             m.weight += identity.to(m.weight.device)
             return m
         elif isinstance(self.m, torch.nn.Conv2d):
             m = self.m
-            assert(m.groups != m.in_channels)
+            assert m.groups != m.in_channels
             identity = torch.ones(m.weight.shape[0], m.weight.shape[1], 1, 1)
-            identity = torch.nn.functional.pad(identity, [1,1,1,1])
+            identity = torch.nn.functional.pad(identity, [1, 1, 1, 1])
             m.weight += identity.to(m.weight.device)
             return m
         else:
@@ -117,6 +128,7 @@ class Residual(torch.nn.Module):
 
 class RepVGGDW(torch.nn.Module):
     """Rep vggdw implementation."""
+
     def __init__(self, ed) -> None:
         """Init.
 
@@ -131,7 +143,7 @@ class RepVGGDW(torch.nn.Module):
         self.conv1 = torch.nn.Conv2d(ed, ed, 1, 1, 0, groups=ed)
         self.dim = ed
         self.bn = torch.nn.BatchNorm2d(ed)
-    
+
     def forward(self, x):
         """Forward.
 
@@ -139,21 +151,23 @@ class RepVGGDW(torch.nn.Module):
             x: The x.
         """
         return self.bn((self.conv(x) + self.conv1(x)) + x)
-    
+
     @torch.no_grad()
     def fuse(self):
         """Fuse."""
         conv = self.conv.fuse()
         conv1 = self.conv1
-        
+
         conv_w = conv.weight
         conv_b = conv.bias
         conv1_w = conv1.weight
         conv1_b = conv1.bias
-        
-        conv1_w = torch.nn.functional.pad(conv1_w, [1,1,1,1])
 
-        identity = torch.nn.functional.pad(torch.ones(conv1_w.shape[0], conv1_w.shape[1], 1, 1, device=conv1_w.device), [1,1,1,1])
+        conv1_w = torch.nn.functional.pad(conv1_w, [1, 1, 1, 1])
+
+        identity = torch.nn.functional.pad(
+            torch.ones(conv1_w.shape[0], conv1_w.shape[1], 1, 1, device=conv1_w.device), [1, 1, 1, 1]
+        )
 
         final_conv_w = conv_w + conv1_w + identity
         final_conv_b = conv_b + conv1_b
@@ -162,10 +176,9 @@ class RepVGGDW(torch.nn.Module):
         conv.bias.data.copy_(final_conv_b)
 
         bn = self.bn
-        w = bn.weight / (bn.running_var + bn.eps)**0.5
+        w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = conv.weight * w[:, None, None, None]
-        b = bn.bias + (conv.bias - bn.running_mean) * bn.weight / \
-            (bn.running_var + bn.eps)**0.5
+        b = bn.bias + (conv.bias - bn.running_mean) * bn.weight / (bn.running_var + bn.eps) ** 0.5
         conv.weight.data.copy_(w)
         conv.bias.data.copy_(b)
         return conv
@@ -173,6 +186,7 @@ class RepVGGDW(torch.nn.Module):
 
 class RepViTBlock(nn.Module):
     """Rep vi t block implementation."""
+
     def __init__(self, inp, hidden_dim, oup, kernel_size, stride, use_se, use_hs):
         """Init.
 
@@ -189,21 +203,23 @@ class RepViTBlock(nn.Module):
         assert stride in [1, 2]
 
         self.identity = stride == 1 and inp == oup
-        assert(hidden_dim == 2 * inp)
+        assert hidden_dim == 2 * inp
 
         if stride == 2:
             self.token_mixer = nn.Sequential(
                 Conv2d_BN(inp, inp, kernel_size, stride if inp != 320 else 1, (kernel_size - 1) // 2, groups=inp),
                 SqueezeExcite(inp, 0.25) if use_se else nn.Identity(),
-                Conv2d_BN(inp, oup, ks=1, stride=1, pad=0)
+                Conv2d_BN(inp, oup, ks=1, stride=1, pad=0),
             )
-            self.channel_mixer = Residual(nn.Sequential(
+            self.channel_mixer = Residual(
+                nn.Sequential(
                     # pw
                     Conv2d_BN(oup, 2 * oup, 1, 1, 0),
                     nn.GELU() if use_hs else nn.GELU(),
                     # pw-linear
                     Conv2d_BN(2 * oup, oup, 1, 1, 0, bn_weight_init=0),
-                ))
+                )
+            )
         else:
             # assert(self.identity)
             self.token_mixer = nn.Sequential(
@@ -211,21 +227,23 @@ class RepViTBlock(nn.Module):
                 SqueezeExcite(inp, 0.25) if use_se else nn.Identity(),
             )
             if self.identity:
-                self.channel_mixer = Residual(nn.Sequential(
-                        # pw
-                        Conv2d_BN(inp, hidden_dim, 1, 1, 0),
-                        nn.GELU() if use_hs else nn.GELU(),
-                        # pw-linear
-                        Conv2d_BN(hidden_dim, oup, 1, 1, 0, bn_weight_init=0),
-                    ))
-            else:
-                self.channel_mixer = nn.Sequential(
+                self.channel_mixer = Residual(
+                    nn.Sequential(
                         # pw
                         Conv2d_BN(inp, hidden_dim, 1, 1, 0),
                         nn.GELU() if use_hs else nn.GELU(),
                         # pw-linear
                         Conv2d_BN(hidden_dim, oup, 1, 1, 0, bn_weight_init=0),
                     )
+                )
+            else:
+                self.channel_mixer = nn.Sequential(
+                    # pw
+                    Conv2d_BN(inp, hidden_dim, 1, 1, 0),
+                    nn.GELU() if use_hs else nn.GELU(),
+                    # pw-linear
+                    Conv2d_BN(hidden_dim, oup, 1, 1, 0, bn_weight_init=0),
+                )
 
     def forward(self, x):
         """Forward.
@@ -235,9 +253,13 @@ class RepViTBlock(nn.Module):
         """
         return self.channel_mixer(self.token_mixer(x))
 
+
 from timm.models.vision_transformer import trunc_normal_
+
+
 class BN_Linear(torch.nn.Sequential):
     """Linear implementation."""
+
     def __init__(self, a, b, bias=True, std=0.02):
         """Init.
 
@@ -248,8 +270,8 @@ class BN_Linear(torch.nn.Sequential):
             std: The std.
         """
         super().__init__()
-        self.add_module('bn', torch.nn.BatchNorm1d(a))
-        self.add_module('l', torch.nn.Linear(a, b, bias=bias))
+        self.add_module("bn", torch.nn.BatchNorm1d(a))
+        self.add_module("l", torch.nn.Linear(a, b, bias=bias))
         trunc_normal_(self.l.weight, std=std)
         if bias:
             torch.nn.init.constant_(self.l.bias, 0)
@@ -258,9 +280,8 @@ class BN_Linear(torch.nn.Sequential):
     def fuse(self):
         """Fuse."""
         bn, l = self._modules.values()
-        w = bn.weight / (bn.running_var + bn.eps)**0.5
-        b = bn.bias - self.bn.running_mean * \
-            self.bn.weight / (bn.running_var + bn.eps)**0.5
+        w = bn.weight / (bn.running_var + bn.eps) ** 0.5
+        b = bn.bias - self.bn.running_mean * self.bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = l.weight * w[None, :]
         if l.bias is None:
             b = b @ self.l.weight.T
@@ -271,8 +292,10 @@ class BN_Linear(torch.nn.Sequential):
         m.bias.data.copy_(b)
         return m
 
+
 class Classfier(nn.Module):
     """Classfier implementation."""
+
     def __init__(self, dim, num_classes, distillation=True):
         """Init.
 
@@ -315,8 +338,10 @@ class Classfier(nn.Module):
         else:
             return classifier
 
+
 class RepViT(nn.Module):
     """Rep vi t implementation."""
+
     def __init__(self, cfgs, num_classes=1000, distillation=False, img_size=1024):
         """Init.
 
@@ -334,8 +359,11 @@ class RepViT(nn.Module):
 
         # building first layer
         input_channel = self.cfgs[0][2]
-        patch_embed = torch.nn.Sequential(Conv2d_BN(3, input_channel // 2, 3, 2, 1), torch.nn.GELU(),
-                           Conv2d_BN(input_channel // 2, input_channel, 3, 2, 1))
+        patch_embed = torch.nn.Sequential(
+            Conv2d_BN(3, input_channel // 2, 3, 2, 1),
+            torch.nn.GELU(),
+            Conv2d_BN(input_channel // 2, input_channel, 3, 2, 1),
+        )
         layers = [patch_embed]
         # building inverted residual blocks
         block = RepViTBlock
@@ -346,7 +374,7 @@ class RepViT(nn.Module):
             input_channel = output_channel
         self.features = nn.ModuleList(layers)
         # self.classifier = Classfier(output_channel, num_classes, distillation)
-        
+
         self.neck = nn.Sequential(
             nn.Conv2d(
                 output_channel,
@@ -378,72 +406,74 @@ class RepViT(nn.Module):
         x = self.neck(x)
         return x
 
+
 from timm.models import register_model
 
+
 @register_model
-def repvit(pretrained=False, num_classes = 1000, distillation=False, **kwargs):
+def repvit(pretrained=False, num_classes=1000, distillation=False, **kwargs):
     """
     Constructs a MobileNetV3-Large model
     """
     cfgs = [
-        # k, t, c, SE, HS, s 
-        [3,   2,  80, 1, 0, 1],
-        [3,   2,  80, 0, 0, 1],
-        [3,   2,  80, 1, 0, 1],
-        [3,   2,  80, 0, 0, 1],
-        [3,   2,  80, 1, 0, 1],
-        [3,   2,  80, 0, 0, 1],
-        [3,   2,  80, 0, 0, 1],
-        [3,   2,  160, 0, 0, 2],
-        [3,   2,  160, 1, 0, 1],
-        [3,   2,  160, 0, 0, 1],
-        [3,   2,  160, 1, 0, 1],
-        [3,   2,  160, 0, 0, 1],
-        [3,   2,  160, 1, 0, 1],
-        [3,   2,  160, 0, 0, 1],
-        [3,   2,  160, 0, 0, 1],
-        [3,   2,  320, 0, 1, 2],
-        [3,   2,  320, 1, 1, 1],
-        [3,   2,  320, 0, 1, 1],
-        [3,   2,  320, 1, 1, 1],
-        [3,   2,  320, 0, 1, 1],
-        [3,   2,  320, 1, 1, 1],
-        [3,   2,  320, 0, 1, 1],
-        [3,   2,  320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 1, 1, 1],
-        [3,   2, 320, 0, 1, 1],
+        # k, t, c, SE, HS, s
+        [3, 2, 80, 1, 0, 1],
+        [3, 2, 80, 0, 0, 1],
+        [3, 2, 80, 1, 0, 1],
+        [3, 2, 80, 0, 0, 1],
+        [3, 2, 80, 1, 0, 1],
+        [3, 2, 80, 0, 0, 1],
+        [3, 2, 80, 0, 0, 1],
+        [3, 2, 160, 0, 0, 2],
+        [3, 2, 160, 1, 0, 1],
+        [3, 2, 160, 0, 0, 1],
+        [3, 2, 160, 1, 0, 1],
+        [3, 2, 160, 0, 0, 1],
+        [3, 2, 160, 1, 0, 1],
+        [3, 2, 160, 0, 0, 1],
+        [3, 2, 160, 0, 0, 1],
+        [3, 2, 320, 0, 1, 2],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 320, 1, 1, 1],
+        [3, 2, 320, 0, 1, 1],
         # [3,   2, 320, 1, 1, 1],
         # [3,   2, 320, 0, 1, 1],
-        [3,   2, 320, 0, 1, 1],
-        [3,   2, 640, 0, 1, 2],
-        [3,   2, 640, 1, 1, 1],
-        [3,   2, 640, 0, 1, 1],
+        [3, 2, 320, 0, 1, 1],
+        [3, 2, 640, 0, 1, 2],
+        [3, 2, 640, 1, 1, 1],
+        [3, 2, 640, 0, 1, 1],
         # [3,   2, 640, 1, 1, 1],
         # [3,   2, 640, 0, 1, 1]
-    ]    
+    ]
     return RepViT(cfgs, num_classes=num_classes, distillation=distillation)

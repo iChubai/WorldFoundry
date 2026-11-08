@@ -304,10 +304,8 @@ class LTXVideoMediaDecoder(MultiModalLatentDecoder):
         if self.first_stage_scale is None:
             return request.height, request.width
         return (
-            self._round_down_to_vae(int(request.height * self.first_stage_scale))
-            * self.latent_upsample_factor,
-            self._round_down_to_vae(int(request.width * self.first_stage_scale))
-            * self.latent_upsample_factor,
+            self._round_down_to_vae(int(request.height * self.first_stage_scale)) * self.latent_upsample_factor,
+            self._round_down_to_vae(int(request.width * self.first_stage_scale)) * self.latent_upsample_factor,
         )
 
     def _tone_map(self, latent: torch.Tensor) -> torch.Tensor:
@@ -342,12 +340,16 @@ class LTXVideoMediaDecoder(MultiModalLatentDecoder):
         video = torch.cat(chunks, dim=0)
         if (latent_height, latent_width) != (request.height, request.width):
             dtype = video.dtype
-            video = functional.interpolate(
-                video.permute(0, 3, 1, 2).float(),
-                size=(request.height, request.width),
-                mode="bilinear",
-                align_corners=False,
-            ).to(dtype=dtype).permute(0, 2, 3, 1)
+            video = (
+                functional.interpolate(
+                    video.permute(0, 3, 1, 2).float(),
+                    size=(request.height, request.width),
+                    mode="bilinear",
+                    align_corners=False,
+                )
+                .to(dtype=dtype)
+                .permute(0, 2, 3, 1)
+            )
         return {"video": video}
 
 
@@ -420,9 +422,12 @@ class LTXTensorVideoCodec:
             return latents
         device, dtype = self._input_target(self.decoder)
         latents = latents.to(device=device, dtype=dtype)
-        generator = None if request is None else torch.Generator(device=latents.device).manual_seed(request.sampling.seed)
+        generator = (
+            None if request is None else torch.Generator(device=latents.device).manual_seed(request.sampling.seed)
+        )
         chunks = (
-            [self.decoder.decoder(latents, generator=generator)] if self.tiling is None
+            [self.decoder.decoder(latents, generator=generator)]
+            if self.tiling is None
             else list(self.decoder.decoder.tiled_decode(latents, self.tiling, generator=generator))
         )
         if not chunks:
@@ -508,9 +513,7 @@ class DiffusersLTX2TensorVideoCodec:
             return latents
         self._activate()
         try:
-            values = self._denormalize(
-                latents.to(device=self.compute_device, dtype=self.compute_dtype)
-            )
+            values = self._denormalize(latents.to(device=self.compute_device, dtype=self.compute_dtype))
             video = self.vae.decode(values, return_dict=False)[0]
             if request is not None and video.shape[-2:] != (request.height, request.width):
                 decoded_height, decoded_width = video.shape[-2:]

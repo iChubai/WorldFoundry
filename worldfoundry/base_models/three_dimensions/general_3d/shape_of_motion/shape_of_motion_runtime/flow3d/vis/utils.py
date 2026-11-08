@@ -19,6 +19,7 @@ except ModuleNotFoundError:
 
 class Singleton(type):
     """Singleton implementation."""
+
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -30,6 +31,7 @@ class Singleton(type):
 
 class VisManager(metaclass=Singleton):
     """Vis manager implementation."""
+
     _servers = {}
 
 
@@ -63,9 +65,7 @@ def project_2d_tracks(tracks_3d_w, Ks, T_cw, return_depth=False):
     :param T_cw (torch.Tensor): (T, 4, 4)
     :returns tracks_2d (torch.Tensor): (T, N, 2)
     """
-    tracks_3d_c = torch.einsum(
-        "tij,tnj->tni", T_cw, F.pad(tracks_3d_w, (0, 1), value=1)
-    )[..., :3]
+    tracks_3d_c = torch.einsum("tij,tnj->tni", T_cw, F.pad(tracks_3d_w, (0, 1), value=1))[..., :3]
     tracks_3d_v = torch.einsum("tij,tnj->tni", Ks, tracks_3d_c)
     if return_depth:
         return (
@@ -75,9 +75,7 @@ def project_2d_tracks(tracks_3d_w, Ks, T_cw, return_depth=False):
     return tracks_3d_v[..., :2] / torch.clamp(tracks_3d_v[..., 2:], min=1e-5)
 
 
-def draw_keypoints_video(
-    imgs, kps, colors=None, occs=None, cmap: str = "gist_rainbow", radius: int = 3
-):
+def draw_keypoints_video(imgs, kps, colors=None, occs=None, cmap: str = "gist_rainbow", radius: int = 3):
     """
     :param imgs (np.ndarray): (T, H, W, 3) uint8 [0, 255]
     :param kps (np.ndarray): (N, T, 2)
@@ -192,11 +190,7 @@ def generate_line_verts_faces(starts, ends, line_width):
     P, N, _ = starts.shape
 
     directions = F.normalize(ends - starts, dim=-1)
-    deltas = (
-        torch.cat([-directions[..., 1:], directions[..., :1]], dim=-1)
-        * line_width
-        / 2.0
-    )
+    deltas = torch.cat([-directions[..., 1:], directions[..., :1]], dim=-1) * line_width / 2.0
     v0 = starts + deltas
     v1 = starts - deltas
     v2 = ends + deltas
@@ -229,9 +223,7 @@ def generate_point_verts_faces(points, point_size, num_segments=10):
     """
     P, _ = points.shape
 
-    angles = torch.linspace(0, 2 * torch.pi, num_segments + 1, device=points.device)[
-        ..., :-1
-    ]
+    angles = torch.linspace(0, 2 * torch.pi, num_segments + 1, device=points.device)[..., :-1]
     unit_circle = torch.stack([torch.cos(angles), torch.sin(angles)], dim=1)
     scaled_circles = (point_size / 2.0) * unit_circle
     scaled_circles = scaled_circles[None].repeat(P, 1, 1)
@@ -247,9 +239,7 @@ def generate_point_verts_faces(points, point_size, num_segments=10):
         (0, 1),
         value=num_segments,
     )
-    faces = faces[None, :] + torch.arange(P, device=points.device)[:, None, None] * (
-        num_segments + 1
-    )
+    faces = faces[None, :] + torch.arange(P, device=points.device)[:, None, None] * (num_segments + 1)
     faces = faces.reshape(-1, 3)
 
     return verts, faces
@@ -314,50 +304,28 @@ def draw_tracks_2d_th(
     ).float()
 
     # Generate line verts.
-    verts_l, faces_l = generate_line_verts_faces(
-        tracks_2d[:, :-1], tracks_2d[:, 1:], track_line_width
-    )
+    verts_l, faces_l = generate_line_verts_faces(tracks_2d[:, :-1], tracks_2d[:, 1:], track_line_width)
     # Generate point verts.
-    verts_p, faces_p = generate_point_verts_faces(
-        tracks_2d[:, -1], track_point_size, track_point_segments
-    )
+    verts_p, faces_p = generate_point_verts_faces(tracks_2d[:, -1], track_point_size, track_point_segments)
 
     verts = torch.cat([verts_l, verts_p], dim=0)
     faces = torch.cat([faces_l, faces_p + len(verts_l)], dim=0)
     vert_colors = torch.cat(
         [
-            (
-                track_colors[:, None]
-                .repeat_interleave(4 * (num_frames - 1), dim=1)
-                .reshape(-1, 3)
-            ),
-            (
-                track_colors[:, None]
-                .repeat_interleave(track_point_segments + 1, dim=1)
-                .reshape(-1, 3)
-            ),
+            (track_colors[:, None].repeat_interleave(4 * (num_frames - 1), dim=1).reshape(-1, 3)),
+            (track_colors[:, None].repeat_interleave(track_point_segments + 1, dim=1).reshape(-1, 3)),
         ],
         dim=0,
     )
     track_zs = torch.linspace(0.0, 1.0, num_tracks, device=img.device)[:, None]
     vert_zs = torch.cat(
         [
-            (
-                track_zs[:, None]
-                .repeat_interleave(4 * (num_frames - 1), dim=1)
-                .reshape(-1, 1)
-            ),
-            (
-                track_zs[:, None]
-                .repeat_interleave(track_point_segments + 1, dim=1)
-                .reshape(-1, 1)
-            ),
+            (track_zs[:, None].repeat_interleave(4 * (num_frames - 1), dim=1).reshape(-1, 1)),
+            (track_zs[:, None].repeat_interleave(track_point_segments + 1, dim=1).reshape(-1, 1)),
         ],
         dim=0,
     )
-    track_alphas = torch.linspace(
-        max(0.1, 1.0 - (num_frames - 1) * 0.1), 1.0, num_frames, device=img.device
-    )
+    track_alphas = torch.linspace(max(0.1, 1.0 - (num_frames - 1) * 0.1), 1.0, num_frames, device=img.device)
     vert_alphas = torch.cat(
         [
             (
@@ -392,9 +360,7 @@ def draw_tracks_2d_th(
             faces_int32,
         ),
     )[0]
-    rgba = cast(torch.Tensor, dr.antialias(rgba, rast, verts_clip, faces_int32))[
-        0
-    ].clamp(0, 1)
+    rgba = cast(torch.Tensor, dr.antialias(rgba, rast, verts_clip, faces_int32))[0].clamp(0, 1)
     # Compose.
     color = rgba[..., :-1] * rgba[..., -1:] + (1.0 - rgba[..., -1:]) * img
 
@@ -404,9 +370,7 @@ def draw_tracks_2d_th(
     return (color.cpu().numpy() * 255.0).astype(np.uint8)
 
 
-def make_video_divisble(
-    video: torch.Tensor | np.ndarray, block_size=16
-) -> torch.Tensor | np.ndarray:
+def make_video_divisble(video: torch.Tensor | np.ndarray, block_size=16) -> torch.Tensor | np.ndarray:
     """Make video divisble.
 
     Args:
@@ -546,10 +510,7 @@ def drawMatches(
     set_max = range(128)
     colors = {m: i for i, m in enumerate(set_max)}
     hsv = colormaps.get_cmap("hsv")
-    colors = {
-        m: (255 * np.array(hsv(i / float(len(colors))))[:3][::-1]).astype(np.int32)
-        for m, i in colors.items()
-    }
+    colors = {m: (255 * np.array(hsv(i / float(len(colors))))[:3][::-1]).astype(np.int32) for m, i in colors.items()}
 
     if mask is not None:
         ind = np.argsort(mask)[::-1]
@@ -563,37 +524,21 @@ def drawMatches(
         corr_color = np.int32(64 * coord_angle / np.pi) % 128
         color = tuple(colors[corr_color].tolist())
 
-        if (
-            (pt1[0] <= w1 - 1)
-            and (pt1[0] >= 0)
-            and (pt1[1] <= h1 - 1)
-            and (pt1[1] >= 0)
-        ):
-            img1 = cv2.circle(
-                img1, (int(pt1[0]), int(pt1[1])), radius, color, -1, cv2.LINE_AA
-            )
-        if (
-            (pt2[0] <= w2 - 1)
-            and (pt2[0] >= 0)
-            and (pt2[1] <= h2 - 1)
-            and (pt2[1] >= 0)
-        ):
+        if (pt1[0] <= w1 - 1) and (pt1[0] >= 0) and (pt1[1] <= h1 - 1) and (pt1[1] >= 0):
+            img1 = cv2.circle(img1, (int(pt1[0]), int(pt1[1])), radius, color, -1, cv2.LINE_AA)
+        if (pt2[0] <= w2 - 1) and (pt2[0] >= 0) and (pt2[1] <= h2 - 1) and (pt2[1] >= 0):
             if mask is not None and mask[i]:
                 continue
                 # img2 = cv2.drawMarker(img2, (int(pt2[0]), int(pt2[1])), color, markerType=cv2.MARKER_CROSS,
                 #                       markerSize=int(5*radius), thickness=int(radius/2), line_type=cv2.LINE_AA)
             else:
-                img2 = cv2.circle(
-                    img2, (int(pt2[0]), int(pt2[1])), radius, color, -1, cv2.LINE_AA
-                )
+                img2 = cv2.circle(img2, (int(pt2[0]), int(pt2[1])), radius, color, -1, cv2.LINE_AA)
 
     out = np.concatenate([img1, img2], axis=1)
     return out
 
 
-def plot_correspondences(
-    rgbs, kpts, query_id=0, masks=None, num_vis=1000000, radius=3, seed=1234
-):
+def plot_correspondences(rgbs, kpts, query_id=0, masks=None, num_vis=1000000, radius=3, seed=1234):
     """Plot correspondences.
 
     Args:

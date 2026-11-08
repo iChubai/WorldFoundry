@@ -31,9 +31,7 @@ class Tokenizer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_token_offsets(
-        self, text: str, tokens: Optional[List[int]] = None
-    ) -> Tuple[List[str], List[int]]:
+    def get_token_offsets(self, text: str, tokens: Optional[List[int]] = None) -> Tuple[List[str], List[int]]:
         """Return the offsets of the tokens in the original text. Only used for evaluation."""
         pass
 
@@ -59,9 +57,7 @@ class ByteTokenizer(Tokenizer):
         byte_tokens = bytes([t for t in tokens if t < 256])
         return byte_tokens.decode("utf-8", errors="backslashreplace")
 
-    def get_token_offsets(
-        self, text: str, tokens: Optional[List[int]] = None
-    ) -> Tuple[List[str], List[int]]:
+    def get_token_offsets(self, text: str, tokens: Optional[List[int]] = None) -> Tuple[List[str], List[int]]:
         if tokens is None:
             tokens = self.encode(text)
 
@@ -90,24 +86,18 @@ class SentencePieceTokenizer(Tokenizer):
         self.bos_id: int = self.sp_model.bos_id()
         self.eos_id: int = self.sp_model.eos_id()
         self.pad_id: int = self.sp_model.pad_id()
-        logger.info(
-            f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}"
-        )
+        logger.info(f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}")
         assert self.sp_model.vocab_size() == self.sp_model.get_piece_size()
 
     def encode(self, s: str, add_bos: bool, add_eos: bool):
         assert type(s) is str
-        tokens = (
-            [self.bos_id] * add_bos + self.sp_model.encode(s) + [self.eos_id] * add_eos
-        )
+        tokens = [self.bos_id] * add_bos + self.sp_model.encode(s) + [self.eos_id] * add_eos
         return tokens
 
     def decode(self, tokens: List[int]):
         return self.sp_model.decode(tokens)
 
-    def get_token_offsets(
-        self, text: str, tokens: Optional[List[int]] = None
-    ) -> Tuple[List[str], List[int]]:
+    def get_token_offsets(self, text: str, tokens: Optional[List[int]] = None) -> Tuple[List[str], List[int]]:
         pieces = self.sp_model.encode_as_immutable_proto(text).pieces
         substrs = [p.surface for p in pieces]
         offsets = [p.begin for p in pieces]
@@ -128,7 +118,6 @@ TIKTOKEN_MAX_ENCODE_CHARS = 400_000
 
 
 class TikTokenTokenizer(Tokenizer):
-
     def __init__(self, model_path: str) -> None:
         mergeable_ranks = load_tiktoken_bpe(model_path)
         all_special_tokens_with_ids = copy(DEFAULT_TIKTOKEN_SPECIAL_TOKENS)
@@ -150,9 +139,7 @@ class TikTokenTokenizer(Tokenizer):
 
         self.n_words: int = self.tkt_model.n_vocab
 
-        logger.info(
-            f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}"
-        )
+        logger.info(f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}")
 
     def encode(self, s: str, add_bos: bool, add_eos: bool):
         assert isinstance(s, str)
@@ -169,15 +156,11 @@ class TikTokenTokenizer(Tokenizer):
     def decode(self, tokens: List[int]):
         return self.tkt_model.decode(tokens)
 
-    def get_token_offsets(
-        self, text: str, tokens: Optional[List[int]] = None
-    ) -> Tuple[List[str], List[int]]:
+    def get_token_offsets(self, text: str, tokens: Optional[List[int]] = None) -> Tuple[List[str], List[int]]:
         if tokens is not None:
             token_bytes = self.tkt_model.decode_tokens_bytes(tokens)
         else:
-            token_bytes = self.tkt_model.decode_tokens_bytes(
-                self.tkt_model.encode(text, allowed_special="all")
-            )
+            token_bytes = self.tkt_model.decode_tokens_bytes(self.tkt_model.encode(text, allowed_special="all"))
 
         text_len, offsets = 0, []
         for token in token_bytes:

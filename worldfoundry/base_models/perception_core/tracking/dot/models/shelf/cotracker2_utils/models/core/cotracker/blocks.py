@@ -119,9 +119,7 @@ class ResidualBlock(nn.Module):
             self.downsample = None
 
         else:
-            self.downsample = nn.Sequential(
-                nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm3
-            )
+            self.downsample = nn.Sequential(nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm3)
 
     def forward(self, x):
         y = x
@@ -331,12 +329,7 @@ class Attention(nn.Module):
 
 class AttnBlock(nn.Module):
     def __init__(
-        self,
-        hidden_size,
-        num_heads,
-        attn_class: Callable[..., nn.Module] = Attention,
-        mlp_ratio=4.0,
-        **block_kwargs
+        self, hidden_size, num_heads, attn_class: Callable[..., nn.Module] = Attention, mlp_ratio=4.0, **block_kwargs
     ):
         super().__init__()
         self.norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
@@ -355,11 +348,7 @@ class AttnBlock(nn.Module):
     def forward(self, x, mask=None):
         attn_bias = mask
         if mask is not None:
-            mask = (
-                (mask[:, None] * mask[:, :, None])
-                .unsqueeze(1)
-                .expand(-1, self.attn.num_heads, -1, -1)
-            )
+            mask = (mask[:, None] * mask[:, :, None]).unsqueeze(1).expand(-1, self.attn.num_heads, -1, -1)
             max_neg_value = -torch.finfo(x.dtype).max
             attn_bias = (~mask) * max_neg_value
         x = x + self.attn(self.norm1(x), attn_bias=attn_bias)

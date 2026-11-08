@@ -18,8 +18,10 @@ from .efficient_sam_decoder import MaskDecoder, PromptEncoder
 from .efficient_sam_encoder import ImageEncoderViT
 from .two_way_transformer import TwoWayAttentionBlock, TwoWayTransformer
 
+
 class EfficientSam(nn.Module):
     """Efficient sam implementation."""
+
     mask_threshold: float = 0.0
     image_format: str = "RGB"
 
@@ -49,12 +51,8 @@ class EfficientSam(nn.Module):
         self.prompt_encoder = prompt_encoder
         self.decoder_max_num_input_points = decoder_max_num_input_points
         self.mask_decoder = mask_decoder
-        self.register_buffer(
-            "pixel_mean", torch.Tensor(pixel_mean).view(1, 3, 1, 1), False
-        )
-        self.register_buffer(
-            "pixel_std", torch.Tensor(pixel_std).view(1, 3, 1, 1), False
-        )
+        self.register_buffer("pixel_mean", torch.Tensor(pixel_mean).view(1, 3, 1, 1), False)
+        self.register_buffer("pixel_std", torch.Tensor(pixel_std).view(1, 3, 1, 1), False)
 
     @torch.jit.export
     def predict_masks(
@@ -86,12 +84,8 @@ class EfficientSam(nn.Module):
         rescaled_batched_points = self.get_rescaled_pts(batched_points, input_h, input_w)
 
         if num_pts > self.decoder_max_num_input_points:
-            rescaled_batched_points = rescaled_batched_points[
-                :, :, : self.decoder_max_num_input_points, :
-            ]
-            batched_point_labels = batched_point_labels[
-                :, :, : self.decoder_max_num_input_points
-            ]
+            rescaled_batched_points = rescaled_batched_points[:, :, : self.decoder_max_num_input_points, :]
+            batched_point_labels = batched_point_labels[:, :, : self.decoder_max_num_input_points]
         elif num_pts < self.decoder_max_num_input_points:
             rescaled_batched_points = F.pad(
                 rescaled_batched_points,
@@ -105,12 +99,8 @@ class EfficientSam(nn.Module):
             )
 
         sparse_embeddings = self.prompt_encoder(
-            rescaled_batched_points.reshape(
-                batch_size * max_num_queries, self.decoder_max_num_input_points, 2
-            ),
-            batched_point_labels.reshape(
-                batch_size * max_num_queries, self.decoder_max_num_input_points
-            ),
+            rescaled_batched_points.reshape(batch_size * max_num_queries, self.decoder_max_num_input_points, 2),
+            batched_point_labels.reshape(batch_size * max_num_queries, self.decoder_max_num_input_points),
         )
         sparse_embeddings = sparse_embeddings.view(
             batch_size,
@@ -127,9 +117,7 @@ class EfficientSam(nn.Module):
         _, num_predictions, low_res_size, _ = low_res_masks.shape
 
         if output_w > 0 and output_h > 0:
-            output_masks = F.interpolate(
-                low_res_masks, (output_h, output_w), mode="bicubic"
-            )
+            output_masks = F.interpolate(low_res_masks, (output_h, output_w), mode="bicubic")
             output_masks = torch.reshape(
                 output_masks,
                 (batch_size, max_num_queries, num_predictions, output_h, output_w),
@@ -145,9 +133,7 @@ class EfficientSam(nn.Module):
                     low_res_size,
                 ),
             )
-        iou_predictions = torch.reshape(
-            iou_predictions, (batch_size, max_num_queries, num_predictions)
-        )
+        iou_predictions = torch.reshape(iou_predictions, (batch_size, max_num_queries, num_predictions))
         return output_masks, iou_predictions
 
     def get_rescaled_pts(self, batched_points: torch.Tensor, input_h: int, input_w: int):
@@ -227,10 +213,7 @@ class EfficientSam(nn.Module):
 
     def preprocess(self, x: torch.Tensor) -> torch.Tensor:
         """Normalize pixel values and pad to a square input."""
-        if (
-            x.shape[2] != self.image_encoder.img_size
-            or x.shape[3] != self.image_encoder.img_size
-        ):
+        if x.shape[2] != self.image_encoder.img_size or x.shape[3] != self.image_encoder.img_size:
             x = F.interpolate(
                 x,
                 (self.image_encoder.img_size, self.image_encoder.img_size),

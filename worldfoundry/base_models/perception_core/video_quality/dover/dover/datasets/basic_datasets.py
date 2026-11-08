@@ -36,50 +36,35 @@ def get_spatial_fragments(
     dur_t, res_h, res_w = video.shape[-3:]
     ratio = min(res_h / size_h, res_w / size_w)
     if fallback_type == "upsample" and ratio < 1:
-
         ovideo = video
-        video = torch.nn.functional.interpolate(
-            video / 255.0, scale_factor=1 / ratio, mode="bilinear"
-        )
+        video = torch.nn.functional.interpolate(video / 255.0, scale_factor=1 / ratio, mode="bilinear")
         video = (video * 255.0).type_as(ovideo)
 
     assert dur_t % aligned == 0, "Please provide match vclip and align index"
     size = size_h, size_w
 
     ## make sure that sampling will not run out of the picture
-    hgrids = torch.LongTensor(
-        [min(res_h // fragments_h * i, res_h - fsize_h) for i in range(fragments_h)]
-    )
-    wgrids = torch.LongTensor(
-        [min(res_w // fragments_w * i, res_w - fsize_w) for i in range(fragments_w)]
-    )
+    hgrids = torch.LongTensor([min(res_h // fragments_h * i, res_h - fsize_h) for i in range(fragments_h)])
+    wgrids = torch.LongTensor([min(res_w // fragments_w * i, res_w - fsize_w) for i in range(fragments_w)])
     hlength, wlength = res_h // fragments_h, res_w // fragments_w
 
     if random:
         print("This part is deprecated. Please remind that.")
         if res_h > fsize_h:
-            rnd_h = torch.randint(
-                res_h - fsize_h, (len(hgrids), len(wgrids), dur_t // aligned)
-            )
+            rnd_h = torch.randint(res_h - fsize_h, (len(hgrids), len(wgrids), dur_t // aligned))
         else:
             rnd_h = torch.zeros((len(hgrids), len(wgrids), dur_t // aligned)).int()
         if res_w > fsize_w:
-            rnd_w = torch.randint(
-                res_w - fsize_w, (len(hgrids), len(wgrids), dur_t // aligned)
-            )
+            rnd_w = torch.randint(res_w - fsize_w, (len(hgrids), len(wgrids), dur_t // aligned))
         else:
             rnd_w = torch.zeros((len(hgrids), len(wgrids), dur_t // aligned)).int()
     else:
         if hlength > fsize_h:
-            rnd_h = torch.randint(
-                hlength - fsize_h, (len(hgrids), len(wgrids), dur_t // aligned)
-            )
+            rnd_h = torch.randint(hlength - fsize_h, (len(hgrids), len(wgrids), dur_t // aligned))
         else:
             rnd_h = torch.zeros((len(hgrids), len(wgrids), dur_t // aligned)).int()
         if wlength > fsize_w:
-            rnd_w = torch.randint(
-                wlength - fsize_w, (len(hgrids), len(wgrids), dur_t // aligned)
-            )
+            rnd_w = torch.randint(wlength - fsize_w, (len(hgrids), len(wgrids), dur_t // aligned))
         else:
             rnd_w = torch.zeros((len(hgrids), len(wgrids), dur_t // aligned)).int()
 
@@ -98,9 +83,7 @@ def get_spatial_fragments(
                 else:
                     h_so, h_eo = hs + rnd_h[i][j][t], hs + rnd_h[i][j][t] + fsize_h
                     w_so, w_eo = ws + rnd_w[i][j][t], ws + rnd_w[i][j][t] + fsize_w
-                target_video[:, t_s:t_e, h_s:h_e, w_s:w_e] = video[
-                    :, t_s:t_e, h_so:h_eo, w_so:w_eo
-                ]
+                target_video[:, t_s:t_e, h_s:h_e, w_s:w_e] = video[:, t_s:t_e, h_so:h_eo, w_so:w_eo]
     # target_videos.append(video[:,t_s:t_e,h_so:h_eo,w_so:w_eo])
     # target_video = torch.stack(target_videos, 0).reshape((dur_t // aligned, fragments, fragments,) + target_videos[0].shape).permute(3,0,4,1,5,2,6)
     # target_video = target_video.reshape((-1, dur_t,) + size) ## Splicing Fragments
@@ -109,7 +92,6 @@ def get_spatial_fragments(
 
 class FragmentSampleFrames:
     def __init__(self, fsize_t, fragments_t, frame_interval=1, num_clips=1):
-
         self.fragments_t = fragments_t
         self.fsize_t = fsize_t
         self.size_t = fragments_t * fsize_t
@@ -117,7 +99,6 @@ class FragmentSampleFrames:
         self.num_clips = num_clips
 
     def get_frame_indices(self, num_frames):
-
         tgrids = np.array(
             [num_frames // self.fragments_t * i for i in range(self.fragments_t)],
             dtype=np.int32,
@@ -125,17 +106,11 @@ class FragmentSampleFrames:
         tlength = num_frames // self.fragments_t
 
         if tlength > self.fsize_t * self.frame_interval:
-            rnd_t = np.random.randint(
-                0, tlength - self.fsize_t * self.frame_interval, size=len(tgrids)
-            )
+            rnd_t = np.random.randint(0, tlength - self.fsize_t * self.frame_interval, size=len(tgrids))
         else:
             rnd_t = np.zeros(len(tgrids), dtype=np.int32)
 
-        ranges_t = (
-            np.arange(self.fsize_t)[None, :] * self.frame_interval
-            + rnd_t[:, None]
-            + tgrids[:, None]
-        )
+        ranges_t = np.arange(self.fsize_t)[None, :] * self.frame_interval + rnd_t[:, None] + tgrids[:, None]
         return np.concatenate(ranges_t)
 
     def __call__(self, total_frames, train=False, start_index=0):
@@ -149,7 +124,6 @@ class FragmentSampleFrames:
 
 class SampleFrames:
     def __init__(self, clip_len, frame_interval=1, num_clips=1):
-
         self.clip_len = clip_len
         self.frame_interval = frame_interval
         self.num_clips = num_clips
@@ -173,13 +147,9 @@ class SampleFrames:
 
         if avg_interval > 0:
             base_offsets = np.arange(self.num_clips) * avg_interval
-            clip_offsets = base_offsets + np.random.randint(
-                avg_interval, size=self.num_clips
-            )
+            clip_offsets = base_offsets + np.random.randint(avg_interval, size=self.num_clips)
         elif num_frames > max(self.num_clips, ori_clip_len):
-            clip_offsets = np.sort(
-                np.random.randint(num_frames - ori_clip_len + 1, size=self.num_clips)
-            )
+            clip_offsets = np.sort(np.random.randint(num_frames - ori_clip_len + 1, size=self.num_clips))
         elif avg_interval == 0:
             ratio = (num_frames - ori_clip_len + 1.0) / self.num_clips
             clip_offsets = np.around(np.arange(self.num_clips) * ratio)
@@ -219,10 +189,7 @@ class SampleFrames:
             clip_offsets = self._get_train_clips(total_frames)
         else:
             clip_offsets = self._get_test_clips(total_frames)
-        frame_inds = (
-            clip_offsets[:, None]
-            + np.arange(self.clip_len)[None, :] * self.frame_interval
-        )
+        frame_inds = clip_offsets[:, None] + np.arange(self.clip_len)[None, :] * self.frame_interval
         frame_inds = np.concatenate(frame_inds)
 
         frame_inds = frame_inds.reshape((-1, self.clip_len))
@@ -264,9 +231,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
         self.clip_len = fragments[0] * fsize[0]
         self.aligned = aligned
         self.fallback_type = fallback_type
-        self.sampler = FragmentSampleFrames(
-            fsize[0], fragments[0], frame_interval, num_clips
-        )
+        self.sampler = FragmentSampleFrames(fsize[0], fragments[0], frame_interval, num_clips)
         self.video_infos = []
         self.phase = phase
         self.mean = torch.FloatTensor([123.675, 116.28, 103.53])
@@ -289,7 +254,10 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
             self.cache = None
 
     def __getitem__(
-        self, index, tocache=False, need_original_frames=False,
+        self,
+        index,
+        tocache=False,
+        need_original_frames=False,
     ):
         if tocache or self.cache is None:
             fx, fy = self.fragments[1:]
@@ -298,9 +266,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
             filename = video_info["filename"]
             label = video_info["label"]
             if filename.endswith(".yuv"):
-                video = skvideo.io.vread(
-                    filename, 1080, 1920, inputdict={"-pix_fmt": "yuvj420p"}
-                )
+                video = skvideo.io.vread(filename, 1080, 1920, inputdict={"-pix_fmt": "yuvj420p"})
                 frame_inds = self.sampler(video.shape[0], self.phase == "train")
                 imgs = [torch.from_numpy(video[idx]) for idx in frame_inds]
             else:
@@ -354,9 +320,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
             vfrag, frame_inds, label, img_shape = self.cache[index]
         vfrag = ((vfrag.permute(1, 2, 3, 0) - self.mean) / self.std).permute(3, 0, 1, 2)
         data = {
-            "video": vfrag.reshape(
-                (-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]
-            ).transpose(
+            "video": vfrag.reshape((-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(
                 0, 1
             ),  # B, V, T, C, H, W
             "frame_inds": frame_inds,
@@ -427,7 +391,12 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
             self.cache = None
 
     def __getitem__(
-        self, index, fragments=-1, fsize=-1, tocache=False, need_original_frames=False,
+        self,
+        index,
+        fragments=-1,
+        fsize=-1,
+        tocache=False,
+        need_original_frames=False,
     ):
         if tocache or self.cache is None:
             if fragments == -1:
@@ -438,9 +407,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
             filename = video_info["filename"]
             label = video_info["label"]
             if filename.endswith(".yuv"):
-                video = skvideo.io.vread(
-                    filename, 1080, 1920, inputdict={"-pix_fmt": "yuvj420p"}
-                )
+                video = skvideo.io.vread(filename, 1080, 1920, inputdict={"-pix_fmt": "yuvj420p"})
                 frame_inds = self.sampler(video.shape[0], self.phase == "train")
                 imgs = [torch.from_numpy(video[idx]) for idx in frame_inds]
             else:
@@ -452,13 +419,9 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
             video = torch.stack(imgs, 0)
             video = video.permute(3, 0, 1, 2)
             if self.nfrags == 1:
-                vfrag = get_spatial_fragments(
-                    video, fragments, fragments, fsize, fsize, aligned=self.aligned
-                )
+                vfrag = get_spatial_fragments(video, fragments, fragments, fsize, fsize, aligned=self.aligned)
             else:
-                vfrag = get_spatial_fragments(
-                    video, fragments, fragments, fsize, fsize, aligned=self.aligned
-                )
+                vfrag = get_spatial_fragments(video, fragments, fragments, fsize, fsize, aligned=self.aligned)
                 for i in range(1, self.nfrags):
                     vfrag = torch.cat(
                         (
@@ -480,9 +443,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
             vfrag, frame_inds, label, img_shape = self.cache[index]
         vfrag = ((vfrag.permute(1, 2, 3, 0) - self.mean) / self.std).permute(3, 0, 1, 2)
         data = {
-            "video": vfrag.reshape(
-                (-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]
-            ).transpose(
+            "video": vfrag.reshape((-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(
                 0, 1
             ),  # B, V, T, C, H, W
             "frame_inds": frame_inds,
@@ -563,9 +524,7 @@ class ResizedVideoDataset(torch.utils.data.Dataset):
             vfrag, frame_inds, label, img_shape = self.cache[index]
         vfrag = ((vfrag.permute(1, 2, 3, 0) - self.mean) / self.std).permute(3, 0, 1, 2)
         data = {
-            "video": vfrag.reshape(
-                (-1, self.num_clips, self.clip_len) + vfrag.shape[2:]
-            ).transpose(
+            "video": vfrag.reshape((-1, self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(
                 0, 1
             ),  # B, V, T, C, H, W
             "frame_inds": frame_inds,
@@ -596,7 +555,6 @@ class CroppedVideoDataset(FragmentVideoDataset):
         cache_in_memory=False,
         phase="test",
     ):
-
         """
         Regard Cropping as a special case for Fragments in Grid 1*1.
         """
@@ -652,9 +610,7 @@ class FragmentImageDataset(torch.utils.data.Dataset):
         else:
             self.cache = None
 
-    def __getitem__(
-        self, index, fragments=-1, fsize=-1, tocache=False, need_original_frames=False
-    ):
+    def __getitem__(self, index, fragments=-1, fsize=-1, tocache=False, need_original_frames=False):
         if tocache or self.cache is None:
             if fragments == -1:
                 fragments = self.fragments
@@ -678,9 +634,7 @@ class FragmentImageDataset(torch.utils.data.Dataset):
                     ifrag = torch.cat(
                         (
                             ifrag,
-                            get_spatial_fragments(
-                                image, fragments, fragments, fsize, fsize
-                            ),
+                            get_spatial_fragments(image, fragments, fragments, fsize, fsize),
                         ),
                         1,
                     )
@@ -689,18 +643,10 @@ class FragmentImageDataset(torch.utils.data.Dataset):
         else:
             ifrag, label, img_shape = self.cache[index]
         if self.nfrags == 1:
-            ifrag = (
-                ((ifrag.permute(1, 2, 3, 0) - self.mean) / self.std)
-                .squeeze(0)
-                .permute(2, 0, 1)
-            )
+            ifrag = ((ifrag.permute(1, 2, 3, 0) - self.mean) / self.std).squeeze(0).permute(2, 0, 1)
         else:
             ### During testing, one image as a batch
-            ifrag = (
-                ((ifrag.permute(1, 2, 3, 0) - self.mean) / self.std)
-                .squeeze(0)
-                .permute(0, 3, 1, 2)
-            )
+            ifrag = ((ifrag.permute(1, 2, 3, 0) - self.mean) / self.std).squeeze(0).permute(0, 3, 1, 2)
         data = {
             "image": ifrag,
             "gt_label": label,
@@ -717,7 +663,12 @@ class FragmentImageDataset(torch.utils.data.Dataset):
 
 class ResizedImageDataset(torch.utils.data.Dataset):
     def __init__(
-        self, ann_file, data_prefix, size=224, cache_in_memory=False, phase="test",
+        self,
+        ann_file,
+        data_prefix,
+        size=224,
+        cache_in_memory=False,
+        phase="test",
     ):
         self.ann_file = ann_file
         self.data_prefix = data_prefix
@@ -743,9 +694,7 @@ class ResizedImageDataset(torch.utils.data.Dataset):
         else:
             self.cache = None
 
-    def __getitem__(
-        self, index, fragments=-1, fsize=-1, tocache=False, need_original_frames=False
-    ):
+    def __getitem__(self, index, fragments=-1, fsize=-1, tocache=False, need_original_frames=False):
         if tocache or self.cache is None:
             if fragments == -1:
                 fragments = self.fragments
@@ -762,18 +711,12 @@ class ResizedImageDataset(torch.utils.data.Dataset):
             else:
                 ifrag = get_spatial_fragments(image, fragments, fsize)
                 for i in range(1, self.nfrags):
-                    ifrag = torch.cat(
-                        (ifrag, get_spatial_fragments(image, fragments, fsize)), 1
-                    )
+                    ifrag = torch.cat((ifrag, get_spatial_fragments(image, fragments, fsize)), 1)
             if tocache:
                 return (ifrag, label, img_shape)
         else:
             ifrag, label, img_shape = self.cache[index]
-        ifrag = (
-            ((ifrag.permute(1, 2, 3, 0) - self.mean) / self.std)
-            .squeeze(0)
-            .permute(2, 0, 1)
-        )
+        ifrag = ((ifrag.permute(1, 2, 3, 0) - self.mean) / self.std).squeeze(0).permute(2, 0, 1)
         data = {
             "image": ifrag,
             "gt_label": label,
@@ -797,7 +740,6 @@ class CroppedImageDataset(FragmentImageDataset):
         cache_in_memory=False,
         phase="test",
     ):
-
         """
         Regard Cropping as a special case for Fragments in Grid 1*1.
         """

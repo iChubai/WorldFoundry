@@ -11,6 +11,7 @@ from ..epipolar.distribution_sampler import DistributionSampler
 
 class DepthPredictor(nn.Module):
     """Depth predictor implementation."""
+
     sampler: DistributionSampler
 
     def __init__(
@@ -76,9 +77,7 @@ class DepthPredictor(nn.Module):
         # Compute opacity from PDF.
         if self.use_transmittance:
             partial = pdf.cumsum(dim=-1)
-            partial = torch.cat(
-                (torch.zeros_like(partial[..., :1]), partial[..., :-1]), dim=-1
-            )
+            partial = torch.cat((torch.zeros_like(partial[..., :1]), partial[..., :-1]), dim=-1)
             opacity = pdf / (1 - partial + 1e-10)
             opacity = self.sampler.gather(index, opacity)
         else:

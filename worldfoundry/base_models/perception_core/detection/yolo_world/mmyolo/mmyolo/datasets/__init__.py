@@ -8,7 +8,11 @@ from .yolov5_dota import YOLOv5DOTADataset
 from .yolov5_voc import YOLOv5VOCDataset
 
 __all__ = [
-    'YOLOv5CocoDataset', 'YOLOv5VOCDataset', 'BatchShapePolicy',
-    'yolov5_collate', 'YOLOv5CrowdHumanDataset', 'YOLOv5DOTADataset',
-    'PoseCocoDataset'
+    "YOLOv5CocoDataset",
+    "YOLOv5VOCDataset",
+    "BatchShapePolicy",
+    "yolov5_collate",
+    "YOLOv5CrowdHumanDataset",
+    "YOLOv5DOTADataset",
+    "PoseCocoDataset",
 ]

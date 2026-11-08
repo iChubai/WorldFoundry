@@ -69,10 +69,7 @@ def load_vision_encoder(
         vision_encoder_path = VISION_ENCODER_PATH[vision_encoder_type]
 
     if vision_encoder_type == "siglip":
-        vision_encoder = SiglipVisionModel.from_pretrained(
-            vision_encoder_path, 
-            subfolder='image_encoder'
-        )
+        vision_encoder = SiglipVisionModel.from_pretrained(vision_encoder_path, subfolder="image_encoder")
     else:
         raise ValueError(f"Unsupported vision encoder type: {vision_encoder_type}")
 
@@ -88,11 +85,7 @@ def load_vision_encoder(
     return vision_encoder, vision_encoder_path
 
 
-def load_image_processor(
-    processor_type, 
-    processor_path=None, 
-    logger=None
-):
+def load_image_processor(processor_type, processor_path=None, logger=None):
     """Load image processor.
 
     Args:
@@ -104,10 +97,7 @@ def load_image_processor(
         processor_path = VISION_ENCODER_PATH[processor_type]
 
     if processor_type == "siglip":
-        processor = SiglipImageProcessor.from_pretrained(
-            processor_path, 
-            subfolder='feature_extractor'
-        )
+        processor = SiglipImageProcessor.from_pretrained(processor_path, subfolder="feature_extractor")
     else:
         raise ValueError(f"Unsupported processor type: {processor_type}")
 
@@ -138,6 +128,7 @@ class VisionEncoderModelOutput(ModelOutput):
 
 class VisionEncoder(nn.Module):
     """Vision encoder implementation."""
+
     def __init__(
         self,
         vision_encoder_type: str,
@@ -165,12 +156,8 @@ class VisionEncoder(nn.Module):
         self.vision_encoder_type = vision_encoder_type
         self.precision = vision_encoder_precision
         self.model_path = vision_encoder_path
-        self.processor_type = (
-            processor_type if processor_type is not None else vision_encoder_type
-        )
-        self.processor_path = (
-            processor_path if processor_path is not None else vision_encoder_path
-        )
+        self.processor_type = processor_type if processor_type is not None else vision_encoder_type
+        self.processor_path = processor_path if processor_path is not None else vision_encoder_path
         self.logger = logger
 
         if "siglip" in vision_encoder_type:
@@ -201,7 +188,7 @@ class VisionEncoder(nn.Module):
     def encode_latents_to_images(self, latents, vae, reorg_token=False):
         """
         Convert latents to images using VAE decoder.
-        
+
         Args:
             latents: Input latents tensor
             vae: VAE model for decoding
@@ -228,57 +215,58 @@ class VisionEncoder(nn.Module):
     def encode_images(self, images):
         """
         Encode images using the vision encoder.
-        
+
         Args:
             images: Input images (numpy array or preprocessed tensor)
-            
+
         Returns:
             VisionEncoderModelOutput with encoded features
         """
         if isinstance(images, np.ndarray):
             # Preprocess images if they're numpy arrays
             preprocessed = self.processor.preprocess(images=images, return_tensors="pt").to(
-                device=self.model.device, dtype=self.model.dtype)
+                device=self.model.device, dtype=self.model.dtype
+            )
         else:
             # Assume already preprocessed
             preprocessed = images
 
         outputs = self.model(**preprocessed)
-        
+
         return VisionEncoderModelOutput(
             last_hidden_state=outputs.last_hidden_state,
-            pooler_output=outputs.pooler_output if hasattr(outputs, 'pooler_output') else None,
-            hidden_states=outputs.hidden_states if hasattr(outputs, 'hidden_states') else None
+            pooler_output=outputs.pooler_output if hasattr(outputs, "pooler_output") else None,
+            hidden_states=outputs.hidden_states if hasattr(outputs, "hidden_states") else None,
         )
 
     def encode_latents(self, latents, vae, reorg_token=False):
         """
         Encode latents by first converting to images, then encoding.
         This is the main function that replaces sigclip_vision_encode.
-        
+
         Args:
             latents: Input latent tensors
             vae: VAE model for decoding latents to images
-            
+
         Returns:
             Encoded image features
         """
         # Convert latents to images
         images = self.encode_latents_to_images(latents, vae, reorg_token)
-        
+
         # Encode images
         outputs = self.encode_images(images)
-        
+
         return outputs.last_hidden_state
 
     def forward(self, images):
         """
         Forward pass for direct image encoding.
-        
+
         Args:
             images: Input images
-            
+
         Returns:
             VisionEncoderModelOutput with encoded features
         """
-        return self.encode_images(images) 
+        return self.encode_images(images)

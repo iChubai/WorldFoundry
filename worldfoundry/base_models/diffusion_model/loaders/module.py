@@ -45,9 +45,7 @@ def _compile_policy_from_runtime(policy: RuntimePolicy) -> tuple[CompilePolicy, 
     cuda_graph = bool(policy.options.get("cuda_graph", False))
     regional = policy.options.get("compile_scope") == "regional"
     if compile_options and configured_mode is not None:
-        raise ValueError(
-            "compile_mode and compile_options are mutually exclusive in torch.compile"
-        )
+        raise ValueError("compile_mode and compile_options are mutually exclusive in torch.compile")
     if compile_options and cuda_graph and backend == "inductor":
         raise ValueError(
             "external cuda_graph cannot be combined with custom Inductor compile_options; "
@@ -66,11 +64,11 @@ def _compile_policy_from_runtime(policy: RuntimePolicy) -> tuple[CompilePolicy, 
         "max-autotune-no-cudagraphs",
     }
     if mode is not None and mode not in allowed_modes:
-        raise ValueError(
-            f"unsupported compile_mode {mode!r}; expected one of {sorted(allowed_modes)}"
-        )
+        raise ValueError(f"unsupported compile_mode {mode!r}; expected one of {sorted(allowed_modes)}")
     if (
-        cuda_graph and backend == "inductor" and mode != "max-autotune-no-cudagraphs"
+        cuda_graph
+        and backend == "inductor"
+        and mode != "max-autotune-no-cudagraphs"
         and not (regional and mode == "default")
     ):
         raise ValueError(
@@ -124,7 +122,8 @@ def _compile_policy_from_runtime(policy: RuntimePolicy) -> tuple[CompilePolicy, 
 
 
 def _audited_compile_call(
-    function: Callable[..., Any], runtime: dict[str, Any],
+    function: Callable[..., Any],
+    runtime: dict[str, Any],
 ) -> Callable[..., Any]:
     """Count calls outside the compiled region, preserving execution failures."""
     from worldfoundry.core.attention.backends.dispatch import attention_compile_receipt_scope
@@ -242,10 +241,7 @@ class NativeModuleLoader:
                 "quantization with disk offload is not supported because the "
                 "load-time weight transform requires materialized parameters"
             )
-        if (
-            policy.offload.mode is OffloadMode.BLOCK
-            and policy.quantization.mode is not QuantizationMode.NONE
-        ):
+        if policy.offload.mode is OffloadMode.BLOCK and policy.quantization.mode is not QuantizationMode.NONE:
             raise NotImplementedError(
                 "quantization with block offload is not certified: quantized "
                 "weights are registered buffers, while the asynchronous "
@@ -276,20 +272,11 @@ class NativeModuleLoader:
 
         source: str | list[str]
         source = sources[0] if len(sources) == 1 else list(sources)
-        layerwise_cpu_offload = (
-            policy.offload.mode is OffloadMode.BLOCK
-            and bool(spec.layer_container)
-        )
+        layerwise_cpu_offload = policy.offload.mode is OffloadMode.BLOCK and bool(spec.layer_container)
         legacy_block_offload = (
-            policy.offload.mode is OffloadMode.BLOCK
-            and not layerwise_cpu_offload
-            and spec.vram_module_map is not None
+            policy.offload.mode is OffloadMode.BLOCK and not layerwise_cpu_offload and spec.vram_module_map is not None
         )
-        if (
-            policy.offload.mode is OffloadMode.BLOCK
-            and not layerwise_cpu_offload
-            and not legacy_block_offload
-        ):
+        if policy.offload.mode is OffloadMode.BLOCK and not layerwise_cpu_offload and not legacy_block_offload:
             raise ValueError(
                 "block offload requires ModuleLoadSpec.layer_container for "
                 "asynchronous prefetch, or vram_module_map for the explicitly "
@@ -298,11 +285,7 @@ class NativeModuleLoader:
         # Layerwise offload must be installed before the full checkpoint ever
         # reaches CUDA. Loading on CUDA and attaching hooks afterwards defeats
         # the low-VRAM contract and can OOM during checkpoint restoration.
-        load_device = (
-            torch.device("cpu")
-            if shard_across_gpus or layerwise_cpu_offload
-            else policy.device
-        )
+        load_device = torch.device("cpu") if shard_across_gpus or layerwise_cpu_offload else policy.device
         if policy.offload.mode is OffloadMode.DISK:
             if spec.post_load_hook is not None:
                 raise ValueError("post-load mutations are not supported with disk offload")
@@ -321,8 +304,7 @@ class NativeModuleLoader:
             vram_config = None
             module_map = None
             if spec.vram_module_map is not None and (
-                policy.offload.mode is OffloadMode.COMPONENT
-                or legacy_block_offload
+                policy.offload.mode is OffloadMode.COMPONENT or legacy_block_offload
             ):
                 module_map = dict(spec.vram_module_map)
                 vram_config = {
@@ -342,10 +324,7 @@ class NativeModuleLoader:
                 torch_dtype=policy.dtype,
                 device=load_device,
                 state_dict_converter=spec.state_dict_converter,
-                use_disk_map=all(
-                    str(path).endswith((".safetensors", ".safetensors.index.json"))
-                    for path in sources
-                ),
+                use_disk_map=all(str(path).endswith((".safetensors", ".safetensors.index.json")) for path in sources),
                 module_map=module_map,
                 vram_config=vram_config,
                 vram_limit=spec.vram_limit_gib,
@@ -370,9 +349,7 @@ class NativeModuleLoader:
 
             fuse_qkv = bool(policy.options.get("fuse_qkv", False))
             qkv_strategy = str(policy.options.get("qkv_strategy", "auto"))
-            qkv_split_threshold = int(
-                policy.options.get("qkv_split_threshold", 8192)
-            )
+            qkv_split_threshold = int(policy.options.get("qkv_split_threshold", 8192))
             fused_blocks = 0
             if fuse_qkv:
                 from ..optimizations.qkv_fusion import fuse_qkv_projections
@@ -399,8 +376,7 @@ class NativeModuleLoader:
 
                     if not dist.is_initialized():
                         raise RuntimeError(
-                            "sequence_parallel=True cannot infer a degree before "
-                            "torchrun/NCCL initialization"
+                            "sequence_parallel=True cannot infer a degree before torchrun/NCCL initialization"
                         )
                     sequence_parallel_degree = int(dist.get_world_size())
                 else:
@@ -440,17 +416,11 @@ class NativeModuleLoader:
                     ),
                 }
                 active_conflicts = [
-                    (name, reason)
-                    for name, reason in conflict_reasons.items()
-                    if bool(policy.options.get(name))
+                    (name, reason) for name, reason in conflict_reasons.items() if bool(policy.options.get(name))
                 ]
                 if active_conflicts:
-                    details = "; ".join(
-                        f"{name}: {reason}" for name, reason in active_conflicts
-                    )
-                    raise ValueError(
-                        "sequence_parallel combination is not yet correctness-safe; " + details
-                    )
+                    details = "; ".join(f"{name}: {reason}" for name, reason in active_conflicts)
+                    raise ValueError("sequence_parallel combination is not yet correctness-safe; " + details)
                 from ..optimizations.sequence_parallel import (
                     enable_sequence_parallel,
                     require_sequence_parallel_runtime,
@@ -498,9 +468,7 @@ class NativeModuleLoader:
             # QKV fusion is already complete, and the sparse processor has an
             # explicit fused-QKV contract.
             approximate_option = (
-                policy.options.get("approximate_attention")
-                if spec.supports_approximate_attention
-                else None
+                policy.options.get("approximate_attention") if spec.supports_approximate_attention else None
             )
             if approximate_option:
                 from ..optimizations.approximate_attention import (
@@ -568,10 +536,7 @@ class NativeModuleLoader:
                 applied.record_offload(
                     requested_mode=policy.offload.mode.value,
                     effective="legacy-on-demand-wrapper",
-                    reason=(
-                        "no layer_container was declared, so copy/compute "
-                        "overlap cannot be proven"
-                    ),
+                    reason=("no layer_container was declared, so copy/compute overlap cannot be proven"),
                 )
             elif policy.offload.mode is OffloadMode.COMPONENT:
                 applied.record_offload(
@@ -675,10 +640,7 @@ class NativeModuleLoader:
             # Retain concrete modules and checkpoint keys. Placement hooks
             # remain outside the bound compute callable on each module.
             for (_, target, _, compiled), original in zip(prepared, original_forwards, strict=True):
-                target.forward = (
-                    _audited_compile_call(compiled, compile_runtime)
-                    if wrapper_installed else original
-                )
+                target.forward = _audited_compile_call(compiled, compile_runtime) if wrapper_installed else original
             module._worldfoundry_compile_runtime = compile_runtime
             compile_config: dict[str, Any] = {
                 "backend": compile_policy.backend,
@@ -689,7 +651,8 @@ class NativeModuleLoader:
             }
             if compile_scope == "regional":
                 compile_config.update(
-                    scope="regional", regions=[name for name, *_ in prepared],
+                    scope="regional",
+                    regions=[name for name, *_ in prepared],
                 )
             module._worldfoundry_compile_config = compile_config
             applied = getattr(module, "_worldfoundry_applied_optimizations", None)

@@ -80,6 +80,7 @@ def select_top_k_keypoints(keypoints, scores, k):
 
 class VGGBlock(nn.Sequential):
     """Vgg block implementation."""
+
     def __init__(self, c_in, c_out, kernel_size, relu=True):
         """Init.
 
@@ -106,6 +107,7 @@ class VGGBlock(nn.Sequential):
 
 class SuperPoint(nn.Module):
     """Super point implementation."""
+
     default_conf = {
         "nms_radius": 4,
         "max_num_keypoints": None,

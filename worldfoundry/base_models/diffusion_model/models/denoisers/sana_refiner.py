@@ -77,9 +77,7 @@ class SanaWMLTX2RefinerProcessor:
         if any(left <= right for left, right in zip(self.sigmas, self.sigmas[1:])):
             raise ValueError("SANA-WM refiner sigmas must be strictly descending")
         config = getattr(transformer, "config", None)
-        if int(getattr(config, "patch_size", 1)) != 1 or int(
-            getattr(config, "patch_size_t", 1)
-        ) != 1:
+        if int(getattr(config, "patch_size", 1)) != 1 or int(getattr(config, "patch_size_t", 1)) != 1:
             raise ValueError("SANA-WM streaming refiner requires unit spatial/temporal patches")
 
     def process(
@@ -130,9 +128,7 @@ class SanaWMLTX2RefinerProcessor:
             dtype=torch.float32,
         )
         raw_timestep[:, context_tokens.shape[1] :] = float(sigma)
-        multiplier = float(
-            getattr(self.transformer.config, "timestep_scale_multiplier", 1000.0)
-        )
+        multiplier = float(getattr(self.transformer.config, "timestep_scale_multiplier", 1000.0))
         model_timestep = raw_timestep * multiplier
 
         video_context = conditioning.get("refiner_video_context")
@@ -223,9 +219,7 @@ class SanaWMLTX2RefinerProcessor:
                     fps=fps,
                 )
                 noisy_tokens = _pack_latents(noisy).float()
-                next_tokens = noisy_tokens + (
-                    float(following) - float(sigma)
-                ) * velocity.float()
+                next_tokens = noisy_tokens + (float(following) - float(sigma)) * velocity.float()
                 noisy = _unpack_latents(
                     next_tokens.to(dtype=self.dtype),
                     frames=active.shape[2],

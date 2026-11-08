@@ -90,9 +90,9 @@ class UniCeptionEncoderBase(nn.Module):
             AssertionError: If the data normalization type does not match the encoder's expected input data normalization type.
         """
 
-        assert (
-            data_norm_type == self.data_norm_type
-        ), f"Input normalization type {data_norm_type} does not match the encoder's normalization type {self.data_norm_type}."
+        assert data_norm_type == self.data_norm_type, (
+            f"Input normalization type {data_norm_type} does not match the encoder's normalization type {self.data_norm_type}."
+        )
 
 
 @dataclass

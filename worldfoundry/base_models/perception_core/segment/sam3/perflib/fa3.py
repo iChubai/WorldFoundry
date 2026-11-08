@@ -8,9 +8,7 @@ import torch
 
 
 @torch.library.custom_op("flash::flash_attn_func", mutates_args=())
-def flash_attn_func_op(
-    q: torch.Tensor, k: torch.Tensor, v: torch.Tensor
-) -> torch.Tensor:
+def flash_attn_func_op(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     """Flash attn func op.
 
     Args:

@@ -13,43 +13,43 @@ logger = get_logger()  # pylint: disable=invalid-name
 
 
 def is_vllm_available():
-    return importlib.util.find_spec('vllm') is not None
+    return importlib.util.find_spec("vllm") is not None
 
 
 def is_vllm_ascend_available():
-    return importlib.util.find_spec('vllm_ascend') is not None
+    return importlib.util.find_spec("vllm_ascend") is not None
 
 
 def is_lmdeploy_available():
-    return importlib.util.find_spec('lmdeploy') is not None
+    return importlib.util.find_spec("lmdeploy") is not None
 
 
 def is_liger_available():
-    return importlib.util.find_spec('liger_kernel') is not None
+    return importlib.util.find_spec("liger_kernel") is not None
 
 
 def is_swanlab_available():
-    return importlib.util.find_spec('swanlab') is not None
+    return importlib.util.find_spec("swanlab") is not None
 
 
 def is_xtuner_available():
-    return importlib.util.find_spec('xtuner') is not None
+    return importlib.util.find_spec("xtuner") is not None
 
 
 def is_megatron_available():
-    return importlib.util.find_spec('megatron') is not None
+    return importlib.util.find_spec("megatron") is not None
 
 
 def is_unsloth_available() -> bool:
-    return importlib.util.find_spec('unsloth') is not None
+    return importlib.util.find_spec("unsloth") is not None
 
 
 def is_pyreft_available() -> bool:
-    return importlib.util.find_spec('pyreft') is not None
+    return importlib.util.find_spec("pyreft") is not None
 
 
 def is_wandb_available() -> bool:
-    return importlib.util.find_spec('wandb') is not None
+    return importlib.util.find_spec("wandb") is not None
 
 
 class _LazyModule(ModuleType):
@@ -94,13 +94,13 @@ class _LazyModule(ModuleType):
             module = self._get_module(self._class_to_module[name])
             value = getattr(module, name)
         else:
-            raise AttributeError(f'module {self.__name__} has no attribute {name}')
+            raise AttributeError(f"module {self.__name__} has no attribute {name}")
 
         setattr(self, name, value)
         return value
 
     def _get_module(self, module_name: str):
-        return importlib.import_module('.' + module_name, self.__name__)
+        return importlib.import_module("." + module_name, self.__name__)
 
     def __reduce__(self):
         return self.__class__, (self._name, self.__file__, self._import_structure)

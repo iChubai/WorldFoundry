@@ -3,7 +3,7 @@
 from io import BytesIO
 import math
 import numpy as np
-import torch 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import importlib
@@ -11,8 +11,10 @@ from plyfile import PlyData, PlyElement
 
 import copy
 
+
 class EmbedContainer(nn.Module):
     """Embed container implementation."""
+
     def __init__(self, tensor):
         """Init.
 
@@ -21,10 +23,11 @@ class EmbedContainer(nn.Module):
         """
         super().__init__()
         self.tensor = nn.Parameter(tensor)
-    
+
     def forward(self):
         """Forward."""
         return self.tensor
+
 
 @torch.no_grad
 def zero_init(module):
@@ -38,6 +41,7 @@ def zero_init(module):
         module.bias.zero_()
     return module
 
+
 def import_str(string):
     """Import str.
 
@@ -48,6 +52,7 @@ def import_str(string):
     module, cls = string.rsplit(".", 1)
     return getattr(importlib.import_module(module, package=None), cls)
 
+
 """
 from https://github.com/Kai-46/minFM/blob/main/utils/ema.py
 Exponential Moving Average (EMA) utilities for PyTorch models.
@@ -57,8 +62,11 @@ which are commonly used to improve model stability and generalization
 in training deep neural networks. It supports both regular tensors and
 DTensors (from FSDP-wrapped models).
 """
+
+
 class EMA_FSDP:
     """Fsdp implementation."""
+
     def __init__(self, fsdp_module: torch.nn.Module, decay: float = 0.999):
         """Init.
 
@@ -79,6 +87,7 @@ class EMA_FSDP:
         """
         # 判断是否是FSDP模型
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
         if isinstance(fsdp_module, FSDP):
             with FSDP.summon_full_params(fsdp_module, writeback=False):
                 for n, p in fsdp_module.module.named_parameters():
@@ -96,19 +105,20 @@ class EMA_FSDP:
         """
         d = self.decay
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
         if isinstance(fsdp_module, FSDP):
             with FSDP.summon_full_params(fsdp_module, writeback=False):
                 for n, p in fsdp_module.module.named_parameters():
-                    self.shadow[n].mul_(d).add_(p.detach().float().cpu(), alpha=1. - d)
+                    self.shadow[n].mul_(d).add_(p.detach().float().cpu(), alpha=1.0 - d)
         else:
             for n, p in fsdp_module.named_parameters():
                 print(n, self.shadow[n])
-                self.shadow[n].mul_(d).add_(p.detach().float().cpu(), alpha=1. - d)
+                self.shadow[n].mul_(d).add_(p.detach().float().cpu(), alpha=1.0 - d)
 
     # Optional helpers ---------------------------------------------------
     def state_dict(self):
         """State dict."""
-        return self.shadow            # picklable
+        return self.shadow  # picklable
 
     def load_state_dict(self, sd):
         """Load state dict.
@@ -126,10 +136,12 @@ class EMA_FSDP:
         """
         # load EMA weights into an (unwrapped) copy of the generator
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
         with FSDP.summon_full_params(fsdp_module, writeback=True):
             for n, p in fsdp_module.module.named_parameters():
                 if n in self.shadow:
                     p.data.copy_(self.shadow[n].to(p.dtype, device=p.device))
+
 
 def create_raymaps(cameras, h, w):
     """Create raymaps.
@@ -143,13 +155,16 @@ def create_raymaps(cameras, h, w):
     raymaps = torch.cat([rays_d, rays_o - (rays_o * rays_d).sum(dim=-1, keepdim=True) * rays_d], dim=-1)
     return raymaps
 
+
 # def create_raymaps(cameras, h, w):
 #     rays_o, rays_d = create_rays(cameras, h, w)
 #     raymaps = torch.cat([rays_d, torch.cross(rays_d, rays_o, dim=-1)], dim=-1)
 #     return raymaps
 
+
 class EMANorm(nn.Module):
     """Ema norm implementation."""
+
     def __init__(self, beta):
         """Init.
 
@@ -157,7 +172,7 @@ class EMANorm(nn.Module):
             beta: The beta.
         """
         super().__init__()
-        self.register_buffer('magnitude_ema', torch.ones([]))
+        self.register_buffer("magnitude_ema", torch.ones([]))
         self.beta = beta
 
     def forward(self, x):
@@ -172,9 +187,11 @@ class EMANorm(nn.Module):
         input_gain = self.magnitude_ema.rsqrt()
         x = x.mul(input_gain)
         return x
-    
+
+
 class TimestepEmbedding(nn.Module):
     """Timestep embedding implementation."""
+
     def __init__(self, dim, max_period=10000, time_factor: float = 1000.0, zero_weight: bool = True):
         """Init.
 
@@ -204,6 +221,7 @@ class TimestepEmbedding(nn.Module):
         else:
             return timestep_embedding(t, self.dim, self.max_period, self.time_factor) * self.weight.unsqueeze(0)
 
+
 # @torch.compile(mode="max-autotune-no-cudagraphs", dynamic=True)
 def timestep_embedding(t, dim, max_period=10000, time_factor: float = 1000.0):
     """
@@ -225,6 +243,7 @@ def timestep_embedding(t, dim, max_period=10000, time_factor: float = 1000.0):
     if torch.is_floating_point(t):
         embedding = embedding.to(t)
     return embedding
+
 
 def quaternion_to_matrix(quaternions):
     """
@@ -254,6 +273,7 @@ def quaternion_to_matrix(quaternions):
     )
     return o.reshape(quaternions.shape[:-1] + (3, 3))
 
+
 # from https://pytorch3d.readthedocs.io/en/latest/_modules/pytorch3d/transforms/rotation_conversions.html#matrix_to_quaternion
 def standardize_quaternion(quaternions: torch.Tensor) -> torch.Tensor:
     """
@@ -269,6 +289,7 @@ def standardize_quaternion(quaternions: torch.Tensor) -> torch.Tensor:
     """
     return torch.where(quaternions[..., 0:1] < 0, -quaternions, quaternions)
 
+
 def _sqrt_positive_part(x: torch.Tensor) -> torch.Tensor:
     """
     Returns torch.sqrt(torch.max(0, x))
@@ -281,6 +302,7 @@ def _sqrt_positive_part(x: torch.Tensor) -> torch.Tensor:
     else:
         ret = torch.where(positive_mask, torch.sqrt(x), ret)
     return ret
+
 
 def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     """
@@ -296,9 +318,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
 
     batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(
-        matrix.reshape(batch_dim + (9,)), dim=-1
-    )
+    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)
 
     q_abs = _sqrt_positive_part(
         torch.stack(
@@ -344,6 +364,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     out = torch.gather(quat_candidates, -2, gather_indices).squeeze(-2)
     return standardize_quaternion(out)
 
+
 @torch.amp.autocast(device_type="cuda", enabled=False)
 def normalize_cameras(cameras, return_meta=False, ref_w2c=None, T_norm=None, n_frame=None):
     """Normalize cameras.
@@ -356,7 +377,7 @@ def normalize_cameras(cameras, return_meta=False, ref_w2c=None, T_norm=None, n_f
         n_frame: The n frame.
     """
     B, N = cameras.shape[:2]
-     
+
     c2ws = torch.zeros(B, N, 3, 4, device=cameras.device)
 
     c2ws[..., :3, :3] = quaternion_to_matrix(cameras[..., 0:4])
@@ -383,6 +404,7 @@ def normalize_cameras(cameras, return_meta=False, ref_w2c=None, T_norm=None, n_f
     else:
         return cameras
 
+
 def create_rays(cameras, h, w, uv_offset=None):
     """Create rays.
 
@@ -407,28 +429,29 @@ def create_rays(cameras, h, w, uv_offset=None):
     fx, cx = fx * w, cx * w
     fy, cy = fy * h, cy * h
 
-    inds = torch.arange(0, h*w, device=device).expand(N, h*w)
-        
+    inds = torch.arange(0, h * w, device=device).expand(N, h * w)
+
     i = inds % w + 0.5
-    j = torch.div(inds, w, rounding_mode='floor') + 0.5
+    j = torch.div(inds, w, rounding_mode="floor") + 0.5
 
-    u = i / cx + (uv_offset[..., 0].reshape(N, h*w) if uv_offset is not None else 0) 
-    v = j / cy + (uv_offset[..., 1].reshape(N, h*w) if uv_offset is not None else 0) 
+    u = i / cx + (uv_offset[..., 0].reshape(N, h * w) if uv_offset is not None else 0)
+    v = j / cy + (uv_offset[..., 1].reshape(N, h * w) if uv_offset is not None else 0)
 
-    zs = - torch.ones_like(i)
-    xs = - (u - 1) * cx / fx * zs
+    zs = -torch.ones_like(i)
+    xs = -(u - 1) * cx / fx * zs
     ys = (v - 1) * cy / fy * zs
     directions = torch.stack((xs, ys, zs), dim=-1)
 
     rays_d = F.normalize(directions @ c2w[:, :3, :3].transpose(-1, -2), dim=-1)
 
-    rays_o = c2w[..., :3, 3] # [B, 3]
+    rays_o = c2w[..., :3, 3]  # [B, 3]
     rays_o = rays_o[..., None, :].expand_as(rays_d)
 
     rays_o = rays_o.reshape(*prefix_shape, h, w, 3)
     rays_d = rays_d.reshape(*prefix_shape, h, w, 3)
 
     return rays_o, rays_d
+
 
 def matrix_to_square(mat):
     """Matrix to square.
@@ -437,10 +460,13 @@ def matrix_to_square(mat):
         mat: The mat.
     """
     l = len(mat.shape)
-    if l==3:
-        return torch.cat([mat, torch.tensor([0,0,0,1]).repeat(mat.shape[0],1,1).to(mat.device)],dim=1)
-    elif l==4:
-        return torch.cat([mat, torch.tensor([0,0,0,1]).repeat(mat.shape[0],mat.shape[1],1,1).to(mat.device)],dim=2)
+    if l == 3:
+        return torch.cat([mat, torch.tensor([0, 0, 0, 1]).repeat(mat.shape[0], 1, 1).to(mat.device)], dim=1)
+    elif l == 4:
+        return torch.cat(
+            [mat, torch.tensor([0, 0, 0, 1]).repeat(mat.shape[0], mat.shape[1], 1, 1).to(mat.device)], dim=2
+        )
+
 
 def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=None, spz_path=None):
     """Export gaussians.
@@ -455,13 +481,13 @@ def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=No
 
     sh_degree = int(math.sqrt((gaussians.shape[-1] - sum([3, 1, 3, 4])) / 3 - 1))
 
-    xyz, opacity, scale, rotation, feature = gaussians.float().split([3, 1, 3, 4, (sh_degree + 1)**2 * 3], dim=-1)
-     
+    xyz, opacity, scale, rotation, feature = gaussians.float().split([3, 1, 3, 4, (sh_degree + 1) ** 2 * 3], dim=-1)
+
     means3D = xyz.contiguous().float()
     opacity = opacity.contiguous().float()
     scales = scale.contiguous().float()
     rotations = rotation.contiguous().float()
-    shs = feature.contiguous().float() # [N, 1, 3]
+    shs = feature.contiguous().float()  # [N, 1, 3]
 
     # print(means3D.shape, opacity.shape, scales.shape, rotations.shape, shs.shape)
 
@@ -481,14 +507,14 @@ def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=No
         scales = scales * T_norm.item()
 
     # invert activation to make it compatible with the original ply format
-    opacity = torch.log(opacity/(1-opacity))
+    opacity = torch.log(opacity / (1 - opacity))
     scales = torch.log(scales + 1e-8)
 
-    xyzs = means3D.detach() # .cpu().numpy()
-    f_dc = shs.detach().flatten(start_dim=1).contiguous() #.cpu().numpy()
-    opacities = opacity.detach() #.cpu().numpy()
-    scales = scales.detach() #.cpu().numpy()
-    rotations = rotations.detach() #.cpu().numpy()
+    xyzs = means3D.detach()  # .cpu().numpy()
+    f_dc = shs.detach().flatten(start_dim=1).contiguous()  # .cpu().numpy()
+    opacities = opacity.detach()  # .cpu().numpy()
+    scales = scales.detach()  # .cpu().numpy()
+    rotations = rotations.detach()  # .cpu().numpy()
 
     """spz
     Data Layout
@@ -515,30 +541,31 @@ def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=No
         cloud.sh = f_dc[..., 3:].flatten().cpu().numpy()
 
         spz.save_spz(cloud, spz.PackOptions(), spz_path)
-    
+
     if ply_path is not None:
-        l = ['x', 'y', 'z']
+        l = ["x", "y", "z"]
         # All channels except the 3 DC
         for i in range(f_dc.shape[1]):
-            l.append('f_dc_{}'.format(i))
-        l.append('opacity')
+            l.append("f_dc_{}".format(i))
+        l.append("opacity")
         for i in range(scales.shape[1]):
-            l.append('scale_{}'.format(i))
+            l.append("scale_{}".format(i))
         for i in range(rotations.shape[1]):
-            l.append('rot_{}'.format(i))
+            l.append("rot_{}".format(i))
 
-        dtype_full = [(attribute, 'f4') for attribute in l]
+        dtype_full = [(attribute, "f4") for attribute in l]
 
         attributes = torch.cat((xyzs, f_dc, opacities, scales, rotations), dim=1).cpu().numpy()
 
-        elements = np.rec.fromarrays([attributes[:, i] for i in range(attributes.shape[1])], names=l, formats=['f4'] * len(l))
-        el = PlyElement.describe(elements, 'vertex')
+        elements = np.rec.fromarrays(
+            [attributes[:, i] for i in range(attributes.shape[1])], names=l, formats=["f4"] * len(l)
+        )
+        el = PlyElement.describe(elements, "vertex")
         PlyData([el]).write(ply_path)
 
+
 @torch.amp.autocast(device_type="cuda", enabled=False)
-def quaternion_slerp(
-    q0, q1, fraction, spin: int = 0, shortestpath: bool = True
-):
+def quaternion_slerp(q0, q1, fraction, spin: int = 0, shortestpath: bool = True):
     """Return spherical linear interpolation between two quaternions.
     Args:
         quat0: first quaternion
@@ -558,11 +585,11 @@ def quaternion_slerp(
     # theta = torch.arccos(d) * fraction
     # q2 = q1 - q0 * d
     # q2 = q2 / (q2.norm(dim=-1) + 1e-10)
-    
+
     # return torch.cos(theta) * q0 + torch.sin(theta) * q2
 
     angle = torch.acos(_d) + spin * math.pi
-    isin = 1.0 / (torch.sin(angle)+ 1e-10)
+    isin = 1.0 / (torch.sin(angle) + 1e-10)
     q0_ = q0 * (torch.sin((1.0 - fraction) * angle) * isin)[..., None]
     q1_ = q1 * (torch.sin(fraction * angle) * isin)[..., None]
 
@@ -574,6 +601,7 @@ def quaternion_slerp(
     # q[(d.abs() - 1).abs() < 1e-5] = q0[(d.abs() - 1).abs() < 1e-5]
 
     return q
+
 
 def sample_from_two_pose(pose_a, pose_b, fraction, noise_strengths=[0, 0]):
     """
@@ -600,6 +628,7 @@ def sample_from_two_pose(pose_a, pose_b, fraction, noise_strengths=[0, 0]):
     new_pose[..., 4:] = T
     return new_pose
 
+
 def sample_from_dense_cameras(dense_cameras, t, noise_strengths=[0, 0, 0, 0]):
     """Sample from dense cameras.
 
@@ -610,16 +639,15 @@ def sample_from_dense_cameras(dense_cameras, t, noise_strengths=[0, 0, 0, 0]):
     """
     N, C = dense_cameras.shape
     M = t.shape
-    
-    left = torch.floor(t * (N-1)).long().clamp(0, N-2)
+
+    left = torch.floor(t * (N - 1)).long().clamp(0, N - 2)
     right = left + 1
-    fraction = t * (N-1) - left
+    fraction = t * (N - 1) - left
 
     a = torch.gather(dense_cameras, 0, left[..., None].repeat(1, C))
     b = torch.gather(dense_cameras, 0, right[..., None].repeat(1, C))
 
-    new_pose = sample_from_two_pose(a[:, :7], 
-                                    b[:, :7], fraction, noise_strengths=noise_strengths[:2])
+    new_pose = sample_from_two_pose(a[:, :7], b[:, :7], fraction, noise_strengths=noise_strengths[:2])
 
     new_ins = (1 - fraction)[:, None] * a[:, 7:] + fraction[:, None] * b[:, 7:]
 

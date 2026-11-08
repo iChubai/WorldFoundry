@@ -159,9 +159,7 @@ def _varlen_attention(
         q_seg = q[start:stop].transpose(0, 1).unsqueeze(0)
         k_seg = k[start:stop].transpose(0, 1).unsqueeze(0)
         v_seg = v[start:stop].transpose(0, 1).unsqueeze(0)
-        attended = F.scaled_dot_product_attention(
-            q_seg, k_seg, v_seg, is_causal=False, scale=softmax_scale
-        )
+        attended = F.scaled_dot_product_attention(q_seg, k_seg, v_seg, is_causal=False, scale=softmax_scale)
         out[start:stop] = attended.squeeze(0).transpose(0, 1)
     return out
 
@@ -185,9 +183,7 @@ class MiniMaxH3TimeEmbedder(nn.Module):
         half = self.frequency_embedding_size // 2
         freqs = self._frequency_cache
         if freqs is None or freqs.device != t.device:
-            freqs = torch.exp(
-                -math.log(10000.0) * torch.arange(half, dtype=_FP32, device=t.device) / half
-            )
+            freqs = torch.exp(-math.log(10000.0) * torch.arange(half, dtype=_FP32, device=t.device) / half)
             self._frequency_cache = freqs
         args = t.to(_FP32)[:, None] * freqs[None]
         t_freq = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
@@ -310,8 +306,7 @@ class MiniMaxH3AdalnProj(nn.Module):
         super().__init__()
         if out_features != expand_ratio * arch.hidden_size * modality_num:
             raise ValueError(
-                f"adaln out_features mismatch: {out_features} != "
-                f"{expand_ratio}*{arch.hidden_size}*{modality_num}"
+                f"adaln out_features mismatch: {out_features} != {expand_ratio}*{arch.hidden_size}*{modality_num}"
             )
         self.expand_ratio = expand_ratio
         self.modality_num = modality_num
@@ -354,9 +349,7 @@ class MiniMaxH3TokenRefiner(nn.Module):
 
     def __init__(self, arch: MiniMaxH3DiTArchConfig) -> None:
         super().__init__()
-        self.blocks = nn.ModuleList(
-            [MiniMaxH3TokenRefinerBlock(arch) for _ in range(arch.token_refiner_num_layers)]
-        )
+        self.blocks = nn.ModuleList([MiniMaxH3TokenRefinerBlock(arch) for _ in range(arch.token_refiner_num_layers)])
         self.final_norm = make_rms_norm(arch.hidden_size, eps=arch.final_norm_eps)
 
     def forward(self, x: torch.Tensor, *, cu_seqlens: torch.Tensor) -> torch.Tensor:
@@ -700,18 +693,14 @@ class MiniMaxH3DiTModel(nn.Module):
                 rope_cache=rope_cache,
                 cu_seqlens=cu_seqlens,
             )
-        video_logits, audio_logits = self.final_layer(
-            hidden, adaln_input=adaln_input, inverse_indices=inverse_indices
-        )
+        video_logits, audio_logits = self.final_layer(hidden, adaln_input=adaln_input, inverse_indices=inverse_indices)
 
         video_logits = video_logits.index_select(0, infer_out_pos.to(device))
         audio_logits = audio_logits.index_select(0, audio_pos.to(device))
         if not skip_mask_out_condition:
             update_mask = update_mask.view(-1).to(device)
             if update_mask.shape[0] != video_logits.shape[0]:
-                raise ValueError(
-                    f"update_mask length mismatch: {update_mask.shape[0]} != {video_logits.shape[0]}"
-                )
+                raise ValueError(f"update_mask length mismatch: {update_mask.shape[0]} != {video_logits.shape[0]}")
             video_logits = video_logits * update_mask.unsqueeze(-1)
             update_audio_mask = kwargs.get("update_audio_mask")
             if update_audio_mask is not None:

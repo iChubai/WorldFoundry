@@ -11,6 +11,7 @@ from .distribution_sampler import DistributionSampler
 
 class DepthPredictorMonocular(nn.Module):
     """Depth predictor monocular implementation."""
+
     projection: nn.Sequential
     sampler: DistributionSampler
     num_samples: int
@@ -75,9 +76,7 @@ class DepthPredictorMonocular(nn.Module):
 
         # Convert the features into a depth distribution plus intra-bucket offsets.
         features = self.projection(features)
-        pdf_raw, offset_raw = rearrange(
-            features, "... (dpt srf c) -> c ... srf dpt", c=2, srf=self.num_surfaces
-        )
+        pdf_raw, offset_raw = rearrange(features, "... (dpt srf c) -> c ... srf dpt", c=2, srf=self.num_surfaces)
         pdf = self.to_pdf(pdf_raw)
         offset = self.to_offset(offset_raw)
 
@@ -96,9 +95,7 @@ class DepthPredictorMonocular(nn.Module):
         # Compute opacity from PDF.
         if self.use_transmittance:
             partial = pdf.cumsum(dim=-1)
-            partial = torch.cat(
-                (torch.zeros_like(partial[..., :1]), partial[..., :-1]), dim=-1
-            )
+            partial = torch.cat((torch.zeros_like(partial[..., :1]), partial[..., :-1]), dim=-1)
             opacity = pdf / (1 - partial + 1e-10)
             opacity = self.sampler.gather(index, opacity)
         else:

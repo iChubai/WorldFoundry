@@ -42,7 +42,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         img_size: int = 518,
         patch_size: int = 14,
         embed_dim: int = 1024,
-        patch_embed: str = 'dinov2_vitl14_reg',
+        patch_embed: str = "dinov2_vitl14_reg",
         disable_global_rope: bool = False,
         # Head configuration
         enable_camera: bool = True,
@@ -143,7 +143,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
             patch_size=self.patch_size,
             output_dim=2,
             activation="exp",
-            conf_activation="expp1"
+            conf_activation="expp1",
         )
 
     def _build_point_head(self) -> nn.Module:
@@ -157,7 +157,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
             patch_size=self.patch_size,
             output_dim=4,
             activation="inv_log",
-            conf_activation="expp1"
+            conf_activation="expp1",
         )
 
     def _build_local_point_head(self) -> nn.Module:
@@ -171,7 +171,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
             patch_size=self.patch_size,
             output_dim=4,
             activation="inv_log",
-            conf_activation="expp1"
+            conf_activation="expp1",
         )
 
     def _normalize_input(self, images: torch.Tensor, query_points=None):
@@ -245,7 +245,7 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
 
         camera_sliding_window = sliding_window_size if self.enable_camera_sliding_window else -1
 
-        with torch.amp.autocast('cuda', enabled=False):
+        with torch.amp.autocast("cuda", enabled=False):
             pose_enc_list = self.camera_head(
                 aggregated_tokens_list_fp32,
                 mask=mask,
@@ -284,11 +284,9 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         aggregated_tokens_list_fp32 = [t.float() for t in aggregated_tokens_list]
         images_fp32 = images.float()
 
-        with torch.amp.autocast('cuda', enabled=False):
+        with torch.amp.autocast("cuda", enabled=False):
             depth, depth_conf = self.depth_head(
-                aggregated_tokens_list_fp32,
-                images=images_fp32,
-                patch_start_idx=patch_start_idx
+                aggregated_tokens_list_fp32, images=images_fp32, patch_start_idx=patch_start_idx
             )
 
         return {"depth": depth, "depth_conf": depth_conf}
@@ -317,11 +315,9 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         aggregated_tokens_list_fp32 = [t.float() for t in aggregated_tokens_list]
         images_fp32 = images.float()
 
-        with torch.amp.autocast('cuda', enabled=False):
+        with torch.amp.autocast("cuda", enabled=False):
             pts3d, pts3d_conf = self.point_head(
-                aggregated_tokens_list_fp32,
-                images=images_fp32,
-                patch_start_idx=patch_start_idx
+                aggregated_tokens_list_fp32, images=images_fp32, patch_start_idx=patch_start_idx
             )
 
         return {"world_points": pts3d, "world_points_conf": pts3d_conf}
@@ -350,11 +346,9 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         aggregated_tokens_list_fp32 = [t.float() for t in aggregated_tokens_list]
         images_fp32 = images.float()
 
-        with torch.amp.autocast('cuda', enabled=False):
+        with torch.amp.autocast("cuda", enabled=False):
             pts3d, pts3d_conf = self.local_point_head(
-                aggregated_tokens_list_fp32,
-                images=images_fp32,
-                patch_start_idx=patch_start_idx
+                aggregated_tokens_list_fp32, images=images_fp32, patch_start_idx=patch_start_idx
             )
 
         return {"cam_points": pts3d, "cam_points_conf": pts3d_conf}
@@ -389,19 +383,17 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
         c2w = closed_form_inverse_se3(extrinsics_4x4).view(B, S, 4, 4)
 
         y_grid, x_grid = torch.meshgrid(
-            torch.arange(H, device=device, dtype=dtype),
-            torch.arange(W, device=device, dtype=dtype),
-            indexing='ij'
+            torch.arange(H, device=device, dtype=dtype), torch.arange(W, device=device, dtype=dtype), indexing="ij"
         )
         pixel_coords = torch.stack([x_grid, y_grid, torch.ones_like(x_grid)], dim=-1)
 
         intrinsics_inv = torch.inverse(intrinsics)
-        camera_coords = torch.einsum('bsij,hwj->bshwi', intrinsics_inv, pixel_coords)
+        camera_coords = torch.einsum("bsij,hwj->bshwi", intrinsics_inv, pixel_coords)
         camera_points = camera_coords * depth
 
         ones = torch.ones_like(camera_points[..., :1])
         camera_points_h = torch.cat([camera_points, ones], dim=-1)
-        world_points_h = torch.einsum('bsij,bshwj->bshwi', c2w, camera_points_h)
+        world_points_h = torch.einsum("bsij,bshwj->bshwi", c2w, camera_points_h)
 
         return world_points_h[..., :3]
 
@@ -445,30 +437,44 @@ class GCTBase(nn.Module, PyTorchModelHubMixin, ABC):
 
         predictions = {}
 
-        predictions.update(self._predict_camera(
-            aggregated_tokens_list,
-            mask=ordered_video,
-            causal_inference=causal_inference,
-            num_frame_for_scale=num_frame_for_scale,
-            sliding_window_size=sliding_window_size,
-            num_frame_per_block=num_frame_per_block,
-            gather_outputs=gather_outputs,
-        ))
+        predictions.update(
+            self._predict_camera(
+                aggregated_tokens_list,
+                mask=ordered_video,
+                causal_inference=causal_inference,
+                num_frame_for_scale=num_frame_for_scale,
+                sliding_window_size=sliding_window_size,
+                num_frame_per_block=num_frame_per_block,
+                gather_outputs=gather_outputs,
+            )
+        )
 
-        predictions.update(self._predict_depth(
-            aggregated_tokens_list, images, patch_start_idx,
-            gather_outputs=gather_outputs,
-        ))
+        predictions.update(
+            self._predict_depth(
+                aggregated_tokens_list,
+                images,
+                patch_start_idx,
+                gather_outputs=gather_outputs,
+            )
+        )
 
-        predictions.update(self._predict_points(
-            aggregated_tokens_list, images, patch_start_idx,
-            gather_outputs=gather_outputs,
-        ))
+        predictions.update(
+            self._predict_points(
+                aggregated_tokens_list,
+                images,
+                patch_start_idx,
+                gather_outputs=gather_outputs,
+            )
+        )
 
-        predictions.update(self._predict_local_points(
-            aggregated_tokens_list, images, patch_start_idx,
-            gather_outputs=gather_outputs,
-        ))
+        predictions.update(
+            self._predict_local_points(
+                aggregated_tokens_list,
+                images,
+                patch_start_idx,
+                gather_outputs=gather_outputs,
+            )
+        )
 
         if not self.training:
             predictions["images"] = images

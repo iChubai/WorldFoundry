@@ -26,9 +26,7 @@ def masked_mse_loss(pred, gt, mask=None, normalize=True, quantile: float = 1.0):
         )
         ndim = sum_loss.shape[-1]
         if normalize:
-            return torch.sum((sum_loss * mask)[quantile_mask]) / (
-                ndim * torch.sum(mask[quantile_mask]) + 1e-8
-            )
+            return torch.sum((sum_loss * mask)[quantile_mask]) / (ndim * torch.sum(mask[quantile_mask]) + 1e-8)
         else:
             return torch.mean((sum_loss * mask)[quantile_mask])
 
@@ -66,7 +64,7 @@ def masked_l1_loss(pred, gt, mask=None, normalize=True, quantile: float = 1.0):
         return trimmed_l1_loss(pred, gt, quantile)
     else:
         sum_loss = F.l1_loss(pred, gt, reduction="none").mean(dim=-1, keepdim=True)
-        # sum_loss.shape 
+        # sum_loss.shape
         # block     [218255, 1]
         # apple     [36673, 475, 1]     17,419,675
         # creeper   [37587, 360, 1]     13,531,320
@@ -87,16 +85,15 @@ def masked_l1_loss(pred, gt, mask=None, normalize=True, quantile: float = 1.0):
                 idxi = int(idxf)
                 threshold = sorted[idxi] + (sorted[idxi + 1] - sorted[idxi]) * (idxf - idxi)
             quantile_mask = (sum_loss < threshold).squeeze(-1)
-        else: 
+        else:
             quantile_mask = torch.ones_like(sum_loss, dtype=torch.bool).squeeze(-1)
 
         ndim = sum_loss.shape[-1]
         if normalize:
-            return torch.sum((sum_loss * mask)[quantile_mask]) / (
-                ndim * torch.sum(mask[quantile_mask]) + 1e-8
-            )
+            return torch.sum((sum_loss * mask)[quantile_mask]) / (ndim * torch.sum(mask[quantile_mask]) + 1e-8)
         else:
             return torch.mean((sum_loss * mask)[quantile_mask])
+
 
 def masked_huber_loss(pred, gt, delta, mask=None, normalize=True):
     """Masked huber loss.
@@ -163,9 +160,7 @@ def compute_gradient_loss(pred, gt, mask, quantile=0.98):
     gt_grad_y = gt[:, 1:, :] - gt[:, :-1, :]
     loss = masked_l1_loss(
         pred_grad_x[mask_x][..., None], gt_grad_x[mask_x][..., None], quantile=quantile
-    ) + masked_l1_loss(
-        pred_grad_y[mask_y][..., None], gt_grad_y[mask_y][..., None], quantile=quantile
-    )
+    ) + masked_l1_loss(pred_grad_y[mask_y][..., None], gt_grad_y[mask_y][..., None], quantile=quantile)
     return loss
 
 
@@ -204,9 +199,7 @@ def get_weights_for_procrustes(clusters, visibilities=None):
     weights /= weights.mean(dim=-1, keepdim=True) + 1e-6
     if visibilities is not None:
         weights *= visibilities.float() + 1e-6
-    invalid = dists2clusters_center > np.quantile(
-        dists2clusters_center.cpu().numpy(), 0.9
-    )
+    invalid = dists2clusters_center > np.quantile(dists2clusters_center.cpu().numpy(), 0.9)
     invalid |= torch.isnan(weights)
     weights[invalid] = 0
     return weights
@@ -219,14 +212,10 @@ def compute_z_acc_loss(means_ts_nb: torch.Tensor, w2cs: torch.Tensor):
     return (float)
     """
     camera_center_t = torch.linalg.inv(w2cs)[:, :3, 3]  # (B, 3)
-    ray_dir = F.normalize(
-        means_ts_nb[:, 1] - camera_center_t, p=2.0, dim=-1
-    )  # [G, B, 3]
+    ray_dir = F.normalize(means_ts_nb[:, 1] - camera_center_t, p=2.0, dim=-1)  # [G, B, 3]
     # acc = 2 * means[:, 1] - means[:, 0] - means[:, 2]  # [G, B, 3]
     # acc_loss = (acc * ray_dir).sum(dim=-1).abs().mean()
-    acc_loss = (
-        ((means_ts_nb[:, 1] - means_ts_nb[:, 0]) * ray_dir).sum(dim=-1) ** 2
-    ).mean() + (
+    acc_loss = (((means_ts_nb[:, 1] - means_ts_nb[:, 0]) * ray_dir).sum(dim=-1) ** 2).mean() + (
         ((means_ts_nb[:, 2] - means_ts_nb[:, 1]) * ray_dir).sum(dim=-1) ** 2
     ).mean()
     return acc_loss

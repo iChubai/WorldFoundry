@@ -4,6 +4,7 @@ import torch
 import numpy as np
 from einops import rearrange
 
+
 def pi_inv(K, x, d):
     """Pi inv.
 
@@ -12,9 +13,8 @@ def pi_inv(K, x, d):
         x: The x.
         d: The d.
     """
-    
-    fx, fy, cx, cy = K[:, 0:1, 0:1], K[:, 1:2,
-                                       1:2], K[:, 0:1, 2:3], K[:, 1:2, 2:3]
+
+    fx, fy, cx, cy = K[:, 0:1, 0:1], K[:, 1:2, 1:2], K[:, 0:1, 2:3], K[:, 1:2, 2:3]
     X_x = d * (x[..., 0] - cx) / fx
     X_y = d * (x[..., 1] - cy) / fy
     X_z = d
@@ -44,11 +44,11 @@ def transpose(R, t, X):
         X: The x.
     """
     b, h, w, c = X.shape
-    X = rearrange(X, 'b h w c -> b c (h w)')
+    X = rearrange(X, "b h w c -> b c (h w)")
 
-    X_after_R = R@X + t[:, :, None]
+    X_after_R = R @ X + t[:, :, None]
 
-    X_after_R = rearrange(X_after_R, 'b c (h w) -> b h w c', h=h)
+    X_after_R = rearrange(X_after_R, "b c (h w) -> b h w c", h=h)
     return X_after_R
 
 
@@ -63,8 +63,7 @@ def back_projection(depth, pose, K, x_2d=None):
     """
     b, h, w = depth.shape
     if x_2d is None:
-        x_2d = x_2d_coords(h, w, device=depth.device)[
-            None, ...].repeat(b, 1, 1, 1)
+        x_2d = x_2d_coords(h, w, device=depth.device)[None, ...].repeat(b, 1, 1, 1)
 
     X_3d = pi_inv(K, x_2d, depth)
 
@@ -73,6 +72,7 @@ def back_projection(depth, pose, K, x_2d=None):
 
     X_world = X_world.reshape((-1, h, w, 3))
     return X_world
+
 
 def get_x_2d(width, height):
     """Get x 2d.
@@ -85,8 +85,7 @@ def get_x_2d(width, height):
     y = np.arange(height)
     x, y = np.meshgrid(x, y)
     z = np.ones_like(x)
-    xyz = np.concatenate(
-        [x[..., None], y[..., None], z[..., None]], axis=-1).astype(np.float32)
+    xyz = np.concatenate([x[..., None], y[..., None], z[..., None]], axis=-1).astype(np.float32)
     return xyz
 
 

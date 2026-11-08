@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 ## This file is modified from https://github.com/kq-chen/qwen-vl-utils/blob/main/src/qwen_vl_utils/vision_process.py
 import base64
 import logging
@@ -119,18 +120,18 @@ def fetch_image(ele: dict[str, str | Image.Image], size_factor: int = IMAGE_FACT
             if len(shape) == 4:
                 if shape[1] in [1, 3]:  # Likely [B, C, H, W]
                     height, width = shape[2], shape[3]
-                    image_mode = 'NCHW'
+                    image_mode = "NCHW"
                 elif shape[3] in [1, 3]:  # Likely [B, H, W, C]
                     height, width = shape[1], shape[2]
-                    image_mode = 'NHWC'
+                    image_mode = "NHWC"
 
             elif len(shape) == 3:
                 if shape[0] in [1, 3]:  # Likely [C, H, W]
                     height, width = shape[1], shape[2]
-                    image_mode = 'CHW'
+                    image_mode = "CHW"
                 elif shape[2] in [1, 3]:  # Likely [H, W, C]
                     height, width = shape[0], shape[1]
-                    image_mode = 'HWC'
+                    image_mode = "HWC"
                 else:
                     raise ValueError(f"Cannot determine tensor image format from shape {shape}")
             else:
@@ -148,20 +149,23 @@ def fetch_image(ele: dict[str, str | Image.Image], size_factor: int = IMAGE_FACT
         )
 
     if isinstance(image, torch.Tensor):
-        if image_mode == 'NCHW':
+        if image_mode == "NCHW":
             image = transforms.functional.resize(
                 image, [resized_height, resized_width], interpolation=InterpolationMode.BICUBIC, antialias=True
             )
-        elif image_mode == 'NHWC':
+        elif image_mode == "NHWC":
             image = transforms.functional.resize(
-                image.permute(0, 3, 1, 2), [resized_height, resized_width], interpolation=InterpolationMode.BICUBIC, antialias=True
+                image.permute(0, 3, 1, 2),
+                [resized_height, resized_width],
+                interpolation=InterpolationMode.BICUBIC,
+                antialias=True,
             )
-        elif image_mode == 'CHW':
+        elif image_mode == "CHW":
             image = image.unsqueeze(0)  # Add batch dimension
             image = transforms.functional.resize(
                 image, [resized_height, resized_width], interpolation=InterpolationMode.BICUBIC, antialias=True
             )
-        elif image_mode == 'HWC':
+        elif image_mode == "HWC":
             image = image.permute(2, 0, 1).unsqueeze(0)  # Add batch dimension and change to CHW
             image = transforms.functional.resize(
                 image, [resized_height, resized_width], interpolation=InterpolationMode.BICUBIC, antialias=True
@@ -247,10 +251,10 @@ def _read_video_torchvision(
 
     total_frames, video_fps = video.size(0), info["video_fps"]
     # logger.info(f"torchvision:  {video_path=}, {total_frames=}, {video_fps=}, time={time.time() - st:.3f}s")
-    if ele['sample_type'] == 'uniform':
+    if ele["sample_type"] == "uniform":
         nframes = smart_nframes(ele, total_frames=total_frames, video_fps=video_fps)
         idx = torch.linspace(0, total_frames - 1, nframes).round().long().tolist()
-    elif ele['sample_type'] == 'multi_pts':
+    elif ele["sample_type"] == "multi_pts":
         frames_each_pts = 6
         num_pts = 4
         fps = 8
@@ -263,7 +267,7 @@ def _read_video_torchvision(
         idx = []
         for pt in pts:
             idx.extend(frames_idx[pt - frames_each_pts // 2 : pt + frames_each_pts // 2])
-   
+
     video = video[idx]
     return video
 
@@ -289,20 +293,21 @@ def _read_video_decord(
         torch.Tensor: the video tensor with shape (T, C, H, W).
     """
     import decord
+
     video_path = ele["video"]
     st = time.time()
     vr = decord.VideoReader(video_path)
     # TODO: support start_pts and end_pts
-    if 'video_start' in ele or 'video_end' in ele:
+    if "video_start" in ele or "video_end" in ele:
         raise NotImplementedError("not support start_pts and end_pts in decord for now.")
     total_frames, video_fps = len(vr), vr.get_avg_fps()
     # logger.info(f"decord:  {video_path=}, {total_frames=}, {video_fps=}, time={time.time() - st:.3f}s")
-    if ele['sample_type'] == 'uniform':
+    if ele["sample_type"] == "uniform":
         nframes = smart_nframes(ele, total_frames=total_frames, video_fps=video_fps)
         # nframes = max(nframes, 8)
         # import pdb; pdb.set_trace()
         idx = torch.linspace(0, total_frames - 1, nframes).round().long().tolist()
-    elif ele['sample_type'] == 'multi_pts':
+    elif ele["sample_type"] == "multi_pts":
         frames_each_pts = 6
         num_pts = 4
         fps = 8

@@ -39,7 +39,6 @@ else:
 def loadModel(
     url="https://github.com/serengil/deepface_models/releases/download/v1.0/deepid_keras_weights.h5",
 ):
-
     myInput = Input(shape=(55, 47, 3))
 
     x = Conv2D(20, (4, 4), name="Conv1", activation="relu", input_shape=(55, 47, 3))(myInput)

@@ -4,7 +4,7 @@ import os
 
 
 def load_synclr_as_dino(patch_size, load_dir="./models", l14=False):
-    sd = torch.load(os.path.join(load_dir, f'synclr_vit_b_{patch_size}.pth'))['model']
+    sd = torch.load(os.path.join(load_dir, f"synclr_vit_b_{patch_size}.pth"))["model"]
     dino_vit = vit_base(patch_size=patch_size)
     new_sd = dict()
 

@@ -13,6 +13,7 @@ import numpy as np
 if TYPE_CHECKING:
     from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.animate.pose2d import AAPoseMeta
 
+
 def draw_handpose(canvas, keypoints, hand_score_th=0.6):
     """
     Draw keypoints and connections representing hand pose on a given canvas.
@@ -78,7 +79,6 @@ def draw_handpose(canvas, keypoints, hand_score_th=0.6):
             )
 
     for keypoint in keypoints:
-
         if keypoint is None:
             continue
         if keypoint[2] < hand_score_th:
@@ -91,12 +91,23 @@ def draw_handpose(canvas, keypoints, hand_score_th=0.6):
             cv2.circle(canvas, (x, y), stickwidth, (0, 0, 255), thickness=-1)
     return canvas
 
+
 def draw_aapose_by_meta(img, meta: AAPoseMeta, threshold=0.5, stick_width_norm=200, draw_hand=True, draw_head=True):
     kp2ds = np.concatenate([meta.kps_body, meta.kps_body_p[:, None]], axis=1)
     kp2ds_lhand = np.concatenate([meta.kps_lhand, meta.kps_lhand_p[:, None]], axis=1)
     kp2ds_rhand = np.concatenate([meta.kps_rhand, meta.kps_rhand_p[:, None]], axis=1)
-    pose_img = draw_aapose(img, kp2ds, threshold, kp2ds_lhand=kp2ds_lhand, kp2ds_rhand=kp2ds_rhand, stick_width_norm=stick_width_norm, draw_hand=draw_hand, draw_head=draw_head)
+    pose_img = draw_aapose(
+        img,
+        kp2ds,
+        threshold,
+        kp2ds_lhand=kp2ds_lhand,
+        kp2ds_rhand=kp2ds_rhand,
+        stick_width_norm=stick_width_norm,
+        draw_hand=draw_hand,
+        draw_head=draw_head,
+    )
     return pose_img
+
 
 def draw_aapose(
     img,
@@ -108,7 +119,7 @@ def draw_aapose(
     kp2ds_rhand=None,
     draw_hand=False,
     stick_width_norm=200,
-    draw_head=True
+    draw_head=True,
 ):
     """
     Draw keypoints and connections representing hand pose on a given canvas.
@@ -129,7 +140,7 @@ def draw_aapose(
     #              kp2ds.copy()[[0, 5, 6, 8, 10, 5, 7, 9, 12, 14, 16, 11, 13, 15, 2, 1, 4, 3, 18, 21]]) / 2
     kp2ds = kp2ds.copy()
     if not draw_head:
-        kp2ds[[0,14,15,16,17], 2] = 0
+        kp2ds[[0, 14, 15, 16, 17], 2] = 0
     kp2ds_body = kp2ds
 
     # kp2ds_lhand = kp2ds.copy()[91:112]

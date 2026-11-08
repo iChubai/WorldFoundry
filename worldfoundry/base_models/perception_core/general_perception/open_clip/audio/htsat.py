@@ -61,6 +61,7 @@ def _ntuple(n):
     Args:
         n: The n.
     """
+
     def parse(x):
         """Parse.
 
@@ -124,16 +125,16 @@ class PatchEmbed(nn.Module):
     """2D Image to Patch Embedding"""
 
     def __init__(
-            self,
-            img_size=224,
-            patch_size=16,
-            in_chans=3,
-            embed_dim=768,
-            norm_layer=None,
-            flatten=True,
-            patch_stride=16,
-            enable_fusion=False,
-            fusion_type="None",
+        self,
+        img_size=224,
+        patch_size=16,
+        in_chans=3,
+        embed_dim=768,
+        norm_layer=None,
+        flatten=True,
+        patch_stride=16,
+        enable_fusion=False,
+        fusion_type="None",
     ):
         """Init.
 
@@ -288,6 +289,7 @@ def _no_grad_trunc_normal_(tensor, mean, std, a, b):
         a: The a.
         b: The b.
     """
+
     # Cut & paste from PyTorch official master until it's in a few official releases - RW
     # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
     def norm_cdf(x):
@@ -541,21 +543,21 @@ class SwinTransformerBlock(nn.Module):
     """
 
     def __init__(
-            self,
-            dim,
-            input_resolution,
-            num_heads,
-            window_size=7,
-            shift_size=0,
-            mlp_ratio=4.0,
-            qkv_bias=True,
-            qk_scale=None,
-            drop=0.0,
-            attn_drop=0.0,
-            drop_path=0.0,
-            act_layer=nn.GELU,
-            norm_layer=nn.LayerNorm,
-            norm_before_mlp="ln",
+        self,
+        dim,
+        input_resolution,
+        num_heads,
+        window_size=7,
+        shift_size=0,
+        mlp_ratio=4.0,
+        qkv_bias=True,
+        qk_scale=None,
+        drop=0.0,
+        attn_drop=0.0,
+        drop_path=0.0,
+        act_layer=nn.GELU,
+        norm_layer=nn.LayerNorm,
+        norm_before_mlp="ln",
     ):
         """Init.
 
@@ -765,22 +767,22 @@ class BasicLayer(nn.Module):
     """
 
     def __init__(
-            self,
-            dim,
-            input_resolution,
-            depth,
-            num_heads,
-            window_size,
-            mlp_ratio=4.0,
-            qkv_bias=True,
-            qk_scale=None,
-            drop=0.0,
-            attn_drop=0.0,
-            drop_path=0.0,
-            norm_layer=nn.LayerNorm,
-            downsample=None,
-            use_checkpoint=False,
-            norm_before_mlp="ln",
+        self,
+        dim,
+        input_resolution,
+        depth,
+        num_heads,
+        window_size,
+        mlp_ratio=4.0,
+        qkv_bias=True,
+        qk_scale=None,
+        drop=0.0,
+        attn_drop=0.0,
+        drop_path=0.0,
+        norm_layer=nn.LayerNorm,
+        downsample=None,
+        use_checkpoint=False,
+        norm_before_mlp="ln",
     ):
         """Init.
 
@@ -890,31 +892,31 @@ class HTSATEncoder(nn.Module):
     """
 
     def __init__(
-            self,
-            spec_size=256,
-            patch_size=4,
-            patch_stride=(4, 4),
-            in_chans=1,
-            num_classes=527,
-            embed_dim=96,
-            depths=[2, 2, 6, 2],
-            num_heads=[4, 8, 16, 32],
-            window_size=8,
-            mlp_ratio=4.0,
-            qkv_bias=True,
-            qk_scale=None,
-            drop_rate=0.0,
-            attn_drop_rate=0.0,
-            drop_path_rate=0.1,
-            norm_layer=nn.LayerNorm,
-            ape=False,
-            patch_norm=True,
-            use_checkpoint=False,
-            norm_before_mlp="ln",
-            config=None,
-            enable_fusion=False,
-            fusion_type="None",
-            **kwargs,
+        self,
+        spec_size=256,
+        patch_size=4,
+        patch_stride=(4, 4),
+        in_chans=1,
+        num_classes=527,
+        embed_dim=96,
+        depths=[2, 2, 6, 2],
+        num_heads=[4, 8, 16, 32],
+        window_size=8,
+        mlp_ratio=4.0,
+        qkv_bias=True,
+        qk_scale=None,
+        drop_rate=0.0,
+        attn_drop_rate=0.0,
+        drop_path_rate=0.1,
+        norm_layer=nn.LayerNorm,
+        ape=False,
+        patch_norm=True,
+        use_checkpoint=False,
+        norm_before_mlp="ln",
+        config=None,
+        enable_fusion=False,
+        fusion_type="None",
+        **kwargs,
     ):
         """Init.
 
@@ -1060,7 +1062,7 @@ class HTSATEncoder(nn.Module):
                 qk_scale=self.qk_scale,
                 drop=self.drop_rate,
                 attn_drop=self.attn_drop_rate,
-                drop_path=dpr[sum(self.depths[:i_layer]) : sum(self.depths[:i_layer + 1])],
+                drop_path=dpr[sum(self.depths[:i_layer]) : sum(self.depths[: i_layer + 1])],
                 norm_layer=self.norm_layer,
                 downsample=PatchMerging if (i_layer < self.num_layers - 1) else None,
                 use_checkpoint=use_checkpoint,
@@ -1190,7 +1192,7 @@ class HTSATEncoder(nn.Module):
                 crop_pos = random.randint(0, time_steps - crop_size - 1)
             else:
                 crop_pos = spe_pos
-            tx[i][0] = x[i, 0, crop_pos:crop_pos + crop_size, :]
+            tx[i][0] = x[i, 0, crop_pos : crop_pos + crop_size, :]
         return tx
 
     # Reshape the wavform to a img size, if you want to use the pretrained swin transformer model
@@ -1234,7 +1236,7 @@ class HTSATEncoder(nn.Module):
         if F < target_F:
             x = nn.functional.interpolate(x, (x.shape[2], target_F), mode="bicubic", align_corners=True)
         x = x.permute(0, 1, 3, 2).contiguous()  # B C F T
-        x = x[:, :, :, cur_pos:cur_pos + self.spec_size]
+        x = x[:, :, :, cur_pos : cur_pos + self.spec_size]
         x = x.repeat(repeats=(1, 1, 4, 1))
         return x
 

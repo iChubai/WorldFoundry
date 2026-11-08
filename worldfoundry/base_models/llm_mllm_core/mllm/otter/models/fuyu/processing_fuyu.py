@@ -15,6 +15,7 @@
 """
 Image/Text processor class for GIT
 """
+
 import re
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -121,7 +122,9 @@ def _segment_prompt_into_text_token_conversions(prompt: str) -> List:
     """
     # Wherever, we notice the [TOKEN_OPEN_STRING, TOKEN_CLOSE_STRING], we split the prompt
     prompt_text_list: List = []
-    regex_pattern = re.compile(f"({TOKEN_BBOX_OPEN_STRING}|{TOKEN_BBOX_CLOSE_STRING}|{TOKEN_POINT_OPEN_STRING}|{TOKEN_POINT_CLOSE_STRING})")
+    regex_pattern = re.compile(
+        f"({TOKEN_BBOX_OPEN_STRING}|{TOKEN_BBOX_CLOSE_STRING}|{TOKEN_POINT_OPEN_STRING}|{TOKEN_POINT_CLOSE_STRING})"
+    )
     # Split by the regex pattern
     prompt_split = regex_pattern.split(prompt)
     for i, elem in enumerate(prompt_split):
@@ -132,7 +135,9 @@ def _segment_prompt_into_text_token_conversions(prompt: str) -> List:
             TOKEN_POINT_CLOSE_STRING,
         ]:
             continue
-        prompt_text_list.append((elem, i > 1 and prompt_split[i - 1] in [TOKEN_BBOX_OPEN_STRING, TOKEN_POINT_OPEN_STRING]))
+        prompt_text_list.append(
+            (elem, i > 1 and prompt_split[i - 1] in [TOKEN_BBOX_OPEN_STRING, TOKEN_POINT_OPEN_STRING])
+        )
     return prompt_text_list
 
 
@@ -223,7 +228,12 @@ def _tokenize_prompts_with_image_and_batch(
     if scale_factors is not None:
         transformed_prompt_tokens = []
         for prompt_seq, scale_factor_seq in zip(prompts, scale_factors):
-            transformed_prompt_tokens.append([_transform_coordinates_and_tokenize(prompt, scale_factor.item(), tokenizer) for prompt, scale_factor in zip(prompt_seq, scale_factor_seq)])
+            transformed_prompt_tokens.append(
+                [
+                    _transform_coordinates_and_tokenize(prompt, scale_factor.item(), tokenizer)
+                    for prompt, scale_factor in zip(prompt_seq, scale_factor_seq)
+                ]
+            )
     else:
         transformed_prompt_tokens = [[tokenizer.tokenize(prompt) for prompt in prompt_seq] for prompt_seq in prompts]
 
@@ -287,7 +297,9 @@ def scale_point_to_transformed_image(x: float, y: float, scale_factor: float) ->
     return [x_scaled, y_scaled]
 
 
-def scale_bbox_to_transformed_image(top: float, left: float, bottom: float, right: float, scale_factor: float) -> List[int]:
+def scale_bbox_to_transformed_image(
+    top: float, left: float, bottom: float, right: float, scale_factor: float
+) -> List[int]:
     top_scaled = original_to_transformed_w_coords(np.array([top / 2]), scale_factor)[0]
     left_scaled = original_to_transformed_h_coords(np.array([left / 2]), scale_factor)[0]
     bottom_scaled = original_to_transformed_w_coords(np.array([bottom / 2]), scale_factor)[0]
@@ -308,6 +320,7 @@ class FuyuProcessor(ProcessorMixin):
         tokenizer ([`LlamaTokenizerFast`]):
             The tokenizer is a required input.
     """
+
     attributes = ["image_processor", "tokenizer"]
     image_processor_class = "FuyuImageProcessor"
     tokenizer_class = "AutoTokenizer"
@@ -376,7 +389,10 @@ class FuyuProcessor(ProcessorMixin):
                 if key == "input_ids":
                     num_padding_tokens = max_length_input_ids - tensor.shape[1]
                     padded_input_ids = torch.cat(
-                        [tensor, torch.full((tensor.shape[0], num_padding_tokens), self.pad_token_id, dtype=torch.long)],
+                        [
+                            tensor,
+                            torch.full((tensor.shape[0], num_padding_tokens), self.pad_token_id, dtype=torch.long),
+                        ],
                         dim=1,
                     )
                     batched_inputs[key].append(padded_input_ids)
@@ -394,7 +410,12 @@ class FuyuProcessor(ProcessorMixin):
                 else:  # for image_patches_indices
                     num_padding_indices = max_length_image_patch_indices - tensor.shape[1]
                     padded_indices = torch.cat(
-                        [tensor, torch.full((tensor.shape[0], num_padding_indices), self.dummy_image_index, dtype=torch.long)],
+                        [
+                            tensor,
+                            torch.full(
+                                (tensor.shape[0], num_padding_indices), self.dummy_image_index, dtype=torch.long
+                            ),
+                        ],
                         dim=1,
                     )
                     batched_inputs[key].append(padded_indices)
@@ -440,7 +461,9 @@ class FuyuProcessor(ProcessorMixin):
                     num_padding_indices = max_length_image_patch_indices - tensor.shape[1]
                     padded_indices = torch.cat(
                         [
-                            torch.full((tensor.shape[0], num_padding_indices), self.dummy_image_index, dtype=torch.long),
+                            torch.full(
+                                (tensor.shape[0], num_padding_indices), self.dummy_image_index, dtype=torch.long
+                            ),
                             tensor,
                         ],
                         dim=1,
@@ -625,7 +648,9 @@ class FuyuProcessor(ProcessorMixin):
         # --- Use self.image_processor again to obtain the full token ids and batch inputs ---
         all_encodings = []
 
-        for prompt, scale_factor, image_unpadded_height, image_unpadded_width, tensor_batch_image in zip(prompts, scale_factors, image_unpadded_heights, image_unpadded_widths, tensor_batch_images):
+        for prompt, scale_factor, image_unpadded_height, image_unpadded_width, tensor_batch_image in zip(
+            prompts, scale_factors, image_unpadded_heights, image_unpadded_widths, tensor_batch_images
+        ):
             sample_encoding = self.get_sample_encoding(
                 prompts=[prompt],
                 scale_factors=[scale_factor],
@@ -636,7 +661,9 @@ class FuyuProcessor(ProcessorMixin):
                 tensor_batch_images=tensor_batch_image.unsqueeze(0),
             )
             all_encodings.append(sample_encoding)
-        batch_encoding = self._right_pad_inputs_with_attention_mask(model_inputs=all_encodings, return_attention_mask=return_attention_mask)
+        batch_encoding = self._right_pad_inputs_with_attention_mask(
+            model_inputs=all_encodings, return_attention_mask=return_attention_mask
+        )
         return FuyuBatchFeature(data=batch_encoding)
 
     def post_process_box_coordinates(self, outputs, target_sizes=None):

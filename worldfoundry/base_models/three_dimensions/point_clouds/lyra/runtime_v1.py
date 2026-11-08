@@ -92,27 +92,27 @@ class Lyra1Representation:
         if not generated_root.exists():
             raise FileNotFoundError(f"Lyra-1 generated root not found: {generated_root}")
 
-        ckpt_path = Path(
-            str(data.get("ckpt_path") or self._default_ckpt_path(mode))
-        ).expanduser().resolve()
+        ckpt_path = Path(str(data.get("ckpt_path") or self._default_ckpt_path(mode))).expanduser().resolve()
         if not ckpt_path.exists():
             raise FileNotFoundError(f"Lyra-1 reconstruction checkpoint not found: {ckpt_path}")
 
-        demo_config_path = Path(
-            str(data.get("demo_config_path") or self._default_demo_config(mode))
-        ).expanduser().resolve()
+        demo_config_path = (
+            Path(str(data.get("demo_config_path") or self._default_demo_config(mode))).expanduser().resolve()
+        )
         if not demo_config_path.exists():
             raise FileNotFoundError(f"Lyra-1 demo config not found: {demo_config_path}")
 
-        inference_config_path = Path(
-            str(data.get("inference_config_path") or self.inference_config_path)
-        ).expanduser().resolve()
+        inference_config_path = (
+            Path(str(data.get("inference_config_path") or self.inference_config_path)).expanduser().resolve()
+        )
         if not inference_config_path.exists():
             raise FileNotFoundError(f"Lyra-1 inference config not found: {inference_config_path}")
 
-        output_dir = Path(
-            str(data.get("output_dir") or generated_root.parent / f"{generated_root.name}_reconstruction")
-        ).expanduser().resolve()
+        output_dir = (
+            Path(str(data.get("output_dir") or generated_root.parent / f"{generated_root.name}_reconstruction"))
+            .expanduser()
+            .resolve()
+        )
         output_dir.mkdir(parents=True, exist_ok=True)
 
         ensure_repo_on_path(self.repo_root)
@@ -131,21 +131,14 @@ class Lyra1Representation:
         dataset_registry = dataset_registry_module.dataset_registry
         load_and_merge_configs = misc_module.load_and_merge_configs
 
-        runtime_dataset_name = str(
-            data.get("dataset_name")
-            or f"worldbench_lyra1_{mode}_{uuid.uuid4().hex[:8]}"
-        )
-        template_key = (
-            "lyra_static_template_generated" if mode == "static" else "lyra_dynamic_template_generated"
-        )
+        runtime_dataset_name = str(data.get("dataset_name") or f"worldbench_lyra1_{mode}_{uuid.uuid4().hex[:8]}")
+        template_key = "lyra_static_template_generated" if mode == "static" else "lyra_dynamic_template_generated"
         runtime_entry = copy.deepcopy(dataset_registry[template_key])
         runtime_entry["kwargs"]["root_path"] = str(generated_root)
         dataset_registry[runtime_dataset_name] = runtime_entry
 
         try:
-            config = load_and_merge_configs(
-                [str(inference_config_path), str(demo_config_path)]
-            )
+            config = load_and_merge_configs([str(inference_config_path), str(demo_config_path)])
             config.dataset_name = runtime_dataset_name
             config.out_dir_inference = str(output_dir)
             config.ckpt_path = str(ckpt_path)
@@ -279,9 +272,13 @@ class Lyra1Representation:
             "meta_dir": str(root / "meta"),
             "gaussians_dir": str(root / "gaussians"),
             "gaussians_orig_dir": str(root / "gaussians_orig"),
-            "main_render_videos": [str(path.resolve()) for path in sorted((root / "main_gaussians_renderings").glob("*.mp4"))],
+            "main_render_videos": [
+                str(path.resolve()) for path in sorted((root / "main_gaussians_renderings").glob("*.mp4"))
+            ],
             "full_output_videos": [str(path.resolve()) for path in sorted((root / "full_output").glob("*.mp4"))],
             "grid_videos": [str(path.resolve()) for path in sorted((root / "grid").glob("*.mp4"))],
             "gaussian_ply_paths": [str(path.resolve()) for path in sorted((root / "gaussians").glob("*.ply"))],
-            "gaussian_orig_ply_paths": [str(path.resolve()) for path in sorted((root / "gaussians_orig").glob("*.ply"))],
+            "gaussian_orig_ply_paths": [
+                str(path.resolve()) for path in sorted((root / "gaussians_orig").glob("*.ply"))
+            ],
         }

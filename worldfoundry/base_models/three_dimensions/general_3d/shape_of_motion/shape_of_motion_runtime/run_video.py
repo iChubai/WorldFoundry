@@ -32,6 +32,7 @@ torch.set_float32_matmul_precision("high")
 @dataclass
 class BaseTrajectoryConfig:
     """Base trajectory config implementation."""
+
     num_frames: int = tyro.MISSING
     ref_t: int = -1
     _fn: tyro.conf.SuppressFixed[Callable] = tyro.MISSING
@@ -51,6 +52,7 @@ class BaseTrajectoryConfig:
 @dataclass
 class ArcTrajectoryConfig(BaseTrajectoryConfig):
     """Arc trajectory config implementation."""
+
     num_frames: int = 120
     degree: float = 15.0
     _fn: tyro.conf.SuppressFixed[Callable] = get_arc_w2cs
@@ -59,6 +61,7 @@ class ArcTrajectoryConfig(BaseTrajectoryConfig):
 @dataclass
 class LemniscateTrajectoryConfig(BaseTrajectoryConfig):
     """Lemniscate trajectory config implementation."""
+
     num_frames: int = 240
     degree: float = 15.0
     _fn: tyro.conf.SuppressFixed[Callable] = get_lemniscate_w2cs
@@ -67,6 +70,7 @@ class LemniscateTrajectoryConfig(BaseTrajectoryConfig):
 @dataclass
 class SpiralTrajectoryConfig(BaseTrajectoryConfig):
     """Spiral trajectory config implementation."""
+
     num_frames: int = 240
     rads: float = 0.5
     zrate: float = 0.5
@@ -77,6 +81,7 @@ class SpiralTrajectoryConfig(BaseTrajectoryConfig):
 @dataclass
 class WanderTrajectoryConfig(BaseTrajectoryConfig):
     """Wander trajectory config implementation."""
+
     num_frames: int = 120
     _fn: tyro.conf.SuppressFixed[Callable] = get_wander_w2cs
 
@@ -84,12 +89,14 @@ class WanderTrajectoryConfig(BaseTrajectoryConfig):
 @dataclass
 class FixedTrajectoryConfig(BaseTrajectoryConfig):
     """Fixed trajectory config implementation."""
+
     _fn: tyro.conf.SuppressFixed[Callable] = lambda ref_w2c, **_: ref_w2c[None]
 
 
 @dataclass
 class BaseTimeConfig:
     """Base time config implementation."""
+
     _fn: tyro.conf.SuppressFixed[Callable] = tyro.MISSING
 
     def get_ts(self, **kwargs) -> torch.Tensor:
@@ -106,29 +113,28 @@ class BaseTimeConfig:
 @dataclass
 class ReplayTimeConfig(BaseTimeConfig):
     """Replay time config implementation."""
-    _fn: tyro.conf.SuppressFixed[Callable] = (
-        lambda num_frames, traj_frames, device, **_: F.pad(
-            torch.arange(num_frames, device=device)[:traj_frames],
-            (0, max(traj_frames - num_frames, 0)),
-            value=num_frames - 1,
-        )
+
+    _fn: tyro.conf.SuppressFixed[Callable] = lambda num_frames, traj_frames, device, **_: F.pad(
+        torch.arange(num_frames, device=device)[:traj_frames],
+        (0, max(traj_frames - num_frames, 0)),
+        value=num_frames - 1,
     )
 
 
 @dataclass
 class FixedTimeConfig(BaseTimeConfig):
     """Fixed time config implementation."""
+
     t: int = 0
-    _fn: tyro.conf.SuppressFixed[Callable] = (
-        lambda t, num_frames, traj_frames, device, **_: torch.tensor(
-            [min(t, num_frames - 1)], device=device
-        ).expand(traj_frames)
-    )
+    _fn: tyro.conf.SuppressFixed[Callable] = lambda t, num_frames, traj_frames, device, **_: torch.tensor(
+        [min(t, num_frames - 1)], device=device
+    ).expand(traj_frames)
 
 
 @dataclass
 class VideoConfig:
     """Video config implementation."""
+
     work_dir: str
     data: (
         Annotated[
@@ -209,9 +215,7 @@ def main(cfg: VideoConfig):
 
     w2cs = cfg.trajectory.get_w2cs(
         ref_w2c=(
-            avg_w2c
-            if cfg.trajectory.ref_t < 0
-            else train_w2cs[min(cfg.trajectory.ref_t, train_dataset.num_frames - 1)]
+            avg_w2c if cfg.trajectory.ref_t < 0 else train_w2cs[min(cfg.trajectory.ref_t, train_dataset.num_frames - 1)]
         ),
         lookat=lookat,
         up=up,
@@ -272,9 +276,7 @@ def main(cfg: VideoConfig):
     video = []
     for w2c, t in zip(tqdm(w2cs), ts):
         with torch.inference_mode():
-            img = renderer.model.render(int(t.item()), w2c[None], K[None], img_wh)[
-                "img"
-            ][0]
+            img = renderer.model.render(int(t.item()), w2c[None], K[None], img_wh)["img"][0]
         img = (img.cpu().numpy() * 255.0).astype(np.uint8)
         video.append(img)
     video = np.stack(video, 0)

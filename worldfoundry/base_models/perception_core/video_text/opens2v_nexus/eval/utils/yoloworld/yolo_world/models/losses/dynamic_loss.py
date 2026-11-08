@@ -35,7 +35,5 @@ class CoVMSELoss(nn.Module):
         reduction = reduction_override if reduction_override else self.reduction
         cov = pred.std(self.dim) / pred.mean(self.dim).clamp(min=self.eps)
         target = torch.zeros_like(cov)
-        loss = self.loss_weight * mse_loss(
-            cov, target, weight, reduction=reduction, avg_factor=avg_factor
-        )
+        loss = self.loss_weight * mse_loss(cov, target, weight, reduction=reduction, avg_factor=avg_factor)
         return loss

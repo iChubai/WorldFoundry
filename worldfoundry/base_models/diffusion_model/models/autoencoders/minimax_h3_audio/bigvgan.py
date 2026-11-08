@@ -42,9 +42,8 @@ def snakebeta(x, alpha, beta):
 
 class SnakeBeta(nn.Module):
     """Learned Snake activation with a beta frequency term."""
-    def __init__(
-        self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=False
-    ):
+
+    def __init__(self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=False):
         super(SnakeBeta, self).__init__()
         self.in_features = in_features
 
@@ -72,6 +71,7 @@ class SnakeBeta(nn.Module):
 
 class AttrDict(dict):
     """Dict subclass that also exposes keys as attributes."""
+
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
@@ -134,16 +134,12 @@ class AMPBlock1(torch.nn.Module):
             ]
         )
 
-        self.num_layers = len(self.convs1) + len(
-            self.convs2
-        )  # Total number of conv layers
+        self.num_layers = len(self.convs1) + len(self.convs2)  # Total number of conv layers
 
         if activation == "snakebeta":
             self.activations = nn.ModuleList(
                 [
-                    Activation1d(
-                        activation=SnakeBeta(channels, alpha_logscale=h.snake_logscale)
-                    )
+                    Activation1d(activation=SnakeBeta(channels, alpha_logscale=h.snake_logscale))
                     for _ in range(self.num_layers)
                 ]
             )
@@ -182,17 +178,13 @@ class BigVGAN(torch.nn.Module):
         self.num_upsamples = len(h.upsample_rates)
 
         # Pre-conv
-        self.conv_pre = weight_norm(
-            Conv1d(h.num_mels, h.upsample_initial_channel, 7, 1, padding=3)
-        )
+        self.conv_pre = weight_norm(Conv1d(h.num_mels, h.upsample_initial_channel, 7, 1, padding=3))
 
         # Define which AMPBlock to use. BigVGAN uses AMPBlock1 as default
         if h.resblock == "1":
             resblock_class = AMPBlock1
         else:
-            raise ValueError(
-                f"Incorrect resblock class specified in hyperparameters. Got {h.resblock}"
-            )
+            raise ValueError(f"Incorrect resblock class specified in hyperparameters. Got {h.resblock}")
 
         # Transposed conv-based upsamplers. does not apply anti-aliasing
         self.ups = nn.ModuleList()
@@ -217,12 +209,8 @@ class BigVGAN(torch.nn.Module):
         self.resblocks = nn.ModuleList()
         for i in range(len(self.ups)):
             ch = h.upsample_initial_channel // (2 ** (i + 1))
-            for j, (k, d) in enumerate(
-                zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)
-            ):
-                self.resblocks.append(
-                    resblock_class(h, ch, k, d, activation=h.activation)
-                )
+            for j, (k, d) in enumerate(zip(h.resblock_kernel_sizes, h.resblock_dilation_sizes)):
+                self.resblocks.append(resblock_class(h, ch, k, d, activation=h.activation))
 
         # Post-conv
         if h.activation != "snakebeta":
@@ -235,9 +223,7 @@ class BigVGAN(torch.nn.Module):
 
         # Whether to use bias for the final conv_post. Default to True for backward compatibility
         self.use_bias_at_final = h.get("use_bias_at_final", True)
-        self.conv_post = weight_norm(
-            Conv1d(ch, 1, 7, 1, padding=3, bias=self.use_bias_at_final)
-        )
+        self.conv_post = weight_norm(Conv1d(ch, 1, 7, 1, padding=3, bias=self.use_bias_at_final))
 
         # Final tanh activation. Defaults to True for backward compatibility
         self.use_tanh_at_final = h.get("use_tanh_at_final", True)

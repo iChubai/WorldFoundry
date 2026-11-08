@@ -1,4 +1,5 @@
 """Attention layers."""
+
 import math
 import warnings
 from typing import Optional
@@ -13,7 +14,9 @@ from .norm import LPLayerNorm
 def _reset_is_causal(num_query_tokens: int, num_key_tokens: int, original_is_causal: bool):
     if original_is_causal and num_query_tokens != num_key_tokens:
         if num_query_tokens != 1:
-            raise NotImplementedError("MPT does not support query and key with different number of tokens, unless number of query tokens is 1.")
+            raise NotImplementedError(
+                "MPT does not support query and key with different number of tokens, unless number of query tokens is 1."
+            )
         else:
             return False
     return original_is_causal
@@ -52,8 +55,14 @@ def scaled_multihead_dot_product_attention(
         _s_q = max(0, attn_bias.size(2) - s_q)
         _s_k = max(0, attn_bias.size(3) - s_k)
         attn_bias = attn_bias[:, :, _s_q:, _s_k:]
-        if attn_bias.size(-1) != 1 and attn_bias.size(-1) != s_k or (attn_bias.size(-2) != 1 and attn_bias.size(-2) != s_q):
-            raise RuntimeError(f"attn_bias (shape: {attn_bias.shape}) is expected to broadcast to shape: {attn_weight.shape}.")
+        if (
+            attn_bias.size(-1) != 1
+            and attn_bias.size(-1) != s_k
+            or (attn_bias.size(-2) != 1 and attn_bias.size(-2) != s_q)
+        ):
+            raise RuntimeError(
+                f"attn_bias (shape: {attn_bias.shape}) is expected to broadcast to shape: {attn_weight.shape}."
+            )
         attn_weight = attn_weight + attn_bias
     min_val = torch.finfo(q.dtype).min
     if key_padding_mask is not None:
@@ -275,7 +284,11 @@ class MultiheadAttention(nn.Module):
         elif self.attn_impl == "torch":
             self.attn_fn = scaled_multihead_dot_product_attention
             if torch.cuda.is_available() and verbose:
-                warnings.warn("Using `attn_impl: torch`. If your model does not use `alibi` or " + "`prefix_lm` we recommend using `attn_impl: flash` otherwise " + "we recommend using `attn_impl: triton`.")
+                warnings.warn(
+                    "Using `attn_impl: torch`. If your model does not use `alibi` or "
+                    + "`prefix_lm` we recommend using `attn_impl: flash` otherwise "
+                    + "we recommend using `attn_impl: triton`."
+                )
         else:
             raise ValueError(f"attn_impl={attn_impl!r} is an invalid setting.")
         self.out_proj = nn.Linear(self.d_model, self.d_model, device=device)
@@ -368,7 +381,11 @@ class MultiQueryAttention(nn.Module):
         elif self.attn_impl == "torch":
             self.attn_fn = scaled_multihead_dot_product_attention
             if torch.cuda.is_available() and verbose:
-                warnings.warn("Using `attn_impl: torch`. If your model does not use `alibi` or " + "`prefix_lm` we recommend using `attn_impl: flash` otherwise " + "we recommend using `attn_impl: triton`.")
+                warnings.warn(
+                    "Using `attn_impl: torch`. If your model does not use `alibi` or "
+                    + "`prefix_lm` we recommend using `attn_impl: flash` otherwise "
+                    + "we recommend using `attn_impl: triton`."
+                )
         else:
             raise ValueError(f"attn_impl={attn_impl!r} is an invalid setting.")
         self.out_proj = nn.Linear(self.d_model, self.d_model, device=device)

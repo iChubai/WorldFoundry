@@ -17,8 +17,9 @@ from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose
 @dataclass
 class FrameDiskCache:
     """Frame disk cache implementation."""
+
     root_dir: str
-    compress: bool = False  
+    compress: bool = False
 
     def __post_init__(self):
         """Post init."""
@@ -32,6 +33,7 @@ class FrameDiskCache:
             frame: The frame.
             pred_cpu: The pred cpu.
         """
+
         def clone_tensor_map(src: dict) -> dict:
             """Clone tensor map.
 
@@ -50,9 +52,7 @@ class FrameDiskCache:
             return cloned
 
         view_payload = {
-            key: tensor.detach().clone().cpu()
-            for key, tensor in frame.items()
-            if isinstance(tensor, torch.Tensor)
+            key: tensor.detach().clone().cpu() for key, tensor in frame.items() if isinstance(tensor, torch.Tensor)
         }
 
         pred_payload = clone_tensor_map(pred_cpu)

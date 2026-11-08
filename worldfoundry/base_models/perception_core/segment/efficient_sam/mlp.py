@@ -9,6 +9,7 @@ from torch import nn
 # https://github.com/facebookresearch/MaskFormer/blob/main/mask_former/modeling/transformer/transformer_predictor.py # noqa
 class MLPBlock(nn.Module):
     """Mlp block implementation."""
+
     def __init__(
         self,
         input_dim: int,
@@ -33,8 +34,7 @@ class MLPBlock(nn.Module):
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
         self.layers = nn.ModuleList(
-            nn.Sequential(nn.Linear(n, k), act())
-            for n, k in zip([input_dim] + h, [hidden_dim] * num_layers)
+            nn.Sequential(nn.Linear(n, k), act()) for n, k in zip([input_dim] + h, [hidden_dim] * num_layers)
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
 

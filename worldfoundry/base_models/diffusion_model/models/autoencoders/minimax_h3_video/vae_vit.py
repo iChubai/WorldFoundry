@@ -105,27 +105,17 @@ class ViTBase(nn.Module):
         if self.mask_enabled and self.mask_style == "drop" and self.mask_prob < 1.0:
             logger.warning("mask_style='drop' with mask_prob < 1.0")
         if self._mask_is_3d:
-            self.temporal_scale_range = mask_config.get(
-                "temporal_scale_range", (0.3, 0.5)
-            )
-            self.spatial_scale_range = mask_config.get(
-                "spatial_scale_range", (0.1, 0.25)
-            )
+            self.temporal_scale_range = mask_config.get("temporal_scale_range", (0.3, 0.5))
+            self.spatial_scale_range = mask_config.get("spatial_scale_range", (0.1, 0.25))
             self.min_mask_ratio = mask_config.get("min_mask_ratio", 0.75)
             self.max_mask_ratio = mask_config.get("max_mask_ratio", 0.95)
         else:
-            self.spatial_scale_range = mask_config.get(
-                "spatial_scale_range", (0.15, 0.15)
-            )
+            self.spatial_scale_range = mask_config.get("spatial_scale_range", (0.15, 0.15))
             self.min_mask_ratio = mask_config.get("min_mask_ratio", 0.5)
             self.max_mask_ratio = mask_config.get("max_mask_ratio", 0.75)
         self.aspect_ratio_range = mask_config.get("aspect_ratio_range", (0.75, 1.5))
         self.max_retries = mask_config.get("max_retries", 100)
-        if (
-            self.mask_enabled
-            and self.mask_style == "drop"
-            and getattr(self, "t_causal", False)
-        ):
+        if self.mask_enabled and self.mask_style == "drop" and getattr(self, "t_causal", False):
             logger.warning("mask_style='drop' with t_causal may cause issues")
         if self.mask_enabled and "mask_token" in self._buffers:
             del self._buffers["mask_token"]
@@ -134,9 +124,7 @@ class ViTBase(nn.Module):
     def init_suffix_tokens(self, dim, num_register_tokens, has_cls_token=True):
         self.num_register_tokens = num_register_tokens
         if num_register_tokens > 0:
-            self.register_tokens = nn.Parameter(
-                torch.randn(1, num_register_tokens, dim) * 0.02
-            )
+            self.register_tokens = nn.Parameter(torch.randn(1, num_register_tokens, dim) * 0.02)
         else:
             self.register_tokens = None
         if has_cls_token:
@@ -144,9 +132,7 @@ class ViTBase(nn.Module):
 
     def apply_mask_preprocess(self, hidden_states, img_ids, patch_dims, num_suffix):
         if self.training and self.mask_enabled:
-            raise NotImplementedError(
-                "mask modeling is not supported in this inference-only bundle"
-            )
+            raise NotImplementedError("mask modeling is not supported in this inference-only bundle")
         return hidden_states, img_ids
 
     def forward_transformer_blocks(self, hidden_states, rotary_pos_emb, pack_info=None):
@@ -158,9 +144,7 @@ class ViTBase(nn.Module):
 
     def apply_mask_postprocess(self, hidden_states, num_patches):
         if self.training and self.mask_enabled and self.mask_style == "drop":
-            raise NotImplementedError(
-                "mask modeling is not supported in this inference-only bundle"
-            )
+            raise NotImplementedError("mask modeling is not supported in this inference-only bundle")
         return hidden_states
 
 
@@ -202,9 +186,7 @@ class ViT3DDecoder(ViTBase):
         dim = heads * dim_head
         rope_apply_dim = int(dim_head * rope_dim_ratio)
 
-        self.pos_embed = RotaryEmbeddingND(
-            rope_apply_dim, rope_theta, n_dim=3, use_angle=True
-        )
+        self.pos_embed = RotaryEmbeddingND(rope_apply_dim, rope_theta, n_dim=3, use_angle=True)
 
         self.x_embedder = nn.Linear(in_channels, dim)
 
@@ -263,10 +245,7 @@ class ViT3DDecoder(ViTBase):
         """
 
         if dtype not in (torch.float16, torch.bfloat16):
-            raise ValueError(
-                "MiniMax H3 decoder autocast weights require fp16 or bf16, "
-                f"got {dtype}"
-            )
+            raise ValueError(f"MiniMax H3 decoder autocast weights require fp16 or bf16, got {dtype}")
         if self._autocast_linear_dtype == dtype:
             return 0
 
@@ -294,9 +273,7 @@ class ViT3DDecoder(ViTBase):
         latent_size = (latent_T, latent_H, latent_W)
 
         with torch.autocast("cuda", enabled=False):
-            hidden_states = _linear_with_module_dtype(
-                self.x_embedder, hidden_states, hidden_states.dtype
-            )
+            hidden_states = _linear_with_module_dtype(self.x_embedder, hidden_states, hidden_states.dtype)
 
         num_patches = hidden_states.shape[1]
 
@@ -312,15 +289,9 @@ class ViT3DDecoder(ViTBase):
 
         patch_dims = [latent_T, latent_H, latent_W]
         rotary_dtype = (
-            torch.get_autocast_dtype("cuda")
-            if x.is_cuda and torch.is_autocast_enabled("cuda")
-            else hidden_states.dtype
+            torch.get_autocast_dtype("cuda") if x.is_cuda and torch.is_autocast_enabled("cuda") else hidden_states.dtype
         )
-        cache_enabled = (
-            not self.training
-            and not self.mask_enabled
-            and not torch.compiler.is_compiling()
-        )
+        cache_enabled = not self.training and not self.mask_enabled and not torch.compiler.is_compiling()
         cache_key = (
             B,
             latent_T,
@@ -337,14 +308,10 @@ class ViT3DDecoder(ViTBase):
             img_ids = cache_record[1]
         else:
             img_ids = create_token_ids(latent_size, x.device, x.dtype).expand(B, -1, -1)
-            suffix_ids = torch.zeros(
-                (B, num_suffix, 3), device=x.device, dtype=img_ids.dtype
-            )
+            suffix_ids = torch.zeros((B, num_suffix, 3), device=x.device, dtype=img_ids.dtype)
             img_ids = torch.cat([img_ids, suffix_ids], dim=1)
 
-        hidden_states, img_ids = self.apply_mask_preprocess(
-            hidden_states, img_ids, patch_dims, num_suffix
-        )
+        hidden_states, img_ids = self.apply_mask_preprocess(hidden_states, img_ids, patch_dims, num_suffix)
         cache_img_ids = img_ids
 
         pack_info = {}
@@ -379,17 +346,13 @@ class ViT3DDecoder(ViTBase):
         hidden_states = self.apply_mask_postprocess(hidden_states, num_patches)
 
         with torch.autocast("cuda", enabled=False):
-            output = _linear_with_module_dtype(
-                self.proj_out, hidden_states, hidden_states.dtype
-            )
+            output = _linear_with_module_dtype(self.proj_out, hidden_states, hidden_states.dtype)
 
         output = output[:, :num_patches, :]
 
         video_t = latent_size[0] * patch_size_t
         video_h = latent_size[1] * patch_size
         video_w = latent_size[2] * patch_size
-        output = _unpack_tensors_3d(
-            output, patch_size, patch_size_t, video_t, video_h, video_w
-        )
+        output = _unpack_tensors_3d(output, patch_size, patch_size_t, video_t, video_h, video_w)
 
         return output

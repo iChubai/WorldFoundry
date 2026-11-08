@@ -78,9 +78,7 @@ class MultiViewTransformerInput(InfoSharingInput):
 
     features: List[Tensor]
     additional_input_tokens: Optional[Tensor] = None
-    additional_input_tokens_per_view: Optional[
-        List[Tensor]
-    ] = None
+    additional_input_tokens_per_view: Optional[List[Tensor]] = None
 
 
 @dataclass
@@ -91,9 +89,7 @@ class MultiViewTransformerOutput(InfoSharingOutput):
 
     features: List[Tensor]
     additional_token_features: Optional[Tensor] = None
-    additional_token_features_per_view: Optional[
-        List[Tensor]
-    ] = None
+    additional_token_features_per_view: Optional[List[Tensor]] = None
 
 
 @dataclass

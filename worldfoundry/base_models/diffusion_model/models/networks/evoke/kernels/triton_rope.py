@@ -305,9 +305,7 @@ def test_in_training_loop_comparison():
     print("-" * 80)
 
     torch.manual_seed(42)
-    inputs = [
-        (torch.randn(1, 128, 12, 128, device="cuda"), torch.randn(1, 128, 256, device="cuda")) for _ in range(10)
-    ]
+    inputs = [(torch.randn(1, 128, 12, 128, device="cuda"), torch.randn(1, 128, 256, device="cuda")) for _ in range(10)]
 
     for step, (x, freqs_cis) in enumerate(inputs):
         optimizer_orig.zero_grad()

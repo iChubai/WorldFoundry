@@ -18,6 +18,7 @@ from .utils import depth2disparity
 
 class DepthCompletion(torch.nn.Module):
     """Depth completion implementation."""
+
     @staticmethod
     def build(**kwargs):
         """Build."""

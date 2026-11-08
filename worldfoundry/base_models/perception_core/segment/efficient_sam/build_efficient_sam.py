@@ -8,6 +8,7 @@
 
 from .efficient_sam import build_efficient_sam
 
+
 def build_efficient_sam_vitt():
     """Build efficient sam vitt."""
     return build_efficient_sam(

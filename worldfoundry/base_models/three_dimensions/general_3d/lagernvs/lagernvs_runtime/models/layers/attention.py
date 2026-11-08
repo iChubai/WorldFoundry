@@ -48,6 +48,7 @@ def _get_flash_attention_ops():
 # src: https://github.com/pytorch/benchmark/blob/main/torchbenchmark/models/llama/model.py#L28
 class RMSNorm(nn.Module):
     """Rms norm implementation."""
+
     def __init__(self, dim: int, eps: float = 1e-5):
         """Init.
 
@@ -80,6 +81,7 @@ class RMSNorm(nn.Module):
 
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim: int,
@@ -141,10 +143,7 @@ class Attention(nn.Module):
         k = self.k_proj(kv)
         v = self.v_proj(kv)
 
-        q, k, v = (
-            einops.rearrange(t, "b l (nh dh) -> b l nh dh", dh=self.head_dim)
-            for t in (q, k, v)
-        )
+        q, k, v = (einops.rearrange(t, "b l (nh dh) -> b l nh dh", dh=self.head_dim) for t in (q, k, v))
         if self.use_qk_norm:
             q, k = self.q_norm(q), self.k_norm(k)
 

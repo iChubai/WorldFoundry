@@ -40,7 +40,11 @@ from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base impo
     VideoStream,
 )
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils import io
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.geometry import project_points_to_panorama, se3_to_so3, so3_to_se3
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.geometry import (
+    project_points_to_panorama,
+    se3_to_so3,
+    so3_to_se3,
+)
 from worldfoundry.studio.visualization.plugins.scene3d.projection import save_projection_video
 
 from . import AnnotationPipelineOutput, Pipeline
@@ -51,6 +55,7 @@ logger = logging.getLogger(__name__)
 
 class MergedPanoramaVideoStream(VideoStream):
     """Merged panorama video stream implementation."""
+
     # Determines how much height of the panorama is kept for depth estimation.
     # This way we crop the top and bottom of the input to avoid distortion (where depth estimation is not reliable).
     DEPTH_KEEP_RATIO = 0.6
@@ -235,6 +240,7 @@ class MergedPanoramaVideoStream(VideoStream):
 
 class PanoramaAnnotationPipeline(Pipeline):
     """Panorama annotation pipeline implementation."""
+
     def __init__(
         self,
         init: DictConfig,

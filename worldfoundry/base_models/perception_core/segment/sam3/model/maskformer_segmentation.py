@@ -17,6 +17,7 @@ from .model_misc import MLP
 
 class LinearPresenceHead(nn.Sequential):
     """Linear presence head implementation."""
+
     def __init__(self, d_model):
         """Init.
 
@@ -39,6 +40,7 @@ class LinearPresenceHead(nn.Sequential):
 
 class MaskPredictor(nn.Module):
     """Mask predictor implementation."""
+
     def __init__(self, hidden_dim, mask_dim):
         """Init.
 
@@ -59,30 +61,23 @@ class MaskPredictor(nn.Module):
         if len(obj_queries.shape) == 3:
             if pixel_embed.ndim == 3:
                 # batch size was omitted
-                mask_preds = torch.einsum(
-                    "bqc,chw->bqhw", self.mask_embed(obj_queries), pixel_embed
-                )
+                mask_preds = torch.einsum("bqc,chw->bqhw", self.mask_embed(obj_queries), pixel_embed)
             else:
-                mask_preds = torch.einsum(
-                    "bqc,bchw->bqhw", self.mask_embed(obj_queries), pixel_embed
-                )
+                mask_preds = torch.einsum("bqc,bchw->bqhw", self.mask_embed(obj_queries), pixel_embed)
         else:
             # Assumed to have aux masks
             if pixel_embed.ndim == 3:
                 # batch size was omitted
-                mask_preds = torch.einsum(
-                    "lbqc,chw->lbqhw", self.mask_embed(obj_queries), pixel_embed
-                )
+                mask_preds = torch.einsum("lbqc,chw->lbqhw", self.mask_embed(obj_queries), pixel_embed)
             else:
-                mask_preds = torch.einsum(
-                    "lbqc,bchw->lbqhw", self.mask_embed(obj_queries), pixel_embed
-                )
+                mask_preds = torch.einsum("lbqc,bchw->lbqhw", self.mask_embed(obj_queries), pixel_embed)
 
         return mask_preds
 
 
 class SegmentationHead(nn.Module):
     """Segmentation head implementation."""
+
     def __init__(
         self,
         hidden_dim,
@@ -122,9 +117,7 @@ class SegmentationHead(nn.Module):
             )
         self.no_dec = no_dec
         if no_dec:
-            self.mask_predictor = nn.Conv2d(
-                hidden_dim, 1, kernel_size=3, stride=1, padding=1
-            )
+            self.mask_predictor = nn.Conv2d(hidden_dim, 1, kernel_size=3, stride=1, padding=1)
         else:
             self.mask_predictor = MaskPredictor(hidden_dim, mask_dim=hidden_dim)
 
@@ -181,26 +174,18 @@ class SegmentationHead(nn.Module):
                 backbone_visual_feats = []
                 for feat in backbone_feats:
                     # Copy the img features per query (pixel decoder won't share img feats)
-                    backbone_visual_feats.append(
-                        _unwrap(feat)[image_ids_, ...].to(model_device)
-                    )
+                    backbone_visual_feats.append(_unwrap(feat)[image_ids_, ...].to(model_device))
             else:
                 # Bs=1, we rely on broadcasting for query-based processing
-                backbone_visual_feats = [
-                    _unwrap(bb_feat).clone() for bb_feat in backbone_feats
-                ]
+                backbone_visual_feats = [_unwrap(bb_feat).clone() for bb_feat in backbone_feats]
             # Extract visual embeddings
             encoder_hidden_states = encoder_hidden_states.permute(1, 2, 0)
             spatial_dim = math.prod(backbone_feats[-1].shape[-2:])
-            encoder_visual_embed = encoder_hidden_states[..., :spatial_dim].reshape(
-                -1, *backbone_feats[-1].shape[1:]
-            )
+            encoder_visual_embed = encoder_hidden_states[..., :spatial_dim].reshape(-1, *backbone_feats[-1].shape[1:])
 
             backbone_visual_feats[-1] = encoder_visual_embed
             if self.act_ckpt:
-                pixel_embed = checkpoint.checkpoint(
-                    self.pixel_decoder, backbone_visual_feats, use_reentrant=False
-                )
+                pixel_embed = checkpoint.checkpoint(self.pixel_decoder, backbone_visual_feats, use_reentrant=False)
             else:
                 pixel_embed = self.pixel_decoder(backbone_visual_feats)
         else:
@@ -253,6 +238,7 @@ class SegmentationHead(nn.Module):
 
 class PixelDecoder(nn.Module):
     """Pixel decoder implementation."""
+
     def __init__(
         self,
         hidden_dim,
@@ -286,9 +272,7 @@ class PixelDecoder(nn.Module):
         self.shared_conv = shared_conv
         self.out_dim = self.conv_layers[-1].out_channels
         if compile_mode is not None:
-            self.forward = torch.compile(
-                self.forward, mode=compile_mode, dynamic=True, fullgraph=True
-            )
+            self.forward = torch.compile(self.forward, mode=compile_mode, dynamic=True, fullgraph=True)
             # Needed to make checkpointing happy. But we don't know if the module is checkpointed, so we disable it by default.
             torch._dynamo.config.optimize_ddp = False
 
@@ -304,9 +288,7 @@ class PixelDecoder(nn.Module):
         fpn_feats = backbone_feats[:-1]
         for layer_idx, bb_feat in enumerate(fpn_feats[::-1]):
             curr_fpn = bb_feat
-            prev_fpn = curr_fpn + F.interpolate(
-                prev_fpn, size=curr_fpn.shape[-2:], mode=self.interpolation_mode
-            )
+            prev_fpn = curr_fpn + F.interpolate(prev_fpn, size=curr_fpn.shape[-2:], mode=self.interpolation_mode)
             if self.shared_conv:
                 # only one conv layer
                 layer_idx = 0
@@ -356,16 +338,12 @@ class UniversalSegmentationHead(SegmentationHead):
         self.d_model = hidden_dim
 
         if dot_product_scorer is not None:
-            assert presence_head, (
-                "Specifying a dot product scorer without a presence head is likely a mistake"
-            )
+            assert presence_head, "Specifying a dot product scorer without a presence head is likely a mistake"
 
         self.presence_head = None
         if presence_head:
             self.presence_head = (
-                dot_product_scorer
-                if dot_product_scorer is not None
-                else LinearPresenceHead(self.d_model)
+                dot_product_scorer if dot_product_scorer is not None else LinearPresenceHead(self.d_model)
             )
 
         self.cross_attend_prompt = cross_attend_prompt
@@ -373,9 +351,7 @@ class UniversalSegmentationHead(SegmentationHead):
             self.cross_attn_norm = nn.LayerNorm(self.d_model)
 
         self.semantic_seg_head = nn.Conv2d(self.pixel_decoder.out_dim, 1, kernel_size=1)
-        self.instance_seg_head = nn.Conv2d(
-            self.pixel_decoder.out_dim, self.d_model, kernel_size=1
-        )
+        self.instance_seg_head = nn.Conv2d(self.pixel_decoder.out_dim, self.d_model, kernel_size=1)
 
     def forward(
         self,

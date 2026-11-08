@@ -22,6 +22,7 @@ except ImportError:
 
 class SparseSampler:
     """Sparse sampler implementation."""
+
     def __init__(self, device="cuda:0"):
         """Init.
 

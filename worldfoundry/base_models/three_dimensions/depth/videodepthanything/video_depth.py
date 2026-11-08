@@ -25,7 +25,11 @@ from torchvision.transforms import Compose
 from tqdm import tqdm
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_dav2.model import DINOv2
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.transform import NormalizeImage, PrepareForNet, Resize
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.transform import (
+    NormalizeImage,
+    PrepareForNet,
+    Resize,
+)
 
 from .dpt_temporal import DPTHeadTemporal
 from .util import compute_scale_and_shift, get_interpolate_frames
@@ -39,6 +43,7 @@ INTERP_LEN = 8
 
 class VideoDepthAnything(nn.Module):
     """Video depth anything implementation."""
+
     def __init__(
         self,
         encoder="vitl",

@@ -75,8 +75,7 @@ def validate_input_views_for_inference(
         invalid_keys = provided_keys - ALLOWED_VIEW_KEYS
         if invalid_keys:
             raise ValueError(
-                f"View {view_idx} contains invalid keys: {invalid_keys}. "
-                f"Allowed keys are: {sorted(ALLOWED_VIEW_KEYS)}"
+                f"View {view_idx} contains invalid keys: {invalid_keys}. Allowed keys are: {sorted(ALLOWED_VIEW_KEYS)}"
             )
 
         # Check for missing required keys
@@ -95,10 +94,7 @@ def validate_input_views_for_inference(
 
         # Check depth constraint: If depth is provided, intrinsics or ray_directions must also be provided
         if "depth_z" in provided_keys:
-            if (
-                "intrinsics" not in provided_keys
-                and "ray_directions" not in provided_keys
-            ):
+            if "intrinsics" not in provided_keys and "ray_directions" not in provided_keys:
                 raise ValueError(
                     f"View {view_idx} depth constraint violation: If 'depth_z' is provided, "
                     f"then 'intrinsics' or 'ray_directions' must also be provided. "
@@ -197,9 +193,7 @@ def preprocess_input_views_for_inference(
             # Get batch size from the image tensor
             batch_size = view["img"].shape[0]
             # Default to True for all samples in the batch
-            processed_view["is_metric_scale"] = torch.ones(
-                batch_size, dtype=torch.bool, device=view["img"].device
-            )
+            processed_view["is_metric_scale"] = torch.ones(batch_size, dtype=torch.bool, device=view["img"].device)
 
         # Rename keys to match expected model input format
         if "ray_directions" in processed_view:
@@ -284,9 +278,7 @@ def postprocess_model_outputs_for_inference(
 
         # 3. Recover pinhole camera intrinsics from ray directions if available
         if "ray_directions" in processed_output:
-            intrinsics = recover_pinhole_intrinsics_from_ray_directions(
-                processed_output["ray_directions"]
-            )
+            intrinsics = recover_pinhole_intrinsics_from_ray_directions(processed_output["ray_directions"])
             processed_output["intrinsics"] = intrinsics
 
         # 4. Add camera pose matrices if both translation and quaternions are available
@@ -299,9 +291,7 @@ def postprocess_model_outputs_for_inference(
             rotation_matrices = quaternion_to_rotation_matrix(cam_quats)  # (B, 3, 3)
 
             # Create 4x4 pose matrices
-            pose_matrices = (
-                torch.eye(4, device=img.device).unsqueeze(0).repeat(batch_size, 1, 1)
-            )
+            pose_matrices = torch.eye(4, device=img.device).unsqueeze(0).repeat(batch_size, 1, 1)
             pose_matrices[:, :3, :3] = rotation_matrices
             pose_matrices[:, :3, 3] = cam_trans
 
@@ -343,9 +333,7 @@ def postprocess_model_outputs_for_inference(
 
             # Start with non-ambiguous mask if available
             if "non_ambiguous_mask" in processed_output:
-                non_ambiguous_mask = (
-                    processed_output["non_ambiguous_mask"].cpu().numpy()
-                )  # (B, H, W)
+                non_ambiguous_mask = processed_output["non_ambiguous_mask"].cpu().numpy()  # (B, H, W)
                 final_mask = non_ambiguous_mask
 
             # Apply confidence mask if requested and available
@@ -386,20 +374,12 @@ def postprocess_model_outputs_for_inference(
 
                     if batch_final_mask.any():  # Only compute if we have valid points
                         # Compute normals and normal-based edge mask
-                        normals, normals_mask = points_to_normals(
-                            batch_pts3d, mask=batch_final_mask
-                        )
-                        normal_edges = normals_edge(
-                            normals, tol=edge_normal_threshold, mask=normals_mask
-                        )
+                        normals, normals_mask = points_to_normals(batch_pts3d, mask=batch_final_mask)
+                        normal_edges = normals_edge(normals, tol=edge_normal_threshold, mask=normals_mask)
 
                         # Compute depth-based edge mask
-                        depth_z = (
-                            processed_output["depth_z"][b].squeeze(-1).cpu().numpy()
-                        )
-                        depth_edges = depth_edge(
-                            depth_z, rtol=edge_depth_threshold, mask=batch_final_mask
-                        )
+                        depth_z = processed_output["depth_z"][b].squeeze(-1).cpu().numpy()
+                        depth_edges = depth_edge(depth_z, rtol=edge_depth_threshold, mask=batch_final_mask)
 
                         # Combine both edge types
                         edge_mask = ~(depth_edges & normal_edges)
@@ -415,9 +395,7 @@ def postprocess_model_outputs_for_inference(
             # Apply final mask to dense geometry outputs if we have a mask
             if final_mask is not None:
                 # Convert mask to torch tensor
-                final_mask_torch = torch.from_numpy(final_mask).to(
-                    processed_output["pts3d"].device
-                )
+                final_mask_torch = torch.from_numpy(final_mask).to(processed_output["pts3d"].device)
                 final_mask_torch = final_mask_torch.unsqueeze(-1)  # (B, H, W, 1)
 
                 # Apply mask to dense geometry outputs (zero out invalid regions)

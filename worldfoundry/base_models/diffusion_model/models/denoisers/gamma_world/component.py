@@ -164,20 +164,38 @@ class GammaWorldDenoiser:
             def one() -> dict[str, torch.Tensor]:
                 return {
                     "k_players": torch.zeros(
-                        batch_size, n_views, player_tokens, spec.num_heads, spec.head_dim,
-                        device=device, dtype=dtype,
+                        batch_size,
+                        n_views,
+                        player_tokens,
+                        spec.num_heads,
+                        spec.head_dim,
+                        device=device,
+                        dtype=dtype,
                     ),
                     "v_players": torch.zeros(
-                        batch_size, n_views, player_tokens, spec.num_heads, spec.head_dim,
-                        device=device, dtype=dtype,
+                        batch_size,
+                        n_views,
+                        player_tokens,
+                        spec.num_heads,
+                        spec.head_dim,
+                        device=device,
+                        dtype=dtype,
                     ),
                     "k_z": torch.zeros(
-                        batch_size, z_tokens, spec.num_heads, spec.head_dim,
-                        device=device, dtype=dtype,
+                        batch_size,
+                        z_tokens,
+                        spec.num_heads,
+                        spec.head_dim,
+                        device=device,
+                        dtype=dtype,
                     ),
                     "v_z": torch.zeros(
-                        batch_size, z_tokens, spec.num_heads, spec.head_dim,
-                        device=device, dtype=dtype,
+                        batch_size,
+                        z_tokens,
+                        spec.num_heads,
+                        spec.head_dim,
+                        device=device,
+                        dtype=dtype,
                     ),
                     "global_end_index": torch.zeros(1, device=device, dtype=torch.long),
                     "local_end_index": torch.zeros(1, device=device, dtype=torch.long),
@@ -189,16 +207,25 @@ class GammaWorldDenoiser:
             def one() -> dict[str, torch.Tensor]:
                 return {
                     "k": torch.zeros(
-                        batch_size, sequence_tokens, spec.num_heads, spec.head_dim,
-                        device=device, dtype=dtype,
+                        batch_size,
+                        sequence_tokens,
+                        spec.num_heads,
+                        spec.head_dim,
+                        device=device,
+                        dtype=dtype,
                     ),
                     "v": torch.zeros(
-                        batch_size, sequence_tokens, spec.num_heads, spec.head_dim,
-                        device=device, dtype=dtype,
+                        batch_size,
+                        sequence_tokens,
+                        spec.num_heads,
+                        spec.head_dim,
+                        device=device,
+                        dtype=dtype,
                     ),
                     "global_end_index": torch.zeros(1, device=device, dtype=torch.long),
                     "local_end_index": torch.zeros(1, device=device, dtype=torch.long),
                 }
+
         return [one() for _ in range(spec.num_layers)]
 
     @staticmethod
@@ -251,8 +278,13 @@ class GammaWorldDenoiser:
                 mask.to(device=model_device, dtype=model_dtype)
                 if isinstance(mask, torch.Tensor)
                 else torch.zeros(
-                    latents.shape[0], 1, latents.shape[2], latents.shape[3], latents.shape[4],
-                    device=model_device, dtype=model_dtype,
+                    latents.shape[0],
+                    1,
+                    latents.shape[2],
+                    latents.shape[3],
+                    latents.shape[4],
+                    device=model_device,
+                    dtype=model_dtype,
                 )
             ),
             "fps": fps.to(device=model_device),

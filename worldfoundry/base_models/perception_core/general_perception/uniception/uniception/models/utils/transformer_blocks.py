@@ -60,7 +60,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
 
     def extra_repr(self):
-        return f"drop_prob={round(self.drop_prob,3):0.3f}"
+        return f"drop_prob={round(self.drop_prob, 3):0.3f}"
 
 
 class Mlp(nn.Module):
@@ -222,9 +222,9 @@ class Attention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, xpos)
             k = self.custom_positional_encoding(k, xpos)
 
@@ -348,12 +348,12 @@ class CrossAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                qpos is not None
-            ), "Positions of queries (qpos) are a required input when using custom positional encoding"
-            assert (
-                kpos is not None
-            ), "Positions of keys (kpos) are a required input when using custom positional encoding"
+            assert qpos is not None, (
+                "Positions of queries (qpos) are a required input when using custom positional encoding"
+            )
+            assert kpos is not None, (
+                "Positions of keys (kpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, qpos)
             k = self.custom_positional_encoding(k, kpos)
 
@@ -506,9 +506,9 @@ class SelfAttentionBlock(nn.Module):
             torch.Tensor: Output features of same shape as input
         """
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
         x = x + self.drop_path1(self.ls1(self.attn(self.norm1(x), xpos)))
         x = x + self.drop_path2(self.ls2(self.mlp(self.norm2(x))))
         return x
@@ -634,12 +634,12 @@ class CrossAttentionBlock(nn.Module):
             torch.Tensor: Output features of same shape as input
         """
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
-            assert (
-                ypos is not None
-            ), "Positions of cross tokens (ypos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
+            assert ypos is not None, (
+                "Positions of cross tokens (ypos) are a required input when using custom positional encoding"
+            )
         x = x + self.drop_path1(self.ls1(self.attn(self.norm1(x), xpos)))
         y_ = self.norm_y(y)
         x = x + self.drop_path2(self.ls2(self.cross_attn(self.norm2(x), y_, y_, xpos, ypos)))
@@ -761,9 +761,9 @@ class DiffAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, xpos)
             k = self.custom_positional_encoding(k, xpos)
 
@@ -896,12 +896,12 @@ class DiffCrossAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                qpos is not None
-            ), "Positions of queries (qpos) are a required input when using custom positional encoding"
-            assert (
-                kpos is not None
-            ), "Positions of keys (kpos) are a required input when using custom positional encoding"
+            assert qpos is not None, (
+                "Positions of queries (qpos) are a required input when using custom positional encoding"
+            )
+            assert kpos is not None, (
+                "Positions of keys (kpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, qpos)
             k = self.custom_positional_encoding(k, kpos)
 

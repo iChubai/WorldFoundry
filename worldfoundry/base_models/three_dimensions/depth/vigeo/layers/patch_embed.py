@@ -12,6 +12,7 @@ import torch.nn as nn
 from torch import Tensor
 from typing import Callable
 
+
 def make_2tuple(x):
     if isinstance(x, tuple):
         assert len(x) == 2

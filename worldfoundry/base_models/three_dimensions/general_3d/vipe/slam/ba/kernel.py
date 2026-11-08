@@ -22,6 +22,7 @@ import torch
 
 class RobustKernel(ABC):
     """Robust kernel implementation."""
+
     @abstractmethod
     def apply(self, x: torch.Tensor) -> torch.Tensor:
         """Return a per-residual weight of the same shape as ``x``."""

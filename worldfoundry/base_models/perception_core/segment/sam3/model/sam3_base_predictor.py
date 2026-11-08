@@ -90,9 +90,7 @@ class Sam3BasePredictor:
             return self.close_session(
                 session_id=request["session_id"],
                 run_gc_collect=request.get("run_gc_collect", True),
-                clear_cache_threshold=int(
-                    request.get("clear_cache_threshold", _CLEAR_CACHE_THRESHOLD)
-                ),
+                clear_cache_threshold=int(request.get("clear_cache_threshold", _CLEAR_CACHE_THRESHOLD)),
             )
         else:
             raise RuntimeError(f"invalid request type: {request_type}")
@@ -174,9 +172,7 @@ class Sam3BasePredictor:
             point_labels = torch.tensor(point_labels, dtype=torch.int32)
         if bounding_boxes is not None and not isinstance(bounding_boxes, torch.Tensor):
             bounding_boxes = torch.tensor(bounding_boxes, dtype=torch.float32)
-        if bounding_box_labels is not None and not isinstance(
-            bounding_box_labels, torch.Tensor
-        ):
+        if bounding_box_labels is not None and not isinstance(bounding_box_labels, torch.Tensor):
             bounding_box_labels = torch.tensor(bounding_box_labels, dtype=torch.int32)
 
         kwargs = dict(
@@ -219,9 +215,7 @@ class Sam3BasePredictor:
         inference_state = session["state"]
         self._extend_expiration_time(session)
 
-        result = self.model.remove_object(
-            inference_state, obj_id, frame_idx=frame_idx, is_user_action=is_user_action
-        )
+        result = self.model.remove_object(inference_state, obj_id, frame_idx=frame_idx, is_user_action=is_user_action)
         # Handle both return conventions
         if result is None or (isinstance(result, tuple) and result[1] is None):
             import numpy as np
@@ -269,9 +263,7 @@ class Sam3BasePredictor:
             inference_state = session["state"]
             self._extend_expiration_time(session)
             if propagation_direction not in ["both", "forward", "backward"]:
-                raise ValueError(
-                    f"invalid propagation direction: {propagation_direction}"
-                )
+                raise ValueError(f"invalid propagation direction: {propagation_direction}")
 
             propagate_kwargs = dict(
                 inference_state=inference_state,
@@ -452,12 +444,8 @@ class Sam3BasePredictor:
         # bookkeeping reads (no CUDA sync) and complement
         # ``mem_get_info`` by exposing the caching-allocator pool size
         # vs the actual live tensor footprint.
-        allocated_bytes = (
-            torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
-        )
-        reserved_bytes = (
-            torch.cuda.memory_reserved() if torch.cuda.is_available() else 0
-        )
+        allocated_bytes = torch.cuda.memory_allocated() if torch.cuda.is_available() else 0
+        reserved_bytes = torch.cuda.memory_reserved() if torch.cuda.is_available() else 0
         return {
             "free_bytes": free_bytes,
             "total_bytes": total_bytes,
@@ -475,9 +463,7 @@ class Sam3BasePredictor:
         """
         session = self._all_inference_states.get(session_id, None)
         if session is None:
-            raise RuntimeError(
-                f"Cannot find session {session_id}; it might have expired"
-            )
+            raise RuntimeError(f"Cannot find session {session_id}; it might have expired")
         return session
 
     def _extend_expiration_time(self, session):

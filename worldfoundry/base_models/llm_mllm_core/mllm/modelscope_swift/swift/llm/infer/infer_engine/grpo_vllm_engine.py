@@ -8,14 +8,13 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.llm impo
 
 try:
     # After setting the environment variables, import vllm. This way of writing allows lint to pass.
-    os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
-    os.environ['VLLM_ENGINE_ITERATION_TIMEOUT_S'] = '3600'
+    os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+    os.environ["VLLM_ENGINE_ITERATION_TIMEOUT_S"] = "3600"
 except Exception:
     raise
 
 
 class GRPOVllmEngine(VllmEngine):
-
     def __init__(
         self,
         model_id_or_path: str,
@@ -35,7 +34,7 @@ class GRPOVllmEngine(VllmEngine):
         disable_custom_all_reduce: bool = True,
         enforce_eager: bool = False,
         limit_mm_per_prompt: Optional[Dict[str, Any]] = None,
-        device: str = 'auto',
+        device: str = "auto",
         seed: Optional[int] = None,
         # lora
         enable_lora: bool = False,

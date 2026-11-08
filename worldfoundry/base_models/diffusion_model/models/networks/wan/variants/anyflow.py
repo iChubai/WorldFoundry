@@ -47,6 +47,7 @@ from torch.nn.attention.flex_attention import create_block_mask, flex_attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
+
 @lru_cache(maxsize=1)
 def compiled_flex_attention():
     """Compile the FAR attention kernel only when a causal call needs it."""
@@ -76,8 +77,8 @@ class WanSelfAttnProcessor2_0:
     """AnyFlow self-attention: SDPA or FlexAttention, plus optional FAR KV cache."""
 
     def __init__(self):
-        if not hasattr(F, 'scaled_dot_product_attention'):
-            raise ImportError('WanSelfAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.')
+        if not hasattr(F, "scaled_dot_product_attention"):
+            raise ImportError("WanSelfAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
 
     def __call__(
         self,
@@ -87,9 +88,8 @@ class WanSelfAttnProcessor2_0:
         attention_mask: Optional[torch.Tensor] = None,
         rotary_emb: Optional[torch.Tensor] = None,
         kv_cache=None,
-        kv_cache_flag=None
+        kv_cache_flag=None,
     ) -> torch.Tensor:
-
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
 
@@ -107,35 +107,79 @@ class WanSelfAttnProcessor2_0:
         value = value.unflatten(2, (attn.heads, -1)).transpose(1, 2)
 
         if kv_cache is not None:
-            if kv_cache_flag['is_cache_step']:
-                kv_cache['compressed_cache'][0, :, :, :kv_cache_flag['num_compressed_tokens'], :] = key[:, :, :kv_cache_flag['num_compressed_tokens']]
-                kv_cache['compressed_cache'][1, :, :, :kv_cache_flag['num_compressed_tokens'], :] = value[:, :, :kv_cache_flag['num_compressed_tokens']]
-                kv_cache['full_cache'][0, :, :, :kv_cache_flag['num_full_tokens'], :] = key[:, :, kv_cache_flag['num_compressed_tokens']:]
-                kv_cache['full_cache'][1, :, :, :kv_cache_flag['num_full_tokens'], :] = value[:, :, kv_cache_flag['num_compressed_tokens']:]
+            if kv_cache_flag["is_cache_step"]:
+                kv_cache["compressed_cache"][0, :, :, : kv_cache_flag["num_compressed_tokens"], :] = key[
+                    :, :, : kv_cache_flag["num_compressed_tokens"]
+                ]
+                kv_cache["compressed_cache"][1, :, :, : kv_cache_flag["num_compressed_tokens"], :] = value[
+                    :, :, : kv_cache_flag["num_compressed_tokens"]
+                ]
+                kv_cache["full_cache"][0, :, :, : kv_cache_flag["num_full_tokens"], :] = key[
+                    :, :, kv_cache_flag["num_compressed_tokens"] :
+                ]
+                kv_cache["full_cache"][1, :, :, : kv_cache_flag["num_full_tokens"], :] = value[
+                    :, :, kv_cache_flag["num_compressed_tokens"] :
+                ]
             else:
-                key = torch.cat([
-                    kv_cache['compressed_cache'][0, :, :, :kv_cache_flag['num_cached_compressed_tokens'], :],
-                    kv_cache['full_cache'][0, :, :, :kv_cache_flag['num_cached_full_tokens'], :],
-                    key
-                ], dim=2)
-                value = torch.cat([
-                    kv_cache['compressed_cache'][1, :, :, :kv_cache_flag['num_cached_compressed_tokens'], :],
-                    kv_cache['full_cache'][1, :, :, :kv_cache_flag['num_cached_full_tokens'], :],
-                    value
-                ], dim=2)
+                key = torch.cat(
+                    [
+                        kv_cache["compressed_cache"][0, :, :, : kv_cache_flag["num_cached_compressed_tokens"], :],
+                        kv_cache["full_cache"][0, :, :, : kv_cache_flag["num_cached_full_tokens"], :],
+                        key,
+                    ],
+                    dim=2,
+                )
+                value = torch.cat(
+                    [
+                        kv_cache["compressed_cache"][1, :, :, : kv_cache_flag["num_cached_compressed_tokens"], :],
+                        kv_cache["full_cache"][1, :, :, : kv_cache_flag["num_cached_full_tokens"], :],
+                        value,
+                    ],
+                    dim=2,
+                )
 
         if rotary_emb is not None:
-            query = apply_rotary_emb(query, rotary_emb['query'])
-            key = apply_rotary_emb(key, rotary_emb['key'])
+            query = apply_rotary_emb(query, rotary_emb["query"])
+            key = apply_rotary_emb(key, rotary_emb["key"])
 
         if attention_mask is None:
-            hidden_states = F.scaled_dot_product_attention(query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False)
+            hidden_states = F.scaled_dot_product_attention(
+                query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
+            )
         else:
             seq_len = query.shape[2]
             padded_length = int(math.ceil(seq_len / 128.0) * 128.0 - seq_len)
-            query = torch.cat([query, torch.zeros([query.shape[0], query.shape[1], padded_length, query.shape[3]], device=query.device, dtype=query.dtype)], dim=2)  # noqa: E501
-            key = torch.cat([key, torch.zeros([key.shape[0], key.shape[1], padded_length, key.shape[3]], device=key.device, dtype=key.dtype)], dim=2)  # noqa: E501
-            value = torch.cat([value, torch.zeros([value.shape[0], value.shape[1], padded_length, value.shape[3]], device=value.device, dtype=value.dtype)], dim=2)  # noqa: E501
+            query = torch.cat(
+                [
+                    query,
+                    torch.zeros(
+                        [query.shape[0], query.shape[1], padded_length, query.shape[3]],
+                        device=query.device,
+                        dtype=query.dtype,
+                    ),
+                ],
+                dim=2,
+            )  # noqa: E501
+            key = torch.cat(
+                [
+                    key,
+                    torch.zeros(
+                        [key.shape[0], key.shape[1], padded_length, key.shape[3]], device=key.device, dtype=key.dtype
+                    ),
+                ],
+                dim=2,
+            )  # noqa: E501
+            value = torch.cat(
+                [
+                    value,
+                    torch.zeros(
+                        [value.shape[0], value.shape[1], padded_length, value.shape[3]],
+                        device=value.device,
+                        dtype=value.dtype,
+                    ),
+                ],
+                dim=2,
+            )  # noqa: E501
 
             hidden_states = compiled_flex_attention()(query, key, value, block_mask=attention_mask)[:, :, :seq_len]
 
@@ -152,8 +196,10 @@ class WanCrossAttnProcessor2_0:
     """AnyFlow text/image cross-attention processor (PyTorch 2 SDPA)."""
 
     def __init__(self):
-        if not hasattr(F, 'scaled_dot_product_attention'):
-            raise ImportError('WanCrossAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.')
+        if not hasattr(F, "scaled_dot_product_attention"):
+            raise ImportError(
+                "WanCrossAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0."
+            )
 
     def __call__(
         self,
@@ -163,7 +209,6 @@ class WanCrossAttnProcessor2_0:
         attention_mask: Optional[torch.Tensor] = None,
         rotary_emb: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-
         query = attn.to_q(hidden_states)
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -178,10 +223,12 @@ class WanCrossAttnProcessor2_0:
         value = value.unflatten(2, (attn.heads, -1)).transpose(1, 2)
 
         if rotary_emb is not None:
-            query = apply_rotary_emb(query, rotary_emb['query'])
-            key = apply_rotary_emb(key, rotary_emb['key'])
+            query = apply_rotary_emb(query, rotary_emb["query"])
+            key = apply_rotary_emb(key, rotary_emb["key"])
 
-        hidden_states = F.scaled_dot_product_attention(query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False)
+        hidden_states = F.scaled_dot_product_attention(
+            query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
+        )
 
         hidden_states = hidden_states.transpose(1, 2).flatten(2, 3)
         hidden_states = hidden_states.type_as(query)
@@ -198,7 +245,7 @@ class WanImageEmbedding(torch.nn.Module):
         super().__init__()
 
         self.norm1 = FP32LayerNorm(in_features)
-        self.ff = FeedForward(in_features, out_features, mult=1, activation_fn='gelu')
+        self.ff = FeedForward(in_features, out_features, mult=1, activation_fn="gelu")
         self.norm2 = FP32LayerNorm(out_features)
 
     def forward(self, encoder_hidden_states_image: torch.Tensor) -> torch.Tensor:
@@ -225,20 +272,15 @@ class WanTimeTextImageEmbedding(nn.Module):
         self.time_embedder = TimestepEmbedding(in_channels=time_freq_dim, time_embed_dim=dim)
         self.act_fn = nn.SiLU()
         self.time_proj = nn.Linear(dim, time_proj_dim)
-        self.text_embedder = PixArtAlphaTextProjection(text_embed_dim, dim, act_fn='gelu_tanh')
+        self.text_embedder = PixArtAlphaTextProjection(text_embed_dim, dim, act_fn="gelu_tanh")
 
         self.image_embedder = None
         if image_embed_dim is not None:
             self.image_embedder = WanImageEmbedding(image_embed_dim, dim)
 
-    def forward_timestep(
-        self,
-        timestep: torch.Tensor,
-        encoder_hidden_states,
-        token_per_frame
-    ):
+    def forward_timestep(self, timestep: torch.Tensor, encoder_hidden_states, token_per_frame):
         batch_size, num_frames = timestep.shape
-        timestep = rearrange(timestep, 'b t -> (b t)')
+        timestep = rearrange(timestep, "b t -> (b t)")
 
         timestep = self.timesteps_proj(timestep)
 
@@ -248,8 +290,10 @@ class WanTimeTextImageEmbedding(nn.Module):
         temb = self.time_embedder(timestep).type_as(encoder_hidden_states)
         timestep_proj = self.time_proj(self.act_fn(temb))
 
-        temb = rearrange(temb, '(b t) c -> b t c', b=batch_size).repeat_interleave(token_per_frame, dim=1)
-        timestep_proj = rearrange(timestep_proj, '(b t) c -> b t c', b=batch_size).repeat_interleave(token_per_frame, dim=1)
+        temb = rearrange(temb, "(b t) c -> b t c", b=batch_size).repeat_interleave(token_per_frame, dim=1)
+        timestep_proj = rearrange(timestep_proj, "(b t) c -> b t c", b=batch_size).repeat_interleave(
+            token_per_frame, dim=1
+        )
 
         return temb, timestep_proj
 
@@ -261,17 +305,24 @@ class WanTimeTextImageEmbedding(nn.Module):
         encoder_hidden_states_image: Optional[torch.Tensor] = None,
         far_cfg=None,
         clean_timestep=None,
-        is_causal=True
+        is_causal=True,
     ):
-
         if is_causal:
-            full_frame_timestep, full_frame_timestep_proj = self.forward_timestep(timestep[:, -far_cfg['num_full_frames']:], encoder_hidden_states, far_cfg['full_token_per_frame'])  # noqa: E501
-            compressed_frame_timestep, compressed_frame_timestep_proj = self.forward_timestep(timestep[:, :-far_cfg['num_full_frames']], encoder_hidden_states, far_cfg['compressed_token_per_frame'])  # noqa: E501
+            full_frame_timestep, full_frame_timestep_proj = self.forward_timestep(
+                timestep[:, -far_cfg["num_full_frames"] :], encoder_hidden_states, far_cfg["full_token_per_frame"]
+            )  # noqa: E501
+            compressed_frame_timestep, compressed_frame_timestep_proj = self.forward_timestep(
+                timestep[:, : -far_cfg["num_full_frames"]], encoder_hidden_states, far_cfg["compressed_token_per_frame"]
+            )  # noqa: E501
 
             if clean_timestep is not None:
-                clean_timestep, clean_timestep_proj = self.forward_timestep(clean_timestep, encoder_hidden_states, far_cfg['full_token_per_frame'])  # noqa: E501
+                clean_timestep, clean_timestep_proj = self.forward_timestep(
+                    clean_timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
+                )  # noqa: E501
                 timestep = torch.cat([compressed_frame_timestep, full_frame_timestep, clean_timestep], dim=1)
-                timestep_proj = torch.cat([compressed_frame_timestep_proj, full_frame_timestep_proj, clean_timestep_proj], dim=1)
+                timestep_proj = torch.cat(
+                    [compressed_frame_timestep_proj, full_frame_timestep_proj, clean_timestep_proj], dim=1
+                )
             else:
                 timestep = torch.cat([compressed_frame_timestep, full_frame_timestep], dim=1)
                 timestep_proj = torch.cat([compressed_frame_timestep_proj, full_frame_timestep_proj], dim=1)
@@ -280,7 +331,9 @@ class WanTimeTextImageEmbedding(nn.Module):
             if encoder_hidden_states_image is not None:
                 encoder_hidden_states_image = self.image_embedder(encoder_hidden_states_image)
         else:
-            timestep, timestep_proj = self.forward_timestep(timestep, encoder_hidden_states, far_cfg['full_token_per_frame'])  # noqa: E501
+            timestep, timestep_proj = self.forward_timestep(
+                timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
+            )  # noqa: E501
 
             encoder_hidden_states = self.text_embedder(encoder_hidden_states)
             if encoder_hidden_states_image is not None:
@@ -309,25 +362,21 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
         self.delta_embedder = TimestepEmbedding(in_channels=time_freq_dim, time_embed_dim=dim)
         self.act_fn = nn.SiLU()
         self.time_proj = nn.Linear(dim, time_proj_dim)
-        self.text_embedder = PixArtAlphaTextProjection(text_embed_dim, dim, act_fn='gelu_tanh')
+        self.text_embedder = PixArtAlphaTextProjection(text_embed_dim, dim, act_fn="gelu_tanh")
 
         self.image_embedder = None
         if image_embed_dim is not None:
             self.image_embedder = WanImageEmbedding(image_embed_dim, dim)
 
-        self.register_buffer('delta_emb_gate', torch.tensor([gate_value], dtype=torch.float32), persistent=False)
+        self.register_buffer("delta_emb_gate", torch.tensor([gate_value], dtype=torch.float32), persistent=False)
         self.deltatime_type = deltatime_type
 
     def forward_timestep(
-        self,
-        timestep: torch.Tensor,
-        delta_timestep: torch.Tensor,
-        encoder_hidden_states,
-        token_per_frame
+        self, timestep: torch.Tensor, delta_timestep: torch.Tensor, encoder_hidden_states, token_per_frame
     ):
         batch_size, num_frames = timestep.shape
-        timestep = rearrange(timestep, 'b t -> (b t)')
-        delta_timestep = rearrange(delta_timestep, 'b t -> (b t)')
+        timestep = rearrange(timestep, "b t -> (b t)")
+        delta_timestep = rearrange(delta_timestep, "b t -> (b t)")
 
         timestep = self.timesteps_proj(timestep)
 
@@ -349,8 +398,10 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
         rt_emb = (1 - gate) * temb + gate * delta_emb
         timestep_proj = self.time_proj(self.act_fn(rt_emb))
 
-        rt_emb = rearrange(rt_emb, '(b t) c -> b t c', b=batch_size).repeat_interleave(token_per_frame, dim=1)
-        timestep_proj = rearrange(timestep_proj, '(b t) c -> b t c', b=batch_size).repeat_interleave(token_per_frame, dim=1)
+        rt_emb = rearrange(rt_emb, "(b t) c -> b t c", b=batch_size).repeat_interleave(token_per_frame, dim=1)
+        timestep_proj = rearrange(timestep_proj, "(b t) c -> b t c", b=batch_size).repeat_interleave(
+            token_per_frame, dim=1
+        )
 
         return rt_emb, timestep_proj
 
@@ -362,23 +413,37 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
         encoder_hidden_states_image: Optional[torch.Tensor] = None,
         far_cfg=None,
         clean_timestep=None,
-        is_causal=True
+        is_causal=True,
     ):
-        if self.deltatime_type == 'r':
+        if self.deltatime_type == "r":
             delta_timestep = r_timestep
-        elif self.deltatime_type == 't-r':
+        elif self.deltatime_type == "t-r":
             delta_timestep = timestep - r_timestep
         else:
             raise NotImplementedError
 
         if is_causal:
-            full_frame_timestep, full_frame_timestep_proj = self.forward_timestep(timestep[:, -far_cfg['num_full_frames']:], delta_timestep[:, -far_cfg['num_full_frames']:], encoder_hidden_states, far_cfg['full_token_per_frame'])  # noqa: E501
-            compressed_frame_timestep, compressed_frame_timestep_proj = self.forward_timestep(timestep[:, :-far_cfg['num_full_frames']], delta_timestep[:, :-far_cfg['num_full_frames']], encoder_hidden_states, far_cfg['compressed_token_per_frame'])  # noqa: E501
+            full_frame_timestep, full_frame_timestep_proj = self.forward_timestep(
+                timestep[:, -far_cfg["num_full_frames"] :],
+                delta_timestep[:, -far_cfg["num_full_frames"] :],
+                encoder_hidden_states,
+                far_cfg["full_token_per_frame"],
+            )  # noqa: E501
+            compressed_frame_timestep, compressed_frame_timestep_proj = self.forward_timestep(
+                timestep[:, : -far_cfg["num_full_frames"]],
+                delta_timestep[:, : -far_cfg["num_full_frames"]],
+                encoder_hidden_states,
+                far_cfg["compressed_token_per_frame"],
+            )  # noqa: E501
 
             if clean_timestep is not None:
-                clean_timestep, clean_timestep_proj = self.forward_timestep(clean_timestep, clean_timestep, encoder_hidden_states, far_cfg['full_token_per_frame'])  # noqa: E501
+                clean_timestep, clean_timestep_proj = self.forward_timestep(
+                    clean_timestep, clean_timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
+                )  # noqa: E501
                 timestep = torch.cat([compressed_frame_timestep, full_frame_timestep, clean_timestep], dim=1)
-                timestep_proj = torch.cat([compressed_frame_timestep_proj, full_frame_timestep_proj, clean_timestep_proj], dim=1)
+                timestep_proj = torch.cat(
+                    [compressed_frame_timestep_proj, full_frame_timestep_proj, clean_timestep_proj], dim=1
+                )
             else:
                 timestep = torch.cat([compressed_frame_timestep, full_frame_timestep], dim=1)
                 timestep_proj = torch.cat([compressed_frame_timestep_proj, full_frame_timestep_proj], dim=1)
@@ -387,7 +452,9 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
             if encoder_hidden_states_image is not None:
                 encoder_hidden_states_image = self.image_embedder(encoder_hidden_states_image)
         else:
-            timestep, timestep_proj = self.forward_timestep(timestep, delta_timestep, encoder_hidden_states, far_cfg['full_token_per_frame'])  # noqa: E501
+            timestep, timestep_proj = self.forward_timestep(
+                timestep, delta_timestep, encoder_hidden_states, far_cfg["full_token_per_frame"]
+            )  # noqa: E501
 
             encoder_hidden_states = self.text_embedder(encoder_hidden_states)
             if encoder_hidden_states_image is not None:
@@ -398,7 +465,12 @@ class WanTwoTimeTextImageEmbedding(nn.Module):
 
 class WanRotaryPosEmbed(nn.Module):
     def __init__(
-        self, attention_head_dim: int, patch_size: Tuple[int, int, int], compressed_patch_size: Tuple[int, int, int], max_seq_len: int, theta: float = 10000.0
+        self,
+        attention_head_dim: int,
+        patch_size: Tuple[int, int, int],
+        compressed_patch_size: Tuple[int, int, int],
+        max_seq_len: int,
+        theta: float = 10000.0,
     ):
         super().__init__()
 
@@ -419,10 +491,9 @@ class WanRotaryPosEmbed(nn.Module):
         self.freqs = torch.cat(freqs, dim=1)
 
     def avg_pool_complex(self, freq: torch.Tensor, kernel_size: int, stride: int):
-
-        real = freq.real   # [B, C, L], float
+        real = freq.real  # [B, C, L], float
         real = real.transpose(0, 1).unsqueeze(0)
-        imag = freq.imag   # [B, C, L], float
+        imag = freq.imag  # [B, C, L], float
         imag = imag.transpose(0, 1).unsqueeze(0)
 
         pr = F.avg_pool1d(real, kernel_size, stride)
@@ -484,19 +555,22 @@ class WanRotaryPosEmbed(nn.Module):
     def forward(self, far_cfg, device, clean_hidden_states=None, is_causal=True):
         if is_causal:
             full_frame_freqs = self._forward_full_frame(
-                num_frames=far_cfg['total_frames'],
-                height=far_cfg['full_frame_shape'][0],
-                width=far_cfg['full_frame_shape'][1],
-                device=device
+                num_frames=far_cfg["total_frames"],
+                height=far_cfg["full_frame_shape"][0],
+                width=far_cfg["full_frame_shape"][1],
+                device=device,
             )
             compressed_frame_freqs = self._forward_compressed_frame(
-                num_frames=far_cfg['total_frames'],
-                height=far_cfg['compressed_frame_shape'][0],
-                width=far_cfg['compressed_frame_shape'][1],
-                device=device
+                num_frames=far_cfg["total_frames"],
+                height=far_cfg["compressed_frame_shape"][0],
+                width=far_cfg["compressed_frame_shape"][1],
+                device=device,
             )
 
-            compressed_frame_freqs, full_frame_freqs = compressed_frame_freqs[:far_cfg['num_compressed_frames']], full_frame_freqs[far_cfg['num_compressed_frames']:]  # noqa: E501
+            compressed_frame_freqs, full_frame_freqs = (
+                compressed_frame_freqs[: far_cfg["num_compressed_frames"]],
+                full_frame_freqs[far_cfg["num_compressed_frames"] :],
+            )  # noqa: E501
 
             compressed_frame_freqs = compressed_frame_freqs.flatten(start_dim=0, end_dim=2)
             full_frame_freqs = full_frame_freqs.flatten(start_dim=0, end_dim=2)
@@ -508,17 +582,17 @@ class WanRotaryPosEmbed(nn.Module):
 
             freqs = freqs[None, None, ...]
 
-            return {'query': freqs, 'key': freqs}
+            return {"query": freqs, "key": freqs}
         else:
             freqs = self._forward_full_frame(
-                num_frames=far_cfg['total_frames'],
-                height=far_cfg['full_frame_shape'][0],
-                width=far_cfg['full_frame_shape'][1],
-                device=device
+                num_frames=far_cfg["total_frames"],
+                height=far_cfg["full_frame_shape"][0],
+                width=far_cfg["full_frame_shape"][1],
+                device=device,
             )
             freqs = freqs.flatten(start_dim=0, end_dim=2)
             freqs = freqs[None, None, ...]
-            return {'query': freqs, 'key': freqs}
+            return {"query": freqs, "key": freqs}
 
 
 class WanTransformerBlock(nn.Module):
@@ -527,7 +601,7 @@ class WanTransformerBlock(nn.Module):
         dim: int,
         ffn_dim: int,
         num_heads: int,
-        qk_norm: str = 'rms_norm_across_heads',
+        qk_norm: str = "rms_norm_across_heads",
         cross_attn_norm: bool = False,
         eps: float = 1e-6,
         added_kv_proj_dim: Optional[int] = None,
@@ -567,7 +641,7 @@ class WanTransformerBlock(nn.Module):
         self.norm2 = FP32LayerNorm(dim, eps, elementwise_affine=True) if cross_attn_norm else nn.Identity()
 
         # 3. Feed-forward
-        self.ffn = FeedForward(dim, inner_dim=ffn_dim, activation_fn='gelu-approximate')
+        self.ffn = FeedForward(dim, inner_dim=ffn_dim, activation_fn="gelu-approximate")
         self.norm3 = FP32LayerNorm(dim, eps, elementwise_affine=False)
 
         self.scale_shift_table = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5)
@@ -582,13 +656,27 @@ class WanTransformerBlock(nn.Module):
         kv_cache=None,
         kv_cache_flag=None,
     ) -> torch.Tensor:
-
-        shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = (self.scale_shift_table + temb.float()).chunk(6, dim=2)
-        shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = shift_msa.squeeze(2), scale_msa.squeeze(2), gate_msa.squeeze(2), c_shift_msa.squeeze(2), c_scale_msa.squeeze(2), c_gate_msa.squeeze(2)  # noqa: E501
+        shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = (
+            self.scale_shift_table + temb.float()
+        ).chunk(6, dim=2)
+        shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = (
+            shift_msa.squeeze(2),
+            scale_msa.squeeze(2),
+            gate_msa.squeeze(2),
+            c_shift_msa.squeeze(2),
+            c_scale_msa.squeeze(2),
+            c_gate_msa.squeeze(2),
+        )  # noqa: E501
 
         # 1. Self-attention
         norm_hidden_states = (self.norm1(hidden_states.float()) * (1 + scale_msa) + shift_msa).type_as(hidden_states)
-        attn_output = self.attn1(hidden_states=norm_hidden_states, rotary_emb=rotary_emb, attention_mask=attention_mask, kv_cache=kv_cache, kv_cache_flag=kv_cache_flag)  # noqa: E501
+        attn_output = self.attn1(
+            hidden_states=norm_hidden_states,
+            rotary_emb=rotary_emb,
+            attention_mask=attention_mask,
+            kv_cache=kv_cache,
+            kv_cache_flag=kv_cache_flag,
+        )  # noqa: E501
         hidden_states = (hidden_states.float() + attn_output * gate_msa).type_as(hidden_states)
 
         # 2. Cross-attention
@@ -597,7 +685,9 @@ class WanTransformerBlock(nn.Module):
         hidden_states = hidden_states + attn_output
 
         # 3. Feed-forward
-        norm_hidden_states = (self.norm3(hidden_states.float()) * (1 + c_scale_msa) + c_shift_msa).type_as(hidden_states)
+        norm_hidden_states = (self.norm3(hidden_states.float()) * (1 + c_scale_msa) + c_shift_msa).type_as(
+            hidden_states
+        )
         ff_output = self.ffn(norm_hidden_states)
         hidden_states = (hidden_states.float() + ff_output.float() * c_gate_msa).type_as(hidden_states)
 
@@ -642,10 +732,10 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = ['patch_embedding', 'condition_embedder', 'norm']
-    _no_split_modules = ['WanTransformerBlock']
-    _keep_in_fp32_modules = ['time_embedder', 'scale_shift_table', 'norm1', 'norm2', 'norm3']
-    _keys_to_ignore_on_load_unexpected = ['norm_added_q']
+    _skip_layerwise_casting_patterns = ["patch_embedding", "condition_embedder", "norm"]
+    _no_split_modules = ["WanTransformerBlock"]
+    _keep_in_fp32_modules = ["time_embedder", "scale_shift_table", "norm1", "norm2", "norm3"]
+    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
 
     @register_to_config
     def __init__(
@@ -663,13 +753,13 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         ffn_dim: int = 13824,
         num_layers: int = 40,
         cross_attn_norm: bool = True,
-        qk_norm: Optional[str] = 'rms_norm_across_heads',
+        qk_norm: Optional[str] = "rms_norm_across_heads",
         eps: float = 1e-6,
         image_dim: Optional[int] = None,
         added_kv_proj_dim: Optional[int] = None,
         rope_max_seq_len: int = 1024,
         gate_value: Optional[float] = None,
-        deltatime_type: Optional[str] = None
+        deltatime_type: Optional[str] = None,
     ) -> None:
         super().__init__()
 
@@ -737,13 +827,17 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         inner_dim = self.config.num_attention_heads * self.config.attention_head_dim
 
         self.far_patch_embedding = nn.Conv3d(
-            self.config.in_channels, inner_dim, kernel_size=self.config.compressed_patch_size, stride=self.config.compressed_patch_size)
+            self.config.in_channels,
+            inner_dim,
+            kernel_size=self.config.compressed_patch_size,
+            stride=self.config.compressed_patch_size,
+        )
 
         # init far patch embedding
         original_weight = self.patch_embedding.weight.data.view(-1, 1, *self.config.patch_size)
 
         new_weight = F.interpolate(
-            original_weight, size=self.config.compressed_patch_size, mode='trilinear', align_corners=False
+            original_weight, size=self.config.compressed_patch_size, mode="trilinear", align_corners=False
         )
         new_weight = new_weight.view(inner_dim, self.config.in_channels, *self.config.compressed_patch_size)
 
@@ -752,29 +846,46 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             self.far_patch_embedding.bias.copy_(self.patch_embedding.bias)
 
         # reset rope part with compressed patch size
-        self.rope = WanRotaryPosEmbed(self.config.attention_head_dim, self.config.patch_size, self.config.compressed_patch_size, self.config.rope_max_seq_len)
+        self.rope = WanRotaryPosEmbed(
+            self.config.attention_head_dim,
+            self.config.patch_size,
+            self.config.compressed_patch_size,
+            self.config.rope_max_seq_len,
+        )
 
     def _unpack_latent_sequence(self, latents, num_frames, height, width, patch_size):
         batch_size, num_patches, channels = latents.shape
         height, width = height // patch_size, width // patch_size
 
-        latents = latents.view(batch_size * num_frames, height, width, patch_size, patch_size, channels // (patch_size * patch_size))
+        latents = latents.view(
+            batch_size * num_frames, height, width, patch_size, patch_size, channels // (patch_size * patch_size)
+        )
 
         latents = latents.permute(0, 5, 1, 3, 2, 4)
-        latents = latents.reshape(batch_size, num_frames, channels // (patch_size * patch_size), height * patch_size, width * patch_size)
+        latents = latents.reshape(
+            batch_size, num_frames, channels // (patch_size * patch_size), height * patch_size, width * patch_size
+        )
         return latents
 
     def forward_far_patchify(self, hidden_states, far_cfg, clean_hidden_states=None):
+        full_hidden_states, compressed_hidden_states = (
+            hidden_states[:, :, far_cfg["num_compressed_frames"] :],
+            hidden_states[:, :, : far_cfg["num_compressed_frames"]],
+        )  # noqa: E501
 
-        full_hidden_states, compressed_hidden_states = hidden_states[:, :, far_cfg['num_compressed_frames']:], hidden_states[:, :, :far_cfg['num_compressed_frames']]  # noqa: E501
-
-        patchified_full_hidden_states = self.patch_embedding(full_hidden_states).flatten(start_dim=2, end_dim=4).transpose(1, 2)
+        patchified_full_hidden_states = (
+            self.patch_embedding(full_hidden_states).flatten(start_dim=2, end_dim=4).transpose(1, 2)
+        )
         if clean_hidden_states is not None:
-            clean_hidden_states = self.patch_embedding(clean_hidden_states).flatten(start_dim=2, end_dim=4).transpose(1, 2)
+            clean_hidden_states = (
+                self.patch_embedding(clean_hidden_states).flatten(start_dim=2, end_dim=4).transpose(1, 2)
+            )
             patchified_full_hidden_states = torch.cat([patchified_full_hidden_states, clean_hidden_states], dim=1)
 
-        if far_cfg['num_compressed_frames'] > 0:
-            patchified_compressed_hidden_states = self.far_patch_embedding(compressed_hidden_states).flatten(start_dim=2, end_dim=4).transpose(1, 2)
+        if far_cfg["num_compressed_frames"] > 0:
+            patchified_compressed_hidden_states = (
+                self.far_patch_embedding(compressed_hidden_states).flatten(start_dim=2, end_dim=4).transpose(1, 2)
+            )
             hidden_states = torch.cat([patchified_compressed_hidden_states, patchified_full_hidden_states], dim=1)
         else:
             hidden_states = patchified_full_hidden_states
@@ -785,10 +896,10 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         return hidden_states
 
     def _build_causal_mask(self, far_cfg, clean_hidden_states, device, dtype):
-        chunk_partition = far_cfg['chunk_partition']
+        chunk_partition = far_cfg["chunk_partition"]
 
-        noise_seq_len = clean_seq_len = far_cfg['num_full_frames'] * far_cfg['full_token_per_frame']
-        context_seq_len = far_cfg['num_compressed_frames'] * far_cfg['compressed_token_per_frame']
+        noise_seq_len = clean_seq_len = far_cfg["num_full_frames"] * far_cfg["full_token_per_frame"]
+        context_seq_len = far_cfg["num_compressed_frames"] * far_cfg["compressed_token_per_frame"]
 
         noise_start = context_seq_len
         noise_end = noise_start + noise_seq_len
@@ -804,13 +915,27 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         padded_seq_len = int(math.ceil(real_seq_len / 128.0) * 128.0)
 
         if clean_hidden_states is not None:
-            context_chunk_partition, noise_chunk_partition = chunk_partition[:far_cfg['num_compressed_chunk']], chunk_partition[far_cfg['num_compressed_chunk']:]  # noqa: E501
+            context_chunk_partition, noise_chunk_partition = (
+                chunk_partition[: far_cfg["num_compressed_chunk"]],
+                chunk_partition[far_cfg["num_compressed_chunk"] :],
+            )  # noqa: E501
 
             if len(context_chunk_partition) != 0:
-                context_frame_idx = torch.cat([torch.ones(chunk_len * far_cfg['compressed_token_per_frame'], device=device) * chunk_idx for chunk_idx, chunk_len in enumerate(context_chunk_partition)])  # noqa: E501
+                context_frame_idx = torch.cat(
+                    [
+                        torch.ones(chunk_len * far_cfg["compressed_token_per_frame"], device=device) * chunk_idx
+                        for chunk_idx, chunk_len in enumerate(context_chunk_partition)
+                    ]
+                )  # noqa: E501
             else:
                 context_frame_idx = None
-            noise_frame_idx = clean_frame_idx = torch.cat([torch.ones(chunk_len * far_cfg['full_token_per_frame'], device=device) * (chunk_idx + len(context_chunk_partition)) for chunk_idx, chunk_len in enumerate(noise_chunk_partition)])  # noqa: E501
+            noise_frame_idx = clean_frame_idx = torch.cat(
+                [
+                    torch.ones(chunk_len * far_cfg["full_token_per_frame"], device=device)
+                    * (chunk_idx + len(context_chunk_partition))
+                    for chunk_idx, chunk_len in enumerate(noise_chunk_partition)
+                ]
+            )  # noqa: E501
             pad_frame_idx = torch.zeros(padded_seq_len - real_seq_len, device=device)
 
             if len(context_chunk_partition) != 0:
@@ -865,14 +990,28 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
                 _compile=False,
             )
         else:
-            context_chunk_partition, noise_chunk_partition = chunk_partition[:far_cfg['num_compressed_chunk']], chunk_partition[far_cfg['num_compressed_chunk']:]  # noqa: E501
+            context_chunk_partition, noise_chunk_partition = (
+                chunk_partition[: far_cfg["num_compressed_chunk"]],
+                chunk_partition[far_cfg["num_compressed_chunk"] :],
+            )  # noqa: E501
 
             if len(context_chunk_partition) != 0:
-                context_frame_idx = torch.cat([torch.ones(chunk_len * far_cfg['compressed_token_per_frame'], device=device) * chunk_idx for chunk_idx, chunk_len in enumerate(context_chunk_partition)])  # noqa: E501
+                context_frame_idx = torch.cat(
+                    [
+                        torch.ones(chunk_len * far_cfg["compressed_token_per_frame"], device=device) * chunk_idx
+                        for chunk_idx, chunk_len in enumerate(context_chunk_partition)
+                    ]
+                )  # noqa: E501
             else:
                 context_frame_idx = None
 
-            noise_frame_idx = torch.cat([torch.ones(chunk_len * far_cfg['full_token_per_frame'], device=device) * (chunk_idx + len(context_chunk_partition)) for chunk_idx, chunk_len in enumerate(noise_chunk_partition)])  # noqa: E501
+            noise_frame_idx = torch.cat(
+                [
+                    torch.ones(chunk_len * far_cfg["full_token_per_frame"], device=device)
+                    * (chunk_idx + len(context_chunk_partition))
+                    for chunk_idx, chunk_len in enumerate(noise_chunk_partition)
+                ]
+            )  # noqa: E501
             pad_frame_idx = torch.zeros(padded_seq_len - real_seq_len, device=device)
 
             if len(context_chunk_partition) != 0:
@@ -896,10 +1035,10 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             )
 
     def forward(self, *args, **kwargs):
-        is_causal = kwargs.pop('is_causal', True)
+        is_causal = kwargs.pop("is_causal", True)
         if is_causal:
-            if kwargs.get('kv_cache', None) is not None:
-                if kwargs['kv_cache_flag'].get('is_cache_step'):
+            if kwargs.get("kv_cache", None) is not None:
+                if kwargs["kv_cache_flag"].get("is_cache_step"):
                     return self._forward_cache(*args, **kwargs)
                 else:
                     return self._forward_inference(*args, **kwargs)
@@ -919,34 +1058,46 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         return_dict: bool = True,
         attention_kwargs: Optional[Dict[str, Any]] = None,
         kv_cache=None,
-        kv_cache_flag=None
+        kv_cache_flag=None,
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-
-        hidden_states = rearrange(hidden_states, 'b f c h w -> b c f h w')
+        hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
 
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
 
         full_token_per_frame = (height // self.config.patch_size[1]) * (width // self.config.patch_size[2])
-        compressed_token_per_frame = (height // self.config.compressed_patch_size[1]) * (width // self.config.compressed_patch_size[2])
+        compressed_token_per_frame = (height // self.config.compressed_patch_size[1]) * (
+            width // self.config.compressed_patch_size[2]
+        )
 
-        total_chunks = 1 + kv_cache_flag['num_cached_chunks']
+        total_chunks = 1 + kv_cache_flag["num_cached_chunks"]
 
         if total_chunks >= self.config.full_chunk_limit:
-            num_full_chunk, num_compressed_chunk = self.config.full_chunk_limit, total_chunks - self.config.full_chunk_limit
+            num_full_chunk, num_compressed_chunk = (
+                self.config.full_chunk_limit,
+                total_chunks - self.config.full_chunk_limit,
+            )
         else:
             num_full_chunk, num_compressed_chunk = total_chunks, 0
 
-        kv_cache_flag['num_cached_full_tokens'] = sum(chunk_partition[num_compressed_chunk: num_compressed_chunk + (num_full_chunk - 1)]) * full_token_per_frame  # noqa: E501
-        kv_cache_flag['num_cached_compressed_tokens'] = sum(chunk_partition[:num_compressed_chunk]) * compressed_token_per_frame
+        kv_cache_flag["num_cached_full_tokens"] = (
+            sum(chunk_partition[num_compressed_chunk : num_compressed_chunk + (num_full_chunk - 1)])
+            * full_token_per_frame
+        )  # noqa: E501
+        kv_cache_flag["num_cached_compressed_tokens"] = (
+            sum(chunk_partition[:num_compressed_chunk]) * compressed_token_per_frame
+        )
 
         far_cfg = {
-            'total_frames': sum(chunk_partition),
-            'num_full_frames': sum(chunk_partition[num_compressed_chunk:]),
-            'num_compressed_frames': sum(chunk_partition[:num_compressed_chunk]),
-            'full_frame_shape': (height // self.config.patch_size[1], width // self.config.patch_size[2]),
-            'compressed_frame_shape': (height // self.config.compressed_patch_size[1], width // self.config.compressed_patch_size[2]),
-            'full_token_per_frame': full_token_per_frame,
-            'compressed_token_per_frame': compressed_token_per_frame
+            "total_frames": sum(chunk_partition),
+            "num_full_frames": sum(chunk_partition[num_compressed_chunk:]),
+            "num_compressed_frames": sum(chunk_partition[:num_compressed_chunk]),
+            "full_frame_shape": (height // self.config.patch_size[1], width // self.config.patch_size[2]),
+            "compressed_frame_shape": (
+                height // self.config.compressed_patch_size[1],
+                width // self.config.compressed_patch_size[2],
+            ),
+            "full_token_per_frame": full_token_per_frame,
+            "compressed_token_per_frame": compressed_token_per_frame,
         }
 
         # step 3: generate attention mask
@@ -954,10 +1105,14 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         hidden_states = self.forward_far_patchify_inference(hidden_states)
 
         rotary_emb = self.rope(far_cfg=far_cfg, device=hidden_states.device)
-        rotary_emb['query'] = rotary_emb['query'][:, :, -hidden_states.shape[1]:]
+        rotary_emb["query"] = rotary_emb["query"][:, :, -hidden_states.shape[1] :]
 
         temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, r_timestep, encoder_hidden_states, encoder_hidden_states_image, far_cfg=far_cfg  # noqa: E501
+            timestep,
+            r_timestep,
+            encoder_hidden_states,
+            encoder_hidden_states_image,
+            far_cfg=far_cfg,  # noqa: E501
         )
         timestep_proj = timestep_proj.unflatten(2, (6, -1))
 
@@ -966,13 +1121,27 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
 
         # 4. Transformer blocks
         for index_block, block in enumerate(self.blocks):
-
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 hidden_states = self._gradient_checkpointing_func(
-                    block, hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, attention_mask, kv_cache[index_block], kv_cache_flag
+                    block,
+                    hidden_states,
+                    encoder_hidden_states,
+                    timestep_proj,
+                    rotary_emb,
+                    attention_mask,
+                    kv_cache[index_block],
+                    kv_cache_flag,
                 )
             else:
-                hidden_states = block(hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, attention_mask, kv_cache[index_block], kv_cache_flag)
+                hidden_states = block(
+                    hidden_states,
+                    encoder_hidden_states,
+                    timestep_proj,
+                    rotary_emb,
+                    attention_mask,
+                    kv_cache[index_block],
+                    kv_cache_flag,
+                )
 
         # 5. Output norm, projection & unpatchify
         shift, scale = (self.scale_shift_table + temb.unsqueeze(2)).chunk(2, dim=2)
@@ -988,7 +1157,9 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
 
         output = self.proj_out(hidden_states)
-        output = self._unpack_latent_sequence(output, num_frames=chunk_partition[-1], height=height, width=width, patch_size=self.config.patch_size[1])
+        output = self._unpack_latent_sequence(
+            output, num_frames=chunk_partition[-1], height=height, width=width, patch_size=self.config.patch_size[1]
+        )
 
         if not return_dict:
             return output, kv_cache
@@ -1008,17 +1179,18 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         clean_hidden_states=None,
         clean_timestep=None,
         kv_cache=None,
-        kv_cache_flag=None
+        kv_cache_flag=None,
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-
-        hidden_states = rearrange(hidden_states, 'b f c h w -> b c f h w')
+        hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
         if clean_hidden_states is not None:
-            clean_hidden_states = rearrange(clean_hidden_states, 'b f c h w -> b c f h w')
+            clean_hidden_states = rearrange(clean_hidden_states, "b f c h w -> b c f h w")
 
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
 
         full_token_per_frame = (height // self.config.patch_size[1]) * (width // self.config.patch_size[2])
-        compressed_token_per_frame = (height // self.config.compressed_patch_size[1]) * (width // self.config.compressed_patch_size[2])
+        compressed_token_per_frame = (height // self.config.compressed_patch_size[1]) * (
+            width // self.config.compressed_patch_size[2]
+        )
         total_chunks = len(chunk_partition)
 
         full_chunk_limit = self.config.full_chunk_limit - 1
@@ -1029,29 +1201,43 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             num_full_chunk, num_compressed_chunk = total_chunks, 0
 
         far_cfg = {
-            'total_frames': sum(chunk_partition),
-            'num_full_chunk': num_full_chunk,
-            'num_full_frames': sum(chunk_partition[num_compressed_chunk:]),
-            'num_compressed_chunk': num_compressed_chunk,
-            'num_compressed_frames': sum(chunk_partition[:num_compressed_chunk]),
-            'full_frame_shape': (height // self.config.patch_size[1], width // self.config.patch_size[2]),
-            'compressed_frame_shape': (height // self.config.compressed_patch_size[1], width // self.config.compressed_patch_size[2]),
-            'full_token_per_frame': full_token_per_frame,
-            'compressed_token_per_frame': compressed_token_per_frame,
-            'chunk_partition': chunk_partition
+            "total_frames": sum(chunk_partition),
+            "num_full_chunk": num_full_chunk,
+            "num_full_frames": sum(chunk_partition[num_compressed_chunk:]),
+            "num_compressed_chunk": num_compressed_chunk,
+            "num_compressed_frames": sum(chunk_partition[:num_compressed_chunk]),
+            "full_frame_shape": (height // self.config.patch_size[1], width // self.config.patch_size[2]),
+            "compressed_frame_shape": (
+                height // self.config.compressed_patch_size[1],
+                width // self.config.compressed_patch_size[2],
+            ),
+            "full_token_per_frame": full_token_per_frame,
+            "compressed_token_per_frame": compressed_token_per_frame,
+            "chunk_partition": chunk_partition,
         }
 
-        kv_cache_flag['num_full_tokens'] = far_cfg['num_full_frames'] * far_cfg['full_token_per_frame']
-        kv_cache_flag['num_compressed_tokens'] = far_cfg['num_compressed_frames'] * far_cfg['compressed_token_per_frame']
+        kv_cache_flag["num_full_tokens"] = far_cfg["num_full_frames"] * far_cfg["full_token_per_frame"]
+        kv_cache_flag["num_compressed_tokens"] = (
+            far_cfg["num_compressed_frames"] * far_cfg["compressed_token_per_frame"]
+        )
 
         # step 3: generate attention mask
-        attention_mask = self._build_causal_mask(far_cfg, clean_hidden_states=clean_hidden_states, device=hidden_states.device, dtype=hidden_states.dtype)
+        attention_mask = self._build_causal_mask(
+            far_cfg, clean_hidden_states=clean_hidden_states, device=hidden_states.device, dtype=hidden_states.dtype
+        )
 
         rotary_emb = self.rope(far_cfg=far_cfg, clean_hidden_states=clean_hidden_states, device=hidden_states.device)
-        hidden_states = self.forward_far_patchify(hidden_states, far_cfg=far_cfg, clean_hidden_states=clean_hidden_states)
+        hidden_states = self.forward_far_patchify(
+            hidden_states, far_cfg=far_cfg, clean_hidden_states=clean_hidden_states
+        )
 
         temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, r_timestep, encoder_hidden_states, encoder_hidden_states_image, far_cfg=far_cfg, clean_timestep=clean_timestep
+            timestep,
+            r_timestep,
+            encoder_hidden_states,
+            encoder_hidden_states_image,
+            far_cfg=far_cfg,
+            clean_timestep=clean_timestep,
         )
         timestep_proj = timestep_proj.unflatten(2, (6, -1))
 
@@ -1060,13 +1246,27 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
 
         # 4. Transformer blocks
         for index_block, block in enumerate(self.blocks):
-
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 hidden_states = self._gradient_checkpointing_func(
-                    block, hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, attention_mask, kv_cache[index_block], kv_cache_flag
+                    block,
+                    hidden_states,
+                    encoder_hidden_states,
+                    timestep_proj,
+                    rotary_emb,
+                    attention_mask,
+                    kv_cache[index_block],
+                    kv_cache_flag,
                 )
             else:
-                hidden_states = block(hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, attention_mask, kv_cache[index_block], kv_cache_flag)
+                hidden_states = block(
+                    hidden_states,
+                    encoder_hidden_states,
+                    timestep_proj,
+                    rotary_emb,
+                    attention_mask,
+                    kv_cache[index_block],
+                    kv_cache_flag,
+                )
 
         return None, kv_cache
 
@@ -1083,44 +1283,60 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         clean_hidden_states=None,
         clean_timestep=None,
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-
-        hidden_states = rearrange(hidden_states, 'b f c h w -> b c f h w')
+        hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
         if clean_hidden_states is not None:
-            clean_hidden_states = rearrange(clean_hidden_states, 'b f c h w -> b c f h w')
+            clean_hidden_states = rearrange(clean_hidden_states, "b f c h w -> b c f h w")
 
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
 
         full_token_per_frame = (height // self.config.patch_size[1]) * (width // self.config.patch_size[2])
-        compressed_token_per_frame = (height // self.config.compressed_patch_size[1]) * (width // self.config.compressed_patch_size[2])
+        compressed_token_per_frame = (height // self.config.compressed_patch_size[1]) * (
+            width // self.config.compressed_patch_size[2]
+        )
         total_chunks = len(chunk_partition)
 
         if total_chunks > self.config.full_chunk_limit:
-            num_full_chunk, num_compressed_chunk = self.config.full_chunk_limit, total_chunks - self.config.full_chunk_limit
+            num_full_chunk, num_compressed_chunk = (
+                self.config.full_chunk_limit,
+                total_chunks - self.config.full_chunk_limit,
+            )
         else:
             num_full_chunk, num_compressed_chunk = total_chunks, 0
 
         far_cfg = {
-            'total_frames': sum(chunk_partition),
-            'num_full_chunk': num_full_chunk,
-            'num_full_frames': sum(chunk_partition[num_compressed_chunk:]),
-            'num_compressed_chunk': num_compressed_chunk,
-            'num_compressed_frames': sum(chunk_partition[:num_compressed_chunk]),
-            'full_frame_shape': (height // self.config.patch_size[1], width // self.config.patch_size[2]),
-            'compressed_frame_shape': (height // self.config.compressed_patch_size[1], width // self.config.compressed_patch_size[2]),
-            'full_token_per_frame': full_token_per_frame,
-            'compressed_token_per_frame': compressed_token_per_frame,
-            'chunk_partition': chunk_partition
+            "total_frames": sum(chunk_partition),
+            "num_full_chunk": num_full_chunk,
+            "num_full_frames": sum(chunk_partition[num_compressed_chunk:]),
+            "num_compressed_chunk": num_compressed_chunk,
+            "num_compressed_frames": sum(chunk_partition[:num_compressed_chunk]),
+            "full_frame_shape": (height // self.config.patch_size[1], width // self.config.patch_size[2]),
+            "compressed_frame_shape": (
+                height // self.config.compressed_patch_size[1],
+                width // self.config.compressed_patch_size[2],
+            ),
+            "full_token_per_frame": full_token_per_frame,
+            "compressed_token_per_frame": compressed_token_per_frame,
+            "chunk_partition": chunk_partition,
         }
 
         # step 3: generate attention mask
-        attention_mask = self._build_causal_mask(far_cfg, clean_hidden_states=clean_hidden_states, device=hidden_states.device, dtype=hidden_states.dtype)
+        attention_mask = self._build_causal_mask(
+            far_cfg, clean_hidden_states=clean_hidden_states, device=hidden_states.device, dtype=hidden_states.dtype
+        )
 
         rotary_emb = self.rope(far_cfg=far_cfg, clean_hidden_states=clean_hidden_states, device=hidden_states.device)
 
-        hidden_states = self.forward_far_patchify(hidden_states, far_cfg=far_cfg, clean_hidden_states=clean_hidden_states)
+        hidden_states = self.forward_far_patchify(
+            hidden_states, far_cfg=far_cfg, clean_hidden_states=clean_hidden_states
+        )
 
         temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, r_timestep, encoder_hidden_states, encoder_hidden_states_image, far_cfg=far_cfg, clean_timestep=clean_timestep
+            timestep,
+            r_timestep,
+            encoder_hidden_states,
+            encoder_hidden_states_image,
+            far_cfg=far_cfg,
+            clean_timestep=clean_timestep,
         )
         timestep_proj = timestep_proj.unflatten(2, (6, -1))
 
@@ -1129,10 +1345,14 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
 
         # 4. Transformer blocks
         for index_block, block in enumerate(self.blocks):
-
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 hidden_states = self._gradient_checkpointing_func(
-                    block, hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, attention_mask,
+                    block,
+                    hidden_states,
+                    encoder_hidden_states,
+                    timestep_proj,
+                    rotary_emb,
+                    attention_mask,
                 )
             else:
                 hidden_states = block(hidden_states, encoder_hidden_states, timestep_proj, rotary_emb, attention_mask)
@@ -1151,9 +1371,19 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
 
         if clean_hidden_states is not None:
-            hidden_states = hidden_states[:, :-(far_cfg['num_full_frames'] * far_cfg['full_token_per_frame'])]  # remove clean copy
-        output = self.proj_out(hidden_states[:, far_cfg['num_compressed_frames'] * far_cfg['compressed_token_per_frame']:])  # remove far context
-        output = self._unpack_latent_sequence(output, num_frames=far_cfg['num_full_frames'], height=height, width=width, patch_size=self.config.patch_size[1])  # noqa: E501
+            hidden_states = hidden_states[
+                :, : -(far_cfg["num_full_frames"] * far_cfg["full_token_per_frame"])
+            ]  # remove clean copy
+        output = self.proj_out(
+            hidden_states[:, far_cfg["num_compressed_frames"] * far_cfg["compressed_token_per_frame"] :]
+        )  # remove far context
+        output = self._unpack_latent_sequence(
+            output,
+            num_frames=far_cfg["num_full_frames"],
+            height=height,
+            width=width,
+            patch_size=self.config.patch_size[1],
+        )  # noqa: E501
 
         if not return_dict:
             return output
@@ -1169,9 +1399,9 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         encoder_hidden_states_image: Optional[torch.Tensor] = None,
         return_dict: bool = True,
         attention_kwargs: Optional[Dict[str, Any]] = None,
-        is_causal=False
+        is_causal=False,
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-        hidden_states = rearrange(hidden_states, 'b f c h w -> b c f h w')
+        hidden_states = rearrange(hidden_states, "b f c h w -> b c f h w")
 
         assert is_causal is False
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
@@ -1179,9 +1409,9 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         full_token_per_frame = (height * width) // (self.config.patch_size[1] * self.config.patch_size[2])
 
         far_cfg = {
-            'total_frames': num_frames,
-            'full_frame_shape': (height // self.config.patch_size[1], width // self.config.patch_size[2]),
-            'full_token_per_frame': full_token_per_frame,
+            "total_frames": num_frames,
+            "full_frame_shape": (height // self.config.patch_size[1], width // self.config.patch_size[2]),
+            "full_token_per_frame": full_token_per_frame,
         }
 
         rotary_emb = self.rope(far_cfg=far_cfg, device=hidden_states.device, is_causal=is_causal)
@@ -1190,7 +1420,12 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         hidden_states = hidden_states.flatten(2).transpose(1, 2)
 
         temb, timestep_proj, encoder_hidden_states, encoder_hidden_states_image = self.condition_embedder(
-            timestep, r_timestep, encoder_hidden_states, encoder_hidden_states_image, is_causal=is_causal, far_cfg=far_cfg
+            timestep,
+            r_timestep,
+            encoder_hidden_states,
+            encoder_hidden_states_image,
+            is_causal=is_causal,
+            far_cfg=far_cfg,
         )
         timestep_proj = timestep_proj.unflatten(2, (6, -1))
 
@@ -1229,11 +1464,18 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
         hidden_states = (self.norm_out(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
         hidden_states = self.proj_out(hidden_states)
 
-        output = self._unpack_latent_sequence(hidden_states, num_frames=far_cfg['total_frames'], height=height, width=width, patch_size=self.config.patch_size[1])  # noqa: E501
+        output = self._unpack_latent_sequence(
+            hidden_states,
+            num_frames=far_cfg["total_frames"],
+            height=height,
+            width=width,
+            patch_size=self.config.patch_size[1],
+        )  # noqa: E501
 
         if not return_dict:
             return (output,)
 
         return Transformer2DModelOutput(sample=output)
+
 
 __all__ = ["AnyFlowWanTransformer3DModel"]

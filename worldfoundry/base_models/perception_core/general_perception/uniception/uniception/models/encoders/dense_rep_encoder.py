@@ -259,9 +259,9 @@ class DenseRepresentationEncoder(UniCeptionViTEncoderBase):
         assert input_data.ndim == 4, "Input must be of shape (B, C, H, W)"
         assert input_data.shape[1] == self.in_chans, f"Input channels must be {self.in_chans}"
         batch_size, channels, height, width = input_data.shape
-        assert (
-            height % self.patch_size == 0 and width % self.patch_size == 0
-        ), f"Input shape must be divisible by patch size: {self.patch_size}"
+        assert height % self.patch_size == 0 and width % self.patch_size == 0, (
+            f"Input shape must be divisible by patch size: {self.patch_size}"
+        )
 
         # Encode the dense representation
         features = self.unshuffle(input_data)

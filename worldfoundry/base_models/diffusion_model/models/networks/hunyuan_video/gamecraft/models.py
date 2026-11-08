@@ -517,15 +517,11 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
 
     def _encode_camera_condition(self, condition, latent_frames):
         if latent_frames == 18:
-            return torch.cat(
-                [self.camera_net(torch.zeros_like(condition)), self.camera_net(condition)], dim=1
-            )
+            return torch.cat([self.camera_net(torch.zeros_like(condition)), self.camera_net(condition)], dim=1)
         if latent_frames == 9:
             return self.camera_net(condition)
         if latent_frames == 10:
-            return torch.cat(
-                [self.camera_net(torch.zeros_like(condition)[:, :4]), self.camera_net(condition)], dim=1
-            )
+            return torch.cat([self.camera_net(torch.zeros_like(condition)[:, :4]), self.camera_net(condition)], dim=1)
         raise ValueError("GameCraft camera conditioning requires 9, 10 or 18 latent frames")
 
     def enable_deterministic(self):
@@ -593,7 +589,8 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
             raise NotImplementedError(f"Unsupported text_projection: {self.text_projection}")
 
         camera_latents = camera_features(
-            self.camera_net, camera_condition,
+            self.camera_net,
+            camera_condition,
             encode=lambda condition: self._encode_camera_condition(condition, latent_len),
         )
         img = img + camera_latents

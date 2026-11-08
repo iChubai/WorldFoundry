@@ -226,7 +226,7 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
     ):
         """
         Differentiable version of image preprocessing using torch operations.
-        
+
         Args:
             images: torch.Tensor of shape (B, C, H, W) or (C, H, W)
         Returns:
@@ -235,15 +235,15 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
         """
         if images.dim() == 3:
             images = images.unsqueeze(0)  # Add batch dimension
-        
+
         batch_size, channels, height, width = images.shape
-        
+
         processed_images = []
         resized_height, resized_width = height, width
-        
+
         for i in range(batch_size):
             image = images[i]  # (C, H, W)
-            
+
             if do_resize:
                 resized_height, resized_width = smart_resize(
                     height,
@@ -254,10 +254,7 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
                 )
                 # Use differentiable interpolation
                 image = F.interpolate(
-                    image.unsqueeze(0), 
-                    size=(resized_height, resized_width), 
-                    mode='bilinear', 
-                    align_corners=False
+                    image.unsqueeze(0), size=(resized_height, resized_width), mode="bilinear", align_corners=False
                 ).squeeze(0)
 
             if do_rescale:
@@ -276,16 +273,16 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
 
         # Stack all processed images
         patches = torch.stack(processed_images)  # (B, C, H, W)
-        
+
         # Handle temporal dimension
         if patches.shape[0] == 1:
             patches = patches.repeat(self.temporal_patch_size, 1, 1, 1)
-        
+
         # Reshape for patch extraction
         batch_size, channel, resized_height, resized_width = patches.shape
         grid_t = batch_size // self.temporal_patch_size
         grid_h, grid_w = resized_height // self.patch_size, resized_width // self.patch_size
-        
+
         # Differentiable patch extraction and reshaping
         patches = patches.view(
             grid_t,
@@ -365,7 +362,7 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
                 image_mean=image_mean,
                 image_std=image_std,
             )
-        
+
         # Original non-differentiable path for backward compatibility
         images = make_list_of_images(images)
 
@@ -404,9 +401,7 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
                 image = self.rescale(image, scale=rescale_factor, input_data_format=input_data_format)
 
             if do_normalize:
-                image = self.normalize(
-                    image=image, mean=image_mean, std=image_std, input_data_format=input_data_format
-                )
+                image = self.normalize(image=image, mean=image_mean, std=image_std, input_data_format=input_data_format)
 
             image = to_channel_dimension_format(image, data_format, input_channel_dim=input_data_format)
             processed_images.append(image)
@@ -451,10 +446,10 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
     ):
         """
         Differentiable preprocessing method for torch tensors.
-        
+
         Args:
             images: torch.Tensor of shape (B, C, H, W) or (C, H, W)
-            
+
         Returns:
             dict containing:
                 - pixel_values: torch.Tensor - processed patches
@@ -476,11 +471,8 @@ class Qwen2VLImageProcessor(BaseImageProcessor):
             image_mean=image_mean,
             image_std=image_std,
         )
-        
-        return {
-            "pixel_values": patches,
-            "image_grid_thw": torch.tensor(image_grid_thw, device=patches.device)
-        }
+
+        return {"pixel_values": patches, "image_grid_thw": torch.tensor(image_grid_thw, device=patches.device)}
 
     def preprocess(
         self,

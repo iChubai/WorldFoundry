@@ -18,7 +18,6 @@ def get_video_transform(
     image_res: int = 224,
     normalize_img: bool = True,
 ) -> Tuple[Callable, int]:
-
     transforms = VideoTransform(
         size=image_res,
         normalize_img=normalize_img,
@@ -137,9 +136,7 @@ class VideoTransform(ImageTransform):
     def draw_bounding_boxes(self, frames, all_bboxes):
         # Assuming frames is a torch.Tensor with shape (N, C, H, W)
         N, _, _, _ = frames.shape
-        frames_with_bbox = (
-            frames.clone()
-        )  # Clone the tensor to avoid modifying the original
+        frames_with_bbox = frames.clone()  # Clone the tensor to avoid modifying the original
         for i in range(N):
             if i in all_bboxes:
                 bbox = all_bboxes[i]

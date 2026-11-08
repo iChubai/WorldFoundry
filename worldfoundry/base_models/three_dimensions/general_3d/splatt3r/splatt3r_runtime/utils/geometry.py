@@ -5,8 +5,9 @@ import torch
 
 # --- Intrinsics Transformations ---
 
+
 def normalize_intrinsics(intrinsics, image_shape):
-    '''Normalize an intrinsics matrix given the image shape'''
+    """Normalize an intrinsics matrix given the image shape"""
     intrinsics = intrinsics.clone()
     intrinsics[..., 0, :] /= image_shape[1]
     intrinsics[..., 1, :] /= image_shape[0]
@@ -14,7 +15,7 @@ def normalize_intrinsics(intrinsics, image_shape):
 
 
 def unnormalize_intrinsics(intrinsics, image_shape):
-    '''Unnormalize an intrinsics matrix given the image shape'''
+    """Unnormalize an intrinsics matrix given the image shape"""
     intrinsics = intrinsics.clone()
     intrinsics[..., 0, :] *= image_shape[1]
     intrinsics[..., 1, :] *= image_shape[0]
@@ -23,12 +24,13 @@ def unnormalize_intrinsics(intrinsics, image_shape):
 
 # --- Quaternions, Rotations and Scales ---
 
+
 def quaternion_to_matrix(quaternions, eps: float = 1e-8):
-    '''
+    """
     Convert the 4-dimensional quaternions to 3x3 rotation matrices.
     This is adapted from Pytorch3D:
     https://github.com/facebookresearch/pytorch3d/blob/main/pytorch3d/transforms/rotation_conversions.py
-    '''
+    """
 
     # Order changed to match scipy format!
     i, j, k, r = torch.unbind(quaternions, dim=-1)
@@ -52,8 +54,8 @@ def quaternion_to_matrix(quaternions, eps: float = 1e-8):
 
 
 def build_covariance(scale, rotation_xyzw):
-    '''Build the 3x3 covariance matrix from the three dimensional scale and the
-    four dimension quaternion'''
+    """Build the 3x3 covariance matrix from the three dimensional scale and the
+    four dimension quaternion"""
     scale = scale.diag_embed()
     rotation = quaternion_to_matrix(rotation_xyzw)
     return (
@@ -65,6 +67,7 @@ def build_covariance(scale, rotation_xyzw):
 
 
 # --- Projections ---
+
 
 def homogenize_points(points):
     """Append a '1' along the final dimension of the tensor (i.e. convert xyz->xyz1)"""
@@ -89,7 +92,7 @@ def pixel_space_to_camera_space(pixel_space_points, depth, intrinsics):
         torch.Tensor: Camera space points with shape (b, v, h, w, 3).
     """
     pixel_space_points = homogenize_points(pixel_space_points)
-    camera_space_points = torch.einsum('b v i j , h w j -> b v h w i', intrinsics.inverse(), pixel_space_points)
+    camera_space_points = torch.einsum("b v i j , h w j -> b v h w i", intrinsics.inverse(), pixel_space_points)
     camera_space_points = camera_space_points * depth
     return camera_space_points
 
@@ -106,7 +109,7 @@ def camera_space_to_world_space(camera_space_points, c2w):
         torch.Tensor: World space points with shape (b, v, h, w, 3).
     """
     camera_space_points = homogenize_points(camera_space_points)
-    world_space_points = torch.einsum('b v i j , b v h w j -> b v h w i', c2w, camera_space_points)
+    world_space_points = torch.einsum("b v i j , b v h w j -> b v h w i", c2w, camera_space_points)
     return world_space_points[..., :3]
 
 
@@ -122,7 +125,7 @@ def camera_space_to_pixel_space(camera_space_points, intrinsics):
         torch.Tensor: World space points with shape (b, v1, v2, h, w, 2).
     """
     camera_space_points = normalize_homogenous_points(camera_space_points)
-    pixel_space_points = torch.einsum('b u i j , b v u h w j -> b v u h w i', intrinsics, camera_space_points)
+    pixel_space_points = torch.einsum("b u i j , b v u h w j -> b v u h w i", intrinsics, camera_space_points)
     return pixel_space_points[..., :2]
 
 
@@ -138,7 +141,7 @@ def world_space_to_camera_space(world_space_points, c2w):
         torch.Tensor: Camera space points with shape (b, v1, v2, h, w, 3).
     """
     world_space_points = homogenize_points(world_space_points)
-    camera_space_points = torch.einsum('b u i j , b v h w j -> b v u h w i', c2w.inverse(), world_space_points)
+    camera_space_points = torch.einsum("b u i j , b v h w j -> b v u h w i", c2w.inverse(), world_space_points)
     return camera_space_points[..., :3]
 
 
@@ -160,7 +163,7 @@ def unproject_depth(depth, intrinsics, c2w):
     x_grid, y_grid = torch.meshgrid(
         torch.arange(w, device=depth.device, dtype=torch.float32),
         torch.arange(h, device=depth.device, dtype=torch.float32),
-        indexing='xy'
+        indexing="xy",
     )  # (h, w), (h, w)
 
     # Compute coordinates of pixels in camera space

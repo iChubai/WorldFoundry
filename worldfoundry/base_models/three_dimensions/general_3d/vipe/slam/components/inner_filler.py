@@ -36,6 +36,7 @@ from .factor_graph import FactorGraph
 @dataclass
 class FilledReturn:
     """Filled return implementation."""
+
     poses: SE3  # Inverse of c2w
     dense_disps: torch.Tensor | None = None
 

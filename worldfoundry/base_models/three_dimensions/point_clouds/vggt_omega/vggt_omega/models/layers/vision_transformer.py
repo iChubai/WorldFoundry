@@ -72,6 +72,7 @@ def init_weights_vit(module: nn.Module, name: str = ""):
 
 class DinoVisionTransformer(nn.Module):
     """Dino vision transformer implementation."""
+
     def __init__(
         self,
         *,

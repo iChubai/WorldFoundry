@@ -24,6 +24,7 @@ from .motion_module.motion_module import TemporalModule
 
 class DPTHeadTemporal(DPTHead):
     """Dpt head temporal implementation."""
+
     def __init__(
         self,
         in_channels,

@@ -13,6 +13,7 @@ import torch
 @dataclass
 class Arguments:
     """Arguments implementation."""
+
     K: int = field(default=5, metadata={"help": "K value of KNN"})
     conditioned_model_size: str = field(default="vitb", metadata={"help": "Size of conditioned model."})
     frozen_model_size: str = field(default="vitb", metadata={"help": "Size of frozen model."})

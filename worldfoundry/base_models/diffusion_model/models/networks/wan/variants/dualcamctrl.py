@@ -91,9 +91,7 @@ class WanControlNet(WanModel):
         num_depth_inject_blocks = len(depth_inject_blocks)
         self.num_depth_inject_blocks = num_depth_inject_blocks
         if num_control_block >= 0:
-            print(
-                f"Using {num_control_block} control blocks, for layers {self.control_block_index}"
-            )
+            print(f"Using {num_control_block} control blocks, for layers {self.control_block_index}")
             # Control blocks
             self.control_blocks = nn.ModuleList(
                 [
@@ -111,43 +109,25 @@ class WanControlNet(WanModel):
             if use_gate_3d_linear:
                 if update:
                     self.control_zero_inits = nn.ModuleList(
-                        [
-                            ResidualFusion3D_Stack(C=dim)
-                            for _ in range(num_depth_inject_blocks)
-                        ]
+                        [ResidualFusion3D_Stack(C=dim) for _ in range(num_depth_inject_blocks)]
                     )
                     self.rgb_zero_inits = nn.ModuleList(
-                        [
-                            ResidualFusion3D_Stack(C=dim)
-                            for _ in range(num_rgb_inject_blocks)
-                        ]
+                        [ResidualFusion3D_Stack(C=dim) for _ in range(num_rgb_inject_blocks)]
                     )
                 else:
                     self.control_zero_inits = nn.ModuleList(
-                        [
-                            ResidualFusion3D_Gating(C=dim)
-                            for _ in range(num_depth_inject_blocks)
-                        ]
+                        [ResidualFusion3D_Gating(C=dim) for _ in range(num_depth_inject_blocks)]
                     )
                     self.rgb_zero_inits = nn.ModuleList(
-                        [
-                            ResidualFusion3D_Gating(C=dim)
-                            for _ in range(num_rgb_inject_blocks)
-                        ]
+                        [ResidualFusion3D_Gating(C=dim) for _ in range(num_rgb_inject_blocks)]
                     )
 
             else:
                 self.control_zero_inits = nn.ModuleList(
-                    [
-                        nn.Linear(dim, dim, bias=False)
-                        for _ in range(num_depth_inject_blocks)
-                    ]
+                    [nn.Linear(dim, dim, bias=False) for _ in range(num_depth_inject_blocks)]
                 )
                 self.rgb_zero_inits = nn.ModuleList(
-                    [
-                        nn.Linear(dim, dim, bias=False)
-                        for _ in range(num_rgb_inject_blocks)
-                    ]
+                    [nn.Linear(dim, dim, bias=False) for _ in range(num_rgb_inject_blocks)]
                 )
 
                 for idx in range(num_depth_inject_blocks):
@@ -160,9 +140,7 @@ class WanControlNet(WanModel):
                         self.rgb_zero_inits[idx].bias.data.zero_()
 
         else:
-            print(
-                f"No control blocks used, control_block_index is empty: {control_block_index}"
-            )
+            print(f"No control blocks used, control_block_index is empty: {control_block_index}")
             self.control_blocks = None
 
     def copy_weights_from_main_branch(self):
@@ -176,9 +154,7 @@ class WanControlNet(WanModel):
             if idx in self.control_block_index:
                 c_block_id = self.control_block_index.index(idx)
                 # print(f"copy main block {idx} to control block {c_block_id}")
-                state = self.control_blocks[c_block_id].load_state_dict(
-                    block.state_dict(), strict=True
-                )
+                state = self.control_blocks[c_block_id].load_state_dict(block.state_dict(), strict=True)
         return
 
     # def zero_init_linear(self):
@@ -189,9 +165,7 @@ class WanControlNet(WanModel):
     #             if self.control_zero_inits[idx].bias is not None:
     #                 self.control_zero_inits[idx].bias.data.zero_()
 
-    def patchify(
-        self, x: torch.Tensor, control_camera_latents_input: torch.Tensor = None
-    ):
+    def patchify(self, x: torch.Tensor, control_camera_latents_input: torch.Tensor = None):
         """Use shared Wan camera-adapter projection and residual arithmetic."""
         return super().patchify(x, control_camera_latents_input)
 
@@ -281,9 +255,7 @@ class WanControlNet(WanModel):
                             use_reentrant=False,
                         )
                 else:
-                    control_latents = self.control_blocks[idx](
-                        control_latents, context, t_mod, freqs
-                    )
+                    control_latents = self.control_blocks[idx](control_latents, context, t_mod, freqs)
 
                 x = x + self.control_zero_inits[idx](control_video)
 
@@ -310,9 +282,7 @@ class WanControlNet(WanModel):
                         use_reentrant=False,
                     )
             else:
-                x = block(
-                    x, context, t_mod, freqs, camera_pose_embedding=camera_pose_embedding
-                )
+                x = block(x, context, t_mod, freqs, camera_pose_embedding=camera_pose_embedding)
 
         x = self.head(x, t)
         x = self.unpatchify(x, (f, h, w))

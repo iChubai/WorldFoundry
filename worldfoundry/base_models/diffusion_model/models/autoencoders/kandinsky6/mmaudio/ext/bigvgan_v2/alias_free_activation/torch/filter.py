@@ -27,9 +27,7 @@ else:
 # This code is adopted from adefossez's julius.lowpass.LowPassFilters under the MIT License
 # https://adefossez.github.io/julius/julius/lowpass.html
 # License text: THIRD-PARTY-NOTICES, BigVGAN Julius LICENSE_5.
-def kaiser_sinc_filter1d(
-    cutoff, half_width, kernel_size
-):  # return filter [1,1,kernel_size]
+def kaiser_sinc_filter1d(cutoff, half_width, kernel_size):  # return filter [1,1,kernel_size]
     even = kernel_size % 2 == 0
     half_size = kernel_size // 2
 

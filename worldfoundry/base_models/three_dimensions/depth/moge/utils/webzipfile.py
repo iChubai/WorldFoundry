@@ -4,10 +4,21 @@ from typing import *
 import io
 import os
 from zipfile import (
-    ZipInfo, BadZipFile, ZipFile, ZipExtFile,
-    sizeFileHeader, structFileHeader, stringFileHeader, 
-    _FH_SIGNATURE, _FH_FILENAME_LENGTH, _FH_EXTRA_FIELD_LENGTH, _FH_GENERAL_PURPOSE_FLAG_BITS,
-    _MASK_COMPRESSED_PATCH, _MASK_STRONG_ENCRYPTION, _MASK_UTF_FILENAME, _MASK_ENCRYPTED
+    ZipInfo,
+    BadZipFile,
+    ZipFile,
+    ZipExtFile,
+    sizeFileHeader,
+    structFileHeader,
+    stringFileHeader,
+    _FH_SIGNATURE,
+    _FH_FILENAME_LENGTH,
+    _FH_EXTRA_FIELD_LENGTH,
+    _FH_GENERAL_PURPOSE_FLAG_BITS,
+    _MASK_COMPRESSED_PATCH,
+    _MASK_STRONG_ENCRYPTION,
+    _MASK_UTF_FILENAME,
+    _MASK_ENCRYPTED,
 )
 import struct
 from requests import Session
@@ -17,6 +28,7 @@ from .webfile import WebFile
 
 class _SharedWebFile(WebFile):
     """Shared web file implementation."""
+
     def __init__(self, webfile: WebFile, pos: int):
         """Init.
 
@@ -30,11 +42,12 @@ class _SharedWebFile(WebFile):
 
 class WebZipFile(ZipFile):
     "Lock-free version of ZipFile that reads from a WebFile, allowing for concurrent reads."
+
     def __init__(self, url: str, session: Optional[Session] = None, headers: Optional[Dict[str, str]] = None):
         """Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
         or append 'a'."""
         webf = WebFile(url, session=session, headers=headers)
-        super().__init__(webf, mode='r')
+        super().__init__(webf, mode="r")
 
     def open(self, name, mode="r", pwd=None, *, force_zip64=False):
         """Return file-like object for 'name'.
@@ -57,16 +70,15 @@ class WebZipFile(ZipFile):
         if pwd and (mode == "w"):
             raise ValueError("pwd is only supported for reading files")
         if not self.fp:
-            raise ValueError(
-                "Attempt to use ZIP archive that was already closed")
-        
+            raise ValueError("Attempt to use ZIP archive that was already closed")
+
         assert mode == "r", "Only read mode is supported for now"
 
         # Make sure we have an info object
         if isinstance(name, ZipInfo):
             # 'name' is already an info object
             zinfo = name
-        elif mode == 'w':
+        elif mode == "w":
             zinfo = ZipInfo(name)
             zinfo.compress_type = self.compression
             zinfo._compresslevel = self.compresslevel
@@ -74,13 +86,15 @@ class WebZipFile(ZipFile):
             # Get info object for name
             zinfo = self.getinfo(name)
 
-        if mode == 'w':
+        if mode == "w":
             return self._open_to_write(zinfo, force_zip64=force_zip64)
 
         if self._writing:
-            raise ValueError("Can't read from the ZIP file while there "
-                    "is an open writing handle on it. "
-                    "Close the writing handle before trying to read.")
+            raise ValueError(
+                "Can't read from the ZIP file while there "
+                "is an open writing handle on it. "
+                "Close the writing handle before trying to read."
+            )
 
         # Open for reading:
         self._fileRefCnt += 1
@@ -114,9 +128,7 @@ class WebZipFile(ZipFile):
                 fname_str = fname.decode(self.metadata_encoding or "cp437")
 
             if fname_str != zinfo.orig_filename:
-                raise BadZipFile(
-                    'File name in directory %r and header %r differ.'
-                    % (zinfo.orig_filename, fname))
+                raise BadZipFile("File name in directory %r and header %r differ." % (zinfo.orig_filename, fname))
 
             # check for encrypted flag & handle password
             is_encrypted = zinfo.flag_bits & _MASK_ENCRYPTED
@@ -126,8 +138,7 @@ class WebZipFile(ZipFile):
                 if pwd and not isinstance(pwd, bytes):
                     raise TypeError("pwd: expected bytes, got %s" % type(pwd).__name__)
                 if not pwd:
-                    raise RuntimeError("File %r is encrypted, password "
-                                       "required for extraction" % name)
+                    raise RuntimeError("File %r is encrypted, password required for extraction" % name)
             else:
                 pwd = None
 

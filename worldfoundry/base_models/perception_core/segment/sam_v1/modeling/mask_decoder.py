@@ -17,6 +17,7 @@ from worldfoundry.core.nn.blocks.layers import LayerNorm2d, SamHeadMLP
 
 class MaskDecoder(nn.Module):
     """Mask decoder implementation."""
+
     def __init__(
         self,
         *,
@@ -61,10 +62,7 @@ class MaskDecoder(nn.Module):
             activation(),
         )
         self.output_hypernetworks_mlps = nn.ModuleList(
-            [
-                SamHeadMLP(transformer_dim, transformer_dim, transformer_dim // 8, 3)
-                for i in range(self.num_mask_tokens)
-            ]
+            [SamHeadMLP(transformer_dim, transformer_dim, transformer_dim // 8, 3) for i in range(self.num_mask_tokens)]
         )
 
         self.iou_prediction_head = SamHeadMLP(

@@ -24,7 +24,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 class CausalConv3d(nn.Module):
     """Causal conv d implementation."""
 
-    def __init__(self, in_channel, out_channel, kernel_size, stride=1, dilation=1, pad_mode='replicate', **kwargs):
+    def __init__(self, in_channel, out_channel, kernel_size, stride=1, dilation=1, pad_mode="replicate", **kwargs):
         """Init.
 
         Args:
@@ -37,8 +37,14 @@ class CausalConv3d(nn.Module):
         """
         super().__init__()
         self.pad_mode = pad_mode
-        self.time_causal_padding = (kernel_size // 2, kernel_size // 2, kernel_size // 2, kernel_size // 2, kernel_size - 1, 0
-                                   )  # W, H, T
+        self.time_causal_padding = (
+            kernel_size // 2,
+            kernel_size // 2,
+            kernel_size // 2,
+            kernel_size // 2,
+            kernel_size - 1,
+            0,
+        )  # W, H, T
         self.conv = nn.Conv3d(in_channel, out_channel, kernel_size, stride=stride, dilation=dilation, **kwargs)
 
     def forward(self, x):
@@ -54,7 +60,9 @@ class CausalConv3d(nn.Module):
 class UpsampleCausal3D(nn.Module):
     """Upsample causal d implementation."""
 
-    def __init__(self, channels, use_conv=False, out_channels=None, kernel_size=None, bias=True, upsample_factor=(2, 2, 2)):
+    def __init__(
+        self, channels, use_conv=False, out_channels=None, kernel_size=None, bias=True, upsample_factor=(2, 2, 2)
+    ):
         """Init.
 
         Args:
@@ -138,7 +146,9 @@ class ResnetBlockCausal3D(nn.Module):
 
         self.conv_shortcut = None
         if in_channels != out_channels:
-            self.conv_shortcut = CausalConv3d(in_channels, out_channels, kernel_size=1, stride=1, bias=conv_shortcut_bias)
+            self.conv_shortcut = CausalConv3d(
+                in_channels, out_channels, kernel_size=1, stride=1, bias=conv_shortcut_bias
+            )
 
     def forward(self, input_tensor):
         """Forward.
@@ -159,7 +169,7 @@ class ResnetBlockCausal3D(nn.Module):
         hidden_states = self.conv2(hidden_states)
         # shortcut
         if self.conv_shortcut is not None:
-            input_tensor = (self.conv_shortcut(input_tensor))
+            input_tensor = self.conv_shortcut(input_tensor)
         # shortcut and scale
         output_tensor = input_tensor + hidden_states
 
@@ -180,7 +190,7 @@ def prepare_causal_attention_mask(n_frame, n_hw, dtype, device, batch_size=None)
     mask = torch.full((seq_len, seq_len), float("-inf"), dtype=dtype, device=device)
     for i in range(seq_len):
         i_frame = i // n_hw
-        mask[i, :(i_frame + 1) * n_hw] = 0
+        mask[i, : (i_frame + 1) * n_hw] = 0
     if batch_size is not None:
         mask = mask.unsqueeze(0).expand(batch_size, -1, -1)
     return mask
@@ -189,15 +199,17 @@ def prepare_causal_attention_mask(n_frame, n_hw, dtype, device, batch_size=None)
 class Attention(nn.Module):
     """Attention implementation."""
 
-    def __init__(self,
-                 in_channels,
-                 num_heads,
-                 head_dim,
-                 num_groups=32,
-                 dropout=0.0,
-                 eps=1e-6,
-                 bias=True,
-                 residual_connection=True):
+    def __init__(
+        self,
+        in_channels,
+        num_heads,
+        head_dim,
+        num_groups=32,
+        dropout=0.0,
+        eps=1e-6,
+        bias=True,
+        residual_connection=True,
+    ):
         """Init.
 
         Args:
@@ -287,7 +299,8 @@ class UNetMidBlockCausal3D(nn.Module):
                     eps=eps,
                     bias=True,
                     residual_connection=True,
-                ))
+                )
+            )
 
             resnets.append(
                 ResnetBlockCausal3D(
@@ -296,7 +309,8 @@ class UNetMidBlockCausal3D(nn.Module):
                     dropout=dropout,
                     groups=num_groups,
                     eps=eps,
-                ))
+                )
+            )
 
         self.attentions = nn.ModuleList(attentions)
         self.resnets = nn.ModuleList(resnets)
@@ -323,15 +337,15 @@ class UpDecoderBlockCausal3D(nn.Module):
     """Up decoder block causal d implementation."""
 
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            dropout=0.0,
-            num_layers=1,
-            eps=1e-6,
-            num_groups=32,
-            add_upsample=True,
-            upsample_scale_factor=(2, 2, 2),
+        self,
+        in_channels,
+        out_channels,
+        dropout=0.0,
+        num_layers=1,
+        eps=1e-6,
+        num_groups=32,
+        add_upsample=True,
+        upsample_scale_factor=(2, 2, 2),
     ):
         """Init.
 
@@ -356,19 +370,22 @@ class UpDecoderBlockCausal3D(nn.Module):
                     groups=num_groups,
                     dropout=dropout,
                     eps=eps,
-                ))
+                )
+            )
         self.resnets = nn.ModuleList(resnets)
 
         self.upsamplers = None
         if add_upsample:
-            self.upsamplers = nn.ModuleList([
-                UpsampleCausal3D(
-                    out_channels,
-                    use_conv=True,
-                    out_channels=out_channels,
-                    upsample_factor=upsample_scale_factor,
-                )
-            ])
+            self.upsamplers = nn.ModuleList(
+                [
+                    UpsampleCausal3D(
+                        out_channels,
+                        use_conv=True,
+                        out_channels=out_channels,
+                        upsample_factor=upsample_scale_factor,
+                    )
+                ]
+            )
 
     def forward(self, hidden_states):
         """Forward.
@@ -562,7 +579,6 @@ class HunyuanVideoVAEDecoder(nn.Module):
         self.post_quant_conv = nn.Conv3d(in_channels, in_channels, kernel_size=1)
         self.scaling_factor = 0.476986
 
-
     def forward(self, latents):
         """Forward.
 
@@ -573,7 +589,6 @@ class HunyuanVideoVAEDecoder(nn.Module):
         latents = self.post_quant_conv(latents)
         dec = self.decoder(latents)
         return dec
-    
 
     def build_1d_mask(self, length, left_bound, right_bound, border_width):
         """Build 1d mask.
@@ -590,7 +605,6 @@ class HunyuanVideoVAEDecoder(nn.Module):
         if not right_bound:
             x[-border_width:] = torch.flip((torch.arange(border_width) + 1) / border_width, dims=(0,))
         return x
-    
 
     def build_mask(self, data, is_bound, border_width):
         """Build mask.
@@ -612,7 +626,6 @@ class HunyuanVideoVAEDecoder(nn.Module):
         mask = torch.stack([t, h, w]).min(dim=0).values
         mask = rearrange(mask, "T H W -> 1 1 T H W")
         return mask
-    
 
     def tile_forward(self, hidden_states, tile_size, tile_stride):
         """Tile forward.
@@ -629,11 +642,14 @@ class HunyuanVideoVAEDecoder(nn.Module):
         # Split tasks
         tasks = []
         for t in range(0, T, stride_t):
-            if (t-stride_t >= 0 and t-stride_t+size_t >= T): continue
+            if t - stride_t >= 0 and t - stride_t + size_t >= T:
+                continue
             for h in range(0, H, stride_h):
-                if (h-stride_h >= 0 and h-stride_h+size_h >= H): continue
+                if h - stride_h >= 0 and h - stride_h + size_h >= H:
+                    continue
                 for w in range(0, W, stride_w):
-                    if (w-stride_w >= 0 and w-stride_w+size_w >= W): continue
+                    if w - stride_w >= 0 and w - stride_w + size_w >= W:
+                        continue
                     t_, h_, w_ = t + size_t, h + size_h, w + size_w
                     tasks.append((t, t_, h, h_, w, w_))
 
@@ -653,29 +669,28 @@ class HunyuanVideoVAEDecoder(nn.Module):
 
             mask = self.build_mask(
                 hidden_states_batch,
-                is_bound=(t==0, t_>=T, h==0, h_>=H, w==0, w_>=W),
-                border_width=((size_t - stride_t) * 4, (size_h - stride_h) * 8, (size_w - stride_w) * 8)
+                is_bound=(t == 0, t_ >= T, h == 0, h_ >= H, w == 0, w_ >= W),
+                border_width=((size_t - stride_t) * 4, (size_h - stride_h) * 8, (size_w - stride_w) * 8),
             ).to(dtype=torch_dtype, device=data_device)
 
-            target_t = 0 if t==0 else t * 4 + 1
+            target_t = 0 if t == 0 else t * 4 + 1
             target_h = h * 8
             target_w = w * 8
             values[
                 :,
                 :,
-                target_t: target_t + hidden_states_batch.shape[2],
-                target_h: target_h + hidden_states_batch.shape[3],
-                target_w: target_w + hidden_states_batch.shape[4],
+                target_t : target_t + hidden_states_batch.shape[2],
+                target_h : target_h + hidden_states_batch.shape[3],
+                target_w : target_w + hidden_states_batch.shape[4],
             ] += hidden_states_batch * mask
             weight[
                 :,
                 :,
-                target_t: target_t + hidden_states_batch.shape[2],
-                target_h: target_h + hidden_states_batch.shape[3],
-                target_w: target_w + hidden_states_batch.shape[4],
+                target_t : target_t + hidden_states_batch.shape[2],
+                target_h : target_h + hidden_states_batch.shape[3],
+                target_w : target_w + hidden_states_batch.shape[4],
             ] += mask
         return values / weight
-
 
     def decode_video(self, latents, tile_size=(17, 32, 32), tile_stride=(12, 24, 24)):
         """Decode video.
@@ -709,6 +724,6 @@ class HunyuanVideoVAEDecoderStateDictConverter:
         """
         state_dict_ = {}
         for name in state_dict:
-            if name.startswith('decoder.') or name.startswith('post_quant_conv.'):
+            if name.startswith("decoder.") or name.startswith("post_quant_conv."):
                 state_dict_[name] = state_dict[name]
         return state_dict_

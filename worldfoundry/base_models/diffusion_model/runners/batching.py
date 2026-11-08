@@ -242,7 +242,9 @@ def run_request_batch(
         or runner.cfg_parallel_degree != 1
         or runner.cfg_gate_step != 1.0
     ):
-        raise ValueError("request batching requires native guidance without custom extensions, CFG gating or CFG parallelism")
+        raise ValueError(
+            "request batching requires native guidance without custom extensions, CFG gating or CFG parallelism"
+        )
     if type(initializer) is not WanTextToVideoLatentInitializer and not image_initializer:
         raise ValueError("request batching requires a native Wan T2V, I2V or TI2V initializer")
     if image_initializer:

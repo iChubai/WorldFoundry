@@ -13,7 +13,9 @@ neck_num_heads = [4, 8, _base_.last_stage_out_channels // 2 // 32]
 base_lr = 2e-4
 weight_decay = 0.05
 train_batch_size_per_gpu = 16
-load_from = "pretrained_models/yolo_world_l_clip_t2i_bn_2e-3adamw_32xb16-100e_obj365v1_goldg_cc3mlite_train-ca93cd1f.pth"
+load_from = (
+    "pretrained_models/yolo_world_l_clip_t2i_bn_2e-3adamw_32xb16-100e_obj365v1_goldg_cc3mlite_train-ca93cd1f.pth"
+)
 persistent_workers = False
 text_model_name = "openai/clip-vit-base-patch32/"
 img_scale = (800, 800)
@@ -108,9 +110,7 @@ val_dataloader = dict(dataset=coco_val_dataset)
 test_dataloader = val_dataloader
 # training settings
 default_hooks = dict(
-    param_scheduler=dict(
-        scheduler_type="linear", lr_factor=0.01, max_epochs=max_epochs
-    ),
+    param_scheduler=dict(scheduler_type="linear", lr_factor=0.01, max_epochs=max_epochs),
     checkpoint=dict(max_keep_ckpts=-1, save_best=None, interval=save_epoch_intervals),
 )
 custom_hooks = [
@@ -131,9 +131,7 @@ custom_hooks = [
 train_cfg = dict(
     max_epochs=max_epochs,
     val_interval=5,
-    dynamic_intervals=[
-        ((max_epochs - close_mosaic_epochs), _base_.val_interval_stage2)
-    ],
+    dynamic_intervals=[((max_epochs - close_mosaic_epochs), _base_.val_interval_stage2)],
 )
 
 optim_wrapper = dict(

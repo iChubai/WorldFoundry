@@ -76,9 +76,7 @@ def qk_norm_rope(
     if can_use_fused_qknorm_rope(q, k, cos_sin_cache):
         from worldfoundry.core.kernels.triton_minimax_h3_qknorm_rope import fused_qknorm_rope
 
-        return fused_qknorm_rope(
-            q, k, q_norm.weight, k_norm.weight, cos_sin_cache, eps=float(q_norm.eps)
-        )
+        return fused_qknorm_rope(q, k, q_norm.weight, k_norm.weight, cos_sin_cache, eps=float(q_norm.eps))
     q, k = apply_qk_norm(q, k, q_norm, k_norm, q.shape[-1])
     return apply_rope_qk(q, k, cos_sin_cache, positions)
 
@@ -107,10 +105,7 @@ def can_use_fused_indexed_modulation(*tensors: torch.Tensor) -> bool:
     first = tensors[0]
     if not first.is_cuda or first.dtype != _BF16:
         return False
-    return all(
-        t.is_cuda and t.dtype == _BF16 and t.is_contiguous() and t.stride(-1) == 1
-        for t in tensors
-    )
+    return all(t.is_cuda and t.dtype == _BF16 and t.is_contiguous() and t.stride(-1) == 1 for t in tensors)
 
 
 # --------------------------------------------------------------------------- #

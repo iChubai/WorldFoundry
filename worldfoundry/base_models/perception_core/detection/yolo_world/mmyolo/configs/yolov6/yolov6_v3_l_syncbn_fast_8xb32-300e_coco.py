@@ -1,4 +1,4 @@
-_base_ = './yolov6_v3_m_syncbn_fast_8xb32-300e_coco.py'
+_base_ = "./yolov6_v3_m_syncbn_fast_8xb32-300e_coco.py"
 
 # ======================= Possible modified parameters =======================
 # -----model related-----
@@ -12,17 +12,16 @@ model = dict(
     backbone=dict(
         deepen_factor=deepen_factor,
         widen_factor=widen_factor,
-        hidden_ratio=1. / 2,
-        block_cfg=dict(
-            type='ConvWrapper',
-            norm_cfg=dict(type='BN', momentum=0.03, eps=0.001)),
-        act_cfg=dict(type='SiLU', inplace=True)),
+        hidden_ratio=1.0 / 2,
+        block_cfg=dict(type="ConvWrapper", norm_cfg=dict(type="BN", momentum=0.03, eps=0.001)),
+        act_cfg=dict(type="SiLU", inplace=True),
+    ),
     neck=dict(
         deepen_factor=deepen_factor,
         widen_factor=widen_factor,
-        hidden_ratio=1. / 2,
-        block_cfg=dict(
-            type='ConvWrapper',
-            norm_cfg=dict(type='BN', momentum=0.03, eps=0.001)),
-        block_act_cfg=dict(type='SiLU', inplace=True)),
-    bbox_head=dict(head_module=dict(widen_factor=widen_factor)))
+        hidden_ratio=1.0 / 2,
+        block_cfg=dict(type="ConvWrapper", norm_cfg=dict(type="BN", momentum=0.03, eps=0.001)),
+        block_act_cfg=dict(type="SiLU", inplace=True),
+    ),
+    bbox_head=dict(head_module=dict(widen_factor=widen_factor)),
+)

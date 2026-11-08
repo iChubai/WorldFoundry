@@ -9,13 +9,14 @@ from transformers.cache_utils import Cache
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
 from .modeling_qwen3 import (
     Qwen3Attention,
-    Qwen3MLP, 
-    Qwen3RMSNorm, 
+    Qwen3MLP,
+    Qwen3RMSNorm,
 )
 
 
 class Qwen3DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
+
     def __init__(self, config, layer_idx: int):
         """Init.
 
@@ -93,4 +94,3 @@ class Qwen3DecoderLayer(nn.Module):
             outputs += (self_attn_weights,)
 
         return outputs
-    

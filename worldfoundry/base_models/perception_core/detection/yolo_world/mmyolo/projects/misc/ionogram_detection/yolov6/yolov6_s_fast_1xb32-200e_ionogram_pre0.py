@@ -1,4 +1,4 @@
-_base_ = './yolov6_s_fast_1xb32-100e_ionogram.py'
+_base_ = "./yolov6_s_fast_1xb32-100e_ionogram.py"
 
 # ======================= Modified parameters =====================
 base_lr = _base_.base_lr * 4
@@ -12,6 +12,4 @@ train_cfg = dict(
     val_begin=20,
 )
 
-default_hooks = dict(
-    param_scheduler=dict(max_epochs=max_epochs),
-    logger=dict(type='LoggerHook', interval=50))
+default_hooks = dict(param_scheduler=dict(max_epochs=max_epochs), logger=dict(type="LoggerHook", interval=50))

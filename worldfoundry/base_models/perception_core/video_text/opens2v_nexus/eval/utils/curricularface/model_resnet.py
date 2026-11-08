@@ -18,9 +18,7 @@ from .common import initialize_weights
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
-    return Conv2d(
-        in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False
-    )
+    return Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
 
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -76,9 +74,7 @@ class ResNet(Module):
         layers: layers in each block
         """
         super(ResNet, self).__init__()
-        assert input_size[0] in [112, 224], (
-            "input_size should be [112, 112] or [224, 224]"
-        )
+        assert input_size[0] in [112, 224], "input_size should be [112, 112] or [224, 224]"
         self.inplanes = 64
         self.conv1 = Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = BatchNorm2d(64)

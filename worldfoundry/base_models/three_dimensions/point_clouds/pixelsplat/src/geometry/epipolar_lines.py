@@ -46,6 +46,7 @@ def _is_positive_t(
 
 class PointProjection(TypedDict):
     """Point projection implementation."""
+
     t: Float[Tensor, " *batch"]  # ray parameter, as in xyz = origin + t * direction
     xy: Float[Tensor, "*batch 2"]  # image-space xy (normalized to 0 to 1)
 
@@ -168,6 +169,7 @@ def _compute_point_projection(
 
 class RaySegmentProjection(TypedDict):
     """Ray segment projection implementation."""
+
     t_min: Float[Tensor, " *batch"]  # ray parameter
     t_max: Float[Tensor, " *batch"]  # ray parameter
     xy_min: Float[Tensor, "*batch 2"]  # image-space xy (normalized to 0 to 1)
@@ -290,6 +292,7 @@ def project_rays(
 
 class RaySegmentProjection(TypedDict):
     """Ray segment projection implementation."""
+
     t_min: Float[Tensor, " *batch"]  # ray parameter
     t_max: Float[Tensor, " *batch"]  # ray parameter
     xy_min: Float[Tensor, "*batch 2"]  # image-space xy (normalized to 0 to 1)

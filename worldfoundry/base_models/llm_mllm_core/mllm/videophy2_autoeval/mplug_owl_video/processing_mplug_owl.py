@@ -12,13 +12,13 @@ from decord import VideoReader
 import numpy as np
 from PIL import Image
 
+
 def get_index(num_frames, num_segments):
     seg_size = float(num_frames - 1) / num_segments
     start = int(seg_size / 2)
-    offsets = np.array([
-        start + int(np.round(seg_size * idx)) for idx in range(num_segments)
-    ])
+    offsets = np.array([start + int(np.round(seg_size * idx)) for idx in range(num_segments)])
     return offsets
+
 
 def load_video(path, num_frames=4):
     vr = VideoReader(path, height=224, width=224)
@@ -27,16 +27,16 @@ def load_video(path, num_frames=4):
     frame_indices = get_index(total_frames, num_frames)
     images_group = list()
     for frame_index in frame_indices:
-        img = Image.fromarray(vr[frame_index].asnumpy()).convert('RGB')
+        img = Image.fromarray(vr[frame_index].asnumpy()).convert("RGB")
         images_group.append(img)
     return images_group
 
+
 class MplugOwlProcessor(ProcessorMixin):
     attributes = []
-    tokenizer_class = ("MplugOwlTokenizer")
-    
+    tokenizer_class = "MplugOwlTokenizer"
+
     def __init__(self, image_processor=None, tokenizer=None, **kwargs):
-    
         super().__init__(**kwargs)
         self.tokens_to_generate = 0
         self.image_processor = image_processor
@@ -44,7 +44,6 @@ class MplugOwlProcessor(ProcessorMixin):
         self.add_BOS = True
 
     def __call__(self, videos=None, text=None, num_frames=4, return_tensors=None, **kwargs):
-
         if text is not None:
             encoding = tokenize_prompts(
                 prompts=text,
@@ -59,17 +58,19 @@ class MplugOwlProcessor(ProcessorMixin):
             video_features = []
             for video in videos:
                 video_frames = load_video(video, num_frames)
-                video_feature = self.image_processor(video_frames, return_tensors=return_tensors, **kwargs)['pixel_values']
+                video_feature = self.image_processor(video_frames, return_tensors=return_tensors, **kwargs)[
+                    "pixel_values"
+                ]
                 video_features.append(video_feature)
             video_features = torch.stack(video_features, dim=0)
             video_features = video_features.permute(0, 2, 1, 3, 4)
-    
+
         if text is not None and videos is not None:
             encoding["video_pixel_values"] = video_features
             return encoding
         if text is not None and videos is None:
             return encoding
-            
+
         return video_features
 
     def batch_decode(self, skip_special_tokens=True, *args, **kwargs):
@@ -209,11 +210,7 @@ def _tokenize_prompts_and_batch(prompts, tokens_to_generate, add_BOS, tokenizer,
     return prompts_tokens_tensor, prompts_length_tensor, attention_mask
 
 
-def _tokenize_prompt(
-        prompt, tokenizer, add_BOS=False, 
-        media_info={"<image>": 65, "<|video|>": 65},
-        **kwargs
-    ):
+def _tokenize_prompt(prompt, tokenizer, add_BOS=False, media_info={"<image>": 65, "<|video|>": 65}, **kwargs):
     media_tokens = {k: -int(i + 1) for i, k in enumerate(media_info.keys())}
     media_lengths = media_info.copy()
 

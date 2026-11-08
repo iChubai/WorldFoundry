@@ -12,4 +12,5 @@ class YOLOv5VOCDataset(BatchShapePolicyDataset, VOCDataset):
     We only add `BatchShapePolicy` function compared with VOCDataset. See
     `mmyolo/datasets/utils.py#BatchShapePolicy` for details
     """
+
     pass

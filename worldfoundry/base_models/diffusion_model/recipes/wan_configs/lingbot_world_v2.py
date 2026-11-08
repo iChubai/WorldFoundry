@@ -31,8 +31,14 @@ LINGBOT_WORLD_V2_CONFIG.sample_neg_prompt = (
 LINGBOT_WORLD_V2_1P3B_CONFIG = deepcopy(LINGBOT_WORLD_V2_CONFIG)
 LINGBOT_WORLD_V2_1P3B_CONFIG.__name__ = "Config: LingBot-World-V2 I2V 1.3B causal-fast"
 LINGBOT_WORLD_V2_1P3B_CONFIG.update(
-    dim=1536, ffn_dim=8960, num_heads=12, num_layers=30,
-    fast_checkpoint=".", sample_shift=5.0, reference_noise_chunks=20, frame_num=317,
+    dim=1536,
+    ffn_dim=8960,
+    num_heads=12,
+    num_layers=30,
+    fast_checkpoint=".",
+    sample_shift=5.0,
+    reference_noise_chunks=20,
+    frame_num=317,
 )
 
 LINGBOT_WORLD_V2_CONFIGS = {

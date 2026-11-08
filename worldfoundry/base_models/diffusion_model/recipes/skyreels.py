@@ -189,9 +189,7 @@ def skyreels_v3_recipe() -> NativeDiffusionRecipe:
             },
         ),
         checkpoints=checkpoints,
-        capabilities=frozenset(
-            {"reference-to-video", "classifier-free-guidance", "dual-condition-guidance"}
-        ),
+        capabilities=frozenset({"reference-to-video", "classifier-free-guidance", "dual-condition-guidance"}),
         options={"latent_channels": 16, "spatial_compression": 8, "temporal_compression": 4},
         metadata={
             "architecture": "skyreels-v3-wan-r2v-14b",

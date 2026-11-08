@@ -80,7 +80,10 @@ def generic_param_init_fn_(
 
     if init_div_is_residual is not False:
         if verbose > 1:
-            warnings.warn(f"Initializing _is_residual layers then dividing them by {div_is_residual}." + f"set `init_div_is_residual: false` in model config to disable this.")
+            warnings.warn(
+                f"Initializing _is_residual layers then dividing them by {div_is_residual}."
+                + f"set `init_div_is_residual: false` in model config to disable this."
+            )
 
     if isinstance(module, nn.Linear):
         # Linear
@@ -144,7 +147,11 @@ def generic_param_init_fn_(
             for s, e in zip(splits[:-1], splits[1:]):
                 init_fn_(module.in_proj_weight[s:e])
         else:
-            assert module.q_proj_weight is not None and module.k_proj_weight is not None and module.v_proj_weight is not None
+            assert (
+                module.q_proj_weight is not None
+                and module.k_proj_weight is not None
+                and module.v_proj_weight is not None
+            )
             assert module.in_proj_weight is None
             init_fn_(module.q_proj_weight)
             init_fn_(module.k_proj_weight)
@@ -305,7 +312,10 @@ def kaiming_uniform_param_init_fn_(
     del kwargs  # unused, just to capture any extra args from the config
 
     if verbose > 1:
-        warnings.warn(f"Using nn.init.kaiming_uniform_ init fn with parameters: " + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}")
+        warnings.warn(
+            f"Using nn.init.kaiming_uniform_ init fn with parameters: "
+            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
+        )
 
     kaiming_uniform_ = partial(
         nn.init.kaiming_uniform_,
@@ -342,7 +352,10 @@ def kaiming_normal_param_init_fn_(
     del kwargs  # unused, just to capture any extra args from the config
 
     if verbose > 1:
-        warnings.warn(f"Using nn.init.kaiming_normal_ init fn with parameters: " + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}")
+        warnings.warn(
+            f"Using nn.init.kaiming_normal_ init fn with parameters: "
+            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
+        )
 
     kaiming_normal_ = partial(
         torch.nn.init.kaiming_normal_,

@@ -177,6 +177,7 @@ def _rms_norm_2d_bwd_dx_fused(
 
 class TritonRMSNorm2dFunc(torch.autograd.Function):
     """Triton rms norm d func implementation."""
+
     @staticmethod
     def forward(ctx, x, weight, bias, eps):
         """Forward.

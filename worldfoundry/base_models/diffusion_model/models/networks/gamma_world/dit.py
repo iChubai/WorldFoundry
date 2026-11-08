@@ -33,7 +33,10 @@ from collections import namedtuple
 from collections.abc import Sequence
 from typing import List, Optional, Tuple, Union
 
-from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.kv_cache import AttentionOpWithKVCache, KVCacheConfig
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.kv_cache import (
+    AttentionOpWithKVCache,
+    KVCacheConfig,
+)
 
 try:
     from worldfoundry.core.distributed.model_parallel.megatron_compat import parallel_state
@@ -64,7 +67,9 @@ from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.contex
     MinimalA2AAttnOp,
     NattenA2AAttnOp,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.neighborhood_attention import NeighborhoodAttention
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.neighborhood_attention import (
+    NeighborhoodAttention,
+)
 
 VideoSize = namedtuple("VideoSize", ["T", "H", "W"])
 _COMPILED_FLEX_ATTENTION = compile_callable_cached(

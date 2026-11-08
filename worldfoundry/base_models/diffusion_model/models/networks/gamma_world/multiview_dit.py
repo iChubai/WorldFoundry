@@ -310,7 +310,6 @@ class MinimalV1LVGDiT(MinimalDiT):
             )
 
     def init_weights(self) -> None:
-
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
@@ -349,7 +348,6 @@ class MinimalV1LVGDiT(MinimalDiT):
                         nn.init.zeros_(m.bias)
 
     def _resolve_agent_pool_indices(self, n_views: int) -> list[int]:
-
         if self._override_agent_pool_indices is not None:
             indices = list(self._override_agent_pool_indices)
             assert len(indices) == n_views, (
@@ -374,7 +372,6 @@ class MinimalV1LVGDiT(MinimalDiT):
         device: torch.device,
         fps: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-
         B, T, H, W, D = B_T_H_W_D
         t_per_view = T // n_views
 
@@ -407,7 +404,6 @@ class MinimalV1LVGDiT(MinimalDiT):
         view_indices_B_T: torch.Tensor,
         fps: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-
         B, T, H, W, D = B_T_H_W_D
         n_views = view_indices_B_T.max().item() + 1
 

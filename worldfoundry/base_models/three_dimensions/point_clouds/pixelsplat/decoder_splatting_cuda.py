@@ -34,7 +34,7 @@ class DecoderSplattingCUDA(torch.nn.Module):
             torch.tensor(background_color, dtype=torch.float32),
             persistent=False,
         )
-    
+
     def forward(self, batch, pred1, pred2, image_shape):
         """Forward.
 
@@ -45,11 +45,11 @@ class DecoderSplattingCUDA(torch.nn.Module):
             image_shape: The image shape.
         """
 
-        base_pose = batch['context'][0]['camera_pose'] # [b, 4, 4]
+        base_pose = batch["context"][0]["camera_pose"]  # [b, 4, 4]
         inv_base_pose = torch.inverse(base_pose)
 
-        extrinsics = torch.stack([target_view['camera_pose'] for target_view in batch['target']], dim=1)
-        intrinsics = torch.stack([target_view['camera_intrinsics'] for target_view in batch['target']], dim=1)
+        extrinsics = torch.stack([target_view["camera_pose"] for target_view in batch["target"]], dim=1)
+        intrinsics = torch.stack([target_view["camera_intrinsics"] for target_view in batch["target"]], dim=1)
         intrinsics = normalize_intrinsics(intrinsics, image_shape)[..., :3, :3]
 
         # Rotate the ground truth extrinsics into the coordinate system used by MAST3R

@@ -59,13 +59,9 @@ class ResidualConvUnit(nn.Module):
 
         self.groups = 1
 
-        self.conv1 = nn.Conv2d(
-            features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups
-        )
+        self.conv1 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups)
 
-        self.conv2 = nn.Conv2d(
-            features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups
-        )
+        self.conv2 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups)
 
         if self.bn is True:
             self.bn1 = nn.BatchNorm2d(features)
@@ -131,9 +127,7 @@ class FeatureFusionBlock(nn.Module):
         if self.expand is True:
             out_features = features // 2
 
-        self.out_conv = nn.Conv2d(
-            features, out_features, kernel_size=1, stride=1, padding=0, bias=True, groups=1
-        )
+        self.out_conv = nn.Conv2d(features, out_features, kernel_size=1, stride=1, padding=0, bias=True, groups=1)
 
         self.resConfUnit1 = ResidualConvUnit(features, activation, bn)
         self.resConfUnit2 = ResidualConvUnit(features, activation, bn)

@@ -56,6 +56,7 @@ class PatchEmbed(nn.Module):
 
 class Attention(nn.Module):
     """Attention implementation."""
+
     def __init__(
         self,
         dim,
@@ -85,11 +86,7 @@ class Attention(nn.Module):
             x: The x.
         """
         B, N, C = x.shape
-        qkv = (
-            self.qkv(x)
-            .reshape(B, N, 3, self.num_heads, C // self.num_heads)
-            .permute(2, 0, 3, 1, 4)
-        )
+        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = (
             qkv[0],
             qkv[1],
@@ -104,6 +101,7 @@ class Attention(nn.Module):
 
 class Mlp(nn.Module):
     """Mlp implementation."""
+
     def __init__(
         self,
         in_features,
@@ -140,6 +138,7 @@ class Mlp(nn.Module):
 
 class Block(nn.Module):
     """Block implementation."""
+
     def __init__(
         self,
         dim,
@@ -187,9 +186,7 @@ class Block(nn.Module):
 
 
 @torch.jit.export
-def get_abs_pos(
-    abs_pos: torch.Tensor, has_cls_token: bool, hw: List[int]
-) -> torch.Tensor:
+def get_abs_pos(abs_pos: torch.Tensor, has_cls_token: bool, hw: List[int]) -> torch.Tensor:
     """
     Calculate absolute positional embeddings. If needed, resize embeddings and remove cls_token
         dimension for the original embeddings.
@@ -224,6 +221,7 @@ def get_abs_pos(
 # Image encoder for efficient SAM.
 class ImageEncoderViT(nn.Module):
     """Image encoder vi t implementation."""
+
     def __init__(
         self,
         img_size: int,
@@ -251,15 +249,13 @@ class ImageEncoderViT(nn.Module):
         super().__init__()
 
         self.img_size = img_size
-        self.image_embedding_size = img_size // ((patch_size if patch_size > 0 else 1))
+        self.image_embedding_size = img_size // (patch_size if patch_size > 0 else 1)
         self.transformer_output_dim = ([patch_embed_dim] + neck_dims)[-1]
         self.pretrain_use_cls_token = True
         pretrain_img_size = 224
         self.patch_embed = PatchEmbed(img_size, patch_size, in_chans, patch_embed_dim)
         # Initialize absolute positional embedding with pretrain image size.
-        num_patches = (pretrain_img_size // patch_size) * (
-            pretrain_img_size // patch_size
-        )
+        num_patches = (pretrain_img_size // patch_size) * (pretrain_img_size // patch_size)
         num_positions = num_patches + 1
         self.pos_embed = nn.Parameter(torch.zeros(1, num_positions, patch_embed_dim))
         self.blocks = nn.ModuleList()
@@ -293,15 +289,11 @@ class ImageEncoderViT(nn.Module):
         Returns:
             The return value.
         """
-        assert (
-            x.shape[2] == self.img_size and x.shape[3] == self.img_size
-        ), "input image size must match self.img_size"
+        assert x.shape[2] == self.img_size and x.shape[3] == self.img_size, "input image size must match self.img_size"
         x = self.patch_embed(x)
         # B C H W -> B H W C
         x = x.permute(0, 2, 3, 1)
-        x = x + get_abs_pos(
-            self.pos_embed, self.pretrain_use_cls_token, [x.shape[1], x.shape[2]]
-        )
+        x = x + get_abs_pos(self.pos_embed, self.pretrain_use_cls_token, [x.shape[1], x.shape[2]])
         num_patches = x.shape[1]
         assert x.shape[2] == num_patches
         x = x.reshape(x.shape[0], num_patches * num_patches, x.shape[3])

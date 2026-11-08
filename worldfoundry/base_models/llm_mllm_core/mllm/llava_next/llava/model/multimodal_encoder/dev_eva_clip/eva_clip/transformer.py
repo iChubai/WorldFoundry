@@ -153,7 +153,19 @@ def _in_projection_packed(
 
 
 class Attention(nn.Module):
-    def __init__(self, dim, num_heads=8, qkv_bias=True, scaled_cosine=False, scale_heads=False, logit_scale_max=math.log(1.0 / 0.01), attn_drop=0.0, proj_drop=0.0, xattn=False, rope=False):
+    def __init__(
+        self,
+        dim,
+        num_heads=8,
+        qkv_bias=True,
+        scaled_cosine=False,
+        scale_heads=False,
+        logit_scale_max=math.log(1.0 / 0.01),
+        attn_drop=0.0,
+        proj_drop=0.0,
+        xattn=False,
+        rope=False,
+    ):
         super().__init__()
         self.scaled_cosine = scaled_cosine
         self.scale_heads = scale_heads
@@ -237,7 +249,18 @@ class Attention(nn.Module):
 
 
 class CustomAttention(nn.Module):
-    def __init__(self, dim, num_heads=8, qkv_bias=True, scaled_cosine=True, scale_heads=False, logit_scale_max=math.log(1.0 / 0.01), attn_drop=0.0, proj_drop=0.0, xattn=False):
+    def __init__(
+        self,
+        dim,
+        num_heads=8,
+        qkv_bias=True,
+        scaled_cosine=True,
+        scale_heads=False,
+        logit_scale_max=math.log(1.0 / 0.01),
+        attn_drop=0.0,
+        proj_drop=0.0,
+        xattn=False,
+    ):
         super().__init__()
         self.scaled_cosine = scaled_cosine
         self.scale_heads = scale_heads
@@ -268,7 +291,9 @@ class CustomAttention(nn.Module):
         self.xattn = xattn
         self.xattn_drop = attn_drop
 
-    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, attn_mask: Optional[torch.Tensor] = None):
+    def forward(
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, attn_mask: Optional[torch.Tensor] = None
+    ):
         q, k, v = _in_projection_packed(query, key, value, self.in_proj_weight, self.in_proj_bias)
         N_q, B_q, C_q = q.shape
         N_k, B_k, C_k = k.shape
@@ -279,7 +304,14 @@ class CustomAttention(nn.Module):
             k = k.permute(1, 0, 2).reshape(B_k, N_k, self.num_heads, -1)
             v = v.permute(1, 0, 2).reshape(B_v, N_v, self.num_heads, -1)
 
-            x = xops.memory_efficient_attention(q, k, v, p=self.xattn_drop, scale=self.scale if self.logit_scale is None else None, attn_bias=xops.LowerTriangularMask() if attn_mask is not None else None)
+            x = xops.memory_efficient_attention(
+                q,
+                k,
+                v,
+                p=self.xattn_drop,
+                scale=self.scale if self.logit_scale is None else None,
+                attn_bias=xops.LowerTriangularMask() if attn_mask is not None else None,
+            )
         else:
             # B*H, L, C
             q = q.contiguous().view(N_q, B_q * self.num_heads, -1).transpose(0, 1)
@@ -338,14 +370,32 @@ class CustomResidualAttentionBlock(nn.Module):
         self.ln_1 = norm_layer(d_model)
         self.ln_1_k = norm_layer(d_model) if cross_attn else self.ln_1
         self.ln_1_v = norm_layer(d_model) if cross_attn else self.ln_1
-        self.attn = CustomAttention(d_model, n_head, qkv_bias=True, attn_drop=0.0, proj_drop=0.0, scaled_cosine=scale_cosine_attn, scale_heads=scale_heads, xattn=xattn)
+        self.attn = CustomAttention(
+            d_model,
+            n_head,
+            qkv_bias=True,
+            attn_drop=0.0,
+            proj_drop=0.0,
+            scaled_cosine=scale_cosine_attn,
+            scale_heads=scale_heads,
+            xattn=xattn,
+        )
 
         self.ln_attn = norm_layer(d_model) if scale_attn else nn.Identity()
         self.ls_1 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
 
         self.ln_2 = norm_layer(d_model)
         mlp_width = int(d_model * mlp_ratio)
-        self.mlp = nn.Sequential(OrderedDict([("c_fc", nn.Linear(d_model, mlp_width)), ("ln", norm_layer(mlp_width) if scale_fc else nn.Identity()), ("gelu", act_layer()), ("c_proj", nn.Linear(mlp_width, d_model))]))
+        self.mlp = nn.Sequential(
+            OrderedDict(
+                [
+                    ("c_fc", nn.Linear(d_model, mlp_width)),
+                    ("ln", norm_layer(mlp_width) if scale_fc else nn.Identity()),
+                    ("gelu", act_layer()),
+                    ("c_proj", nn.Linear(mlp_width, d_model)),
+                ]
+            )
+        )
 
         self.ls_2 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
 
@@ -401,7 +451,9 @@ class CustomTransformer(nn.Module):
     def get_cast_dtype(self) -> torch.dtype:
         return self.resblocks[0].mlp.c_fc.weight.dtype
 
-    def forward(self, q: torch.Tensor, k: torch.Tensor = None, v: torch.Tensor = None, attn_mask: Optional[torch.Tensor] = None):
+    def forward(
+        self, q: torch.Tensor, k: torch.Tensor = None, v: torch.Tensor = None, attn_mask: Optional[torch.Tensor] = None
+    ):
         if k is None and v is None:
             k = v = q
         for r in self.resblocks:
@@ -434,7 +486,15 @@ class ResidualAttentionBlock(nn.Module):
 
         self.ln_2 = norm_layer(d_model)
         mlp_width = int(d_model * mlp_ratio)
-        self.mlp = nn.Sequential(OrderedDict([("c_fc", nn.Linear(d_model, mlp_width)), ("gelu", act_layer()), ("c_proj", nn.Linear(mlp_width, d_model))]))
+        self.mlp = nn.Sequential(
+            OrderedDict(
+                [
+                    ("c_fc", nn.Linear(d_model, mlp_width)),
+                    ("gelu", act_layer()),
+                    ("c_proj", nn.Linear(mlp_width, d_model)),
+                ]
+            )
+        )
 
         self.ls_2 = LayerScale(d_model, ls_init_value) if ls_init_value is not None else nn.Identity()
         self.xattn = xattn
@@ -468,7 +528,20 @@ class Transformer(nn.Module):
         self.layers = layers
         self.grad_checkpointing = False
 
-        self.resblocks = nn.ModuleList([ResidualAttentionBlock(width, heads, mlp_ratio, ls_init_value=ls_init_value, act_layer=act_layer, norm_layer=norm_layer, xattn=xattn) for _ in range(layers)])
+        self.resblocks = nn.ModuleList(
+            [
+                ResidualAttentionBlock(
+                    width,
+                    heads,
+                    mlp_ratio,
+                    ls_init_value=ls_init_value,
+                    act_layer=act_layer,
+                    norm_layer=norm_layer,
+                    xattn=xattn,
+                )
+                for _ in range(layers)
+            ]
+        )
 
     def get_cast_dtype(self) -> torch.dtype:
         return self.resblocks[0].mlp.c_fc.weight.dtype
@@ -514,7 +587,16 @@ class VisionTransformer(nn.Module):
         self.patch_dropout = PatchDropout(patch_dropout) if patch_dropout > 0.0 else nn.Identity()
         self.ln_pre = norm_layer(width)
 
-        self.transformer = Transformer(width, layers, heads, mlp_ratio, ls_init_value=ls_init_value, act_layer=act_layer, norm_layer=norm_layer, xattn=xattn)
+        self.transformer = Transformer(
+            width,
+            layers,
+            heads,
+            mlp_ratio,
+            ls_init_value=ls_init_value,
+            act_layer=act_layer,
+            norm_layer=norm_layer,
+            xattn=xattn,
+        )
 
         self.global_average_pool = global_average_pool
         self.ln_post = norm_layer(width)
@@ -568,7 +650,14 @@ class VisionTransformer(nn.Module):
         x = self.conv1(x)  # shape = [*, width, grid, grid]
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
-        x = torch.cat([self.class_embedding.to(x.dtype) + torch.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device), x], dim=1)  # shape = [*, grid ** 2 + 1, width]
+        x = torch.cat(
+            [
+                self.class_embedding.to(x.dtype)
+                + torch.zeros(x.shape[0], 1, x.shape[-1], dtype=x.dtype, device=x.device),
+                x,
+            ],
+            dim=1,
+        )  # shape = [*, grid ** 2 + 1, width]
         x = x + self.positional_embedding.to(x.dtype)
 
         # a patch_dropout of 0. would mean it is disabled and this function would do nothing but return what was passed in
@@ -616,7 +705,15 @@ class TextTransformer(nn.Module):
 
         self.token_embedding = nn.Embedding(vocab_size, width)
         self.positional_embedding = nn.Parameter(torch.empty(self.context_length, width))
-        self.transformer = Transformer(width=width, layers=layers, heads=heads, ls_init_value=ls_init_value, act_layer=act_layer, norm_layer=norm_layer, xattn=xattn)
+        self.transformer = Transformer(
+            width=width,
+            layers=layers,
+            heads=heads,
+            ls_init_value=ls_init_value,
+            act_layer=act_layer,
+            norm_layer=norm_layer,
+            xattn=xattn,
+        )
 
         self.xattn = xattn
         self.ln_final = norm_layer(width)

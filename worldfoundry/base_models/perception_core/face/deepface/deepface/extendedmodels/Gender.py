@@ -26,7 +26,6 @@ labels = ["Woman", "Man"]
 def loadModel(
     url="https://github.com/serengil/deepface_models/releases/download/v1.0/gender_model_weights.h5",
 ):
-
     model = VGGFace.baseModel()
 
     # --------------------------

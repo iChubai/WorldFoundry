@@ -1,8 +1,8 @@
 """
- Copyright (c) 2022, salesforce.com, inc.
- All rights reserved.
- SPDX-License-Identifier: BSD-3-Clause
- For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+Copyright (c) 2022, salesforce.com, inc.
+All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
+For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
 __author__ = "aagrawal"
@@ -98,16 +98,8 @@ class VQA:
                 )
             else:
                 anns = self.dataset["annotations"]
-            anns = (
-                anns
-                if len(quesTypes) == 0
-                else [ann for ann in anns if ann["question_type"] in quesTypes]
-            )
-            anns = (
-                anns
-                if len(ansTypes) == 0
-                else [ann for ann in anns if ann["answer_type"] in ansTypes]
-            )
+            anns = anns if len(quesTypes) == 0 else [ann for ann in anns if ann["question_type"] in quesTypes]
+            anns = anns if len(ansTypes) == 0 else [ann for ann in anns if ann["answer_type"] in ansTypes]
         ids = [ann["question_id"] for ann in anns]
         return ids
 
@@ -127,21 +119,11 @@ class VQA:
             anns = self.dataset["annotations"]
         else:
             if not len(quesIds) == 0:
-                anns = sum(
-                    [self.qa[quesId] for quesId in quesIds if quesId in self.qa], []
-                )
+                anns = sum([self.qa[quesId] for quesId in quesIds if quesId in self.qa], [])
             else:
                 anns = self.dataset["annotations"]
-            anns = (
-                anns
-                if len(quesTypes) == 0
-                else [ann for ann in anns if ann["question_type"] in quesTypes]
-            )
-            anns = (
-                anns
-                if len(ansTypes) == 0
-                else [ann for ann in anns if ann["answer_type"] in ansTypes]
-            )
+            anns = anns if len(quesTypes) == 0 else [ann for ann in anns if ann["question_type"] in quesTypes]
+            anns = anns if len(ansTypes) == 0 else [ann for ann in anns if ann["answer_type"] in ansTypes]
         ids = [ann["image_id"] for ann in anns]
         return ids
 
@@ -189,22 +171,20 @@ class VQA:
         anns = json.load(open(resFile))
         assert type(anns) == list, "results is not an array of objects"
         annsQuesIds = [ann["question_id"] for ann in anns]
-        assert set(annsQuesIds) == set(
-            self.getQuesIds()
-        ), "Results do not correspond to current VQA set. Either the results do not have predictions for all question ids in annotation file or there is atleast one question id that does not belong to the question ids in the annotation file."
+        assert set(annsQuesIds) == set(self.getQuesIds()), (
+            "Results do not correspond to current VQA set. Either the results do not have predictions for all question ids in annotation file or there is atleast one question id that does not belong to the question ids in the annotation file."
+        )
         for ann in anns:
             quesId = ann["question_id"]
             if res.dataset["task_type"] == "Multiple Choice":
-                assert (
-                    ann["answer"] in self.qqa[quesId]["multiple_choices"]
-                ), "predicted answer is not one of the multiple choices"
+                assert ann["answer"] in self.qqa[quesId]["multiple_choices"], (
+                    "predicted answer is not one of the multiple choices"
+                )
             qaAnn = self.qa[quesId]
             ann["image_id"] = qaAnn["image_id"]
             ann["question_type"] = qaAnn["question_type"]
             ann["answer_type"] = qaAnn["answer_type"]
-        print(
-            "DONE (t=%0.2fs)" % ((datetime.datetime.utcnow() - time_t).total_seconds())
-        )
+        print("DONE (t=%0.2fs)" % ((datetime.datetime.utcnow() - time_t).total_seconds()))
 
         res.dataset["annotations"] = anns
         res.createIndex()

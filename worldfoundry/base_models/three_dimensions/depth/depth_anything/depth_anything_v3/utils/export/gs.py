@@ -19,10 +19,17 @@ from typing import Literal, Optional
 import moviepy.editor as mpy
 import torch
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.gs_renderer import run_renderer_in_chunk_w_trj_mode
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.gs_renderer import (
+    run_renderer_in_chunk_w_trj_mode,
+)
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.specs import Prediction
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.gsply_helpers import save_gaussian_ply
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.layout_helpers import hcat, vcat
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.gsply_helpers import (
+    save_gaussian_ply,
+)
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.layout_helpers import (
+    hcat,
+    vcat,
+)
 from worldfoundry.studio.visualization.plugins.scene3d.depth_anything_v3.export_vis import vis_depth_map_tensor
 
 VIDEO_QUALITY_MAP = {
@@ -35,9 +42,7 @@ VIDEO_QUALITY_MAP = {
 def export_to_gs_ply(
     prediction: Prediction,
     export_dir: str,
-    gs_views_interval: Optional[
-        int
-    ] = 1,  # export GS every N views, useful for extremely dense inputs
+    gs_views_interval: Optional[int] = 1,  # export GS every N views, useful for extremely dense inputs
 ):
     """Export to gs ply.
 

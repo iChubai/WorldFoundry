@@ -121,9 +121,9 @@ class VILAPretrainedModel(PreTrainedModel):
         self.post_config()
         self.is_loaded = True
 
-        assert (
-            self.llm is not None or self.vision_tower is not None or self.mm_projector is not None
-        ), "At least one of the components must be instantiated."
+        assert self.llm is not None or self.vision_tower is not None or self.mm_projector is not None, (
+            "At least one of the components must be instantiated."
+        )
 
     @classmethod
     def from_pretrained(
@@ -206,6 +206,7 @@ class VILAPretrainedModel(PreTrainedModel):
         if type(mm_projector) is list:
             mm_projector = mm_projector[0]
         return mm_projector
+
 
 class VILAForCausalLM(VILAPretrainedModel):
     def __init__(self, config: VILAConfig, *args, **kwargs):

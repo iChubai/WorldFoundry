@@ -50,6 +50,7 @@ logger = logging.getLogger(__name__)
 
 class DefaultAnnotationPipeline(Pipeline):
     """Default annotation pipeline implementation."""
+
     def __init__(self, init: DictConfig, slam: DictConfig, post: DictConfig, output: DictConfig) -> None:
         """Init.
 

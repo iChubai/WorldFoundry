@@ -150,7 +150,8 @@ class SanaLongLiveScheduler:
                 timestep=torch.tensor(value, device=device, dtype=dtype),
                 next_timestep=torch.tensor(
                     self.TIMESTEPS[index + 1] if index + 1 < len(self.TIMESTEPS) else 0,
-                    device=device, dtype=torch.float32,
+                    device=device,
+                    dtype=torch.float32,
                 ),
                 sigma_table=sigma_table,
             )
@@ -177,9 +178,7 @@ class SanaLongLiveScheduler:
         noise = torch.empty_like(flat).normal_(generator=generator)
         noise = noise.reshape(batch, frames, channels, height, width).permute(0, 2, 1, 3, 4)
         calculation_dtype = torch.promote_types(clean.dtype, torch.float32)
-        return (
-            (1 - sigma) * clean.to(calculation_dtype) + sigma * noise.to(calculation_dtype)
-        ).to(noise.dtype)
+        return ((1 - sigma) * clean.to(calculation_dtype) + sigma * noise.to(calculation_dtype)).to(noise.dtype)
 
 
 def build_sana_longlive_scheduler(context: ComponentBuildContext) -> SanaLongLiveScheduler:
@@ -206,9 +205,7 @@ class SanaStreamingEulerScheduler(WanFlowMatchEulerScheduler):
             return super().schedule(sampling, device=device, dtype=dtype)
         unsupported = set(sampling.scheduler_options) - {"shift"}
         if unsupported:
-            raise ValueError(
-                f"unsupported SanaStreamingEulerScheduler options: {sorted(unsupported)}"
-            )
+            raise ValueError(f"unsupported SanaStreamingEulerScheduler options: {sorted(unsupported)}")
         timesteps = torch.tensor(
             (*fixed, 0.0),
             device=device,
@@ -258,14 +255,10 @@ class SanaWMStreamingEulerScheduler:
         del dtype
         unsupported = set(sampling.scheduler_options) - {"shift"}
         if unsupported:
-            raise ValueError(
-                f"unsupported SanaWMStreamingEulerScheduler options: {sorted(unsupported)}"
-            )
+            raise ValueError(f"unsupported SanaWMStreamingEulerScheduler options: {sorted(unsupported)}")
         required_steps = len(self.TIMESTEPS) - 1
         if sampling.num_inference_steps != required_steps:
-            raise ValueError(
-                f"SANA-WM streaming requires exactly {required_steps} inference steps"
-            )
+            raise ValueError(f"SANA-WM streaming requires exactly {required_steps} inference steps")
         values = torch.tensor(self.TIMESTEPS, device=device, dtype=torch.float32)
         return tuple(
             SchedulerStep(index=index, timestep=values[index], next_timestep=values[index + 1])
@@ -355,12 +348,15 @@ class SanaSCMScheduler:
         current = step.timestep.to(device=latents.device, dtype=latents.dtype)
         following = step.next_timestep.to(device=latents.device, dtype=latents.dtype)
         pred_x0 = torch.cos(current) * latents - torch.sin(current) * model_output.to(latents.dtype)
-        noise = torch.randn(
-            latents.shape,
-            generator=generator,
-            device=latents.device,
-            dtype=latents.dtype,
-        ) * self.sigma_data
+        noise = (
+            torch.randn(
+                latents.shape,
+                generator=generator,
+                device=latents.device,
+                dtype=latents.dtype,
+            )
+            * self.sigma_data
+        )
         return torch.cos(following) * pred_x0 + torch.sin(following) * noise
 
 

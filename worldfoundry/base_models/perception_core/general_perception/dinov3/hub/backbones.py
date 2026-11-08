@@ -16,6 +16,7 @@ from .utils import _DINOV3_BASE_URL, _safe_load_state_dict_from_url
 
 class Weights(Enum):
     """Weights implementation."""
+
     LVD1689M = "LVD1689M"
     SAT493M = "SAT493M"
 

@@ -53,12 +53,8 @@ def loadModel(
     arcface_model = BatchNormalization(momentum=0.9, epsilon=2e-5)(arcface_model)
     arcface_model = Dropout(0.4)(arcface_model)
     arcface_model = Flatten()(arcface_model)
-    arcface_model = Dense(512, activation=None, use_bias=True, kernel_initializer="glorot_normal")(
-        arcface_model
-    )
-    embedding = BatchNormalization(momentum=0.9, epsilon=2e-5, name="embedding", scale=True)(
-        arcface_model
-    )
+    arcface_model = Dense(512, activation=None, use_bias=True, kernel_initializer="glorot_normal")(arcface_model)
+    embedding = BatchNormalization(momentum=0.9, epsilon=2e-5, name="embedding", scale=True)(arcface_model)
     model = keras.models.Model(inputs, embedding, name=base_model.name)
 
     # ---------------------------------------
@@ -70,7 +66,6 @@ def loadModel(
     output = home + "/.deepface/weights/" + file_name
 
     if os.path.isfile(output) != True:
-
         print(file_name, " will be downloaded to ", output)
         gdown.download(url, output, quiet=False)
 
@@ -82,13 +77,10 @@ def loadModel(
 
 
 def ResNet34():
-
     img_input = Input(shape=(112, 112, 3))
 
     x = ZeroPadding2D(padding=1, name="conv1_pad")(img_input)
-    x = Conv2D(
-        64, 3, strides=1, use_bias=False, kernel_initializer="glorot_normal", name="conv1_conv"
-    )(x)
+    x = Conv2D(64, 3, strides=1, use_bias=False, kernel_initializer="glorot_normal", name="conv1_conv")(x)
     x = BatchNormalization(axis=3, epsilon=2e-5, momentum=0.9, name="conv1_bn")(x)
     x = PReLU(shared_axes=[1, 2], name="conv1_prelu")(x)
     x = stack_fn(x)
@@ -110,9 +102,7 @@ def block1(x, filters, kernel_size=3, stride=1, conv_shortcut=True, name=None):
             kernel_initializer="glorot_normal",
             name=name + "_0_conv",
         )(x)
-        shortcut = BatchNormalization(
-            axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_0_bn"
-        )(shortcut)
+        shortcut = BatchNormalization(axis=bn_axis, epsilon=2e-5, momentum=0.9, name=name + "_0_bn")(shortcut)
     else:
         shortcut = x
 

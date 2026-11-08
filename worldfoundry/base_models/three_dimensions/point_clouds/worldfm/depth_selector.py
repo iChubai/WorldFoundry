@@ -24,10 +24,10 @@ from worldfoundry.base_models.three_dimensions.point_clouds.worldfm.transforms_i
 
 @dataclass(frozen=True)
 class ConditionDB:
-    cond_paths: List[str]     # len=V
-    P_views: torch.Tensor     # (V,3,4) float32 on device
+    cond_paths: List[str]  # len=V
+    P_views: torch.Tensor  # (V,3,4) float32 on device
     depth_views: torch.Tensor  # (V,H,W) float32 on device
-    C_views: torch.Tensor     # (V,3) float32 on device
+    C_views: torch.Tensor  # (V,3) float32 on device
     width: int
     height: int
 
@@ -52,6 +52,7 @@ def _P_from_K_c2w(K: np.ndarray, c2w: np.ndarray) -> np.ndarray:
 # ---------------------------------------------------------------------------
 # build_condition_db: file-based variant (original interface)
 # ---------------------------------------------------------------------------
+
 
 @torch.inference_mode()
 def build_condition_db(
@@ -112,17 +113,19 @@ def build_condition_db(
 
     if profile:
         torch.cuda.synchronize(device=device)
-        print(f"[CondDB] views={len(cond_paths)} size=({height},{width}) "
-              f"build_ms={(time.perf_counter()-t0)*1000:.2f}")
+        print(
+            f"[CondDB] views={len(cond_paths)} size=({height},{width}) build_ms={(time.perf_counter() - t0) * 1000:.2f}"
+        )
 
-    return ConditionDB(cond_paths=cond_paths, P_views=P_views,
-                       depth_views=depth_views, C_views=C_views,
-                       width=width, height=height)
+    return ConditionDB(
+        cond_paths=cond_paths, P_views=P_views, depth_views=depth_views, C_views=C_views, width=width, height=height
+    )
 
 
 # ---------------------------------------------------------------------------
 # build_condition_db_in_memory: works with in-memory condition images + transforms
 # ---------------------------------------------------------------------------
+
 
 @torch.inference_mode()
 def build_condition_db_in_memory(
@@ -157,13 +160,15 @@ def build_condition_db_in_memory(
         P_views=torch.stack(P_list),
         depth_views=torch.stack(depth_list),
         C_views=torch.stack(C_list),
-        width=width, height=height,
+        width=width,
+        height=height,
     )
 
 
 # ---------------------------------------------------------------------------
 # select_best_condition_index
 # ---------------------------------------------------------------------------
+
 
 @torch.inference_mode()
 def select_best_condition_index(
@@ -274,7 +279,9 @@ def select_best_condition_index(
                 dn = torch.gather(depth_flat, 1, idn)
                 ok_n = dn > 0
                 diff_n = torch.where(ins_n & ok_n, torch.abs(dn - z), torch.full_like(dn, 1e9))
-                diffs.append(diff_n); insides.append(ins_n); oks.append(ok_n)
+                diffs.append(diff_n)
+                insides.append(ins_n)
+                oks.append(ok_n)
         min_abs_diff = torch.stack(diffs, dim=-1).min(dim=-1).values
         inside_any = torch.stack(insides, dim=-1).any(dim=-1)
         depth_ok_any = torch.stack(oks, dim=-1).any(dim=-1)
@@ -313,7 +320,9 @@ def select_best_condition_index(
 
     if profile:
         torch.cuda.synchronize(device=device)
-        print(f"[CondSelect] views={P.shape[0]} samples={samples} best={best} "
-              f"hits={best_hits} ms={(time.perf_counter()-t0)*1000:.2f}")
+        print(
+            f"[CondSelect] views={P.shape[0]} samples={samples} best={best} "
+            f"hits={best_hits} ms={(time.perf_counter() - t0) * 1000:.2f}"
+        )
 
     return best, best_hits, samples

@@ -45,6 +45,7 @@ _CONFIG_FOR_DOC = "Qwen2Config"
 # Copied from transformers.models.llama.modeling_llama.LlamaRMSNorm with Llama->Qwen2
 class Qwen2RMSNorm(nn.Module):
     """Qwen rms norm implementation."""
+
     def __init__(self, hidden_size, eps=1e-6):
         """
         Qwen2RMSNorm is equivalent to T5LayerNorm
@@ -73,6 +74,7 @@ class Qwen2RMSNorm(nn.Module):
 # Copied from transformers.models.llama.modeling_llama.LlamaRotaryEmbedding with Llama->Qwen2
 class Qwen2RotaryEmbedding(nn.Module):
     """Qwen rotary embedding implementation."""
+
     def __init__(
         self,
         dim=None,
@@ -175,6 +177,7 @@ class Qwen2RotaryEmbedding(nn.Module):
 
         return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
 
+
 # Copied from transformers.models.llama.modeling_llama.rotate_half
 def rotate_half(x):
     """Rotates half the hidden dims of the input."""
@@ -214,6 +217,7 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids=None, unsqueeze_dim=1):
 # Copied from transformers.models.mistral.modeling_mistral.MistralMLP with Mistral->Qwen2
 class Qwen2MLP(nn.Module):
     """Qwen mlp implementation."""
+
     def __init__(self, config):
         """Init.
 
@@ -353,7 +357,7 @@ class Qwen2Attention(nn.Module):
         #     # 如果是标准的 causal mask,可以使用 create_block_mask
         #     def causal_mask_mod(b, h, q_idx, kv_idx):
         #         return q_idx >= kv_idx
-            
+
         #     block_mask = create_block_mask(
         #         causal_mask_mod,
         #         B=bsz,
@@ -362,7 +366,7 @@ class Qwen2Attention(nn.Module):
         #         KV_LEN=key_states.shape[-2],
         #         device=query_states.device
         #     )
-        
+
         # 使用 flex_attention
         # attn_output = flex_attention(
         #     query_states,  # (bsz, num_heads, q_len, head_dim)
@@ -476,8 +480,8 @@ class Qwen2FlashAttention2(Qwen2Attention):
             key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
 
         # repeat k/v heads if n_kv_heads < n_heads
-        #key_states = repeat_kv(key_states, self.num_key_value_groups)
-        #value_states = repeat_kv(value_states, self.num_key_value_groups)
+        # key_states = repeat_kv(key_states, self.num_key_value_groups)
+        # value_states = repeat_kv(value_states, self.num_key_value_groups)
 
         dropout_rate = 0.0 if not self.training else self.attention_dropout
 
@@ -511,6 +515,7 @@ class Qwen2FlashAttention2(Qwen2Attention):
             and getattr(self.config, "sliding_window", None) is not None
             and self.layer_idx >= self.config.max_window_layers
         ):
+
             def mask_mod(b, h, q_idx, kv_idx):
                 """Mask mod.
 
@@ -530,7 +535,7 @@ class Qwen2FlashAttention2(Qwen2Attention):
                     window_mask = q_idx - kv_idx < sliding_window
                     return causal_mask & window_mask
                 return causal_mask
-            
+
             block_mask = create_block_mask(
                 mask_mod,
                 B=bsz,
@@ -543,13 +548,13 @@ class Qwen2FlashAttention2(Qwen2Attention):
         # 使用flex_attention
         attn_output = flex_attention(
             query_states,  # (bsz, num_heads, q_len, head_dim)
-            key_states,    # (bsz, num_key_value_heads, kv_len, head_dim)
+            key_states,  # (bsz, num_key_value_heads, kv_len, head_dim)
             value_states,  # (bsz, num_key_value_heads, kv_len, head_dim)
             enable_gqa=(self.num_heads != self.num_key_value_heads),  # 启用GQA
             block_mask=block_mask,
             scale=1.0 / math.sqrt(self.head_dim),  # 手动设置scale
         )
-    
+
         # flex_attention输出shape: (bsz, num_heads, q_len, head_dim)
         # 需要转换为 (bsz, q_len, num_heads, head_dim) 然后reshape
         attn_output = attn_output.transpose(1, 2).contiguous()
@@ -582,8 +587,7 @@ class Qwen2FlashAttention2(Qwen2Attention):
         #     use_top_left_mask=self._flash_attn_uses_top_left_mask,
         # )
 
-        #attn_output = attn_output.reshape(bsz, q_len, self.hidden_size).contiguous()
-
+        # attn_output = attn_output.reshape(bsz, q_len, self.hidden_size).contiguous()
 
         attn_output = self.o_proj(attn_output)
 
@@ -598,8 +602,10 @@ QWEN2_ATTENTION_CLASSES = {
     "flash_attention_2": Qwen2FlashAttention2,
 }
 
+
 class Qwen2DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
+
     def __init__(self, config: Qwen2Config, layer_idx: int):
         """Init.
 
@@ -711,6 +717,7 @@ QWEN2_START_DOCSTRING = r"""
 )
 class Qwen2PreTrainedModel(PreTrainedModel):
     """Qwen pre trained model implementation."""
+
     config_class = Qwen2Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
@@ -1005,6 +1012,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
 
 class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     """Qwen for causal lm implementation."""
+
     _tied_weights_keys = ["lm_head.weight"]
 
     def __init__(self, config):
@@ -1028,19 +1036,20 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
             mllm_state_dict: The mllm state dict.
             logger: The logger.
         """
-        print("Initializing LLM decoder from MLLM weights") 
+        print("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "moe_gen" in name:
                 continue
-            
-            original_name = "language_model."+name.replace("_und", "") if "norm_und" in name \
-                            else "language_model."+name
+
+            original_name = (
+                "language_model." + name.replace("_und", "") if "norm_und" in name else "language_model." + name
+            )
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
             except:
                 logger.info(f"'{name}' not initialized")
         return mllm_state_dict
-    
+
     def get_input_embeddings(self):
         """Get input embeddings."""
         return self.model.embed_tokens

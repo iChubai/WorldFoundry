@@ -6,7 +6,6 @@ def build_model():
 
 
 def detect_face(face_detector, img, align=True):
-
     from retinaface import RetinaFace  # this is not a must dependency
     from retinaface.commons import postprocess
 
@@ -41,9 +40,7 @@ def detect_face(face_detector, img, align=True):
                 # mouth_right = landmarks["mouth_right"]
                 # mouth_left = landmarks["mouth_left"]
 
-                detected_face = postprocess.alignment_procedure(
-                    detected_face, right_eye, left_eye, nose
-                )
+                detected_face = postprocess.alignment_procedure(detected_face, right_eye, left_eye, nose)
 
             resp.append((detected_face, img_region, confidence))
 

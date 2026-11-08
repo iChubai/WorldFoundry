@@ -440,9 +440,7 @@ class SanaMS(Sana):
 
         # sCM uses dense cross-attention even when xFormers is installed.
         # Its context must retain batch boundaries and a tensor padding mask.
-        pack_context = _xformers_available and not isinstance(
-            self.blocks[0].cross_attn, MultiHeadCrossVallinaAttention
-        )
+        pack_context = _xformers_available and not isinstance(self.blocks[0].cross_attn, MultiHeadCrossVallinaAttention)
         if mask is not None:
             mask = mask.to(torch.int16)
             mask = mask.repeat(y.shape[0] // mask.shape[0], 1) if mask.shape[0] != y.shape[0] else mask

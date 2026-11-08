@@ -12,8 +12,10 @@ from cuda_timer import CudaTimer
 
 ENABLE_TIMING = False
 
+
 class DroidFrontend:
     """Droid frontend implementation."""
+
     def __init__(self, net, video, args):
         """Init.
 
@@ -24,9 +26,7 @@ class DroidFrontend:
         """
         self.video = video
         self.update_op = net.update
-        self.graph = FactorGraph(
-            video, net.update, max_factors=48, upsample=args.upsample
-        )
+        self.graph = FactorGraph(video, net.update, max_factors=48, upsample=args.upsample)
 
         # local optimization window
         self.t0 = 0
@@ -61,9 +61,7 @@ class DroidFrontend:
         # set pose / depth for next iteration
         self.video.poses[self.t1] = self.video.poses[self.t1 - 1]
 
-        self.video.disps[self.t1] = torch.quantile(
-            self.video.disps[self.t1 - 3 : self.t1 - 1], 0.5
-        )
+        self.video.disps[self.t1] = torch.quantile(self.video.disps[self.t1 - 3 : self.t1 - 1], 0.5)
 
         # damped linear velocity model
         if self.motion_damping >= 0:
@@ -102,9 +100,7 @@ class DroidFrontend:
             self.graph.update(None, None, use_inactive=True)
 
         # set initial pose for next frame
-        d = self.video.distance(
-            [self.t1 - 4], [self.t1 - 2], beta=self.beta, bidirectional=True
-        )
+        d = self.video.distance([self.t1 - 4], [self.t1 - 2], beta=self.beta, bidirectional=True)
 
         if d.item() < 2 * self.keyframe_thresh:
             self.graph.rm_keyframe(self.t1 - 3)
@@ -117,12 +113,9 @@ class DroidFrontend:
             for itr in range(self.iters2):
                 self.graph.update(None, None, use_inactive=True)
 
-
         # set pose for next itration
         self.video.poses[self.t1] = self.video.poses[self.t1 - 1]
-        self.video.disps[self.t1] = torch.quantile(
-            self.video.disps[self.t1 - self.depth_window - 1 : self.t1 - 1], 0.7
-        )
+        self.video.disps[self.t1] = torch.quantile(self.video.disps[self.t1 - self.depth_window - 1 : self.t1 - 1], 0.7)
 
         # update visualization
         self.video.dirty[self.graph.ii.min() : self.t1] = True
@@ -138,9 +131,7 @@ class DroidFrontend:
         for itr in range(8):
             self.graph.update(1, use_inactive=True)
 
-        self.graph.add_proximity_factors(
-            0, 0, rad=2, nms=2, thresh=self.frontend_thresh, remove=False
-        )
+        self.graph.add_proximity_factors(0, 0, rad=2, nms=2, thresh=self.frontend_thresh, remove=False)
 
         for itr in range(8):
             self.graph.update(1, use_inactive=True)

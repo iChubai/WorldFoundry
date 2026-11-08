@@ -11,9 +11,12 @@ from flow3d.vis.utils import draw_tracks_2d_th, get_server
 try:
     from nerfview import CameraState
 except ModuleNotFoundError:
+
     class CameraState:  # type: ignore[no-redef]
         """Camera state implementation."""
+
         pass
+
 
 try:
     from flow3d.vis.viewer import DynamicViewer
@@ -23,6 +26,7 @@ except ModuleNotFoundError:
 
 class Renderer:
     """Renderer implementation."""
+
     def __init__(
         self,
         model: SceneModel,
@@ -51,11 +55,11 @@ class Renderer:
         self.viewer = None
         if port is not None:
             if DynamicViewer is None:
-                raise RuntimeError("Shape-of-Motion interactive viewer requires nerfview/viser; omit port for non-interactive inference.")
+                raise RuntimeError(
+                    "Shape-of-Motion interactive viewer requires nerfview/viser; omit port for non-interactive inference."
+                )
             server = get_server(port=port)
-            self.viewer = DynamicViewer(
-                server, self.render_fn, model.num_frames, work_dir, mode="rendering"
-            )
+            self.viewer = DynamicViewer(server, self.render_fn, model.num_frames, work_dir, mode="rendering")
 
         self.tracks_3d = self.model.compute_poses_fg(
             #  torch.arange(max(0, t - 20), max(1, t), device=self.device),
@@ -64,9 +68,7 @@ class Renderer:
         )[0]
 
     @staticmethod
-    def init_from_checkpoint(
-        path: str, device: torch.device, use_2dgs, *args, **kwargs
-    ) -> "Renderer":
+    def init_from_checkpoint(path: str, device: torch.device, use_2dgs, *args, **kwargs) -> "Renderer":
         """Init from checkpoint.
 
         Args:
@@ -107,14 +109,8 @@ class Renderer:
             [[focal, 0.0, W / 2.0], [0.0, focal, H / 2.0], [0.0, 0.0, 1.0]],
             device=self.device,
         )
-        w2c = torch.linalg.inv(
-            torch.from_numpy(camera_state.c2w.astype(np.float32)).to(self.device)
-        )
-        t = (
-            int(self.viewer._playback_guis[0].value)
-            if not self.viewer._canonical_checkbox.value
-            else None
-        )
+        w2c = torch.linalg.inv(torch.from_numpy(camera_state.c2w.astype(np.float32)).to(self.device))
+        t = int(self.viewer._playback_guis[0].value) if not self.viewer._canonical_checkbox.value else None
         self.model.training = False
         img = self.model.render(t, w2c[None], K[None], img_wh)["img"][0]
         if not self.viewer._render_track_checkbox.value:
@@ -122,9 +118,7 @@ class Renderer:
         else:
             assert t is not None
             tracks_3d = self.tracks_3d[:, max(0, t - 20) : max(1, t)]
-            tracks_2d = torch.einsum(
-                "ij,jk,nbk->nbi", K, w2c[:3], F.pad(tracks_3d, (0, 1), value=1.0)
-            )
+            tracks_2d = torch.einsum("ij,jk,nbk->nbi", K, w2c[:3], F.pad(tracks_3d, (0, 1), value=1.0))
             tracks_2d = tracks_2d[..., :2] / tracks_2d[..., 2:]
             img = draw_tracks_2d_th(img, tracks_2d)
         return img

@@ -55,6 +55,7 @@ def solve_scipy(pi: torch.Tensor, pj: torch.Tensor, lhs: torch.Tensor, rhs: torc
 
 class Solver:
     """Solver implementation."""
+
     def __init__(
         self,
         compute_energy: bool = False,

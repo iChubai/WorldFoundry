@@ -8,6 +8,7 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 
 CACHE_T = 2
 
+
 class QwenImageCausalConv3d(torch.nn.Conv3d):
     r"""
     A custom 3D causal convolution layer with feature caching support.
@@ -71,7 +72,6 @@ class QwenImageCausalConv3d(torch.nn.Conv3d):
         return super().forward(x)
 
 
-
 class QwenImageRMS_norm(nn.Module):
     r"""
     A custom RMS normalization layer.
@@ -111,8 +111,10 @@ class QwenImageRMS_norm(nn.Module):
         Args:
             x: The x.
         """
-        return torch.nn.functional.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
-
+        return (
+            torch.nn.functional.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma
+            + self.bias
+        )
 
 
 class QwenImageResidualBlock(nn.Module):
@@ -207,7 +209,6 @@ class QwenImageResidualBlock(nn.Module):
         return x + h
 
 
-
 class QwenImageAttentionBlock(nn.Module):
     r"""
     Causal self-attention with a single head.
@@ -263,7 +264,6 @@ class QwenImageAttentionBlock(nn.Module):
         return x + identity
 
 
-
 class QwenImageUpsample(nn.Upsample):
     r"""
     Perform upsampling while ensuring the output tensor has the same data type as the input.
@@ -282,7 +282,6 @@ class QwenImageUpsample(nn.Upsample):
             x: The x.
         """
         return super().forward(x.float()).type_as(x)
-
 
 
 class QwenImageResample(nn.Module):
@@ -386,7 +385,6 @@ class QwenImageResample(nn.Module):
         return x
 
 
-
 class QwenImageMidBlock(nn.Module):
     """
     Middle block for WanVAE encoder and decoder.
@@ -439,7 +437,6 @@ class QwenImageMidBlock(nn.Module):
             x = resnet(x, feat_cache, feat_idx)
 
         return x
-
 
 
 class QwenImageEncoder3d(nn.Module):
@@ -568,7 +565,6 @@ class QwenImageEncoder3d(nn.Module):
         return x
 
 
-
 class QwenImageUpBlock(nn.Module):
     """
     A block that handles upsampling for the WanVAE decoder.
@@ -646,7 +642,6 @@ class QwenImageUpBlock(nn.Module):
             else:
                 x = self.upsamplers[0](x)
         return x
-
 
 
 class QwenImageDecoder3d(nn.Module):
@@ -785,9 +780,9 @@ class QwenImageDecoder3d(nn.Module):
         return x
 
 
-
 class QwenImageVAE(torch.nn.Module):
     """Qwen image vae implementation."""
+
     def __init__(
         self,
         base_dim: int = 96,
@@ -881,7 +876,7 @@ class QwenImageVAE(torch.nn.Module):
         x = (x - mean) * std
         x = x.squeeze(2)
         return x
-    
+
     def decode(self, x, **kwargs):
         """Decode.
 
@@ -895,16 +890,16 @@ class QwenImageVAE(torch.nn.Module):
         x = self.decoder(x)
         x = x.squeeze(2)
         return x
-    
+
     @staticmethod
     def state_dict_converter():
         """State dict converter."""
         return QwenImageVAEStateDictConverter()
 
 
-
-class QwenImageVAEStateDictConverter():
+class QwenImageVAEStateDictConverter:
     """Qwen image vae state dict converter implementation."""
+
     def __init__(self):
         """Init."""
         pass

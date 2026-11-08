@@ -36,11 +36,7 @@ def _collect_image_paths(path: str | os.PathLike[str]) -> list[str]:
     path_obj = Path(path).expanduser()
     if path_obj.is_file():
         if path_obj.suffix.lower() == ".txt":
-            return [
-                line.strip()
-                for line in path_obj.read_text(encoding="utf-8").splitlines()
-                if line.strip()
-            ]
+            return [line.strip() for line in path_obj.read_text(encoding="utf-8").splitlines() if line.strip()]
         return [str(path_obj)]
     if not path_obj.is_dir():
         raise FileNotFoundError(f"Image path does not exist: {path}")
@@ -71,8 +67,7 @@ def _resolve_checkpoint_path(pretrained_model_path: str | os.PathLike[str] | Non
         if pt_files:
             return str(pt_files[0])
         raise FileNotFoundError(
-            f"No LingBot-Map checkpoint found in {candidate}. "
-            f"Tried: {', '.join(DEFAULT_CHECKPOINT_CANDIDATES)}"
+            f"No LingBot-Map checkpoint found in {candidate}. Tried: {', '.join(DEFAULT_CHECKPOINT_CANDIDATES)}"
         )
 
     path_text = str(pretrained_model_path)
@@ -254,7 +249,6 @@ class LingBotMapRepresentation:
             use_amp=bool(kwargs.get("use_amp", True)),
             preprocess_mode=str(kwargs.get("preprocess_mode", "crop")),
         )
-
 
     def _prepare_images(self, images: Any, **kwargs: Any) -> torch.Tensor:
         _ensure_runtime_importable()

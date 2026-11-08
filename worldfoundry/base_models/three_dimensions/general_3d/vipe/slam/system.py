@@ -51,6 +51,7 @@ from .networks.droid_net import DroidNet
 
 class StandardResizeStreamProcessor(StreamProcessor):
     """Standard resize stream processor implementation."""
+
     def __init__(self) -> None:
         """Init.
 

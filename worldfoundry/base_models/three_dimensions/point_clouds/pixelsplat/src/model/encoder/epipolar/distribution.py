@@ -10,6 +10,7 @@ from torch import Tensor, nn
 
 class Distribution(nn.Module):
     """Distribution implementation."""
+
     scale: float
     to_q: nn.Linear
     to_k: nn.Linear
@@ -57,9 +58,7 @@ class Distribution(nn.Module):
             return weights
 
         # Where applicable, force the last token to be selected.
-        last_token = torch.zeros(
-            keys.shape[1], device=queries.device, dtype=queries.dtype
-        )
+        last_token = torch.zeros(keys.shape[1], device=queries.device, dtype=queries.dtype)
         last_token[-1] = 1
         mask = force_last_token[:, None, None]
         return last_token * mask + weights * ~mask

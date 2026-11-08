@@ -20,7 +20,10 @@ import torch
 import torch.nn as nn
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.dpt import DPT
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.head_utils import activate_head_gs, custom_interpolate
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.head_utils import (
+    activate_head_gs,
+    custom_interpolate,
+)
 
 
 class GSDPT(DPT):
@@ -79,9 +82,7 @@ class GSDPT(DPT):
         )
         self.conf_dim = conf_dim
         if conf_dim and conf_dim > 1:
-            assert (
-                conf_activation == "linear"
-            ), "use linear prediction when using view-dependent opacity"
+            assert conf_activation == "linear", "use linear prediction when using view-dependent opacity"
 
         merger_out_dim = features if feature_only else features // 2
         self.images_merger = nn.Sequential(

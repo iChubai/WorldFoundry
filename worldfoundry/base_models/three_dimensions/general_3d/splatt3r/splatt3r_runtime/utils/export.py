@@ -48,6 +48,7 @@ def save_as_ply(pred1, pred2, save_path: str) -> None:
     Returns:
         The return value.
     """
+
     def construct_list_of_attributes(num_rest: int) -> list[str]:
         """Construct list of attributes.
 

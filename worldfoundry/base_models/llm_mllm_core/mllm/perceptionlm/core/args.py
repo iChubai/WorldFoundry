@@ -53,9 +53,7 @@ def dataclass_to_dict(dataclass_instance: T) -> dict:
     if isinstance(dataclass_instance, dict):
         return dataclass_instance
 
-    return OmegaConf.to_container(
-        OmegaConf.structured(dataclass_instance), resolve=True
-    )
+    return OmegaConf.to_container(OmegaConf.structured(dataclass_instance), resolve=True)
 
 
 def load_config_file(config_file, dataclass_cls: Type[T]) -> T:

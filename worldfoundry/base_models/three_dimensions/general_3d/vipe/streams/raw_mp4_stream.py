@@ -20,7 +20,12 @@ from pathlib import Path
 import cv2
 import torch
 
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base import ProcessedVideoStream, StreamList, VideoFrame, VideoStream
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.streams.base import (
+    ProcessedVideoStream,
+    StreamList,
+    VideoFrame,
+    VideoStream,
+)
 
 
 class RawMp4Stream(VideoStream):
@@ -132,6 +137,7 @@ class RawMp4Stream(VideoStream):
 
 class RawMP4StreamList(StreamList):
     """Raw stream list implementation."""
+
     def __init__(self, base_path: str, frame_start: int, frame_end: int, frame_skip: int, cached: bool = False) -> None:
         """Init.
 

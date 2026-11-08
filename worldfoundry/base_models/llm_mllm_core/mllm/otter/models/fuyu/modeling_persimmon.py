@@ -17,7 +17,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" PyTorch Persimmon model."""
+"""PyTorch Persimmon model."""
+
 import math
 from typing import List, Optional, Tuple, Union
 
@@ -30,9 +31,18 @@ from flash_attn.ops.fused_dense import fused_mlp_func
 from flash_attn.layers.rotary import apply_rotary_emb as fused_apply_rotary_emb
 from transformers.activations import ACT2FN
 from flash_attn import flash_attn_func
-from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast, SequenceClassifierOutputWithPast
+from transformers.modeling_outputs import (
+    BaseModelOutputWithPast,
+    CausalLMOutputWithPast,
+    SequenceClassifierOutputWithPast,
+)
 from transformers.modeling_utils import PreTrainedModel
-from transformers.utils import add_start_docstrings, add_start_docstrings_to_model_forward, logging, replace_return_docstrings
+from transformers.utils import (
+    add_start_docstrings,
+    add_start_docstrings_to_model_forward,
+    logging,
+    replace_return_docstrings,
+)
 from transformers import PersimmonConfig
 
 
@@ -42,7 +52,9 @@ _CONFIG_FOR_DOC = "PersimmonConfig"
 
 
 # Copied from transformers.models.bart.modeling_bart._make_causal_mask
-def _make_causal_mask(input_ids_shape: torch.Size, dtype: torch.dtype, device: torch.device, past_key_values_length: int = 0):
+def _make_causal_mask(
+    input_ids_shape: torch.Size, dtype: torch.dtype, device: torch.device, past_key_values_length: int = 0
+):
     """
     Make causal mask used for bi-directional self-attention.
     """
@@ -84,7 +96,9 @@ class PersimmonRotaryEmbedding(nn.Module):
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
         # Build here to make `torch.jit.trace` work.
-        self._set_cos_sin_cache(seq_len=max_position_embeddings, device=self.inv_freq.device, dtype=torch.get_default_dtype())
+        self._set_cos_sin_cache(
+            seq_len=max_position_embeddings, device=self.inv_freq.device, dtype=torch.get_default_dtype()
+        )
 
     def _set_cos_sin_cache(self, seq_len, device, dtype):
         self.max_seq_len_cached = seq_len
@@ -139,7 +153,9 @@ class PersimmonDynamicNTKScalingRotaryEmbedding(PersimmonRotaryEmbedding):
         self.max_seq_len_cached = seq_len
 
         if seq_len > self.max_position_embeddings:
-            base = self.base * ((self.scaling_factor * seq_len / self.max_position_embeddings) - (self.scaling_factor - 1)) ** (self.dim / (self.dim - 2))
+            base = self.base * (
+                (self.scaling_factor * seq_len / self.max_position_embeddings) - (self.scaling_factor - 1)
+            ) ** (self.dim / (self.dim - 2))
             inv_freq = 1.0 / (base ** (torch.arange(0, self.dim, 2).float().to(device) / self.dim))
             self.register_buffer("inv_freq", inv_freq, persistent=False)
 
@@ -188,9 +204,31 @@ class PersimmonMLP(nn.Module):
             2: recompute gelu_in and gelu_out in the bwd
         """
         if hasattr(self.dense_h_to_4h, "bias") and hasattr(self.dense_4h_to_h, "bias"):
-            hidden_states = fused_mlp_func(hidden_states, self.dense_h_to_4h.weight, self.dense_4h_to_h.weight, self.dense_h_to_4h.bias, self.dense_4h_to_h.bias, "sqrelu", True, False, 0, -1) # Thanks [Dongfu Jiang](https://jdf-prog.github.io/) for adding this exception!
+            hidden_states = fused_mlp_func(
+                hidden_states,
+                self.dense_h_to_4h.weight,
+                self.dense_4h_to_h.weight,
+                self.dense_h_to_4h.bias,
+                self.dense_4h_to_h.bias,
+                "sqrelu",
+                True,
+                False,
+                0,
+                -1,
+            )  # Thanks [Dongfu Jiang](https://jdf-prog.github.io/) for adding this exception!
         else:
-            hidden_states = fused_mlp_func(hidden_states, self.dense_h_to_4h.weight, self.dense_4h_to_h.weight, None, None, "sqrelu", True, False, 0, -1)
+            hidden_states = fused_mlp_func(
+                hidden_states,
+                self.dense_h_to_4h.weight,
+                self.dense_4h_to_h.weight,
+                None,
+                None,
+                "sqrelu",
+                True,
+                False,
+                0,
+                -1,
+            )
         return hidden_states
 
 
@@ -208,14 +246,21 @@ class PersimmonAttention(nn.Module):
         self.partial_rotary_factor = config.partial_rotary_factor
 
         if (self.head_dim * self.num_heads) != self.hidden_size:
-            raise ValueError(f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}" f" and `num_heads`: {self.num_heads}).")
+            raise ValueError(
+                f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}"
+                f" and `num_heads`: {self.num_heads})."
+            )
         self.query_key_value = nn.Linear(self.hidden_size, 3 * self.hidden_size, bias=True)
         self.dense = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=True)
         self.qk_layernorm = config.qk_layernorm
 
         if self.qk_layernorm:
-            self.q_layernorm = nn.LayerNorm(config.hidden_size // self.num_heads, eps=config.layer_norm_eps, elementwise_affine=True)
-            self.k_layernorm = nn.LayerNorm(config.hidden_size // self.num_heads, eps=config.layer_norm_eps, elementwise_affine=True)
+            self.q_layernorm = nn.LayerNorm(
+                config.hidden_size // self.num_heads, eps=config.layer_norm_eps, elementwise_affine=True
+            )
+            self.k_layernorm = nn.LayerNorm(
+                config.hidden_size // self.num_heads, eps=config.layer_norm_eps, elementwise_affine=True
+            )
         self.attention_dropout = nn.Dropout(config.attention_dropout)
         self._init_rope()
 
@@ -283,8 +328,12 @@ class PersimmonAttention(nn.Module):
         (query_states, key_states, value_states) = self._split_heads(fused_qkv)
 
         if self.qk_layernorm:
-            query_states = fused_layer_norm(query_states, self.q_layernorm.weight, self.q_layernorm.bias, self.q_layernorm.eps)
-            key_states = fused_layer_norm(key_states, self.k_layernorm.weight, self.k_layernorm.bias, self.k_layernorm.eps)
+            query_states = fused_layer_norm(
+                query_states, self.q_layernorm.weight, self.q_layernorm.bias, self.q_layernorm.eps
+            )
+            key_states = fused_layer_norm(
+                key_states, self.k_layernorm.weight, self.k_layernorm.bias, self.k_layernorm.eps
+            )
 
         # Full rotary embedding
         kv_seq_len = key_states.shape[1]
@@ -307,7 +356,9 @@ class PersimmonAttention(nn.Module):
         query_states = torch.cat((query_rot, query_pass), dim=-1)
         key_states = torch.cat((key_rot, key_pass), dim=-1)
         scale = 1.0 / math.sqrt(query_states.shape[-1])
-        attn_output = flash_attn_func(query_states, key_states, value_states, dropout_p=0.0, softmax_scale=scale, causal=True)
+        attn_output = flash_attn_func(
+            query_states, key_states, value_states, dropout_p=0.0, softmax_scale=scale, causal=True
+        )
 
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
 
@@ -360,7 +411,9 @@ class PersimmonDecoderLayer(nn.Module):
 
         residual = hidden_states
 
-        hidden_states = fused_layer_norm(hidden_states, self.input_layernorm.weight, self.input_layernorm.bias, self.input_layernorm.eps)
+        hidden_states = fused_layer_norm(
+            hidden_states, self.input_layernorm.weight, self.input_layernorm.bias, self.input_layernorm.eps
+        )
 
         # Self Attention
         hidden_states, self_attn_weights, present_key_value = self.self_attn(
@@ -375,7 +428,12 @@ class PersimmonDecoderLayer(nn.Module):
 
         # Fully Connected
         residual = hidden_states
-        hidden_states = fused_layer_norm(hidden_states, self.post_attention_layernorm.weight, self.post_attention_layernorm.bias, self.post_attention_layernorm.eps)
+        hidden_states = fused_layer_norm(
+            hidden_states,
+            self.post_attention_layernorm.weight,
+            self.post_attention_layernorm.bias,
+            self.post_attention_layernorm.eps,
+        )
         hidden_states = self.mlp(hidden_states)
 
         hidden_states = self.dropout(hidden_states)
@@ -546,8 +604,12 @@ class PersimmonModel(PersimmonPreTrainedModel):
 
         if attention_mask is not None:
             # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
-            expanded_attn_mask = _expand_mask(attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]).to(inputs_embeds.device)
-            combined_attention_mask = expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask + combined_attention_mask
+            expanded_attn_mask = _expand_mask(attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]).to(
+                inputs_embeds.device
+            )
+            combined_attention_mask = (
+                expanded_attn_mask if combined_attention_mask is None else expanded_attn_mask + combined_attention_mask
+            )
 
         return combined_attention_mask
 
@@ -565,7 +627,9 @@ class PersimmonModel(PersimmonPreTrainedModel):
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
         use_cache = use_cache if use_cache is not None else self.config.use_cache
 
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
@@ -589,21 +653,29 @@ class PersimmonModel(PersimmonPreTrainedModel):
 
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
-            position_ids = torch.arange(past_key_values_length, seq_length + past_key_values_length, dtype=torch.long, device=device)
+            position_ids = torch.arange(
+                past_key_values_length, seq_length + past_key_values_length, dtype=torch.long, device=device
+            )
             position_ids = position_ids.unsqueeze(0)
 
         if inputs_embeds is None:
             inputs_embeds = self.embed_tokens(input_ids)
         # embed positions
         if attention_mask is None:
-            attention_mask = torch.ones((batch_size, seq_length_with_past), dtype=torch.bool, device=inputs_embeds.device)
-        attention_mask = self._prepare_decoder_attention_mask(attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length)
+            attention_mask = torch.ones(
+                (batch_size, seq_length_with_past), dtype=torch.bool, device=inputs_embeds.device
+            )
+        attention_mask = self._prepare_decoder_attention_mask(
+            attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
+        )
 
         hidden_states = inputs_embeds
 
         if self.gradient_checkpointing and self.training:
             if use_cache:
-                logger.warning_once("`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...")
+                logger.warning_once(
+                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+                )
                 use_cache = False
 
         # decoder layers
@@ -650,7 +722,9 @@ class PersimmonModel(PersimmonPreTrainedModel):
             if output_attentions:
                 all_self_attns += (layer_outputs[1],)
 
-        hidden_states = fused_layer_norm(hidden_states, self.final_layernorm.weight, self.final_layernorm.bias, self.final_layernorm.eps)
+        hidden_states = fused_layer_norm(
+            hidden_states, self.final_layernorm.weight, self.final_layernorm.bias, self.final_layernorm.eps
+        )
 
         # add hidden states from the last decoder layer
         if output_hidden_states:
@@ -746,7 +820,9 @@ class PersimmonForCausalLM(PersimmonPreTrainedModel):
         ```"""
 
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
-        output_hidden_states = output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
@@ -791,7 +867,9 @@ class PersimmonForCausalLM(PersimmonPreTrainedModel):
         )
 
     # Copied from transformers.models.llama.modeling_llama.LlamaForCausalLM.prepare_inputs_for_generation
-    def prepare_inputs_for_generation(self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs):
+    def prepare_inputs_for_generation(
+        self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
+    ):
         if past_key_values is not None:
             past_length = past_key_values[0][0].shape[2]
 
@@ -832,7 +910,9 @@ class PersimmonForCausalLM(PersimmonPreTrainedModel):
     def _reorder_cache(past_key_values, beam_idx):
         reordered_past = ()
         for layer_past in past_key_values:
-            reordered_past += (tuple(past_state.index_select(0, beam_idx.to(past_state.device)) for past_state in layer_past),)
+            reordered_past += (
+                tuple(past_state.index_select(0, beam_idx.to(past_state.device)) for past_state in layer_past),
+            )
         return reordered_past
 
 
@@ -915,7 +995,9 @@ class PersimmonForSequenceClassification(PersimmonPreTrainedModel):
             sequence_lengths = -1
         else:
             if input_ids is not None:
-                sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(logits.device)
+                sequence_lengths = (torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1).to(
+                    logits.device
+                )
             else:
                 sequence_lengths = -1
 

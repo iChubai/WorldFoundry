@@ -13,6 +13,7 @@ from torch.nn.utils import weight_norm
 
 class DINOHead(nn.Module):
     """Dino head implementation."""
+
     def __init__(
         self,
         in_dim,

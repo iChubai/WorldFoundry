@@ -193,6 +193,7 @@ def _make_encoder_block(
 
 class VideoEncoder(nn.Module):
     """LTX video VAE encoder: BCTHW pixels to 128-channel latents."""
+
     _DEFAULT_NORM_NUM_GROUPS = 32
     """
     Variational Autoencoder Encoder. Encodes video frames into a latent representation.
@@ -439,9 +440,7 @@ class VideoEncoder(nn.Module):
 
             # Encode tile to latent (output on model device)
             latent_tile = (
-                self.sample_posterior(video_tile, generator=generator)
-                if sample_posterior
-                else self.forward(video_tile)
+                self.sample_posterior(video_tile, generator=generator) if sample_posterior else self.forward(video_tile)
             )
 
             # Move blend mask to model device
@@ -607,6 +606,7 @@ def _make_decoder_block(
 
 class VideoDecoder(nn.Module):
     """LTX video VAE decoder: 128-channel latents to BCTHW pixels."""
+
     _DEFAULT_NORM_NUM_GROUPS = 32
     """
     Variational Autoencoder Decoder. Decodes latent representation into video frames.

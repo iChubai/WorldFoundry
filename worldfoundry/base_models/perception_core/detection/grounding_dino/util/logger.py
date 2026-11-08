@@ -11,6 +11,7 @@ from termcolor import colored
 
 class _ColorfulFormatter(logging.Formatter):
     """Colorful formatter implementation."""
+
     def __init__(self, *args, **kwargs):
         """Init."""
         self._root_name = kwargs.pop("root_name") + "."
@@ -58,9 +59,7 @@ def setup_logger(output=None, distributed_rank=0, *, color=True, name="imagenet"
     if abbrev_name is None:
         abbrev_name = name
 
-    plain_formatter = logging.Formatter(
-        "[%(asctime)s.%(msecs)03d]: %(message)s", datefmt="%m/%d %H:%M:%S"
-    )
+    plain_formatter = logging.Formatter("[%(asctime)s.%(msecs)03d]: %(message)s", datefmt="%m/%d %H:%M:%S")
     # stdout logging: master only
     if distributed_rank == 0:
         ch = logging.StreamHandler(stream=sys.stdout)

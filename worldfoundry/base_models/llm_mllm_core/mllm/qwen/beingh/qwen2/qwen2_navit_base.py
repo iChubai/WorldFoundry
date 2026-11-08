@@ -9,15 +9,16 @@ from transformers.utils import ModelOutput
 
 from worldfoundry.core.attention import scaled_dot_product_attention, varlen_scaled_dot_product_attention
 from .modeling_qwen2 import (
-    Qwen2Attention, 
-    Qwen2MLP, 
-    Qwen2RMSNorm, 
+    Qwen2Attention,
+    Qwen2MLP,
+    Qwen2RMSNorm,
     apply_rotary_pos_emb,
 )
 
 
 class NaiveCache:
     """Naive cache implementation."""
+
     def __init__(self, num_layers):
         """Init.
 
@@ -39,16 +40,19 @@ class NaiveCache:
             return self.key_cache[0].shape[0]
         else:
             return 0
-        
+
+
 @dataclass
 class BaseNavitOutputWithPast(ModelOutput):
     """Base navit output with past implementation."""
+
     packed_query_sequence: torch.FloatTensor = None
     past_key_values: Optional[NaiveCache] = None
 
 
 class PackedAttention(Qwen2Attention):
     """Packed attention implementation."""
+
     def __init__(self, config, layer_idx: Optional[int] = None):
         """Init.
 
@@ -126,9 +130,9 @@ class PackedAttention(Qwen2Attention):
             packed_key_states = pad_sequence(packed_key_states.permute(1, 0, 2), pad_size)
             packed_value_states = pad_sequence(packed_value_states.permute(1, 0, 2), pad_size)
             packed_attn_output = flex_attention(
-                packed_query_states.unsqueeze(0), 
-                packed_key_states.unsqueeze(0), 
-                packed_value_states.unsqueeze(0), 
+                packed_query_states.unsqueeze(0),
+                packed_key_states.unsqueeze(0),
+                packed_value_states.unsqueeze(0),
                 enable_gqa=True,
                 block_mask=attention_mask,
             )
@@ -223,6 +227,7 @@ class PackedAttention(Qwen2Attention):
 
 class Qwen2DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
+
     def __init__(self, config, layer_idx: Optional[int] = None):
         """Init.
 
@@ -342,6 +347,7 @@ class Qwen2DecoderLayer(nn.Module):
 
 class Qwen2MoEDecoderLayer(nn.Module):
     """Qwen mo e decoder layer implementation."""
+
     def __init__(self, config, layer_idx: Optional[int] = None):
         """Init.
 
@@ -475,7 +481,9 @@ class Qwen2MoEDecoderLayer(nn.Module):
         elif mode == "gen":
             packed_query_sequence_ = torch.zeros_like(packed_query_sequence).to(torch.bfloat16)
             packed_query_sequence_[packed_text_indexes] = self.mlp(packed_query_sequence[packed_text_indexes])
-            packed_query_sequence_[packed_vae_token_indexes] = self.mlp_moe_gen(packed_query_sequence[packed_vae_token_indexes])
+            packed_query_sequence_[packed_vae_token_indexes] = self.mlp_moe_gen(
+                packed_query_sequence[packed_vae_token_indexes]
+            )
             packed_query_sequence = packed_query_sequence_
         packed_query_sequence = residual + packed_query_sequence
 

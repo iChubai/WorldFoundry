@@ -17,6 +17,7 @@ from transformers import AutoTokenizer
 
 class PaddingSide(str, Enum):
     """Whether the LTX Gemma tokenizer pads on the left or right."""
+
     LEFT = "left"
     RIGHT = "right"
 

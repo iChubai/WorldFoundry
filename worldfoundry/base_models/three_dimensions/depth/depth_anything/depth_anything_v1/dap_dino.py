@@ -19,8 +19,7 @@ class DINOv3Adapter(nn.Module):
         super().__init__()
         if model_name not in self._MODEL_NAMES:
             raise ValueError(
-                f"Unsupported DAP DINOv3 backbone {model_name!r}; "
-                f"expected one of {sorted(self._MODEL_NAMES)}."
+                f"Unsupported DAP DINOv3 backbone {model_name!r}; expected one of {sorted(self._MODEL_NAMES)}."
             )
 
         self.model = DINOv3(model_name)
@@ -60,13 +59,9 @@ class DINOv3Adapter(nn.Module):
             batch, token_count, channels = patches.shape
             square_size = int(token_count**0.5)
             if square_size * square_size == token_count:
-                grid = patches.transpose(1, 2).reshape(
-                    batch, channels, square_size, square_size
-                )
+                grid = patches.transpose(1, 2).reshape(batch, channels, square_size, square_size)
             else:
-                grid = patches.transpose(1, 2).reshape(
-                    batch, channels, token_count, 1
-                )
+                grid = patches.transpose(1, 2).reshape(batch, channels, token_count, 1)
                 grid = F.interpolate(
                     grid,
                     size=(grid_height * grid_width, 1),

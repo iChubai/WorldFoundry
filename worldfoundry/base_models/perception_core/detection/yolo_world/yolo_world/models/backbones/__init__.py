@@ -6,11 +6,7 @@ from .mm_backbone import (
     MultiModalYOLOBackbone,
     HuggingVisionBackbone,
     HuggingCLIPLanguageBackbone,
-    PseudoLanguageBackbone)
+    PseudoLanguageBackbone,
+)
 
-__all__ = [
-    'MultiModalYOLOBackbone',
-    'HuggingVisionBackbone',
-    'HuggingCLIPLanguageBackbone',
-    'PseudoLanguageBackbone'
-]
+__all__ = ["MultiModalYOLOBackbone", "HuggingVisionBackbone", "HuggingCLIPLanguageBackbone", "PseudoLanguageBackbone"]

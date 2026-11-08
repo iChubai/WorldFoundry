@@ -140,7 +140,11 @@ class TransformerArgsPreprocessor:
         self.action_embedder = action_embedder
 
     def _prepare_timestep(
-        self, timestep: torch.Tensor, adaln: AdaLayerNormSingle, batch_size: int, hidden_dtype: torch.dtype,
+        self,
+        timestep: torch.Tensor,
+        adaln: AdaLayerNormSingle,
+        batch_size: int,
+        hidden_dtype: torch.dtype,
         video_control: object | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Prepare timestep embeddings."""
@@ -151,7 +155,9 @@ class TransformerArgsPreprocessor:
             embedded_timestep = adaln.emb(timestep_scaled.flatten(), hidden_dtype=hidden_dtype)
             embedded_timestep = embedded_timestep.view(batch_size, -1, embedded_timestep.shape[-1])
             embedded_timestep = embedded_timestep + self.action_embedder(
-                video_control.action_ids, video_control.action_valid_mask, hidden_dtype=hidden_dtype,
+                video_control.action_ids,
+                video_control.action_valid_mask,
+                hidden_dtype=hidden_dtype,
             )
             timestep = adaln.linear(adaln.silu(embedded_timestep))
         # Second dimension is 1 or number of tokens (if timestep_per_token)

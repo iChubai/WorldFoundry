@@ -18,9 +18,7 @@ from mmyolo.registry import OPTIM_WRAPPER_CONSTRUCTORS, OPTIM_WRAPPERS, OPTIMIZE
 class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
     """YOLO World v5 constructor for optimizers."""
 
-    def __init__(
-        self, optim_wrapper_cfg: dict, paramwise_cfg: Optional[dict] = None
-    ) -> None:
+    def __init__(self, optim_wrapper_cfg: dict, paramwise_cfg: Optional[dict] = None) -> None:
         super().__init__(optim_wrapper_cfg, paramwise_cfg)
         self.base_total_batch_size = self.paramwise_cfg.pop("base_total_batch_size", 64)
 
@@ -60,16 +58,13 @@ class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
 
         # special rules for norm layers and depth-wise conv layers
         is_norm = isinstance(module, (_BatchNorm, _InstanceNorm, GroupNorm, LayerNorm))
-        is_dwconv = (
-            isinstance(module, torch.nn.Conv2d) and module.in_channels == module.groups
-        )
+        is_dwconv = isinstance(module, torch.nn.Conv2d) and module.in_channels == module.groups
 
         for name, param in module.named_parameters(recurse=False):
             param_group = {"params": [param]}
             if bypass_duplicate and self._is_in(param_group, params):
                 print_log(
-                    f"{prefix} is duplicate. It is skipped since "
-                    f"bypass_duplicate={bypass_duplicate}",
+                    f"{prefix} is duplicate. It is skipped since bypass_duplicate={bypass_duplicate}",
                     logger="current",
                     level=logging.WARNING,
                 )
@@ -94,11 +89,7 @@ class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
             # NOTE: the behavious is different from MMDetection
             # bias_lr_mult affects all bias parameters
             # except for norm.bias dcn.conv_offset.bias
-            if (
-                name == "bias"
-                and not (is_norm or is_dcn_module)
-                and bias_lr_mult is not None
-            ):
+            if name == "bias" and not (is_norm or is_dcn_module) and bias_lr_mult is not None:
                 param_group["lr"] = self.base_lr * bias_lr_mult
 
             if (
@@ -116,28 +107,20 @@ class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
                 if is_norm and norm_decay_mult is not None:
                     param_group["weight_decay"] = self.base_wd * norm_decay_mult
                 # bias lr and decay
-                elif (
-                    name == "bias" and not is_dcn_module and bias_decay_mult is not None
-                ):
+                elif name == "bias" and not is_dcn_module and bias_decay_mult is not None:
                     param_group["weight_decay"] = self.base_wd * bias_decay_mult
                 # depth-wise conv
                 elif is_dwconv and dwconv_decay_mult is not None:
                     param_group["weight_decay"] = self.base_wd * dwconv_decay_mult
                 # flatten parameters except dcn offset
-                elif (
-                    param.ndim == 1
-                    and not is_dcn_module
-                    and flat_decay_mult is not None
-                ):
+                elif param.ndim == 1 and not is_dcn_module and flat_decay_mult is not None:
                     param_group["weight_decay"] = self.base_wd * flat_decay_mult
             params.append(param_group)
             for key, value in param_group.items():
                 if key == "params":
                     continue
                 full_name = f"{prefix}.{name}" if prefix else name
-                print_log(
-                    f"paramwise_options -- {full_name}:{key}={value}", logger="current"
-                )
+                print_log(f"paramwise_options -- {full_name}:{key}={value}", logger="current")
 
         if mmcv_full_available():
             from mmcv.ops import DeformConv2d, ModulatedDeformConv2d
@@ -147,9 +130,7 @@ class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
             is_dcn_module = False
         for child_name, child_mod in module.named_children():
             child_prefix = f"{prefix}.{child_name}" if prefix else child_name
-            self.add_params(
-                params, child_mod, prefix=child_prefix, is_dcn_module=is_dcn_module
-            )
+            self.add_params(params, child_mod, prefix=child_prefix, is_dcn_module=is_dcn_module)
 
     def __call__(self, model: nn.Module) -> OptimWrapper:
         if hasattr(model, "module"):
@@ -184,7 +165,5 @@ class YOLOWv5OptimizerConstructor(DefaultOptimWrapperConstructor):
             self.add_params(params, model)
             optimizer_cfg["params"] = params
             optimizer = OPTIMIZERS.build(optimizer_cfg)
-        optim_wrapper = OPTIM_WRAPPERS.build(
-            optim_wrapper_cfg, default_args=dict(optimizer=optimizer)
-        )
+        optim_wrapper = OPTIM_WRAPPERS.build(optim_wrapper_cfg, default_args=dict(optimizer=optimizer))
         return optim_wrapper

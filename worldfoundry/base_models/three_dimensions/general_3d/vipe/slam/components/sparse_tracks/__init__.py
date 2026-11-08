@@ -157,6 +157,7 @@ class SparseTracks(ABC):
 
 class DummySparseTracks(SparseTracks):
     """Dummy sparse tracks implementation."""
+
     enabled: bool = False
 
     def track_image(self, frame_data_list: list[VideoFrame]) -> None:

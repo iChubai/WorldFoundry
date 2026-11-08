@@ -33,6 +33,7 @@ from .pre_norm import PreNorm
 
 class Transformer(nn.Module):
     """Transformer implementation."""
+
     def __init__(
         self,
         dim,

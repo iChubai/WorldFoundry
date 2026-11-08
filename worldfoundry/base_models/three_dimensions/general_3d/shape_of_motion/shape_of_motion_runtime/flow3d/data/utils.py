@@ -13,6 +13,7 @@ UINT16_MAX = 65535
 
 class SceneNormDict(TypedDict):
     """Scene norm dict implementation."""
+
     scale: float
     transfm: torch.Tensor
 
@@ -138,9 +139,7 @@ def get_tracks_3d_for_query_frame(
         )
         * track_depths[..., None]
     )
-    tracks_3d = torch.einsum("nij,npj->npi", c2ws, F.pad(tracks_3d, (0, 1), value=1.0))[
-        ..., :3
-    ]
+    tracks_3d = torch.einsum("nij,npj->npi", c2ws, F.pad(tracks_3d, (0, 1), value=1.0))[..., :3]
     # Filter out out-of-mask tracks.
     # (T, 1, H, W), (T, 1, N, 2) -> (T, 1, 1, N)
     is_in_masks = (
@@ -250,25 +249,15 @@ def masked_median_blur(image, mask, kernel_size=11):
     b, c, h, w = image.shape
 
     # map the local window to single vector
-    features: torch.Tensor = F.conv2d(
-        image.reshape(b * c, 1, h, w), kernel, padding=padding, stride=1
-    )
-    masks: torch.Tensor = F.conv2d(
-        mask.reshape(b * c, 1, h, w), kernel, padding=padding, stride=1
-    )
-    features = features.view(b, c, -1, h, w).permute(
-        0, 1, 3, 4, 2
-    )  # BxCxxHxWx(K_h * K_w)
+    features: torch.Tensor = F.conv2d(image.reshape(b * c, 1, h, w), kernel, padding=padding, stride=1)
+    masks: torch.Tensor = F.conv2d(mask.reshape(b * c, 1, h, w), kernel, padding=padding, stride=1)
+    features = features.view(b, c, -1, h, w).permute(0, 1, 3, 4, 2)  # BxCxxHxWx(K_h * K_w)
     min_value, max_value = features.min(), features.max()
     masks = masks.view(b, c, -1, h, w).permute(0, 1, 3, 4, 2)  # BxCxHxWx(K_h * K_w)
     index_invalid = (1 - masks).nonzero(as_tuple=True)
     index_b, index_c, index_h, index_w, index_k = index_invalid
-    features[(index_b[::2], index_c[::2], index_h[::2], index_w[::2], index_k[::2])] = (
-        min_value
-    )
-    features[
-        (index_b[1::2], index_c[1::2], index_h[1::2], index_w[1::2], index_k[1::2])
-    ] = max_value
+    features[(index_b[::2], index_c[::2], index_h[::2], index_w[::2], index_k[::2])] = min_value
+    features[(index_b[1::2], index_c[1::2], index_h[1::2], index_w[1::2], index_k[1::2])] = max_value
     # compute the median along the feature axis
     median: torch.Tensor = torch.median(features, dim=-1)[0]
 
@@ -350,19 +339,13 @@ def depth2point_cam(sampled_depth, ref_intrinsic):
     """
     B, N, C, H, W = sampled_depth.shape
     valid_z = sampled_depth
-    valid_x = torch.arange(W, dtype=torch.float32, device=sampled_depth.device) / (
-        W - 1
-    )
-    valid_y = torch.arange(H, dtype=torch.float32, device=sampled_depth.device) / (
-        H - 1
-    )
+    valid_x = torch.arange(W, dtype=torch.float32, device=sampled_depth.device) / (W - 1)
+    valid_y = torch.arange(H, dtype=torch.float32, device=sampled_depth.device) / (H - 1)
     valid_y, valid_x = torch.meshgrid(valid_y, valid_x, indexing="ij")
     # B,N,H,W
     valid_x = valid_x[None, None, None, ...].expand(B, N, C, -1, -1)
     valid_y = valid_y[None, None, None, ...].expand(B, N, C, -1, -1)
-    ndc_xyz = torch.stack([valid_x, valid_y, valid_z], dim=-1).view(
-        B, N, C, H, W, 3
-    )  # 1, 1, 5, 512, 640, 3
+    ndc_xyz = torch.stack([valid_x, valid_y, valid_z], dim=-1).view(B, N, C, H, W, 3)  # 1, 1, 5, 512, 640, 3
     cam_xyz = ndc_2_cam(ndc_xyz, ref_intrinsic, W, H)  # 1, 1, 5, 512, 640, 3
     return ndc_xyz, cam_xyz
 
@@ -376,13 +359,11 @@ def depth2point_world(depth_image, intrinsic_matrix, extrinsic_matrix):
         extrinsic_matrix: The extrinsic matrix.
     """
     # depth_image: (H, W), intrinsic_matrix: (3, 3), extrinsic_matrix: (4, 4)
-    _, xyz_cam = depth2point_cam(
-        depth_image[None, None, None, ...], intrinsic_matrix[None, ...]
-    )
+    _, xyz_cam = depth2point_cam(depth_image[None, None, None, ...], intrinsic_matrix[None, ...])
     xyz_cam = xyz_cam.reshape(-1, 3)
-    xyz_world = torch.cat(
-        [xyz_cam, torch.ones_like(xyz_cam[..., 0:1])], dim=-1
-    ) @ torch.inverse(extrinsic_matrix).transpose(0, 1)
+    xyz_world = torch.cat([xyz_cam, torch.ones_like(xyz_cam[..., 0:1])], dim=-1) @ torch.inverse(
+        extrinsic_matrix
+    ).transpose(0, 1)
     xyz_world = xyz_world[..., :3]
 
     return xyz_world
@@ -403,9 +384,7 @@ def depth_pcd2normal(xyz):
     bottom_to_top = top_point - bottom_point
     xyz_normal = torch.cross(left_to_right, bottom_to_top, dim=-1)
     xyz_normal = torch.nn.functional.normalize(xyz_normal, p=2, dim=-1)
-    xyz_normal = torch.nn.functional.pad(
-        xyz_normal.permute(2, 0, 1), (1, 1, 1, 1), mode="constant"
-    ).permute(1, 2, 0)
+    xyz_normal = torch.nn.functional.pad(xyz_normal.permute(2, 0, 1), (1, 1, 1, 1), mode="constant").permute(1, 2, 0)
     return xyz_normal
 
 

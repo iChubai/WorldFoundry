@@ -29,6 +29,7 @@ from torch import nn
 
 class FeedForward(nn.Module):
     """Feed forward implementation."""
+
     def __init__(self, dim, hidden_dim, dropout=0.0):
         """Init.
 

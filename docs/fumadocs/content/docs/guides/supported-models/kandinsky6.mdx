@@ -57,7 +57,7 @@ The pinned `kandinsky6-pro-distill` snapshot passed text-to-video generation on 
 The validated environment uses Python 3.10.16, PyTorch 2.9.0+cu126, Diffusers 0.40.0, Transformers 5.14.1, Safetensors 0.8.0, and PyAV 16.0.1. The video VAE accounts for convolution workspace when choosing spatial tiles and preserves partial edge tiles.
 
 ```bash
-python scripts/inference/check_kandinsky6.py \
+python tests/manual/kandinsky6_inference.py \
   --checkpoint-dir ../ckpt/kandinskylab--Kandinsky-6.0-Pro-distill-5s-Diffusers \
   --output-dir outputs/kandinsky6-pro-distill-validation \
   --offload-mode component --attention-backend sdpa

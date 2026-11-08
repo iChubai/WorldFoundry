@@ -57,7 +57,7 @@ Transformer 与 PiFlow head 的实现位于 `base_models/diffusion_model/models/
 验证环境使用 Python 3.10.16、PyTorch 2.9.0+cu126、Diffusers 0.40.0、Transformers 5.14.1、Safetensors 0.8.0 和 PyAV 16.0.1。视频 VAE 选择空间 tile 时计入卷积 workspace，并保留边缘不足一个完整 tile 的区域。
 
 ```bash
-python scripts/inference/check_kandinsky6.py \
+python tests/manual/kandinsky6_inference.py \
   --checkpoint-dir ../ckpt/kandinskylab--Kandinsky-6.0-Pro-distill-5s-Diffusers \
   --output-dir outputs/kandinsky6-pro-distill-validation \
   --offload-mode component --attention-backend sdpa

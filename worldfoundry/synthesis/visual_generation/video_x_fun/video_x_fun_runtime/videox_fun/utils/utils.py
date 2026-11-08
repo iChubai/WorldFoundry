@@ -687,9 +687,9 @@ def _write_to_excel(model_name, time_sum):
 
     import pandas as pd
 
-    row_env = os.environ.get(f"{model_name}_EXCEL_ROW", "1")  # 默认第1行
-    col_env = os.environ.get(f"{model_name}_EXCEL_COL", "1")  # 默认第A列
-    file_path = os.environ.get("EXCEL_FILE", "timing_records.xlsx")  # 默认文件名
+    row_env = os.environ.get(f"{model_name}_EXCEL_ROW", "1")  # 0-based DataFrame row index
+    col_env = os.environ.get(f"{model_name}_EXCEL_COL", "1")  # 0-based DataFrame column index
+    file_path = os.environ.get("EXCEL_FILE", "timing_records.xlsx")
 
     try:
         df = pd.read_excel(file_path, sheet_name="Sheet1", header=None)

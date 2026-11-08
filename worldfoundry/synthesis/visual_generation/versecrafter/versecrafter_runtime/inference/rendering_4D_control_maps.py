@@ -1088,7 +1088,7 @@ def render_video_with_bg_and_fg(
         Ks_batch = intrinsics[start_idx:end_idx]
         Ts_batch = extrinsics[start_idx:end_idx]
 
-        # 渲染背景
+        # Render the background.
         rgb_bg_batch = None
         depth_bg_batch = None
         mask_bg_batch = None
@@ -1102,7 +1102,7 @@ def render_video_with_bg_and_fg(
             depth_bg_batch = torch.zeros((current_batch_size, H, W), dtype=torch.float32, device=device)
             mask_bg_batch = torch.zeros((current_batch_size, H, W), dtype=torch.bool, device=device)
 
-        # 渲染前景
+        # Render the foreground.
         rgb_fg_batch = None
         if mode in ("full", "foreground"):
             meshes_batch = foreground_meshes_per_frame[start_idx:end_idx]
@@ -1114,7 +1114,7 @@ def render_video_with_bg_and_fg(
             depth_fg_batch = torch.zeros((current_batch_size, H, W), dtype=torch.float32, device=device)
             mask_fg_batch = torch.zeros((current_batch_size, H, W), dtype=torch.bool, device=device)
 
-        # 合成
+        # Composite.
         if mode == "foreground":
             rgb_out_batch = rgb_fg_batch
             depth_out_batch = depth_fg_batch

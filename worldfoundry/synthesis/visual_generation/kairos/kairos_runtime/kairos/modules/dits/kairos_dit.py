@@ -76,7 +76,7 @@ from kairos.modules.utils.tp_utils import (  # noqa: E402 - Follows the conditio
 # isort: split
 
 # ================================================================
-# ====================rope_apply_for3d_triton当前只适用于沐曦========
+# ======== rope_apply_for3d_triton currently targets MetaX GPUs only ========
 # ================================================================
 import triton  # noqa: E402 - Follows the conditional setup block.
 import triton.language as tl  # noqa: E402 - Follows the conditional setup block.
@@ -92,7 +92,7 @@ def _optional_torch_compile(fn):
 
 
 def rope_apply_for3d_triton(x, num_frames, freqs, num_heads):
-    assert x.is_contiguous(), "x 必须是 contiguous 的 [B,L,D]"
+    assert x.is_contiguous(), "x must be a contiguous [B,L,D] tensor"
     B, T, D = x.shape
     H = num_heads
     x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)  # [B,T,H,HD] ([1,720000,20,128]) bf16
@@ -106,7 +106,7 @@ def rope_apply_for3d_triton(x, num_frames, freqs, num_heads):
     assert x.is_contiguous()
     assert freqs_scalar.is_contiguous()
 
-    # 输出 buffer，同 layout
+    # Output buffer with the same layout as x.
     out = torch.empty_like(x)  # [B,L,H,D] ([1,720000,20,128]) bf16
 
     def grid(meta):
@@ -160,24 +160,24 @@ def rope_apply_for_3d_kernel(
 
     t_start = pid_t * BT
 
-    # 复数通道 index: 0..C-1
+    # Complex channel index 0..C-1.
     offs_c = tl.arange(0, C)  # [C]
 
     for dt in range(BT):
         t = t_start + dt
-        mask_t = t < T  # 当前这一行是否有效（标量 bool）
+        mask_t = t < T  # Scalar bool: whether row t is in range.
 
-        # 如果这一 dt 已经越界了，不 return，只是把 load/store 全部 mask 掉
+        # Out-of-range rows mask every load and store instead of returning early.
         # x[b, t, h, d]，d = 0..HD-1
         base_x = ((b * T + t) * H + h) * HD
 
         idx_real = base_x + 2 * offs_c  # d = 2c
         idx_imag = idx_real + 1  # d = 2c + 1
 
-        # 每个通道都复用同一个 time-mask
-        mask_elem = mask_t  # 形状 [C]，广播到 [C]
+        # Every channel shares the row mask (broadcast to [C]).
+        mask_elem = mask_t
 
-        # -------- x: bf16 → float64，拆成实部/虚部 --------
+        # -------- x: bf16 -> float64, split into real and imaginary parts --------
         x_real_bf16 = tl.load(
             x_bf16 + idx_real,
             mask=mask_elem,
@@ -191,10 +191,9 @@ def rope_apply_for_3d_kernel(
         x_real_f64 = x_real_bf16.to(tl.float64)
         x_imag_f64 = x_imag_bf16.to(tl.float64)
 
-        # -------- freqs: float64 视图 [T, 2*C] --------
-        # 假设 freqs_f64 按 [t, 2*C] 摊平成一维：
-        # real 在偶数位，imag 在奇数位
-        base_f = t * (2 * C)  # 对应 freqs[t, 0]
+        # -------- freqs: flattened float64 view of [T, 2*C] --------
+        # Real parts sit at even offsets, imaginary parts at odd offsets.
+        base_f = t * (2 * C)  # freqs[t, 0]
         idx_freq_real = base_f + 2 * offs_c
         idx_freq_imag = idx_freq_real + 1
 
@@ -209,16 +208,15 @@ def rope_apply_for_3d_kernel(
             other=0.0,
         )
 
-        # -------- 复数乘 (fp64) --------
+        # -------- Complex multiply in fp64 --------
         # (x_r + i x_i) * (f_r + i f_i)
         y_real_f64 = x_real_f64 * freq_real_f64 - x_imag_f64 * freq_imag_f64
         y_imag_f64 = x_real_f64 * freq_imag_f64 + x_imag_f64 * freq_real_f64
 
-        # 先 f64 -> f32
+        # Cast f64 -> f32 -> bf16.
         y_real_f32 = y_real_f64.to(tl.float32)
         y_imag_f32 = y_imag_f64.to(tl.float32)
 
-        # 再 f32 -> bf16
         y_real_bf16 = y_real_f32.to(tl.bfloat16)
         y_imag_bf16 = y_imag_f32.to(tl.bfloat16)
 
@@ -494,7 +492,7 @@ class SagAttentionModule(nn.Module):
         n = self.num_heads
         d = q.shape[-1] // n
 
-        # 一步到位：b s (n d) -> b n s d
+        # b s (n d) -> b n s d
         q = q.view(b, s, n, d).transpose(1, 2)
         k = k.view(b, s, n, d).transpose(1, 2)
         v = v.view(b, s, n, d).transpose(1, 2)
@@ -616,7 +614,7 @@ def tensor_parallel_rms_norm(x, norm, tp_chunk_list):
     full_dim = norm.weight.shape[0]
     total_heads = sum(tp_chunk_list)
 
-    # head_dim 必须来自 full_dim / total_heads
+    # head_dim is full_dim / total_heads.
     assert full_dim % total_heads == 0, f"RMSNorm dim {full_dim} not divisible by total_heads {total_heads}"
 
     head_dim = full_dim // total_heads
@@ -858,8 +856,9 @@ class DiTBlock(nn.Module):
             self.context_group_size = parallel_state.get_context_parallel_world_size()
             self.context_group = parallel_state.get_context_parallel_group()
         else:
-            self.context_group_rank = 0  # 单卡/单机非分布式场景默认rank为0
-            self.context_group_size = 1  # 单卡/单机非分布式场景默认world_size为1
+            # Single-process run: rank 0 in a group of size 1.
+            self.context_group_rank = 0
+            self.context_group_size = 1
             self.context_group = None
 
         if is_first_block:
@@ -894,7 +893,7 @@ class DiTBlock(nn.Module):
         else:
             assert gateddeltanet_layer_idx == -1
             if self.use_tp_in_self_attn and self.world > 1:
-                # self_attention用tp并行
+                # Tensor-parallel self-attention.
                 if attend_k0:
                     raise NotImplementedError("SelfAttentionTP not support attend_k0 yet!!!")
                 self.self_attn = SelfAttentionTP(

@@ -32,48 +32,41 @@ def parse_args():
 
 def print_gpu_memory(device_id=0):
     """
-    打印指定 GPU 的显存使用情况（只统计 PyTorch 占用）
+    Print the PyTorch memory usage of the GPU that belongs to this process.
 
+    The GPU is chosen from ``LOCAL_RANK`` or ``RANK`` (falling back to GPU 0); ``device_id`` is ignored.
     """
 
-    # 1. 获取当前进程的rank值（适配常见的分布式训练环境变量）
     def get_current_rank():
-        # 优先读取LOCAL_RANK（单机多卡），其次是RANK（多机多卡）
+        # LOCAL_RANK covers single-node multi-GPU runs; RANK covers multi-node runs.
         rank = os.environ.get("LOCAL_RANK") or os.environ.get("RANK")
         if rank is None:
-            # 未找到rank环境变量，默认使用0号卡
-            print("警告：未检测到RANK/LOCAL_RANK环境变量，默认使用GPU 0")
+            print("Warning: RANK/LOCAL_RANK is not set, using GPU 0")
             return 0
         try:
             return int(rank)
         except ValueError:
-            print(f"警告：环境变量中的rank值 '{rank}' 不是有效数字，默认使用GPU 0")
+            print(f"Warning: rank '{rank}' from the environment is not an integer, using GPU 0")
             return 0
 
-    # 获取当前rank对应的显卡ID
     device_id = get_current_rank()
 
-    # 安全检查：确保显卡ID有效
     if device_id >= torch.cuda.device_count():
         print(
-            f"警告：rank {device_id} 对应的GPU ID超出可用范围（可用GPU数：{torch.cuda.device_count()}），默认使用GPU 0"
+            f"Warning: GPU ID {device_id} for this rank exceeds the available GPUs ({torch.cuda.device_count()}), using GPU 0"
         )
         device_id = 0
-    # 切换到目标 GPU
     torch.cuda.set_device(device_id)
 
-    # 1. PyTorch 实际使用的显存（核心）
-    used = torch.cuda.memory_allocated(device_id) / 1024**3  # 转 GB
-    # 2. PyTorch 缓存的显存（闲置未释放）
-    cached = torch.cuda.memory_reserved(device_id) / 1024**3
-    # 3. GPU 总显存
+    used = torch.cuda.memory_allocated(device_id) / 1024**3  # GiB held by tensors
+    cached = torch.cuda.memory_reserved(device_id) / 1024**3  # GiB reserved by the caching allocator
     total = torch.cuda.get_device_properties(device_id).total_memory / 1024**3
 
-    print(f"GPU {device_id} 显存统计：")
-    print(f"  实际使用：{used:.2f} GB")
-    print(f"  缓存显存：{cached:.2f} GB")
-    print(f"  总显存：{total:.2f} GB")
-    print(f"  实际使用率：{used / total * 100:.2f}%")
+    print(f"GPU {device_id} memory:")
+    print(f"  Allocated: {used:.2f} GB")
+    print(f"  Reserved: {cached:.2f} GB")
+    print(f"  Total: {total:.2f} GB")
+    print(f"  Allocated ratio: {used / total * 100:.2f}%")
 
 
 if __name__ == "__main__":

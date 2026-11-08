@@ -200,11 +200,11 @@ def _build_subject_ref_memory_tokens(
     _, _, _, ref_h, ref_w = ref_x.shape
 
     ratio = min(1.0, max(0.01, float(subject_ref_slot_ratio)))
-    slot_size = int(round(min(int(video_h), int(video_w)) * ratio))
+    slot_size = int(round(min(int(video_h), int(video_w)) * ratio))  # noqa: RUF046 - Shape arithmetic keeps its explicit int conversion.
     if slot_size <= 0:
         return None
-    slot_h = max(1, int(round(ref_h * slot_size / float(video_h))))
-    slot_w = max(1, int(round(ref_w * slot_size / float(video_w))))
+    slot_h = max(1, int(round(ref_h * slot_size / float(video_h))))  # noqa: RUF046 - Shape arithmetic keeps its explicit int conversion.
+    slot_w = max(1, int(round(ref_w * slot_size / float(video_w))))  # noqa: RUF046 - Shape arithmetic keeps its explicit int conversion.
     slot_h = min(slot_h, ref_h)
     slot_w = min(slot_w, ref_w)
     h_start = int(ref_h - slot_h)
@@ -438,7 +438,7 @@ def _prepend_subject_ref_prope_camera_info(
                 device=mat_pt.device,
                 dtype=mat_pt.dtype,
             )
-            view_shape = (1, 1) + tuple(1 for _ in mat_pt.shape[2:-2]) + (mat_pt.shape[-2], mat_pt.shape[-1])
+            view_shape = (1, 1, *(1 for _ in mat_pt.shape[2:-2]), mat_pt.shape[-2], mat_pt.shape[-1])
             prefix = eye.view(view_shape).expand(b_cam, token_count, *mat_pt.shape[2:])
         return torch.cat([prefix, mat_pt], dim=1).contiguous()
 

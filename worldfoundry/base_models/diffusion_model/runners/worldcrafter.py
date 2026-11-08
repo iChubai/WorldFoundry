@@ -106,7 +106,7 @@ class WorldCrafterPipeline(HeliosPipeline):
         return_dict: bool = True,
         attention_kwargs: dict[str, Any] | None = None,
         callback_on_step_end: (Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None) = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Read-only default; the function never mutates it.
         callback_on_chunk_end: Callable[[int, torch.Tensor], None] | None = None,
         callback_on_chunk_state: Callable[[int, dict[str, Any]], None] | None = None,
         resume_state: dict[str, Any] | None = None,
@@ -127,11 +127,11 @@ class WorldCrafterPipeline(HeliosPipeline):
         video_noise_sigma_max: float = 0.135,
         # ------------ Interactive ------------
         use_interpolate_prompt: bool = False,
-        interpolate_time_list: list = [7, 7, 7],
+        interpolate_time_list: list = [7, 7, 7],  # noqa: B006 - Read-only default; the function never mutates it.
         interpolation_steps: int = 3,
         # ------------ Stage 1 ------------
         memory_size: int = 4,
-        history_sizes: list = [2, 1],
+        history_sizes: list = [2, 1],  # noqa: B006 - Read-only default; the function never mutates it.
         num_latent_frames_per_chunk: int = 9,
         keep_first_frame: bool = True,
         is_skip_first_chunk: bool = False,
@@ -142,7 +142,7 @@ class WorldCrafterPipeline(HeliosPipeline):
         # ------------ Stage 2 ------------
         is_enable_stage2: bool = False,
         pyramid_num_stages: int = 3,
-        pyramid_num_inference_steps_list: list = [10, 10, 10],
+        pyramid_num_inference_steps_list: list = [10, 10, 10],  # noqa: B006 - Read-only default; the function never mutates it.
         # ------------ CFG Zero ------------
         use_zero_init: bool | None = True,
         zero_steps: int | None = 1,
@@ -558,7 +558,7 @@ class WorldCrafterPipeline(HeliosPipeline):
                 )
             if keep_first_frame:
                 if is_first_chunk:
-                    history_sizes_first_chunk = [1] + history_sizes.copy()
+                    history_sizes_first_chunk = [1, *history_sizes]
                     history_latents_first_chunk = torch.zeros(
                         batch_size,
                         num_channels_latents,

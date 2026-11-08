@@ -402,7 +402,7 @@ def create_vit(vit, image_size, use_grad_checkpointing=False, ckpt_layer=0, drop
             num_heads=16,
             use_grad_checkpointing=use_grad_checkpointing,
             ckpt_layer=ckpt_layer,
-            drop_path_rate=0.1 or drop_path_rate,
+            drop_path_rate=0.1 or drop_path_rate,  # noqa: SIM222 - Upstream BLIP fixes the large-ViT drop-path rate at 0.1.
         )
     return visual_encoder, vision_width
 

@@ -519,7 +519,7 @@ class VideoPositionEmb(nn.Module):
     def seq_dim(self):
         return 1
 
-    def forward(self, x_B_T_H_W_C: torch.Tensor, fps=Optional[torch.Tensor]) -> torch.Tensor:
+    def forward(self, x_B_T_H_W_C: torch.Tensor, fps=Optional[torch.Tensor]) -> torch.Tensor:  # noqa: UP045 - Upstream default object; callers always pass fps.
         """
         With CP, the function assume that the input tensor is already split.
         It delegates the embedding generation to generate_embeddings function.
@@ -540,7 +540,7 @@ class VideoPositionEmb(nn.Module):
 
         return self._split_for_context_parallel(embeddings)
 
-    def generate_embeddings(self, B_T_H_W_C: torch.Size, fps=Optional[torch.Tensor]):
+    def generate_embeddings(self, B_T_H_W_C: torch.Size, fps=Optional[torch.Tensor]):  # noqa: UP045 - Upstream default object; callers always pass fps.
         raise NotImplementedError
 
     def _split_for_context_parallel(self, embeddings):
@@ -713,7 +713,7 @@ class LearnablePosEmbAxis(VideoPositionEmb):
         torch.nn.init.trunc_normal_(self.pos_emb_w, std=std, a=-3 * std, b=3 * std)
         torch.nn.init.trunc_normal_(self.pos_emb_t, std=std, a=-3 * std, b=3 * std)
 
-    def generate_embeddings(self, B_T_H_W_C: torch.Size, fps=Optional[torch.Tensor]) -> torch.Tensor:
+    def generate_embeddings(self, B_T_H_W_C: torch.Size, fps=Optional[torch.Tensor]) -> torch.Tensor:  # noqa: UP045 - Upstream default object; callers always pass fps.
         B, T, H, W, _ = B_T_H_W_C
         if self.interpolation == "crop":
             emb_h_H = self.pos_emb_h[:H]

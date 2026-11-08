@@ -151,7 +151,7 @@ def recursive_replace(d: Union[List, Dict, str], mapping: Dict[str, str]):
 
 
 class timeit:
-    _history: Dict[str, List["timeit"]] = {}
+    _history: ClassVar[Dict[str, List["timeit"]]] = {}
 
     def __init__(self, name: str | None = None, verbose: bool = True, average: bool = False):
         self.name = name

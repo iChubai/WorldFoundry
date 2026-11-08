@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from typing import Any
+from typing import Any, ClassVar
 
 from mmengine.dataset import force_full_init
 
@@ -13,7 +13,7 @@ from ..registry import DATASETS
 
 @DATASETS.register_module()
 class PoseCocoDataset(MMPoseCocoDataset):
-    METAINFO: dict = {"from_file": "configs/_base_/pose/coco.py"}
+    METAINFO: ClassVar[dict] = {"from_file": "configs/_base_/pose/coco.py"}
 
     def __init__(self, *args, **kwargs):
         if MMPoseCocoDataset is object:

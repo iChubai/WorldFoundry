@@ -119,7 +119,7 @@ class iAFF(nn.Module):
                 nn.BatchNorm2d(channels),
             )
         else:
-            raise "the type is not supported"
+            raise "the type is not supported"  # noqa: B016 - Upstream CLAP guard; callers pass only "1D" or "2D".
 
         self.sigmoid = nn.Sigmoid()
 
@@ -200,7 +200,7 @@ class AFF(nn.Module):
                 nn.BatchNorm2d(channels),
             )
         else:
-            raise "the type is not supported."
+            raise "the type is not supported."  # noqa: B016 - Upstream CLAP guard; callers pass only "1D" or "2D".
 
         self.sigmoid = nn.Sigmoid()
 

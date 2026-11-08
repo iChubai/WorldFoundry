@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import os
 import shlex
@@ -168,20 +169,16 @@ def _python_import_available(python_executable: str, module_name: str, pythonpat
     try:
         return process.wait(timeout=timeout) == 0
     except subprocess.TimeoutExpired:
-        try:
+        with contextlib.suppress(ProcessLookupError):
             if os.name == "nt":
                 process.kill()
             else:
                 os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        try:
+        # Some broken external envs can block in uninterruptible filesystem
+        # or loader state. Readiness must report that import as unavailable
+        # instead of blocking the whole benchmark inventory.
+        with contextlib.suppress(subprocess.TimeoutExpired):
             process.wait(timeout=kill_timeout)
-        except subprocess.TimeoutExpired:
-            # Some broken external envs can block in uninterruptible filesystem
-            # or loader state. Readiness must report that import as unavailable
-            # instead of blocking the whole benchmark inventory.
-            pass
         return False
 
 

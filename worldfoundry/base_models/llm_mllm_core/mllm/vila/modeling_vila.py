@@ -277,7 +277,7 @@ class VILAForCausalLM(VILAPretrainedModel):
 
         return image_features_each_image, new_block_sizes
 
-    def encode_images(self, images, block_sizes: tuple[int, ...] | None | None = None):
+    def encode_images(self, images, block_sizes: tuple[int, ...] | None = None):
         if block_sizes is None:
             block_sizes = [None] * len(images)
         if getattr(self.config, "dynamic_s2", False):

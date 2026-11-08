@@ -39,7 +39,7 @@ def audio_latent_duration(
 ) -> int:
     """Audio latent length matching K5 T2VA: ceil(sample_frames/fps * audio_fps / downsample)."""
     sample_frames = (video_latent_frames - 1) * 4 + 1
-    return int(math.ceil(sample_frames / fps * audio_fps / downsample_factor))
+    return math.ceil(sample_frames / fps * audio_fps / downsample_factor)
 
 
 def prepare_audio_latents(
@@ -99,7 +99,7 @@ def prepare_audio_rope_pos(audio_cu_seqlens: Tensor, device: torch.device | str 
 def prepare_text_rope_pos(text_cu_seqlens: Tensor, device: torch.device | str | None = None) -> Tensor:
     """Compute packed text RoPE positions from cumulative sequence lengths."""
     lengths = torch.diff(text_cu_seqlens).cpu()
-    pos = torch.cat([torch.arange(l.item()) for l in lengths])
+    pos = torch.cat([torch.arange(length.item()) for length in lengths])
     if device is not None:
         pos = pos.to(device)
     return pos

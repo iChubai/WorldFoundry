@@ -207,11 +207,11 @@ def denoise_loop(
                     ar = compute_rope1d(raw.audio_rope, int(audio_rope.shape[0]))
                 tr = _rebuild_text_rope(raw, rope)
             return dit(
-                x_video=model_input_v,
-                x_audio=audio,
+                x_video=model_input_v,  # noqa: B023 - Called within the same loop iteration.
+                x_audio=audio,  # noqa: B023 - Called within the same loop iteration.
                 text_embed=te,
                 pooled_text_embed=pe,
-                time=t_step,
+                time=t_step,  # noqa: B023 - Called within the same loop iteration.
                 visual_rope=vr,
                 audio_rope=ar,
                 text_rope=tr,

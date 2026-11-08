@@ -259,9 +259,7 @@ def _is_fusible_self_attention(module: nn.Module) -> bool:
         if layer.in_features != dim or layer.out_features != dim:
             return False
     bias_flags = {layer.bias is not None for layer in (q, k, v)}
-    if len(bias_flags) != 1:
-        return False
-    return True
+    return len(bias_flags) == 1
 
 
 def _fused_self_attention_forward(

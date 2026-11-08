@@ -154,7 +154,7 @@ def extract_value_from_conv(chat):
 
 
 class VILAProcessorKwargs(ProcessingKwargs, total=False):
-    _defaults = {
+    _defaults = {  # noqa: RUF012 - TypedDict subclass; Transformers reads these defaults and ClassVar is invalid here.
         "text_kwargs": {
             "padding": False,
         },

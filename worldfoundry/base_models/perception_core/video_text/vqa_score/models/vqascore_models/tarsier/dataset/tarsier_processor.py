@@ -12,7 +12,7 @@ logger = logging.get_logger(__name__)
 
 
 class TarsierProcessorKwargs(ProcessingKwargs, total=False):
-    _defaults = {
+    _defaults = {  # noqa: RUF012 - TypedDict subclass; Transformers reads these defaults and ClassVar is invalid here.
         "text_kwargs": {},
         "images_kwargs": {},
     }

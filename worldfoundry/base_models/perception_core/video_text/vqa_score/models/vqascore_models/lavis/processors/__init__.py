@@ -14,7 +14,7 @@ from .blip_processors import (
     BlipImageTrainProcessor,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022 - Exports are grouped by component.
     "BaseProcessor",
     # BLIP
     "BlipImageTrainProcessor",

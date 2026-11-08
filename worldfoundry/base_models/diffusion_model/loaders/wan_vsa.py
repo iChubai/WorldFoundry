@@ -200,7 +200,9 @@ def _checkpoint_gate_shapes(
                 raise RuntimeError("Wan VSA checkpoint detection requires the safetensors package") from error
             with safe_open(path, framework="pt", device="cpu") as handle:
                 entries: dict[str, Any] = {
-                    name: handle.get_slice(name).get_shape() for name in handle.keys() if "gate_compress" in name
+                    name: handle.get_slice(name).get_shape()
+                    for name in handle.keys()  # noqa: SIM118 - safetensors handles list tensor names through keys().
+                    if "gate_compress" in name
                 }
         else:
             # PyTorch pickle formats have no standalone tensor header.  Reuse

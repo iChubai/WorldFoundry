@@ -21,7 +21,7 @@ from .turbo_decoder import TurboVAED as Magi2TurboDecoder
 from .video_vae import Wan2_2_VAE, get_vae2_2
 from .video_vae import Wan2_2_VAE as Magi2VideoVAE
 
-__all__ = [
+__all__ = [  # noqa: RUF022 - Exports are grouped by component.
     # video encode VAE
     "Wan2_2_VAE",
     "Magi2VideoVAE",

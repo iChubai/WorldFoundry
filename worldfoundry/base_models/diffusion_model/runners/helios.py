@@ -529,7 +529,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
         zero_steps: int | None = 1,
         # ------------ Callback ------------
         callback_on_step_end: Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Read-only default; the function never mutates it.
         progress_bar=None,
     ):
         batch_size = latents.shape[0]
@@ -642,7 +642,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
         is_amplify_first_chunk: bool = False,
         # ------------ Callback ------------
         callback_on_step_end: Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Read-only default; the function never mutates it.
         progress_bar=None,
     ):
         batch_size, num_channel, num_frames, height, width = latents.shape
@@ -843,7 +843,7 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
         return_dict: bool = True,
         attention_kwargs: dict[str, Any] | None = None,
         callback_on_step_end: Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Read-only default; the function never mutates it.
         max_sequence_length: int = 512,
         # ------------ I2V ------------
         image: PipelineImageInput | None = None,
@@ -860,17 +860,17 @@ class HeliosPipeline(DiffusionPipeline, HeliosLoraLoaderMixin):
         video_noise_sigma_max: float = 0.135,
         # ------------ Interactive ------------
         use_interpolate_prompt: bool = False,
-        interpolate_time_list: list = [7, 7, 7],
+        interpolate_time_list: list = [7, 7, 7],  # noqa: B006 - Read-only default; the function never mutates it.
         interpolation_steps: int = 3,
         # ------------ Stage 1 ------------
-        history_sizes: list = [16, 2, 1],
+        history_sizes: list = [16, 2, 1],  # noqa: B006 - Read-only default; the function never mutates it.
         num_latent_frames_per_chunk: int = 9,
         keep_first_frame: bool = True,
         is_skip_first_chunk: bool = False,
         # ------------ Stage 2 ------------
         is_enable_stage2: bool = False,
         pyramid_num_stages: int = 3,
-        pyramid_num_inference_steps_list: list = [10, 10, 10],
+        pyramid_num_inference_steps_list: list = [10, 10, 10],  # noqa: B006 - Read-only default; the function never mutates it.
         # ------------ CFG Zero ------------
         use_zero_init: bool | None = True,
         zero_steps: int | None = 1,

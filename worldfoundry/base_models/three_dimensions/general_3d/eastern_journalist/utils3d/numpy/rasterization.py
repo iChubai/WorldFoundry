@@ -30,7 +30,7 @@ def map_np_dtype(dtype) -> str:
     Returns:
         The return value.
     """
-    if dtype == int:
+    if dtype == int:  # noqa: E721 - numpy dtypes compare equal to the matching Python type.
         return "i4"
     elif dtype == np.uint8:
         return "u1"

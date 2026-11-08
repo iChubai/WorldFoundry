@@ -48,7 +48,7 @@ class NativeDiffusionRecipe:
 
     model_id: str
     components: tuple[ComponentSpec, ...]
-    execution: ExecutionSpec = ExecutionSpec()
+    execution: ExecutionSpec = ExecutionSpec()  # noqa: RUF009 - ExecutionSpec is frozen and stores read-only mappings.
     checkpoints: Mapping[str, CheckpointSpec] = field(default_factory=dict)
     aliases: tuple[str, ...] = ()
     capabilities: frozenset[str] = field(default_factory=frozenset)

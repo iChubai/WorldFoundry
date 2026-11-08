@@ -44,7 +44,7 @@ def sample_fast(
     transformer_dtype: torch.dtype = None,
     generator: torch.Generator | None = None,
     callback_on_step_end: (Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None) = None,
-    callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+    callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Read-only default; the function never mutates it.
     progress_bar=None,
 ):
     """Run the checkpoint's three-stage DMD schedule with CFG=1."""

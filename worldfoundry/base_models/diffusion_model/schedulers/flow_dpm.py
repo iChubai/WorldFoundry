@@ -221,8 +221,8 @@ class FlowDPMSolverMultistepScheduler(NativeSchedulerMixin):
         num_inference_steps: int | None = None,
         device: str | torch.device = None,
         sigmas: list[float] | None = None,
-        mu: float | None | None = None,
-        shift: float | None | None = None,
+        mu: float | None = None,
+        shift: float | None = None,
     ):
         """
         Sets the discrete timesteps used for the diffusion chain (to be run before inference).

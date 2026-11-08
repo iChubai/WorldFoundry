@@ -96,7 +96,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
 
     def __init__(
         self,
-        device=get_device_type(),
+        device=get_device_type(),  # noqa: B008 - The device type is resolved once, when the class is defined.
         torch_dtype=torch.float16,
         height_division_factor=64,
         width_division_factor=64,
@@ -433,15 +433,15 @@ class StagedDiffusionPipeline(torch.nn.Module):
             if not (hasattr(module, "vram_management_enabled") and module.vram_management_enabled):
                 raise ValueError("VRAM Management is not enabled. LoRA hotloading is not supported.")
             updated_num = 0
-            for _, module in module.named_modules():
-                if isinstance(module, AutoWrappedLinear):
-                    name = module.name
+            for _, submodule in module.named_modules():
+                if isinstance(submodule, AutoWrappedLinear):
+                    name = submodule.name
                     lora_a_name = f"{name}.lora_A.weight"
                     lora_b_name = f"{name}.lora_B.weight"
                     if lora_a_name in lora and lora_b_name in lora:
                         updated_num += 1
-                        module.lora_A_weights.append(lora[lora_a_name] * alpha)
-                        module.lora_B_weights.append(lora[lora_b_name])
+                        submodule.lora_A_weights.append(lora[lora_a_name] * alpha)
+                        submodule.lora_B_weights.append(lora[lora_b_name])
             if verbose >= 1:
                 print(
                     f"{updated_num} tensors are patched by LoRA. You can use `pipe.clear_lora()` to clear all LoRA layers."
@@ -462,7 +462,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
         if verbose >= 1:
             print(f"{cleared_num} LoRA layers are cleared.")
 
-    def download_and_load_models(self, model_configs: list[ModelConfig] = [], vram_limit: float | None = None):
+    def download_and_load_models(self, model_configs: list[ModelConfig] = [], vram_limit: float | None = None):  # noqa: B006 - Read-only default; the function never mutates it.
         if self.model_pool_factory is None:
             raise RuntimeError("staged pipeline checkpoint discovery requires an explicit model_pool_factory")
         model_pool = self.model_pool_factory(model_configs=self.model_pool_configs)
@@ -540,7 +540,7 @@ class InferenceStageGraph:
     def build_chains(self, units: list[InferenceStage]):
         # Establish updating chains for each variable
         # to track their computation process.
-        params = sum([unit.fetch_input_params() + unit.fetch_output_params() for unit in units], [])
+        params = [param for unit in units for param in unit.fetch_input_params() + unit.fetch_output_params()]
         params = sorted(set(params))
         chains = {param: [] for param in params}
         for unit_id, unit in enumerate(units):

@@ -47,7 +47,7 @@ class QwenVisionConfig:
     finetuning_task: str | None = None
     forced_bos_token_id: int | None = None
     forced_eos_token_id: int | None = None
-    fullatt_block_indexes: list[int] | None | None = [7, 15, 23, 31]
+    fullatt_block_indexes: list[int] | None = [7, 15, 23, 31]
     hidden_act: str = "silu"
     hidden_size: int = 1280
     id2label: dict[int, str] = {0: "LABEL_0", 1: "LABEL_1"}
@@ -66,7 +66,7 @@ class QwenVisionConfig:
     num_beams: int = 1
     num_heads: int = 16
     num_return_sequences: int = 1
-    out_hidden_size: int | None | None = 2048
+    out_hidden_size: int | None = 2048
     output_attentions: bool = False
     output_hidden_states: bool = False
     output_scores: bool = False
@@ -89,17 +89,17 @@ class QwenVisionConfig:
     tie_encoder_decoder: bool = False
     tie_word_embeddings: bool = True
     tokenizer_class: str | None = None
-    tokens_per_second: int | None | None = 2
+    tokens_per_second: int | None = 2
     top_k: int = 50
     top_p: float = 1.0
     torch_dtype: str = "bfloat16"
     torchscript: bool = False
     typical_p: float = 1.0
     use_bfloat16: bool = False
-    window_size: int | None | None = 112
+    window_size: int | None = 112
 
-    embed_dim: int | None | None = None
-    mlp_ratio: int | None | None = None
+    embed_dim: int | None = None
+    mlp_ratio: int | None = None
 
 
 @attrs.define
@@ -131,7 +131,7 @@ class QwenModelConfig(FSDP2ModelConfig):
     id2label: dict[int, str] = {0: "LABEL_0", 1: "LABEL_1"}
     image_token_id: int = 151655
     initializer_range: float = 0.02
-    intermediate_size: int | None | None = 11008
+    intermediate_size: int | None = 11008
     is_decoder: bool = False
     is_encoder_decoder: bool = False
     label2id: dict[str, int] = {"LABEL_0": 0, "LABEL_1": 1}

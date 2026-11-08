@@ -356,9 +356,12 @@ class Kandinsky6Sampler:
 
         if images is not None and scheme == "pretrain" and not dit.visual_cond:
             raise ValueError("image conditioning requires dit.visual_cond=True")
-        if images is not None and scheme == "tail_cond_first_frame":
-            if getattr(dit, "visual_token_type_num_embeddings", 0) < 2:
-                raise ValueError("tail_cond_first_frame requires dit.visual_token_type_num_embeddings >= 2")
+        if (
+            images is not None
+            and scheme == "tail_cond_first_frame"
+            and getattr(dit, "visual_token_type_num_embeddings", 0) < 2
+        ):
+            raise ValueError("tail_cond_first_frame requires dit.visual_token_type_num_embeddings >= 2")
 
         if isinstance(self.dit, CacheDiT) and self.dit.mode != "none":
             # Keep cache step counters aligned with this generation's schedule.

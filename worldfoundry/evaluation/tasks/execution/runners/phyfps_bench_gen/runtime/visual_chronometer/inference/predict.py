@@ -35,7 +35,7 @@ def download_checkpoint(ckpt_path):
     try:
         from huggingface_hub import hf_hub_download
     except ImportError:
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: B904 - Keeps the implicit exception context.
             "Checkpoint not found and `huggingface_hub` is not installed.\n"
             "Install the Visual Chronometer/PhyFPS benchmark profile, or stage the checkpoint at: "
             f"{ckpt_path}"

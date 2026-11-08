@@ -64,7 +64,7 @@ def make_attn(in_channels, attn_type="vanilla"):
     elif attn_type == "none":
         return nn.Identity(in_channels)
     else:
-        return LinAttnBlock(in_channels)
+        return LinAttnBlock(in_channels)  # noqa: F821 - Undefined upstream; only reached with attn_type='linear', which no shipped config sets.
 
 
 class Downsample(nn.Module):
@@ -166,10 +166,7 @@ class ResnetBlock(nn.Module):
         h = self.conv2(h)
 
         if self.in_channels != self.out_channels:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
 
         return x + h
 
@@ -216,14 +213,14 @@ class Model(nn.Module):
         self.conv_in = torch.nn.Conv2d(in_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1, *tuple(ch_mult))
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for _i_block in range(self.num_res_blocks):
                 block.append(
                     ResnetBlock(
                         in_channels=block_in,
@@ -376,7 +373,7 @@ class Encoder(nn.Module):
         self.conv_in = torch.nn.Conv2d(in_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1, *tuple(ch_mult))
         self.in_ch_mult = in_ch_mult
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
@@ -384,7 +381,7 @@ class Encoder(nn.Module):
             attn = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for _i_block in range(self.num_res_blocks):
                 block.append(
                     ResnetBlock(
                         in_channels=block_in,
@@ -499,7 +496,6 @@ class Decoder(nn.Module):
         self.tanh_out = tanh_out
 
         # compute in_ch_mult, block_in and curr_res at lowest res
-        in_ch_mult = (1,) + tuple(ch_mult)
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
@@ -529,7 +525,7 @@ class Decoder(nn.Module):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks + 1):
+            for _i_block in range(self.num_res_blocks + 1):
                 block.append(
                     ResnetBlock(
                         in_channels=block_in,
@@ -629,10 +625,7 @@ class SimpleDecoder(nn.Module):
 
     def forward(self, x):
         for i, layer in enumerate(self.model):
-            if i in [1, 2, 3]:
-                x = layer(x, None)
-            else:
-                x = layer(x)
+            x = layer(x, None) if i in [1, 2, 3] else layer(x)
 
         h = self.norm_out(x)
         h = nonlinearity(h)
@@ -663,7 +656,7 @@ class UpsampleDecoder(nn.Module):
         for i_level in range(self.num_resolutions):
             res_block = []
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks + 1):
+            for _i_block in range(self.num_res_blocks + 1):
                 res_block.append(
                     ResnetBlock(
                         in_channels=block_in,
@@ -739,8 +732,8 @@ class LatentRescaler(nn.Module):
         x = torch.nn.functional.interpolate(
             x,
             size=(
-                int(round(x.shape[2] * self.factor)),
-                int(round(x.shape[3] * self.factor)),
+                round(x.shape[2] * self.factor),
+                round(x.shape[3] * self.factor),
             ),
         )
         x = self.attn(x)
@@ -934,7 +927,7 @@ class FirstStagePostProcessor(nn.Module):
     @torch.no_grad()
     def encode_with_pretrained(self, x):
         c = self.pretrained_model.encode(x)
-        if isinstance(c, DiagonalGaussianDistribution):
+        if isinstance(c, DiagonalGaussianDistribution):  # noqa: F821 - Undefined upstream; FirstStagePostProcessor is not used by the FPS predictor.
             c = c.mode()
         return c
 

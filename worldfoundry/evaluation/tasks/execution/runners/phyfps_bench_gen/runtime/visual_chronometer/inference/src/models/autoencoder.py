@@ -13,7 +13,7 @@ class AutoencoderKL(torch.nn.Module):
         embed_dim,
         use_quant_conv=True,
         ckpt_path=None,
-        ignore_keys=[],
+        ignore_keys=[],  # noqa: B006 - Read-only default; retain the public signature.
         image_key="image",
         colorize_nlabels=None,
         monitor=None,
@@ -40,7 +40,7 @@ class AutoencoderKL(torch.nn.Module):
         self.test_args = test_args
         self.logdir = logdir
         if colorize_nlabels is not None:
-            assert type(colorize_nlabels) == int
+            assert type(colorize_nlabels) is int
             self.register_buffer("colorize", torch.randn(3, colorize_nlabels, 1, 1))
         if monitor is not None:
             self.monitor = monitor
@@ -60,12 +60,12 @@ class AutoencoderKL(torch.nn.Module):
             param.requires_grad = False
         self.eval()
 
-    def init_from_ckpt(self, path, ignore_keys=list()):
+    def init_from_ckpt(self, path, ignore_keys=[]):  # noqa: B006 - Read-only default; retain the public signature.
         sd = torch.load(path, map_location="cpu")
         try:
             self._cur_epoch = sd["epoch"]
             sd = sd["state_dict"]
-        except:
+        except BaseException:
             self._cur_epoch = "null"
         keys = list(sd.keys())
         for k in keys:
@@ -93,10 +93,7 @@ class AutoencoderKL(torch.nn.Module):
 
     def forward(self, input, sample_posterior=True):
         posterior = self.encode(input)
-        if sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        z = posterior.sample() if sample_posterior else posterior.mode()
         dec = self.decode(z)
         return dec, posterior
 

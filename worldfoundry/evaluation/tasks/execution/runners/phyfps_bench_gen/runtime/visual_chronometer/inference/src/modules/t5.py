@@ -2,6 +2,7 @@ import html
 import os
 import re
 import urllib.parse as ul
+from typing import ClassVar
 
 import ftfy
 import torch
@@ -11,7 +12,7 @@ from transformers import AutoTokenizer, T5EncoderModel
 
 
 class T5Embedder:
-    available_models = ["flan-t5-large"]
+    available_models: ClassVar[list[str]] = ["flan-t5-large"]
     bad_punct_regex = re.compile(
         r"[" + "#®•©™&@·º½¾¿¡§~" + "\)" + "\(" + "\]" + "\[" + "\}" + "\{" + "\|" + "\\" + "\/" + "\*" + r"]{1,}"
     )

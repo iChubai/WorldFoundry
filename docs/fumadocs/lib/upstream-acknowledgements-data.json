@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 219,
+  "modelsTotal": 218,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -218,7 +218,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 96,
+      "count": 95,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -355,10 +355,6 @@
         {
           "name": "HunyuanWorld-Mirror",
           "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror"
-        },
-        {
-          "name": "HunyuanWorld-Voyager",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
         },
         {
           "name": "Hy-Nomas",

@@ -35,17 +35,6 @@ def test_base_operator_saves_operation_types_and_uses_fresh_default():
     assert second.operation_types == []
 
 
-def test_hunyuan_world_voyager_has_no_historical_alias_module():
-    old_module = "worldfoundry.operators.hunyuan_world_" + "vo" + "ager_operator"
-    old_path = REPO_ROOT / "worldfoundry/operators" / ("hunyuan_world_" + "vo" + "ager_operator.py")
-
-    assert importlib.util.find_spec("worldfoundry.operators.hunyuan_world_voyager_operator") is not None
-    assert not old_path.exists()
-    assert importlib.util.find_spec(old_module) is None
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module(old_module)
-
-
 def test_visual_memories_use_canonical_stream_module():
     retired_modules = [
         "worldfoundry.memories.visual_synthesis.stream_memory",

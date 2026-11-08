@@ -61,7 +61,6 @@ from worldfoundry.runtime.inference_specs.giga_world_0 import GIGA_WORLD_0_INFER
 from worldfoundry.runtime.inference_specs.helios import HELIOS_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hma import HMA_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hunyuan_gamecraft import HUNYUAN_GAMECRAFT_INFERENCE_SPEC
-from worldfoundry.runtime.inference_specs.hunyuan_world_voyager import HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hy_worldplay import HY_WORLDPLAY_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hyperflow import HYPERFLOW_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.leworld_model import LEWORLD_MODEL_INFERENCE_SPEC
@@ -268,7 +267,6 @@ _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     LONGCAT_VIDEO_INFERENCE_SPEC.model_family_id: LONGCAT_VIDEO_INFERENCE_SPEC,
     STABLE_VIDEO_INFINITY_INFERENCE_SPEC.model_family_id: STABLE_VIDEO_INFINITY_INFERENCE_SPEC,
     HUNYUAN_GAMECRAFT_INFERENCE_SPEC.model_family_id: HUNYUAN_GAMECRAFT_INFERENCE_SPEC,
-    HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC.model_family_id: HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC,
     HY_WORLDPLAY_INFERENCE_SPEC.model_family_id: HY_WORLDPLAY_INFERENCE_SPEC,
     CAMERACTRL_INFERENCE_SPEC.model_family_id: CAMERACTRL_INFERENCE_SPEC,
     DEPTH_ANYTHING3_INFERENCE_SPEC.model_family_id: DEPTH_ANYTHING3_INFERENCE_SPEC,

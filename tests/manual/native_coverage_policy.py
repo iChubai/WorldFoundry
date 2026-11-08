@@ -16,11 +16,13 @@ _IDENTITY = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_.-]*")
 _BASELINE_SHA256 = "b4aaf03f6698aa451c67d608b5d100b4373462f8e4259cb6f4de4c8449d5e146"
 
 # Planned retirements retain their frozen records, not their uncovered-gap exception.
-# See the validation guide's planned model retirements policy (2026-10-16).
+# See the validation guide's planned model retirements policy (2026-10-16) and the
+# removal of models whose runtime depended on code outside the repository.
 _RETIRED_NATIVE_VARIANTS = frozenset(
     {
         "biwm-wan21@biwm-wan21",
         "biwm-wan22@biwm-wan22",
+        "hunyuanworld-voyager@hunyuanworld-voyager",
         "irasim@irasim",
         "pandora@pandora",
     }

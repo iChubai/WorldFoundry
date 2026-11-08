@@ -408,7 +408,7 @@ EvalCrafter 是当前唯一由 WorldFoundry 管理专用 metric profile 的 benc
 下列模型仍然使用 `worldfoundry-unified-<cuda-tier>`，但文档里必须写清楚额外的本地
 资产、编译 wheel 或外部服务。这些都不是 clone 外部 repo 的理由；代码路径仍然在仓内。
 
-- **使用统一环境的 WRBench camera/world 集成（EasyAnimate、Hunyuan WorldPlay、HunyuanWorld-Voyager、InSpatio-World、Matrix-Game 2/3、ReCamMaster、SANA-WM、ATI、HyDRA、Spatia、minWM、MagicWorld、LiveWorld、VerseCrafter、VideoX-Fun camera variants、HY-World renderer）** — 额外条件：各 profile 声明的 Hugging Face checkpoint；Spatia 默认 MapAnything checkpoint 仅限非商业研究。说明：这些模型使用 `worldfoundry-unified-<cuda-tier>`，并各自保留独立的仓内推理 binding。Wan2.1、MapAnything、UniCeption、Uni3C、Depth Pro、STream3R、SAM3 视频分割、Qwen3-VL 实体提取和点云投影等可复用组件统一放在 `base_models`，runtime config 放在 `worldfoundry/data`；setup 不 clone 外部源码仓库。AC3D、Cosmos3、GEN3C、Hunyuan GameCraft 和两个 LingBot 路由使用上表专用环境。
+- **使用统一环境的 WRBench camera/world 集成（EasyAnimate、Hunyuan WorldPlay、InSpatio-World、Matrix-Game 2/3、ReCamMaster、SANA-WM、ATI、HyDRA、Spatia、minWM、MagicWorld、LiveWorld、VerseCrafter、VideoX-Fun camera variants、HY-World renderer）** — 额外条件：各 profile 声明的 Hugging Face checkpoint；Spatia 默认 MapAnything checkpoint 仅限非商业研究。说明：这些模型使用 `worldfoundry-unified-<cuda-tier>`，并各自保留独立的仓内推理 binding。Wan2.1、MapAnything、UniCeption、Uni3C、Depth Pro、STream3R、SAM3 视频分割、Qwen3-VL 实体提取和点云投影等可复用组件统一放在 `base_models`，runtime config 放在 `worldfoundry/data`；setup 不 clone 外部源码仓库。AC3D、Cosmos3、GEN3C、Hunyuan GameCraft 和两个 LingBot 路由使用上表专用环境。
 - **SkyReels V3** — 额外条件：官方 8 卡 USP 路径需要 CUDA compiler、flash-attn 和 torchao。说明：运行不带 `--skip-flash-attn` 的 `unified_install.sh`，或用 `scripts/setup/install_flash_attn.sh` 构建 flash-attn。
 - **Matrix-Game-3** — 额外条件：flash-attn。说明：config 可能请求 FA3；A100 验证主机上回退到 FA2 是可接受的。
 - **HunyuanWorld-Mirror** — 额外条件：与当前 CUDA/PyTorch 匹配的 `gsplat` wheel。说明：wheel 匹配当前 torch 栈时，仍属于统一环境模型。

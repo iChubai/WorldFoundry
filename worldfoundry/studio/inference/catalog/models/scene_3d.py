@@ -512,15 +512,6 @@ def _cut3r_default_ref() -> str:
     )
 
 
-def _hunyuan_world_voyager_default_ref() -> str:
-    return resolve._checkpoint_model_ref(
-        "HunyuanWorld-Voyager",
-        "tencent--HunyuanWorld-Voyager",
-        "hfd/tencent--HunyuanWorld-Voyager",
-        fallback="tencent/HunyuanWorld-Voyager",
-    )
-
-
 def _worldfm_default_ref() -> str:
     return resolve._prefer_existing_model_ref(
         *resolve._cache_candidates("worldfm", "inspatio--worldfm"),
@@ -546,10 +537,6 @@ def _worldfm_demo_meta_path() -> str:
 
 def _worldfm_demo_panorama_path() -> str:
     return str(resolve._data_path("test_cases", "worldfm", "mario.png"))
-
-
-def _hunyuan_world_voyager_case1_dir() -> Path:
-    return resolve._data_path("test_cases", "hunyuan_world_voyager", "case1")
 
 
 def _lyra1_default_call_kwargs() -> dict[str, Any]:
@@ -1152,19 +1139,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         },
         "tags": ("novel-view", "poses", "scene-context"),
         "notes": "Supports pose-matrix JSON directly. Navigation tokens can also be converted into pose trajectories.",
-    },
-    "hunyuanworld-voyager": {
-        "display_name": "HunyuanWorld-Voyager",
-        "category": "3D Scene",
-        "default_model_ref": _hunyuan_world_voyager_default_ref,
-        "default_input_path": str(_hunyuan_world_voyager_case1_dir() / "ref_image.png"),
-        "default_prompt": "An old-fashioned European village with thatched roofs on the houses.",
-        "default_call_kwargs": {
-            "condition_dir": str(_hunyuan_world_voyager_case1_dir()),
-            "seed": 0,
-            "infer_steps": 50,
-        },
-        "tags": ("world-model", "video-to-3d", "local-checkpoint"),
     },
     "vggt": {
         "display_name": "VGGT",

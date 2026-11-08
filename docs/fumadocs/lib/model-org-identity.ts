@@ -26,7 +26,6 @@ const HUNYUAN_MODEL_IDS = new Set([
   'hunyuanvideo-1.5',
   'hunyuanworld-1',
   'hunyuanworld-mirror',
-  'hunyuanworld-voyager',
   'hy-embodied',
   'hy-embodied-vla',
   'hy-world-2.0',

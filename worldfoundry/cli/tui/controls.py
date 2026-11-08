@@ -264,8 +264,6 @@ def infer_control_fields(model_id: str, ckpt_type: str | None = None) -> tuple[s
         fields = {"input", "prompt", "frames", "seed", "fps", "interactions", "output_path"}
     elif variant == "lyra2":
         fields = {"input", "prompt", "size", "steps", "guidance_scale", "seed", "fps", "interactions", "output_path"}
-    elif variant == "hunyuanworld-voyager":
-        fields = {"input", "prompt", "steps", "seed", "output_path"}
     elif variant == "neoverse":
         fields = {
             "input",
@@ -481,13 +479,6 @@ def _infer_control_text_overrides(variant: str) -> dict[str, dict[str, str]]:
             "input_dir": {
                 "label": "Input directory",
                 "placeholder": "image sequence directory",
-            },
-        }
-    if variant == "hunyuanworld-voyager":
-        return {
-            "input": {
-                "label": "Reference image",
-                "placeholder": "ref_image.png",
             },
         }
     if variant == "hy-world-2.0":

@@ -242,9 +242,11 @@ make verify-inference PYTHON=python3 \
 2026-10-16 的计划下线策略将 BiWM Wan2.1（`biwm-wan21@biwm-wan21`）、
 BiWM Wan2.2（`biwm-wan22@biwm-wan22`）、IRASim（`irasim@irasim`）和
 Pandora（`pandora@pandora`）移出支持范围。冻结基线中的历史记录保持不变；
-`tests/manual/native_coverage_policy.py` 显式列出这四个完整身份，允许其按计划移除，
-并通过 `retired_native_variants` 报告，不计为回放覆盖或 GPU 成功。删除其他冻结变体
-仍会失败。重新引入已下线身份时，需要像新增变体一样提供独立的 checkpoint 回放配方，
+`tests/manual/native_coverage_policy.py` 显式列出这些完整身份，允许其按计划移除，
+并通过 `retired_native_variants` 报告，不计为回放覆盖或 GPU 成功。
+HunyuanWorld-Voyager（`hunyuanworld-voyager@hunyuanworld-voyager`）以同样方式下线：
+它的运行时依赖 license-gated 本地检出或外部源码检出，而所有模型运行时都必须在仓库内运行。
+删除其他冻结变体仍会失败。重新引入已下线身份时，需要像新增变体一样提供独立的 checkpoint 回放配方，
 不能沿用历史未覆盖缺口的豁免。
 
 Runtime profile 按声明的 model ID 和 pipeline binding 识别归属，并纳入 `source_repos[].in_tree_path`，覆盖静态 import 图无法发现的子进程代码。这些声明补充静态依赖；未知路径仍保守扩大选择，受影响的 native 变体没有真实权重回放时仍失败。

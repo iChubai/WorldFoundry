@@ -979,19 +979,6 @@
       "caption": "Method overview: HunyuanVideo 1.5’s Diffusion Transformer for latent video generation.",
       "captionZh": "论文方法总览：HunyuanVideo 1.5 用于潜空间视频生成的 Diffusion Transformer。"
     },
-    "hunyuanworld-voyager": {
-      "modelId": "hunyuanworld-voyager",
-      "paperSrc": "/models/hunyuanworld-voyager/paper.png",
-      "teaserSrc": "/models/hunyuanworld-voyager/teaser.png",
-      "teaserAlt": "Official paper teaser: Loading Balancing for SP-Ring.",
-      "teaserAltZh": "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
-      "teaserCaption": "Official paper teaser: Loading Balancing for SP-Ring.",
-      "teaserCaptionZh": "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
-      "alt": "HunyuanWorld-Voyager",
-      "altZh": "HunyuanWorld-Voyager",
-      "caption": "HunyuanWorld-Voyager",
-      "captionZh": "HunyuanWorld-Voyager"
-    },
     "hy-embodied-vla": {
       "modelId": "hy-embodied-vla",
       "paperSrc": "/models/hy-embodied-vla/paper.png",

@@ -36,7 +36,6 @@ _OPERATOR_MODULES = {
     "HunyuanGameCraftOperator": "hunyuan_game_craft_operator",
     "HunyuanMirrorOperator": "hunyuan_mirror_operator",
     "HunyuanWorldPlayOperator": "hunyuan_worldplay_operator",
-    "HunyuanWorldVoyagerOperator": "hunyuan_world_voyager_operator",
     "InfiniteVGGTOperator": "infinite_vggt_operator",
     "InfiniteWorldOperator": "infinite_world_operator",
     "KairosOperator": "kairos_operator",

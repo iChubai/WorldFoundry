@@ -542,12 +542,6 @@ CAPTIONS: dict[str, dict[str, tuple[str, str]]] = {
             "论文方法总览：HunyuanWorld-Mirror 的几何与深度架构。",
         ),
     },
-    "hunyuanworld-voyager": {
-        "teaser": (
-            "Official paper teaser: Loading Balancing for SP-Ring.",
-            "论文官方 Teaser：HunyuanWorld-Voyager 的方法论文配图。",
-        ),
-    },
     "hy-embodied-vla": {
         "teaser": (
             "Official paper teaser: Overview of Hy-Embodied-0.5-VLA. An end-to-end VLA system that pairs the Hy-Embodied-0.5-MoT backbone with a flow-matching action expert under a delta-chunk action representation, pre-trained on a 10 10 K-hour.",

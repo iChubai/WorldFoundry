@@ -1202,7 +1202,6 @@ MODEL_ORGS: dict[str, str] = {
     "hunyuanvideo-1.5": "tencent-hunyuan",
     "hunyuanworld-1": "tencent-hunyuan",
     "hunyuanworld-mirror": "tencent-hunyuan",
-    "hunyuanworld-voyager": "tencent-hunyuan",
     "hy-world-2.0": "tencent-hunyuan",
     "hy-worldplay": "tencent-hunyuan",
     "hydra": "hust",

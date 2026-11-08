@@ -79,7 +79,6 @@ TARGET_PIPELINE_MODEL_IDS = (
     "cosmos-transfer-2.5",
     "dreamx-world-5b-cam",
     "hunyuanworld-1",
-    "hunyuanworld-voyager",
     "lingbot-world",
     "matrix-game-2",
     "adaworld",

@@ -258,9 +258,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "hunyuanworld-mirror": {
         "overview": "https://arxiv.org/html/2510.10726v2/Figs/pipeline.png",
     },
-    "hunyuanworld-voyager": {
-        "teaser": "https://arxiv.org/html/2405.07719v5/lb.png",
-    },
     "hy-embodied-vla": {
         "teaser": "https://arxiv.org/html/2606.14409v2/teaser_1.png",
         "overview": "https://arxiv.org/html/2606.14409v2/pipeline.png",

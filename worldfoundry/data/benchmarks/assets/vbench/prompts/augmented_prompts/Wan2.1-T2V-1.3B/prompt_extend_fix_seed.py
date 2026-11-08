@@ -254,7 +254,7 @@ class DashScopePromptExpander(PromptExpander):
 
 
 def set_seed(seed):
-    """设置所有相关随机种子"""
+    """Seed Python, NumPy and PyTorch RNGs and make cuDNN deterministic."""
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)

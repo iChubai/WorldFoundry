@@ -1,4 +1,4 @@
-# prompt_augmenter.py (优化版)
+# prompt_augmenter.py (memory-optimized)
 import gc
 import os
 
@@ -13,9 +13,13 @@ class PromptAugmenter:
         Initialize the prompt augmenter with memory optimizations
 
         Args:
-            max_image_size: 最大图像尺寸 (长或宽)，自动进行缩放
+            input_path: Text file with one prompt per line.
+            output_path: Text file that receives one augmented prompt per line.
+            model_name: Qwen model name or local path.
+            device: Device that runs the prompt expander.
+            seed: Seed passed to every prompt expansion.
         """
-        # 设置内存优化环境变量
+        # Reduce CUDA allocator fragmentation across repeated generations.
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
         self.input_path = input_path
@@ -23,7 +27,6 @@ class PromptAugmenter:
         self.device = device
         self.seed = seed
 
-        # 延迟加载模型，只在需要时初始化
         self._expander = None
         self.model_name = model_name
         self.prompt_expander = QwenPromptExpander(model_name=args.model_name, is_vl=False, device=self.device)
@@ -43,7 +46,7 @@ class PromptAugmenter:
     def augment_prompt(self, prompt):
         """Augment a single prompt with memory management"""
 
-        # 清理GPU缓存
+        # Release cached GPU memory before each generation.
         torch.cuda.empty_cache()
 
         result = self.prompt_expander(prompt, tar_lang="en", seed=self.seed)
@@ -89,7 +92,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # 初始化并运行
     print(f"Starting optimized prompt augmentation for {args.input}")
     augmenter = PromptAugmenter(
         input_path=args.input, output_path=args.output, model_name=args.model_name, device=args.device, seed=args.seed

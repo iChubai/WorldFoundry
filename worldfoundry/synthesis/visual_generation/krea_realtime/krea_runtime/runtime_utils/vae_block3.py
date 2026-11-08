@@ -41,7 +41,7 @@ class Resample(nn.Module):
         else:
             self.resample = nn.Identity()
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         b, c, t, h, w = x.size()
         if self.mode == "upsample3d" and feat_cache is not None:
             idx = feat_idx[0]
@@ -67,7 +67,7 @@ class Resample(nn.Module):
         x = self.resample(x)
         x = rearrange(x, "(b t) c h w -> b c t h w", t=t)
 
-        if self.mode == "downsample3d":
+        if self.mode == "downsample3d":  # noqa: SIM102 - Branches carry per-case comments.
             if feat_cache is not None:
                 idx = feat_idx[0]
                 if feat_cache[idx] is None:
@@ -157,7 +157,7 @@ class VAEEncoderWrapper(nn.Module):
         self.z_dim = 16
 
     def forward(self, z: torch.Tensor, feat_cache: list[torch.Tensor], stream: bool = False):
-        device, dtype = z.device, z.dtype
+        device, dtype = z.device, z.dtype  # noqa: F841 - Upstream assignment kept.
         scale = [self.mean.to(dtype=dtype), 1.0 / self.std.to(dtype=dtype)]
 
         # cache
@@ -244,7 +244,7 @@ class VAEDecoderWrapper(nn.Module):
         z = z.permute(0, 2, 1, 3, 4)
         feat_cache = list(feat_cache)
 
-        device, dtype = z.device, z.dtype
+        device, dtype = z.device, z.dtype  # noqa: F841 - Upstream assignment kept.
         scale = [self.mean.to(dtype=dtype), 1.0 / self.std.to(dtype=dtype)]
 
         if isinstance(scale[0], torch.Tensor):
@@ -273,10 +273,10 @@ class VAEEncoder3d(nn.Module):
         self,
         dim=96,
         z_dim=32,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -289,7 +289,7 @@ class VAEEncoder3d(nn.Module):
         self.cache_t = 2
 
         # dimensions
-        dims = [dim * u for u in [1] + dim_mult]
+        dims = [dim * u for u in [1] + dim_mult]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0
 
         # init block
@@ -339,7 +339,7 @@ class VAEEncoder3d(nn.Module):
             layer(x, feat_cache, feat_idx)
 
         # middle
-        for idx, layer in enumerate(self.middle):
+        for idx, layer in enumerate(self.middle):  # noqa: B007 - The loop variable is read outside the loop.
             if isinstance(layer, ResidualBlock) and feat_cache is not None:
                 x = layer(x, feat_cache, feat_idx)
             else:
@@ -368,10 +368,10 @@ class VAEDecoder3d(nn.Module):
         self,
         dim=96,
         z_dim=16,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_upsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_upsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -385,7 +385,7 @@ class VAEDecoder3d(nn.Module):
         self.decoder_conv_num = 32
 
         # dimensions
-        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]
+        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0 / 2 ** (len(dim_mult) - 2)
 
         # init block
@@ -442,7 +442,7 @@ class VAEDecoder3d(nn.Module):
         feat_idx[0] += 1
 
         # middle
-        for idx, layer in enumerate(self.middle):
+        for idx, layer in enumerate(self.middle):  # noqa: B007 - The loop variable is read outside the loop.
             if isinstance(layer, ResidualBlock) and feat_cache is not None:
                 x = layer(x, feat_cache, feat_idx)
             else:

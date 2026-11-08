@@ -50,7 +50,7 @@ class Encoder(nn.Module):
         norm_type: str = "groupnorm",
     ) -> None:
         super().__init__()
-        assert len(resnet_blocks) == len(hidden_size_mult), print(hidden_size_mult, resnet_blocks)
+        assert len(resnet_blocks) == len(hidden_size_mult), print(hidden_size_mult, resnet_blocks)  # noqa: RUF030 - Upstream assertion prints its context before failing.
         # ---- Config ----
         self.num_resolutions = len(hidden_size_mult)
         self.resolution = resolution
@@ -61,7 +61,7 @@ class Encoder(nn.Module):
 
         # ---- Downsample ----
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(hidden_size_mult)
+        in_ch_mult = (1,) + tuple(hidden_size_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.in_ch_mult = in_ch_mult
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
@@ -561,7 +561,7 @@ class CausalVAEModel(VideoBaseAE):
     def disable_tiling(self):
         self.enable_tiling(False)
 
-    def init_from_ckpt(self, path, ignore_keys=[]):
+    def init_from_ckpt(self, path, ignore_keys=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         sd = torch.load(path, map_location="cpu")
         print("init from " + path)
 

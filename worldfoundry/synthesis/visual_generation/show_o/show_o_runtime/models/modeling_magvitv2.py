@@ -1,3 +1,4 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import math
 from dataclasses import dataclass, field
 
@@ -5,8 +6,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from .common_modules import *
-from .misc import *
+from .common_modules import *  # noqa: F403 - Upstream star import kept as written.
+from .misc import *  # noqa: F403 - Upstream star import kept as written.
 from .modeling_utils import ConfigMixin, ModelMixin, register_to_config
 
 
@@ -62,9 +63,9 @@ class VQGANEncoder(ModelMixin, ConfigMixin):
     def __init__(
         self,
         ch: int = 128,
-        ch_mult: List[int] = [1, 2, 2, 4, 4],
-        num_res_blocks: List[int] = [4, 3, 4, 3, 4],
-        attn_resolutions: List[int] = [5],
+        ch_mult: List[int] = [1, 2, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_res_blocks: List[int] = [4, 3, 4, 3, 4],  # noqa: B006 - Keeps the upstream default object and signature.
+        attn_resolutions: List[int] = [5],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout: float = 0.0,
         in_ch: int = 3,
         out_ch: int = 3,
@@ -83,7 +84,7 @@ class VQGANEncoder(ModelMixin, ConfigMixin):
         self.conv_in = torch.nn.Conv2d(self.in_ch, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = self.resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
             block = nn.ModuleList()
@@ -269,9 +270,9 @@ class VQGANDecoder(ModelMixin, ConfigMixin):
     def __init__(
         self,
         ch: int = 128,
-        ch_mult: List[int] = [1, 1, 2, 2, 4],
-        num_res_blocks: List[int] = [4, 4, 3, 4, 3],
-        attn_resolutions: List[int] = [5],
+        ch_mult: List[int] = [1, 1, 2, 2, 4],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_res_blocks: List[int] = [4, 4, 3, 4, 3],  # noqa: B006 - Keeps the upstream default object and signature.
+        attn_resolutions: List[int] = [5],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout: float = 0.0,
         in_ch: int = 3,
         out_ch: int = 3,
@@ -290,7 +291,7 @@ class VQGANDecoder(ModelMixin, ConfigMixin):
 
         self.z_channels = z_channels
         # compute in_ch_mult, block_in and curr_res at lowest res
-        _in_ch_mult = (1,) + tuple(ch_mult)
+        _in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = self.resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)

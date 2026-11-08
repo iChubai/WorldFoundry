@@ -23,7 +23,7 @@ from kairos.apis.builder import DITS, KAIROS_PROCESSOR, PIPELINES_API
 class KairosEmbodiedAPI(torch.nn.Module):
     def __init__(
         self,
-        config=MMConfig(
+        config=MMConfig(  # noqa: B008 - Default evaluated once at definition, as upstream.
             {
                 "pipeline_type": "KairosEmbodiedPipeline",
                 "pretrained_dit": None,

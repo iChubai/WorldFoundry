@@ -2,7 +2,7 @@
 import logging
 import os
 import time
-from typing import Dict
+from typing import Dict  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 
 import websockets.sync.client
 from typing_extensions import override

@@ -120,7 +120,7 @@ class RealEstate10KPoseControlnetDataset(Dataset):
         sample_n_frames=49,
         relative_pose=True,
         zero_t_first_frame=True,
-        image_size=[480, 720],
+        image_size=[480, 720],  # noqa: B006 - Keeps the upstream default object and signature.
         rescale_fxy=True,
         shuffle_frames=False,
         hflip_p=0.0,
@@ -135,7 +135,7 @@ class RealEstate10KPoseControlnetDataset(Dataset):
         self.minimum_sample_stride = minimum_sample_stride
         self.sample_n_frames = sample_n_frames
 
-        self.dataset = json.load(open(os.path.join(root_path, annotation_json)))
+        self.dataset = json.load(open(os.path.join(root_path, annotation_json)))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         self.length = len(self.dataset)
         sample_size = image_size
         sample_size = tuple(sample_size) if not isinstance(sample_size, int) else (sample_size, sample_size)

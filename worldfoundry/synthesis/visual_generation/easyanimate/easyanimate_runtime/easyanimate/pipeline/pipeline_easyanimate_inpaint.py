@@ -22,7 +22,9 @@ from diffusers import DiffusionPipeline
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.models.embeddings import get_2d_rotary_pos_embed, get_3d_rotary_pos_embed
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from diffusers.pipelines.pipeline_utils import (  # noqa: F811 - Later import provides the binding, as upstream.
+    DiffusionPipeline,
+)
 from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
 from diffusers.utils import (
     BaseOutput,
@@ -90,13 +92,13 @@ def get_resize_crop_region_for_grid(src, tgt_width, tgt_height):
     r = h / w
     if r > (th / tw):
         resize_height = th
-        resize_width = int(round(th / h * w))
+        resize_width = int(round(th / h * w))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     else:
         resize_width = tw
-        resize_height = int(round(tw / w * h))
+        resize_height = int(round(tw / w * h))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
-    crop_top = int(round((th - resize_height) / 2.0))
-    crop_left = int(round((tw - resize_width) / 2.0))
+    crop_top = int(round((th - resize_height) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    crop_left = int(round((tw - resize_width) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     return (crop_top, crop_left), (crop_top + resize_height, crop_left + resize_width)
 
@@ -734,14 +736,14 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
             raise ValueError(
                 "Must provide `negative_prompt_attention_mask_2` when specifying `negative_prompt_embeds_2`."
             )
-        if prompt_embeds is not None and negative_prompt_embeds is not None:
+        if prompt_embeds is not None and negative_prompt_embeds is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds.shape != negative_prompt_embeds.shape:
                 raise ValueError(
                     "`prompt_embeds` and `negative_prompt_embeds` must have the same shape when passed directly, but"
                     f" got: `prompt_embeds` {prompt_embeds.shape} != `negative_prompt_embeds`"
                     f" {negative_prompt_embeds.shape}."
                 )
-        if prompt_embeds_2 is not None and negative_prompt_embeds_2 is not None:
+        if prompt_embeds_2 is not None and negative_prompt_embeds_2 is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds_2.shape != negative_prompt_embeds_2.shape:
                 raise ValueError(
                     "`prompt_embeds_2` and `negative_prompt_embeds_2` must have the same shape when passed directly, but"
@@ -1028,7 +1030,7 @@ class EasyAnimateInpaintPipeline(DiffusionPipeline):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         guidance_rescale: float = 0.0,
         original_size: tuple[int, int] | None = (1024, 1024),
         target_size: tuple[int, int] | None = None,

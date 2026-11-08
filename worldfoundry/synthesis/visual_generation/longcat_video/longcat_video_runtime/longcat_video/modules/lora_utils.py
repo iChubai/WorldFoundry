@@ -90,7 +90,7 @@ class LoRANetwork(torch.nn.Module):
         print(f"create LoRA network. base dim (rank): {lora_dim}, alpha: {alpha}")
 
         lora_module_names = set()
-        for key in lora_network_state_dict_loaded.keys():
+        for key in lora_network_state_dict_loaded.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if key.endswith("lora_down.weight"):
                 lora_name = key.split(".lora_down.weight")[0]
                 lora_module_names.add(lora_name)

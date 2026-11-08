@@ -18,21 +18,30 @@ from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat i
 configure_pytorch3d_extension()
 
 
-from kornia.morphology import erosion
-from pytorch3d.renderer import (
+from kornia.morphology import erosion  # noqa: E402 - Follows a module-level setup call, as upstream.
+from pytorch3d.renderer import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     PerspectiveCameras,
     PointsRasterizationSettings,
     PointsRasterizer,
 )
-from pytorch3d.renderer.points.compositor import _add_background_color_to_images
-from pytorch3d.structures import Pointclouds
-from torchvision.transforms import Resize, ToPILImage, ToTensor
-from util.midas_utils import (
+from pytorch3d.renderer.points.compositor import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    _add_background_color_to_images,
+)
+from pytorch3d.structures import Pointclouds  # noqa: E402 - Follows a module-level setup call, as upstream.
+from torchvision.transforms import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    Resize,
+    ToPILImage,
+    ToTensor,
+)
+from util.midas_utils import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     dpt_512_transform,
     dpt_transform,
 )
-from util.segment_utils import refine_disp_with_segments, save_sam_anns
-from util.utils import functbl, save_depth_map
+from util.segment_utils import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    refine_disp_with_segments,
+    save_sam_anns,
+)
+from util.utils import functbl, save_depth_map  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 BG_COLOR = (1, 0, 0)
 

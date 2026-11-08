@@ -406,7 +406,7 @@ class LongCatVideoPipeline:
             height = obj.height
             width = obj.width
         except AttributeError:
-            raise ValueError("Unsupported condition type")
+            raise ValueError("Unsupported condition type")  # noqa: B904 - Keeps the implicit exception context.
 
         ratio = height / width
         # Find the closest bucket
@@ -657,7 +657,7 @@ class LongCatVideoPipeline:
 
         self._current_timestep = None
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             if self._t2v_cpu_offload:
                 self._move_module("dit", "cpu")
                 self._move_module("vae", device)
@@ -887,7 +887,7 @@ class LongCatVideoPipeline:
 
         self._current_timestep = None
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             latents = latents.to(self.vae.dtype)
             latents = self.denormalize_latents(latents)
             output_video = self.vae.decode(latents, return_dict=False)[0]
@@ -1162,7 +1162,7 @@ class LongCatVideoPipeline:
 
         self._current_timestep = None
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             latents = latents.to(self.vae.dtype)
             latents = self.denormalize_latents(latents)
             output_video = self.vae.decode(latents, return_dict=False)[0]
@@ -1411,7 +1411,7 @@ class LongCatVideoPipeline:
 
         self._current_timestep = None
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             self._transition_t2v_modules(
                 activate="vae",
                 deactivate=("dit",),

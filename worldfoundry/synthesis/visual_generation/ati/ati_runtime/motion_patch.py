@@ -24,7 +24,7 @@ def ind_sel(target: torch.Tensor, ind: torch.Tensor, dim: int = 1):
     :param dim: dim to apply index on
     :return: sel_target [... (k), M, ...]
     """
-    assert len(ind.shape) > dim, "Index must have the target dim, but get dim: %d, ind shape: %s" % (
+    assert len(ind.shape) > dim, "Index must have the target dim, but get dim: %d, ind shape: %s" % (  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         dim,
         str(ind.shape),
     )

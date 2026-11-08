@@ -188,7 +188,7 @@ def _prepare_image(image: Any, *, center_crop: bool) -> Any:
     if pil.size != (image_size, image_size):
         pil = pil.resize((image_size, image_size), Image.Resampling.LANCZOS)
     if center_crop:
-        crop_side = int(round(image_size * math.sqrt(0.9)))
+        crop_side = int(round(image_size * math.sqrt(0.9)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         left = (image_size - crop_side) // 2
         top = (image_size - crop_side) // 2
         pil = pil.crop((left, top, left + crop_side, top + crop_side))

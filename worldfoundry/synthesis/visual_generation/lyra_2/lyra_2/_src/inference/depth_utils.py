@@ -47,7 +47,7 @@ def load_moge_model(device: torch.device):
     try:
         from worldfoundry.base_models.three_dimensions.depth.moge.model.v1 import MoGeModel
     except Exception as e:
-        raise ImportError("WorldFoundry canonical MoGe is required for --input_image_path flow. Error: " + str(e))
+        raise ImportError("WorldFoundry canonical MoGe is required for --input_image_path flow. Error: " + str(e))  # noqa: B904 - Keeps the implicit exception context.
 
     for _name, _mod in sys.modules.items():
         if "moge" in _name and hasattr(_mod, "XFORMERS_ENABLED"):

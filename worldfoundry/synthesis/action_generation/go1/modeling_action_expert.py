@@ -26,9 +26,9 @@ if has_flash_attn:
     pad_input = _flash_attn_symbols["pad_input"]
     index_first_axis = _flash_attn_symbols["index_first_axis"]
     unpad_input = _flash_attn_symbols["unpad_input"]
-import logging
+import logging  # noqa: E402 - Follows the conditional setup block.
 
-from .modeling_internlm2 import (
+from .modeling_internlm2 import (  # noqa: E402 - Follows the conditional setup block.
     InternLM2DynamicNTKScalingRotaryEmbedding,
     InternLM2LinearScalingRotaryEmbedding,
     InternLM2RotaryEmbedding,

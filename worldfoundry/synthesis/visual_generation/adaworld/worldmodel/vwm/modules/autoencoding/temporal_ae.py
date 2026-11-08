@@ -12,7 +12,7 @@ class VideoResBlock(ResnetBlock):
     def __init__(
         self, out_channels, *args, dropout=0.0, video_kernel_size=3, alpha=0.0, merge_strategy="learned", **kwargs
     ):
-        super().__init__(out_channels=out_channels, dropout=dropout, *args, **kwargs)
+        super().__init__(out_channels=out_channels, dropout=dropout, *args, **kwargs)  # noqa: B026 - Keeps the upstream argument order.
         if video_kernel_size is None:
             video_kernel_size = [3, 1, 1]
         self.time_stack = ResBlock(

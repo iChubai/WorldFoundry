@@ -158,7 +158,7 @@ class AutoencoderKL(nn.Module):
         dec_depth=6,
         dec_heads=12,
         mlp_ratio=4.0,
-        norm_layer=functools.partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=functools.partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         use_variational=True,
         **kwargs,
     ):

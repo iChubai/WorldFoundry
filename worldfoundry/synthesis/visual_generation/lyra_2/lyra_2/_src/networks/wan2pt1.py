@@ -669,7 +669,7 @@ class WanModel(nn.Module):
         cross_attn_norm=True,
         eps=1e-6,
         concat_padding_mask: bool = False,
-        sac_config: SACConfig = SACConfig(),
+        sac_config: SACConfig = SACConfig(),  # noqa: B008 - Default evaluated once at definition, as upstream.
         cp_comm_type: str = "p2p",
         postpone_checkpoint: bool = False,
         conv_patchify: bool = False,

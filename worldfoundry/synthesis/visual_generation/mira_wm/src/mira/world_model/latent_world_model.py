@@ -564,7 +564,7 @@ class LatentWorldModel(nn.Module):
         checkpoint = {"state_dict": self.state_dict()}
 
         if extra_data is not None:
-            for key in extra_data.keys():
+            for key in extra_data.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if key in checkpoint:
                     raise ValueError(f"Key {key} already exists in checkpoint, cannot overwrite")
 

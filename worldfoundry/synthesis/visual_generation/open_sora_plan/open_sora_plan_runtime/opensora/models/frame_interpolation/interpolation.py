@@ -159,7 +159,7 @@ def interpolater(model, inputs, scale, padder, iters=1):
     return outputs
 
 
-def write(outputs, input_path, output_path, frame_rate=30):
+def write(outputs, input_path, output_path, frame_rate=30):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """
     write results to the output_path.
     """

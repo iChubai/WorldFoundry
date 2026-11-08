@@ -6,7 +6,7 @@ import torch
 from scipy.stats import truncnorm
 
 from .configs import ConfigBase
-from .wall_utils import *
+from .wall_utils import *  # noqa: F403 - Upstream star import kept as written.
 
 
 class Sample(NamedTuple):
@@ -71,7 +71,7 @@ class DotDataset:
         img = torch.exp(-(c - locations).norm(dim=-1).pow(2) / (2 * self.config.dot_std * self.config.dot_std)) / (
             2 * math.pi * self.config.dot_std * self.config.dot_std
         )
-        img = normalize_images(img)
+        img = normalize_images(img)  # noqa: F405 - Name comes from the upstream star import.
         return img
 
     def generate_state_and_actions(
@@ -125,9 +125,9 @@ class DotDataset:
         if inside_walls.any():
             change_to_ef = (torch.rand(size) < 0.5).to(door_locs.device)
             # generate random samples for the new x values
-            new_x_left = sample_uniformly_between(torch.full((size,), min_val).to(door_locs.device), left_walls)
+            new_x_left = sample_uniformly_between(torch.full((size,), min_val).to(door_locs.device), left_walls)  # noqa: F405 - Name comes from the upstream star import.
 
-            new_x_right = sample_uniformly_between(right_walls, torch.full((size,), max_val).to(door_locs.device))
+            new_x_right = sample_uniformly_between(right_walls, torch.full((size,), max_val).to(door_locs.device))  # noqa: F405 - Name comes from the upstream star import.
 
             # Apply changes where conditions are met
             location[inside_walls & change_to_ef, 0] = new_x_left[inside_walls & change_to_ef]

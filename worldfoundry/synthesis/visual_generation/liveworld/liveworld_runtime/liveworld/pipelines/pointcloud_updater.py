@@ -68,7 +68,7 @@ class PointCloudUpdater(ABC):
         frame: np.ndarray,
         geometry_poses_c2w: np.ndarray,
         dynamic_mask: np.ndarray | None,
-        options: BackboneInferenceOptions,
+        options: BackboneInferenceOptions,  # noqa: F821 - Name is undefined in the upstream source.
     ) -> ReconstructionResult:
         """Reconstruct initial point cloud from a single first frame.
 
@@ -94,7 +94,7 @@ class PointCloudUpdater(ABC):
         frame_indices: list[int] | None,
         state_points: np.ndarray | None,
         state_colors: np.ndarray | None,
-        options: BackboneInferenceOptions,
+        options: BackboneInferenceOptions,  # noqa: F821 - Name is undefined in the upstream source.
         debug_dir: str | None = None,
         rgb_frames: np.ndarray | None = None,
         extra_entity_prompts: list[str] | None = None,
@@ -194,11 +194,11 @@ Supports:
 - Scene projection rendering from internal point cloud
 """
 
-import gc
+import gc  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-import open3d as o3d
-import torchvision.transforms.functional as TF
-from PIL import Image
+import open3d as o3d  # noqa: E402 - Follows a module-level setup call, as upstream.
+import torchvision.transforms.functional as TF  # noqa: E402 - Follows a module-level setup call, as upstream.
+from PIL import Image  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 
 def _depth_based_upsample(
@@ -271,11 +271,15 @@ def _depth_based_upsample(
 
 
 # Ensure stream3r is importable, then import at module level
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.pose_enc import (
+from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.pose_enc import (  # noqa: E402 - Follows module-level definitions, as upstream.
     pose_encoding_to_extri_intri,
 )
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.stream3r import STream3R
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.stream_session import StreamSession
+from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.stream3r import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    STream3R,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.stream_session import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    StreamSession,
+)
 
 
 def _create_stream_session(model, options) -> StreamSession:
@@ -855,7 +859,7 @@ class Stream3RUpdater(PointCloudUpdater):
         _cpu_offload_sam3 = getattr(self, "_cpu_offload_sam3", False)
 
         # Step 1: Save frames as temp video for Qwen video-mode detection
-        tmp_video = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+        tmp_video = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         tmp_video_path = tmp_video.name
         tmp_video.close()
         try:

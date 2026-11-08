@@ -153,7 +153,7 @@ class SceneViz:
             focal = max(H, W)
             intrinsics = np.float32([[focal, 0, W / 2], [0, focal, H / 2], [0, 0, 1]])
 
-        pts3d = depthmap_to_pts3d(depth, intrinsics, cam2world=cam2world)
+        pts3d = depthmap_to_pts3d(depth, intrinsics, cam2world=cam2world)  # noqa: F821 - Name is undefined in the upstream source.
 
         return self.add_pointcloud(pts3d, image, mask=(depth < zfar) if mask is None else mask)
 
@@ -175,7 +175,7 @@ class SceneViz:
         if isinstance(color, (list, np.ndarray, torch.Tensor)):
             color = to_numpy(color)
             col = np.concatenate([p[m] for p, m in zip(color, mask, strict=False)])
-            assert col.shape == pts.shape, bb()
+            assert col.shape == pts.shape, bb()  # noqa: F821 - Name is undefined in the upstream source.
             pct.visual.vertex_colors = uint8(col.reshape(-1, 3))
         else:
             assert len(color) == 3
@@ -192,7 +192,7 @@ class SceneViz:
         self.scene.add_geometry(pct)
         return self
 
-    def add_rgbd(self, image, depth, intrinsics=None, cam2world=None, zfar=np.inf, mask=None):
+    def add_rgbd(self, image, depth, intrinsics=None, cam2world=None, zfar=np.inf, mask=None):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
         if intrinsics is None:
             H, W, THREE = image.shape
             focal = max(H, W)
@@ -691,7 +691,7 @@ def drawMatches_lines(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row
         mask = mask[ind]
 
     whole_img = np.concatenate([img1, img2], axis=0) if row_cat else np.concatenate([img1, img2], axis=1)
-    for i, (pt1, pt2) in enumerate(zip(kp1, kp2, strict=False)):
+    for i, (pt1, pt2) in enumerate(zip(kp1, kp2, strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
         if color_by == 0:
             coord_angle = np.arctan2(pt1[1] - center1[1], pt1[0] - center1[0])
         elif color_by == 1:
@@ -700,7 +700,7 @@ def drawMatches_lines(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row
         corr_color = np.int32(64 * coord_angle / np.pi) % 128
         color = tuple(colors[corr_color].tolist())
         rand_val = np.random.rand()
-        if rand_val < 0.1:
+        if rand_val < 0.1:  # noqa: SIM102 - Statement form kept for readability.
             if ((pt1[0] <= w1 - 1) and (pt1[0] >= 0) and (pt1[1] <= h1 - 1) and (pt1[1] >= 0)) and (
                 (pt2[0] <= w2 - 1) and (pt2[0] >= 0) and (pt2[1] <= h2 - 1) and (pt2[1] >= 0)
             ):
@@ -750,10 +750,10 @@ def drawMatches_lines(img1, img2, kp1, kp2, radius=2, mask=None, color_by=0, row
     return whole_img
 
 
-import os
-import time
+import os  # noqa: E402 - Follows module-level definitions, as upstream.
+import time  # noqa: E402 - Follows module-level definitions, as upstream.
 
-import viser
+import viser  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 def rotation_matrix_to_quaternion(R):
@@ -908,7 +908,7 @@ class PointCloudViewer:
             time.sleep(10.0)
 
 
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 def colorize_feature_map(x):

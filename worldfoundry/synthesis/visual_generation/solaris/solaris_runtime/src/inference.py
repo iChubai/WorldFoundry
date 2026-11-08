@@ -26,7 +26,7 @@ def main(cfg):
 
     init_jax_distributed(cfg)
 
-    if not (jax.process_index() == 0):  # not first process
+    if not (jax.process_index() == 0):  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.  # not first process
         logging.set_verbosity(logging.ERROR)  # disable info/warning
 
     inference = instantiate_from_config(cfg.runner)

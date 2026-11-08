@@ -72,7 +72,7 @@ def _inference(
                     jerky movements, low frame rate, artifacting, color banding, unnatural transitions, outdated special \
                     effects, fake elements, unconvincing visuals, poorly edited content, jump cuts, visual noise, and \
                     flickering. Overall, the video is of poor quality."
-    data_list = json.load(open(data_path))
+    data_list = json.load(open(data_path))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     data_list = gd_utils.split_data(data_list, dp_world_size, dp_rank)
     os.makedirs(save_dir, exist_ok=True)
     # Inference loop
@@ -90,11 +90,11 @@ def _inference(
             (image_width, image_height), (width, height), mode="area", multiple=16
         )
         if float(dst_height) / image_height < float(dst_width) / image_width:
-            new_height = int(round(float(dst_width) / image_width * image_height))
+            new_height = int(round(float(dst_width) / image_width * image_height))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             new_width = dst_width
         else:
             new_height = dst_height
-            new_width = int(round(float(dst_height) / image_height * image_width))
+            new_width = int(round(float(dst_height) / image_height * image_width))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         assert dst_width <= new_width and dst_height <= new_height
         x1 = (new_width - dst_width) // 2
         y1 = (new_height - dst_height) // 2
@@ -163,7 +163,7 @@ def inference(
     vae_model_path: str | None = None,
     lora_model_path: str | None = None,
     lora_fuse: bool = False,
-    gpu_ids: list[int] = [0],
+    gpu_ids: list[int] = [0],  # noqa: B006 - Keeps the upstream default object and signature.
     num_inference_steps: int = 30,
     fps: int = 16,
     num_frames: int = 61,

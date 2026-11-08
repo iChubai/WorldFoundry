@@ -35,7 +35,7 @@ def download(url, local_path, chunk_size=1024):
 def get_ckpt_path(name, root, check=False):
     assert name in URL_MAP
     path = os.path.join(root, CKPT_MAP[name])
-    if not os.path.exists(path) or (check and not md5_hash(path) == MD5_MAP[name]):
+    if not os.path.exists(path) or (check and not md5_hash(path) == MD5_MAP[name]):  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
         print(f"Downloading {name} model from {URL_MAP[name]} to {path}")
         download(URL_MAP[name], path)
         md5 = md5_hash(path)
@@ -84,7 +84,7 @@ class LPIPS(nn.Module):
 
         res = [spatial_average(lins[kk].model(diffs[kk]), keepdim=True) for kk in range(len(self.chns))]
         val = res[0]
-        for l in range(1, len(self.chns)):
+        for l in range(1, len(self.chns)):  # noqa: E741 - Ambiguous upstream name kept as written.
             val += res[l]
         return val
 

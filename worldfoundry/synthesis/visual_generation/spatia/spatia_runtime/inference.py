@@ -600,9 +600,9 @@ def get_args():
 
     args = parser.parse_args()
     args.mask_path = [resolve_path(path) for path in args.mask_path]
-    args.map_stride = max(1, int(round(args.fps / args.map_fps)))
-    args.ref_stride = max(1, int(round(args.fps / args.ref_fps)))
-    args.ref_hist_stride = max(1, int(round(args.fps / args.ref_hist_fps)))
+    args.map_stride = max(1, int(round(args.fps / args.map_fps)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    args.ref_stride = max(1, int(round(args.fps / args.ref_fps)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    args.ref_hist_stride = max(1, int(round(args.fps / args.ref_hist_fps)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     return args
 
 

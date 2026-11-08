@@ -69,13 +69,13 @@ class ConditionalUnet1D(nn.Module):
         local_cond_dim=None,
         global_cond_dim=None,
         diffusion_step_embed_dim=256,
-        down_dims=[256, 512, 1024],
+        down_dims=[256, 512, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         kernel_size=3,
         n_groups=8,
         cond_predict_scale=False,
     ):
         super().__init__()
-        all_dims = [input_dim] + list(down_dims)
+        all_dims = [input_dim] + list(down_dims)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         start_dim = down_dims[0]
 
         dsed = diffusion_step_embed_dim

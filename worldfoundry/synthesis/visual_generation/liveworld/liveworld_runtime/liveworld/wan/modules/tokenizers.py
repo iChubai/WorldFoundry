@@ -34,4 +34,6 @@ def canonicalize(text, keep_punctuation_exact_string=None):
     return text.strip()
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    HuggingfaceTokenizer,
+)

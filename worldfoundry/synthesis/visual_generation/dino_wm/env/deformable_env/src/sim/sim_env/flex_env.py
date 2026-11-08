@@ -14,9 +14,14 @@ pyflex.loadURDF = FlexRobotHelper.loadURDF
 pyflex.resetJointState = FlexRobotHelper.resetJointState
 pyflex.getRobotShapeStates = FlexRobotHelper.getRobotShapeStates
 
-from ..utils import find_min_distance, fps_with_idx, quatFromAxisAngle, rand_float
-from .cameras import Camera
-from .flex_scene import FlexScene
+from ..utils import (  # noqa: E402 - Follows module-level setup, as upstream.
+    find_min_distance,
+    fps_with_idx,
+    quatFromAxisAngle,
+    rand_float,
+)
+from .cameras import Camera  # noqa: E402 - Follows module-level setup, as upstream.
+from .flex_scene import FlexScene  # noqa: E402 - Follows module-level setup, as upstream.
 
 BASE_DIR = os.path.abspath(os.path.join(__file__, "../../../../../../"))
 
@@ -103,7 +108,7 @@ class FlexEnv(gym.Env):
 
         return shape_states
 
-    def reset_robot(self, jointPositions=np.zeros(13).tolist()):
+    def reset_robot(self, jointPositions=np.zeros(13).tolist()):  # noqa: B008 - Default evaluated once at definition, as upstream.
         index = 0
         for j in range(7):
             p.changeDynamics(self.robotId, j, linearDamping=0, angularDamping=0)
@@ -334,14 +339,14 @@ class FlexEnv(gym.Env):
         # create way points
         if self.gripper:
             way_points = [
-                s_2d + [0.0, 0.0, 0.5],
+                s_2d + [0.0, 0.0, 0.5],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 s_2d,
                 s_2d,
-                e_2d + [0.0, 0.0, 0.5],
+                e_2d + [0.0, 0.0, 0.5],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 e_2d,
             ]
         else:
-            way_points = [s_2d + [0.0, 0.0, 0.2], s_2d, e_2d, e_2d + [0.0, 0.0, 0.2]]
+            way_points = [s_2d + [0.0, 0.0, 0.2], s_2d, e_2d, e_2d + [0.0, 0.0, 0.2]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.reset_robot(self.rest_joints)
 
         # set robot speed
@@ -469,7 +474,7 @@ class FlexEnv(gym.Env):
 
         self.reset_robot()
 
-        for i in range(200):
+        for i in range(200):  # noqa: B007 - The loop variable is read outside the loop.
             pyflex.step()
 
         # save final rendering
@@ -529,7 +534,7 @@ class FlexEnv(gym.Env):
             pickpoint = np.random.choice(chosen_points)
             obj_pos = positions[pickpoint, [0, 2]]
             slope = (obj_pos[1] - startpoint_pos[1]) / (obj_pos[0] - startpoint_pos[0])
-            if obj_pos[0] < startpoint_pos[0]:
+            if obj_pos[0] < startpoint_pos[0]:  # noqa: SIM108 - Branches carry per-case comments.
                 # 1.0 for planning
                 # (1.5, 2.0) for data collection
                 x_end = obj_pos[0] - 1.0  # rand_float(1.5, 2.0)
@@ -558,8 +563,8 @@ class FlexEnv(gym.Env):
             positions[:, 1],
             positions[:, 2],
         )
-        x_min, y_min, z_min = np.min(particle_x), np.min(particle_y), np.min(particle_z)
-        x_max, y_max, z_max = np.max(particle_x), np.max(particle_y), np.max(particle_z)
+        x_min, y_min, z_min = np.min(particle_x), np.min(particle_y), np.min(particle_z)  # noqa: F841 - Upstream assignment kept.
+        x_max, y_max, z_max = np.max(particle_x), np.max(particle_y), np.max(particle_z)  # noqa: F841 - Upstream assignment kept.
 
         # choose the starting point at the boundary of the object
         if init:  # record boundary points

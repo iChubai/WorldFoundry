@@ -83,20 +83,20 @@ class Florence2VisionConfig(PretrainedConfig):
     def __init__(
         self,
         drop_path_rate=0.1,
-        patch_size=[7, 3, 3, 3],
-        patch_stride=[4, 2, 2, 2],
-        patch_padding=[3, 1, 1, 1],
-        patch_prenorm=[False, True, True, True],
+        patch_size=[7, 3, 3, 3],  # noqa: B006 - Keeps the upstream default object and signature.
+        patch_stride=[4, 2, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
+        patch_padding=[3, 1, 1, 1],  # noqa: B006 - Keeps the upstream default object and signature.
+        patch_prenorm=[False, True, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         enable_checkpoint=False,
-        dim_embed=[256, 512, 1024, 2048],
-        num_heads=[8, 16, 32, 64],
-        num_groups=[8, 16, 32, 64],
-        depths=[1, 1, 9, 1],
+        dim_embed=[256, 512, 1024, 2048],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_heads=[8, 16, 32, 64],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_groups=[8, 16, 32, 64],  # noqa: B006 - Keeps the upstream default object and signature.
+        depths=[1, 1, 9, 1],  # noqa: B006 - Keeps the upstream default object and signature.
         window_size=12,
         projection_dim=1024,
         visual_temporal_embedding=None,
         image_pos_embed=None,
-        image_feature_source=["spatial_avg_pool", "temporal_avg_pool"],
+        image_feature_source=["spatial_avg_pool", "temporal_avg_pool"],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         self.drop_path_rate = drop_path_rate

@@ -378,7 +378,7 @@ class CameraTrajectory:
             with open(filepath) as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON format: {e}")
+            raise ValueError(f"Invalid JSON format: {e}")  # noqa: B904 - Keeps the implicit exception context.
 
         mode = data.get("mode", "relative")
         if mode not in ("relative", "global"):
@@ -566,7 +566,7 @@ class CameraTrajectory:
             try:
                 idx = int(key_str)
             except (TypeError, ValueError):
-                raise ValueError(f"Keyframe {i}: key must be an integer frame index, got '{key_str}'")
+                raise ValueError(f"Keyframe {i}: key must be an integer frame index, got '{key_str}'")  # noqa: B904 - Keeps the implicit exception context.
             if idx < 0 or idx >= num_frames:
                 raise ValueError(f"Keyframe {i}: frame index must be >= 0 and < {num_frames}, got {idx}")
             frame_indices.append(idx)

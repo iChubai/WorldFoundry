@@ -14,31 +14,47 @@ DEFAULT_CHECKPOINT = ""
 DEFAULT_NORM_STATS = ""
 DEFAULT_DEVICE = "cuda:0"
 
-import copy
-import html
-import json
-from collections.abc import Callable
-from typing import Any
+import copy  # noqa: E402 - Follows module-level setup, as upstream.
+import html  # noqa: E402 - Follows module-level setup, as upstream.
+import json  # noqa: E402 - Follows module-level setup, as upstream.
+from collections.abc import Callable  # noqa: E402 - Follows module-level setup, as upstream.
+from typing import Any  # noqa: E402 - Follows module-level setup, as upstream.
 
-import numpy as np
-import PIL
-import regex as re
-import torch
-import torch.nn.functional as torch_F
-from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
-from diffusers.image_processor import PipelineImageInput
-from diffusers.loaders import WanLoraLoaderMixin
-from diffusers.models import AutoencoderKLWan
-from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
-from diffusers.utils import is_ftfy_available, is_torch_xla_available, logging
-from diffusers.utils.torch_utils import randn_tensor
-from diffusers.video_processor import VideoProcessor
-from PIL import Image
-from transformers import AutoTokenizer, CLIPImageProcessor, CLIPVisionModel, UMT5EncoderModel
+import numpy as np  # noqa: E402 - Follows module-level setup, as upstream.
+import PIL  # noqa: E402 - Follows module-level setup, as upstream.
+import regex as re  # noqa: E402 - Follows module-level setup, as upstream.
+import torch  # noqa: E402 - Follows module-level setup, as upstream.
+import torch.nn.functional as torch_F  # noqa: E402 - Follows module-level setup, as upstream.
+from diffusers.callbacks import (  # noqa: E402 - Follows module-level setup, as upstream.
+    MultiPipelineCallbacks,
+    PipelineCallback,
+)
+from diffusers.image_processor import PipelineImageInput  # noqa: E402 - Follows module-level setup, as upstream.
+from diffusers.loaders import WanLoraLoaderMixin  # noqa: E402 - Follows module-level setup, as upstream.
+from diffusers.models import AutoencoderKLWan  # noqa: E402 - Follows module-level setup, as upstream.
+from diffusers.pipelines.pipeline_utils import (  # noqa: E402 - Follows module-level setup, as upstream.
+    DiffusionPipeline,
+)
+from diffusers.schedulers import (  # noqa: E402 - Follows module-level setup, as upstream.
+    FlowMatchEulerDiscreteScheduler,
+)
+from diffusers.utils import (  # noqa: E402 - Follows module-level setup, as upstream.
+    is_ftfy_available,
+    is_torch_xla_available,
+    logging,
+)
+from diffusers.utils.torch_utils import randn_tensor  # noqa: E402 - Follows module-level setup, as upstream.
+from diffusers.video_processor import VideoProcessor  # noqa: E402 - Follows module-level setup, as upstream.
+from PIL import Image  # noqa: E402 - Follows module-level setup, as upstream.
+from transformers import (  # noqa: E402 - Follows module-level setup, as upstream.
+    AutoTokenizer,
+    CLIPImageProcessor,
+    CLIPVisionModel,
+    UMT5EncoderModel,
+)
 
-from .transformer import CasualWorldActionTransformer
-from .transformer_mot import CasualWorldActionTransformer_MoT
+from .transformer import CasualWorldActionTransformer  # noqa: E402 - Follows module-level setup, as upstream.
+from .transformer_mot import CasualWorldActionTransformer_MoT  # noqa: E402 - Follows module-level setup, as upstream.
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm
@@ -444,7 +460,7 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         action_dim: int = 32,
     ):
@@ -684,19 +700,19 @@ class WAPipeline(DiffusionPipeline, WanLoraLoaderMixin):
             return action
 
 
-from torchvision.transforms import InterpolationMode
-from torchvision.transforms import functional as F
+from torchvision.transforms import InterpolationMode  # noqa: E402 - Follows the logging setup.
+from torchvision.transforms import functional as F  # noqa: E402 - Follows the logging setup.
 
 
 def process_images(input_images, dst_width, dst_height):
     height = input_images.height
     width = input_images.width
     if float(dst_height) / height < float(dst_width) / width:
-        new_height = int(round(float(dst_width) / width * height))
+        new_height = int(round(float(dst_width) / width * height))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         new_width = dst_width
     else:
         new_height = dst_height
-        new_width = int(round(float(dst_height) / height * width))
+        new_width = int(round(float(dst_height) / height * width))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     input_images = F.resize(input_images, (new_height, new_width), InterpolationMode.BILINEAR)
     # center crop
     x1 = (new_width - dst_width) // 2

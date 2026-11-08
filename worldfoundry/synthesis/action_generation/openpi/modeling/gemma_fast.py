@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 
 """
 Gemma model implementation from big_vision/models/ppp/gemma.py (with small modifications for NNX compatibility)

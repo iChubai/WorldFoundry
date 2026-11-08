@@ -705,7 +705,7 @@ class OpenPIRuntime:
             "action_shape": list(actions.shape),
             "action": _jsonable(actions[0]),  # Store the first action as a single item for convenience.
             "actions": _jsonable(actions),  # Store all actions.
-            "result_keys": sorted(str(key) for key in result.keys()),
+            "result_keys": sorted(str(key) for key in result.keys()),  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             "duration_seconds": round(time.monotonic() - started, 3),
             "metadata": _jsonable(dict(extra_metadata or {})),
         }

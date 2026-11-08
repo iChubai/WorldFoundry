@@ -138,7 +138,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
                 f" {negative_prompt_embeds}. Please make sure to only forward one of the two."
             )
 
-        if prompt_embeds is not None and negative_prompt_embeds is not None:
+        if prompt_embeds is not None and negative_prompt_embeds is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds.shape != negative_prompt_embeds.shape:
                 raise ValueError(
                     "`prompt_embeds` and `negative_prompt_embeds` must have the same shape when passed directly, but"
@@ -426,7 +426,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
         vae_ver: str = "88-4c-sd",
         enable_tiling: bool = False,
@@ -848,7 +848,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
         if last_latents.shape[2] == 1:
             latents = latents[:, :, 1:, :, :]
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             expand_temporal_dim = False
             if len(latents.shape) == 4:
                 if isinstance(self.vae, AutoencoderKLCausal3D):
@@ -861,7 +861,7 @@ class HunyuanVideoGamePipeline(DiffusionPipeline, TextualInversionLoaderMixin, L
                     f"Only support latents with shape (b, c, h, w) or (b, c, f, h, w), but got {latents.shape}."
                 )
 
-            last_latents = latents[:, :, latents.shape[2] // 2 :, :, :] if not last_latents.shape[2] == 1 else latents
+            last_latents = latents[:, :, latents.shape[2] // 2 :, :, :] if not last_latents.shape[2] == 1 else latents  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             latent_decode = last_latents.clone()
             latent_decode = latent_decode / self.vae.config.scaling_factor
 

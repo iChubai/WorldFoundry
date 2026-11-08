@@ -19,7 +19,7 @@ class BasePolicy(ABC):
     def infer(self, observation: Mapping[str, Any]) -> Any:
         """Return an action for one decoded observation."""
 
-    def reset(self, reset_info: Mapping[str, Any]) -> None:
+    def reset(self, reset_info: Mapping[str, Any]) -> None:  # noqa: B027 - Optional hook with a no-op default.
         """Reset optional episode-local state."""
 
 

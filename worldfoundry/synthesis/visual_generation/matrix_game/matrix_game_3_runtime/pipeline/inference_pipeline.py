@@ -468,7 +468,7 @@ class MatrixGame3Pipeline:
         max_seq_len = max_total_f * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
 
         if self.sp_size > 1:
-            max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
+            max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         with torch.no_grad():
             total_frames = 0
@@ -567,7 +567,7 @@ class MatrixGame3Pipeline:
                                 lat_w=lat_w,
                             )
                         )
-                    plucker = torch.cat(memory_pluckers + [plucker], dim=2)
+                    plucker = torch.cat(memory_pluckers + [plucker], dim=2)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     src = torch.cat(all_latents_list, dim=2)
                     x_memory = src[:, :, latent_idx]
                     memory_mouse_condition = torch.ones((1, len(selected_index), 2)).to(
@@ -658,7 +658,7 @@ class MatrixGame3Pipeline:
                     else:
                         noise_pred = self.model(**model_kwargs)
 
-                    if args is not None and getattr(args, "use_int8", False) and getattr(args, "verify_quant", False):
+                    if args is not None and getattr(args, "use_int8", False) and getattr(args, "verify_quant", False):  # noqa: SIM102 - Statement form kept for readability.
                         if _ == 0 and self.rank == 0:
                             print(
                                 f"\n[Verification] Step {_}: noise_pred stats: mean={noise_pred.mean().item():.6f}, std={noise_pred.std().item():.6f}",

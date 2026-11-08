@@ -1,3 +1,4 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import random
 from dataclasses import dataclass
 from typing import NamedTuple, Optional
@@ -5,7 +6,7 @@ from typing import NamedTuple, Optional
 import torch
 
 from .single import DotDataset, DotDatasetConfig
-from .wall_utils import *
+from .wall_utils import *  # noqa: F403 - Upstream star import kept as written.
 
 
 class WallSample(NamedTuple):
@@ -22,7 +23,7 @@ class WallDatasetConfig(DotDatasetConfig):
     fix_wall: bool = True
     fix_wall_batch_k: Optional[int] = None  # noqa: UP045 - DataclassArgParser passes field types to argparse, which requires a callable type.
 
-    fix_wall: bool = True
+    fix_wall: bool = True  # noqa: PIE794 - Duplicate upstream field; the later definition applies.
     wall_padding: int = 20
     door_padding: int = 10
     wall_width: int = 1

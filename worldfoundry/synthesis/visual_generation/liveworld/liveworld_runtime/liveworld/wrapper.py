@@ -118,7 +118,7 @@ class WanVAEWrapper(torch.nn.Module):
         return output
 
     def run_vae_encoder(self, img, new_target_video_length=None, add_first_to_kvcache=False):
-        if add_first_to_kvcache == None:
+        if add_first_to_kvcache == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             add_first_to_kvcache = False
 
         if new_target_video_length is not None:
@@ -586,9 +586,11 @@ class WanWrapperBase(torch.nn.Module):
 
 # --- Additional import for BidirectionalWanWrapperSP ---
 
-import torch
+import torch  # noqa: E402 - Follows module-level definitions, as upstream.
 
-from .wan.modules.model_state_adapter import StateAdapterWanModel
+from .wan.modules.model_state_adapter import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    StateAdapterWanModel,
+)
 
 
 class BidirectionalWanWrapperSP(WanWrapperBase):

@@ -29,7 +29,7 @@ class AddPositionEmbs(nn.Module):
           Output tensor with shape `(bs, timesteps, in_dim)`.
         """
         # inputs.shape is (batch_size, seq_len, emb_dim).
-        assert inputs.ndim == 3, "Number of dimensions should be 3, but it is: %d" % inputs.ndim
+        assert inputs.ndim == 3, "Number of dimensions should be 3, but it is: %d" % inputs.ndim  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         pos_emb_shape = (1, inputs.shape[1], inputs.shape[2])
         pe = self.param("pos_embedding", self.posemb_init, pos_emb_shape)
         return inputs + pe
@@ -84,7 +84,7 @@ class MAPHead(nn.Module):
         else:
             mask = None
 
-        *batch_dims, l, d = x.shape
+        *batch_dims, l, d = x.shape  # noqa: E741 - Ambiguous upstream name kept as written.
         x = x.reshape(-1, l, d)
         batch_size = x.shape[0]
 

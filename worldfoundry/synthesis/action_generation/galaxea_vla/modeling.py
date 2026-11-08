@@ -25,20 +25,23 @@ Generates causal masking for the mixtures
 Potentially customized to add/remove mixtures, e.g., remove proprio or add another vision module
 
 """
-import logging
-from pathlib import Path
+import logging  # noqa: E402 - Follows a module-level setup call, as upstream.
+from pathlib import Path  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-import torch
-from safetensors import safe_open
-from torch import nn
+import torch  # noqa: E402 - Follows a module-level setup call, as upstream.
+from safetensors import safe_open  # noqa: E402 - Follows a module-level setup call, as upstream.
+from torch import nn  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from .joint_model import JointModel
-from .modules import (
+from .joint_model import JointModel  # noqa: E402 - Follows a module-level setup call, as upstream.
+from .modules import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     ActionDecoder,
     ActionEncoder,
     SinusoidalPosEmb,
 )
-from .siglip import PaliGemmaMultiModalProjector, SiglipVisionModel
+from .siglip import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    PaliGemmaMultiModalProjector,
+    SiglipVisionModel,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +130,7 @@ class GalaxeaZero(nn.Module):
         tensors = {}
         for safetensors_file in safetensors_files:
             with safe_open(str(safetensors_file), framework="pt", device="cpu") as f:
-                for key in f.keys():
+                for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     tensors[key] = f.get_tensor(key)
 
         # load embed tokens
@@ -160,7 +163,7 @@ class GalaxeaZero(nn.Module):
         # load lm --- do not change any lora weights
         joint_model_state_dict = self.joint_model.state_dict()
         lora_keys = []
-        for key in joint_model_state_dict.keys():  # avoid RuntimeError: OrderedDict mutated during iteration
+        for key in joint_model_state_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.  # avoid RuntimeError: OrderedDict mutated during iteration
             if "lora_" in key:
                 lora_keys.append(key)
         for key in lora_keys:
@@ -280,7 +283,7 @@ class GalaxeaZero(nn.Module):
 
         # [Batch_Size, Seq_Len]
         image_mask = input_ids == self.image_token_index  # [Batch_Size, Seq_Len]
-        if (
+        if (  # noqa: SIM108 - Branches carry per-case comments.
             self.fill_padded_with_token
         ):  # In the final embedding, the padded ones are filled with the token of pad_token_id
             text_mask = ~image_mask

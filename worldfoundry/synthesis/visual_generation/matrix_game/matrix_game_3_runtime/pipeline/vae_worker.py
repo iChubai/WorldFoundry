@@ -7,17 +7,17 @@ _repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
 
-import argparse
-import json
+import argparse  # noqa: E402 - Follows the sys.path setup.
+import json  # noqa: E402 - Follows the sys.path setup.
 
-import numpy as np
-import torch
-import torch.multiprocessing as mp
-from einops import rearrange
-from utils.visualize import process_video
+import numpy as np  # noqa: E402 - Follows the sys.path setup.
+import torch  # noqa: E402 - Follows the sys.path setup.
+import torch.multiprocessing as mp  # noqa: E402 - Follows the sys.path setup.
+from einops import rearrange  # noqa: E402 - Follows the sys.path setup.
+from utils.visualize import process_video  # noqa: E402 - Follows the sys.path setup.
 
 # isort: split
-from pipeline.vae_config import load_vae
+from pipeline.vae_config import load_vae  # noqa: E402 - Follows the sys.path setup.
 
 
 def _matrix_game3_asset_root() -> str:
@@ -153,4 +153,4 @@ if __name__ == "__main__":
     if args.metadata_stdin:
         meta = json.load(sys.stdin)
 
-    run_vae_worker(args.watch_dir, args.gpu_id, metadata=meta)
+    run_vae_worker(args.watch_dir, args.gpu_id, metadata=meta)  # noqa: F821 - Name is undefined in the upstream source.

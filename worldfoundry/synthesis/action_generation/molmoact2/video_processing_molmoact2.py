@@ -796,7 +796,7 @@ class MolmoAct2VideoProcessor(BaseVideoProcessor):
     ) -> BatchFeature:
         validate_kwargs(
             captured_kwargs=kwargs.keys(),
-            valid_processor_keys=list(self.valid_kwargs.__annotations__.keys()) + ["return_tensors"],
+            valid_processor_keys=list(self.valid_kwargs.__annotations__.keys()) + ["return_tensors"],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         )
 
         # Set default kwargs from self. This ensures that if a kwarg is not provided

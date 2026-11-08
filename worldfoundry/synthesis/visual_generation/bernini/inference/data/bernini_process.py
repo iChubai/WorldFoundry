@@ -203,8 +203,8 @@ def bernini_process_sample(
     img_dropout_rate: float,
     video_dropout_rate: float,
     max_vae_frames: int | None = None,
-    noise_sigma=torch.tensor(0),
-    noise_timestep=torch.tensor(0),
+    noise_sigma=torch.tensor(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
+    noise_timestep=torch.tensor(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
     noise_sigma_low=None,
     noise_timestep_low=None,
     vit_mask_ratio: float = 1.0,  # mask all tokens when inference

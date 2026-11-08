@@ -163,7 +163,7 @@ def pose_to_input(pose_data, latent_num: int, tps: bool = False):
         r = R.from_matrix(R_rel)
         rot_angles_deg = r.as_euler("xyz", degrees=True)
 
-        if move_norms > move_norm_valid:
+        if move_norms > move_norm_valid:  # noqa: SIM102 - Statement form kept for readability.
             if (not tps) or (tps and abs(rot_angles_deg[1]) < 5e-2 and abs(rot_angles_deg[0]) < 5e-2):
                 if trans_angles_deg[2] < 60:
                     trans_one_hot[i, 0] = 1

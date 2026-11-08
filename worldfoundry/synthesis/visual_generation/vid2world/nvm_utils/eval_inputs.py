@@ -190,7 +190,7 @@ class BaseDataset(Dataset):
         if len(yaw.shape) == 2:
             yaw = yaw.squeeze(1)
 
-        if yaw.shape != (self.len_traj_pred + 1,):
+        if yaw.shape != (self.len_traj_pred + 1,):  # noqa: SIM102 - Branches carry per-case comments.
             # for the case that the trajectory is shorter than the video length, which can happen in our usage of this in training set
             if not only_goal:
                 raise ValueError("is used?")
@@ -299,7 +299,7 @@ class RECONVIDDataset(BaseDataset):
             )
         except Exception as e:
             print(f"Exception in {self.dataset_name}", e)
-            raise Exception(e)
+            raise Exception(e)  # noqa: B904 - Keeps the implicit exception context.
 
 
 class RECONEvalDataset(BaseDataset):
@@ -385,4 +385,4 @@ class RECONEvalDataset(BaseDataset):
             )
         except Exception as e:
             print(f"Exception in {self.dataset_name}", e)
-            raise Exception(e)
+            raise Exception(e)  # noqa: B904 - Keeps the implicit exception context.

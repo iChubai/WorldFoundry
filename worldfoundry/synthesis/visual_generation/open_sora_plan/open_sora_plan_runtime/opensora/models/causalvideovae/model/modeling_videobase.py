@@ -3,8 +3,8 @@ import os
 
 import torch
 from diffusers import ConfigMixin, ModelMixin
-from diffusers.configuration_utils import ConfigMixin
-from diffusers.models.modeling_utils import ModelMixin
+from diffusers.configuration_utils import ConfigMixin  # noqa: F811 - Later import provides the binding, as upstream.
+from diffusers.models.modeling_utils import ModelMixin  # noqa: F811 - Later import provides the binding, as upstream.
 
 
 class VideoBaseAE(ModelMixin, ConfigMixin):

@@ -64,10 +64,10 @@ def get_actions_joint(gripper, all_joints=None, slices=None, delta_act_sidx=None
 
     if slices is None:
         ### the first frame is repeated to fill memory
-        n = all_ends_p.shape[0] - 1 + delta_act_sidx
+        n = all_ends_p.shape[0] - 1 + delta_act_sidx  # noqa: F821 - Name is undefined in the upstream source.
         slices = [
             0,
-        ] * (delta_act_sidx - 1) + list(range(all_ends_p.shape[0]))
+        ] * (delta_act_sidx - 1) + list(range(all_ends_p.shape[0]))  # noqa: F821 - Name is undefined in the upstream source.
     else:
         n = len(slices)
 

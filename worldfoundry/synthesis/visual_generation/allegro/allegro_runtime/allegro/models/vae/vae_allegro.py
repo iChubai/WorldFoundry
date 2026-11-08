@@ -29,7 +29,7 @@ class Encoder3D(nn.Module):
         in_channels=3,
         out_channels=3,
         num_blocks=4,
-        blocks_temp_li=[False, False, False, False],
+        blocks_temp_li=[False, False, False, False],  # noqa: B006 - Keeps the upstream default object and signature.
         block_out_channels=(64,),
         layers_per_block=2,
         norm_num_groups=32,
@@ -142,7 +142,7 @@ class Decoder3D(nn.Module):
         in_channels=4,
         out_channels=3,
         num_blocks=4,
-        blocks_temp_li=[False, False, False, False],
+        blocks_temp_li=[False, False, False, False],  # noqa: B006 - Keeps the upstream default object and signature.
         block_out_channels=(64,),
         layers_per_block=2,
         norm_num_groups=32,
@@ -314,8 +314,8 @@ class AllegroAutoencoderKL3D(ModelMixin, ConfigMixin):
         chunk_len: int = 24,
         t_over: int = 8,
         scale_factor: float = 0.13235,
-        blocks_tempdown_li=[True, True, False, False],
-        blocks_tempup_li=[False, True, True, False],
+        blocks_tempdown_li=[True, True, False, False],  # noqa: B006 - Keeps the upstream default object and signature.
+        blocks_tempup_li=[False, True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         load_mode="full",
     ):
         super().__init__()

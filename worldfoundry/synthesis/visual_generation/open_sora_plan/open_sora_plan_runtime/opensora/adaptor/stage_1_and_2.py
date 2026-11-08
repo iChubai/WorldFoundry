@@ -479,7 +479,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         # interesting code: unique ids being assigned to individual parameters
         largest_param_numel = 0
         count = 0
-        for i, params_group in enumerate(self.bit16_groups):
+        for i, params_group in enumerate(self.bit16_groups):  # noqa: B007 - The loop variable is read outside the loop.
             for param in params_group:
                 unique_id = id(param)
                 self.param_id[unique_id] = count
@@ -512,7 +512,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             self.temp_grad_buffer_for_gpu_offload = torch.zeros(
                 largest_param_numel, device=get_accelerator().current_device_name(), dtype=self.dtype
             )
-            for i, params_group in enumerate(self.bit16_groups):
+            for i, params_group in enumerate(self.bit16_groups):  # noqa: B007 - The loop variable is read outside the loop.
                 self.get_grad_position(i, self.params_in_partition[i], self.first_offset[i], self.partition_size[i])
 
         # mapping from parameter to partition that it belongs to
@@ -643,13 +643,13 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             "Reduce Scatter in ZeRO Stage 2 must be set to True for MoE. Other code paths are not tested with MoE"
         )
 
-        assert any([self.is_moe_group(group) for group in self.optimizer.param_groups]), (
+        assert any([self.is_moe_group(group) for group in self.optimizer.param_groups]), (  # noqa: C419 - Evaluates every element before testing, as upstream.
             "The model has moe layers, but None of the param groups are marked as MoE. Create a param group with 'moe' key set to True before creating optimizer"
         )
         self.is_moe_param_group = []
         for i, group in enumerate(self.optimizer.param_groups):
             if self.is_moe_group(group):
-                assert all([is_moe_param(param) for param in group["params"]]), (
+                assert all([is_moe_param(param) for param in group["params"]]), (  # noqa: C419 - Evaluates every element before testing, as upstream.
                     "All params in MoE group must be MoE params"
                 )
                 self.real_zp_process_group[i] = self.expert_dp_process_group[group["name"]]
@@ -687,7 +687,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         reordered_indices = {}
 
         for partition_index in partition_tensors:
-            for i, (original_index, tensor) in enumerate(partition_tensors[partition_index]):
+            for i, (original_index, tensor) in enumerate(partition_tensors[partition_index]):  # noqa: B007 - The loop variable is read outside the loop.
                 reordered_indices[original_index] = len(reordered_tensors)
                 reordered_tensors.append(tensor)
 
@@ -700,7 +700,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             self.grads_in_partition_offset = 0
 
     def initialize_optimizer_states(self):
-        for i, group in enumerate(self.bit16_groups):
+        for i, group in enumerate(self.bit16_groups):  # noqa: B007 - The loop variable is read outside the loop.
             single_grad_partition = torch.zeros(
                 int(self.partition_size[i]), dtype=self.single_partition_of_fp32_groups[i].dtype, device=self.device
             )
@@ -970,7 +970,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             self.report_ipg_memory_usage("In ipg_remove_grads after reduce_ipg_grads", param.numel())
 
         param_id = self.get_param_id(param)
-        assert self.params_already_reduced[param_id] == False, (
+        assert self.params_already_reduced[param_id] == False, (  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             f"The parameter {param_id} has already been reduced. \
             Gradient computed twice for this partition. \
             Multiple gradient reduction is currently not supported"
@@ -1100,7 +1100,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                     grad_reduc.data.div_(dist.get_world_size(group=process_group) / float(self.sequence_parallel_size))
 
                 partition_ids = self.param_to_partition_ids[i][param_id]
-                assert all([p_id < dist.get_world_size(group=process_group) for p_id in partition_ids]), (
+                assert all([p_id < dist.get_world_size(group=process_group) for p_id in partition_ids]), (  # noqa: C419 - Evaluates every element before testing, as upstream.
                     f"world size {dist.get_world_size(group=process_group)} and p_ids: {partition_ids}"
                 )
                 _partition_size = self.partition_size[i]
@@ -1423,7 +1423,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
 
         with get_accelerator().stream(stream):
             for _, param, param_id in self.params_in_ipg_bucket:
-                assert self.params_already_reduced[param_id] == False, (
+                assert self.params_already_reduced[param_id] == False, (  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
                     f"The parameter {param_id} has already been reduced. \
                     Gradient computed twice for this partition. \
                     Multiple gradient reduction is currently not supported"
@@ -1547,7 +1547,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             global_rank = dist.get_global_rank(self.dp_process_group, rank)
             dist.reduce(tensor_to_allreduce, global_rank, group=self.dp_process_group)
 
-        if communication_data_type != tensor.dtype and tensor is not tensor_to_allreduce:
+        if communication_data_type != tensor.dtype and tensor is not tensor_to_allreduce:  # noqa: SIM102 - Statement form kept for readability.
             if rank is None or rank == dist.get_rank(group=process_group):
                 tensor.copy_(tensor_to_allreduce)
 
@@ -2016,7 +2016,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
 
     # `params` is a list / generator of torch.Variable
     def has_overflow_serial(self, params, is_grad_list=False):
-        for p in params:
+        for p in params:  # noqa: SIM110 - Keeps the explicit loop.
             if p.grad is not None and self._has_inf_or_nan(p.grad.data):
                 return True
 
@@ -2306,7 +2306,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                 ranks = self.get_ep_ranks(group_name=self.optimizer.param_groups[i]["name"])
                 all_partition_group_states = [all_partition_group_states[i] for i in ranks]
 
-            for key in all_partition_group_states[0].keys():
+            for key in all_partition_group_states[0].keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 all_partition_states = [all_states[key] for all_states in all_partition_group_states]
                 partition_states[key] = self._partition_base_optimizer_state(key, all_partition_states, i)
             base_optimizer_group_states.append(partition_states)
@@ -2339,7 +2339,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         self._load_hp_checkpoint_state(checkpoint_folder)
 
     @property
-    def param_groups(self):
+    def param_groups(self):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
         """Forward the wrapped optimizer's parameters."""
         return self.optimizer.param_groups
 

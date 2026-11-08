@@ -41,7 +41,7 @@ def _check_model_weights(model: object, checkpoint_dir: Path) -> dict[str, objec
 
     model_shapes = {key: tuple(value.shape) for key, value in model.state_dict().items()}
     with safe_open(checkpoint_dir / "model.safetensors", framework="pt", device="cpu") as reader:
-        checkpoint_shapes = {key: tuple(reader.get_slice(key).get_shape()) for key in reader.keys()}
+        checkpoint_shapes = {key: tuple(reader.get_slice(key).get_shape()) for key in reader.keys()}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
     missing = sorted(model_shapes.keys() - checkpoint_shapes.keys())
     unexpected = sorted(checkpoint_shapes.keys() - model_shapes.keys())
     mismatched = sorted(

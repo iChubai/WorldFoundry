@@ -57,7 +57,7 @@ class Activation1d(nn.Module):
             x = self.downsample(x)
             return x
         else:
-            if self.act.__class__.__name__ == "Snake":
+            if self.act.__class__.__name__ == "Snake":  # noqa: SIM108 - Branches carry per-case comments.
                 beta = self.act.alpha.data  # Snake uses same params for alpha and beta
             else:
                 beta = self.act.beta.data  # Snakebeta uses different params for alpha and beta

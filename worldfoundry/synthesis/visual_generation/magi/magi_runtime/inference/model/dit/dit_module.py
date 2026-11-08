@@ -465,7 +465,7 @@ class PerTensorQuantizedFp8Linear(torch.nn.Module):
             self.input_scale,
             self.weight_scale,
             dtype=self.output_dtype,
-        ).reshape(prefix_shape + (self.out_features,))
+        ).reshape(prefix_shape + (self.out_features,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 ##########################################################
@@ -496,7 +496,7 @@ class PerChannelQuantizedFp8Linear(torch.nn.Module):
             self.input_scale,
             self.weight_scale,
             dtype=self.output_dtype,
-        ).reshape(prefix_shape + (self.out_features,))
+        ).reshape(prefix_shape + (self.out_features,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 ##########################################################
@@ -527,7 +527,7 @@ class CustomMLP(torch.nn.Module):
         self.engine_config: EngineConfig = engine_config
         self.layer_number = layer_number
 
-        self.input_size = input_size if input_size != None else self.model_config.hidden_size
+        self.input_size = input_size if input_size != None else self.model_config.hidden_size  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
         self.layer_norm = torch.nn.LayerNorm(
             self.input_size, eps=self.model_config.layernorm_epsilon, dtype=self.model_config.params_dtype
         )

@@ -182,9 +182,9 @@ def __getattr__(name: str) -> Any:
 
 
 __all__ = [
-    "HunyuanVideoPipelineOutput",
+    "HunyuanVideoPipelineOutput",  # noqa: F822 - Provided by the module-level __getattr__.
     "HunyuanWorldPlayRuntime",
     "HunyuanWorldPlaySynthesis",
-    "_HunyuanWorldPlayInternalPipeline",
+    "_HunyuanWorldPlayInternalPipeline",  # noqa: F822 - Provided by the module-level __getattr__.
     "load_runtime",
 ]

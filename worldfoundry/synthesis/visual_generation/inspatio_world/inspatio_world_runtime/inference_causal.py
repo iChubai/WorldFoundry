@@ -280,7 +280,7 @@ def encode_video(video_bcthw: torch.Tensor) -> torch.Tensor:
 # ============================================================================
 # Dataset
 # ============================================================================
-from inference_inputs.video_dataset import VideoDataset
+from inference_inputs.video_dataset import VideoDataset  # noqa: E402 - Follows module-level definitions, as upstream.
 
 dataset_config = OmegaConf.to_container(config.dataset, resolve=True)
 if args.json_path:

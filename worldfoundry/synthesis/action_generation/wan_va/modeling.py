@@ -580,7 +580,7 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin):
     @register_to_config
     def __init__(
         self,
-        patch_size=[1, 2, 2],
+        patch_size=[1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         num_attention_heads=24,
         attention_head_dim=128,
         in_channels=48,

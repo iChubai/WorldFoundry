@@ -13,12 +13,12 @@ if pkg_resources.parse_version(installed_version) >= pkg_resources.parse_version
 else:
     from diffusers.models.attention_processor import Attention, AttnProcessor2_0
 
-from diffusers.models.attention import FeedForward
-from diffusers.utils.import_utils import is_xformers_available
-from einops import rearrange, repeat
-from torch import nn
+from diffusers.models.attention import FeedForward  # noqa: E402 - Follows the conditional setup block.
+from diffusers.utils.import_utils import is_xformers_available  # noqa: E402 - Follows the conditional setup block.
+from einops import rearrange, repeat  # noqa: E402 - Follows the conditional setup block.
+from torch import nn  # noqa: E402 - Follows the conditional setup block.
 
-from .norm import FP32LayerNorm
+from .norm import FP32LayerNorm  # noqa: E402 - Follows the conditional setup block.
 
 if is_xformers_available():
     import xformers

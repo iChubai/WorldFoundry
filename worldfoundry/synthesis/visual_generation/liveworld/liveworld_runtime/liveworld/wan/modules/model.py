@@ -49,7 +49,9 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 
 # @amp.autocast(enabled=False)
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import rope_apply
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    rope_apply,
+)
 
 
 class WanRMSNorm(nn.Module):
@@ -609,7 +611,7 @@ class WanModel(ModelMixin, ConfigMixin):
 
         # blocks
         # ti2v uses t2v_cross_attn (Wan2.2-5B structure, no separate k_img/v_img layers)
-        if model_type in ["t2v", "ti2v"]:
+        if model_type in ["t2v", "ti2v"]:  # noqa: SIM108 - Branches carry per-case comments.
             cross_attn_type = "t2v_cross_attn"
         else:  # i2v
             cross_attn_type = "i2v_cross_attn"
@@ -866,7 +868,7 @@ class WanModel(ModelMixin, ConfigMixin):
             # For LiveWorld: State Adapter processes P+T frames while main model has R+P+T frames
             # We need to slice x to only P+T portion for State Adapter block initialization
             sp_seq_len = c.shape[1]  # (P+T) * tokens_per_frame
-            if sp_seq_len < seq_len:
+            if sp_seq_len < seq_len:  # noqa: SIM108 - Branches carry per-case comments.
                 # LiveWorld case: main model has more frames than State Adapter
                 # Use sp_hint_offset to get the P+T portion of x
                 x_for_sp = x[:, sp_hint_offset : sp_hint_offset + sp_seq_len, :]
@@ -899,7 +901,7 @@ class WanModel(ModelMixin, ConfigMixin):
             for block in self.sp_blocks:
                 if torch.is_grad_enabled() and self.gradient_checkpointing:
                     c = torch.utils.checkpoint.checkpoint(
-                        lambda c_in, **kw: block(c_in, **kw),
+                        lambda c_in, **kw: block(c_in, **kw),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         c,
                         **sp_kwargs,
                         use_reentrant=False,

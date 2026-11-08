@@ -792,7 +792,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
         transformer = getattr(self, "transformer", None)
         if transformer is None:
             return False
-        for module in transformer.modules():
+        for module in transformer.modules():  # noqa: SIM110 - Keeps the explicit loop.
             if bool(getattr(module, "merged", False)):
                 return True
         return False
@@ -2199,7 +2199,7 @@ class WarpAsHistoryPipeline(HeliosPipeline):
         zero_steps: int | None = 1,
         is_amplify_first_chunk: bool = False,
         callback_on_step_end: Callable[[int, int], None] | PipelineCallback | MultiPipelineCallbacks | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         progress_bar=None,
     ):
         state = getattr(self, "_wah_state", None)

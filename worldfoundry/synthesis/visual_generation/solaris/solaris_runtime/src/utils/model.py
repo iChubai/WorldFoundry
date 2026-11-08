@@ -11,10 +11,10 @@ def flatten_state(state, path=()):
         yield name, state
     elif hasattr(state, "items"):  # state behaves like a dict of submodules/vars
         for key, subtree in state.items():
-            yield from flatten_state(subtree, path + (key,))
+            yield from flatten_state(subtree, path + (key,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     elif isinstance(state, (list, tuple)):
         for idx, subtree in enumerate(state):
-            yield from flatten_state(subtree, path + (str(idx),))
+            yield from flatten_state(subtree, path + (str(idx),))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def log_num_params(tag, state):

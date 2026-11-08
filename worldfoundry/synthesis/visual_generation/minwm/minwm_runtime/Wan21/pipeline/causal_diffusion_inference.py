@@ -190,7 +190,7 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
                 assert num_input_frames % self.num_frame_per_block == 0
                 num_input_blocks = num_input_frames // self.num_frame_per_block
 
-            for block_index in range(num_input_blocks):
+            for block_index in range(num_input_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 current_ref_latents = initial_latent[
                     :, cache_start_frame : cache_start_frame + self.num_frame_per_block
                 ]
@@ -235,7 +235,7 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
         # Step 3: Temporal denoising loop
         all_num_frames = [self.num_frame_per_block] * num_blocks
         if self.independent_first_frame and initial_latent is None:
-            all_num_frames = [1] + all_num_frames
+            all_num_frames = [1] + all_num_frames  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         for current_num_frames in all_num_frames:
             noisy_input = noise[
                 :, cache_start_frame - num_input_frames : cache_start_frame + current_num_frames - num_input_frames
@@ -434,7 +434,7 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
             assert num_input_frames % self.num_frame_per_block == 0
             num_input_blocks = num_input_frames // self.num_frame_per_block
 
-            for block_index in range(num_input_blocks):
+            for block_index in range(num_input_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 current_ref_latents = initial_latent[
                     :, cache_start_frame : cache_start_frame + self.num_frame_per_block
                 ]
@@ -599,7 +599,7 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
 
         if initial_latent is not None:
             num_input_blocks = num_input_frames // chunksize
-            for block_index in range(num_input_blocks):
+            for block_index in range(num_input_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 current_ref_latents = initial_latent[:, cache_start_frame : cache_start_frame + chunksize]
                 output[:, cache_start_frame : cache_start_frame + chunksize] = current_ref_latents
                 self.generator(
@@ -662,7 +662,7 @@ class CausalDiffusionInferencePipeline(torch.nn.Module):
         num_heads = self._get_sp_num_heads(12)
         kv_cache_pos = []
         kv_cache_neg = []
-        if self.local_attn_size != -1:
+        if self.local_attn_size != -1:  # noqa: SIM108 - Branches carry per-case comments.
             # Use the local attention size to compute the KV cache size
             kv_cache_size = self.local_attn_size * self.frame_seq_length
         else:

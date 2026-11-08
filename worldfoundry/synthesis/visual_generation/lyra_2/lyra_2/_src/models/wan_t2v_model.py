@@ -90,7 +90,7 @@ class I4LoraConfig:
     pretrained_lora_path: str = ""
     lora_rank: int = -1
     adapter_name: str = "default"
-    lora_target_modules: list[str] = []
+    lora_target_modules: list[str] = []  # noqa: RUF008 - Upstream mutable default kept as written.
     init_lora_weights: str = "kaiming"
 
 
@@ -106,7 +106,7 @@ class T2VModelConfig:
     input_image_key: str = "image"  # key to fetch input image from data_batch
     input_caption_key: str = "ai_caption"  # Key used to fetch input captions
     use_torch_compile: bool = False
-    lora_config: I4LoraConfig = I4LoraConfig()
+    lora_config: I4LoraConfig = I4LoraConfig()  # noqa: RUF009 - Default evaluated once at definition, as upstream.
     use_mp_policy_fsdp: bool = False
     keep_original_net_dtype: bool = False
 
@@ -264,7 +264,7 @@ class WANDiffusionModel(InferenceModel):
             self.net = torch.compile(self.net, dynamic=False, disable=not self.config.use_torch_compile)
 
     def is_lora_model(self, model):
-        for _, module in model.named_modules():
+        for _, module in model.named_modules():  # noqa: SIM110 - Keeps the explicit loop.
             if isinstance(module, BaseTunerLayer):
                 return True
         return False
@@ -304,7 +304,7 @@ class WANDiffusionModel(InferenceModel):
         state_dict = {k[len("net.") :] if k.startswith("net.") else k: v for k, v in state_dict.items()}
 
         if not skip_inject:
-            target_modules = list({name.split(".lora")[0] for name in state_dict.keys()})
+            target_modules = list({name.split(".lora")[0] for name in state_dict.keys()})  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             for key, val in state_dict.items():
                 if ("lora_down" in key or "lora_A" in key) and val.ndim > 1:
                     rank = val.shape[0]
@@ -423,7 +423,7 @@ class WANDiffusionModel(InferenceModel):
                 _state_dict = get_model_state_dict(model)
                 missing_keys = []
                 unexpected_keys = []
-                for k in _state_dict.keys():
+                for k in _state_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     if "_extra_state" in k:
                         pass
                     if k in pretrained_lora_state_dict:
@@ -623,7 +623,7 @@ class WANDiffusionModel(InferenceModel):
             ]
 
         noise = misc.arch_invariant_rand(
-            (n_sample,) + tuple(state_shape),
+            (n_sample,) + tuple(state_shape),  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             torch.float32,
             self.tensor_kwargs["device"],
             seed,

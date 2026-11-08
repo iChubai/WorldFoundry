@@ -97,7 +97,7 @@ class ColumnParallelLinear(nn.Linear):
         dist.all_gather(lens, local_len, group=self.tp_group)
         lens = [int(t.item()) for t in lens]
 
-        if all(l == lens[0] for l in lens):
+        if all(l == lens[0] for l in lens):  # noqa: E741 - Ambiguous upstream name kept as written.
             outs = [torch.empty_like(x) for _ in range(self.tp_size)]
             dist.all_gather(outs, x, group=self.tp_group)
             return torch.cat(outs, dim=-1)

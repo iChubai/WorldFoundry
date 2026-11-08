@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 """
 Adapted from TTT-LM-JAX and LaCT repository.
 """

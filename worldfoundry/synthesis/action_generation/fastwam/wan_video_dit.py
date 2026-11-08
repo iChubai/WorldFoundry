@@ -395,9 +395,9 @@ class WanVideoDiT(torch.nn.Module):
 
         self.action_conditioned = action_conditioned
         self.action_dim = action_dim
-        assert has_image_input == False
-        assert require_clip_embedding == False
-        assert require_vae_embedding == False and fuse_vae_embedding_in_latents == True, (
+        assert has_image_input == False  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
+        assert require_clip_embedding == False  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
+        assert require_vae_embedding == False and fuse_vae_embedding_in_latents == True, (  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             "Only support fusing vae embedding in latents"
         )
 

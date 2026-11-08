@@ -115,7 +115,7 @@ def main(
         gray_rgb = np.stack([gray, gray, gray], axis=-1)
         return gray_rgb
 
-    for image_path in (pbar := tqdm(image_paths, desc="Inference", disable=len(image_paths) <= 1)):
+    for image_path in (pbar := tqdm(image_paths, desc="Inference", disable=len(image_paths) <= 1)):  # noqa: F841 - Upstream assignment kept.
         if not image_path.exists():
             logger.error("File %s does not exist", image_path)
             raise FileNotFoundError(f"File {image_path} does not exist.")

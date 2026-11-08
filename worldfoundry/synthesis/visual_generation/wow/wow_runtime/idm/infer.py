@@ -35,14 +35,14 @@ def load_model_with_text_map(model_path, device="cuda", args=None):
     checkpoint = torch.load(model_path, map_location=device, weights_only=True)
 
     # Extract text mapping if present
-    text_map = checkpoint["text_map"] if "text_map" in checkpoint else {"default": 0}
+    text_map = checkpoint["text_map"] if "text_map" in checkpoint else {"default": 0}  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
     # Create model instance
     ModelClass = get_model_class(args.model)
     model = ModelClass(output_dim=args.output_dim)
 
     # Load weights (handle both bare state_dict and checkpoint format)
-    state_dict = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint
+    state_dict = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
     # Handle DataParallel 'module.' prefix
     new_state_dict = {}

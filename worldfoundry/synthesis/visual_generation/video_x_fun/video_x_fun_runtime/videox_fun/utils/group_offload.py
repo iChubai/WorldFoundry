@@ -149,7 +149,7 @@ class HookRegistry:
         self._fn_refs = []
 
     def register_hook(self, hook: ModelHook, name: str) -> None:
-        if name in self.hooks.keys():
+        if name in self.hooks.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             raise ValueError(
                 f"Hook with name {name} already exists in the registry. Please use a different name or "
                 f"first remove the existing hook and then add a new one."
@@ -192,7 +192,7 @@ class HookRegistry:
         return self.hooks.get(name, None)
 
     def remove_hook(self, name: str, recurse: bool = True) -> None:
-        if name in self.hooks.keys():
+        if name in self.hooks.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             num_hooks = len(self._hook_order)
             hook = self.hooks[name]
             index = self._hook_order.index(name)
@@ -441,7 +441,7 @@ class ModuleGroup:
         self._is_offloaded_to_disk = True
 
         # We do this to free up the RAM which is still holding the up tensor data.
-        for tensor_obj in self.tensor_to_key.keys():
+        for tensor_obj in self.tensor_to_key.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             tensor_obj.data = torch.empty_like(tensor_obj.data, device=self.offload_device)
 
     def _offload_to_memory(self):
@@ -670,7 +670,7 @@ class LayerExecutionTrackerHook(ModelHook):
 def apply_group_offloading(
     module: torch.nn.Module,
     onload_device: str | torch.device,
-    offload_device: str | torch.device = torch.device("cpu"),
+    offload_device: str | torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     offload_type: str | GroupOffloadingType = "block_level",
     num_blocks_per_group: int | None = None,
     non_blocking: bool = False,
@@ -813,7 +813,7 @@ def _apply_group_offloading(module: torch.nn.Module, config: GroupOffloadingConf
     elif config.offload_type == GroupOffloadingType.LEAF_LEVEL:
         _apply_group_offloading_leaf_level(module, config)
     else:
-        assert False
+        assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
 
 def _apply_group_offloading_block_level(module: torch.nn.Module, config: GroupOffloadingConfig) -> None:
@@ -880,7 +880,7 @@ def _apply_group_offloading_block_level(module: torch.nn.Module, config: GroupOf
             unmatched_modules.append((name, submodule))
 
     # Apply group offloading hooks to the module groups
-    for i, group in enumerate(matched_module_groups):
+    for i, group in enumerate(matched_module_groups):  # noqa: B007 - The loop variable is read outside the loop.
         for group_module in group.modules:
             _apply_group_offloading_hook(group_module, group, config=config)
 
@@ -1216,7 +1216,7 @@ def safe_remove_group_offloading(obj, *args, **kwargs):
 def enable_group_offload(
     self,
     onload_device: torch.device,
-    offload_device: torch.device = torch.device("cpu"),
+    offload_device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     offload_type: str = "block_level",
     num_blocks_per_group: int | None = None,
     non_blocking: bool = False,

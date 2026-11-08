@@ -400,7 +400,7 @@ class SpatialAttnDownBlock3D(nn.Module):
         return x
 
 
-class TemporalDownBlock3D(nn.Module):
+class TemporalDownBlock3D(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(
         self,
         in_channels: int,

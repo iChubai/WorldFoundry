@@ -146,7 +146,7 @@ class CSGOVID(Dataset):
         else:
             self.spatial_transform = None
         if self.mode == "validation":
-            assert self.augment_data == False, "validation mode, augment_data should be set False"
+            assert self.augment_data == False, "validation mode, augment_data should be set False"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def _load_metadata(self):
         """Helper function to load metadata."""
@@ -160,8 +160,8 @@ class CSGOVID(Dataset):
                 val_start_idx_path = self.val_start_idx_path
             self.start_indices = np.load(val_start_idx_path)
         self.file_list = []
-        for root, _, files in os.walk(self.data_dir):
-            for file in files:
+        for root, _, filenames in os.walk(self.data_dir):
+            for file in filenames:
                 if not file.endswith(".hdf5"):
                     continue
                 file_path = os.path.join(root, file)
@@ -400,8 +400,8 @@ class CSGOVID(Dataset):
             target_area = area * torch.empty(1).uniform_(scale[0], scale[1]).item()
             aspect_ratio = torch.exp(torch.empty(1).uniform_(log_ratio[0], log_ratio[1])).item()
 
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
+            w = int(round(math.sqrt(target_area * aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+            h = int(round(math.sqrt(target_area / aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
             if 0 < w <= width and 0 < h <= height:
                 i = torch.randint(0, height - h + 1, size=(1,)).item()
@@ -412,10 +412,10 @@ class CSGOVID(Dataset):
         in_ratio = float(width) / float(height)
         if in_ratio < min(ratio):
             w = width
-            h = int(round(w / min(ratio)))
+            h = int(round(w / min(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         elif in_ratio > max(ratio):
             h = height
-            w = int(round(h * max(ratio)))
+            w = int(round(h * max(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         else:  # whole image
             w = width
             h = height

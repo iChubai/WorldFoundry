@@ -289,7 +289,7 @@ def worker(
                     raise KeyboardInterrupt("User ends the task.")
 
                 current_step = d["i"] + 1
-                desc = f"Total generated frames: {int(max(0, total_generated_latent_frames * 4 - 3))}, Video length: {max(0, (total_generated_latent_frames * 4 - 3) / 30):.2f} seconds (FPS-30). The video is being extended now ..."
+                desc = f"Total generated frames: {int(max(0, total_generated_latent_frames * 4 - 3))}, Video length: {max(0, (total_generated_latent_frames * 4 - 3) / 30):.2f} seconds (FPS-30). The video is being extended now ..."  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 stream.output_queue.push(("progress", f"Sampling {current_step}/{steps}. {desc}"))
                 return
 

@@ -511,7 +511,7 @@ class MatrixGame3Pipeline:
         max_seq_len = max_total_f * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
 
         if self.sp_size > 1:
-            max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
+            max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         with torch.no_grad():
             total_frames = 0
@@ -681,7 +681,7 @@ class MatrixGame3Pipeline:
                                 lat_w=lat_w,
                             )
                         )
-                    plucker = torch.cat(memory_pluckers + [plucker], dim=2)
+                    plucker = torch.cat(memory_pluckers + [plucker], dim=2)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     src = torch.cat(all_latents_list, dim=2)
                     x_memory = src[:, :, latent_idx]
                     memory_mouse_condition = torch.ones((1, len(selected_index), 2)).to(

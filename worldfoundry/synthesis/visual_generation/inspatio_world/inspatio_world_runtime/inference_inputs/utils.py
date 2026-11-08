@@ -164,7 +164,7 @@ def center_poses_by_mean_translation(T_w2c):
 
 
 ##### traj pose generation #####
-from scipy.interpolate import UnivariateSpline, interp1d
+from scipy.interpolate import UnivariateSpline, interp1d  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 def txt_interpolation(input_list, n, mode="smooth"):

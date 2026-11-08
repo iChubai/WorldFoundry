@@ -33,7 +33,7 @@ class Dust3rPipeline:
                 from dust3r.model import AsymmetricCroCo3DStereo  # type: ignore[import]
                 from dust3r.utils.image import load_images  # type: ignore[import]
         except ImportError:
-            raise ImportError(f"Missing in-tree DUSt3R package required by VMem. Expected it under {dust3r_parent}.")
+            raise ImportError(f"Missing in-tree DUSt3R package required by VMem. Expected it under {dust3r_parent}.")  # noqa: B904 - Keeps the implicit exception context.
 
         self.device = torch.device(device)
         local_model = resolve_local_hf_model_path(

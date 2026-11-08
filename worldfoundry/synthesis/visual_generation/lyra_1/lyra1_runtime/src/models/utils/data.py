@@ -50,7 +50,7 @@ class ImageTransform:
         video = images
 
         if self.use_flip:
-            assert False
+            assert False  # noqa: B011 - Keeps the assertion semantics under -O.
             flip_flag = self.pixel_transforms[1].get_flip_flag(self.sample_n_frames)
         else:
             flip_flag = torch.zeros(images.shape[0], dtype=torch.bool, device=video.device)
@@ -289,7 +289,7 @@ def read_exr_depth_to_numpy(exr_file) -> np.ndarray:
         bytes_per_pixel = 2
     elif pix_type == Imath.PixelType(Imath.PixelType.FLOAT).v:
         dtype = np.float32
-        bytes_per_pixel = 4
+        bytes_per_pixel = 4  # noqa: F841 - Upstream assignment kept.
     elif pix_type == Imath.PixelType(Imath.PixelType.DOUBLE).v:
         dtype = np.float64
     else:

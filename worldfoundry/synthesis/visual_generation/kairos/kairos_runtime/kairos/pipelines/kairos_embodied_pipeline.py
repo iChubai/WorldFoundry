@@ -141,7 +141,7 @@ class KairosEmbodiedPipeline(BasePipeline):
         pipe.vae = vae_
         vae_group = parallel_state.get_vae_parallel_group()
         vae_size = dist.get_world_size(vae_group) if (vae_group is not None and dist.is_initialized()) else 1
-        if vae_size > 1 and parallel_mode:
+        if vae_size > 1 and parallel_mode:  # noqa: SIM102 - Statement form kept for readability.
             if (parallel_mode == "cp" or parallel_mode == "sp") and not hasattr(pipe.vae, "parallel_group"):
                 print(
                     f">>>> Wrapping VAE for Context Parallel Decoding with cp_size:{vae_size}, parallel mode: {parallel_mode} <<<<"

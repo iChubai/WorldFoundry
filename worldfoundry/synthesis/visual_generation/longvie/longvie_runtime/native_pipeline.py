@@ -160,7 +160,7 @@ class LongViePipeline(StagedDiffusionPipeline):
         else:
             lora = state_dict
         if hotload:
-            for name, module in module.named_modules():
+            for name, module in module.named_modules():  # noqa: B020 - Upstream loop rebinding kept.
                 if isinstance(module, AutoWrappedLinear):
                     lora_a_name = f"{name}.lora_A.default.weight"
                     lora_b_name = f"{name}.lora_B.default.weight"
@@ -587,7 +587,7 @@ class LongViePipeline(StagedDiffusionPipeline):
         progress_bar_cmd=tqdm,
         dense_video=None,
         sparse_video=None,
-        history=[],
+        history=[],  # noqa: B006 - Keeps the upstream default object and signature.
         noise=None,
     ):
         """Call.
@@ -1682,7 +1682,7 @@ def model_fn_wan_video(
         value = dit.patch_embedding(value)
         if dit.control_adapter is not None and camera_control is not None:
             camera_value = dit.control_adapter(camera_control)
-            value = [base + control for base, control in zip(value, camera_value, strict=False)][0].unsqueeze(0)
+            value = [base + control for base, control in zip(value, camera_value, strict=False)][0].unsqueeze(0)  # noqa: RUF015 - Keeps eager list construction and IndexError.
         return value
 
     x = patch_volume(x, control_camera_latents_input)

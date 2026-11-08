@@ -533,7 +533,7 @@ class PhiFlashAttention2(PhiAttention):
             softmax_scale (`float`, *optional*):
                 The scaling of QK^T before applying softmax. Default to 1 / sqrt(head_dim)
         """
-        if not self._flash_attn_uses_top_left_mask:
+        if not self._flash_attn_uses_top_left_mask:  # noqa: SIM108 - Branches carry per-case comments.
             causal = self.is_causal
         else:
             # TODO: Remove the `query_length != 1` check once Flash Attention for RoCm is bumped to 2.1. For details, please see the comment in LlamaFlashAttention2 __init__.
@@ -1192,8 +1192,8 @@ class PhiForCausalLM(PhiPreTrainedModel):
             loss = loss_fct(shift_logits, shift_labels)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return CausalLMOutputWithPast(
             loss=loss,
@@ -1380,8 +1380,8 @@ class PhiForSequenceClassification(PhiPreTrainedModel):
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
-            output = (pooled_logits,) + model_outputs[1:]
-            return ((loss,) + output) if loss is not None else output
+            output = (pooled_logits,) + model_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return SequenceClassifierOutputWithPast(
             loss=loss,
@@ -1469,8 +1469,8 @@ class PhiForTokenClassification(PhiPreTrainedModel):
             loss = loss_fct(logits.view(batch_size * seq_length, self.num_labels), labels.view(batch_size * seq_length))
 
         if not return_dict:
-            output = (logits,) + model_outputs[2:]
-            return ((loss,) + output) if loss is not None else output
+            output = (logits,) + model_outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return TokenClassifierOutput(
             loss=loss,

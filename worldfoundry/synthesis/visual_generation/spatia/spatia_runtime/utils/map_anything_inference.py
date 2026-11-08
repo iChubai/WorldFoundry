@@ -21,12 +21,17 @@ from worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.camera
 
 
 def load_and_preprocess_videos(
-    video_path, mask_path=[], read_fps=24, extrinsics_path=None, intrinsic_path=None, per_frame_mask=False
+    video_path,
+    mask_path=[],  # noqa: B006 - Keeps the upstream default object and signature.
+    read_fps=24,
+    extrinsics_path=None,
+    intrinsic_path=None,
+    per_frame_mask=False,
 ):
     assert os.path.exists(video_path), f"Video file {video_path} does not exist"
     video = decord.VideoReader(video_path)
     fps = video.get_avg_fps()
-    stride = int(round(fps / read_fps))
+    stride = int(round(fps / read_fps))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     selected_index = np.arange(0, len(video), stride)
     selected_frames = video.get_batch(selected_index).asnumpy()
     raw_images = [Image.fromarray(frame).convert("RGB") for frame in selected_frames]

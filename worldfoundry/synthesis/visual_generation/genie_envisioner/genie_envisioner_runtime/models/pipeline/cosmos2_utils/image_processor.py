@@ -26,7 +26,7 @@ from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.utils import CONFIG_NAME, PIL_INTERPOLATION, deprecate
 from PIL import Image, ImageFilter, ImageOps
 
-PipelineImageInput = Union[
+PipelineImageInput = Union[  # noqa: UP007 - Runtime type alias kept as typing.Union.
     PIL.Image.Image,
     np.ndarray,
     torch.Tensor,

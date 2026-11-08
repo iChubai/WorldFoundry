@@ -437,7 +437,7 @@ class HeliosRotaryPosEmbed(nn.Module):
         return freqs.cos(), freqs.sin()
 
     @torch.no_grad()
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def _get_spatial_meshgrid(self, height, width, device_str):
         device = torch.device(device_str)
         grid_y_coords = torch.arange(height, device=device, dtype=torch.float32)

@@ -485,11 +485,11 @@ class Lyra2Model(WANDiffusionModel):
         self.framepack_total_max_num_latent_frames = max_num_clean_latent_frames + self.framepack_num_new_latent_frames
 
         # framepack_splits: e.g., [16, 2, 1, 9]
-        framepack_splits = self.framepack_clean_latent_frame_splits + [self.framepack_num_new_latent_frames]
+        framepack_splits = self.framepack_clean_latent_frame_splits + [self.framepack_num_new_latent_frames]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         # framepack_indices: 0, 1, ..., 18 (history), 19, 20, ..., 27 (new)
         framepack_indices = torch.arange(self.framepack_total_max_num_latent_frames)
         # framepack_kernel_ids: 0, 1, 2, -1 (new frames -- using the original patch embedding kernel)
-        framepack_kernel_ids = list(range(len(self.framepack_clean_latent_frame_kernel_sizes))) + [-1]
+        framepack_kernel_ids = list(range(len(self.framepack_clean_latent_frame_kernel_sizes))) + [-1]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.framepack_params = {
             "framepack_indices": framepack_indices,
             "framepack_splits": framepack_splits,
@@ -1244,7 +1244,7 @@ class Lyra2Model(WANDiffusionModel):
         temporal_rest_needed = max(0, num_temporal_hist - 1)
         recent_start = max(0, T_hist_total - temporal_rest_needed)
         temporal_rest = list(range(recent_start, T_hist_total))
-        return [0] + temporal_rest
+        return [0] + temporal_rest  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def _compose_selected_indices(
         self,
@@ -1570,7 +1570,7 @@ class Lyra2Model(WANDiffusionModel):
             if self._collect_return_condition_state:
                 if len(spatial_condition_pixels_list) > 0:
                     # Show buffer warp + all per-frame spatial warps (like multibuffer vis).
-                    vis_list = [condition_state_pixels] + spatial_condition_pixels_list
+                    vis_list = [condition_state_pixels] + spatial_condition_pixels_list  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     condition_vis = torch.cat(vis_list, dim=1)
                     self._latest_condition_state_pixels = condition_vis
                 else:
@@ -1606,7 +1606,7 @@ class Lyra2Model(WANDiffusionModel):
             frames_per_lat = int(self.framepack_num_frames_per_latent)
             v_len = int(K_sel.shape[1])
             # subsample long T to 0, 4, 8, 12, ... to match VAE latent indexing used elsewhere
-            time_idx = [0] + list(range(4, v_len, frames_per_lat))
+            time_idx = [0] + list(range(4, v_len, frames_per_lat))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             time_idx_t = torch.tensor(time_idx, device=device, dtype=torch.long)
 
             # Select downsampled intrinsics and poses
@@ -2194,7 +2194,7 @@ class Lyra2Model(WANDiffusionModel):
                         for t in range(int(data_batch["video"].shape[2])):
                             if t == abs_buffer_idx:
                                 continue
-                            if t < (t0 - skip_recent) or t > (t1 + skip_recent):
+                            if t < (t0 - skip_recent) or t > (t1 + skip_recent):  # noqa: SIM102 - Statement form kept for readability.
                                 if (t % stride == 0) and t != 0:
                                     spatial_cache.add(
                                         data_batch["depth"][:, t].to(device=latents.device, dtype=torch.float32),

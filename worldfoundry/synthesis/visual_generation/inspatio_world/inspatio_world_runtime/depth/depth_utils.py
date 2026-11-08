@@ -267,7 +267,7 @@ def _rodrigues_rotation_matrix(axis, angle):
             [-axis[1], axis[0], 0],
         ]
     )
-    I = np.eye(3)
+    I = np.eye(3)  # noqa: E741 - Ambiguous upstream name kept as written.
     return I + np.sin(angle) * K + (1 - np.cos(angle)) * np.dot(K, K)
 
 

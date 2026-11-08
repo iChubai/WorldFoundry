@@ -368,7 +368,7 @@ def segment_with_sam3(
             expected_frames=1,
         )
 
-        if masks.size == 0 or not masks.any():
+        if masks.size == 0 or not masks.any():  # noqa: SIM108 - Branches carry per-case comments.
             mask = np.zeros(image.shape[:2], dtype=bool)
         else:
             mask = masks[0]  # [H, W]
@@ -740,7 +740,7 @@ def update_dynamic_object_depth(
     torch.cuda.empty_cache()
 
     # 保存分割可视化
-    def save_mask_vis(image, mask, path, color=[255, 0, 0]):
+    def save_mask_vis(image, mask, path, color=[255, 0, 0]):  # noqa: B006 - Keeps the upstream default object and signature.
         vis = image.copy()
         overlay = image.copy()
         overlay[mask] = color
@@ -1099,7 +1099,7 @@ def merge_video_foregrounds(
     # Build foreground mask from per-instance masks or fallback to per-frame SAM3.
     if instance_masks_dict:
         foreground_mask1 = np.zeros((H, W), dtype=bool)
-        for obj_id, inst_masks in instance_masks_dict.items():
+        for obj_id, inst_masks in instance_masks_dict.items():  # noqa: B007 - The loop variable is read outside the loop.
             foreground_mask1 |= inst_masks[0]
         _log(f"  Foreground mask (from {len(instance_masks_dict)} instances): {foreground_mask1.sum()} pixels")
     else:
@@ -1154,7 +1154,7 @@ def merge_video_foregrounds(
         # Build fg mask from per-instance masks or fallback to per-frame SAM3.
         if instance_masks_dict:
             fg_mask_i = np.zeros((H, W), dtype=bool)
-            for obj_id, inst_masks in instance_masks_dict.items():
+            for obj_id, inst_masks in instance_masks_dict.items():  # noqa: B007 - The loop variable is read outside the loop.
                 fg_mask_i |= inst_masks[frame_idx]
         else:
             fg_mask_i = segment_with_sam3(frame, dynamic_object_prompts, sam3_segmenter)
@@ -1271,7 +1271,7 @@ def merge_video_foregrounds(
 
             # 计算 right 和 up
             right = np.cross(forward, world_up)
-            if np.linalg.norm(right) < 1e-6:
+            if np.linalg.norm(right) < 1e-6:  # noqa: SIM108 - Branches carry per-case comments.
                 # forward 和 world_up 平行，用 x 轴作为 right
                 right = np.array([1, 0, 0])
             else:

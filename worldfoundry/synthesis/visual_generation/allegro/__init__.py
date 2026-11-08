@@ -26,6 +26,9 @@ def runtime_root() -> Path:
     return Path(__file__).resolve().parent / "allegro_runtime"
 
 
-from .worldfoundry_runtime import Allegro, preprocess_images
+from .worldfoundry_runtime import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    Allegro,
+    preprocess_images,
+)
 
 __all__ = ["Allegro", "preprocess_images", "runtime_root"]

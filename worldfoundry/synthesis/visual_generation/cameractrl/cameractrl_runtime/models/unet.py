@@ -14,7 +14,7 @@ from diffusers.loaders import AttnProcsLayers, UNet2DConditionLoadersMixin
 from diffusers.models.attention_processor import AttentionProcessor, LoRAAttnProcessor
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.utils import BaseOutput, logging
+from diffusers.utils import BaseOutput, logging  # noqa: F811 - Later import provides the binding, as upstream.
 from einops import rearrange, repeat
 
 from .attention_processor import AttnProcessor as CustomizedAttnProcessor
@@ -84,7 +84,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
         motion_module_resolutions=(1, 2, 4, 8),
         motion_module_mid_block=False,
         motion_module_type=None,
-        motion_module_kwargs={},
+        motion_module_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         # whether fuse first frame's feature
         fuse_first_frame: bool = False,
     ):
@@ -281,7 +281,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
 
     def set_image_layer_lora(self, image_layer_lora_rank: int = 128):
         lora_attn_procs = {}
-        for name in self.attn_processors.keys():
+        for name in self.attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             self.logger.info(f"(add lora) {name}")
             cross_attention_dim = None if name.endswith("attn1.processor") else self.config.cross_attention_dim
             if name.startswith("mid_block"):
@@ -379,7 +379,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
 
     def set_motion_module_lora_layers(self, motion_module_lora_rank: int = 32):
         lora_attn_procs = {}
-        for name in self.mm_attn_processors.keys():
+        for name in self.mm_attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             self.logger.info(f"(add lora) {name}")
             cross_attention_dim = None
             if name.startswith("mid_block"):
@@ -631,13 +631,13 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
         activations["conv_in_out"] = sample
 
         # to be fused
-        if self.down_fusers[0] != None:
+        if self.down_fusers[0] != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             # scale, shift   = self.down_fusers[0](sample[:,:,0].contiguous(), emb_single).unsqueeze(2).chunk(2, dim=1)
             # sample[:,:,1:] = (1 + scale) * sample[:,:,1:].contiguous() + shift
             fused_sample = self.down_fusers[0](
                 init_hidden_state=sample[:, :, :1].contiguous(),
                 post_hidden_states=sample[:, :, 1:].contiguous(),
-                temb=emb_single,
+                temb=emb_single,  # noqa: F821 - Name is undefined in the upstream source.
             )
             sample = torch.cat([sample[:, :, :1], fused_sample], dim=2)
 
@@ -663,11 +663,11 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             )
             # to be fused
             for sample_idx, fuser in enumerate(down_fuser):
-                if fuser != None:
+                if fuser != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
                     fused_sample = fuser(
                         init_hidden_state=res_samples[sample_idx][:, :, :1].contiguous(),
                         post_hidden_states=res_samples[sample_idx][:, :, 1:].contiguous(),
-                        temb=emb_single,
+                        temb=emb_single,  # noqa: F821 - Name is undefined in the upstream source.
                     )
                     res_samples = list(res_samples)
                     res_samples[sample_idx] = torch.cat([res_samples[sample_idx][:, :, :1], fused_sample], dim=2)
@@ -705,11 +705,11 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
         )
 
         # mid block fuser
-        if self.mid_fuser != None:
+        if self.mid_fuser != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             fused_sample = self.mid_fuser(
                 init_hidden_state=sample[:, :, :1],
                 post_hidden_states=sample[:, :, 1:],
-                temb=emb_single,
+                temb=emb_single,  # noqa: F821 - Name is undefined in the upstream source.
             )
             sample = torch.cat([sample[:, :, :1], fused_sample], dim=2)
 
@@ -899,9 +899,9 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
         add_spatial_lora=True,
         add_motion_lora=False,
         temporal_attn_names="0",
-        pose_feature_dimensions=[320, 640, 1280, 1280],
-        lora_kwargs={},
-        motion_lora_kwargs={},
+        pose_feature_dimensions=[320, 640, 1280, 1280],  # noqa: B006 - Keeps the upstream default object and signature.
+        lora_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
+        motion_lora_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         **attention_processor_kwargs,
     ):
         lora_rank = lora_kwargs.pop("lora_rank")
@@ -909,7 +909,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
         spatial_attn_procs = {}
         if add_spatial:
             set_processor_names = spatial_attn_names.split(",")
-            for name in self.attn_processors.keys():
+            for name in self.attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 attention_name = name.split(".")[-2]
                 cross_attention_dim = None if attention_name == "attn1" else self.config.cross_attention_dim
                 if name.startswith("mid_block"):
@@ -953,7 +953,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
                 else:
                     spatial_attn_procs[name] = CustomizedAttnProcessor()
         elif (not add_spatial) and add_spatial_lora:
-            for name in self.attn_processors.keys():
+            for name in self.attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 cross_attention_dim = None if name.endswith("attn1.processor") else self.config.cross_attention_dim
                 if name.startswith("mid_block"):
                     hidden_size = self.config.block_out_channels[-1]
@@ -970,7 +970,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
                     rank=lora_rank if lora_rank > 16 else hidden_size // lora_rank,
                 )
         else:
-            for name in self.attn_processors.keys():
+            for name in self.attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 spatial_attn_procs[name] = CustomizedAttnProcessor()
         self.set_attn_processor(spatial_attn_procs)
 
@@ -978,7 +978,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
         if add_temporal:
             set_processor_names = temporal_attn_names.split(",")
             cross_attention_dim = None
-            for name in self.mm_attn_processors.keys():
+            for name in self.mm_attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 attention_name = name.split(".")[-2]
                 if name.startswith("mid_block"):
                     hidden_size = self.config.block_out_channels[-1]
@@ -1020,7 +1020,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
                 else:
                     mm_attn_procs[name] = CustomizedAttnProcessor()
         elif (not add_temporal) and add_motion_lora:
-            for name in self.mm_attn_processors.keys():
+            for name in self.mm_attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 cross_attention_dim = None
                 if name.startswith("mid_block"):
                     hidden_size = self.config.block_out_channels[-1]
@@ -1037,7 +1037,7 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
                     rank=motion_lora_rank if motion_lora_rank > 16 else hidden_size // motion_lora_rank,
                 )
         else:
-            for name in self.mm_attn_processors.keys():
+            for name in self.mm_attn_processors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 mm_attn_procs[name] = CustomizedAttnProcessor()
         self.set_mm_attn_processor(mm_attn_procs)
 
@@ -1122,13 +1122,13 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
         activations["conv_in_out"] = sample
 
         # to be fused
-        if self.down_fusers[0] != None:
+        if self.down_fusers[0] != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             # scale, shift   = self.down_fusers[0](sample[:,:,0].contiguous(), emb_single).unsqueeze(2).chunk(2, dim=1)
             # sample[:,:,1:] = (1 + scale) * sample[:,:,1:].contiguous() + shift
             fused_sample = self.down_fusers[0](
                 init_hidden_state=sample[:, :, :1].contiguous(),
                 post_hidden_states=sample[:, :, 1:].contiguous(),
-                temb=emb_single,
+                temb=emb_single,  # noqa: F821 - Name is undefined in the upstream source.
             )
             sample = torch.cat([sample[:, :, :1], fused_sample], dim=2)
 
@@ -1169,11 +1169,11 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
 
             # to be fused
             for sample_idx, fuser in enumerate(down_fuser):
-                if fuser != None:
+                if fuser != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
                     fused_sample = fuser(
                         init_hidden_state=res_samples[sample_idx][:, :, :1].contiguous(),
                         post_hidden_states=res_samples[sample_idx][:, :, 1:].contiguous(),
-                        temb=emb_single,
+                        temb=emb_single,  # noqa: F821 - Name is undefined in the upstream source.
                     )
                     res_samples = list(res_samples)
                     res_samples[sample_idx] = torch.cat([res_samples[sample_idx][:, :, :1], fused_sample], dim=2)
@@ -1214,11 +1214,11 @@ class UNet3DConditionModelPoseCond(UNet3DConditionModel):
         )
 
         # mid block fuser
-        if self.mid_fuser != None:
+        if self.mid_fuser != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             fused_sample = self.mid_fuser(
                 init_hidden_state=sample[:, :, :1],
                 post_hidden_states=sample[:, :, 1:],
-                temb=emb_single,
+                temb=emb_single,  # noqa: F821 - Name is undefined in the upstream source.
             )
             sample = torch.cat([sample[:, :, :1], fused_sample], dim=2)
 

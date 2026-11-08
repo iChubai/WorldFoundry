@@ -649,7 +649,7 @@ def _fill_top_invalid_with_far_plane(
 
     augmented_points = point_map_world.astype(np.float32, copy=True)
     fill_mask = np.zeros(valid_mask.shape, dtype=bool)
-    top_fill_limit = int(round(valid_mask.shape[0] * float(fill_top_max_y_frac)))
+    top_fill_limit = int(round(valid_mask.shape[0] * float(fill_top_max_y_frac)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     top_fill_limit = min(max(top_fill_limit, 0), valid_mask.shape[0] - 1)
 
     global_depths = depth_map[valid_mask]
@@ -1517,7 +1517,7 @@ class Pi3XWarpRenderer:
             top_percent_value = (
                 float(CAMERA_CONTROL_EMPTY_DEPTH_FALLBACK_TOP_PERCENT) if top_percent is None else float(top_percent)
             )
-            keep_count = max(1, int(math.ceil(candidate_conf.size * top_percent_value / 100.0)))
+            keep_count = max(1, int(math.ceil(candidate_conf.size * top_percent_value / 100.0)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             threshold = np.partition(candidate_conf, max(0, candidate_conf.size - keep_count))[
                 max(0, candidate_conf.size - keep_count)
             ]
@@ -1635,7 +1635,7 @@ class Pi3XWarpRenderer:
                         if "No valid first-frame mesh quads" not in str(retry_exc):
                             raise
                         last_error = retry_exc
-            raise last_error
+            raise last_error  # noqa: B904 - Keeps the implicit exception context.
 
     def render_from_geometry(
         self,

@@ -48,7 +48,7 @@ class WanLayerNorm(nnx.LayerNorm):
         num_features,
         eps=1e-6,
         elementwise_affine=False,
-        rngs=nnx.Rngs(0),
+        rngs=nnx.Rngs(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
         param_dtype=jnp.float32,
         dtype=jnp.float32,
     ):
@@ -86,7 +86,7 @@ class Conv3d(nnx.Module):
         in_channels,
         out_channels,
         kernel_size,
-        rngs=nnx.Rngs(0),
+        rngs=nnx.Rngs(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
         strides=(1, 1, 1),
         padding="VALID",
         param_dtype=jnp.float32,
@@ -171,7 +171,7 @@ class WanSelfAttention(nnx.Module):
         window_size=(-1, -1),
         qk_norm=True,
         eps=1e-6,
-        rngs=nnx.Rngs(0),
+        rngs=nnx.Rngs(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         super().__init__()
         self.dim = dim

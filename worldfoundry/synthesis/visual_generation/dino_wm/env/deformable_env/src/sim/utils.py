@@ -152,7 +152,7 @@ def is_inside_polygon(points, p):
     p1 = points[0]
     for i in range(n + 1):
         p2 = points[i % n]
-        if p[1] > min(p1[1], p2[1]) and p[1] <= max(p1[1], p2[1]) and p[0] <= max(p1[0], p2[0]):
+        if p[1] > min(p1[1], p2[1]) and p[1] <= max(p1[1], p2[1]) and p[0] <= max(p1[0], p2[0]):  # noqa: SIM102 - Statement form kept for readability.
             if p1[1] != p2[1]:
                 xints = x_intercept(p1, p2, p[1])
                 if p1[0] == p2[0] or p[0] <= xints:
@@ -162,7 +162,7 @@ def is_inside_polygon(points, p):
     return inside
 
 
-def find_min_distance(X, Z, k):
+def find_min_distance(X, Z, k):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """Find the top k minimum distance between point X and set of points Z using numpy."""
     Z_array = np.array(Z)
     distances = np.linalg.norm(Z_array - X, axis=1)

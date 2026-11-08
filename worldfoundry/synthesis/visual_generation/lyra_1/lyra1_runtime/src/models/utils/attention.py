@@ -47,12 +47,14 @@ try:
 except BaseException:
     warnings.warn("flex_attn is not available", stacklevel=1)
 
-import math
-from functools import partial
+import math  # noqa: E402 - Follows the warnings configuration.
+from functools import partial  # noqa: E402 - Follows the warnings configuration.
 
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.models.layers import DropPath, to_2tuple, trunc_normal_  # noqa: E402 - Follows the warnings configuration.
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention import (  # noqa: E402 - Follows the warnings configuration.
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
 
 
 def _ntuple(n):
@@ -64,7 +66,7 @@ def _ntuple(n):
     return parse
 
 
-to_2tuple = _ntuple(2)
+to_2tuple = _ntuple(2)  # noqa: F811 - Later definition replaces the earlier one, as upstream.
 to_3tuple = _ntuple(3)
 
 
@@ -80,7 +82,7 @@ def drop_path(x, drop_prob: float = 0.0, training: bool = False, scale_by_keep: 
     return x * random_tensor
 
 
-class DropPath(nn.Module):
+class DropPath(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob: float = 0.0, scale_by_keep: bool = True):

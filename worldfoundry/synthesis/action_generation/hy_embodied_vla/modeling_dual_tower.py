@@ -344,8 +344,8 @@ class HyDualTower(PreTrainedModel):
                 hidden_states = mask_apply(
                     hidden_states,
                     modality_mask,
-                    [lambda x: layer.input_layernorm(x)],
-                    [lambda x: layer.input_layernorm_v(x)],
+                    [lambda x: layer.input_layernorm(x)],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    [lambda x: layer.input_layernorm_v(x)],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 )[0]
 
                 input_shape = hidden_states.shape[:-1]
@@ -359,14 +359,14 @@ class HyDualTower(PreTrainedModel):
                     hidden_states,
                     modality_mask,
                     [
-                        lambda x: layer.self_attn.q_proj(x),
-                        lambda x: layer.self_attn.k_proj(x),
-                        lambda x: layer.self_attn.v_proj(x),
+                        lambda x: layer.self_attn.q_proj(x),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        lambda x: layer.self_attn.k_proj(x),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        lambda x: layer.self_attn.v_proj(x),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                     ],
                     [
-                        lambda x: layer.self_attn.q_proj_v(x),
-                        lambda x: layer.self_attn.k_proj_v(x),
-                        lambda x: layer.self_attn.v_proj_v(x),
+                        lambda x: layer.self_attn.q_proj_v(x),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        lambda x: layer.self_attn.k_proj_v(x),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        lambda x: layer.self_attn.v_proj_v(x),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                     ],
                     out_dims=[
                         self.config.vlm_config.num_attention_heads * layer.self_attn.head_dim,
@@ -452,8 +452,8 @@ class HyDualTower(PreTrainedModel):
                     out_emb = mask_apply(
                         att_output[:, start:end],
                         modality_mask,
-                        [lambda x: layer.self_attn.o_proj(x)],
-                        [lambda x: layer.self_attn.o_proj_v(x)],
+                        [lambda x: layer.self_attn.o_proj(x)],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        [lambda x: layer.self_attn.o_proj_v(x)],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         out_dims=[models[i].config.hidden_size],
                     )[0]
 
@@ -462,8 +462,8 @@ class HyDualTower(PreTrainedModel):
                     out_emb = mask_apply(
                         out_emb,
                         modality_mask,
-                        [lambda x: layer.mlp(layer.post_attention_layernorm(x))],
-                        [lambda x: layer.mlp_v(layer.post_attention_layernorm_v(x))],
+                        [lambda x: layer.mlp(layer.post_attention_layernorm(x))],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        [lambda x: layer.mlp_v(layer.post_attention_layernorm_v(x))],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                     )[0]
 
                     out_emb += after_first_residual

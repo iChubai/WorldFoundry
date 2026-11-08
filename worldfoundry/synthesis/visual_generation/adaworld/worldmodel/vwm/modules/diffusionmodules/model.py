@@ -219,7 +219,7 @@ def make_attn(in_channels, attn_type="vanilla", attn_kwargs=None):
     elif attn_type == "vanilla-xformers":
         print(f"Building MemoryEfficientAttnBlock with {in_channels} in_channels")
         return MemoryEfficientAttnBlock(in_channels)
-    elif type == "memory-efficient-cross-attn":
+    elif type == "memory-efficient-cross-attn":  # noqa: E721 - Upstream compares against the builtin `type` object.
         attn_kwargs["query_dim"] = in_channels
         return MemoryEfficientCrossAttentionWrapper(**attn_kwargs)
     elif attn_type == "none":
@@ -260,7 +260,7 @@ class Encoder(nn.Module):
         self.conv_in = nn.Conv2d(in_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.in_ch_mult = in_ch_mult
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
@@ -356,7 +356,7 @@ class Decoder(nn.Module):
         self.tanh_out = tanh_out
 
         # Compute in_ch_mult, block_in and curr_res at lowest res
-        _in_ch_mult = (1,) + tuple(ch_mult)
+        _in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = resolution // 2 ** (self.num_resolutions - 1)
         z_shape = (1, z_channels, curr_res, curr_res)

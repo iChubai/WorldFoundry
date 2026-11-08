@@ -25,7 +25,7 @@ class CameraCtrlSynthesis(RuntimeAdapterSynthesis):
     DISPLAY_NAME = CameraCtrlRuntime.DISPLAY_NAME
 
     #: CameraCtrl callers read the resolved asset paths straight off the adapter.
-    MIRRORED_RUNTIME_ATTRS = RuntimeAdapterSynthesis.MIRRORED_RUNTIME_ATTRS + (
+    MIRRORED_RUNTIME_ATTRS = RuntimeAdapterSynthesis.MIRRORED_RUNTIME_ATTRS + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         "sd15_path",
         "pose_adaptor_ckpt",
         "model_config",

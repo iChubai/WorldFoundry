@@ -5,7 +5,7 @@ from safetensors import safe_open
 
 
 @contextmanager
-def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = False):
+def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = False):  # noqa: B008 - Default evaluated once at definition, as upstream.
     old_register_parameter = torch.nn.Module.register_parameter
     if include_buffers:
         old_register_buffer = torch.nn.Module.register_buffer
@@ -42,7 +42,7 @@ def init_weights_on_device(device=torch.device("meta"), include_buffers: bool = 
         torch.nn.Module.register_parameter = register_empty_parameter
         if include_buffers:
             torch.nn.Module.register_buffer = register_empty_buffer
-        for torch_function_name in tensor_constructors_to_patch.keys():
+        for torch_function_name in tensor_constructors_to_patch.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             setattr(torch, torch_function_name, patch_tensor_constructor(getattr(torch, torch_function_name)))
         yield
     finally:
@@ -63,7 +63,7 @@ def load_state_dict(file_path, torch_dtype=None, device="cpu"):
 def load_state_dict_from_safetensors(file_path, torch_dtype=None, device="cpu"):
     state_dict = {}
     with safe_open(file_path, framework="pt", device=str(device)) as f:
-        for k in f.keys():
+        for k in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             state_dict[k] = f.get_tensor(k)
             if torch_dtype is not None:
                 state_dict[k] = state_dict[k].to(torch_dtype)

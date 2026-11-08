@@ -214,7 +214,7 @@ class BasePCOptimizer(nn.Module):
         # possibly store images for show_pointcloud
         self.imgs = None
         if "img" in view1 and "img" in view2:
-            imgs = [torch.zeros((3,) + hw) for hw in self.imshapes]
+            imgs = [torch.zeros((3,) + hw) for hw in self.imshapes]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             for v in range(len(self.edges)):
                 idx = view1["idx"][v]
                 imgs[idx] = view1["img"][v]
@@ -444,7 +444,7 @@ class BasePCOptimizer(nn.Module):
             )
         return dynamic_masks
 
-    def save_depth_maps(self, path):
+    def save_depth_maps(self, path):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
         depth_maps = self.get_depthmaps()
         images = []
 

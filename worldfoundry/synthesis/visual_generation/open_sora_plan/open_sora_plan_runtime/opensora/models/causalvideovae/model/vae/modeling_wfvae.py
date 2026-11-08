@@ -80,7 +80,7 @@ class Encoder(VideoBaseAE):
             resolve_str_to_obj(l2_dowmsample_block)(base_channels * 2, base_channels * 2),
         )
         # Connection
-        if l1_dowmsample_block == "Downsample":  # Bad code. For temporal usage.
+        if l1_dowmsample_block == "Downsample":  # noqa: SIM108 - Branches carry per-case comments.  # Bad code. For temporal usage.
             l1_channels = 12
         else:
             l1_channels = 24
@@ -228,7 +228,7 @@ class Decoder(VideoBaseAE):
             ],
         )
         # Connection
-        if l1_upsample_block == "Upsample":  # Bad code. For temporal usage.
+        if l1_upsample_block == "Upsample":  # noqa: SIM108 - Branches carry per-case comments.  # Bad code. For temporal usage.
             l1_channels = 12
         else:
             l1_channels = 24
@@ -307,8 +307,8 @@ class WFVAEModel(VideoBaseAE):
         norm_type: str = "groupnorm",
         t_interpolation: str = "nearest",
         connect_res_layer_num: int = 1,
-        scale: list[float] = [0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215],
-        shift: list[float] = [0, 0, 0, 0, 0, 0, 0, 0],
+        scale: list[float] = [0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215, 0.18215],  # noqa: B006 - Keeps the upstream default object and signature.
+        shift: list[float] = [0, 0, 0, 0, 0, 0, 0, 0],  # noqa: B006 - Keeps the upstream default object and signature.
         # Module config
         l1_dowmsample_block: str = "Downsample",
         l1_downsample_wavelet: str = "HaarWaveletTransform2D",
@@ -495,7 +495,7 @@ class WFVAEModel(VideoBaseAE):
     def disable_tiling(self):
         self.enable_tiling(False)
 
-    def init_from_ckpt(self, path, ignore_keys=[]):
+    def init_from_ckpt(self, path, ignore_keys=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         sd = torch.load(path, map_location="cpu")
         print("init from " + path)
 

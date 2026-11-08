@@ -185,13 +185,13 @@ def model_wrapper(
     model,
     noise_schedule,
     model_type="noise",
-    model_kwargs={},
+    model_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
     guidance_type="uncond",
     condition=None,
     unconditional_condition=None,
     guidance_scale=1.0,
     classifier_fn=None,
-    classifier_kwargs={},
+    classifier_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     """Create a wrapper function for the noise prediction model.
 
@@ -563,7 +563,7 @@ class DPM_Solver:
             timesteps_outer = self.get_time_steps(skip_type, t_T, t_0, steps, device)[
                 torch.cumsum(
                     torch.tensor(
-                        [
+                        [  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                             0,
                         ]
                         + orders
@@ -1314,7 +1314,7 @@ class DPM_Solver:
                     t = timesteps[step]
                     # We only use lower order for steps < 10
                     # if lower_order_final and steps < 10:
-                    if lower_order_final:  # recommended by Shuchen Xue
+                    if lower_order_final:  # noqa: SIM108 - Branches carry per-case comments.  # recommended by Shuchen Xue
                         step_order = min(order, steps + 1 - step)
                     else:
                         step_order = order

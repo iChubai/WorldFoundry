@@ -28,7 +28,9 @@ def reshape_tensor(x, heads):
     return x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.lvdm.resampler import PerceiverAttention
+from worldfoundry.base_models.diffusion_model.models.encoders.lvdm.resampler import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    PerceiverAttention,
+)
 
 
 class AttentionPool2d(nn.Module):
@@ -297,7 +299,7 @@ if __name__ == "__main__":
         dim=1024, depth=4, dim_head=64, heads=12, num_queries=1024, embedding_dim=1024, output_dim=1024, ff_mult=4
     )
     numel = 0
-    for name, param in image_proj_model.named_parameters():
+    for name, param in image_proj_model.named_parameters():  # noqa: B007 - Loop target name kept as upstream.
         numel += param.numel()
 
     print(f"Total params: {numel}")

@@ -159,11 +159,11 @@ def write_caption(ws, scene_name, args):
         return
     text = args.prompt
     if args.prompt_file:
-        text = open(args.prompt_file, encoding="utf-8").read().strip()
+        text = open(args.prompt_file, encoding="utf-8").read().strip()  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     if not text:
         sys.exit("ERROR: provide --prompt, --prompt-file or --caption")
     payload = {"detailed": {"0": {"start": "", "dynamic": text}}}
-    json.dump(payload, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(payload, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
 
 def write_refs(scene_dir, refs_dir):
@@ -247,7 +247,7 @@ def build_workspace(args):
     # Depth file must exist and parse; its values are never used for
     # generation (DA3 estimates depth at runtime).
     np.savez_compressed(os.path.join(scene, "depth", "video.npz"), frame_00000=np.full((h, w), 5.0, np.float32))
-    json.dump({"format": "npz_float"}, open(os.path.join(scene, "depth", "metadata.json"), "w"))
+    json.dump({"format": "npz_float"}, open(os.path.join(scene, "depth", "metadata.json"), "w"))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     write_caption(ws, "case", args)
     if args.person == "third" and args.refs:

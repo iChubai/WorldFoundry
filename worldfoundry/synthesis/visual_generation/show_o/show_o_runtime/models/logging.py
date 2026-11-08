@@ -51,7 +51,7 @@ def _get_default_logging_level():
     If muse_VERBOSITY env var is set to one of the valid choices return that as the new default level. If it is
     not - fall back to `_default_log_level`
     """
-    env_level_str = os.getenv("muse_VERBOSITY", None)
+    env_level_str = os.getenv("muse_VERBOSITY", None)  # noqa: SIM112 - Environment variable name used by the upstream code.
     if env_level_str:
         if env_level_str in log_levels:
             return log_levels[env_level_str]
@@ -267,7 +267,7 @@ def warning_advice(self, *args, **kwargs):
     This method is identical to `logger.warning()`, but if env var muse_NO_ADVISORY_WARNINGS=1 is set, this
     warning will not be printed
     """
-    no_advisory_warnings = os.getenv("muse_NO_ADVISORY_WARNINGS", False)
+    no_advisory_warnings = os.getenv("muse_NO_ADVISORY_WARNINGS", False)  # noqa: SIM112 - Environment variable name used by the upstream code.
     if no_advisory_warnings:
         return
     self.warning(*args, **kwargs)

@@ -402,14 +402,14 @@ class OpenSoraPipeline(DiffusionPipeline):
             raise ValueError(
                 "Must provide `negative_prompt_attention_mask_2` when specifying `negative_prompt_embeds_2`."
             )
-        if prompt_embeds is not None and negative_prompt_embeds is not None:
+        if prompt_embeds is not None and negative_prompt_embeds is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds.shape != negative_prompt_embeds.shape:
                 raise ValueError(
                     "`prompt_embeds` and `negative_prompt_embeds` must have the same shape when passed directly, but"
                     f" got: `prompt_embeds` {prompt_embeds.shape} != `negative_prompt_embeds`"
                     f" {negative_prompt_embeds.shape}."
                 )
-        if prompt_embeds_2 is not None and negative_prompt_embeds_2 is not None:
+        if prompt_embeds_2 is not None and negative_prompt_embeds_2 is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds_2.shape != negative_prompt_embeds_2.shape:
                 raise ValueError(
                     "`prompt_embeds_2` and `negative_prompt_embeds_2` must have the same shape when passed directly, but"
@@ -493,7 +493,7 @@ class OpenSoraPipeline(DiffusionPipeline):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         guidance_rescale: float = 0.0,
         max_sequence_length: int = 512,
         device=None,
@@ -722,14 +722,14 @@ class OpenSoraPipeline(DiffusionPipeline):
         # ==================make sp=====================================
         if get_sequence_parallel_state():
             latents_shape = list(latents.shape)  # b c t//sp h w
-            full_shape = [latents_shape[0] * world_size] + latents_shape[1:]  # # b*sp c t//sp h w
+            full_shape = [latents_shape[0] * world_size] + latents_shape[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # # b*sp c t//sp h w
             all_latents = torch.zeros(full_shape, dtype=latents.dtype, device=latents.device)
             torch.distributed.all_gather_into_tensor(all_latents, latents)
             latents_list = list(all_latents.chunk(world_size, dim=0))
             latents = torch.cat(latents_list, dim=2)
         # ==================make sp=====================================
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             videos = self.decode_latents(latents)
             videos = videos[:, :num_frames, :height, :width]
         else:

@@ -25,7 +25,7 @@ def generate_proper_pad_mask(
     if pad_mask_dict is None:
         logging.warning("No pad_mask_dict found. Nothing will be masked.")
         return jnp.ones(tokens.shape[:-1])
-    if not all([key in pad_mask_dict for key in keys]):
+    if not all([key in pad_mask_dict for key in keys]):  # noqa: C419 - Evaluates every element before testing, as upstream.
         logging.warning(f"pad_mask_dict missing keys {set(keys) - set(pad_mask_dict.keys())}.Nothing will be masked.")
         return jnp.ones(tokens.shape[:-1])
 
@@ -60,7 +60,7 @@ class TokenLearner(nn.Module):
 
 
 def regex_match(regex_keys, x):
-    return any([re.match(r_key, x) for r_key in regex_keys])
+    return any([re.match(r_key, x) for r_key in regex_keys])  # noqa: C419 - Evaluates every element before testing, as upstream.
 
 
 def regex_filter(regex_keys, xs):

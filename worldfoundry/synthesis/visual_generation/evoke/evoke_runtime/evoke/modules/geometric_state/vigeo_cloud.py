@@ -82,8 +82,8 @@ def _fit_patch_res(h: int, w: int, long_side: int, patch: int = _PATCH):
     """Scale (h, w) to a ~long_side long edge with both sides multiples of `patch`. Mirrors DA3's
     `upper_bound_resize`, so ViGeo does not resize a second time internally."""
     s = float(long_side) / float(max(h, w))
-    nh = max(patch, int(round(h * s / patch)) * patch)
-    nw = max(patch, int(round(w * s / patch)) * patch)
+    nh = max(patch, int(round(h * s / patch)) * patch)  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    nw = max(patch, int(round(w * s / patch)) * patch)  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     return nh, nw
 
 
@@ -325,7 +325,7 @@ class ViGeoDepthEstimator:
         half-diagonal, so f_pix = focal_norm * sqrt(h^2 + w^2) / 2 with fx = fy and a centred
         principal point. Estimated in least-squares form sum(u*z * x) / sum(x^2) to avoid x ~= 0.
         """
-        N, h, w = int(depth.shape[0]), int(depth.shape[-2]), int(depth.shape[-1])
+        N, h, w = int(depth.shape[0]), int(depth.shape[-2]), int(depth.shape[-1])  # noqa: F841 - Upstream assignment kept.
         aspect = w / h
         span_x = aspect / (1 + aspect**2) ** 0.5
         span_y = 1.0 / (1 + aspect**2) ** 0.5
@@ -601,7 +601,7 @@ class ViGeoDepthEstimator:
                 if self._dbg:
                     print(
                         f"[vigeo] win#{self._win_seen} N={N} {H}x{W}->{h}x{w} "
-                        f"scale_raw={('%.4g' % c_raw) if c_raw is not None else 'None'} scale_used={c:.4g}"
+                        f"scale_raw={('%.4g' % c_raw) if c_raw is not None else 'None'} scale_used={c:.4g}"  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                         f"{'(locked)' if self._scale_locked is not None else ''} "
                         f"stream={'on' if self.streaming else 'off'} "
                         f"depth_med={float(np.median(depth)):.3f} f_gt={f_gt:.1f} "

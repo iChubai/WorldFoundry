@@ -290,7 +290,7 @@ def _mask_apply(
         hs_b = hidden_states[b]  # (S, D)
         mask_b = mask[b].bool()  # (S,)
 
-        if padding_mask is not None:
+        if padding_mask is not None:  # noqa: SIM108 - Branches carry per-case comments.
             valid_b = padding_mask[b].bool()  # (S,)
         else:
             valid_b = None
@@ -417,7 +417,7 @@ def _flash_attention_forward_mot_fast(
 
     if has_visual:
         # Normalize v_seqlens to a list of tensors, one per batch element
-        if isinstance(v_seqlens, list):
+        if isinstance(v_seqlens, list):  # noqa: SIM108 - Branches carry per-case comments.
             v_seglens_list = v_seqlens
         else:
             v_seglens_list = [v_seqlens]  # B==1
@@ -1389,12 +1389,12 @@ class _HYViT2VisionTransformer(nn.Module):
         proj_drop_rate: float = 0.0,
         attn_drop_rate: float = 0.0,
         drop_path_rate: float = 0.0,
-        embed_layer: Callable = None,
+        embed_layer: Callable | None = None,
         norm_layer: LayerType | None = None,
         act_layer: LayerType | None = None,
         strict_img_size: bool = False,
-        block_fn: type[nn.Module] = None,
-        mlp_layer: type[nn.Module] = None,
+        block_fn: type[nn.Module] | None = None,
+        mlp_layer: type[nn.Module] | None = None,
         ignore_head: bool = False,
     ) -> None:
         super().__init__()
@@ -1512,10 +1512,10 @@ class _HYViT2VisionTransformer(nn.Module):
         if self.no_embed_class:
             x = x + pos_embed
             if to_cat:
-                x = torch.cat(to_cat + [x], dim=1)
+                x = torch.cat(to_cat + [x], dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         else:
             if to_cat:
-                x = torch.cat(to_cat + [x], dim=1)
+                x = torch.cat(to_cat + [x], dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             x = x + pos_embed
 
         return self.pos_drop(x)
@@ -1866,7 +1866,7 @@ class _HunYuanVLMoTVisionEncoder(nn.Module):
 class HunYuanVLMoTPreTrainedModel(PreTrainedModel):
     config_class = HunYuanVLMoTConfig
     base_model_prefix = "model"
-    _no_split_modules = ["HunYuanVLMoTDecoderLayer"]
+    _no_split_modules = ["HunYuanVLMoTDecoderLayer"]  # noqa: RUF012 - Shared class-level value, as upstream.
     _skip_keys_device_placement = "past_key_values"
     # Attention dispatch is internal: optional FA2 on SM80-SM90, SDPA elsewhere.
     _supports_sdpa = False
@@ -1899,7 +1899,7 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
 
     base_model_prefix = ""
     config: HunYuanVLMoTConfig
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping = {}  # noqa: RUF012 - Shared class-level value, as upstream.
     accepts_loss_kwargs = False
 
     def __init__(self, config: HunYuanVLMoTConfig):
@@ -1973,7 +1973,7 @@ class HunYuanVLMoTModel(HunYuanVLMoTPreTrainedModel):
                 recon_videos.extend(pv.split(1, dim=0))
 
         fake_image = torch.zeros(1, 3, 64, 64, dtype=dtype, device=device)
-        all_embeds = self.visual([fake_image] + recon_images + recon_videos)
+        all_embeds = self.visual([fake_image] + recon_images + recon_videos)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         split_point = len(recon_images) + 1
         image_embeds = all_embeds[1:split_point]
         video_embeds = all_embeds[split_point:]
@@ -2098,8 +2098,8 @@ class HunYuanVLMoTForConditionalGeneration(HunYuanVLMoTPreTrainedModel, Generati
     Supports images, videos, and text input with Mixture-of-Transformers attention.
     """
 
-    _checkpoint_conversion_mapping = {}
-    _tied_weights_keys = {"model.language_model.lm_head.weight": "model.language_model.model.embed_tokens.weight"}
+    _checkpoint_conversion_mapping = {}  # noqa: RUF012 - Shared class-level value, as upstream.
+    _tied_weights_keys = {"model.language_model.lm_head.weight": "model.language_model.model.embed_tokens.weight"}  # noqa: RUF012 - Shared class-level value, as upstream.
     accepts_loss_kwargs = False
     config: HunYuanVLMoTConfig
 

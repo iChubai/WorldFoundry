@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 """NeoVerse Gaussian rasterization components."""
 
 import numpy as np
@@ -729,7 +730,7 @@ class GaussianSplatRenderer(nn.Module):
             gt_valid_masks_src = views["valid_mask"][:, :S]  # [B, S, H, W]
             gt_valid_masks_tgt = views["valid_mask"][:, S:]  # [B, V, H, W]
             unproject_masks = calculate_unprojected_mask(views, S)  # [B, V, H, W]
-            valid_masks = torch.cat([gt_valid_masks_src, (gt_valid_masks_tgt & unproject_masks)], dim=1)
+            valid_masks = torch.cat([gt_valid_masks_src, (gt_valid_masks_tgt & unproject_masks)], dim=1)  # noqa: F841 - Kept as upstream; an underscore name already exists.
             render_timestamps = views["timestamp"]
         else:
             # Re-predict the camera for novel views and perform translation scale alignment
@@ -796,7 +797,7 @@ class GaussianSplatRenderer(nn.Module):
         filtered = {}
         mask_keys = ["means", "quats", "scales", "opacities", "sh", "conf", "weights"]
 
-        for key in splats.keys():
+        for key in splats.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if key in mask_keys and key in splats:
                 x = splats[key]
                 if x.ndim == 1:  # [B, N]
@@ -850,7 +851,7 @@ class GaussianSplatRenderer(nn.Module):
         images,
         gs_params,
         context_nums,
-        context_predictions={},
+        context_predictions={},  # noqa: B006 - Keeps the upstream default object and signature.
         position_from="gsdepth+gtcamera",
     ):
         """

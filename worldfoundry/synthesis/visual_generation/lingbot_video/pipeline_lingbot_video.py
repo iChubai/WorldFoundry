@@ -457,7 +457,7 @@ class LingBotVideoPipeline(DiffusionPipeline):
                 if cfg_parallel_rank == 0:
                     branch_embeds = prompt_embeds
                     branch_mask = prompt_mask
-                    branch_name = "transformer.cond"
+                    branch_name = "transformer.cond"  # noqa: F841 - Upstream assignment kept.
                 else:
                     branch_embeds = negative_embeds
                     branch_mask = negative_mask

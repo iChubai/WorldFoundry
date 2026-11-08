@@ -273,7 +273,7 @@ class FlaxVideoLLaMAPreTrainedModel(FlaxPreTrainedModel):
             return outputs
         elif past_key_values is not None and not return_dict:
             outputs, past_key_values = outputs
-            outputs = outputs[:1] + (unfreeze(past_key_values["cache"]),) + outputs[1:]
+            outputs = outputs[:1] + (unfreeze(past_key_values["cache"]),) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return outputs
 
@@ -374,9 +374,9 @@ class FlaxVideoLLaMAModule(nn.Module):
 
         if output_hidden_states:
             all_hidden_states = outputs[1] + (hidden_states,)
-            outputs = (hidden_states, all_hidden_states) + outputs[2:]
+            outputs = (hidden_states, all_hidden_states) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         else:
-            outputs = (hidden_states,) + outputs[1:]
+            outputs = (hidden_states,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(v for v in outputs if v is not None)
@@ -481,7 +481,7 @@ class FlaxDeltaLaMAForCausalLMModule(nn.Module):
 
         if self.config.sample_mode == "all":
             if not return_dict:
-                return (vision_logits, lm_logits, delta_logits) + outputs[1:]
+                return (vision_logits, lm_logits, delta_logits) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             return FlaxCausalLMOutput(
                 logits=(vision_logits, lm_logits, delta_logits),
@@ -490,21 +490,21 @@ class FlaxDeltaLaMAForCausalLMModule(nn.Module):
             )
         elif self.config.sample_mode == "vision":
             if not return_dict:
-                return (vision_logits,) + outputs[1:]
+                return (vision_logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             return FlaxCausalLMOutput(
                 logits=vision_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions
             )
         elif self.config.sample_mode == "text":
             if not return_dict:
-                return (lm_logits,) + outputs[1:]
+                return (lm_logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             return FlaxCausalLMOutput(
                 logits=lm_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions
             )
         elif self.config.sample_mode == "delta":
             if not return_dict:
-                return (delta_logits,) + outputs[1:]
+                return (delta_logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             return FlaxCausalLMOutput(
                 logits=delta_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions

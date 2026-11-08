@@ -101,7 +101,7 @@ class BasePipeline(torch.nn.Module):
         ]
         return video
 
-    def load_models_to_device(self, model_names=[]):
+    def load_models_to_device(self, model_names=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         if self.vram_management_enabled:
             # offload models
             for name, model in self.named_children():

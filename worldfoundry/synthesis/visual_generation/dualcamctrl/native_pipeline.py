@@ -1176,7 +1176,7 @@ def model_fn_wan_video(
                 x = block(x, context, t_mod, freqs, **block_kwargs)
 
             if vace_context is not None and block_id in vace.vace_layers_mapping:
-                current_vace_hint = vace_hints[vace.vace_layers_mapping[block_id]]
+                current_vace_hint = vace_hints[vace.vace_layers_mapping[block_id]]  # noqa: F821 - Name is undefined in the upstream source.
                 if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
                     current_vace_hint = torch.chunk(current_vace_hint, get_sequence_parallel_world_size(), dim=1)[
                         get_sequence_parallel_rank()

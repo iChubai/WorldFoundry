@@ -423,10 +423,10 @@ class WanModelStateDictConverter:
             if name in rename_dict:
                 state_dict_[rename_dict[name]] = param
             else:
-                name_ = ".".join(name.split(".")[:1] + ["0"] + name.split(".")[2:])
+                name_ = ".".join(name.split(".")[:1] + ["0"] + name.split(".")[2:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 if name_ in rename_dict:
                     name_ = rename_dict[name_]
-                    name_ = ".".join(name_.split(".")[:1] + [name.split(".")[1]] + name_.split(".")[2:])
+                    name_ = ".".join(name_.split(".")[:1] + [name.split(".")[1]] + name_.split(".")[2:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     state_dict_[name_] = param
         if hash_state_dict_keys(state_dict) == "cb104773c6c2cb6df4f9529ad5c60d0b":
             config = {

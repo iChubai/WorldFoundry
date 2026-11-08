@@ -154,7 +154,7 @@ class BasicTransformerBlock(nn.Module):
         # SC-Attn
         assert unet_use_cross_frame_attention is not None
         if unet_use_cross_frame_attention:
-            self.attn1 = SparseCausalAttention2D(
+            self.attn1 = SparseCausalAttention2D(  # noqa: F821 - Name is undefined in the upstream source.
                 query_dim=dim,
                 heads=num_attention_heads,
                 dim_head=attention_head_dim,

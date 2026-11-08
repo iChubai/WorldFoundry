@@ -79,7 +79,7 @@ def pad_duration_token_keys(special_token_keys: list[str]) -> list[str]:
         return special_token_keys
 
     if env_is_true("PAD_DURATION"):
-        return special_token_keys + ["DURATION_TOKEN"]
+        return special_token_keys + ["DURATION_TOKEN"]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     return special_token_keys
 
 

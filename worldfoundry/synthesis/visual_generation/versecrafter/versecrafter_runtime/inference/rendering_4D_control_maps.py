@@ -31,7 +31,7 @@ from worldfoundry.base_models.three_dimensions.three_d_four_d.pytorch3d_compat i
 
 configure_pytorch3d_extension()
 
-from pytorch3d.renderer import (
+from pytorch3d.renderer import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     AlphaCompositor,
     HardPhongShader,
     MeshRasterizer,
@@ -44,8 +44,12 @@ from pytorch3d.renderer import (
     RasterizationSettings,
     TexturesVertex,
 )
-from pytorch3d.structures import Meshes, Pointclouds, join_meshes_as_batch
-from pytorch3d.utils import ico_sphere
+from pytorch3d.structures import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    Meshes,
+    Pointclouds,
+    join_meshes_as_batch,
+)
+from pytorch3d.utils import ico_sphere  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -651,7 +655,7 @@ def project_3d_gaussians_to_2d(
         gaussian_list.sort(key=lambda x: x[2], reverse=True)
 
         # Composite Gaussians
-        for normalized_density, color_rgb, depth_z, obj_id in gaussian_list:
+        for normalized_density, color_rgb, depth_z, obj_id in gaussian_list:  # noqa: B007 - The loop variable is read outside the loop.
             alpha_new = torch.where(
                 normalized_density > threshold,
                 (normalized_density - threshold) / (1.0 - threshold + 1e-8),

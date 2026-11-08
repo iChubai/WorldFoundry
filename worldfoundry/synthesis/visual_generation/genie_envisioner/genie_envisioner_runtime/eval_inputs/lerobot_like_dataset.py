@@ -6,24 +6,31 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
-import json
-import random
-import traceback
+import json  # noqa: E402 - Follows the warnings configuration.
+import random  # noqa: E402 - Follows the warnings configuration.
+import traceback  # noqa: E402 - Follows the warnings configuration.
 
-import numpy as np
-import pandas as pd
-import torch
-import torchvision.transforms as transforms
+import numpy as np  # noqa: E402 - Follows the warnings configuration.
+import pandas as pd  # noqa: E402 - Follows the warnings configuration.
+import torch  # noqa: E402 - Follows the warnings configuration.
+import torchvision.transforms as transforms  # noqa: E402 - Follows the warnings configuration.
 
 # from eval_inputs.utils.domain_table import DomainTable
-from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
-from eval_inputs.utils.utils import gen_crop_config, intrin_crop_transform, intrinsic_transform
-from moviepy.editor import VideoFileClip
-from torch.utils.data.dataset import Dataset
-from tqdm import tqdm
+from eval_inputs.utils.statistics import (  # noqa: E402 - Follows the warnings configuration.
+    StatisticInfo,
+    load_stat_file,
+)
+from eval_inputs.utils.utils import (  # noqa: E402 - Follows the warnings configuration.
+    gen_crop_config,
+    intrin_crop_transform,
+    intrinsic_transform,
+)
+from moviepy.editor import VideoFileClip  # noqa: E402 - Follows the warnings configuration.
+from torch.utils.data.dataset import Dataset  # noqa: E402 - Follows the warnings configuration.
+from tqdm import tqdm  # noqa: E402 - Follows the warnings configuration.
 
 # from eval_inputs.utils.get_actions import parse_h5
-from utils import zero_rank_print
+from utils import zero_rank_print  # noqa: E402 - Follows the warnings configuration.
 
 
 def load_jsonl(jsonl_path):
@@ -47,7 +54,7 @@ class CustomLeRobotDataset(Dataset):
         sample_size=(192, 256),
         sample_n_frames=64,
         preprocess="resize",
-        valid_cam=["observation.images.top_head", "observation.images.hand_left", "observation.images.hand_right"],
+        valid_cam=["observation.images.top_head", "observation.images.hand_left", "observation.images.hand_right"],  # noqa: B006 - Keeps the upstream default object and signature.
         chunk=1,
         action_chunk=None,
         n_previous=-1,
@@ -444,7 +451,7 @@ class CustomLeRobotDataset(Dataset):
             action = np.stack([data[self.action_key][i] for i in range(data[self.action_key].shape[0])])
             state = np.stack([data[self.state_key][i] for i in range(data[self.state_key].shape[0])])
         except BaseException:
-            raise ValueError("We currently only support action and state data with the shape of T*C!")
+            raise ValueError("We currently only support action and state data with the shape of T*C!")  # noqa: B904 - Keeps the implicit exception context.
 
         action = action.astype(np.float32)
         state = state.astype(np.float32)

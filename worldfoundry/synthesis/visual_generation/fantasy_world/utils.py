@@ -305,8 +305,8 @@ def resize_by_short_side_and_update_intrinsics(
     intrinsic = np.copy(intrinsic)
 
     image_pil = Image.fromarray(image)
-    new_w = int(round(original_w * scale))
-    new_h = int(round(original_h * scale))
+    new_w = int(round(original_w * scale))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    new_h = int(round(original_h * scale))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     output_resolution = (new_w, new_h)
     resample_filter = lanczos if scale < 1 else bicubic
     image_pil = image_pil.resize(output_resolution, resample=resample_filter)
@@ -939,7 +939,7 @@ def cameras_json_to_camera_list(data, image_size=None, K=None):
         c2w = np.asarray(c2w, dtype=np.float64).reshape(4, 4)
         w2c = np.linalg.inv(c2w)
         w2c_3x4 = w2c[:3, :]
-        entry = [idx, fx, fy, cx, cy, 0.0, 0.0] + w2c_3x4.flatten().tolist()
+        entry = [idx, fx, fy, cx, cy, 0.0, 0.0] + w2c_3x4.flatten().tolist()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         cam_list.append(Camera(entry))
     return cam_list
 

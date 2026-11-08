@@ -230,7 +230,7 @@ class MultiCropImagePreprocessor:
                 start_token = self.tokenizer.low_res_image_start_token_id
             else:
                 start_token = self.tokenizer.image_start_token_id
-            joint = [
+            joint = [  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 [start_token],
                 extra_tokens,
                 [self.tokenizer.image_end_token_id],

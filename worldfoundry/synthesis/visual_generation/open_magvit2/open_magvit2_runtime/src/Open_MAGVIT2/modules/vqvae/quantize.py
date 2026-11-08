@@ -284,8 +284,8 @@ class VectorQuantizer2(nn.Module):
 
     def forward(self, z, temp=None, rescale_logits=False, return_logits=False):
         assert temp is None or temp == 1.0, "Only for interface compatible with Gumbel"
-        assert rescale_logits == False, "Only for interface compatible with Gumbel"
-        assert return_logits == False, "Only for interface compatible with Gumbel"
+        assert rescale_logits == False, "Only for interface compatible with Gumbel"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
+        assert return_logits == False, "Only for interface compatible with Gumbel"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         # reshape z -> (batch, height, width, channel) and flatten
         z = rearrange(z, "b c h w -> b h w c").contiguous()
         z_flattened = z.view(-1, self.e_dim)
@@ -373,8 +373,8 @@ class EmbeddingEMA(nn.Module):
 class EMAVectorQuantizer(nn.Module):
     def __init__(self, n_embed, embedding_dim, beta, decay=0.99, eps=1e-5, remap=None, unknown_index="random"):
         super().__init__()
-        self.codebook_dim = codebook_dim
-        self.num_tokens = num_tokens
+        self.codebook_dim = codebook_dim  # noqa: F821 - Name is undefined in the upstream source.
+        self.num_tokens = num_tokens  # noqa: F821 - Name is undefined in the upstream source.
         self.beta = beta
         self.embedding = EmbeddingEMA(self.num_tokens, self.codebook_dim, decay, eps)
 

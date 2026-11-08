@@ -94,7 +94,7 @@ class BasePipeline(torch.nn.Module):
     def enable_cpu_offload(self):
         self.cpu_offload = True
 
-    def load_models_to_device(self, loadmodel_names=[]):
+    def load_models_to_device(self, loadmodel_names=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         # only load models to device if cpu_offload is enabled
         if not self.cpu_offload:
             return

@@ -64,7 +64,7 @@ def rope_apply(
     x, grid_sizes, freqs, b_, s_, n_, d_, mask_token=None, ids_restore=None, ids_keep=None, rand_num_img=None, flag=None
 ):
     if not flag:  # False:
-        if ids_restore != None:
+        if ids_restore != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             x = x.view(b_, s_, n_ * d_)
 
             mask_tokens = mask_token.repeat(x.shape[0], ids_restore.shape[1] - x.shape[1], 1)
@@ -102,7 +102,7 @@ def rope_apply(
             # append to collection
             output.append(x_i)
 
-        if ids_keep != None:
+        if ids_keep != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             output = torch.stack(output).float()
             output = output.view(b_, ids_restore.shape[1], n_ * d_)
             output = torch.gather(output, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, n_ * d_))
@@ -111,7 +111,7 @@ def rope_apply(
 
         return torch.stack(output).float()
     else:
-        if ids_restore != None:
+        if ids_restore != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             x = x.view(b_, s_, n_ * d_)
 
             mask_tokens = mask_token.repeat(x.shape[0], ids_restore.shape[1] - x.shape[1], 1)
@@ -132,7 +132,7 @@ def rope_apply(
         x_i = torch.cat([x_i, x[0, seq_len:]])
         output.append(x_i)
 
-        if ids_keep != None:
+        if ids_keep != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             output = torch.stack(output).float()
             output = output.view(b_, ids_restore.shape[1], n_ * d_)
             output = torch.gather(output, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, n_ * d_))
@@ -727,7 +727,7 @@ class Yume1p5WanModel(WanModel):
 
         cnt_blocks = 0
         for block in self.blocks:
-            cnt_blocks += 1
+            cnt_blocks += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             if cnt_blocks == len_blocks and enable_mask:
                 kwargs["ids_keep"] = None
                 kwargs["ids_restore"] = None
@@ -743,7 +743,7 @@ class Yume1p5WanModel(WanModel):
         # head
         x = self.head(x, e)
 
-        if flag:
+        if flag:  # noqa: SIM108 - Branches carry per-case comments.
             # unpatchify
             x = self.unpatchify(x[:, seq_lens1:, :], grid_sizes)
         else:

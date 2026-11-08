@@ -137,7 +137,7 @@ class MolmoAct2Processor(ProcessorMixin):
         image_start_token = LOW_RES_IMAGE_START_TOKEN if self.use_single_crop_start_token else IM_START_TOKEN
         if use_single_crop_col_tokens:
             per_row = np.concatenate([per_row, [IM_COL_TOKEN]], 0)
-        joint = [
+        joint = [  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             [image_start_token],
             np.tile(per_row, [resized_h]),
             [IM_END_TOKEN],

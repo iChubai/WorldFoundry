@@ -54,7 +54,7 @@ logger = logging.get_logger(__name__)
 
 _CONFIG_FOR_DOC = "InternLM2Config"
 
-from .flash_attn_utils import load_flash_attn
+from .flash_attn_utils import load_flash_attn  # noqa: E402 - Follows module-level setup, as upstream.
 
 flash_attn_func, flash_attn_varlen_func = None, None
 pad_input, index_first_axis, unpad_input = None, None, None
@@ -1096,8 +1096,8 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
             loss = loss_fct(shift_logits, shift_labels)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
         output = CausalLMOutputWithPast(
@@ -1117,7 +1117,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
             past_length = past_key_values[0][0].shape[2]
 
             # Some generation methods already pass only the last input ID
-            if input_ids.shape[1] > past_length:
+            if input_ids.shape[1] > past_length:  # noqa: SIM108 - Branches carry per-case comments.
                 remove_prefix_length = past_length
             else:
                 # Default to old behavior: keep only final ID
@@ -1158,7 +1158,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
             )
         return reordered_past
 
-    def build_inputs(self, tokenizer, query: str, history: list[tuple[str, str]] = [], meta_instruction=""):
+    def build_inputs(self, tokenizer, query: str, history: list[tuple[str, str]] = [], meta_instruction=""):  # noqa: B006 - Keeps the upstream default object and signature.
         prompt = "" if tokenizer.add_bos_token else tokenizer.bos_token
         if meta_instruction:
             prompt += f"""<|im_start|>system\n{meta_instruction}<|im_end|>\n"""
@@ -1172,7 +1172,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
         self,
         tokenizer,
         query: str,
-        history: list[tuple[str, str]] = [],
+        history: list[tuple[str, str]] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         streamer: BaseStreamer | None = None,  # type: ignore
         max_new_tokens: int = 1024,
         do_sample: bool = True,
@@ -1200,7 +1200,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
         outputs = outputs[0].cpu().tolist()[len(inputs["input_ids"][0]) :]
         response = tokenizer.decode(outputs, skip_special_tokens=True)
         response = response.split("<|im_end|>")[0]
-        history = history + [(query, response)]
+        history = history + [(query, response)]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return response, history
 
     @torch.no_grad()
@@ -1208,7 +1208,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
         self,
         tokenizer,
         query: str,
-        history: list[tuple[str, str]] = [],
+        history: list[tuple[str, str]] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         max_new_tokens: int = 1024,
         do_sample: bool = True,
         temperature: float = 0.8,
@@ -1239,7 +1239,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
                 self.response = ""
                 self.cache = []
                 self.received_inputs = False
-                self.queue.put((self.response, history + [(self.query, self.response)]))
+                self.queue.put((self.response, history + [(self.query, self.response)]))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             def put(self, value):
                 if len(value.shape) > 1 and value.shape[0] > 1:
@@ -1256,7 +1256,7 @@ class InternLM2ForCausalLM(InternLM2PreTrainedModel):
                 token = self.tokenizer.decode(self.cache, skip_special_tokens=True)
                 if token.strip() != "<|im_end|>":
                     self.response = self.response + token
-                    history = self.history + [(self.query, self.response)]
+                    history = self.history + [(self.query, self.response)]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     self.queue.put((self.response, history))
                     self.cache = []
                 else:
@@ -1398,8 +1398,8 @@ class InternLM2ForSequenceClassification(InternLM2PreTrainedModel):
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
-            output = (pooled_logits,) + transformer_outputs[1:]
-            return ((loss,) + output) if loss is not None else output
+            output = (pooled_logits,) + transformer_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return SequenceClassifierOutputWithPast(
             loss=loss,

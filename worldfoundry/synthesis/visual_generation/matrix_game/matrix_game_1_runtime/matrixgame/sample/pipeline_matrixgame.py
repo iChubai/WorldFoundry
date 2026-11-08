@@ -352,7 +352,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                 f" {negative_prompt_embeds}. Please make sure to only forward one of the two."
             )
 
-        if prompt_embeds is not None and negative_prompt_embeds is not None:
+        if prompt_embeds is not None and negative_prompt_embeds is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds.shape != negative_prompt_embeds.shape:
                 raise ValueError(
                     "`prompt_embeds` and `negative_prompt_embeds` must have the same shape when passed directly, but"
@@ -571,7 +571,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         freqs_cis: tuple[torch.Tensor, torch.Tensor] | None = None,
         vae_ver: str = "88-4c-sd",
         enable_tiling: bool = False,
@@ -580,7 +580,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
         args=None,
         semantic_images=None,
         prompt="N.o.n.e",
-        negative_prompt=["N.o.n.e"],
+        negative_prompt=["N.o.n.e"],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         r"""
@@ -979,7 +979,7 @@ class MatrixGameVideoPipeline(DiffusionPipeline):
                         step_idx = i // getattr(self.scheduler, "order", 1)
                         callback(step_idx, t, latents)
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             expand_temporal_dim = False
             if len(latents.shape) == 4:
                 if isinstance(self.vae, AutoencoderKLCausal3D):

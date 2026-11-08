@@ -110,6 +110,6 @@ def apply_rope_with_tangent(
     if freqs is None:
         return x, t_x
 
-    assert fused == False
+    assert fused == False  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
     out, t_out = torch.func.jvp(lambda inp: apply_rope(inp, freqs, fused=False), (x,), (t_x,))
     return out, t_out

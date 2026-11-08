@@ -275,7 +275,7 @@ class Wan2_2_CameraPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         | MultiPipelineCallbacks
         | None = None,
         attention_kwargs: dict[str, Any] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         boundary: float = 0.875,
         comfyui_progressbar: bool = False,
@@ -397,7 +397,7 @@ class Wan2_2_CameraPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
         elif control_camera_video is not None and isinstance(control_camera_video, dict):
             control_camera_latents = {}
-            for key, value in control_camera_video.items():
+            for key, value in control_camera_video.items():  # noqa: B007 - The loop variable is read outside the loop.
                 control_camera_latents[key] = control_camera_video[key].unsqueeze(0)
 
         mask = torch.zeros(1, 1, latents.size()[2], latents.size()[3], latents.size()[4]).to(device, weight_dtype)
@@ -578,7 +578,7 @@ class Wan2_2_CameraPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
 
         if output_type == "numpy":
             video = self.decode_latents(latents)
-        elif not output_type == "latent":
+        elif not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             video = self.decode_latents(latents)
             video = self.video_processor.postprocess_video(video=video, output_type=output_type)
         else:

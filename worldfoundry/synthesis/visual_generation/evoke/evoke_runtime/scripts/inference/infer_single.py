@@ -16,8 +16,8 @@ import numpy as np
 # True when the pipeline draws its chunk progress bar: per-chunk chatter is folded into that bar's
 #   summary line instead of being printed alongside it. EVOKE_INFER_DEBUG=1 restores every print.
 _PROGRESS_UI = os.environ.get("EVOKE_INFER_PROGRESS", "0") == "1" and os.environ.get("EVOKE_INFER_DEBUG", "0") != "1"
-import torch
-from PIL import Image
+import torch  # noqa: E402 - Follows the environment setup.
+from PIL import Image  # noqa: E402 - Follows the environment setup.
 
 REPO_ROOT = Path(__file__).resolve().parents[2]  # scripts/inference/<this> -> repo root
 if str(REPO_ROOT) not in sys.path:  # so `import evoke` works when run directly
@@ -35,7 +35,7 @@ if os.environ.get("EVOKE_CPU_THREADS"):
 # Single source of truth for the chunk-0 disparity default: the engine owns it (the pipeline falls back
 # to the same constant when the attribute is absent, e.g. training validation), the CLI only surfaces it.
 # Import is safe here -- da3_cloud's module scope is numpy/torch/pathlib only, no DA3/ViGeo weight load.
-import contextlib
+import contextlib  # noqa: E402 - Follows the environment setup.
 
 from evoke.modules.geometric_state.da3_cloud import (  # noqa: E402
     CHUNK0_TARGET_DISPARITY_PX_DEFAULT as _CHUNK0_TARGET_DISPARITY_PX_DEFAULT,
@@ -1040,7 +1040,7 @@ def _check_prereqs(args):
         try:
             check_assets(args.geo_depth_backend, weights=args.geo_vigeo_weights, src=args.geo_vigeo_src)
         except FileNotFoundError as _e:
-            raise SystemExit(f"[geo-infer] FATAL: {_e}")
+            raise SystemExit(f"[geo-infer] FATAL: {_e}")  # noqa: B904 - Keeps the implicit exception context.
 
         # The i2v chunk-0 warp needs a depth scale solvable from ONE frame, which only the baseline-free
         # modes give. It used to degrade to a blank chunk-0 warp on its own, reported as
@@ -1088,7 +1088,7 @@ def _check_prereqs(args):
             "[geo-infer] FATAL: --use_geometric_state cannot be combined with sample_type=t2v (the warp backend needs source pixels)"
         )
 
-    if args.use_geometric_state:
+    if args.use_geometric_state:  # noqa: SIM102 - Branches carry per-case comments.
         # warp backend = DA3 (known GT trajectory + depth-only estimation); weight directory: --geo_da3_weights / EVOKE_DA3_WEIGHTS.
         if not args.lingbot_pose_path or not Path(args.lingbot_pose_path).is_file():
             raise SystemExit("[geo-infer] FATAL: --use_geometric_state requires --lingbot_pose_path")
@@ -1126,7 +1126,7 @@ def _load_lingbot_pose(args):
     _vae_stride_t = 4
     _window_pix = (_W - 1) * _vae_stride_t + 1  # 33
     _num_secs = max(1, (int(args.num_frames) + _window_pix - 1) // _window_pix)
-    _ref_pix = max(0, int(round(float(args.ref_seconds) * 24)))  # ref_seconds * target_fps
+    _ref_pix = max(0, int(round(float(args.ref_seconds) * 24)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.  # ref_seconds * target_fps
     _ref_lat = ((_ref_pix - 1) // _vae_stride_t + 1) if _ref_pix > 0 else 0
     _needed_lat = _ref_lat + _num_secs * _W
     _pose_num_target_frames = (_needed_lat - 1) * _vae_stride_t + 1
@@ -1198,7 +1198,7 @@ def _spawn_bg_postprocess(output_dir: Path, video_np, params: dict, max_workers:
     print(f"[geo-infer] [bg] dumped pred frames {tuple(video_np.shape)} -> {npy} ({time.time() - _t:.1f}s)", flush=True)
 
     worker = str(Path(__file__).resolve().parent / "postprocess_viz.py")
-    log_f = open(output_dir / "postproc.log", "w")
+    log_f = open(output_dir / "postproc.log", "w")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     proc = subprocess.Popen(
         [sys.executable, worker, str(output_dir)],
         stdout=log_f,
@@ -1333,7 +1333,7 @@ def build_pipe(args):
                 _lp = _lp / "pytorch_lora_weights.safetensors"
             if _lp.is_file():
                 with safe_open(str(_lp), framework="pt") as _f:
-                    _plk_on = any("patch_embedding_wancamctrl" in k for k in _f.keys())
+                    _plk_on = any("patch_embedding_wancamctrl" in k for k in _f.keys())  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         except Exception as e:
             print(f"[geo-infer] plk auto-detect skipped: {e}", flush=True)
     if _plk_on:
@@ -1743,7 +1743,7 @@ def main(argv=None):
         if args.pose_smooth_win and args.pose_smooth_win > 1:
             from evoke.utils.trajectory_capping import smooth_c2w_trajectory
 
-            _ref_pix_for_sm = max(0, int(round(float(args.ref_seconds) * 24)))
+            _ref_pix_for_sm = max(0, int(round(float(args.ref_seconds) * 24)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             lingbot_c2ws, _sm_info = smooth_c2w_trajectory(
                 lingbot_c2ws,
                 ref_pix=_ref_pix_for_sm,
@@ -1765,7 +1765,7 @@ def main(argv=None):
             #   straddles two real chunks and the accumulated lag gets released in the last short window
             #   at several times the nominal speed -- which is the opposite of a cap.
             _W_pix, _W_pix0 = 36, 33
-            _ref_pix_for_cap = max(0, int(round(float(args.ref_seconds) * 24)))
+            _ref_pix_for_cap = max(0, int(round(float(args.ref_seconds) * 24)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             _c2w_np = (
                 lingbot_c2ws.detach().cpu().numpy()
                 if isinstance(lingbot_c2ws, torch.Tensor)
@@ -1943,7 +1943,7 @@ def main(argv=None):
                     _seg_out = pred_seg_u8
                     if _hud_on and _c2ws_full is not None:
                         # pred pixel 0 == first frame after the ref prefix (ref_seconds=0 for i2v/segment)
-                        _rp = int(round(float(args.ref_seconds) * int(args.fps)))
+                        _rp = int(round(float(args.ref_seconds) * int(args.fps)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                         _s = _rp + pix_off
                         _e = min(_s + T_pix, int(_c2ws_full.shape[0]))
                         if _e > _s:
@@ -1968,7 +1968,7 @@ def main(argv=None):
 
                     if _has_gt and _state["gt_dry"] < _GT_DRY_MAX:
                         # v2v: pred pixel offset 0 corresponds to first frame after ref, offset GT slice by ref_pix
-                        _ref_pix_viz = int(round(float(args.ref_seconds) * int(args.fps)))
+                        _ref_pix_viz = int(round(float(args.ref_seconds) * int(args.fps)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                         # slice c2w for this chunk
                         _max_pose = int(_c2ws_full.shape[0])
                         _end = min(_ref_pix_viz + pix_off + T_pix, _max_pose)
@@ -2332,7 +2332,7 @@ def main(argv=None):
                 "joystick_c2ws_npy": str(_c2ws_npy),
                 "joystick_move_scale": float(_ms),
                 "joystick_rot_scale": float(_rs),
-                "joystick_ref_pix": int(round(float(args.ref_seconds) * int(args.fps))),
+                "joystick_ref_pix": int(round(float(args.ref_seconds) * int(args.fps))),  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                 # dual -> the writer emits both files; absent/False keeps the historical single-file
                 # behaviour (overlaid when the HUD is on, clean when it is off).
                 "joystick_dual": bool(_hud_dual),
@@ -2414,7 +2414,7 @@ def run_argv_batch(path: str) -> int:
     import traceback
 
     with open(path) as f:
-        jobs = [json.loads(l) for l in f if l.strip()]
+        jobs = [json.loads(l) for l in f if l.strip()]  # noqa: E741 - Ambiguous upstream name kept as written.
     print(f"[geo-infer] argv batch: {len(jobs)} case(s) in one process (pipeline built once, then reused)", flush=True)
     # Throttle how many shards build their pipeline at the same time. Building one streams the whole
     #   checkpoint through host RAM (54 GB transformer + 22 GB text encoder for post_distill), so with
@@ -2432,7 +2432,7 @@ def run_argv_batch(path: str) -> int:
         try:
             if log:
                 Path(log).parent.mkdir(parents=True, exist_ok=True)
-                lg = open(log, "w")
+                lg = open(log, "w")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
                 ctx = contextlib.ExitStack()
                 ctx.enter_context(lg)
                 ctx.enter_context(contextlib.redirect_stdout(lg))
@@ -2444,7 +2444,7 @@ def run_argv_batch(path: str) -> int:
                     main(argv)
                 except SystemExit as e:  # argparse / an explicit sys.exit inside main
                     if e.code not in (0, None):
-                        raise RuntimeError(f"SystemExit({e.code})")
+                        raise RuntimeError(f"SystemExit({e.code})")  # noqa: B904 - Keeps the implicit exception context.
         except BaseException as e:  # keep going; the shard has other cases to do
             failed.append((name, f"{type(e).__name__}: {e}"))
             print(f"[geo-infer] [{i}/{len(jobs)}] {name} FAILED ({type(e).__name__}) -- see {log}", flush=True)

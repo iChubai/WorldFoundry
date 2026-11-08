@@ -102,10 +102,10 @@ def build_plan_cfg_dicts(
     ckpt_base_path="",
     model_name="",
     model_epoch="final",
-    planner=["gd", "cem"],
-    goal_source=["dset"],
-    goal_H=[1, 5, 10],
-    alpha=[0, 0.1, 1],
+    planner=["gd", "cem"],  # noqa: B006 - Keeps the upstream default object and signature.
+    goal_source=["dset"],  # noqa: B006 - Keeps the upstream default object and signature.
+    goal_H=[1, 5, 10],  # noqa: B006 - Keeps the upstream default object and signature.
+    alpha=[0, 0.1, 1],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     """
     Return a list of plan overrides, for model_path, add a key in the dict {"model_path": model_path}.
@@ -246,7 +246,7 @@ class PlanWorkspace:
             obs_g, state_g = self.env.prepare(self.eval_seed, rand_goal_state)
 
             # add dim for t
-            for k in obs_0.keys():
+            for k in obs_0.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 obs_0[k] = np.expand_dims(obs_0[k], axis=1)
                 obs_g[k] = np.expand_dims(obs_g[k], axis=1)
 
@@ -294,7 +294,7 @@ class PlanWorkspace:
             raise ValueError("No trajectory in the dataset is long enough.")
 
         # sample init_states from dset
-        for i in range(self.n_evals):
+        for i in range(self.n_evals):  # noqa: B007 - The loop variable is read outside the loop.
             max_offset = -1
             while max_offset < 0:  # filter out traj that are not long enough
                 traj_id = random.randint(0, len(self.dset) - 1)

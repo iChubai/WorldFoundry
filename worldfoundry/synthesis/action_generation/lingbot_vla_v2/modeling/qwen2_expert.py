@@ -355,15 +355,15 @@ class Qwen2PreTrainedModel(PreTrainedModel):
     config: Qwen2Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen2DecoderLayer"]
-    _skip_keys_device_placement = ["past_key_values"]
+    _no_split_modules = ["Qwen2DecoderLayer"]  # noqa: RUF012 - Shared class-level value, as upstream.
+    _skip_keys_device_placement = ["past_key_values"]  # noqa: RUF012 - Shared class-level value, as upstream.
     _supports_flash_attn = True
     _supports_sdpa = True
     _supports_flex_attn = True
 
     _can_compile_fullgraph = True
     _supports_attention_backend = True
-    _can_record_outputs = {
+    _can_record_outputs = {  # noqa: RUF012 - Shared class-level value, as upstream.
         "hidden_states": Qwen2DecoderLayer,
         "attentions": Qwen2Attention,
     }

@@ -17,8 +17,8 @@ from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
 MODEL_FOLDER = None  # Set via config: text_encoder_path / vae_path, or wan_model_folder
 
 
-from safetensors.torch import load_file as safe_load_file
-from safetensors.torch import save_file as safe_save_file
+from safetensors.torch import load_file as safe_load_file  # noqa: E402 - Follows module-level setup, as upstream.
+from safetensors.torch import save_file as safe_save_file  # noqa: E402 - Follows module-level setup, as upstream.
 
 
 class WanTextEncoder(torch.nn.Module):
@@ -223,8 +223,8 @@ class WanDiffusionWrapper(torch.nn.Module):
         timestep_shift=5.0,
         is_causal=False,
         ckpt_path=None,
-        weight_list=[],
-        filter_list=[],
+        weight_list=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        filter_list=[],  # noqa: B006 - Keeps the upstream default object and signature.
         in_dim=36,
         dual_model=False,
         high_noise_threshold=0.5,

@@ -114,7 +114,7 @@ def _resolve_vlm_path(config: HyVLAConfig, override: str | None = None) -> str:
     if override:
         candidates.append(("override", override))
     own_path = getattr(config, "pretrained_path", None)
-    if own_path and os.path.isdir(own_path) and os.path.isfile(os.path.join(own_path, "tokenizer.json")):
+    if own_path and os.path.isdir(own_path) and os.path.isfile(os.path.join(own_path, "tokenizer.json")):  # noqa: SIM102 - Branches carry per-case comments.
         # A HyVLA ckpt is "self-contained" iff it ships a tokenizer.json
         # AND either (a) carries an embedded vendor VLM AutoConfig payload
         # via ``vlm_config_dict``, or (b) the directory itself is a vendor

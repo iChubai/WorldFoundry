@@ -614,14 +614,14 @@ class Qwen3VLPreTrainedModel(PreTrainedModel):
     config: Qwen3VLConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
+    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]  # noqa: RUF012 - Shared class-level value, as upstream.
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn = True
     _supports_sdpa = True
 
     _can_compile_fullgraph = True
     _supports_attention_backend = True
-    _can_record_outputs = {
+    _can_record_outputs = {  # noqa: RUF012 - Shared class-level value, as upstream.
         "hidden_states": Qwen3VLTextDecoderLayer,
         "attentions": Qwen3VLTextAttention,
     }
@@ -711,7 +711,7 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
         idx_list = [[] for _ in range(4)]
         weight_list = [[] for _ in range(4)]
 
-        for t, h, w in zip(grid_ts, grid_hs, grid_ws, strict=False):
+        for t, h, w in zip(grid_ts, grid_hs, grid_ws, strict=False):  # noqa: B007 - The loop variable is read outside the loop.
             h_idxs = torch.linspace(0, self.num_grid_per_side - 1, h)
             w_idxs = torch.linspace(0, self.num_grid_per_side - 1, w)
 
@@ -827,7 +827,7 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
 )
 class Qwen3VLTextModel(Qwen3VLPreTrainedModel):
     config: Qwen3VLTextConfig
-    _no_split_modules = ["Qwen3VLTextDecoderLayer"]
+    _no_split_modules = ["Qwen3VLTextDecoderLayer"]  # noqa: RUF012 - Shared class-level value, as upstream.
 
     def __init__(self, config: Qwen3VLTextConfig):
         super().__init__(config)
@@ -953,11 +953,11 @@ class Qwen3VLTextModel(Qwen3VLPreTrainedModel):
 @auto_docstring
 class Qwen3VLModel(Qwen3VLPreTrainedModel):
     base_model_prefix = ""
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping = {}  # noqa: RUF012 - Shared class-level value, as upstream.
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: Qwen3VLConfig
-    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
+    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]  # noqa: RUF012 - Shared class-level value, as upstream.
 
     def __init__(self, config):
         super().__init__(config)

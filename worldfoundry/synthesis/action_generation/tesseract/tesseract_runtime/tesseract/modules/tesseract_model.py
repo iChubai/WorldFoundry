@@ -197,7 +197,7 @@ class TesserActDepth(CogVideoXTransformer3DModel):
         self,
         pretrained_model_path,
         subfolder=None,
-        transformer_additional_kwargs={},
+        transformer_additional_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         low_cpu_mem_usage=False,
         torch_dtype=torch.bfloat16,
         **kwargs,
@@ -381,7 +381,7 @@ class TesserActDepthNormal(TesserActDepth):
             scale_lora_layers(self, lora_scale)
         else:
             if attention_kwargs is not None and attention_kwargs.get("scale", None) is not None:
-                logger.warning("Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective.")
+                logger.warning("Passing `scale` via `attention_kwargs` when not using the PEFT backend is ineffective.")  # noqa: F821 - Name is undefined in the upstream source.
 
         batch_size, num_frames, channels, height, width = hidden_states.shape
 
@@ -491,4 +491,4 @@ class TesserActDepthNormal(TesserActDepth):
 
         if not return_dict:
             return (output,)
-        return Transformer2DModelOutput(sample=output)
+        return Transformer2DModelOutput(sample=output)  # noqa: F821 - Name is undefined in the upstream source.

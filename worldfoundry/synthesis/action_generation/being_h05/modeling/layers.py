@@ -185,7 +185,7 @@ def swish(x):
     return x * torch.sigmoid(x)
 
 
-class SinusoidalPositionalEncoding(nn.Module):
+class SinusoidalPositionalEncoding(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(self, embedding_dim):
         super().__init__()
         self.embedding_dim = embedding_dim
@@ -664,7 +664,7 @@ class MPGEnhancement(nn.Module):
 
         # 7. Apply gate to projected observation features (use unnormalized for enhancement)
         # CODE's formula: gate * projected_input (NOT gate * residual as in paper)
-        if self.use_stop_gradient:
+        if self.use_stop_gradient:  # noqa: SIM108 - Branches carry per-case comments.
             # Stop gradient through gate (prevents gate collapse)
             gated_obs = obs_emb * gate.detach()
         else:

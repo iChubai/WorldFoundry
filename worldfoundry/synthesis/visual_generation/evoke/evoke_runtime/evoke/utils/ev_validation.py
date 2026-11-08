@@ -20,7 +20,7 @@ def load_ref_video_for_v2v(
     start_seconds: float = 0.0,
 ) -> torch.Tensor:
     """Load a clip from source video, resample source_fps to target_fps. Returns [T, 3, H, W] in [-1, 1] fp32 CPU."""
-    num_target_frames = max(1, int(round(seconds * target_fps)))
+    num_target_frames = max(1, int(round(seconds * target_fps)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     video = _load_test_clip(
         video_path,
         num_target_frames=num_target_frames,
@@ -151,7 +151,7 @@ def load_pose_for_v2v(
     # resample to target_fps starting at start_seconds
     if num_target_frames is None:
         num_target_frames = max(1, int(n_src * target_fps / source_fps))
-    start_src = int(round(start_seconds * source_fps))
+    start_src = int(round(start_seconds * source_fps))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     src_indices = [start_src + round(i * source_fps / target_fps) for i in range(num_target_frames)]
     # count how many resampled frames fall inside the real trajectory
     n_in_range = sum(1 for idx in src_indices if idx < n_src)
@@ -171,7 +171,7 @@ def load_pose_for_v2v(
     # Optional: clamp rotation deviation from frame 0 to keep the clip high-overlap (warp-coverage test).
     if max_rotation_deg and float(max_rotation_deg) > 0:
         cam_c2w = _clamp_c2w_rotation(cam_c2w, max_rotation_deg)
-    if intrinsics_all.ndim == 3:
+    if intrinsics_all.ndim == 3:  # noqa: SIM108 - Branches carry per-case comments.
         intrinsic = intrinsics_all[src_indices[0]]  # [3, 3]
     else:
         intrinsic = intrinsics_all  # [3, 3]
@@ -403,13 +403,13 @@ def draw_joystick(frame_bgr, center, radius: int, vec2, label: str | None = None
     # label: drawn supersampled into its own tile so the glyphs get the same subpixel treatment as the
     # widget, instead of cv2's 1 px-thick Hershey strokes straight onto the frame
     if label:
-        fs, th = 0.5 * S, max(1, int(round(S * 0.9)))
+        fs, th = 0.5 * S, max(1, int(round(S * 0.9)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         (tw, tht), base = cv2.getTextSize(label, cv2.FONT_HERSHEY_DUPLEX, fs, th)
         tile = np.zeros((tht + base + 2 * S, tw + 2 * S, 4), dtype=np.uint8)
         cv2.putText(tile, label, (S, tht + S), cv2.FONT_HERSHEY_DUPLEX, fs, (255, 255, 255, 255), th, cv2.LINE_AA)
         tile_s = cv2.resize(tile, (tile.shape[1] // S, tile.shape[0] // S), interpolation=inter)
-        tx = int(round(cx - tile_s.shape[1] * 0.5))
-        ty = int(round(cy - radius * 1.15 - tile_s.shape[0]))
+        tx = int(round(cx - tile_s.shape[1] * 0.5))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        ty = int(round(cy - radius * 1.15 - tile_s.shape[0]))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         tx0, ty0 = max(tx, 0), max(ty, 0)
         tx1, ty1 = min(tx + tile_s.shape[1], w), min(ty + tile_s.shape[0], h)
         if tx1 > tx0 and ty1 > ty0:
@@ -571,7 +571,7 @@ def add_joystick_overlay_from_c2ws(
     if F_pix == n_frames:
         idx_map = list(range(F_pix))
     else:
-        idx_map = [min(int(round(i * (F_pix - 1) / max(n_frames - 1, 1))), F_pix - 1) for i in range(n_frames)]
+        idx_map = [min(int(round(i * (F_pix - 1) / max(n_frames - 1, 1))), F_pix - 1) for i in range(n_frames)]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     h, w = video_frames[0].shape[:2]
     short = min(w, h)
@@ -621,8 +621,8 @@ def _load_gt_video_rgb_for_viz(
     else:
         target_indices = list(range(int(num_target_frames)))
 
-    start_src = int(round(start_seconds * source_fps))
-    src_indices = [start_src + int(round(t * source_fps / target_fps)) for t in target_indices]
+    start_src = int(round(start_seconds * source_fps))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    src_indices = [start_src + int(round(t * source_fps / target_fps)) for t in target_indices]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"cv2 cannot open {video_path}")
@@ -720,7 +720,7 @@ def combine_gt_pred_with_cam_viz(
     stride = int(vae_stride_t)
     window_pix = (W - 1) * stride + 1
     num_secs = max(1, (int(num_frames) + window_pix - 1) // window_pix)
-    ref_pix = max(0, int(round(ref_seconds * target_fps)))
+    ref_pix = max(0, int(round(ref_seconds * target_fps)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     ref_lat = ((ref_pix - 1) // stride + 1) if ref_pix > 0 else 0
     needed_lat = ref_lat + num_secs * W
     pose_num_target_frames = (needed_lat - 1) * stride + 1
@@ -910,7 +910,7 @@ def _load_test_clip(
     )
 
     total_src, _, _ = get_video_details(video_path)
-    start_src = int(round(start_seconds * source_fps))
+    start_src = int(round(start_seconds * source_fps))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     src_indices = [start_src + round(i * source_fps / target_fps) for i in range(num_target_frames)]
     assert src_indices[-1] < total_src, (
         f"video {video_path} is too short: needs src frames >={src_indices[-1] + 1}, has {total_src}"

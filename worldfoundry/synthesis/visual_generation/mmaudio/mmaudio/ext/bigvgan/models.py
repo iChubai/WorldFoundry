@@ -1,5 +1,6 @@
 # Copyright (c) 2022 NVIDIA CORPORATION.
 #   Licensed under the MIT license.
+# ruff: noqa: F405 - Names come from the upstream star import.
 
 # Adapted from https://github.com/jik876/hifi-gan under the MIT license.
 #   LICENSE is in incl_licenses directory.
@@ -7,7 +8,7 @@
 import torch
 import torch.nn as nn
 from mmaudio.ext.bigvgan import activations
-from mmaudio.ext.bigvgan.alias_free_torch import *
+from mmaudio.ext.bigvgan.alias_free_torch import *  # noqa: F403 - Upstream star import kept as written.
 from mmaudio.ext.bigvgan.utils import get_padding, init_weights
 from torch.nn import Conv1d, ConvTranspose1d
 from torch.nn.utils.parametrizations import weight_norm
@@ -105,9 +106,9 @@ class AMPBlock1(torch.nn.Module):
         return x
 
     def remove_weight_norm(self):
-        for l in self.convs1:
+        for l in self.convs1:  # noqa: E741 - Ambiguous upstream name kept as written.
             remove_parametrizations(l, "weight")
-        for l in self.convs2:
+        for l in self.convs2:  # noqa: E741 - Ambiguous upstream name kept as written.
             remove_parametrizations(l, "weight")
 
 
@@ -172,7 +173,7 @@ class AMPBlock2(torch.nn.Module):
         return x
 
     def remove_weight_norm(self):
-        for l in self.convs:
+        for l in self.convs:  # noqa: E741 - Ambiguous upstream name kept as written.
             remove_parametrizations(l, "weight")
 
 
@@ -262,10 +263,10 @@ class BigVGANVocoder(torch.nn.Module):
 
     def remove_weight_norm(self):
         print("Removing weight norm...")
-        for l in self.ups:
+        for l in self.ups:  # noqa: E741 - Ambiguous upstream name kept as written.
             for l_i in l:
                 remove_parametrizations(l_i, "weight")
-        for l in self.resblocks:
+        for l in self.resblocks:  # noqa: E741 - Ambiguous upstream name kept as written.
             l.remove_weight_norm()
         remove_parametrizations(self.conv_pre, "weight")
         remove_parametrizations(self.conv_post, "weight")

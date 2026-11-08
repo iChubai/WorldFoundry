@@ -76,7 +76,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         motion_module_mid_block=False,
         motion_module_decoder_only=False,
         motion_module_type=None,
-        motion_module_kwargs={},
+        motion_module_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         unet_use_cross_frame_attention=False,
         unet_use_temporal_attention=False,
     ):
@@ -468,7 +468,7 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         return UNet3DConditionOutput(sample=sample)
 
     @classmethod
-    def from_pretrained_2d(cls, pretrained_model_name_or_path, unet_additional_kwargs={}, **kwargs):
+    def from_pretrained_2d(cls, pretrained_model_name_or_path, unet_additional_kwargs={}, **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
         from diffusers import __version__
         from diffusers.utils import SAFETENSORS_WEIGHTS_NAME, WEIGHTS_NAME, is_safetensors_available
 

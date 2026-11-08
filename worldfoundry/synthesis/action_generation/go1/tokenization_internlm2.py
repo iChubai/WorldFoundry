@@ -199,7 +199,7 @@ class InternLM2Tokenizer(PreTrainedTokenizer):
             output = output + token_ids_1
 
         if self.add_eos_token:
-            output = output + [self.eos_token_id]
+            output = output + [self.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return output
 

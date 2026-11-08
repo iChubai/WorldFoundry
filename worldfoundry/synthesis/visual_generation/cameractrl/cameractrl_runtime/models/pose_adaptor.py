@@ -20,7 +20,7 @@ def get_parameter_dtype(parameter: torch.nn.Module):
     except StopIteration:
         # For torch.nn.DataParallel compatibility in PyTorch 1.5
 
-        def find_tensor_attributes(module: torch.nn.Module) -> List[Tuple[str, Tensor]]:
+        def find_tensor_attributes(module: torch.nn.Module) -> List[Tuple[str, Tensor]]:  # noqa: F821 - Name is undefined in the upstream source.
             tuples = [(k, v) for k, v in module.__dict__.items() if torch.is_tensor(v)]
             return tuples
 
@@ -103,24 +103,24 @@ class ResnetBlock(nn.Module):
     def __init__(self, in_c, out_c, down, ksize=3, sk=False, use_conv=True):
         super().__init__()
         ps = ksize // 2
-        if in_c != out_c or sk == False:
+        if in_c != out_c or sk == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             self.in_conv = nn.Conv2d(in_c, out_c, ksize, 1, ps)
         else:
             self.in_conv = None
         self.block1 = nn.Conv2d(out_c, out_c, 3, 1, 1)
         self.act = nn.ReLU()
         self.block2 = nn.Conv2d(out_c, out_c, ksize, 1, ps)
-        if sk == False:
+        if sk == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             self.skep = nn.Conv2d(in_c, out_c, ksize, 1, ps)
         else:
             self.skep = None
 
         self.down = down
-        if self.down == True:
+        if self.down == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             self.down_opt = Downsample(in_c, use_conv=use_conv)
 
     def forward(self, x):
-        if self.down == True:
+        if self.down == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             x = self.down_opt(x)
         if self.in_conv is not None:  # edit
             x = self.in_conv(x)
@@ -160,7 +160,7 @@ class CameraPoseEncoder(nn.Module):
     def __init__(
         self,
         downscale_factor,
-        channels=[320, 640, 1280, 1280],
+        channels=[320, 640, 1280, 1280],  # noqa: B006 - Keeps the upstream default object and signature.
         nums_rb=3,
         cin=64,
         ksize=3,

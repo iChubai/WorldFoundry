@@ -40,7 +40,7 @@ class KeywordsStoppingCriteria(StoppingCriteria):
             if torch.equal(truncated_output_ids, keyword_id):
                 return True
         outputs = self.tokenizer.batch_decode(output_ids[:, -offset:], skip_special_tokens=True)[0]
-        for keyword in self.keywords:
+        for keyword in self.keywords:  # noqa: SIM110 - Keeps the explicit loop.
             if keyword in outputs:
                 return True
         return False
@@ -89,7 +89,7 @@ class Conversation:
         elif self.sep_style == SeparatorStyle.PLAIN:
             seps = [self.sep, self.sep2]
             ret = self.system
-            for i, (role, message) in enumerate(messages):
+            for i, (role, message) in enumerate(messages):  # noqa: B007 - The loop variable is read outside the loop.
                 if message:
                     if isinstance(message, tuple):
                         message, _, _ = message

@@ -52,9 +52,9 @@ class TextEncoder(SharedTextEncoder):
         if self.text_encoder_type == "llava-llama-3-8b":
             if isinstance(text, list):
                 for i in range(len(text)):
-                    text[i] = text[i] + "\nThe %s looks like<image>" % name
+                    text[i] = text[i] + "\nThe %s looks like<image>" % name  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             elif isinstance(text, str):
-                text = text + "\nThe %s looks like<image>" % name
+                text = text + "\nThe %s looks like<image>" % name  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             else:
                 raise NotImplementedError
         if tokenize_input_type == "str":

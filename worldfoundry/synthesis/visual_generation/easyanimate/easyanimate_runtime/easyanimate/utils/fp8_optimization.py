@@ -24,7 +24,7 @@ def convert_model_weight_to_float8(model, exclude_module_name="embed_tokens"):
 
 
 def convert_weight_dtype_wrapper(module, origin_dtype):
-    for name, module in module.named_modules():
+    for name, module in module.named_modules():  # noqa: B020 - Upstream loop rebinding kept.
         if name == "" or "embed_tokens" in name:
             continue
         original_forward = module.forward

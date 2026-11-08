@@ -43,7 +43,7 @@ class BatchSampler(torch.utils.data.Sampler):
         else:
             weights = self.sample_weights
             num_weights = len(self.sample_weights)
-            assert all([0 <= x <= 1 for x in weights]) and sum(weights) == 1
+            assert all([0 <= x <= 1 for x in weights]) and sum(weights) == 1  # noqa: C419 - Evaluates every element before testing, as upstream.
             sizes = [
                 num_episodes // num_weights + (num_episodes % num_weights) * (i == num_weights - 1)
                 for i in range(num_weights)

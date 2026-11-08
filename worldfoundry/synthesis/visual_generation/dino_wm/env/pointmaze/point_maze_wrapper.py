@@ -105,7 +105,7 @@ class PointMazeWrapper(MazeEnv):
         """
         obs, state = self.prepare(seed, init_state)
         obses, rewards, dones, infos = self.step_multiple(actions)
-        for k in obses.keys():
+        for k in obses.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             obses[k] = np.vstack([np.expand_dims(obs[k], 0), obses[k]])
         states = np.vstack([np.expand_dims(state, 0), infos["state"]])
         states = np.stack(states)

@@ -154,11 +154,11 @@ class Attention(nn.Module):
 
     def merge_heads(self, x):
         x = x.permute(0, 2, 1, 3).contiguous()
-        new_x_shape = x.size()[:-2] + (x.size(-2) * x.size(-1),)
+        new_x_shape = x.size()[:-2] + (x.size(-2) * x.size(-1),)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return x.view(*new_x_shape)  # in Tensorflow implem: fct merge_states
 
     def split_heads(self, x, k=False):
-        new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
+        new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         x = x.view(*new_x_shape)  # in Tensorflow implem: fct split_states
         if k:
             return x.permute(0, 2, 3, 1)  # (batch, head, head_features, seq_length)
@@ -194,7 +194,7 @@ class Attention(nn.Module):
             key = torch.cat((past_key, key), dim=-1)
             value = torch.cat((past_value, value), dim=-2)
 
-        if use_cache is True:
+        if use_cache is True:  # noqa: SIM108 - Branches carry per-case comments.
             present = torch.stack((key.transpose(-2, -1), value))  # transpose to have same shapes for stacking
         else:
             present = (None,)
@@ -206,7 +206,7 @@ class Attention(nn.Module):
         a = self.c_proj(a)
         a = self.resid_dropout(a)
 
-        outputs = [a, present] + attn_outputs[1:]
+        outputs = [a, present] + attn_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs  # a, present, (attentions)
 
 
@@ -299,7 +299,7 @@ class Block(nn.Module):
         # residual connection
         hidden_states = hidden_states + feed_forward_hidden_states
 
-        outputs = [hidden_states] + outputs
+        outputs = [hidden_states] + outputs  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs  # hidden_states, present, (attentions, cross_attentions)
 
 
@@ -579,7 +579,7 @@ class GPT2Model(GPT2PreTrainedModel):
 
         hidden_states = self.drop(hidden_states)
 
-        output_shape = input_shape + (hidden_states.size(-1),)
+        output_shape = input_shape + (hidden_states.size(-1),)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         presents = () if use_cache else None
         all_self_attentions = () if output_attentions else None
@@ -601,7 +601,7 @@ class GPT2Model(GPT2PreTrainedModel):
                 if isinstance(head_mask, torch.Tensor):
                     head_mask = head_mask.to(hidden_states.device)
             if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             if getattr(self.config, "gradient_checkpointing", False):
 
@@ -635,19 +635,19 @@ class GPT2Model(GPT2PreTrainedModel):
 
             hidden_states, present = outputs[:2]
             if use_cache is True:
-                presents = presents + (present,)
+                presents = presents + (present,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             if output_attentions:
-                all_self_attentions = all_self_attentions + (outputs[2],)
+                all_self_attentions = all_self_attentions + (outputs[2],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 if self.config.add_cross_attention:
-                    all_cross_attentions = all_cross_attentions + (outputs[3],)
+                    all_cross_attentions = all_cross_attentions + (outputs[3],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         hidden_states = self.ln_f(hidden_states)
 
         hidden_states = hidden_states.view(*output_shape)
         # Add last hidden state
         if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
+            all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return hidden_states
 
 

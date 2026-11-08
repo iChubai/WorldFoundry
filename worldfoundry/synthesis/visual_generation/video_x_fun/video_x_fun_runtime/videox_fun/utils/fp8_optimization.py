@@ -14,7 +14,7 @@ def replace_parameters_by_name(module, name_keywords, device):
         replace_parameters_by_name(child_module, name_keywords, device)
 
 
-def convert_model_weight_to_float8(model, exclude_module_name=["embed_tokens"], device=None):
+def convert_model_weight_to_float8(model, exclude_module_name=["embed_tokens"], device=None):  # noqa: B006 - Keeps the upstream default object and signature.
     for name, module in model.named_modules():
         flag = False
         for _exclude_module_name in exclude_module_name:
@@ -45,7 +45,7 @@ def autocast_model_forward(cls, origin_dtype, *inputs, **kwargs):
 
 
 def convert_weight_dtype_wrapper(module, origin_dtype):
-    for name, module in module.named_modules():
+    for name, module in module.named_modules():  # noqa: B020 - Upstream loop rebinding kept.
         if name == "" or "embed_tokens" in name:
             continue
         original_forward = module.forward
@@ -57,7 +57,7 @@ def convert_weight_dtype_wrapper(module, origin_dtype):
 
 
 def undo_convert_weight_dtype_wrapper(module):
-    for _name, module in module.named_modules():
+    for _name, module in module.named_modules():  # noqa: B020 - Upstream loop rebinding kept.
         if hasattr(module, "original_forward") and module.weight is not None:
             module.forward = module.original_forward
             delattr(module, "original_forward")

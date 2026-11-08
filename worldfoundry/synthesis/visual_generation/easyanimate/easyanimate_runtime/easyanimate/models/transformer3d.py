@@ -738,7 +738,7 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         pretrained_model_path,
         subfolder=None,
         patch_size=2,
-        transformer_additional_kwargs={},
+        transformer_additional_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         low_cpu_mem_usage=False,
         torch_dtype=torch.bfloat16,
     ):
@@ -844,7 +844,7 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
 
         tmp_state_dict = {}
         for key in state_dict:
-            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():
+            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 tmp_state_dict[key] = state_dict[key]
             else:
                 print(key, "Size don't match, skip")
@@ -989,7 +989,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
                         skip=layer > num_layers // 2,
                         after_norm=after_norm,
                         time_position_encoding=time_position_encoding,
-                        is_local_attention=not layer % 2 == 0,
+                        is_local_attention=not layer % 2 == 0,  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                         local_attention_frames=2,
                         enable_inpaint=self.enable_inpaint and enable_clip_in_inpaint,
                     )
@@ -1310,7 +1310,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
         cls,
         pretrained_model_path,
         subfolder=None,
-        transformer_additional_kwargs={},
+        transformer_additional_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         low_cpu_mem_usage=False,
         torch_dtype=torch.bfloat16,
     ):
@@ -1445,7 +1445,7 @@ class HunyuanTransformer3DModel(ModelMixin, ConfigMixin):
 
         tmp_state_dict = {}
         for key in state_dict:
-            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():
+            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 tmp_state_dict[key] = state_dict[key]
             else:
                 print(key, "Size don't match, skip")
@@ -1602,7 +1602,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
         self,
         num_steps: int,
         rel_l1_thresh: float,
-        coefficients: list[float] = [-10.47857366, 8.33844143, -0.78477557, 0.68798618, 0.0136149],
+        coefficients: list[float] = [-10.47857366, 8.33844143, -0.78477557, 0.68798618, 0.0136149],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         self.teacache = TeaCache(coefficients, num_steps, rel_l1_thresh=rel_l1_thresh)
 
@@ -1830,7 +1830,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
         cls,
         pretrained_model_path,
         subfolder=None,
-        transformer_additional_kwargs={},
+        transformer_additional_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         low_cpu_mem_usage=False,
         torch_dtype=torch.bfloat16,
     ):
@@ -1937,7 +1937,7 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
 
         tmp_state_dict = {}
         for key in state_dict:
-            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():
+            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 tmp_state_dict[key] = state_dict[key]
             else:
                 print(key, "Size don't match, skip")

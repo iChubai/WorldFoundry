@@ -361,7 +361,7 @@ class SampleTransport:
             denoise_step_of_each_chunk.append(i * denoise_step_per_stage + denoise_idx)
         denoise_step_of_each_chunk.reverse()
         if has_clean_t:
-            denoise_step_of_each_chunk = [self.transport_inputs[infer_idx].num_steps] + denoise_step_of_each_chunk
+            denoise_step_of_each_chunk = [self.transport_inputs[infer_idx].num_steps] + denoise_step_of_each_chunk  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return denoise_step_of_each_chunk
 
     def get_batch_size_and_chunk_token_nums(self, infer_idx: int):

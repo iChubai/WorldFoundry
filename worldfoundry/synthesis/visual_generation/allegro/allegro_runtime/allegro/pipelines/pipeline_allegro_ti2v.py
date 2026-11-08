@@ -38,8 +38,10 @@ from transformers import T5EncoderModel, T5Tokenizer
 
 logger = logging.get_logger(__name__)
 
-from allegro.models.transformers.transformer_3d_allegro_ti2v import AllegroTransformerTI2V3DModel
-from allegro.models.vae.vae_allegro import AllegroAutoencoderKL3D
+from allegro.models.transformers.transformer_3d_allegro_ti2v import (  # noqa: E402 - Follows the logging setup.
+    AllegroTransformerTI2V3DModel,
+)
+from allegro.models.vae.vae_allegro import AllegroAutoencoderKL3D  # noqa: E402 - Follows the logging setup.
 
 
 @dataclass
@@ -151,7 +153,7 @@ class AllegroTI2VPipeline(DiffusionPipeline):
         vae: AllegroAutoencoderKL3D | None = None,
         transformer: AllegroTransformerTI2V3DModel | None = None,
         scheduler: EulerAncestralDiscreteScheduler | None = None,
-        device: torch.device = torch.device("cuda"),
+        device: torch.device = torch.device("cuda"),  # noqa: B008 - Default evaluated once at definition, as upstream.
         dtype: torch.dtype = torch.float16,
     ):
         super().__init__()
@@ -836,12 +838,12 @@ class AllegroTI2VPipeline(DiffusionPipeline):
             latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
 
             # call the callback, if provided
-            if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
+            if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):  # noqa: SIM102 - Statement form kept for readability.
                 if callback is not None and i % callback_steps == 0:
                     step_idx = i // getattr(self.scheduler, "order", 1)
                     callback(step_idx, t, latents)
 
-        if not output_type == "latents":
+        if not output_type == "latents":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             video = self.decode_latents(latents)
             video = video[:, :num_frames, :height, :width]
         else:

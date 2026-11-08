@@ -121,9 +121,9 @@ def read_video_av(
             aframes = np.concatenate(aframes_list, 1)
             aframes = torch.as_tensor(aframes)
             if pts_unit == "sec":
-                start_pts = int(math.floor(start_pts * (1 / audio_timebase)))
+                start_pts = int(math.floor(start_pts * (1 / audio_timebase)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                 if end_pts != float("inf"):
-                    end_pts = int(math.ceil(end_pts * (1 / audio_timebase)))
+                    end_pts = int(math.ceil(end_pts * (1 / audio_timebase)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             aframes = _align_audio_frames(aframes, audio_frames, start_pts, end_pts)
         else:
             aframes = torch.empty((1, 0), dtype=torch.float32)

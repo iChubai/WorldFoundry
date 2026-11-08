@@ -215,7 +215,7 @@ def sample_videos(
             event.synchronize()
             # pixels: [1, num_frames, 3, H, W] on GPU
             cpu_pixels = pixels.cpu().add_(1.0).mul_(0.5).clamp_(0.0, 1.0)
-            all_frames.append(cpu_pixels)
+            all_frames.append(cpu_pixels)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
         params.prompt = prompt
         # Create generation session
@@ -327,7 +327,7 @@ def create_grid(outputs_folder: str = "outputs", grid_output_dir: str = "outputs
         cmd = ["ffmpeg", "-y"]
 
         # Add input files
-        for folder_name, video_path in videos:
+        for folder_name, video_path in videos:  # noqa: B007 - The loop variable is read outside the loop.
             cmd.extend(["-i", str(video_path)])
 
         # Get dimensions from first video

@@ -300,7 +300,8 @@ def main_single(
             )
         if main_config.plucker_embedding_vae:
             batch_test = encode_plucker_vae(
-                batch_test, lambda x: encode_multi_view_video(vae, x, num_input_multi_views, main_config.vae_backbone)
+                batch_test,
+                lambda x: encode_multi_view_video(vae, x, num_input_multi_views, main_config.vae_backbone),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
             )
 
         # Reconstruct latents and render from 3DGS

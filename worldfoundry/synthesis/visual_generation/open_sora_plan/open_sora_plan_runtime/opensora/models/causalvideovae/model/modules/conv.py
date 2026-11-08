@@ -7,7 +7,7 @@ except BaseException:
     npu_config = None
 
 from collections import deque
-from typing import Tuple as Tuple
+from typing import Tuple as Tuple  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Union as Union
 
 import torch

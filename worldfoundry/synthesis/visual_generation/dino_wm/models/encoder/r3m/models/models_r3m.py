@@ -68,7 +68,7 @@ class R3M(nn.Module):
             from transformers import AutoConfig
 
             self.outdim = 768
-            self.convnet = AutoModel.from_config(
+            self.convnet = AutoModel.from_config(  # noqa: F821 - Name is undefined in the upstream source.
                 config=AutoConfig.from_pretrained("google/vit-base-patch32-224-in21k")
             ).to(self.device)
 
@@ -99,7 +99,7 @@ class R3M(nn.Module):
         return self.lang_rew(e0, es, le)
 
     ## Forward Call (im --> representation)
-    def forward(self, obs, num_ims=1, obs_shape=[3, 224, 224]):
+    def forward(self, obs, num_ims=1, obs_shape=[3, 224, 224]):  # noqa: B006 - Keeps the upstream default object and signature.
         if obs_shape != [3, 224, 224]:
             preprocess = nn.Sequential(
                 transforms.Resize(256),

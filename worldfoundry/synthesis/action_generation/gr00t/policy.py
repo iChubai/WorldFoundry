@@ -249,7 +249,7 @@ class Gr00tPolicy(BasePolicy):
         """
         unbatched_obs = []
         # Infer batch size from the first video key
-        batch_size = value["video"][list(value["video"].keys())[0]].shape[0]
+        batch_size = value["video"][list(value["video"].keys())[0]].shape[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
 
         # Split each modality along the batch dimension
         for i in range(batch_size):

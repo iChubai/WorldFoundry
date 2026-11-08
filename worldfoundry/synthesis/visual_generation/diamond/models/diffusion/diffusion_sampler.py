@@ -65,6 +65,6 @@ class DiffusionSampler:
 def build_sigmas(num_steps: int, sigma_min: float, sigma_max: float, rho: int, device: torch.device) -> Tensor:
     min_inv_rho = sigma_min ** (1 / rho)
     max_inv_rho = sigma_max ** (1 / rho)
-    l = torch.linspace(0, 1, num_steps, device=device)
+    l = torch.linspace(0, 1, num_steps, device=device)  # noqa: E741 - Ambiguous upstream name kept as written.
     sigmas = (max_inv_rho + l * (min_inv_rho - max_inv_rho)) ** rho
     return torch.cat((sigmas, sigmas.new_zeros(1)))

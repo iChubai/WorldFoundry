@@ -383,8 +383,8 @@ class GemmaDecoderLayer(nn.Module):
 class GemmaPreTrainedModel(PreTrainedModel):
     config_class = GemmaConfig
     base_model_prefix = "model"
-    _no_split_modules = ["GemmaDecoderLayer"]
-    _skip_keys_device_placement = ["past_key_values"]
+    _no_split_modules = ["GemmaDecoderLayer"]  # noqa: RUF012 - Shared class-level value, as upstream.
+    _skip_keys_device_placement = ["past_key_values"]  # noqa: RUF012 - Shared class-level value, as upstream.
     _supports_flash_attn_3 = True
     _supports_flash_attn_2 = True
     _supports_sdpa = True

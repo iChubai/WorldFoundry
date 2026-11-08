@@ -159,7 +159,7 @@ class MultiviewTransformer(nn.Module):
         n_heads: int,
         d_head: int,
         name: str,
-        unflatten_names: list[str] = [],
+        unflatten_names: list[str] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         depth: int = 1,
         context_dim: int = 1024,
         dropout: float = 0.0,

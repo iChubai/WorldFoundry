@@ -159,7 +159,7 @@ class DataclassArgParser(argparse.ArgumentParser):
                 del d[k]
         sub_dataclasses = {f.name: f.type for f in dataclasses.fields(dtype) if dataclasses.is_dataclass(f.type)}
         for k, s in sub_dataclasses.items():
-            v = {} if k not in inputs else inputs[k]
+            v = {} if k not in inputs else inputs[k]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             inputs[k] = DataclassArgParser._populate_dataclass_from_dict(s, v)
         obj = dtype(**inputs)
         return obj

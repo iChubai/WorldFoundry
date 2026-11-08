@@ -422,13 +422,13 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
 
     def __init__(
         self,
-        novel_view_sampling_trans=[0.1, 0.5],
+        novel_view_sampling_trans=[0.1, 0.5],  # noqa: B006 - Keeps the upstream default object and signature.
         novel_view_sampling_max_rot=0.0,
         culling_prob=0.3,
-        kernel_size_range=[11, 101],
+        kernel_size_range=[11, 101],  # noqa: B006 - Keeps the upstream default object and signature.
         occlusion_thresh=0.1,
         alpha_thresh=0.5,
-        color_thresh=[50, 100],
+        color_thresh=[50, 100],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         """Init.
@@ -580,7 +580,7 @@ class WanVideoUnit_4DPreprocesser(InferenceStage):
             batch: The batch.
         """
         batched_inputs = {}
-        for key in batch[0].keys():
+        for key in batch[0].keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if isinstance(batch[0][key], torch.Tensor):
                 batched_inputs[key] = torch.stack([b[key] for b in batch], dim=1)
             elif isinstance(batch[0][key], np.ndarray):

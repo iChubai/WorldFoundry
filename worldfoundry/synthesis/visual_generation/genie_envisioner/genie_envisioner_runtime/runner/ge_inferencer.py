@@ -25,7 +25,7 @@ class Inferencer:
     def __init__(
         self, config_file, output_dir=None, weight_dtype=torch.bfloat16, device="cuda:0", action_norm_type="meanstd"
     ) -> None:
-        cd = load(open(config_file), Loader=Loader)
+        cd = load(open(config_file), Loader=Loader)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         args = argparse.Namespace(**cd)
         args.lr = float(args.lr)
         args.epsilon = float(args.epsilon)
@@ -36,7 +36,7 @@ class Inferencer:
         if output_dir is not None:
             self.args.output_dir = output_dir
 
-        if self.args.load_weights == False:
+        if self.args.load_weights == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             print("You are not loading the pretrained weights, please check the code.")
 
         # Tokenizers
@@ -300,7 +300,7 @@ class Inferencer:
 
                 ### prepare for next chunk action prediction
                 self.val_dataloader.dataset.fix_sidx += self.args.data["train"]["action_chunk"]
-                self.val_dataloader.dataset.fix_mem_idx = x = (
+                self.val_dataloader.dataset.fix_mem_idx = x = (  # noqa: F841 - Upstream assignment kept.
                     np.linspace(0, self.val_dataloader.dataset.fix_sidx - 1, self.args.data["train"]["n_previous"])
                     .round()
                     .astype(np.int16)

@@ -262,7 +262,7 @@ def _fast_depthmap_to_pts3d(depth, pixel_grid, focal, pp):
         depth = depth.view(depth.shape[0], -1)
     assert focal.shape == (len(depth), 1, 1)
     assert pp.shape == (len(depth), 1, 2)
-    assert pixel_grid.shape == depth.shape + (2,)
+    assert pixel_grid.shape == depth.shape + (2,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     depth = depth.unsqueeze(-1)
     return torch.cat((depth * (pixel_grid - pp) / focal, depth), dim=-1)
 
@@ -286,10 +286,10 @@ def ParameterStack(params, keys=None, is_param=None, fill=0):
 
 def _ravel_hw(tensor, fill=0):
     # ravel H,W
-    tensor = tensor.view((tensor.shape[0] * tensor.shape[1],) + tensor.shape[2:])
+    tensor = tensor.view((tensor.shape[0] * tensor.shape[1],) + tensor.shape[2:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     if len(tensor) < fill:
-        tensor = torch.cat((tensor, tensor.new_zeros((fill - len(tensor),) + tensor.shape[1:])))
+        tensor = torch.cat((tensor, tensor.new_zeros((fill - len(tensor),) + tensor.shape[1:])))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     return tensor
 
 

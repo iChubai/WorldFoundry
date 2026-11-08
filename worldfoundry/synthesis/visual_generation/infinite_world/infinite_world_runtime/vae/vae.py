@@ -67,7 +67,9 @@ def count_conv3d(model):
     return count
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE_
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    WanVAE_,
+)
 
 
 def _video_vae(pretrained_path=None, z_dim=None, device="cpu", **kwargs):

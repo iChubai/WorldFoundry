@@ -86,7 +86,7 @@ def _coerce_native_rows(value: Any) -> list[list[float]]:
                 raw_rows.append([float(field) for field in fields])
             except ValueError:
                 if raw_rows:
-                    raise ValueError(f"MagicWorld camera row {line_number} is not numeric: {path}")
+                    raise ValueError(f"MagicWorld camera row {line_number} is not numeric: {path}")  # noqa: B904 - Keeps the implicit exception context.
                 continue
     elif isinstance(value, (list, tuple)):
         raw_rows = list(value)

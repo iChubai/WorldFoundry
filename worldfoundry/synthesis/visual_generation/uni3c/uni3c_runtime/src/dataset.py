@@ -49,7 +49,7 @@ def load_dataset(
     render_mask[render_mask >= 0.5] = 1
 
     # load camera
-    cam_info = json.load(open(f"{render_path}/cam_info.json"))
+    cam_info = json.load(open(f"{render_path}/cam_info.json"))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     w2cs = torch.tensor(np.array(cam_info["extrinsic"]), dtype=torch.float32, device=device)
     intrinsic = torch.tensor(np.array(cam_info["intrinsic"]), dtype=torch.float32, device=device)
     intrinsic[0, :] = intrinsic[0, :] / cam_info["width"] * width

@@ -221,9 +221,9 @@ class Provider(Dataset):
                 rgb_latents = denormalize_latents(rgb_latents, self.latent_std, self.latent_mean, num_input_multi_views)
             out_dict["rgb_latents"] = rgb_latents
         if not self.opt.compute_plucker_cuda:
-            out_dict["plucker_embedding"] = plucker_embedding
-            out_dict["rays_os"] = rays_os
-            out_dict["rays_ds"] = rays_ds
+            out_dict["plucker_embedding"] = plucker_embedding  # noqa: F821 - Name is undefined in the upstream source.
+            out_dict["rays_os"] = rays_os  # noqa: F821 - Name is undefined in the upstream source.
+            out_dict["rays_ds"] = rays_ds  # noqa: F821 - Name is undefined in the upstream source.
         return out_dict
 
     def _norm_camera_scale(self, c2ws: torch.Tensor):

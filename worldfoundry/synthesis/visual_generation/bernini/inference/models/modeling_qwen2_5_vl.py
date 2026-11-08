@@ -180,7 +180,7 @@ def _flash_attention_forward(
     target_dtype: torch.dtype | None = None,
     **kwargs,
 ):
-    if not use_top_left_mask:
+    if not use_top_left_mask:  # noqa: SIM108 - Branches carry per-case comments.
         causal = is_causal
     else:
         # TODO: Remove the `query_length != 1` check once Flash Attention for RoCm is bumped to 2.1.
@@ -252,7 +252,7 @@ def _flash_attention_forward(
 
         if cu_seq_lens_q is None or cu_seq_lens_k is None:
             query_states, key_states, value_states, indices_q, cu_seq_lens, max_seq_lens = (
-                prepare_fa2_from_position_ids(query_states, key_states, value_states, position_ids)
+                prepare_fa2_from_position_ids(query_states, key_states, value_states, position_ids)  # noqa: F821 - Name is undefined in the upstream source.
             )
 
             cu_seq_lens_q, cu_seq_lens_k = cu_seq_lens
@@ -1113,9 +1113,9 @@ class Qwen2_5_VLFlashAttention2(Qwen2_5_VLAttention):
             attention_mask, torch.nn.attention.flex_attention.BlockMask
         )
         if use_flex_attn and self.flex_attention is None:
-            if is_torch_less_or_equal("2.5.1", accept_dev=True):
+            if is_torch_less_or_equal("2.5.1", accept_dev=True):  # noqa: F821 - Name is undefined in the upstream source.
                 self.flex_attention = torch.compile(flex_attention, dynamic=False)
-            elif version.parse(get_torch_version()).base_version == "2.6.0":
+            elif version.parse(get_torch_version()).base_version == "2.6.0":  # noqa: F821 - Name is undefined in the upstream source.
                 self.flex_attention = torch.compile(flex_attention, dynamic=False, mode="max-autotune-no-cudagraphs")
             else:
                 self.flex_attention = torch.compile(flex_attention)
@@ -1828,7 +1828,7 @@ class Qwen2_5_VLModel(Qwen2_5_VLPreTrainedModel):
             min_dtype = torch.finfo(dtype).min
             causal_mask = torch.full((sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device)
             diagonal_attend_mask = torch.arange(target_length, device=device) > cache_position.reshape(-1, 1)
-            if config.sliding_window is not None:
+            if config.sliding_window is not None:  # noqa: SIM102 - Branches carry per-case comments.
                 # if we have sliding window, we should not attend to tokens beyond sliding window length, so we mask them out also
                 # the check is needed to verify is current checkpoint was trained with sliding window or not
                 if not isinstance(past_key_values, SlidingWindowCache) or sequence_length > target_length:
@@ -2291,7 +2291,7 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
-        image_mask = kwargs["image_mask"] if "image_mask" in kwargs else None
+        image_mask = kwargs["image_mask"] if "image_mask" in kwargs else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         # sp patch: get full sequence dimension of input embeds
         if inputs_embeds is None:
             inputs_embeds = self.model.embed_tokens(input_ids)
@@ -2417,8 +2417,8 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
             loss = None
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return Qwen2_5_VLCausalLMOutputWithPast(
             loss=loss,

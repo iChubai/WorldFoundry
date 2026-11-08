@@ -493,7 +493,7 @@ class FluxPipeline(
                 f" {negative_prompt_embeds}. Please make sure to only forward one of the two."
             )
 
-        if prompt_embeds is not None and negative_prompt_embeds is not None:
+        if prompt_embeds is not None and negative_prompt_embeds is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds.shape != negative_prompt_embeds.shape:
                 raise ValueError(
                     "`prompt_embeds` and `negative_prompt_embeds` must have the same shape when passed directly, but"
@@ -676,7 +676,7 @@ class FluxPipeline(
         return_dict: bool = True,
         joint_attention_kwargs: dict[str, Any] | None = None,
         callback_on_step_end: Callable[[int, int, dict], None] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         blend_extend: int = 6,
     ):
@@ -1040,7 +1040,7 @@ class FluxPipeline(
                 )
                 ##########################################
 
-                if latents.dtype != latents_dtype:
+                if latents.dtype != latents_dtype:  # noqa: SIM102 - Branches carry per-case comments.
                     if torch.backends.mps.is_available():
                         # some platforms (eg. apple mps) misbehave due to a pytorch bug: https://github.com/pytorch/pytorch/pull/99272
                         latents = latents.to(latents_dtype)

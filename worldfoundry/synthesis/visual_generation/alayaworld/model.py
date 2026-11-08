@@ -319,7 +319,7 @@ class AlayaWorldModel(LTXModel):
         )
         x = torch.cat((*prefix_tokens, args.x), dim=1)
         positions = torch.cat(
-            tuple(
+            tuple(  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 prefix.positions.to(device=video.positions.device, dtype=video.positions.dtype) for prefix in prefixes
             )
             + (video.positions,),

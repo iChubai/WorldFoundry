@@ -23,7 +23,7 @@ DEFAULT_CHECKPOINT = "robbyant/lingbot-world-v2-14b-causal-fast"
 SMALL_MODEL_ID = "lingbot-world-v2-1.3b"
 SMALL_CHECKPOINT = "robbyant/lingbot-world-v2-1.3b-causal-fast"
 SHARED_ASSET_PATHS = ("models_t5_umt5-xxl-enc-bf16.pth", "google/umt5-xxl", "Wan2.1_VAE.pth")
-SMALL_CHECKPOINT_PATHS = ("model.safetensors.index.json",) + tuple(
+SMALL_CHECKPOINT_PATHS = ("model.safetensors.index.json",) + tuple(  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     f"model-{index:05d}-of-00006.safetensors" for index in range(1, 7)
 )
 SOURCE_COMMIT = "94f43115de8d4a4f9f282126528c300a0b232c5f"

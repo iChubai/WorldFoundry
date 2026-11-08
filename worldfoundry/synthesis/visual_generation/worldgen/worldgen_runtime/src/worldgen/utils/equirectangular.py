@@ -606,7 +606,7 @@ def merge_with_consensus(
     fov_deg: float,
     voxel_size: float = 0.02,
     depth_tolerance: float = 0.15,
-) -> Gaussians3D:
+) -> Gaussians3D:  # noqa: F821 - Name is undefined in the upstream source.
     """Merge Gaussians from overlapping views using depth consensus.
 
     For regions covered by multiple views, keeps Gaussians whose depth

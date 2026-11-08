@@ -3,31 +3,31 @@ import torch
 from worldfoundry.core.io.paths import package_data_path
 
 torch.set_grad_enabled(False)
-import asyncio
-import base64
-import gc
-import logging
-import os
-import queue
-import random
-import shutil
-import socket
-import subprocess
-import tempfile
-import threading
-import traceback
-import uuid
-from collections import deque
-from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
-from io import BytesIO
-from typing import TYPE_CHECKING
+import asyncio  # noqa: E402 - Follows a module-level setup call, as upstream.
+import base64  # noqa: E402 - Follows a module-level setup call, as upstream.
+import gc  # noqa: E402 - Follows a module-level setup call, as upstream.
+import logging  # noqa: E402 - Follows a module-level setup call, as upstream.
+import os  # noqa: E402 - Follows a module-level setup call, as upstream.
+import queue  # noqa: E402 - Follows a module-level setup call, as upstream.
+import random  # noqa: E402 - Follows a module-level setup call, as upstream.
+import shutil  # noqa: E402 - Follows a module-level setup call, as upstream.
+import socket  # noqa: E402 - Follows a module-level setup call, as upstream.
+import subprocess  # noqa: E402 - Follows a module-level setup call, as upstream.
+import tempfile  # noqa: E402 - Follows a module-level setup call, as upstream.
+import threading  # noqa: E402 - Follows a module-level setup call, as upstream.
+import traceback  # noqa: E402 - Follows a module-level setup call, as upstream.
+import uuid  # noqa: E402 - Follows a module-level setup call, as upstream.
+from collections import deque  # noqa: E402 - Follows a module-level setup call, as upstream.
+from collections.abc import Callable  # noqa: E402 - Follows a module-level setup call, as upstream.
+from concurrent.futures import ThreadPoolExecutor  # noqa: E402 - Follows a module-level setup call, as upstream.
+from functools import lru_cache  # noqa: E402 - Follows a module-level setup call, as upstream.
+from io import BytesIO  # noqa: E402 - Follows a module-level setup call, as upstream.
+from typing import TYPE_CHECKING  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-import numpy as np
-from safetensors.torch import load_file
+import numpy as np  # noqa: E402 - Follows a module-level setup call, as upstream.
+from safetensors.torch import load_file  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from worldfoundry.core.nn import FlowMatchScheduler
+from worldfoundry.core.nn import FlowMatchScheduler  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 if TYPE_CHECKING:
     from pipeline import CausalInferencePipeline
@@ -35,27 +35,35 @@ if TYPE_CHECKING:
     from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder
 
 # Internal / self-forcing imports
-import contextlib
-import time
-from pathlib import Path
+import contextlib  # noqa: E402 - Follows the conditional setup block.
+import time  # noqa: E402 - Follows the conditional setup block.
+from pathlib import Path  # noqa: E402 - Follows the conditional setup block.
 
-import torch._dynamo as dynamo
-import torchvision.transforms.functional as TF
-from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
-from msgpack import packb, unpackb
+import torch._dynamo as dynamo  # noqa: E402 - Follows the conditional setup block.
+import torchvision.transforms.functional as TF  # noqa: E402 - Follows the conditional setup block.
+from fastapi import (  # noqa: E402 - Follows the conditional setup block.
+    FastAPI,
+    File,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402 - Follows the conditional setup block.
+from fastapi.responses import HTMLResponse, JSONResponse  # noqa: E402 - Follows the conditional setup block.
+from msgpack import packb, unpackb  # noqa: E402 - Follows the conditional setup block.
 
 # External imports
-from omegaconf import OmegaConf
-from PIL import Image
-from pydantic import BaseModel, ValidationError
-from settings import compiler_stance, resolve_model_asset
-from tqdm import tqdm
-from utils.misc import AtomicCounter
-from v2v import encode_video_latent, get_denoising_schedule
+from omegaconf import OmegaConf  # noqa: E402 - Follows the conditional setup block.
+from PIL import Image  # noqa: E402 - Follows the conditional setup block.
+from pydantic import BaseModel, ValidationError  # noqa: E402 - Follows the conditional setup block.
+from settings import compiler_stance, resolve_model_asset  # noqa: E402 - Follows the conditional setup block.
+from tqdm import tqdm  # noqa: E402 - Follows the conditional setup block.
+from utils.misc import AtomicCounter  # noqa: E402 - Follows the conditional setup block.
+from v2v import encode_video_latent, get_denoising_schedule  # noqa: E402 - Follows the conditional setup block.
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import WanVAE
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows the conditional setup block.
+    WanVAE,
+)
 
 # PyTorch renamed this setting in older releases and removed the compatibility
 # alias in newer ones.  Keep the upstream intent without making module import
@@ -560,7 +568,7 @@ class GenerationSession:
 
         return latents
 
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def encode_v2v(self, video_path_or_url: str, max_frames=None, resample_to=None):
         latents = encode_video_latent(
             self.models.vae_encoder,
@@ -761,7 +769,7 @@ class GenerationSession:
                     crossattn_cache=models.pipeline.crossattn_cache,
                     current_start=model_input_start_frame * models.pipeline.frame_seq_length,
                 )
-                start_time = time.time()
+                start_time = time.time()  # noqa: F841 - Kept as upstream; an underscore name already exists.
                 next_timestep = self.denoising_step_list[index + 1]
                 noisy_input = models.pipeline.scheduler.add_noise(
                     denoised_pred.flatten(0, 1),
@@ -884,12 +892,12 @@ async def root():
 
 
 @app.post("/upload_video")
-async def upload_video(file: UploadFile = File(...)):
+async def upload_video(file: UploadFile = File(...)):  # noqa: B008 - Default evaluated once at definition, as upstream.
     """Upload a video file and return its temporary path for use in generation"""
     try:
         # Create a temporary file with the original extension
         suffix = Path(file.filename).suffix if file.filename else ".mp4"
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
         # Copy uploaded file to temp file
         with temp_file:
@@ -905,12 +913,12 @@ async def upload_video(file: UploadFile = File(...)):
 
 
 @app.post("/upload_start_frame")
-async def upload_start_frame(file: UploadFile = File(...)):
+async def upload_start_frame(file: UploadFile = File(...)):  # noqa: B008 - Default evaluated once at definition, as upstream.
     """Upload a start frame image and return its temporary path for use in generation"""
     try:
         # Create a temporary file with the original extension
         suffix = Path(file.filename).suffix if file.filename else ".jpg"
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
         # Copy uploaded file to temp file
         with temp_file:

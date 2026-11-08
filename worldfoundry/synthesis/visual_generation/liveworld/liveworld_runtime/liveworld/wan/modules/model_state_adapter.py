@@ -48,7 +48,9 @@ def rope_params(max_seq_len, dim, theta=10000):
 
 
 # @amp.autocast(enabled=False)
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import rope_apply
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    rope_apply,
+)
 
 
 def rope_params_with_offset(positions, dim, theta=10000):
@@ -745,7 +747,7 @@ class StateAdapterWanModel(ModelMixin, ConfigMixin):
 
         # blocks
         # ti2v uses t2v_cross_attn (Wan2.2-5B structure, no separate k_img/v_img layers)
-        if model_type in ["t2v", "ti2v"]:
+        if model_type in ["t2v", "ti2v"]:  # noqa: SIM108 - Branches carry per-case comments.
             cross_attn_type = "t2v_cross_attn"
         else:  # i2v
             cross_attn_type = "i2v_cross_attn"
@@ -1022,7 +1024,7 @@ class StateAdapterWanModel(ModelMixin, ConfigMixin):
             # For LiveWorld [T, P, R]: State Adapter processes T+P frames while main model has T+P+R frames
             # With [T, P, R] order, T+P tokens are at the BEGINNING of x
             sp_seq_len = c.shape[1]  # (T+P) * tokens_per_frame
-            if sp_seq_len < seq_len:
+            if sp_seq_len < seq_len:  # noqa: SIM108 - Branches carry per-case comments.
                 # LiveWorld case: main model has more frames than State Adapter
                 # Slice first T+P tokens from x (sp_hint_offset=0 in [T, P, R] order)
                 x_for_sp = x[:, :sp_seq_len, :]

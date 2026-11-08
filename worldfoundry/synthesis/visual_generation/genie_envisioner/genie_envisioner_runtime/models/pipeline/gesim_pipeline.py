@@ -44,7 +44,7 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.retrieve_timesteps
-def retrieve_timesteps(
+def retrieve_timesteps(  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     scheduler,
     num_inference_steps: int | None = None,
     device: str | torch.device | None = None,
@@ -104,7 +104,7 @@ def retrieve_timesteps(
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
-def retrieve_latents(
+def retrieve_latents(  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     encoder_output: torch.Tensor, generator: torch.Generator | None = None, sample_mode: str = "sample"
 ):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
@@ -384,7 +384,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         sigma_conditioning: float = 0.0001,
         n_view: int = 3,
@@ -685,7 +685,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
 
         self._current_timestep = None
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             latents_mean = (
                 torch.tensor(self.vae.config.latents_mean)
                 .view(1, self.vae.config.z_dim, 1, 1, 1)

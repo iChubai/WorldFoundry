@@ -178,7 +178,7 @@ if __name__ == "__main__":
         print(f"[bold red][Warning][/bold red] {args.accelerate_algo} is not in {ACCELERATE_ALGO}, use naive")
         args.accelerate_algo = "naive"
     num_item = 0
-    for root, _, files in os.walk(args.data_root):
+    for root, _, files in os.walk(args.data_root):  # noqa: B007 - Loop target name kept as upstream.
         files = [f for f in files if f.endswith(".mp4")]  # mp4 would not influence progress bar
         files = sorted(files, key=lambda x: int(x.split("_")[1].split(".")[0]))
         for file in tqdm(files):

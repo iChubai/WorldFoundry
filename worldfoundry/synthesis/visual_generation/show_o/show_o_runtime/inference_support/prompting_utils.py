@@ -81,7 +81,7 @@ class UniversalPrompting:
                 temp_masks = [0] * (self.max_text_len - len(temp_ids)) + [1] * (len(temp_ids) + image_ids.shape[-1] + 3)
             else:
                 # should add the eos token
-                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]
+                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 temp_masks = [1] * (len(temp_ids) + image_ids.shape[-1] + 3)  # +2 for two special tokens
 
             # prompting -- [task token] [sot] [text tokens] [eot] [soi] [image tokens] [eoi]
@@ -130,7 +130,7 @@ class UniversalPrompting:
                 temp_ids = [self.pad_id] * (self.max_text_len - len(temp_ids)) + temp_ids
                 temp_masks = [0] * (self.max_text_len - len(temp_ids)) + [1] * len(temp_ids)
             else:
-                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]
+                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 temp_masks = [1] * len(temp_ids)  # +2 for two special tokens
 
             # prompting -- [task token] [sot] [text tokens] [eot] [soi] [image tokens] [eoi]
@@ -209,7 +209,7 @@ class UniversalPrompting:
                 temp_masks = [1] * (len(temp_ids) + image_ids.shape[-1] + 3) + [0] * (max_text_len - len(temp_ids))
             else:
                 # should add the eos token
-                temp_ids = temp_ids[: max_text_len - 1] + [self.text_tokenizer.eos_token_id]
+                temp_ids = temp_ids[: max_text_len - 1] + [self.text_tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 temp_masks = [1] * (len(temp_ids) + image_ids.shape[-1] + 3)  # +2 for two special tokens
 
             # prompting -- [task token] [sot] [text tokens] [eot] [soi] [image tokens] [eoi]
@@ -271,7 +271,7 @@ class UniversalPrompting:
                 temp_masks = [0] * (self.max_text_len - len(temp_ids)) + [1] * (len(temp_ids) + image_ids.shape[-1] + 3)
             else:
                 # should add the eos token
-                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]
+                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 temp_masks = [1] * (len(temp_ids) + image_ids.shape[-1] + 3)  # +2 for two special tokens
 
             # prompting -- [task token] [sot] [text tokens] [eot] [soi] [image tokens] [eoi]
@@ -320,7 +320,7 @@ class UniversalPrompting:
                 temp_ids = [self.pad_id] * (self.max_text_len - len(temp_ids)) + temp_ids
                 temp_masks = [0] * (self.max_text_len - len(temp_ids)) + [1] * len(temp_ids)
             else:
-                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]
+                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 temp_masks = [1] * len(temp_ids)  # +2 for two special tokens
 
             # prompting -- [task token] [sot] [text tokens] [eot] [soi] [image tokens] [eoi]
@@ -375,7 +375,7 @@ class UniversalPrompting:
                 temp_masks = [0] * (self.max_text_len - len(temp_ids)) + [1] * (len(temp_ids) + image_ids.shape[-1] + 3)
             else:
                 # should add the eos token
-                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]
+                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 temp_masks = [1] * (len(temp_ids) + image_ids.shape[-1] + 3)  # +2 for two special tokens
 
             # prompting -- [task token] [sot] [text tokens] [eot] [soi] [image tokens] [eoi]
@@ -424,7 +424,7 @@ class UniversalPrompting:
                 temp_ids = [self.pad_id] * (self.max_text_len - len(temp_ids)) + temp_ids
                 temp_masks = [0] * (self.max_text_len - len(temp_ids)) + [1] * len(temp_ids)
             else:
-                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]
+                temp_ids = temp_ids[: self.max_text_len - 1] + [self.text_tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 temp_masks = [1] * len(temp_ids)  # +2 for two special tokens
 
             # prompting -- [task token] [sot] [text tokens] [eot] [soi] [image tokens] [eoi]
@@ -547,7 +547,7 @@ def create_attention_mask_predict_next(
             if len(pad_end_idx[0]) != 0:
                 pad_end_idx = pad_end_idx[0][-1]
                 mask_text[i][pad_end_idx + 1 :, : pad_end_idx + 1] = 0
-            id_padding = torch.where(is_padding[i] == True)
+            id_padding = torch.where(is_padding[i] == True)  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             mask_text_image_bi[i][sid_img[i] :, id_padding[0]] = 0
 
     mask_text[in_image_segment] = mask_text_image_bi[in_image_segment]
@@ -571,7 +571,7 @@ def create_attention_mask_lvg(sequence, pad_id=128256, soi_id=128257, eoi_id=128
     sid_img_for_bi = torch.where(sequence == soi_id)[1].reshape(mask_text_image_bi.shape[0], -1)
     eid_img_for_bi = torch.where(sequence == eoi_id)[1].reshape(mask_text_image_bi.shape[0], -1)
     for i in range(N):
-        id_padding = torch.where(is_padding[i] == True)
+        id_padding = torch.where(is_padding[i] == True)  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         mask_text_image_bi[i][sid_img[i] :, id_padding[0]] = 0
         for j in range(sid_img_for_bi.shape[-1]):
             mask_text_image_bi[i][
@@ -624,7 +624,7 @@ def create_attention_mask_lvg_v2(
     sid_img = torch.where(sequence == soi_id)[1].reshape(mask_text_image_bi.shape[0], -1)[:, 0]
 
     for i in range(N):
-        id_padding = torch.where(is_padding[i] == True)
+        id_padding = torch.where(is_padding[i] == True)  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         mask_text_image_bi[i][sid_img[i] :, id_padding[0]] = 0
         for j in range(sid_img_for_bi.shape[-1]):
             mask_text_image_bi[i][

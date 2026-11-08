@@ -120,7 +120,7 @@ class SparseControlNetModel(ModelMixin, ConfigMixin):
         motion_module_resolutions=(1, 2, 4, 8),
         motion_module_mid_block=False,
         motion_module_type="Vanilla",
-        motion_module_kwargs={
+        motion_module_kwargs={  # noqa: B006 - Keeps the upstream default object and signature.
             "num_attention_heads": 8,
             "num_transformer_block": 1,
             "attention_block_types": ["Temporal_Self"],
@@ -313,7 +313,7 @@ class SparseControlNetModel(ModelMixin, ConfigMixin):
         controlnet_conditioning_channel_order: str = "rgb",
         conditioning_embedding_out_channels: tuple[int] | None = (16, 32, 96, 256),
         load_weights_from_unet: bool = True,
-        controlnet_additional_kwargs: dict = {},
+        controlnet_additional_kwargs: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         controlnet = cls(
             in_channels=unet.config.in_channels,
@@ -446,7 +446,7 @@ class SparseControlNetModel(ModelMixin, ConfigMixin):
             fn_recursive_set_attention_slice(module, reversed_slice_size)
 
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, (CrossAttnDownBlock2D, DownBlock2D)):
+        if isinstance(module, (CrossAttnDownBlock2D, DownBlock2D)):  # noqa: F821 - Name is undefined in the upstream source.
             module.gradient_checkpointing = value
 
     def forward(
@@ -552,7 +552,7 @@ class SparseControlNetModel(ModelMixin, ConfigMixin):
             down_block_res_samples, self.controlnet_down_blocks, strict=False
         ):
             down_block_res_sample = controlnet_block(down_block_res_sample)
-            controlnet_down_block_res_samples = controlnet_down_block_res_samples + (down_block_res_sample,)
+            controlnet_down_block_res_samples = controlnet_down_block_res_samples + (down_block_res_sample,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         down_block_res_samples = controlnet_down_block_res_samples
 

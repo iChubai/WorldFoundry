@@ -152,11 +152,11 @@ class BlockTransformer(nn.Module):
             self.pretty_print_attention_mask(prefix_groups, timestep_groups)
 
         horizon = timestep_groups[0].tokens.shape[1]
-        assert all([group.tokens.shape[1] == horizon for group in timestep_groups])
+        assert all([group.tokens.shape[1] == horizon for group in timestep_groups])  # noqa: C419 - Evaluates every element before testing, as upstream.
 
         token_dim = timestep_groups[0].tokens.shape[-1]
-        assert all([group.tokens.shape[-1] == token_dim for group in prefix_groups])
-        assert all([group.tokens.shape[-1] == token_dim for group in timestep_groups])
+        assert all([group.tokens.shape[-1] == token_dim for group in prefix_groups])  # noqa: C419 - Evaluates every element before testing, as upstream.
+        assert all([group.tokens.shape[-1] == token_dim for group in timestep_groups])  # noqa: C419 - Evaluates every element before testing, as upstream.
 
         # Assemble input tokens (batch, total_tokens, token_embedding_size)
         input_tokens = self.assemble_input_tokens(prefix_groups, timestep_groups)

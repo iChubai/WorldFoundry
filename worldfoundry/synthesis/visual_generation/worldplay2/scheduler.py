@@ -50,7 +50,7 @@ class FixedPDD4Scheduler:
 
     def __init__(self):
         raw_boundary = self.boundary / (self.shift - (self.shift - 1.0) * self.boundary)
-        high_count = int(round(self.num_intervals * (1.0 - raw_boundary)))
+        high_count = int(round(self.num_intervals * (1.0 - raw_boundary)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         raw = torch.cat(
             (
                 torch.linspace(1.0, raw_boundary, high_count + 1),

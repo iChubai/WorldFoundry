@@ -378,10 +378,10 @@ class MolmoAct2ImageProcessor(BaseImageProcessor):
         image_std: float | list[float] | None = None,
         do_convert_rgb: bool = True,
         max_crops: int = 8,
-        overlap_margins: list[int] = [4, 4],
+        overlap_margins: list[int] = [4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         crop_mode: str = "overlap-and-resize-c2",
         patch_size: int = 14,
-        pooling_size: list[int] = [2, 2],
+        pooling_size: list[int] = [2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)

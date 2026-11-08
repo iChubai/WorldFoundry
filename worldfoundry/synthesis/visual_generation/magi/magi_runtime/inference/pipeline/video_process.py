@@ -218,7 +218,7 @@ def ffmpeg_i2v(image_path, w=384, h=224, aspect_policy="fit"):
     else:
         magi_logger.warning(f"Unknown aspect policy: {aspect_policy}, using fit as fallback")
         r = r.filter("scale", w, h)
-    image_byte = open(image_path, "rb").read()
+    image_byte = open(image_path, "rb").read()  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     try:
         out, _ = r.output("pipe:", format="rawvideo", pix_fmt="rgb24", vframes=1).run(
             input=image_byte, capture_stdout=True, capture_stderr=True

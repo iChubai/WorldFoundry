@@ -27,7 +27,7 @@ def parse_maze(maze_str):
             elif tile == " " or tile == "O" or tile == "0":
                 maze_arr[w][h] = EMPTY
             else:
-                raise ValueError("Unknown tile type: %s" % tile)
+                raise ValueError("Unknown tile type: %s" % tile)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     return maze_arr
 
 
@@ -85,7 +85,7 @@ def point_maze(maze_str):
                 worldbody.geom(
                     conaffinity=1,
                     type="box",
-                    name="wall_%d_%d" % (w, h),
+                    name="wall_%d_%d" % (w, h),  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                     material="wall",
                     pos=[w + 1.0, h + 1.0, 0],
                     size=[0.5, 0.5, 0.2],
@@ -210,7 +210,7 @@ class MazeEnv(mujoco_env.MujocoEnv, utils.EzPickle, offline_env.OfflineEnv):
         elif self.reward_type == "dense":
             reward = np.exp(-np.linalg.norm(state[0:2] - self._target))
         else:
-            raise ValueError("Unknown reward type %s" % self.reward_type)
+            raise ValueError("Unknown reward type %s" % self.reward_type)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         done = False
         if self.return_value == "obs":
             visual = self._render_frame()

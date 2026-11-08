@@ -36,11 +36,11 @@ def _single_all_to_all(
     inp_shape = list(input_.shape)
     inp_shape[scatter_dim] = inp_shape[scatter_dim] // sp_size
     if scatter_dim < 1:
-        input_t = input_.reshape([sp_size, inp_shape[scatter_dim]] + inp_shape[scatter_dim + 1 :])
+        input_t = input_.reshape([sp_size, inp_shape[scatter_dim]] + inp_shape[scatter_dim + 1 :])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     else:
         # transpose groups of heads with the seq-len parallel dimension, so that we can scatter them!
         input_t = (
-            input_.reshape([-1, sp_size, inp_shape[scatter_dim]] + inp_shape[scatter_dim + 1 :])
+            input_.reshape([-1, sp_size, inp_shape[scatter_dim]] + inp_shape[scatter_dim + 1 :])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             .transpose(0, 1)
             .contiguous()
         )
@@ -52,7 +52,7 @@ def _single_all_to_all(
         output = output.transpose(0, 1).contiguous()
 
     return output.reshape(
-        inp_shape[:gather_dim]
+        inp_shape[:gather_dim]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         + [
             inp_shape[gather_dim] * sp_size,
         ]

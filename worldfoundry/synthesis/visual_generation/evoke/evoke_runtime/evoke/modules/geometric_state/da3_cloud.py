@@ -111,7 +111,7 @@ def render_cloud_batched(
     V = c2w.shape[0]
     HW = height * width
     # invisible fill colour (F2)
-    if invisible_fill == "mean" and npt > 0:
+    if invisible_fill == "mean" and npt > 0:  # noqa: SIM108 - Branches carry per-case comments.
         fill = C.mean(0)
     else:
         fill = torch.zeros(3, device=device)  # black -> -1
@@ -562,7 +562,7 @@ class DA3FrameBank:
                     if _cg_dbg:
                         print(
                             f"[scale-align] window_scale={_s_raw:.3f}"
-                            f"{'(clip->%.3f)' % _s if abs(_s - _s_raw) > 1e-3 else ''} "
+                            f"{'(clip->%.3f)' % _s if abs(_s - _s_raw) > 1e-3 else ''} "  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                             f"applied n_overlap={_sa_nov}",
                             flush=True,
                         )
@@ -795,7 +795,7 @@ class DA3FrameBank:
         if not newobs:
             return
         gmin = min(new_set)
-        targets = sorted([g for g in self.frames.keys() if g < gmin])  # only carve strictly older frames
+        targets = sorted([g for g in self.frames.keys() if g < gmin])  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.  # only carve strictly older frames
         if self.carve_ref_frames > 0:
             targets = targets[-self.carve_ref_frames :]
         _dbg = bool(
@@ -1051,7 +1051,7 @@ def _render_multisrc(
             pose_ok = (d_old <= max(d_nb_min * 1.5, 1e-6)) and (cos_fwd > 0.5)
             if float(cvo[oi]) >= recall_min_cov and float(cvo[oi]) > float(cv.max()) + recall_margin and pose_ok:
                 bo = old_ids[oi]
-                srcs = srcs[: int(nsrc) - 1] + [bo]
+                srcs = srcs[: int(nsrc) - 1] + [bo]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 if nref is not None:
                     scales[bo] = est_scale(bo, nref)
         w2c = torch.linalg.inv(tpose)
@@ -1541,10 +1541,10 @@ def _render_backward_multisrc_zbuf(
             k = int(zbuf_despeckle_ksize)
 
             def erosion(x):
-                return -_F.max_pool2d(-x, k, 1, k // 2)
+                return -_F.max_pool2d(-x, k, 1, k // 2)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
             def dilation(x):
-                return _F.max_pool2d(x, k, 1, k // 2)
+                return _F.max_pool2d(x, k, 1, k // 2)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
             V = covered.float()[None, None]  # (1,1,H,W)
             opened = dilation(

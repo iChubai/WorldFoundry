@@ -29,7 +29,7 @@ from .modeling_internlm2 import (
 
 logger = logging.get_logger(__name__)
 
-from .flash_attn_utils import load_flash_attn
+from .flash_attn_utils import load_flash_attn  # noqa: E402 - Follows the logging setup.
 
 flash_attn_func, flash_attn_varlen_func = None, None
 pad_input, index_first_axis, unpad_input = None, None, None
@@ -537,8 +537,8 @@ class InternLM2ForCausalLMGO1(InternLM2ForCausalLM):
             loss = loss_fct(shift_logits, shift_labels)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
         output = CausalLMOutputWithPast(

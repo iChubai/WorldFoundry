@@ -59,7 +59,7 @@ def load_safetensors(path):
     state_dict = {}
     for file_path in safetensor_files:
         with safe_open(file_path, framework="pt", device="cpu") as f:
-            for key in f.keys():
+            for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 state_dict[key] = f.get_tensor(key)
     print("Weights loaded from .safetensors files.")
     return state_dict
@@ -739,7 +739,7 @@ class BeingHPolicy(BasePolicy):
         curr_rope_id = 0
 
         # === Block 1: System Turn ===
-        block_ids = [self.bos_token_id] + system_ids + [self.eos_token_id, self.newline_token_id]
+        block_ids = [self.bos_token_id] + system_ids + [self.eos_token_id, self.newline_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         packed_text_ids.extend(block_ids)
         packed_text_indexes.extend(range(curr, curr + len(block_ids)))
         packed_position_ids.extend(range(curr_rope_id, curr_rope_id + len(block_ids)))
@@ -753,7 +753,7 @@ class BeingHPolicy(BasePolicy):
 
         # User prompt
         # is_bos: True, is_eos: False
-        block_ids = [self.bos_token_id] + user_ids
+        block_ids = [self.bos_token_id] + user_ids  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         packed_text_ids.extend(block_ids)
         packed_text_indexes.extend(range(curr, curr + len(block_ids)))
         curr += len(block_ids)
@@ -785,7 +785,7 @@ class BeingHPolicy(BasePolicy):
 
         # Instruction
         # is_bos: False, is_eos: True
-        block_ids = inst_ids + [self.eos_token_id, self.newline_token_id]
+        block_ids = inst_ids + [self.eos_token_id, self.newline_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         packed_text_ids.extend(block_ids)
         packed_text_indexes.extend(range(curr, curr + len(block_ids)))
         curr += len(block_ids)
@@ -802,7 +802,7 @@ class BeingHPolicy(BasePolicy):
 
         # Assistant prompt
         # is_bos: True, is_eos: False
-        block_ids = [self.bos_token_id] + assistant_ids
+        block_ids = [self.bos_token_id] + assistant_ids  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         packed_text_ids.extend(block_ids)
         packed_text_indexes.extend(range(curr, curr + len(block_ids)))
         curr += len(block_ids)
@@ -859,7 +859,7 @@ class BeingHPolicy(BasePolicy):
             if first_key.startswith("state."):
                 return first_val.ndim >= 2
             return first_val.ndim > 1
-        if isinstance(first_val, list):  # Applies to instruction lists
+        if isinstance(first_val, list):  # noqa: SIM103 - Branches carry per-case comments.  # Applies to instruction lists
             return True
         return False
 

@@ -17,13 +17,13 @@ class VQModel(nn.Module):
         batch_maximization_weight,
         lossconfig=None,
         ckpt_path=None,
-        ignore_keys=[],
+        ignore_keys=[],  # noqa: B006 - Keeps the upstream default object and signature.
         image_key="image",
         colorize_nlabels=None,
         monitor=None,
         token_factorization=False,
         stage=None,
-        factorized_bits=[9, 9],
+        factorized_bits=[9, 9],  # noqa: B006 - Keeps the upstream default object and signature.
         model_type="en18",
         **_unused,
     ):
@@ -72,7 +72,7 @@ class VQModel(nn.Module):
             if ("inception_model" not in k and "lpips_vgg" not in k and "lpips_alex" not in k)
         }
 
-    def init_from_ckpt(self, path, ignore_keys=[], stage="transformer"):
+    def init_from_ckpt(self, path, ignore_keys=[], stage="transformer"):  # noqa: B006 - Keeps the upstream default object and signature.
         sd = torch.load(path, map_location="cpu")["state_dict"]
         new_params = OrderedDict()
         if stage == "transformer":

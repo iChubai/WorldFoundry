@@ -537,7 +537,7 @@ class WanModel(nn.Module):
         qk_norm=True,
         cross_attn_norm=True,
         eps=1e-6,
-        sac_config: SACConfig = SACConfig(),
+        sac_config: SACConfig = SACConfig(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         r"""
         Initialize the diffusion model backbone.

@@ -54,7 +54,9 @@ def canonicalize(text, keep_punctuation_exact_string=None):
     return text.strip()
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    HuggingfaceTokenizer,
+)
 
 
 def fp16_clamp(x):
@@ -101,7 +103,9 @@ class T5LayerNorm(nn.Module):
         return self.weight * x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5Attention
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5Attention,
+)
 
 
 class T5FeedForward(nn.Module):
@@ -175,7 +179,9 @@ class T5CrossAttention(nn.Module):
         return x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5RelativeEmbedding,
+)
 
 
 class T5Encoder(nn.Module):
@@ -367,7 +373,7 @@ class UMT5EncoderModel:
         self,
         text_len=512,
         dtype=torch.bfloat16,
-        device=torch.cuda.current_device(),
+        device=torch.cuda.current_device(),  # noqa: B008 - Default evaluated once at definition, as upstream.
         checkpoint_path="models_t5_umt5-xxl-enc-bf16.pth",
         tokenizer_path="google/umt5-xxl",
     ):

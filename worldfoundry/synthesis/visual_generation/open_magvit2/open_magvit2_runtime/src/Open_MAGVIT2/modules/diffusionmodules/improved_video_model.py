@@ -135,7 +135,7 @@ class Encoder(nn.Module):
         ## construct the model
         self.down = nn.ModuleList()
 
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         for i_level in range(self.num_blocks):
             block = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]  # [1, 1, 2, 2, 4]
@@ -353,7 +353,7 @@ class AdaptiveGroupNorm(nn.Module):
         return x
 
 
-class AdaptiveGroupNorm(nn.Module):
+class AdaptiveGroupNorm(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(self, z_channel, in_filters, num_groups=32, eps=1e-6):
         super().__init__()
         self.gn = nn.GroupNorm(num_groups=32, num_channels=in_filters, eps=eps, affine=False)

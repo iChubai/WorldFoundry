@@ -423,7 +423,7 @@ class GO1Model(PreTrainedModel):
             input_embeds[selected] = input_embeds[selected] * 0.0 + vit_embeds.reshape(-1, C)
         except Exception as e:
             vit_embeds = vit_embeds.reshape(-1, C)
-            raise ValueError(
+            raise ValueError(  # noqa: B904 - Keeps the implicit exception context.
                 f"warning: {e}, input_embeds[selected].shape={input_embeds[selected].shape}, vit_embeds.shape={vit_embeds.shape}"
             )
 

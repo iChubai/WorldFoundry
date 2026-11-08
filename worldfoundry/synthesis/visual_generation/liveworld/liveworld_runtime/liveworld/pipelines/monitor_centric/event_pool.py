@@ -334,7 +334,7 @@ class EventPool:
         qwen = self._qwen_provider()
 
         # Save anchor frame to a temporary file for Qwen input.
-        tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         tmp_path = tmp.name
         tmp.close()
         try:

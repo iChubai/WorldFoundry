@@ -38,8 +38,8 @@ def make_env_loop(
 
             if n > 0:
                 val_bootstrap = val.detach().clone()
-                if dead.any():
-                    val_bootstrap[dead] = val_final_obs
+                if dead.any():  # noqa: F821 - Name is undefined in the upstream source.
+                    val_bootstrap[dead] = val_final_obs  # noqa: F821 - Name is undefined in the upstream source.
                 all_[-1][-1] = val_bootstrap
 
             dead = torch.logical_or(end, trunc)

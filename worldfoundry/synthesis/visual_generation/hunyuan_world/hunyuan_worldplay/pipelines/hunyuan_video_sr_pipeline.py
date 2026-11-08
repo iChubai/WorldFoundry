@@ -435,7 +435,7 @@ class HunyuanVideo_1_5_SR_Pipeline(_HunyuanWorldPlayInternalPipeline):
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
 
                 # Update progress bar
-                if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
+                if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):  # noqa: SIM102 - Statement form kept for readability.
                     if progress_bar is not None:
                         progress_bar.update()
 

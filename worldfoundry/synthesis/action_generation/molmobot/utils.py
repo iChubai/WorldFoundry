@@ -9,7 +9,7 @@ from typing import TypeVar, Union
 
 from .torch_utils import barrier, get_global_rank
 
-PathOrStr = Union[str, Path]
+PathOrStr = Union[str, Path]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 T = TypeVar("T")
 
 

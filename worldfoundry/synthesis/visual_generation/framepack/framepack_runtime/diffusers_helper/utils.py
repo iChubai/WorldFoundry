@@ -45,8 +45,8 @@ def resize_and_center_crop(image, target_width, target_height):
     pil_image = Image.fromarray(image)
     original_width, original_height = pil_image.size
     scale_factor = max(target_width / original_width, target_height / original_height)
-    resized_width = int(round(original_width * scale_factor))
-    resized_height = int(round(original_height * scale_factor))
+    resized_width = int(round(original_width * scale_factor))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    resized_height = int(round(original_height * scale_factor))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     resized_image = pil_image.resize((resized_width, resized_height), Image.LANCZOS)
     left = (resized_width - target_width) / 2
     top = (resized_height - target_height) / 2
@@ -63,8 +63,8 @@ def resize_and_center_crop_pytorch(image, target_width, target_height):
         return image
 
     scale_factor = max(target_width / W, target_height / H)
-    resized_width = int(round(W * scale_factor))
-    resized_height = int(round(H * scale_factor))
+    resized_width = int(round(W * scale_factor))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    resized_height = int(round(H * scale_factor))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     resized = torch.nn.functional.interpolate(
         image, size=(resized_height, resized_width), mode="bilinear", align_corners=False
@@ -92,8 +92,8 @@ def just_crop(image, w, h):
 
     original_height, original_width = image.shape[:2]
     k = min(original_height / h, original_width / w)
-    new_width = int(round(w * k))
-    new_height = int(round(h * k))
+    new_width = int(round(w * k))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    new_height = int(round(h * k))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     x_start = (original_width - new_width) // 2
     y_start = (original_height - new_height) // 2
     cropped_image = image[y_start : y_start + new_height, x_start : x_start + new_width]
@@ -664,8 +664,8 @@ def hf_clip_vision_encode(image, feature_extractor, image_encoder):
 
 # --- async worker helpers ------------------------------------------------------
 
-import time
-from threading import Lock, Thread
+import time  # noqa: E402 - Follows module-level definitions, as upstream.
+from threading import Lock, Thread  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class Listener:

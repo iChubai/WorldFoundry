@@ -155,19 +155,19 @@ class FusionBlock2D(nn.Module):
         if self.up:
             if kernel == "fir":
                 fir_kernel = (1, 3, 3, 1)
-                self.upsample = lambda x: upsample_2d(x, kernel=fir_kernel)
+                self.upsample = lambda x: upsample_2d(x, kernel=fir_kernel)  # noqa: F821 - Name is undefined in the upstream source.
             elif kernel == "sde_vp":
                 self.upsample = partial(F.interpolate, scale_factor=2.0, mode="nearest")
             else:
-                self.upsample = Upsample2D(in_channels, use_conv=False)
+                self.upsample = Upsample2D(in_channels, use_conv=False)  # noqa: F821 - Name is undefined in the upstream source.
         elif self.down:
             if kernel == "fir":
                 fir_kernel = (1, 3, 3, 1)
-                self.downsample = lambda x: downsample_2d(x, kernel=fir_kernel)
+                self.downsample = lambda x: downsample_2d(x, kernel=fir_kernel)  # noqa: F821 - Name is undefined in the upstream source.
             elif kernel == "sde_vp":
                 self.downsample = partial(F.avg_pool2d, kernel_size=2, stride=2)
             else:
-                self.downsample = Downsample2D(in_channels, use_conv=False, padding=1, name="op")
+                self.downsample = Downsample2D(in_channels, use_conv=False, padding=1, name="op")  # noqa: F821 - Name is undefined in the upstream source.
 
         self.use_in_shortcut = self.in_channels != conv_2d_out_channels if use_in_shortcut is None else use_in_shortcut
 
@@ -405,7 +405,7 @@ class ResnetBlock3D(nn.Module):
         hidden_states = input_tensor
 
         video_length = hidden_states.shape[2]
-        _emb = repeat(emb, "b c -> (b f) c", f=video_length)
+        _emb = repeat(emb, "b c -> (b f) c", f=video_length)  # noqa: F821 - Name is undefined in the upstream source.
 
         hidden_states = self.norm1(hidden_states)
         hidden_states = self.nonlinearity(hidden_states)

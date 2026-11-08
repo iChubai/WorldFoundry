@@ -145,7 +145,7 @@ class VisionTransformer(nn.Module):
         self.head_drop = nn.Dropout(p=self.head_dropout)
         if isinstance(self.num_classes, (list,)) and len(self.num_classes) > 1:
             for a, i in enumerate(range(len(self.num_classes))):
-                setattr(self, "head%d" % a, nn.Linear(self.embed_dim, self.num_classes[i]))
+                setattr(self, "head%d" % a, nn.Linear(self.embed_dim, self.num_classes[i]))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         else:
             self.head = nn.Linear(self.embed_dim, self.num_classes) if self.num_classes > 0 else nn.Identity()
 

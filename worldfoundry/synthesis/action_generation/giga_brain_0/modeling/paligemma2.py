@@ -743,7 +743,7 @@ class PaliGemma2WithExpertModel(nn.Module):
             # Fall back: clone weights when direct tie is impossible
             # (e.g., when loading a compatible checkpoint with a resized vocabulary).
             with torch.no_grad():
-                if isinstance(output_module, nn.Linear) and isinstance(input_emb, nn.Embedding):
+                if isinstance(output_module, nn.Linear) and isinstance(input_emb, nn.Embedding):  # noqa: SIM102 - Statement form kept for readability.
                     if output_module.weight.shape[::-1] == input_emb.weight.shape[::-1]:
                         output_module.weight.copy_(input_emb.weight)
                 # Otherwise do nothing; caller should ensure compatible shapes.

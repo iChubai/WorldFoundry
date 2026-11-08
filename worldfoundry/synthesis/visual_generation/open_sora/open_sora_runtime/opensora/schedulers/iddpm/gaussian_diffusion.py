@@ -148,7 +148,7 @@ def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
     elif schedule_name == "squaredcos_cap_v2":
         return betas_for_alpha_bar(
             num_diffusion_timesteps,
-            lambda t: matorch.cos((t + 0.008) / 1.008 * matorch.pi / 2) ** 2,
+            lambda t: matorch.cos((t + 0.008) / 1.008 * matorch.pi / 2) ** 2,  # noqa: F821 - Name is undefined in the upstream source.
         )
     else:
         raise NotImplementedError(f"unknown beta schedule: {schedule_name}")

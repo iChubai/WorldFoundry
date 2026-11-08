@@ -82,7 +82,7 @@ def get_checkpoint_use_reentrant() -> bool:
     return _CHECKPOINT_USE_REENTRANT
 
 
-def checkpoint_sequential(functions, step, input, *args, **kwargs):
+def checkpoint_sequential(functions, step, input, *args, **kwargs):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     # Hack for keyword-only parameter in a python 2.7-compliant way
     preserve = kwargs.pop("preserve_rng_state", True)
     if kwargs:
@@ -273,7 +273,7 @@ def get_mask(batch, length, mask_ratio, device, mask_type=None, data_info=None, 
                         -1,
                     )
                 )
-            elif type == "laplacian":
+            elif type == "laplacian":  # noqa: E721 - Upstream compares against the builtin `type` object.
                 laplacian_kernel = torch.tensor([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]], dtype=torch.float32).reshape(
                     1, 1, 3, 3
                 )
@@ -422,7 +422,7 @@ class Logger:
         self.file = None
 
         if file_name is not None:
-            self.file = open(file_name, file_mode)
+            self.file = open(file_name, file_mode)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
         self.should_flush = should_flush
         self.stdout = sys.stdout

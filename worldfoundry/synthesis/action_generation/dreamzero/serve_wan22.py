@@ -32,12 +32,12 @@ import imageio
 
 logger = logging.getLogger(__name__)
 
-import cv2
-import numpy as np
-import torch
-import torch.distributed as dist
-import tyro
-from torch.distributed.device_mesh import init_device_mesh
+import cv2  # noqa: E402 - Follows the logging setup.
+import numpy as np  # noqa: E402 - Follows the logging setup.
+import torch  # noqa: E402 - Follows the logging setup.
+import torch.distributed as dist  # noqa: E402 - Follows the logging setup.
+import tyro  # noqa: E402 - Follows the logging setup.
+from torch.distributed.device_mesh import init_device_mesh  # noqa: E402 - Follows the logging setup.
 
 # Avoid FailOnRecompileLimitHit when serving: the flow scheduler's torch.compile'd
 # multistep_uni_p_bh_update recompiles under varying shapes/inputs (e.g. batch size,
@@ -51,16 +51,16 @@ if hasattr(_dynamo, "accumulated_cache_size_limit"):
     _dynamo.accumulated_cache_size_limit = 1000
 if hasattr(_dynamo, "accumulated_recompile_limit"):
     _dynamo.accumulated_recompile_limit = 2000
-from tianshou.data import Batch
+from tianshou.data import Batch  # noqa: E402 - Follows the conditional setup block.
 
-from .protocol import BasePolicy
-from .websocket import PolicyServerConfig, WebsocketPolicyServer
-
-# isort: split
-from .modeling.policy import GrootSimPolicy
+from .protocol import BasePolicy  # noqa: E402 - Follows the conditional setup block.
+from .websocket import PolicyServerConfig, WebsocketPolicyServer  # noqa: E402 - Follows the conditional setup block.
 
 # isort: split
-from .preprocessing import ComposedModalityTransform, EmbodimentTag
+from .modeling.policy import GrootSimPolicy  # noqa: E402 - Follows the conditional setup block.
+
+# isort: split
+from .preprocessing import ComposedModalityTransform, EmbodimentTag  # noqa: E402 - Follows the conditional setup block.
 
 # DreamZero Wan 5B is trained with 160×320 (droid_relative_wan22). Fallback if we cannot read from policy.
 DEFAULT_IMAGE_HEIGHT = 160

@@ -8,5 +8,5 @@ class BasePolicy(abc.ABC):
     def infer(self, obs: dict) -> dict:
         """Infer actions from observations."""
 
-    def reset(self) -> None:
+    def reset(self) -> None:  # noqa: B027 - Optional hook with a no-op default.
         """Reset the policy to its initial state."""

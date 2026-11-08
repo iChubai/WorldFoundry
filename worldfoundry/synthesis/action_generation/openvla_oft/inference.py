@@ -177,7 +177,7 @@ def _prepare_image(image: Any, *, center_crop: bool) -> Any:
     if pil.size != (OPENVLA_IMAGE_SIZE, OPENVLA_IMAGE_SIZE):
         pil = pil.resize((OPENVLA_IMAGE_SIZE, OPENVLA_IMAGE_SIZE), Image.Resampling.LANCZOS)
     if center_crop:
-        crop_side = int(round(OPENVLA_IMAGE_SIZE * math.sqrt(0.9)))
+        crop_side = int(round(OPENVLA_IMAGE_SIZE * math.sqrt(0.9)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         left = (OPENVLA_IMAGE_SIZE - crop_side) // 2
         top = (OPENVLA_IMAGE_SIZE - crop_side) // 2
         pil = pil.crop((left, top, left + crop_side, top + crop_side))

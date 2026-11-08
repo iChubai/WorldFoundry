@@ -176,7 +176,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
         text_encoder,
         tokenizer,
         transformer,
-        scheduler_action=FlowMatchEulerDiscreteScheduler(),
+        scheduler_action=FlowMatchEulerDiscreteScheduler(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         super().__init__()
 
@@ -210,7 +210,7 @@ class CustomPipeline(DiffusionPipeline, FromSingleFileMixin):
                             self.transformer_spatial_patch_size = self.transformer.config.patch_size[0]
                     else:
                         self.transformer_spatial_patch_size = self.transformer.config.patch_size
-                if self.transformer_temporal_patch_size is None:
+                if self.transformer_temporal_patch_size is None:  # noqa: SIM102 - Statement form kept for readability.
                     if hasattr(self.transformer.config, "patch_size_t"):
                         self.transformer_temporal_patch_size = self.transformer.config.patch_size_t
         if self.transformer_spatial_patch_size is None:

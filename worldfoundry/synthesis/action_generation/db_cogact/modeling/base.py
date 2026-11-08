@@ -382,7 +382,7 @@ class DexboticForCausalLM(DexboticPretrainedModel, GenerationMixin):
 
 class ActionOutputForCausalLM(ABC):
     @abstractmethod
-    def inference_action(self, input_ids, image_tensor, inference_args={}, **kwargs): ...
+    def inference_action(self, input_ids, image_tensor, inference_args={}, **kwargs): ...  # noqa: B006 - Keeps the upstream default object and signature.
 
     def _denorm(self, actions, action_norms) -> np.ndarray:
         """Denormalize the actions

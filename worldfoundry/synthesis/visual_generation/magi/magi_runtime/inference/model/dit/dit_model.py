@@ -547,7 +547,7 @@ class VideoDiTModel(torch.nn.Module):
                 prev_chunk_scale, text_scale = self.get_cfg_scale(
                     cfg_timestep[chunk_idx], cfg_t_range, prev_chunk_scale_s, text_scale_s
                 )
-                l = chunk_idx * chunk_width
+                l = chunk_idx * chunk_width  # noqa: E741 - Ambiguous upstream name kept as written.
                 r = (chunk_idx + 1) * chunk_width
                 cfg_output = (
                     (1 - prev_chunk_scale) * out_uncond[:, :, l:r]
@@ -568,7 +568,7 @@ class VideoDiTModel(torch.nn.Module):
             kwargs["caption_dropout_mask"] = torch.tensor([False], dtype=torch.bool, device=x.device)
             inference_params.update_kv_cache = True
             if kwargs.get("distill_nearly_clean_chunk", False):
-                prev_chunks_scale = float(os.getenv("prev_chunks_scale", 0.7))
+                prev_chunks_scale = float(os.getenv("prev_chunks_scale", 0.7))  # noqa: SIM112 - Environment variable name used by the upstream code.
                 slice_start = 1 if kwargs["fwd_extra_1st_chunk"] else 0
                 cond_pre_and_text_channel = x.shape[2]
                 new_x_chunk = x[0:1, :, slice_start * kwargs["chunk_width"] : (slice_start + 1) * kwargs["chunk_width"]]

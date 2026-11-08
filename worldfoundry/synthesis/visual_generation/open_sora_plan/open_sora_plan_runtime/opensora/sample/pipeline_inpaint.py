@@ -174,7 +174,7 @@ class OpenSoraInpaintPipeline(OpenSoraPipeline):
                 "conditional_pixel_values_indices should be a list of integers with the same length as conditional_pixel_values_path"
             )
 
-        if mask_type is not None and mask_type not in STR_TO_TYPE.keys() and mask_type not in STR_TO_TYPE.values():
+        if mask_type is not None and mask_type not in STR_TO_TYPE.keys() and mask_type not in STR_TO_TYPE.values():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             raise ValueError(f"Invalid mask type: {mask_type}")
 
         if not isinstance(max_hxw, int) or not (max_hxw >= 102400 and max_hxw <= 236544):
@@ -233,7 +233,7 @@ class OpenSoraInpaintPipeline(OpenSoraPipeline):
     def get_mask_type_cond_indices(
         self, mask_type, conditional_pixel_values_path, conditional_pixel_values_indices, num_frames
     ):
-        if mask_type is not None and mask_type in STR_TO_TYPE.keys():
+        if mask_type is not None and mask_type in STR_TO_TYPE.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             mask_type = STR_TO_TYPE[mask_type]
         if is_image_file(conditional_pixel_values_path[0]):
             if len(conditional_pixel_values_path) == 1:
@@ -365,7 +365,7 @@ class OpenSoraInpaintPipeline(OpenSoraPipeline):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         guidance_rescale: float = 0.0,
         max_sequence_length: int = 512,
         device=None,
@@ -635,14 +635,14 @@ class OpenSoraInpaintPipeline(OpenSoraPipeline):
         # ==================make sp=====================================
         if get_sequence_parallel_state():
             latents_shape = list(latents.shape)  # b c t//sp h w
-            full_shape = [latents_shape[0] * world_size] + latents_shape[1:]  # # b*sp c t//sp h w
+            full_shape = [latents_shape[0] * world_size] + latents_shape[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # # b*sp c t//sp h w
             all_latents = torch.zeros(full_shape, dtype=latents.dtype, device=latents.device)
             torch.distributed.all_gather_into_tensor(all_latents, latents)
             latents_list = list(all_latents.chunk(world_size, dim=0))
             latents = torch.cat(latents_list, dim=2)
         # ==================make sp=====================================
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             videos = self.decode_latents(latents)
             videos = videos[:, :num_frames, :real_height, :real_width]
         else:

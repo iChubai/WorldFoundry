@@ -23,11 +23,15 @@ Individual mixture in PaliGemma format
 """
 
 
-import torch
-import torch.nn as nn
+import torch  # noqa: E402 - Follows a module-level setup call, as upstream.
+import torch.nn as nn  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from .model_utils import apply_rotary_pos_emb, repeat_kv
-from .paligemma_modules import GemmaMLP, GemmaRMSNorm, GemmaRotaryEmbedding
+from .model_utils import apply_rotary_pos_emb, repeat_kv  # noqa: E402 - Follows a module-level setup call, as upstream.
+from .paligemma_modules import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    GemmaMLP,
+    GemmaRMSNorm,
+    GemmaRotaryEmbedding,
+)
 
 
 class Mixture(nn.Module):

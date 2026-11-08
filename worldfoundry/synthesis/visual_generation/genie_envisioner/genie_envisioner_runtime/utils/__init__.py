@@ -31,7 +31,7 @@ def init_logging(log_dir, rank):
     now = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = os.path.join(log_dir, f"log_rank{rank}_{now}.txt")
 
-    log_file = open(log_filename, "w", buffering=1)
+    log_file = open(log_filename, "w", buffering=1)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     atexit.register(log_file.close)
 
     sys.stdout = Tee(sys.__stdout__, log_file)

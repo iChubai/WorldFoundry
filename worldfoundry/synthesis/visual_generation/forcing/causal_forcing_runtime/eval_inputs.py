@@ -216,5 +216,5 @@ class TextImagePairDataset(Dataset):
 
 def cycle(dl):
     while True:
-        for data in dl:
+        for data in dl:  # noqa: UP028 - Keeps the loop; `yield from` would forward send() and throw().
             yield data

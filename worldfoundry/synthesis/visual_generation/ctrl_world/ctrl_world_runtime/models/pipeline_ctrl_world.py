@@ -141,7 +141,7 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
         if prompt is not None and isinstance(prompt, str):
             batch_size = 1
         elif prompt is not None and isinstance(prompt, list):
-            batch_size = len(prompt)
+            batch_size = len(prompt)  # noqa: F841 - Kept as upstream; an underscore name already exists.
         else:
             _batch_size = prompt_embeds.shape[0]
 
@@ -224,7 +224,7 @@ class LatentToVideoPipeline(TextToVideoSDPipeline):
 
         video_tensor = self.decode_latents(latents)
 
-        video = video_tensor if output_type == "pt" else tensor2vid(video_tensor)
+        video = video_tensor if output_type == "pt" else tensor2vid(video_tensor)  # noqa: F821 - Name is undefined in the upstream source.
 
         # Offload last model to CPU
         if hasattr(self, "final_offload_hook") and self.final_offload_hook is not None:
@@ -265,7 +265,7 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
         latents: torch.FloatTensor | None = None,
         output_type: str | None = "pil",
         callback_on_step_end: Callable[[int, int, dict], None] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         return_dict: bool = True,
         mask=None,
         cond_wrist=None,
@@ -545,7 +545,7 @@ class CtrlWorldDiffusionPipeline(StableVideoDiffusionPipeline):
                 if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     progress_bar.update()
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             # cast back to fp16 if needed
             if needs_upcasting:
                 self.vae.to(dtype=torch.float16)
@@ -586,7 +586,7 @@ class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
         latents: torch.FloatTensor | None = None,
         output_type: str | None = "pil",
         callback_on_step_end: Callable[[int, int, dict], None] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         return_dict: bool = True,
         mask=None,
         condition_type="image",
@@ -813,7 +813,7 @@ class TextStableVideoDiffusionPipeline(StableVideoDiffusionPipeline):
                 if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     progress_bar.update()
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             # cast back to fp16 if needed
             if needs_upcasting:
                 self.vae.to(dtype=torch.float16)

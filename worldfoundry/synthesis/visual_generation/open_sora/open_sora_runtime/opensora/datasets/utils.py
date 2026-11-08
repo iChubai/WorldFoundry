@@ -218,11 +218,11 @@ def resize_crop_to_fill(pil_image, image_size):
         sh, sw = th, round(w * rh)
         image = pil_image.resize((sw, sh), Image.BICUBIC)
         i = 0
-        j = int(round((sw - tw) / 2.0))
+        j = int(round((sw - tw) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     else:
         sh, sw = round(h * rw), tw
         image = pil_image.resize((sw, sh), Image.BICUBIC)
-        i = int(round((sh - th) / 2.0))
+        i = int(round((sh - th) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         j = 0
     arr = np.array(image)
     assert i + th <= arr.shape[0] and j + tw <= arr.shape[1]

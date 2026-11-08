@@ -641,7 +641,7 @@ class WanModelMoe(torch.nn.Module):
 
                 # 🔧 为2x latents计算RoPE频率 - 基于实际的下采样结果
                 clean_2x_rope_freqs_list = []
-                for b in range(B):
+                for b in range(B):  # noqa: B007 - The loop variable is read outside the loop.
                     clean_2x_batch_rope_freqs = []
 
                     # 🔧 使用clean_2x_f作为实际的时间帧数
@@ -711,7 +711,7 @@ class WanModelMoe(torch.nn.Module):
 
                 # 🔧 为4x latents计算RoPE频率 - 基于实际的下采样结果
                 clean_4x_rope_freqs_list = []
-                for b in range(B):
+                for b in range(B):  # noqa: B007 - The loop variable is read outside the loop.
                     clean_4x_batch_rope_freqs = []
 
                     # 🔧 使用clean_4x_f作为实际的时间帧数
@@ -773,7 +773,7 @@ class WanModelMoe(torch.nn.Module):
         if modality_inputs and self.use_moe:
             # 确定模态类型并将处理好的combined_modality_embeddings赋值给对应的模态
             processed_modality_inputs = {}
-            for modality_type in modality_inputs.keys():
+            for modality_type in modality_inputs.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 # 将处理好的camera embeddings赋给对应的模态
                 processed_modality_inputs[modality_type] = combined_modality_embeddings
 
@@ -901,7 +901,7 @@ class WanModelMoe(torch.nn.Module):
         all_expert_stats = []
 
         # 收集所有block的专家统计信息
-        for i, block in enumerate(self.blocks):
+        for i, block in enumerate(self.blocks):  # noqa: B007 - The loop variable is read outside the loop.
             if hasattr(block, "expert_stats_buffer") and len(block.expert_stats_buffer) > 0:
                 all_expert_stats.extend(block.expert_stats_buffer)
 

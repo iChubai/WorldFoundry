@@ -235,12 +235,12 @@ class ViTVAE(ModelMixin, ConfigMixin, VideoTokenizerABC):
         else:
             raise ValueError(f"model_type {model_type} not supported")
 
-        if "patch_length" in ddconfig:
+        if "patch_length" in ddconfig:  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             self._temporal_downsample_factor = ddconfig["patch_length"]
         else:
             self._temporal_downsample_factor = 1
 
-        if "patch_size" in ddconfig:
+        if "patch_size" in ddconfig:  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             self._spatial_downsample_factor = ddconfig["patch_size"]
         else:
             self._spatial_downsample_factor = 8
@@ -253,7 +253,7 @@ class ViTVAE(ModelMixin, ConfigMixin, VideoTokenizerABC):
     def temporal_downsample_factor(self):
         return self._temporal_downsample_factor
 
-    def init_from_ckpt(self, path, ignore_keys=[]):
+    def init_from_ckpt(self, path, ignore_keys=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         raise NotImplementedError
 
     def encode(self, x, sample_posterior=True):

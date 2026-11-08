@@ -269,7 +269,7 @@ class WanI2VFast:
         chunk_size=3,
         max_area=480 * 832,
         frame_num=81,
-        timesteps_index=[0, 179, 358, 679],
+        timesteps_index=[0, 179, 358, 679],  # noqa: B006 - Keeps the upstream default object and signature.
         shift=5.0,
         seed=-1,
         offload_model=True,
@@ -340,7 +340,7 @@ class WanI2VFast:
         lat_f = int(lat_f - (lat_f % chunk_size))
         F = (lat_f - 1) * 4 + 1
         max_seq_len = chunk_size * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
-        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
+        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         seed = seed if seed >= 0 else random.randint(0, sys.maxsize)
         seed_g = torch.Generator(device=self.device)
         seed_g.manual_seed(seed)

@@ -142,7 +142,7 @@ class PymunkKeypointManager:
 
     @classmethod
     def get_tf_img_obj(cls, obj: pymunk.Body):
-        pose = tuple(obj.position) + (obj.angle,)
+        pose = tuple(obj.position) + (obj.angle,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return cls.get_tf_img(pose)
 
     def get_keypoints_global(self, pose_map: dict[set, Sequence | pymunk.Body], is_obj=False):
@@ -566,7 +566,7 @@ class PushTEnv(gym.Env):
         info = {
             "pos_agent": np.array(self.agent.position),
             "vel_agent": np.array(self.agent.velocity),
-            "block_pose": np.array(list(self.block.position) + [self.block.angle]),
+            "block_pose": np.array(list(self.block.position) + [self.block.angle]),  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             "goal_pose": self.goal_pose,
             "n_contacts": n_contact_points_per_step,
         }
@@ -741,7 +741,7 @@ class PushTEnv(gym.Env):
         angle,
         scale=30,
         color="LightSlateGray",
-        mask=pymunk.ShapeFilter.ALL_MASKS(),
+        mask=pymunk.ShapeFilter.ALL_MASKS(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         scale = 30
         mass = 1
@@ -780,7 +780,7 @@ class PushTEnv(gym.Env):
         angle,
         scale=30,
         color="LightSlateGray",
-        mask=pymunk.ShapeFilter.ALL_MASKS(),
+        mask=pymunk.ShapeFilter.ALL_MASKS(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         mass = 1
         vertices1 = [
@@ -817,7 +817,7 @@ class PushTEnv(gym.Env):
         angle,
         scale=30,
         color="LightSlateGray",
-        mask=pymunk.ShapeFilter.ALL_MASKS(),
+        mask=pymunk.ShapeFilter.ALL_MASKS(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         mass = 1
         vertices1 = [
@@ -864,7 +864,7 @@ class PushTEnv(gym.Env):
         angle,
         scale=30,
         color="LightSlateGray",
-        mask=pymunk.ShapeFilter.ALL_MASKS(),
+        mask=pymunk.ShapeFilter.ALL_MASKS(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         mass = 1
         length = 2
@@ -902,7 +902,7 @@ class PushTEnv(gym.Env):
         angle,
         scale=30,
         color="LightSlateGray",
-        mask=pymunk.ShapeFilter.ALL_MASKS(),
+        mask=pymunk.ShapeFilter.ALL_MASKS(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         mass = 1
         length = 2
@@ -940,7 +940,7 @@ class PushTEnv(gym.Env):
         angle,
         scale=30,
         color="LightSlateGray",
-        mask=pymunk.ShapeFilter.ALL_MASKS(),
+        mask=pymunk.ShapeFilter.ALL_MASKS(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         mass = 1
         vertices1 = [
@@ -967,7 +967,7 @@ class PushTEnv(gym.Env):
         angle,
         scale=30,
         color="LightSlateGray",
-        mask=pymunk.ShapeFilter.ALL_MASKS(),
+        mask=pymunk.ShapeFilter.ALL_MASKS(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         mass = 1
         vertices1 = [
@@ -1008,7 +1008,7 @@ class PushTEnv(gym.Env):
             raise ValueError(f"Unknown shape type: {shape}")
 
 
-class PymunkKeypointManager:
+class PymunkKeypointManager:  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(
         self,
         local_keypoint_map: dict[str, np.ndarray],
@@ -1080,7 +1080,7 @@ class PymunkKeypointManager:
 
     @classmethod
     def get_tf_img_obj(cls, obj: pymunk.Body):
-        pose = tuple(obj.position) + (obj.angle,)
+        pose = tuple(obj.position) + (obj.angle,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return cls.get_tf_img(pose)
 
     def get_keypoints_global(self, pose_map: dict[set, Sequence | pymunk.Body], is_obj=False):

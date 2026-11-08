@@ -335,7 +335,7 @@ class GrootSimPolicy:
 
     @staticmethod
     def _check_state_is_batched(observation: dict[str, Any]) -> bool:
-        for key, value in observation.items():
+        for key, value in observation.items():  # noqa: SIM110 - Keeps the explicit loop.
             if "state" in key and len(value.shape) < 3:
                 return False
         return True

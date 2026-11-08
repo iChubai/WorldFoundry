@@ -529,7 +529,7 @@ class _ForcingRuntime:
         del video, fps, return_dict, show_progress
         options = {**self.defaults, **kwargs}
         if interactions and "seed" not in options:
-            first = list(interactions)[0]
+            first = list(interactions)[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if isinstance(first, int):
                 options["seed"] = first
         output_target = Path(output_path).expanduser() if output_path is not None else None

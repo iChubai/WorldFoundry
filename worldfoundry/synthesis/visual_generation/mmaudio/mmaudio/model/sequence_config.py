@@ -26,7 +26,7 @@ class SequenceConfig:
 
     @property
     def latent_seq_len(self) -> int:
-        return int(
+        return int(  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             math.ceil(self.duration * self.sampling_rate / self.spectrogram_frame_rate / self.latent_downsample_rate)
         )
 

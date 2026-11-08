@@ -1,6 +1,7 @@
 # Inference-only Being-H0.5 runtime retained in-tree.
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
+# ruff: noqa: F405 - Names come from the upstream star import.
 import os
 from typing import ClassVar
 
@@ -16,7 +17,7 @@ from transformers.utils import logging
 from ..preprocessing.constants import CONNECTOR_ARCH, LLM_MODEL_ARCH, VIT_MODEL_ARCH
 from ..preprocessing.conversation import get_conv_template
 from .internvit import has_flash_attn
-from .layers import *
+from .layers import *  # noqa: F403 - Upstream star import kept as written.
 
 logger = logging.get_logger(__name__)
 
@@ -51,7 +52,7 @@ def create_sparse_mask(document_lens, split_lens, attn_modes, device):
 
     # Assign document_id to each sample
     document_id = torch.cat(
-        [torch.full((l,), i, dtype=torch.float32) for i, l in enumerate(document_lens, start=1)]
+        [torch.full((l,), i, dtype=torch.float32) for i, l in enumerate(document_lens, start=1)]  # noqa: E741 - Ambiguous upstream name kept as written.
     ).to(device)
 
     # Combine masks: (causal OR full) AND sample
@@ -380,10 +381,10 @@ class BeingH(PreTrainedModel):
 
         if padding_len > 0:
             # Add a dummy sample for padding
-            padded_sample_lens_list = sample_lens_list + [padding_len]
+            padded_sample_lens_list = sample_lens_list + [padding_len]  # noqa: F841, RUF005 - Kept as upstream; an underscore name already exists.; Keeps `+` semantics for the operand's runtime type.
             # Assume causal attention for the padded part
-            padded_attn_modes = attn_modes + ["causal"]
-            padded_seqlen = seqlen + padding_len
+            padded_attn_modes = attn_modes + ["causal"]  # noqa: F841, RUF005 - Kept as upstream; an underscore name already exists.; Keeps `+` semantics for the operand's runtime type.
+            padded_seqlen = seqlen + padding_len  # noqa: F841 - Kept as upstream; an underscore name already exists.
         else:
             _padded_sample_lens_list = sample_lens_list
             _padded_attn_modes = attn_modes

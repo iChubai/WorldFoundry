@@ -1,7 +1,7 @@
 import math
 from inspect import isfunction
 from typing import Any, ClassVar
-from typing import List as List
+from typing import List as List  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Optional as Optional
 
 import torch

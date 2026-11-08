@@ -185,7 +185,7 @@ def load_condition_json(path: str) -> tuple[torch.Tensor, torch.Tensor]:
     target_mats = raw_matrices[75:]
 
     def pad_mats(mats: list[torch.Tensor]) -> list[torch.Tensor]:
-        return [mats[0]] + mats + [mats[-1]]
+        return [mats[0]] + mats + [mats[-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     context_final = pad_mats(context_mats)  # 77
     target_final = pad_mats(target_mats)  # 77

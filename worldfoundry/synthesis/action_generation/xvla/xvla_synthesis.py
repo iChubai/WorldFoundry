@@ -80,7 +80,7 @@ class XVLASynthesis(OfficialPolicySynthesis, ActionModelSynthesis):
                     break
                 except ValueError:
                     pass
-        if selected is not None and explicit_record is not None:
+        if selected is not None and explicit_record is not None:  # noqa: SIM102 - Statement form kept for readability.
             if selected.get("repo_id") != explicit_record.get("repo_id"):
                 raise ValueError(
                     f"X-VLA variant {selector!r} conflicts with explicit checkpoint {explicit_record.get('repo_id')!r}"

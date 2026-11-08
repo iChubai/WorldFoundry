@@ -92,7 +92,7 @@ def collate(features: list[dict], tokenizer: AutoTokenizer, num_views=3, embodim
                 try:
                     parsed_item = ast.literal_eval(item)
                     # Handle different return types from ast.literal_eval
-                    if isinstance(parsed_item, (list, tuple)):
+                    if isinstance(parsed_item, (list, tuple)):  # noqa: SIM108 - Branches carry per-case comments.
                         processed_item = str(parsed_item[0])
                     else:
                         # If it's already a scalar (string, float, int, etc.), convert to string
@@ -170,7 +170,7 @@ def collate(features: list[dict], tokenizer: AutoTokenizer, num_views=3, embodim
                             + str(item).lower()
                         )
                     else:
-                        raise ValueError(f"Embodiment ID {elem['embodiment_id']} not supported.")
+                        raise ValueError(f"Embodiment ID {elem['embodiment_id']} not supported.")  # noqa: B904 - Keeps the implicit exception context.
                     output_values.append(item)
             # print("output_values", output_values)
             ids, mask = tokenizer(output_values, return_mask=True, add_special_tokens=True)
@@ -239,14 +239,14 @@ class DreamTransform(InvertibleModalityTransform):
 
     def check_keys_and_batch_size(self, data):
         grouped_keys = {}
-        for key in data.keys():
+        for key in data.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             try:
                 modality, _ = key.split(".")
                 if "annotation" in key:
                     modality = "language"
             except:  # noqa: E722
                 ### Handle language annotation special case
-                if "annotation" in key:
+                if "annotation" in key:  # noqa: SIM108 - Branches carry per-case comments.
                     modality = "language"
                 else:
                     modality = "others"  # will contain the video, state, and action
@@ -437,7 +437,7 @@ class DreamTransform(InvertibleModalityTransform):
         return transformed_data
 
     def apply_batch(self, data: dict, batch_size: int) -> dict:
-        data_split = [tree.map_structure(lambda x: x[i], data) for i in range(batch_size)]
+        data_split = [tree.map_structure(lambda x: x[i], data) for i in range(batch_size)]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
         processed = [self.apply_single(item) for item in data_split]
         return collate(processed, self.tokenizer, self.num_views, self.embodiment_tag_mapping)
 

@@ -23,7 +23,7 @@ from worldfoundry.core.distributed.runtime.logging import log
 # 1. add adapter_name to the key, 2. change lora keys
 def _convert_non_diffusers_wan_lora_to_diffusers(state_dict, adapter_name="default"):
     converted_state_dict = {}
-    if any("diffusion_model." in k for k in state_dict.keys()):
+    if any("diffusion_model." in k for k in state_dict.keys()):  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         original_state_dict = {k[len("diffusion_model.") :]: v for k, v in state_dict.items()}
     else:
         original_state_dict = state_dict

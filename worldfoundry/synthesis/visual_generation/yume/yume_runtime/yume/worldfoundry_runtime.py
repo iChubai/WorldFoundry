@@ -78,7 +78,7 @@ class YumeRuntime:
         spatial_patch = int(patch_size[1]) * int(patch_size[2])
         seq_len = int(latent.shape[1]) * int(latent.shape[2]) * int(latent.shape[3]) // spatial_patch
         sp_size = int(getattr(self.model, "sp_size", 1) or 1)
-        return int(math.ceil(seq_len / sp_size)) * sp_size
+        return int(math.ceil(seq_len / sp_size)) * sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     def _ensure_arg_seq_len(self, *arg_dicts: dict[str, torch.Tensor] | None, latent: torch.Tensor) -> None:
         required_seq_len = self._patchified_seq_len(latent)

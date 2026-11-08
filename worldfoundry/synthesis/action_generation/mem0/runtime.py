@@ -189,7 +189,7 @@ def _torch_load_checkpoint(root: Path, config: Mem0RuntimeConfig) -> tuple[Any, 
         raise ValueError(f"Mem-0 checkpoint parts are not contiguous: {suffixes}")
     raw = _SplitCheckpointReader(parts)
     try:
-        with io.BufferedReader(raw, buffer_size=8 * 1024 * 1024) as reader:
+        with io.BufferedReader(raw, buffer_size=8 * 1024 * 1024) as reader:  # noqa: SIM117 - Keeps the nested context managers.
             with torch.serialization.safe_globals(safe_numpy_globals):
                 payload = torch.load(reader, map_location="cpu", weights_only=True)
     finally:

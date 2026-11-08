@@ -133,7 +133,7 @@ class WanPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         | MultiPipelineCallbacks
         | None = None,
         attention_kwargs: dict[str, Any] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         comfyui_progressbar: bool = False,
         shift: int = 5,

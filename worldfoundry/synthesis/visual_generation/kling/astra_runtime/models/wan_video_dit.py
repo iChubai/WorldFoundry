@@ -136,7 +136,7 @@ class DiTBlock(nn.Module):
         return x
 
 
-class Head(nn.Module):
+class Head(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         super().__init__()
         self.dim = dim

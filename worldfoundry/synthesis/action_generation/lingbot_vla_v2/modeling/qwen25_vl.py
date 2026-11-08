@@ -15,7 +15,10 @@ from transformers.modeling_flash_attention_utils import (
     is_flash_attn_available,
 )
 from transformers.modeling_layers import GradientCheckpointingLayer
-from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
+from transformers.modeling_utils import (  # noqa: F811 - Later import provides the binding, as upstream.
+    ALL_ATTENTION_FUNCTIONS,
+    PreTrainedModel,
+)
 from transformers.models.qwen2_5_vl.configuration_qwen2_5_vl import Qwen2_5_VLConfig, Qwen2_5_VLVisionConfig
 from transformers.processing_utils import Unpack
 from transformers.utils import (

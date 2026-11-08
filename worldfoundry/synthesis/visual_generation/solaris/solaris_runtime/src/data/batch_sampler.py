@@ -27,7 +27,7 @@ class EvalBatchSampler(torch.utils.data.Sampler):
         num_replicas,
         num_frames,
         num_global_samples=None,  # global number of samples
-        seed=[0],
+        seed=[0],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         _init_torch_sampler_with_optional_dataset(self, dataset)
         self.dataset = dataset

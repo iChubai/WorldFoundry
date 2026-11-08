@@ -18,13 +18,13 @@ def get_resize_crop_region_for_grid(src, tgt_width, tgt_height):
     r = h / w
     if r > (th / tw):
         resize_height = th
-        resize_width = int(round(th / h * w))
+        resize_width = int(round(th / h * w))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     else:
         resize_width = tw
-        resize_height = int(round(tw / w * h))
+        resize_height = int(round(tw / w * h))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
-    crop_top = int(round((th - resize_height) / 2.0))
-    crop_left = int(round((tw - resize_width) / 2.0))
+    crop_top = int(round((th - resize_height) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    crop_left = int(round((tw - resize_width) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     return (crop_top, crop_left), (crop_top + resize_height, crop_left + resize_width)
 

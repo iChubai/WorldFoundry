@@ -170,7 +170,7 @@ class ResidualBlock(nnx.Module):
         x,
         feat_cache=None,
         new_cache=None,
-        feat_idx=[0],
+        feat_idx=[0],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         h = self.shortcut(x) if self.shortcut is not None else x
 
@@ -283,7 +283,7 @@ class Resample(nnx.Module):
         else:
             self.resample = None
 
-    def __call__(self, x, feat_cache=None, new_cache=None, feat_idx=[0]):
+    def __call__(self, x, feat_cache=None, new_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         b, f, h, w, c = x.shape
         if self.mode == "upsample3d" and feat_cache is not None:
             idx = feat_idx[0]
@@ -409,10 +409,10 @@ class WanVAE_(nnx.Module):
         rngs,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -518,7 +518,7 @@ class WanVAE_(nnx.Module):
             feat_cache=cache,
         )
         cache = _pad_cache_time_to(cache, T=CACHE_T)
-        out = jnp.zeros((out0.shape[0], iter_) + out0.shape[2:], dtype=out0.dtype)
+        out = jnp.zeros((out0.shape[0], iter_) + out0.shape[2:], dtype=out0.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         out = out.at[:, :1, :, :, :].set(out0)
 
         # Change second dimension of out to be iter_ length
@@ -574,7 +574,7 @@ class WanVAE_(nnx.Module):
             feat_cache=cache,
         )
         cache = _pad_cache_time_to(cache, T=CACHE_T)
-        out = jnp.zeros((out0.shape[0], (iter_ - 1) * 4 + 1) + out0.shape[2:], dtype=out0.dtype)
+        out = jnp.zeros((out0.shape[0], (iter_ - 1) * 4 + 1) + out0.shape[2:], dtype=out0.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         out = out.at[:, :1, :, :, :].set(out0)
 
         def decode_chunk(i, res):
@@ -633,10 +633,10 @@ class Encoder3d(nnx.Module):
         rngs,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -647,7 +647,7 @@ class Encoder3d(nnx.Module):
         self.attn_scales = attn_scales
         self.temperal_downsample = temperal_downsample
 
-        dims = [dim * u for u in [1] + dim_mult]
+        dims = [dim * u for u in [1] + dim_mult]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         scale = 1.0
         # init block
@@ -750,10 +750,10 @@ class Decoder3d(nnx.Module):
         rngs,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_upsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_upsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -765,7 +765,7 @@ class Decoder3d(nnx.Module):
         self.temperal_upsample = temperal_upsample
 
         # dimensions
-        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]
+        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0 / 2 ** (len(dim_mult) - 2)
 
         # init block

@@ -1282,7 +1282,7 @@ class RefSelectionResult:
             reason = self.stats.get("no_ref_reason", "unknown")
             best = self.stats.get("best_iou", 0)
             thresh = self.stats.get("threshold", 0)
-            if reason == "max_refs_zero":
+            if reason == "max_refs_zero":  # noqa: SIM116 - Branch chain kept as upstream.
                 return "ref=0 (max_refs=0)"
             elif reason == "no_candidates":
                 return "ref=0 (no candidates)"
@@ -1446,7 +1446,7 @@ def render_projection(
     )
 
 
-def scale_intrinsics(K: np.ndarray, scale_x, scale_y) -> np.ndarray:
+def scale_intrinsics(K: np.ndarray, scale_x, scale_y) -> np.ndarray:  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """
     Scale intrinsic matrix for different resolutions.
 

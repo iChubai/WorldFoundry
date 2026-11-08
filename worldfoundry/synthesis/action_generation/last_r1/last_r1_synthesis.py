@@ -222,7 +222,7 @@ class LastR1Synthesis(ActionModelSynthesis):
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
-                raise TimeoutError(f"LaST-R1 inference exceeded {timeout} seconds; see {stderr_path}")
+                raise TimeoutError(f"LaST-R1 inference exceeded {timeout} seconds; see {stderr_path}")  # noqa: B904 - Keeps the implicit exception context.
         result_path = run_dir / "result.json"
         if code != 0 or not result_path.is_file():
             raise RuntimeError(f"LaST-R1 inference failed (exit={code}); see {stderr_path}")

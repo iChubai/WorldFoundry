@@ -13,8 +13,8 @@ def resolve_intrinsic_source_resolution(K_3x3, h_org, w_org, tag=""):
     always keep the declared value. Must stay shared between the training and val/infer pose loaders.
     """
     try:
-        h_inferred = int(round(float(K_3x3[1, 2]) * 2)) if float(K_3x3[1, 2]) > 1 else None
-        w_inferred = int(round(float(K_3x3[0, 2]) * 2)) if float(K_3x3[0, 2]) > 1 else None
+        h_inferred = int(round(float(K_3x3[1, 2]) * 2)) if float(K_3x3[1, 2]) > 1 else None  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        w_inferred = int(round(float(K_3x3[0, 2]) * 2)) if float(K_3x3[0, 2]) > 1 else None  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     except Exception:
         h_inferred, w_inferred = None, None
 

@@ -36,7 +36,9 @@ __all__ = [
 CACHE_T = 2
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import CausalConv3d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level setup, as upstream.
+    CausalConv3d,
+)
 
 
 class RMS_norm(nn.Module):
@@ -62,7 +64,10 @@ class Upsample(nn.Upsample):
         return super().forward(x.float()).type_as(x)
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Decoder3d, Encoder3d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    Decoder3d,
+    Encoder3d,
+)
 
 
 def count_conv3d(model):
@@ -78,10 +83,10 @@ class WanVAE_(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
         temporal_window=4,
     ):

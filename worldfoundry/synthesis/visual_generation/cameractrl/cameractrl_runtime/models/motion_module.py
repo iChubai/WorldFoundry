@@ -47,7 +47,7 @@ class VanillaTemporalModule(nn.Module):
         zero_initialize=True,
         encoder_hidden_states_query=(False, False),
         attention_activation_scale=1.0,
-        attention_processor_kwargs: dict = {},
+        attention_processor_kwargs: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
         causal_temporal_attention=False,
         causal_temporal_attention_mask_type="",
         rescale_output_factor=1.0,
@@ -80,7 +80,7 @@ class VanillaTemporalModule(nn.Module):
         temb=None,
         encoder_hidden_states=None,
         attention_mask=None,
-        cross_attention_kwargs: dict[str, Any] = {},
+        cross_attention_kwargs: dict[str, Any] = {},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         hidden_states = self.temporal_transformer(
             hidden_states, encoder_hidden_states, attention_mask, cross_attention_kwargs=cross_attention_kwargs
@@ -111,7 +111,7 @@ class TemporalTransformer3DModel(nn.Module):
         temporal_position_encoding_max_len=32,
         encoder_hidden_states_query=(False, False),
         attention_activation_scale=1.0,
-        attention_processor_kwargs: dict = {},
+        attention_processor_kwargs: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
         causal_temporal_attention=None,
         causal_temporal_attention_mask_type="",
         rescale_output_factor=1.0,
@@ -217,7 +217,7 @@ class TemporalTransformer3DModel(nn.Module):
         hidden_states,
         encoder_hidden_states=None,
         attention_mask=None,
-        cross_attention_kwargs: dict[str, Any] = {},
+        cross_attention_kwargs: dict[str, Any] = {},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         residual = hidden_states
 
@@ -269,7 +269,7 @@ class TemporalTransformerBlock(nn.Module):
         temporal_position_encoding_max_len=32,
         encoder_hidden_states_query=(False, False),
         attention_activation_scale=1.0,
-        attention_processor_kwargs: dict = {},
+        attention_processor_kwargs: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
         rescale_output_factor=1.0,
     ):
         super().__init__()
@@ -309,7 +309,7 @@ class TemporalTransformerBlock(nn.Module):
         hidden_states,
         encoder_hidden_states=None,
         attention_mask=None,
-        cross_attention_kwargs: dict[str, Any] = {},
+        cross_attention_kwargs: dict[str, Any] = {},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         for attention_block, norm, attention_block_type in zip(
             self.attention_blocks, self.norms, self.attention_block_types, strict=False

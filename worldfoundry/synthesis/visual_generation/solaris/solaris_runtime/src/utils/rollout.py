@@ -121,9 +121,9 @@ def fully_denoise_frame_bidirectional_multiplayer(
         rngs, step_rng = jax.random.split(rngs)
         x_pred = jax.lax.cond(
             is_last_step,
-            lambda: x_start_f32,
-            lambda: (1 - sigma_t[i + 1]) * x_start_f32
-            + sigma_t[i + 1] * jax.random.normal(step_rng, x_start_f32.shape, dtype=jnp.float32),
+            lambda: x_start_f32,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+            lambda: (1 - sigma_t[i + 1]) * x_start_f32  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+            + sigma_t[i + 1] * jax.random.normal(step_rng, x_start_f32.shape, dtype=jnp.float32),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
         )
         frame = x_pred.astype(frame.dtype)
 
@@ -211,8 +211,8 @@ def perform_multiplayer_rollout(
                 frame = jax.lax.cond(
                     exit,
                     lambda: x_start_f32,
-                    lambda: (1 - sigma_t[i + 1]) * x_start_f32
-                    + sigma_t[i + 1] * jax.random.normal(step_rng, x_start_f32.shape, dtype=jnp.float32),
+                    lambda: (1 - sigma_t[i + 1]) * x_start_f32  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    + sigma_t[i + 1] * jax.random.normal(step_rng, x_start_f32.shape, dtype=jnp.float32),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 )
                 return frame.astype(jnp.bfloat16), rngs
 
@@ -423,9 +423,9 @@ def fully_denoise_frame_bidirectional(
         rngs, step_rng = jax.random.split(rngs)
         x_pred = jax.lax.cond(
             is_last_step,
-            lambda: x_start_f32,
-            lambda: (1 - sigma_t[i + 1]) * x_start_f32
-            + sigma_t[i + 1] * jax.random.normal(step_rng, x_start_f32.shape, dtype=jnp.float32),
+            lambda: x_start_f32,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+            lambda: (1 - sigma_t[i + 1]) * x_start_f32  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+            + sigma_t[i + 1] * jax.random.normal(step_rng, x_start_f32.shape, dtype=jnp.float32),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
         )
         frame = x_pred.astype(frame.dtype)
     return frame, rngs

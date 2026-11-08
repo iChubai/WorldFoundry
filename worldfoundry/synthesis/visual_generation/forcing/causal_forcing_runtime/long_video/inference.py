@@ -124,7 +124,7 @@ def encode(self, videos: torch.Tensor) -> torch.Tensor:
     return output
 
 
-for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
+for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):  # noqa: B007 - Loop target name kept as upstream.
     idx = batch_data["idx"].item()
 
     # For DataLoader batch_size=1, the batch_data is already a single item, but in a batch container

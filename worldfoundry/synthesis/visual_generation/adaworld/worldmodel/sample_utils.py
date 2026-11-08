@@ -1,4 +1,4 @@
-from typing import List as List
+from typing import List as List  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 
 import torch
 from omegaconf import OmegaConf

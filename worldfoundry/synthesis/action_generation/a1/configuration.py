@@ -119,7 +119,7 @@ class A1Config:
         aliases = {
             "action_head": action_head or "l1_regression",
             "tokenizer_identifier": _first(tokenizer, "identifier", "name_or_path", default=cls.tokenizer_identifier),
-            "image_size": int(tuple(_first(vision, "image_default_input_size", default=(336, 336)))[0]),
+            "image_size": int(tuple(_first(vision, "image_default_input_size", default=(336, 336)))[0]),  # noqa: RUF015 - Keeps eager list construction and IndexError.
             "image_patch_size": _first(vision, "image_patch_size", default=14),
             "image_emb_dim": _first(vision, "image_emb_dim", default=1024),
             "image_num_heads": _first(vision, "image_num_heads", default=16),

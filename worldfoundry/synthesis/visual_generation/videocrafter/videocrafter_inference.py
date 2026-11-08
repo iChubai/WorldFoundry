@@ -58,7 +58,7 @@ def batch_ddim_sampling(
             uc_emb = torch.cat([uc_emb, uc_img], dim=1)
 
         if isinstance(cond, dict):
-            uc = {key: cond[key] for key in cond.keys()}
+            uc = {key: cond[key] for key in cond.keys()}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             uc.update({"c_crossattn": [uc_emb]})
         else:
             uc = uc_emb
@@ -94,7 +94,7 @@ def _normalized_checkpoint_state_dict(payload):
     """
     if isinstance(payload, dict) and "module" in payload and hasattr(payload["module"], "keys"):
         new_pl_sd = OrderedDict()
-        for key in payload["module"].keys():
+        for key in payload["module"].keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             new_pl_sd[key[16:]] = payload["module"][key]
         return new_pl_sd
     if isinstance(payload, dict) and "state_dict" in payload:

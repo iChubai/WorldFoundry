@@ -45,7 +45,7 @@ def load_personalized_base_model(pipeline, personalized_base_model):
     if personalized_base_model.endswith(".safetensors"):
         dreambooth_state_dict = {}
         with safe_open(personalized_base_model, framework="pt", device="cpu") as f:
-            for key in f.keys():
+            for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 dreambooth_state_dict[key] = f.get_tensor(key)
     elif personalized_base_model.endswith(".ckpt"):
         dreambooth_state_dict = torch.load(
@@ -170,7 +170,7 @@ def get_pipeline(
             map_location=unet.device,
             weights_only=True,
         )
-        if "lora_state_dict" in lora_checkpoints.keys():
+        if "lora_state_dict" in lora_checkpoints.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             lora_checkpoints = lora_checkpoints["lora_state_dict"]
         _, lora_u = unet.load_state_dict(lora_checkpoints, strict=False)
         assert len(lora_u) == 0
@@ -229,7 +229,7 @@ def main(args):
     gpu_id = rank % torch.cuda.device_count()
     model_configs = OmegaConf.load(args.model_config)
     unet_additional_kwargs = (
-        model_configs["unet_additional_kwargs"] if "unet_additional_kwargs" in model_configs else None
+        model_configs["unet_additional_kwargs"] if "unet_additional_kwargs" in model_configs else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
     )
     noise_scheduler_kwargs = model_configs["noise_scheduler_kwargs"]
     pose_encoder_kwargs = model_configs["pose_encoder_kwargs"]
@@ -292,7 +292,7 @@ def main(args):
     plucker_embedding = plucker_embedding[None].to(device)  # B V 6 H W
     plucker_embedding = rearrange(plucker_embedding, "b f c h w -> b c f h w")
     if args.visualization_captions.endswith(".json"):
-        json_file = json.load(open(args.visualization_captions))
+        json_file = json.load(open(args.visualization_captions))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         captions = json_file["captions"] if "captions" in json_file else json_file["prompts"]
         negative_prompts = json_file["negative_prompts"] if args.use_negative_prompt else None
         if isinstance(captions[0], dict):

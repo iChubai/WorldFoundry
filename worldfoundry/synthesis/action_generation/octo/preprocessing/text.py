@@ -24,7 +24,7 @@ class HFTokenizer(TextProcessor):
     def __init__(
         self,
         tokenizer_name: str,
-        tokenizer_kwargs: dict | None = {
+        tokenizer_kwargs: dict | None = {  # noqa: B006 - Keeps the upstream default object and signature.
             "max_length": 64,
             "padding": "max_length",
             "truncation": True,
@@ -79,7 +79,7 @@ class CLIPTextProcessor(TextProcessor):
     def __init__(
         self,
         processor_path: str | None = None,
-        tokenizer_kwargs: dict | None = {
+        tokenizer_kwargs: dict | None = {  # noqa: B006 - Keeps the upstream default object and signature.
             "max_length": 64,
             "padding": "max_length",
             "truncation": True,

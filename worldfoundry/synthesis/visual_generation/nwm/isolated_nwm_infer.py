@@ -8,25 +8,29 @@ import torch
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
-import argparse
-import os
+import argparse  # noqa: E402 - Follows module-level setup, as upstream.
+import os  # noqa: E402 - Follows module-level setup, as upstream.
 
-import numpy as np
-from diffusers.models import AutoencoderKL
-from PIL import Image
+import numpy as np  # noqa: E402 - Follows module-level setup, as upstream.
+from diffusers.models import AutoencoderKL  # noqa: E402 - Follows module-level setup, as upstream.
+from PIL import Image  # noqa: E402 - Follows module-level setup, as upstream.
 
-from worldfoundry.core.distributed.collectives import metric_sync as dist
-from worldfoundry.synthesis.visual_generation.nwm import misc
-from worldfoundry.synthesis.visual_generation.nwm.config_paths import (
+from worldfoundry.core.distributed.collectives import (  # noqa: E402 - Follows module-level setup, as upstream.
+    metric_sync as dist,
+)
+from worldfoundry.synthesis.visual_generation.nwm import misc  # noqa: E402 - Follows module-level setup, as upstream.
+from worldfoundry.synthesis.visual_generation.nwm.config_paths import (  # noqa: E402 - Follows module-level setup, as upstream.
     load_runtime_yaml,
 )
-from worldfoundry.synthesis.visual_generation.nwm.diffusion import (
+from worldfoundry.synthesis.visual_generation.nwm.diffusion import (  # noqa: E402 - Follows module-level setup, as upstream.
     create_diffusion,
 )
-from worldfoundry.synthesis.visual_generation.nwm.eval_inputs import (
+from worldfoundry.synthesis.visual_generation.nwm.eval_inputs import (  # noqa: E402 - Follows module-level setup, as upstream.
     EvalDataset,
 )
-from worldfoundry.synthesis.visual_generation.nwm.models import CDiT_models
+from worldfoundry.synthesis.visual_generation.nwm.models import (  # noqa: E402 - Follows module-level setup, as upstream.
+    CDiT_models,
+)
 
 
 def save_image(output_file, img, unnormalize_img):
@@ -180,7 +184,7 @@ def main(args):
         args.save_output_dir = os.path.join(args.output_dir, exp_name)
 
     if args.ckp != "0100000":
-        args.save_output_dir = args.save_output_dir + "_%s" % (args.ckp)
+        args.save_output_dir = args.save_output_dir + "_%s" % (args.ckp)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     os.makedirs(args.save_output_dir, exist_ok=True)
 

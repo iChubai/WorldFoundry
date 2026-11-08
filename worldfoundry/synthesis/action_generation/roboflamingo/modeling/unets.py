@@ -143,7 +143,7 @@ class ConditionalUnet1D(nn.Module):
         local_cond_dim=None,
         global_cond_dim=None,
         diffusion_step_embed_dim=256,
-        down_dims=[256, 512, 1024],
+        down_dims=[256, 512, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         kernel_size=3,
         n_groups=8,
         cond_predict_scale=False,
@@ -156,7 +156,7 @@ class ConditionalUnet1D(nn.Module):
                 "returns_condition=True is unsupported."
             )
         self.returns_condition = False
-        all_dims = [input_dim] + list(down_dims)
+        all_dims = [input_dim] + list(down_dims)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         start_dim = down_dims[0]
 
         dsed = diffusion_step_embed_dim
@@ -464,7 +464,7 @@ class ConditionalResidualBlock1D(nn.Module):
         return out
 
 
-class Downsample1d(nn.Module):
+class Downsample1d(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(self, dim):
         super().__init__()
         self.conv = nn.Conv1d(dim, dim, 3, 2, 1)
@@ -473,7 +473,7 @@ class Downsample1d(nn.Module):
         return self.conv(x)
 
 
-class Upsample1d(nn.Module):
+class Upsample1d(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(self, dim):
         super().__init__()
         self.conv = nn.ConvTranspose1d(dim, dim, 4, 2, 1)
@@ -482,7 +482,7 @@ class Upsample1d(nn.Module):
         return self.conv(x)
 
 
-class Conv1dBlock(nn.Module):
+class Conv1dBlock(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """
     Conv1d --> GroupNorm --> Mish
     """
@@ -614,7 +614,7 @@ class Progress:
         self._clear()
         self._skip_lines = 1
 
-    def set_description(self, params=[]):
+    def set_description(self, params=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         if type(params) is dict:
             params = sorted([(key, val) for key, val in params.items()])
 
@@ -681,7 +681,7 @@ class Progress:
             self._speed = string
         return string
 
-    def _chunk(self, l, n):
+    def _chunk(self, l, n):  # noqa: E741 - Ambiguous upstream name kept as written.
         return [l[i : i + n] for i in range(0, len(l), n)]
 
     def _format(self, chunks):

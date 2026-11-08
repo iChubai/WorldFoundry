@@ -59,7 +59,7 @@ def load_video_as_rgb(video_path, resample_to=None, resample_frame_count_thresho
         except Exception as e:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-            raise OSError(f"Failed to download video from URL: {e}")
+            raise OSError(f"Failed to download video from URL: {e}")  # noqa: B904 - Keeps the implicit exception context.
 
     rotation = get_rotation_metadata(video_path)
     print("rotation", rotation)

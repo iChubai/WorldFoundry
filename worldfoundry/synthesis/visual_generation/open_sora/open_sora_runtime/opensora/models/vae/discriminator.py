@@ -85,7 +85,7 @@ class BlurPool3D(nn.Module):
         filt = filt_3d / torch.sum(filt_3d)  # SCH: modified to it 3D
         self.register_buffer("filt", filt[None, None, :, :, :].repeat((self.channels, 1, 1, 1, 1)))
 
-        self.pad = get_pad_layer(pad_type)(self.pad_sizes)
+        self.pad = get_pad_layer(pad_type)(self.pad_sizes)  # noqa: F821 - Name is undefined in the upstream source.
 
     def forward(self, inp):
         if self.filt_size == 1:
@@ -322,7 +322,7 @@ class StyleGANDiscriminatorBlur(nn.Module):
         self.norm1 = nn.GroupNorm(num_groups, prev_filters, dtype=dtype, device=device)
 
         scale_factor = 2**self.num_blocks
-        if num_frames % scale_factor != 0:  # SCH: NOTE: has first frame which would be padded before usage
+        if num_frames % scale_factor != 0:  # noqa: SIM108 - Branches carry per-case comments.  # SCH: NOTE: has first frame which would be padded before usage
             time_scaled = num_frames // scale_factor + 1
         else:
             time_scaled = num_frames / scale_factor
@@ -373,7 +373,7 @@ def load_checkpoint_with_inflation(model, ckpt_path):
         state_dict = find_model(ckpt_path)
         with torch.no_grad():
             for key in state_dict:
-                if key in model:
+                if key in model:  # noqa: SIM102 - Branches carry per-case comments.
                     # central inflation
                     if state_dict[key].size() == model[key][:, :, 0, :, :].size():
                         # temporal dimension

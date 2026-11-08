@@ -3208,7 +3208,7 @@ class MonitorCentricEvolutionPipeline:
             if n_total <= max_scene:
                 selected_indices = list(range(n_total))
             else:
-                selected_indices = [0] + sorted(random.sample(range(1, n_total), max_scene - 1))
+                selected_indices = [0] + sorted(random.sample(range(1, n_total), max_scene - 1))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             selected_frames = [all_evt_frames[i].copy() for i in selected_indices]
 
@@ -3522,7 +3522,7 @@ class MonitorCentricEvolutionPipeline:
             iou_device=iou_device,
             max_iou_points=max_iou_points,
         )
-        diag_lines = [
+        diag_lines = [  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             f"observer.reference_retrieval: iou_threshold={iou_threshold}, "
             f"voxel_size_iou={voxel_size_iou}, max_iou_points={max_iou_points}, "
             f"iou_device={iou_device}",
@@ -4042,8 +4042,8 @@ class MonitorCentricEvolutionPipeline:
 
         crop_h, crop_w = crop_fg.shape[:2]
         scale = min(output_w / crop_w, output_h / crop_h)
-        new_w = max(1, int(round(crop_w * scale)))
-        new_h = max(1, int(round(crop_h * scale)))
+        new_w = max(1, int(round(crop_w * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        new_h = max(1, int(round(crop_h * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         resized_fg = cv2.resize(crop_fg, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
         resized_mask = cv2.resize(crop_mask, (new_w, new_h), interpolation=cv2.INTER_NEAREST)

@@ -110,7 +110,7 @@ class VideoProcessor(VaeImageProcessor):
             outputs = np.stack(outputs)
         elif output_type == "pt":
             outputs = torch.stack(outputs)
-        elif not output_type == "pil":
+        elif not output_type == "pil":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             raise ValueError(f"{output_type} does not exist. Please choose one of ['np', 'pt', 'pil']")
 
         return outputs

@@ -262,7 +262,7 @@ class CausalInferencePipeline(torch.nn.Module):
     def _set_all_modules_max_attention_size(self, local_attn_size_value: int):
         if local_attn_size_value == -1:
             target_size = 32760
-            policy = "global"
+            policy = "global"  # noqa: F841 - Upstream assignment kept.
         else:
             target_size = int(local_attn_size_value) * self.frame_seq_length
         updated_modules = []
@@ -276,7 +276,7 @@ class CausalInferencePipeline(torch.nn.Module):
         for name, module in self.generator.model.named_modules():
             if hasattr(module, "max_attention_size"):
                 with contextlib.suppress(Exception):
-                    prev = module.max_attention_size
+                    prev = module.max_attention_size  # noqa: F841 - Upstream assignment kept.
                 try:
                     module.max_attention_size = target_size
                     updated_modules.append(name if name else module.__class__.__name__)

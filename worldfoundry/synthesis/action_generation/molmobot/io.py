@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Union
 
-PathOrStr = Union[str, os.PathLike]
+PathOrStr = Union[str, os.PathLike]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 def normalize_path(path: PathOrStr) -> str:

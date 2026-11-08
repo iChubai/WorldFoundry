@@ -252,10 +252,10 @@ class UNetMidBlock3DCrossAttn(nn.Module):
         hidden_states = rearrange(hidden_states, "(b f) c h w -> b c f h w", f=video_length)
 
         lora_scale = getattr(self, "lora_scale", None)
-        if lora_scale != None:
+        if lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             cross_attention_kwargs = {"scale": lora_scale}
         motion_lora_scale = getattr(self, "motion_lora_scale", None)
-        if motion_lora_scale != None:
+        if motion_lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             if motion_cross_attention_kwargs is None:
                 motion_cross_attention_kwargs = {"scale": motion_lora_scale}
             else:
@@ -387,8 +387,8 @@ class CrossAttnDownBlock3D(nn.Module):
         encoder_hidden_states=None,
         attention_mask=None,
         motion_module_alpha=1.0,
-        cross_attention_kwargs={},
-        motion_cross_attention_kwargs={},
+        cross_attention_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
+        motion_cross_attention_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         video_length = hidden_states.shape[2]
         temb_repeated = repeat(temb, "b c -> (b f) c", f=video_length)
@@ -396,10 +396,10 @@ class CrossAttnDownBlock3D(nn.Module):
         output_states = ()
 
         lora_scale = getattr(self, "lora_scale", None)
-        if lora_scale != None:
+        if lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             cross_attention_kwargs["scale"] = lora_scale
         motion_lora_scale = getattr(self, "motion_lora_scale", None)
-        if motion_lora_scale != None:
+        if motion_lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             if motion_cross_attention_kwargs is None:
                 motion_cross_attention_kwargs = {"scale": motion_lora_scale}
             else:
@@ -516,14 +516,14 @@ class DownBlock3D(nn.Module):
         temb=None,
         encoder_hidden_states=None,
         motion_module_alpha=1.0,
-        motion_cross_attention_kwargs={},
+        motion_cross_attention_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         video_length = hidden_states.shape[2]
         temb_repeated = repeat(temb, "b c -> (b f) c", f=video_length)
         output_states = ()
         motion_lora_scale = getattr(self, "motion_lora_scale", None)
-        if motion_lora_scale != None:
+        if motion_lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             if motion_cross_attention_kwargs is None:
                 motion_cross_attention_kwargs = {"scale": motion_lora_scale}
             else:
@@ -658,16 +658,16 @@ class CrossAttnUpBlock3D(nn.Module):
         attention_mask=None,
         motion_module_alpha=1.0,
         cross_attention_kwargs=None,
-        motion_cross_attention_kwargs={},
+        motion_cross_attention_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         video_length = hidden_states.shape[2]
         temb_repeated = repeat(temb, "b c -> (b f) c", f=video_length)
 
         lora_scale = getattr(self, "lora_scale", None)
-        if lora_scale != None:
+        if lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             cross_attention_kwargs = {"scale": lora_scale}
         motion_lora_scale = getattr(self, "motion_lora_scale", None)
-        if motion_lora_scale != None:
+        if motion_lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             if motion_cross_attention_kwargs is None:
                 motion_cross_attention_kwargs = {"scale": motion_lora_scale}
             else:
@@ -783,14 +783,14 @@ class UpBlock3D(nn.Module):
         upsample_size=None,
         encoder_hidden_states=None,
         motion_module_alpha=1.0,
-        motion_cross_attention_kwargs={},
+        motion_cross_attention_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         video_length = hidden_states.shape[2]
         temb_repeated = repeat(temb, "b c -> (b f) c", f=video_length)
 
         motion_lora_scale = getattr(self, "motion_lora_scale", None)
-        if motion_lora_scale != None:
+        if motion_lora_scale != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             if motion_cross_attention_kwargs is None:
                 motion_cross_attention_kwargs = {"scale": motion_lora_scale}
             else:

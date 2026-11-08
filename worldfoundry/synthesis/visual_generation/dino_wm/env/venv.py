@@ -134,7 +134,7 @@ class EnvWorker(ABC):
         """Given a list of workers, return those ready ones."""
         raise NotImplementedError
 
-    def seed(self, seed: int | None = None) -> list[int] | None:
+    def seed(self, seed: int | None = None) -> list[int] | None:  # noqa: B027 - Optional hook with a no-op default.
         # return self.action_space.seed(seed)  # issue 299
         pass
 
@@ -196,7 +196,7 @@ def _worker(
             for o, b in zip(obs, buffer, strict=False):
                 _encode_obs(o, b)
         elif isinstance(obs, dict) and isinstance(buffer, dict):
-            for k in obs.keys():
+            for k in obs.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 _encode_obs(obs[k], buffer[k])
         return None
 
@@ -580,7 +580,7 @@ class BaseVectorEnv:
         self.workers = [worker_fn(fn) for fn in env_fns]
         self.worker_class = type(self.workers[0])
         assert issubclass(self.worker_class, EnvWorker)
-        assert all([isinstance(w, self.worker_class) for w in self.workers])
+        assert all([isinstance(w, self.worker_class) for w in self.workers])  # noqa: C419 - Evaluates every element before testing, as upstream.
 
         self.env_num = len(env_fns)
         self.wait_num = wait_num or len(env_fns)

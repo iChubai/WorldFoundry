@@ -692,7 +692,7 @@ def parse_arguments() -> argparse.Namespace:
     if args.kv_cache_policy == "sliding_window":
         # Fail before loading model/checkpoint assets when the requested cache
         # budget cannot possibly retain the current causal chunk.
-        SlidingWindowPolicy(
+        SlidingWindowPolicy(  # noqa: F821 - Name is undefined in the upstream source.
             window_blocks=args.kv_cache_window_blocks,
             sink_blocks=args.kv_cache_sink_blocks,
         )
@@ -703,7 +703,7 @@ def load_dit_weights(net, dit_path: str):
     state_dict = load_state_dict_from_dcp(dit_path) if os.path.isdir(dit_path) else load_state_dict(dit_path)
 
     for key in ["generator", "generator_ema"]:
-        if key in state_dict.keys():
+        if key in state_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             state_dict = state_dict[key]
     for prefix in ["model.", "net.", "_fsdp_wrapped_module."]:
         state_dict = {(k[len(prefix) :] if k.startswith(prefix) else k): v for k, v in state_dict.items()}

@@ -275,7 +275,7 @@ class MultiHeadCrossAttention(nn.Module):
                     k=k[0],
                     v=v[0],
                     cu_seqlens_q=torch.tensor([0] + [N] * B, device=q.device).cumsum(0).to(torch.int32),
-                    cu_seqlens_k=torch.tensor([0] + kv_seqlen, device=q.device).cumsum(0).to(torch.int32),
+                    cu_seqlens_k=torch.tensor([0] + kv_seqlen, device=q.device).cumsum(0).to(torch.int32),  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     max_seqlen_q=N,
                     max_seqlen_k=max(kv_seqlen),
                 )[0]
@@ -290,7 +290,7 @@ class MultiHeadCrossAttention(nn.Module):
                     k=k[0],
                     v=v[0],
                     cu_seqlens_q=torch.tensor([0] + [N] * B, device=q.device).cumsum(0).to(torch.int32),
-                    cu_seqlens_k=torch.tensor([0] + kv_seqlen, device=q.device).cumsum(0).to(torch.int32),
+                    cu_seqlens_k=torch.tensor([0] + kv_seqlen, device=q.device).cumsum(0).to(torch.int32),  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     max_seqlen_q=N,
                     max_seqlen_k=max(kv_seqlen),
                 )

@@ -32,7 +32,7 @@ def create_normal_dist(
     activation=None,
     event_shape=None,
 ):
-    if std == None:
+    if std == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
         mean, std = torch.chunk(x, 2, -1)
         mean = mean / mean_scale
         if activation:

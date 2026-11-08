@@ -22,7 +22,7 @@ from .transforms import (
 )
 
 # isort: split
-from .ee_pose import *
+from .ee_pose import *  # noqa: F403 - Upstream star import kept as written.
 
 logger = logging_utils.get_logger(__name__)
 
@@ -188,7 +188,7 @@ class FeatureTransform:
 
                 if feature_category == "actions":
                     assert isinstance(feature_convert_info, dict)
-                    action_feature = list(feature_convert_info.keys())[0].split("action.")[-1]
+                    action_feature = list(feature_convert_info.keys())[0].split("action.")[-1]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                     if action_feature not in self.feature_config.joints:
                         raise ValueError(
                             f"{action_feature} in the robot config is not included among the predefined features in the training config: {self.feature_config.joints}"
@@ -197,7 +197,7 @@ class FeatureTransform:
                 elif feature_category == "states":
                     assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
-                        state_feature = list(feature_convert_info.keys())[0]
+                        state_feature = list(feature_convert_info.keys())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                     else:
                         state_feature = feature_convert_info
                     state_feature = state_feature.split("observation.state.")[-1]
@@ -209,7 +209,7 @@ class FeatureTransform:
                 elif feature_category == "images":
                     assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
-                        image_feature = list(feature_convert_info.keys())[0]
+                        image_feature = list(feature_convert_info.keys())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                     else:
                         image_feature = feature_convert_info
                     if image_feature not in self.feature_config.images:
@@ -317,7 +317,7 @@ class FeatureTransform:
         self.action_subtract_state = action_subtract_state
         self.action_relative_type = action_relative_type
         for feature_category, feature in org_features.items():
-            if feature_category == "actions":
+            if feature_category == "actions":  # noqa: SIM102 - Statement form kept for readability.
                 if len(feature) == 0 and len(self.actions_convert_from_state) > 0:
                     org_features["actions"] = []
                     continue
@@ -424,9 +424,9 @@ class FeatureTransform:
                 if not (action_feature in item and state_feature in item):
                     raise ValueError(f"{action_feature} or/and {state_feature} are not in the item")
                 relative_type = self.action_relative_type.get(action_feature)
-                if _is_quaternion_relative_type(relative_type):
+                if _is_quaternion_relative_type(relative_type):  # noqa: F405 - Name comes from the upstream star import.
                     assert "end.position" in action_feature
-                    item[action_feature] = relative_pose_quaternion(
+                    item[action_feature] = relative_pose_quaternion(  # noqa: F405 - Name comes from the upstream star import.
                         item[action_feature],
                         item[state_feature],
                         relative_type=relative_type,
@@ -476,7 +476,7 @@ class FeatureTransform:
                 future_images, future_pil_images = None, None
         else:
             images, img_masks, pil_images, image_grid_thw = [], [], [], None
-            future_images, future_pil_images = None, None
+            future_images, future_pil_images = None, None  # noqa: F841 - Upstream assignment kept.
 
         merge_size = getattr(self.processor.image_processor, "merge_size", 2)
         image_token_count = compute_image_token_count(
@@ -548,9 +548,9 @@ class FeatureTransform:
             if self.action_subtract_state[action_feature]:
                 state_feature = action_feature.replace("action.", "observation.state.")
                 relative_type = self.action_relative_type.get(action_feature)
-                if _is_quaternion_relative_type(relative_type):
+                if _is_quaternion_relative_type(relative_type):  # noqa: F405 - Name comes from the upstream star import.
                     assert "end.position" in action_feature
-                    item[action_feature] = absolute_pose_quaternion(
+                    item[action_feature] = absolute_pose_quaternion(  # noqa: F405 - Name comes from the upstream star import.
                         item[action_feature],
                         item[state_feature],
                         relative_type=relative_type,

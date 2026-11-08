@@ -39,7 +39,7 @@ class MotionCtrl(LatentDiffusion):
 
                     cc_projection = nn.Linear(_module.attn2.to_k.in_features + pose_dim, _module.attn2.to_k.in_features)
                     nn.init.eye_(
-                        list(cc_projection.parameters())[0][
+                        list(cc_projection.parameters())[0][  # noqa: RUF015 - Keeps eager list construction and IndexError.
                             : _module.attn2.to_k.in_features, : _module.attn2.to_k.in_features
                         ]
                     )

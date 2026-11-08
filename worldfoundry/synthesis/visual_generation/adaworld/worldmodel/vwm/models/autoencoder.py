@@ -96,7 +96,7 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
         else:
             N = x.shape[0]
             bs = self.max_batch_size
-            n_batches = int(math.ceil(N / bs))
+            n_batches = int(math.ceil(N / bs))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             z = []
             for i_batch in range(n_batches):
                 z_batch = self.encoder(x[i_batch * bs : (i_batch + 1) * bs])
@@ -117,7 +117,7 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
         else:
             N = z.shape[0]
             bs = self.max_batch_size
-            n_batches = int(math.ceil(N / bs))
+            n_batches = int(math.ceil(N / bs))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             dec = []
             for i_batch in range(n_batches):
                 dec_batch = self.post_quant_conv(z[i_batch * bs : (i_batch + 1) * bs])

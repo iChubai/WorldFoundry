@@ -102,7 +102,7 @@ def read_act_slice_vpt(
             # Check if attack will be stuck down
             if step_data["mouse"]["newButtons"] == [0]:
                 attack_is_stuck = True
-        elif attack_is_stuck:
+        elif attack_is_stuck:  # noqa: SIM102 - Branches carry per-case comments.
             # Check if we press attack down, then it might not be stuck
             if 0 in step_data["mouse"]["newButtons"]:
                 attack_is_stuck = False
@@ -206,7 +206,7 @@ def read_obs_slice_decord(
         # Shift frames to the right by one so that frame at t is influenced by action at t.
         frames = video.get_batch(range(start + 1, stop + 1)).asnumpy()
     except Exception as e:
-        raise ValueError(
+        raise ValueError(  # noqa: B904 - Keeps the implicit exception context.
             f"Could not read frames from video: {e}. Ensure the video is properly loaded and the range is valid."
         )
 

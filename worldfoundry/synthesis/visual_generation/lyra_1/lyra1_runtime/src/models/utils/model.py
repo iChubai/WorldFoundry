@@ -114,7 +114,7 @@ def encode_plucker_vae(batch, encode_video, plucker_key="plucker_embedding"):
     return batch
 
 
-def encode_latent_time_vae(batch, encode_video, img_size, time_keys=["time_embeddings", "time_embeddings_target"]):
+def encode_latent_time_vae(batch, encode_video, img_size, time_keys=["time_embeddings", "time_embeddings_target"]):  # noqa: B006 - Keeps the upstream default object and signature.
     time_embeddings_out = []
     for k in time_keys:
         batch[k] = repeat_time_spatially(batch[k], img_size)
@@ -268,7 +268,7 @@ class ConvTranspose3dFactorized(nn.Module):
         return x
 
 
-class ConvTranspose3dFactorized(nn.Module):
+class ConvTranspose3dFactorized(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(
         self,
         in_channels,
@@ -369,7 +369,7 @@ class MultiStageConvTranspose3d(nn.Module):
         padding,
         multi_stage=True,
         norm_layer=None,
-        activation=nn.ReLU(inplace=True),
+        activation=nn.ReLU(inplace=True),  # noqa: B008 - Default evaluated once at definition, as upstream.
         gradient_checkpoint=False,
     ):
         super().__init__()

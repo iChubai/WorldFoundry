@@ -60,7 +60,7 @@ class MJCModel:
             yield f
 
     def open(self):
-        self.file = tempfile.NamedTemporaryFile(mode="w+", suffix=".xml", delete=True)
+        self.file = tempfile.NamedTemporaryFile(mode="w+", suffix=".xml", delete=True)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         self.root.write(self.file)
         self.file.seek(0)
         return self.file
@@ -109,7 +109,7 @@ class MJCTreeNode:
         yield self
         if self.children:
             for child in self.children:
-                for node in child.dfs():
+                for node in child.dfs():  # noqa: UP028 - Keeps the loop; `yield from` would forward send() and throw().
                     yield node
 
     def find_attr(self, attr, value):
@@ -123,19 +123,19 @@ class MJCTreeNode:
         return None
 
     def write(self, ostream, tabs=0):
-        contents = " ".join(['%s="%s"' % (k, v) for (k, v) in self.attrs.items()])
+        contents = " ".join(['%s="%s"' % (k, v) for (k, v) in self.attrs.items()])  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         if self.children:
             ostream.write("\t" * tabs)
-            ostream.write("<%s %s>\n" % (self.name, contents))
+            ostream.write("<%s %s>\n" % (self.name, contents))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             for child in self.children:
                 child.write(ostream, tabs=tabs + 1)
             ostream.write("\t" * tabs)
-            ostream.write("</%s>\n" % self.name)
+            ostream.write("</%s>\n" % self.name)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         else:
             ostream.write("\t" * tabs)
-            ostream.write("<%s %s/>\n" % (self.name, contents))
+            ostream.write("<%s %s/>\n" % (self.name, contents))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     def __str__(self):
         s = "<" + self.name
-        s += " ".join(['%s="%s"' % (k, v) for (k, v) in self.attrs.items()])
+        s += " ".join(['%s="%s"' % (k, v) for (k, v) in self.attrs.items()])  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         return s + ">"

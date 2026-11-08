@@ -172,10 +172,10 @@ class ViTMultiHeadDotProductAttention(nn.Module):
             nn.init.constant_(self.wo.bias, 0)
 
     def _split_heads(self, hidden_states, num_heads) -> torch.Tensor:
-        return hidden_states.reshape(hidden_states.shape[:2] + (num_heads, self.head_dim))
+        return hidden_states.reshape(hidden_states.shape[:2] + (num_heads, self.head_dim))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def _merge_heads(self, hidden_states) -> torch.Tensor:
-        return hidden_states.reshape(hidden_states.shape[:2] + (self.embed_dim,))
+        return hidden_states.reshape(hidden_states.shape[:2] + (self.embed_dim,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def forward(self, inputs_q: torch.Tensor, inputs_kv: torch.Tensor | None = None, attn_mask=None) -> torch.Tensor:
         if inputs_kv is not None:

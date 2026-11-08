@@ -302,7 +302,7 @@ class ABotWorldInference:
                 device=self.device,
                 dtype=self.dtype,
             )
-            latent = encoder.encode(pixels)
+            latent = encoder.encode(pixels)  # noqa: F821 - Name is undefined in the upstream source.
             if not latent:
                 raise RuntimeError("Wan2.2 VAE did not produce an image latent")
             return latent[0].permute(1, 0, 2, 3).unsqueeze(0).to(self.dtype)

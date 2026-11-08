@@ -153,7 +153,7 @@ class RTVidActionControl(Dataset):
             self.spatial_transform = None
 
         if self.mode == "validation":
-            assert self.augment_data == False, "validation mode, augment_data should be set False"
+            assert self.augment_data == False, "validation mode, augment_data should be set False"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def _load_metadata(self):
         """Load all npz files from data directory"""

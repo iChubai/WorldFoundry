@@ -297,13 +297,13 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
                 ref_latent = [
                     torch.cat([u] + [torch.zeros_like(u)] * (len(multi_frames) - 1), dim=0) for u in ref_latent
                 ]
-                assert all([x.shape[1] == 1 for x in ref_latent])
+                assert all([x.shape[1] == 1 for x in ref_latent])  # noqa: C419 - Evaluates every element before testing, as upstream.
                 latent = torch.cat([*ref_latent, latent], dim=1)
             cat_latents.append(latent)
         self._offload_vae_after_encode(vae)
         return cat_latents
 
-    def geoada_encode_masks(self, masks, ref_images=None, vae_stride=[4, 8, 8]):
+    def geoada_encode_masks(self, masks, ref_images=None, vae_stride=[4, 8, 8]):  # noqa: B006 - Keeps the upstream default object and signature.
         """
         Encode masks to latent space with VAE stride-aware reshaping.
 
@@ -459,7 +459,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
                 f" {negative_prompt_embeds}. Please make sure to only forward one of the two."
             )
 
-        if prompt_embeds is not None and negative_prompt_embeds is not None:
+        if prompt_embeds is not None and negative_prompt_embeds is not None:  # noqa: SIM102 - Statement form kept for readability.
             if prompt_embeds.shape != negative_prompt_embeds.shape:
                 raise ValueError(
                     "`prompt_embeds` and `negative_prompt_embeds` must have the same shape when passed directly, but"
@@ -512,7 +512,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         | MultiPipelineCallbacks
         | None = None,
         attention_kwargs: dict[str, Any] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         comfyui_progressbar: bool = False,
         shift: int = 5,
@@ -757,7 +757,7 @@ class WanVerseCrafterPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         # 8. Decode latents to pixel space
         if output_type == "numpy":
             video = self.decode_latents(latents)
-        elif not output_type == "latent":
+        elif not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             video = self.decode_latents(latents)
             video = self.video_processor.postprocess_video(video=video, output_type=output_type)
         else:

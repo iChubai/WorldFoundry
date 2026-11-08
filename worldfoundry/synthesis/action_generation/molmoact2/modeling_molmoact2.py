@@ -1432,10 +1432,10 @@ class ViTMultiHeadDotProductAttention(nn.Module):
         ]
 
     def _split_heads(self, hidden_states, num_heads) -> torch.Tensor:
-        return hidden_states.reshape(hidden_states.shape[:2] + (num_heads, self.head_dim))
+        return hidden_states.reshape(hidden_states.shape[:2] + (num_heads, self.head_dim))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def _merge_heads(self, hidden_states) -> torch.Tensor:
-        return hidden_states.reshape(hidden_states.shape[:2] + (self.hidden_size,))
+        return hidden_states.reshape(hidden_states.shape[:2] + (self.hidden_size,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def forward(
         self,
@@ -1944,8 +1944,8 @@ class MolmoAct2RotaryEmbedding(nn.Module):
             sin = pos_sin[0, 0, : x.shape[-2], :]
             cos = pos_cos[0, 0, : x.shape[-2], :]
         else:
-            sin = pos_sin[0, 0][position_ids].view(position_ids.shape + (pos_sin.shape[-1],))
-            cos = pos_cos[0, 0][position_ids].view(position_ids.shape + (pos_cos.shape[-1],))
+            sin = pos_sin[0, 0][position_ids].view(position_ids.shape + (pos_sin.shape[-1],))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            cos = pos_cos[0, 0][position_ids].view(position_ids.shape + (pos_cos.shape[-1],))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
 
     @torch.no_grad()
@@ -3063,7 +3063,7 @@ class MolmoAct2Model(MolmoAct2PreTrainedModel):
         for c in counts_list:
             per_img_patches = patches_per_image[offset_img : offset_img + c]  # [c]
             # Offsets: [0, img0_total_patches, img0+img1_total_patches, ...]
-            index_offset = [0] + per_img_patches.cumsum(0).tolist()[:-1]
+            index_offset = [0] + per_img_patches.cumsum(0).tolist()[:-1]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             index_offset_per_example_list.append(index_offset)
             offset_img += c
 

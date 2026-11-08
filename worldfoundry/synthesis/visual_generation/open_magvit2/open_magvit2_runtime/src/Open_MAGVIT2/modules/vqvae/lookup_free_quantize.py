@@ -104,7 +104,7 @@ def entropy_loss(
     probs = F.softmax(logits / temperature, -1)
     log_probs = F.log_softmax(logits / temperature + eps, -1)
 
-    if mask is not None:
+    if mask is not None:  # noqa: SIM108 - Branches carry per-case comments.
         # avg_probs = probs[mask].mean(tuple(range(probs.ndim - 1)))
         # avg_probs = einx.mean("... D -> D", probs[mask])
 
@@ -116,7 +116,7 @@ def entropy_loss(
     avg_entropy = -torch.sum(avg_probs * torch.log(avg_probs + eps))
 
     sample_entropy = -torch.sum(probs * log_probs, -1)
-    if mask is not None:
+    if mask is not None:  # noqa: SIM108 - Branches carry per-case comments.
         # sample_entropy = sample_entropy[mask].mean()
         sample_entropy = masked_mean(sample_entropy, mask).mean()
     else:
@@ -137,7 +137,7 @@ class LFQ(Module):
         sample_minimization_weight=1.0,
         batch_maximization_weight=1.0,
         token_factorization=False,
-        factorized_bits=[9, 9],
+        factorized_bits=[9, 9],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
 

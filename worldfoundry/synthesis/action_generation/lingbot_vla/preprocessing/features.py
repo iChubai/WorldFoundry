@@ -123,7 +123,7 @@ class FeatureTransform:
 
                 if feature_category == "actions":
                     assert isinstance(feature_convert_info, dict)
-                    action_feature = list(feature_convert_info.keys())[0].split("action.")[-1]
+                    action_feature = list(feature_convert_info.keys())[0].split("action.")[-1]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                     if action_feature not in self.feature_config.joints:
                         raise ValueError(
                             f"{action_feature} in the robot config is not included among the predefined features in the training config: {self.feature_config.joints}"
@@ -132,7 +132,7 @@ class FeatureTransform:
                 elif feature_category == "states":
                     assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
-                        state_feature = list(feature_convert_info.keys())[0]
+                        state_feature = list(feature_convert_info.keys())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                     else:
                         state_feature = feature_convert_info
                     state_feature = state_feature.split("observation.state.")[-1]
@@ -145,7 +145,7 @@ class FeatureTransform:
                 elif feature_category == "images":
                     assert isinstance(feature_convert_info, (dict, str))
                     if isinstance(feature_convert_info, dict):
-                        image_feature = list(feature_convert_info.keys())[0]
+                        image_feature = list(feature_convert_info.keys())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                     else:
                         image_feature = feature_convert_info
                     if image_feature not in self.feature_config.images:

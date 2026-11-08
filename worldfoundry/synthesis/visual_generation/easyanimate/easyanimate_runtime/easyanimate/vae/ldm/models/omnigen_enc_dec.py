@@ -59,13 +59,13 @@ class Encoder(nn.Module):
         out_channels: int = 8,
         down_block_types=("SpatialDownBlock3D",),
         ch=128,
-        ch_mult=[
+        ch_mult=[  # noqa: B006 - Keeps the upstream default object and signature.
             1,
             2,
             4,
             4,
         ],
-        block_out_channels=[128, 256, 512, 512],
+        block_out_channels=[128, 256, 512, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         use_gc_blocks=None,
         mid_block_type: str = "MidBlock3D",
         mid_block_use_attention: bool = True,
@@ -159,7 +159,7 @@ class Encoder(nn.Module):
         def _set_padding_one_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 1
             for sub_name, sub_mod in module.named_children():
                 _set_padding_one_frame(sub_name, sub_mod)
@@ -171,7 +171,7 @@ class Encoder(nn.Module):
         def _set_padding_more_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 2
             for sub_name, sub_mod in module.named_children():
                 _set_padding_more_frame(sub_name, sub_mod)
@@ -183,7 +183,7 @@ class Encoder(nn.Module):
         def _set_magvit_padding_one_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 3
             for sub_name, sub_mod in module.named_children():
                 _set_magvit_padding_one_frame(sub_name, sub_mod)
@@ -195,7 +195,7 @@ class Encoder(nn.Module):
         def _set_magvit_padding_more_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 4
             for sub_name, sub_mod in module.named_children():
                 _set_magvit_padding_more_frame(sub_name, sub_mod)
@@ -207,7 +207,7 @@ class Encoder(nn.Module):
         def _set_cache_slice_vae_padding_one_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 5
             for sub_name, sub_mod in module.named_children():
                 _set_cache_slice_vae_padding_one_frame(sub_name, sub_mod)
@@ -219,7 +219,7 @@ class Encoder(nn.Module):
         def _set_cache_slice_vae_padding_more_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 6
             for sub_name, sub_mod in module.named_children():
                 _set_cache_slice_vae_padding_more_frame(sub_name, sub_mod)
@@ -231,7 +231,7 @@ class Encoder(nn.Module):
         def _set_3dgroupnorm_for_submodule(name, module):
             if hasattr(module, "set_3dgroupnorm"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.set_3dgroupnorm = True
             for sub_name, sub_mod in module.named_children():
                 _set_3dgroupnorm_for_submodule(sub_name, sub_mod)
@@ -368,13 +368,13 @@ class Decoder(nn.Module):
         out_channels: int = 3,
         up_block_types=("SpatialUpBlock3D",),
         ch=128,
-        ch_mult=[
+        ch_mult=[  # noqa: B006 - Keeps the upstream default object and signature.
             1,
             2,
             4,
             4,
         ],
-        block_out_channels=[128, 256, 512, 512],
+        block_out_channels=[128, 256, 512, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         use_gc_blocks=None,
         mid_block_type: str = "MidBlock3D",
         mid_block_use_attention: bool = True,
@@ -468,7 +468,7 @@ class Decoder(nn.Module):
         def _set_padding_one_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 1
             for sub_name, sub_mod in module.named_children():
                 _set_padding_one_frame(sub_name, sub_mod)
@@ -480,7 +480,7 @@ class Decoder(nn.Module):
         def _set_padding_more_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 2
             for sub_name, sub_mod in module.named_children():
                 _set_padding_more_frame(sub_name, sub_mod)
@@ -492,7 +492,7 @@ class Decoder(nn.Module):
         def _set_magvit_padding_one_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 3
             for sub_name, sub_mod in module.named_children():
                 _set_magvit_padding_one_frame(sub_name, sub_mod)
@@ -504,7 +504,7 @@ class Decoder(nn.Module):
         def _set_magvit_padding_more_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 4
             for sub_name, sub_mod in module.named_children():
                 _set_magvit_padding_more_frame(sub_name, sub_mod)
@@ -516,7 +516,7 @@ class Decoder(nn.Module):
         def _set_cache_slice_vae_padding_one_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 5
             for sub_name, sub_mod in module.named_children():
                 _set_cache_slice_vae_padding_one_frame(sub_name, sub_mod)
@@ -528,7 +528,7 @@ class Decoder(nn.Module):
         def _set_cache_slice_vae_padding_more_frame(name, module):
             if hasattr(module, "padding_flag"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.padding_flag = 6
             for sub_name, sub_mod in module.named_children():
                 _set_cache_slice_vae_padding_more_frame(sub_name, sub_mod)
@@ -540,7 +540,7 @@ class Decoder(nn.Module):
         def _set_3dgroupnorm_for_submodule(name, module):
             if hasattr(module, "set_3dgroupnorm"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.set_3dgroupnorm = True
             for sub_name, sub_mod in module.named_children():
                 _set_3dgroupnorm_for_submodule(sub_name, sub_mod)
@@ -552,7 +552,7 @@ class Decoder(nn.Module):
         def _clear_cache(name, module):
             if hasattr(module, "prev_features"):
                 if self.verbose:
-                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))
+                    print("Set pad mode for module[%s] type=%s" % (name, str(type(module))))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 module.prev_features = None
             for sub_name, sub_mod in module.named_children():
                 _clear_cache(sub_name, sub_mod)

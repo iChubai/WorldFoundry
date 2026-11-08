@@ -160,7 +160,7 @@ class LingBotVideoRotaryEmbedding(nn.Module):
         # position_ids: (S, 3) int → (S, head_dim/2) complex64
         device = position_ids.device
         max_vals = position_ids.max(dim=0).values.tolist()
-        needs_rebuild = self.freqs_cis is None or any(m >= l for m, l in zip(max_vals, self.axes_lens, strict=False))
+        needs_rebuild = self.freqs_cis is None or any(m >= l for m, l in zip(max_vals, self.axes_lens, strict=False))  # noqa: E741 - Ambiguous upstream name kept as written.
         if needs_rebuild:
             for i in range(len(self.axes_lens)):
                 if max_vals[i] >= self.axes_lens[i]:
@@ -1149,7 +1149,7 @@ class LingBotVideoTransformer3DModel(ModelMixin, ConfigMixin):
 
         # Per-sample RoPE: video t-axis start = real text length of this sample + 1
         rotary_parts = [self.rope(make_joint_position_ids(text_lens_list[i], gt, gh, gw, device)) for i in range(B)]
-        if packed_batch:
+        if packed_batch:  # noqa: SIM108 - Branches carry per-case comments.
             rotary = torch.cat(rotary_parts, dim=0).unsqueeze(0)
         else:
             rotary = torch.stack(rotary_parts, dim=0)  # (B, S, head_dim/2) complex64

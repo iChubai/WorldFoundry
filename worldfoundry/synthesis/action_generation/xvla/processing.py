@@ -85,7 +85,7 @@ class XVLAProcessor(ProcessorMixin):
             outputs.update(self.encode_language(language_instruction))
         if images is not None:
             outputs.update(self.encode_image(images, **kwargs))
-        if "input_ids" in outputs and "image_input" in outputs:
+        if "input_ids" in outputs and "image_input" in outputs:  # noqa: SIM102 - Statement form kept for readability.
             if int(outputs["input_ids"].shape[0]) != int(outputs["image_input"].shape[0]):
                 raise ValueError("X-VLA text and image batch sizes do not match")
         return outputs

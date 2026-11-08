@@ -202,7 +202,7 @@ class DetectorAgent:
         # If frame_path is empty, save frame to a temporary file
         temp_file = None
         if not frame_path:
-            temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+            temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
             temp_path = temp_file.name
             temp_file.close()
             # Convert RGB to BGR for cv2.imwrite

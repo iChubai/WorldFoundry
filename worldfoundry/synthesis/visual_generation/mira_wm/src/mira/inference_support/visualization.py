@@ -164,7 +164,7 @@ def videos_for_wandb(videos: dict[str, VideoForWandb], fps: float = 10) -> Itera
         for key, value in videos.items():
             video_tensor = videos_to_grid(value.video)
 
-            f = tempfile.NamedTemporaryFile(suffix=".mp4", delete=True)
+            f = tempfile.NamedTemporaryFile(suffix=".mp4", delete=True)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
             tmp_files.append(f)
             write_video_ffmpeg(f.name, video_tensor.cpu(), fps=fps)
             wandb_videos[key] = wandb.Video(f.name, format="mp4", caption=value.caption)

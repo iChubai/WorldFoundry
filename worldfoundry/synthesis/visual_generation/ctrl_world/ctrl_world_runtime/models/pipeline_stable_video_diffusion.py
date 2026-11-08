@@ -404,7 +404,7 @@ class StableVideoDiffusionPipeline(DiffusionPipeline):
         latents: torch.Tensor | None = None,
         output_type: str | None = "pil",
         callback_on_step_end: Callable[[int, int, dict], None] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         return_dict: bool = True,
     ):
         r"""
@@ -613,7 +613,7 @@ class StableVideoDiffusionPipeline(DiffusionPipeline):
                 if XLA_AVAILABLE:
                     xm.mark_step()
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             # cast back to fp16 if needed
             if needs_upcasting:
                 self.vae.to(dtype=torch.float16)

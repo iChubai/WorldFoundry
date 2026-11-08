@@ -11,10 +11,13 @@ import torch
 Preset_model_id: TypeAlias = str
 Preset_model_website: TypeAlias = str
 
-from worldfoundry.core.model_loading import hash_state_dict_keys, load_state_dict
-from worldfoundry.core.vram import init_weights_on_device
+from worldfoundry.core.model_loading import (  # noqa: E402 - Follows module-level setup, as upstream.
+    hash_state_dict_keys,
+    load_state_dict,
+)
+from worldfoundry.core.vram import init_weights_on_device  # noqa: E402 - Follows module-level setup, as upstream.
 
-from ..model_registry import model_loader_configs
+from ..model_registry import model_loader_configs  # noqa: E402 - Follows module-level setup, as upstream.
 
 # =========================================================================
 # 3. 核心加载函数 (保持原样，删除了不必要的引用)
@@ -68,7 +71,7 @@ def load_model_from_single_file(state_dict, model_names, model_classes, model_re
 
 
 class ModelDetectorFromSingleFile:
-    def __init__(self, model_loader_configs=[]):
+    def __init__(self, model_loader_configs=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         self.keys_hash_with_shape_dict = {}
         self.keys_hash_dict = {}
         for metadata in model_loader_configs:
@@ -79,7 +82,7 @@ class ModelDetectorFromSingleFile:
         if keys_hash is not None:
             self.keys_hash_dict[keys_hash] = (model_names, model_classes, model_resource)
 
-    def match(self, file_path="", state_dict={}):
+    def match(self, file_path="", state_dict={}):  # noqa: B006 - Keeps the upstream default object and signature.
         if isinstance(file_path, str) and os.path.isdir(file_path):
             return False
         if len(state_dict) == 0:
@@ -94,7 +97,7 @@ class ModelDetectorFromSingleFile:
         keys_hash = hash_state_dict_keys(state_dict, with_shape=False)
         return keys_hash in self.keys_hash_dict
 
-    def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, **kwargs):
+    def load(self, file_path="", state_dict={}, device="cuda", torch_dtype=torch.float16, **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
         if len(state_dict) == 0:
             state_dict = load_state_dict(file_path)
 
@@ -126,9 +129,9 @@ class ModelManager:
         self,
         torch_dtype=torch.float16,
         device="cuda",
-        model_id_list: list[Preset_model_id] = [],  # 这里的 Preset_model_id 现在是 str，不会报错了
-        downloading_priority: list[Preset_model_website] = ["ModelScope", "HuggingFace"],
-        file_path_list: list[str] = [],
+        model_id_list: list[Preset_model_id] = [],  # noqa: B006 - Keeps the upstream default object and signature.  # 这里的 Preset_model_id 现在是 str，不会报错了
+        downloading_priority: list[Preset_model_website] = ["ModelScope", "HuggingFace"],  # noqa: B006 - Keeps the upstream default object and signature.
+        file_path_list: list[str] = [],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         self.torch_dtype = torch_dtype
         self.device = device

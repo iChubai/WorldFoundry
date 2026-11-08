@@ -1494,7 +1494,7 @@ class OLMoEBlock(OLMoBlock):
             from megablocks.layers.dmoe import dMoE
             from megablocks.layers.moe import MoE
         except ImportError:
-            raise ImportError(
+            raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
                 "To train MoEs, run `pip install git+https://github.com/Muennighoff/megablocks.git@olmoe`"
             )
         from .train_config import config_to_moe_args
@@ -1754,7 +1754,7 @@ class OLMoSequentialBlock(OLMoBlock):
                 x = self.ff_norm(x)
 
         x = self.ff_proj(x)
-        if self.fine_grained_checkpoint_fn is not None:
+        if self.fine_grained_checkpoint_fn is not None:  # noqa: SIM108 - Branches carry per-case comments.
             x = self.fine_grained_checkpoint_fn(self.act, x)  # type: ignore
         else:
             x = self.act(x)

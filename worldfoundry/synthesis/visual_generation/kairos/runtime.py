@@ -660,7 +660,7 @@ class KairosRuntime:
 
         # Handle `interactions` for setting the seed if not explicitly provided in kwargs
         if interactions and "seed" not in kwargs:
-            first = list(interactions)[0]
+            first = list(interactions)[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if isinstance(first, int):
                 options["seed"] = first
 

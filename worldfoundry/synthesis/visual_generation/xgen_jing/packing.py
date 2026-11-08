@@ -95,7 +95,7 @@ def positions(frames, height, width, patch_size):
     pixel_starts = (index // 5) * 17 + torch.tensor([0, 1, 5, 9, 13])[index % 5]
     clock = pixel_starts.to(torch.float64) * (5.0 / 3.0)
     video = torch.stack(torch.meshgrid(clock[:frames], h, w, indexing="ij"), dim=-1).reshape(-1, 3)
-    boundaries = list(range(0, frames - 1, 5)) + [frames]
+    boundaries = list(range(0, frames - 1, 5)) + [frames]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     audio_time = []
     for start, end in pairwise(boundaries):
         length = audio_endpoint(end) - audio_endpoint(start)

@@ -274,7 +274,7 @@ def _conv_filter(state_dict, patch_size=16):
 def adapt_input_conv(in_chans, conv_weight, agg="sum"):
     conv_type = conv_weight.dtype
     conv_weight = conv_weight.float()
-    O, I, J, K = conv_weight.shape
+    O, I, J, K = conv_weight.shape  # noqa: E741 - Ambiguous upstream name kept as written.
     if in_chans == 1:
         if I > 3:
             assert conv_weight.shape[1] % 3 == 0
@@ -294,7 +294,7 @@ def adapt_input_conv(in_chans, conv_weight, agg="sum"):
         else:
             if agg == "sum":
                 print("Summing conv1 weights")
-                repeat = int(math.ceil(in_chans / 3))
+                repeat = int(math.ceil(in_chans / 3))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                 conv_weight = conv_weight.repeat(1, repeat, 1, 1)[:, :in_chans, :, :]
                 conv_weight *= 3 / float(in_chans)
             else:
@@ -324,7 +324,7 @@ def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=Non
                 print(f"Converted input conv {input_conv_name} pretrained weights from 3 to {in_chans} channel(s)")
             except NotImplementedError:
                 del state_dict[weight_name]
-                strict = False
+                strict = False  # noqa: F841 - Upstream assignment kept.
                 print(f"Unable to convert pretrained {input_conv_name} weights, using random init for this layer.")
 
     classifier_name = "head"
@@ -349,7 +349,7 @@ def load_pretrained(model, cfg=None, num_classes=1000, in_chans=3, filter_fn=Non
         param = param
         if "module." in name:
             name = name.replace("module.", "")
-        if name in self_state.keys() and param.shape == self_state[name].shape:
+        if name in self_state.keys() and param.shape == self_state[name].shape:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             saved_names.add(name)
             self_state[name].copy_(param)
         else:

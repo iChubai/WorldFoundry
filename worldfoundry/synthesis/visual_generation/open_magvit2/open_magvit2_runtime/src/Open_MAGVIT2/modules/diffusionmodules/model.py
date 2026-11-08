@@ -185,14 +185,14 @@ class Model(nn.Module):
         self.conv_in = torch.nn.Conv2d(in_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for i_block in range(self.num_res_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 block.append(
                     ResnetBlock(
                         in_channels=block_in, out_channels=block_out, temb_channels=self.temb_ch, dropout=dropout
@@ -327,7 +327,7 @@ class Encoder(nn.Module):
         self.conv_in = torch.nn.Conv2d(in_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
             block = nn.ModuleList()
@@ -423,7 +423,7 @@ class Decoder(nn.Module):
         self.give_pre_end = give_pre_end
 
         # compute in_ch_mult, block_in and curr_res at lowest res
-        _in_ch_mult = (1,) + tuple(ch_mult)
+        _in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
@@ -543,14 +543,14 @@ class VUNet(nn.Module):
         self.conv_in = torch.nn.Conv2d(c_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for i_block in range(self.num_res_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 block.append(
                     ResnetBlock(
                         in_channels=block_in, out_channels=block_out, temb_channels=self.temb_ch, dropout=dropout
@@ -616,8 +616,8 @@ class VUNet(nn.Module):
 
         if self.use_timestep:
             # timestep embedding
-            assert t is not None
-            temb = get_timestep_embedding(t, self.ch)
+            assert t is not None  # noqa: F821 - Name is undefined in the upstream source.
+            temb = get_timestep_embedding(t, self.ch)  # noqa: F821 - Name is undefined in the upstream source.
             temb = self.temb.dense[0](temb)
             temb = nonlinearity(temb)
             temb = self.temb.dense[1](temb)

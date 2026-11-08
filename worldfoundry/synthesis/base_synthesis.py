@@ -28,7 +28,7 @@ def _lazy_no_grad(func):
     return predict_without_grad
 
 
-class BaseSynthesis(ABC):
+class BaseSynthesis(ABC):  # noqa: B024 - Keeps the ABCMeta base shared by its subclasses.
     """
     Abstract Base Class (ABC) defining the fundamental contract for various synthesis backends.
 
@@ -37,7 +37,7 @@ class BaseSynthesis(ABC):
     that must be implemented by concrete subclasses.
     """
 
-    def __init__(self):
+    def __init__(self):  # noqa: B027 - Optional hook with a no-op default.
         """
         Initializes the BaseSynthesis instance.
 

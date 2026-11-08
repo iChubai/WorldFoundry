@@ -388,7 +388,7 @@ class WanVideoPipeline(StagedDiffusionPipeline):
     def from_pretrained(
         torch_dtype: torch.dtype = torch.bfloat16,
         device: str | torch.device = "cuda",
-        model_configs: list[ModelConfig] = [],
+        model_configs: list[ModelConfig] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         tokenizer_config: ModelConfig = None,
         audio_processor_config: ModelConfig = None,
         use_usp=False,
@@ -2142,7 +2142,7 @@ def model_fn_wans2v(
             f"the dimension after chunk must be divisible by world size, but got {x.shape[1]} and {get_sequence_parallel_world_size()}"
         )
         x = torch.chunk(x, world_size, dim=1)[sp_rank]
-        seg_idxs = [0] + list(torch.cumsum(torch.tensor([x.shape[1]] * world_size), dim=0).cpu().numpy())
+        seg_idxs = [0] + list(torch.cumsum(torch.tensor([x.shape[1]] * world_size), dim=0).cpu().numpy())  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         seq_len_x_list = [min(max(0, seq_len_x - seg_idxs[i]), x.shape[1]) for i in range(len(seg_idxs) - 1)]
         seq_len_x = seq_len_x_list[sp_rank]
 
@@ -2167,7 +2167,11 @@ def model_fn_wans2v(
                 x = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(
                         lambda x: dit.after_transformer_block(
-                            block_id, x, audio_emb_global, merged_audio_emb, seq_len_x
+                            block_id,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                            x,
+                            audio_emb_global,
+                            merged_audio_emb,
+                            seq_len_x,
                         )
                     ),
                     x,
@@ -2185,7 +2189,7 @@ def model_fn_wans2v(
             )
             x = torch.utils.checkpoint.checkpoint(
                 create_custom_forward(
-                    lambda x: dit.after_transformer_block(block_id, x, audio_emb_global, merged_audio_emb, seq_len_x)
+                    lambda x: dit.after_transformer_block(block_id, x, audio_emb_global, merged_audio_emb, seq_len_x)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 ),
                 x,
                 use_reentrant=False,

@@ -110,7 +110,7 @@ def normalized_guidance(pred_cond, pred_uncond, guidance_scale, momentum_buffer=
 
 def normalized_guidance_chain(pred_uncond, preds, scales, momentum_buffers, eta, norm_thresholds):
     """Chained APG: each condition's diff is taken against the previous one."""
-    bases = [pred_uncond] + list(preds)
+    bases = [pred_uncond] + list(preds)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     result = pred_uncond
     for i, cond in enumerate(preds):
         nd = _normalize_diff(cond - bases[i], cond, momentum_buffers[i], eta, norm_thresholds[i])
@@ -421,8 +421,8 @@ class GEN_Wanx22(nn.Module):
             def _make_sids(n):
                 if n <= 0:
                     return []
-                if interp and n > max_trained:
-                    return torch.linspace(1.0, float(max_trained), n).tolist()
+                if interp and n > max_trained:  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    return torch.linspace(1.0, float(max_trained), n).tolist()  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 return [float(i) for i in range(1, n + 1)]
 
             # VI combo holds videos then images on a shared id axis; the
@@ -450,22 +450,24 @@ class GEN_Wanx22(nn.Module):
 
             def _add_image(img_vae):
                 nonlocal vi_ptr, i_ptr, vi_len, i_len
-                cur_latent, rotary_emb = cur_transformer.patch_vae_latent(
-                    img_vae.to(dtype=cur_transformer.dtype), source_id=vi_sids[vi_ptr]
+                cur_latent, rotary_emb = cur_transformer.patch_vae_latent(  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    img_vae.to(dtype=cur_transformer.dtype),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    source_id=vi_sids[vi_ptr],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 )
                 vi_ptr += 1
-                vi_latents.append(cur_latent)
-                vi_rotary.append(rotary_emb)
-                vi_masks.append(torch.zeros(cur_latent.shape[1], device=device, dtype=torch.bool))
+                vi_latents.append(cur_latent)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                vi_rotary.append(rotary_emb)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                vi_masks.append(torch.zeros(cur_latent.shape[1], device=device, dtype=torch.bool))  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 vi_len += cur_latent.shape[1]
 
-                cur_latent_i, rotary_emb_i = cur_transformer.patch_vae_latent(
-                    img_vae.to(dtype=cur_transformer.dtype), source_id=i_sids[i_ptr]
+                cur_latent_i, rotary_emb_i = cur_transformer.patch_vae_latent(  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    img_vae.to(dtype=cur_transformer.dtype),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    source_id=i_sids[i_ptr],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 )
                 i_ptr += 1
-                i_latents.append(cur_latent_i)
-                i_rotary.append(rotary_emb_i)
-                i_masks.append(torch.zeros(cur_latent_i.shape[1], device=device, dtype=torch.bool))
+                i_latents.append(cur_latent_i)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                i_rotary.append(rotary_emb_i)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                i_masks.append(torch.zeros(cur_latent_i.shape[1], device=device, dtype=torch.bool))  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 i_len += cur_latent_i.shape[1]
 
             if image_vae_latents is not None:
@@ -483,10 +485,10 @@ class GEN_Wanx22(nn.Module):
 
             def _assemble(cond_lats, cond_rots, cond_msks, cond_len):
                 return (
-                    torch.cat(cond_lats + [noisy_latent], dim=1).to(cur_transformer.dtype),
-                    torch.cat(cond_rots + [noisy_rotary], dim=2),
-                    torch.cat(cond_msks + [noisy_mask], dim=0),
-                    cond_len + noisy_len,
+                    torch.cat(cond_lats + [noisy_latent], dim=1).to(cur_transformer.dtype),  # noqa: RUF005, B023 - Keeps `+` semantics for the operand's runtime type.; Keeps the upstream late binding of the loop variable.
+                    torch.cat(cond_rots + [noisy_rotary], dim=2),  # noqa: RUF005, B023 - Keeps `+` semantics for the operand's runtime type.; Keeps the upstream late binding of the loop variable.
+                    torch.cat(cond_msks + [noisy_mask], dim=0),  # noqa: RUF005, B023 - Keeps `+` semantics for the operand's runtime type.; Keeps the upstream late binding of the loop variable.
+                    cond_len + noisy_len,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 )
 
             none_inp, none_rot, none_msk, none_total = _assemble([], [], [], 0)
@@ -498,9 +500,9 @@ class GEN_Wanx22(nn.Module):
 
             def _fwd(lat_inp, rot, msk, total, text_emb):
                 pred = self.shared_step(
-                    model_id=model_id,
+                    model_id=model_id,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                     noisy_latents=lat_inp,
-                    timesteps=timestep,
+                    timesteps=timestep,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                     cond_embeds=text_emb,
                     rotary_embs=rot,
                     batch_vae_seqlen=[total],
@@ -872,7 +874,7 @@ class GEN_Wanx22(nn.Module):
         target_vidvae_latent_masks,
         shape,
         noisy_vae_latent,
-        norm_threshold=[50.0, 50.0, 50.0],
+        norm_threshold=[50.0, 50.0, 50.0],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         def _seq_lens_kwargs(latent_inputs: torch.Tensor, cond_embeds: torch.Tensor):
             return {

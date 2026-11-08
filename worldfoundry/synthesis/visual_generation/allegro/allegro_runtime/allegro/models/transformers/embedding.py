@@ -173,7 +173,7 @@ class PatchEmbed2DTI2V(nn.Module):
     def forward(self, latent, num_frames):
         b, _, _, _, _ = latent.shape
         video_latent, image_latent = None, None
-        height, width = latent.shape[-2] // self.patch_size, latent.shape[-1] // self.patch_size
+        height, width = latent.shape[-2] // self.patch_size, latent.shape[-1] // self.patch_size  # noqa: F841 - Upstream assignment kept.
         latent = rearrange(latent, "b c t h w -> (b t) c h w")
         latent = self.proj(latent)
 

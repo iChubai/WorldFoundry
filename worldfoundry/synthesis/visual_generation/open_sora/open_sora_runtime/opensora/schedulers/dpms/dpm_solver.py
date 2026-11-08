@@ -294,13 +294,13 @@ def model_wrapper(
     model,
     noise_schedule,
     model_type="noise",
-    model_kwargs={},
+    model_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
     guidance_type="uncond",
     condition=None,
     unconditional_condition=None,
     guidance_scale=1.0,
     classifier_fn=None,
-    classifier_kwargs={},
+    classifier_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     """Create a wrapper function for the noise prediction model.
 
@@ -670,7 +670,7 @@ class DPM_Solver:
             timesteps_outer = self.get_time_steps(skip_type, t_T, t_0, steps, device)[
                 torch.cumsum(
                     torch.tensor(
-                        [
+                        [  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                             0,
                         ]
                         + orders

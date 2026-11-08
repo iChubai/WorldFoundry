@@ -42,7 +42,7 @@ class Attention(Attention_):
     def prepare_sparse_mask(attention_mask, encoder_attention_mask, sparse_n, head_num):
         attention_mask = attention_mask.unsqueeze(1)
         encoder_attention_mask = encoder_attention_mask.unsqueeze(1)
-        l = attention_mask.shape[-1]
+        l = attention_mask.shape[-1]  # noqa: E741 - Ambiguous upstream name kept as written.
         pad_len = 0 if l % (sparse_n * sparse_n) == 0 else sparse_n * sparse_n - l % (sparse_n * sparse_n)
 
         attention_mask_sparse = F.pad(attention_mask, (0, pad_len, 0, 0), value=-9980.0)
@@ -144,7 +144,7 @@ class OpenSoraAttnProcessor2_0:
         """
         require the shape of (ntokens x batch_size x dim)
         """
-        l = x.shape[0]
+        l = x.shape[0]  # noqa: E741 - Ambiguous upstream name kept as written.
         assert l == frame * height * width
         pad_len = 0
         if l % (self.sparse_n * self.sparse_n) != 0:

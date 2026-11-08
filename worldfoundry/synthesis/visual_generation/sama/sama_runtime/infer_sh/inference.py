@@ -186,14 +186,14 @@ def compute_letterbox_params(
         return target_w, target_h, 0, 0, 0, 0
     if orig_ratio < target_ratio:
         resize_h = target_h
-        resize_w = max(1, int(round(resize_h * orig_ratio)))
+        resize_w = max(1, int(round(resize_h * orig_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         pad_total = max(0, target_w - resize_w)
         pad_left = pad_total // 2
         pad_right = pad_total - pad_left
         pad_top = pad_bottom = 0
     else:
         resize_w = target_w
-        resize_h = max(1, int(round(resize_w / orig_ratio)))
+        resize_h = max(1, int(round(resize_w / orig_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         pad_total = max(0, target_h - resize_h)
         pad_top = pad_total // 2
         pad_bottom = pad_total - pad_top

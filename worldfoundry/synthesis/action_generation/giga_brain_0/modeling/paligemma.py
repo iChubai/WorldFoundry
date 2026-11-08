@@ -513,7 +513,7 @@ class GemmaDecoderLayerWithExpert(nn.Module):
         )
 
         after_attn_embeds = []
-        for i, (residual, attn_output, attn_gate) in enumerate(zip(residuals, attn_outputs, attn_gates, strict=False)):
+        for i, (residual, attn_output, attn_gate) in enumerate(zip(residuals, attn_outputs, attn_gates, strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
             if residual is not None:
                 after_attn_embeds.append(self.gated_residual(residual, attn_output, attn_gate))
             else:
@@ -669,7 +669,7 @@ class PaliGemmaWithExpertModel(nn.Module):
             # Fall back: clone weights when direct tie is impossible
             # (e.g., when loading a compatible checkpoint with a resized vocabulary).
             with torch.no_grad():
-                if isinstance(output_module, nn.Linear) and isinstance(input_emb, nn.Embedding):
+                if isinstance(output_module, nn.Linear) and isinstance(input_emb, nn.Embedding):  # noqa: SIM102 - Statement form kept for readability.
                     if output_module.weight.shape[::-1] == input_emb.weight.shape[::-1]:
                         output_module.weight.copy_(input_emb.weight)
                 # Otherwise do nothing; caller should ensure compatible shapes.

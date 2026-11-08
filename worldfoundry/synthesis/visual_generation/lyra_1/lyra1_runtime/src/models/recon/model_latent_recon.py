@@ -420,7 +420,7 @@ class LatentRecon(nn.Module):
         if self.opt.time_embedding_vae:
             num_in_times = V
         else:
-            time_embeddings = repeat(time_embeddings, "b t c -> b t c h w", h=H, w=W)
+            time_embeddings = repeat(time_embeddings, "b t c -> b t c h w", h=H, w=W)  # noqa: F821 - Name is undefined in the upstream source.
             num_in_times = self.opt.num_input_views
         time_embeddings_input = time_embeddings[:, :num_in_times]
         time_embeddings_target = time_embeddings[:, num_in_times : num_in_times + 1]

@@ -340,7 +340,7 @@ class AnimationPipeline(DiffusionPipeline):
         callback_steps: int | None = 1,
         # support controlnet
         controlnet_images: torch.FloatTensor = None,
-        controlnet_image_index: list = [0],
+        controlnet_image_index: list = [0],  # noqa: B006 - Keeps the upstream default object and signature.
         controlnet_conditioning_scale: float | list[float] = 1.0,
         **kwargs,
     ):
@@ -404,7 +404,7 @@ class AnimationPipeline(DiffusionPipeline):
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
                 down_block_additional_residuals = mid_block_additional_residual = None
-                if (getattr(self, "controlnet", None) != None) and (controlnet_images != None):
+                if (getattr(self, "controlnet", None) != None) and (controlnet_images != None):  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
                     assert controlnet_images.dim() == 5
 
                     controlnet_noisy_latents = latent_model_input

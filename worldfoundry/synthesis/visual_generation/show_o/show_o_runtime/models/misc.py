@@ -4,10 +4,10 @@ from collections.abc import Sized as Sized
 from typing import (
     Any,
 )
-from typing import (
+from typing import (  # noqa: UP035 - Re-exported to modules that star-import this namespace.
     Dict as Dict,
 )
-from typing import (
+from typing import (  # noqa: UP035 - Re-exported to modules that star-import this namespace.
     List as List,
 )
 from typing import (
@@ -22,10 +22,10 @@ from typing import (
 from typing import (
     Optional as Optional,
 )
-from typing import (
+from typing import (  # noqa: UP035 - Re-exported to modules that star-import this namespace.
     Tuple as Tuple,
 )
-from typing import (
+from typing import (  # noqa: UP035 - Re-exported to modules that star-import this namespace.
     Type as Type,
 )
 from typing import (

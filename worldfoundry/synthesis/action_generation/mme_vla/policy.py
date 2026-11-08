@@ -72,7 +72,7 @@ class MMEVLAPolicy:
             )
 
     def infer(self, obs: dict) -> dict:
-        if self.config is not None and self.config.representation_type != "symbolic":
+        if self.config is not None and self.config.representation_type != "symbolic":  # noqa: SIM102 - Statement form kept for readability.
             if self.mem_buffer is None or not self.mem_buffer.has_history:
                 raise ValueError("MME-VLA requires at least one buffered history observation")
 

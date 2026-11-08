@@ -29,15 +29,15 @@ KV caches --- There are a few different modes depending on the setting:
     - action flow integration, using cached non-active mixtures
 """
 
-import logging
-import math
+import logging  # noqa: E402 - Follows a module-level setup call, as upstream.
+import math  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-import torch
-import torch.nn as nn
+import torch  # noqa: E402 - Follows a module-level setup call, as upstream.
+import torch.nn as nn  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from .configuration import merge_config
-from .kv_cache import KVCache
-from .mixture import Mixture
+from .configuration import merge_config  # noqa: E402 - Follows a module-level setup call, as upstream.
+from .kv_cache import KVCache  # noqa: E402 - Follows a module-level setup call, as upstream.
+from .mixture import Mixture  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 logger = logging.getLogger(__name__)
 
@@ -350,7 +350,7 @@ class JointModel(nn.Module):
                 cache_mode=cache_mode,
             )
             if intermediates is not None:
-                for k in embeds_all.keys():
+                for k in embeds_all.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     intermediates[k].append(embeds_all[k])
 
         if intermediates is not None:

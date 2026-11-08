@@ -199,7 +199,7 @@ def render_from_image_and_traj(
 
     # === 5) 渲染序列 ===
     # with torch.no_grad(), torch.amp.autocast(device_type="cuda", enabled=(device.startswith("cuda"))):
-    with torch.no_grad():
+    with torch.no_grad():  # noqa: SIM117 - Branches carry per-case comments.
         # 强制禁用 autocast，避免被转成 half/bf16
         with torch.autocast("cuda", enabled=False):
             control_imgs, render_masks = point_rendering(

@@ -242,7 +242,7 @@ class Yume1p5TI2V:  # adapted from wan2p2.WanTI2V
             * (ow // self.vae_stride[2])
             // (self.patch_size[1] * self.patch_size[2])
         )
-        seq_len = int(math.ceil(seq_len / self.sp_size)) * self.sp_size
+        seq_len = int(math.ceil(seq_len / self.sp_size)) * self.sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         seed = seed if seed >= 0 else random.randint(0, sys.maxsize)
         seed_g = torch.Generator(device=self.device)

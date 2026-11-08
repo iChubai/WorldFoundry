@@ -30,7 +30,7 @@ class VideoDataset(torch.utils.data.Dataset):
             json_path = json_path[0]
         assert isinstance(json_path, str), f"json_path must be a string, got {type(json_path)}"
 
-        self.metadata_list = json.load(open(json_path))
+        self.metadata_list = json.load(open(json_path))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         self.dataset = {entry["video_path"]: entry for entry in self.metadata_list}
         for entry in self.metadata_list:
             entry["dataset_type"] = "test"

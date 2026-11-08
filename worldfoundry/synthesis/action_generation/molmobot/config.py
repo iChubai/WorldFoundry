@@ -36,7 +36,7 @@ class BaseConfig:
                 conf = om.merge(conf, kwargs)
             return cast(C, om.to_object(conf))
         except OmegaConfBaseException as e:
-            raise OLMoConfigurationError(e)
+            raise OLMoConfigurationError(e)  # noqa: B904 - Keeps the implicit exception context.
 
     @classmethod
     def load(
@@ -59,7 +59,7 @@ class BaseConfig:
                 conf = om.merge(conf, om.from_dotlist(overrides))
             return cast(C, om.to_object(conf))
         except OmegaConfBaseException as e:
-            raise OLMoConfigurationError(e)
+            raise OLMoConfigurationError(e)  # noqa: B904 - Keeps the implicit exception context.
 
     def save(self, path: PathOrStr) -> None:
         """Save to a YAML file."""

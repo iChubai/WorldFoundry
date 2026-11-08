@@ -145,7 +145,7 @@ class BerniniConfig(PretrainedConfig):
         connector_cfg=None,
         mask_ratio_infer_cfg=None,
         feature_type_from_stage_one=None,
-        additional_special_tokens=[],
+        additional_special_tokens=[],  # noqa: B006 - Keeps the upstream default object and signature.
         tie_word_embeddings=False,
         ema_decay=None,
         partial_pretrain_model=None,
@@ -163,7 +163,7 @@ class BerniniConfig(PretrainedConfig):
         vae_model_path=None,
         vae_subfolder=None,
         vae_config_path=None,
-        wovae_task_list=["und_img", "und_txt", "und_vid"],
+        wovae_task_list=["und_img", "und_txt", "und_vid"],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         super().__init__(**kwargs)

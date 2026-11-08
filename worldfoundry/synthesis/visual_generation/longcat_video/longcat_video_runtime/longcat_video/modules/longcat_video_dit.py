@@ -228,7 +228,7 @@ class LongCatVideoTransformer3DModel(ModelMixin, ConfigMixin):
 
         self.lora_dict[lora_key] = lora_network
 
-    def enable_loras(self, lora_key_list=[]):
+    def enable_loras(self, lora_key_list=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         self.disable_all_loras()
 
         module_loras = {}  # {module_name: [lora1, lora2, ...]}
@@ -275,7 +275,7 @@ class LongCatVideoTransformer3DModel(ModelMixin, ConfigMixin):
                 module = getattr(module, part)
             return module
         except AttributeError as e:
-            raise ValueError(f"Cannot find module: {module_name}, error: {e}")
+            raise ValueError(f"Cannot find module: {module_name}, error: {e}")  # noqa: B904 - Keeps the implicit exception context.
 
     def disable_all_loras(self):
         for _name, module in self.named_modules():
@@ -309,7 +309,7 @@ class LongCatVideoTransformer3DModel(ModelMixin, ConfigMixin):
         encoder_attention_mask=None,
         num_cond_latents=0,
         return_kv=False,
-        kv_cache_dict={},
+        kv_cache_dict={},  # noqa: B006 - Keeps the upstream default object and signature.
         skip_crs_attn=False,
         offload_kv_cache=False,
     ):

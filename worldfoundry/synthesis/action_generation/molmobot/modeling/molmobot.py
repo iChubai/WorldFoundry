@@ -200,7 +200,7 @@ class MolmoBot(VideoOlmo):
             if target == 1:
                 return [layer_states[-1]]
             scale = (available - 1) / float(target - 1)
-            return [layer_states[int(round(i * scale))] for i in range(target)]
+            return [layer_states[int(round(i * scale))] for i in range(target)]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         raise ValueError(f"Unsupported action_expert_layer_mode: {mode}")
 
 

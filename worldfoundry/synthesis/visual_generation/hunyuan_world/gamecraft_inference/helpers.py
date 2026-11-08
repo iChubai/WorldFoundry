@@ -13,7 +13,7 @@ def get_nd_rotary_pos_embed_new(
     use_real=False,
     theta_rescale_factor: float | list[float] = 1.0,
     interpolation_factor: float | list[float] = 1.0,
-    concat_dict={},
+    concat_dict={},  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     """
     Generates multi-dimensional Rotary Position Embeddings (RoPE).

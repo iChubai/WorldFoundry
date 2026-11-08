@@ -29,7 +29,7 @@ class CSGOVIDStyleDataset(Dataset):
     def __init__(
         self,
         data_dir,
-        resolution=[320, 512],
+        resolution=[320, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         video_length=16,
         spatial_transform=None,
         augment_data=False,
@@ -76,7 +76,7 @@ class CSGOVIDStyleDataset(Dataset):
             self.spatial_transform = None
 
         if self.mode == "validation":
-            assert self.augment_data == False, "validation mode, augment_data should be set False"
+            assert self.augment_data == False, "validation mode, augment_data should be set False"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def __len__(self):
         """Len."""

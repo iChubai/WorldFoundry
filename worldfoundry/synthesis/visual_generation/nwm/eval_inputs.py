@@ -188,4 +188,4 @@ class EvalDataset(BaseEvalInputDataset):
             )
         except Exception as e:
             print(f"Exception in {self.dataset_name}", e)
-            raise Exception(e)
+            raise Exception(e)  # noqa: B904 - Keeps the implicit exception context.

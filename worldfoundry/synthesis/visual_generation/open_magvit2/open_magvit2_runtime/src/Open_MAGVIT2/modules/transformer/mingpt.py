@@ -297,7 +297,7 @@ class GPT(nn.Module):
                 token_embedding_post = self.post_emb(idx_post)
                 token_embeddings = token_embedding_pre + token_embedding_post  ##token summation for factorization
         else:
-            if first_step:
+            if first_step:  # noqa: SIM108 - Branches carry per-case comments.
                 token_embeddings = self.class_emb(idx, train=self.training)
             else:  #
                 token_embeddings = self.tok_emb(idx)  # each index maps to a (learnable) vector
@@ -615,7 +615,7 @@ class KMeans(nn.Module):
             # re-assign any poorly positioned codebook elements
             nanix = torch.any(torch.isnan(c), dim=1)
             ndead = nanix.sum().item()
-            print("done step %d/%d, re-initialized %d dead clusters" % (i + 1, self.niter, ndead))
+            print("done step %d/%d, re-initialized %d dead clusters" % (i + 1, self.niter, ndead))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             c[nanix] = x[torch.randperm(N)[:ndead]]  # re-init dead clusters
 
         self.C.copy_(c)

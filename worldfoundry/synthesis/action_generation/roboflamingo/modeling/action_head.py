@@ -621,14 +621,14 @@ class DiffusionDecoder(ActionDecoder):
         horizon=32,
         input_dim: int = 7,  # dim of vectors to be diffused
         diffusion_step_embed_dim=256,
-        down_dims=[256, 512, 1024],
+        down_dims=[256, 512, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         kernel_size=3,
         n_groups=8,
         cond_predict_scale=False,
         n_timesteps=150,
         clip_denoised=False,
         predict_epsilon=True,
-        normalizer=LinearNormalizer(),
+        normalizer=LinearNormalizer(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         super().__init__()
         self.feature_dim = feature_dim

@@ -646,7 +646,7 @@ class CameraCtrlPipeline(AnimationPipeline):
         # Prepare extra step kwargs.
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
         if isinstance(pose_embedding, list):
-            assert all([x.ndim == 5 for x in pose_embedding])
+            assert all([x.ndim == 5 for x in pose_embedding])  # noqa: C419 - Evaluates every element before testing, as upstream.
             bs = pose_embedding[0].shape[0]
             pose_embedding_features = []
             for pe in pose_embedding:

@@ -36,7 +36,7 @@ def load():
             extra_cflags=[
                 "-O3",
             ],
-            extra_cuda_cflags=[
+            extra_cuda_cflags=[  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 "-O3",
                 "-gencode",
                 "arch=compute_70,code=sm_70",

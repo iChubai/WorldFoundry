@@ -1263,7 +1263,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         transformer = getattr(self, "transformer", None)
         if transformer is None:
             return False
-        for module in transformer.modules():
+        for module in transformer.modules():  # noqa: SIM110 - Keeps the explicit loop.
             if bool(getattr(module, "merged", False)):
                 return True
         return False
@@ -1878,7 +1878,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         # ------------ I2V ------------
         image: PipelineImageInput | None = None,
@@ -1903,10 +1903,10 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         cam_base_width_pix: int | None = None,  # None defaults to pipeline `width`
         # ------------ Interactive ------------
         use_interpolate_prompt: bool = False,
-        interpolate_time_list: list = [7, 7, 7],
+        interpolate_time_list: list = [7, 7, 7],  # noqa: B006 - Keeps the upstream default object and signature.
         interpolation_steps: int = 3,
         # ------------ Stage 1 ------------
-        history_sizes: list = [16, 2, 1],
+        history_sizes: list = [16, 2, 1],  # noqa: B006 - Keeps the upstream default object and signature.
         latent_window_size: int = 9,
         use_dynamic_shifting: bool = False,
         time_shift_type: Literal["exponential", "linear"] = "linear",
@@ -1914,7 +1914,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         # ------------ Stage 2 ------------
         is_enable_stage2: bool = False,
         stage2_num_stages: int = 3,
-        stage2_num_inference_steps_list: list = [10, 10, 10],
+        stage2_num_inference_steps_list: list = [10, 10, 10],  # noqa: B006 - Keeps the upstream default object and signature.
         scheduler_type: str = "unipc",  # unipc, euler
         # ------------ CFG Zero ------------
         use_cfg_zero_star: bool | None = False,
@@ -2038,7 +2038,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 indicating whether the corresponding generated image contains "not-safe-for-work" (nsfw) content.
         """
 
-        if image is not None and video is not None:
+        if image is not None and video is not None:  # noqa: SIM102 - Branches carry per-case comments.
             # image + video coexist only in GEO mode (image = Pi3X source; video = v2v conditioning).
             if not use_geometric_state:
                 raise ValueError(
@@ -2587,7 +2587,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
             nearby_sink_latents = None
             if is_keep_x0:
                 if is_first_section:
-                    history_sizes_first_section = [1] + history_sizes.copy()
+                    history_sizes_first_section = [1] + history_sizes.copy()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     history_latents_first_section = torch.zeros(
                         batch_size,
                         num_channels_latents,
@@ -2905,19 +2905,19 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 def _corrupt_clean_latent(clean: torch.Tensor, tier_name: str) -> torch.Tensor:
                     """Add sigma noise to a clean latent if the tier is in target_tiers."""
                     if (
-                        (not _apply_short_noise)
-                        or (not _short_noise_targets)
-                        or (tier_name not in _short_noise_targets)
+                        (not _apply_short_noise)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        or (not _short_noise_targets)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        or (tier_name not in _short_noise_targets)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                     ):
                         return clean
                     _gen = generator[0] if isinstance(generator, list) else generator
-                    if _rollout_locked_sigma is not None:
-                        sigma_scalar = float(_rollout_locked_sigma)
+                    if _rollout_locked_sigma is not None:  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        sigma_scalar = float(_rollout_locked_sigma)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                     else:
                         sigma_scalar = (
                             torch.rand(1, device=clean.device, generator=_gen).item()
-                            * (_short_noise_max - _short_noise_min)
-                            + _short_noise_min
+                            * (_short_noise_max - _short_noise_min)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                            + _short_noise_min  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         )
                     sigmas = torch.full((1, 1, 1, 1, 1), sigma_scalar, device=clean.device, dtype=clean.dtype)
                     _noise = randn_tensor(clean.shape, generator=generator, device=clean.device, dtype=clean.dtype)
@@ -2926,7 +2926,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                     _pcount = getattr(self, "_short_tier_print_count", 0)
                     if _pcount < 3:
                         print(
-                            f"[ShortTier-Noise INFER] σ={sigma_scalar:.3f} applied to {tier_name} (lock={_rollout_locked_sigma is not None})",
+                            f"[ShortTier-Noise INFER] σ={sigma_scalar:.3f} applied to {tier_name} (lock={_rollout_locked_sigma is not None})",  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                             flush=True,
                         )
                         self._short_tier_print_count = _pcount + 1
@@ -3334,7 +3334,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                     else:
                         # Uniformly distributed offsets for arbitrary N.
                         _geo_frame_offsets = tuple(
-                            min(_geo_num_pix - 1, max(0, int(round(i * (_geo_num_pix - 1) / max(1, _geo_add_n - 1)))))
+                            min(_geo_num_pix - 1, max(0, int(round(i * (_geo_num_pix - 1) / max(1, _geo_add_n - 1)))))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                             for i in range(_geo_add_n)
                         )
                     # EVENT/SKILL skip frame bank (A6): event-chunk (VFX) frames must NOT pollute the warp
@@ -3385,9 +3385,9 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                             _orc_win = int(geo_ref_pose_offset_pix) if int(geo_ref_pose_offset_pix) > 0 else 120
 
                             def _orc_evict():
-                                _n = int(_orc_bank.num_frames)
-                                if _orc_bank.pts:  # clearing = a hard re-anchor blood swap, avoiding GT/on-policy double-image geometry
-                                    _orc_bank.evict_before(max(_orc_bank.pts.keys()) + 1)
+                                _n = int(_orc_bank.num_frames)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                                if _orc_bank.pts:  # noqa: B023 - Keeps the upstream late binding of the loop variable.  # clearing = a hard re-anchor blood swap, avoiding GT/on-policy double-image geometry
+                                    _orc_bank.evict_before(max(_orc_bank.pts.keys()) + 1)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                                 return _n
 
                             def _orc_ingest(_fr, _a, _b, _ws):
@@ -3403,7 +3403,12 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                                 stride=int(_geo_pix_stride_add),
                                 gt_avail=_orc_avail,
                                 fetch_fn=lambda _a, _b: _oracle_gt_fetch(
-                                    _orc_cache, _a, _b, int(height), int(width), ref_video=video
+                                    _orc_cache,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                                    _a,
+                                    _b,
+                                    int(height),
+                                    int(width),
+                                    ref_video=video,
                                 ),
                                 evict_fn=_orc_evict,
                                 ingest_fn=_orc_ingest,
@@ -3583,7 +3588,7 @@ def _oracle_gt_avail_pix(cache, ref_video=None):
             start_s = float(_os.environ.get("EVOKE_ORACLE_GT_START", "0") or 0.0)
             vr = PyVideoReader(path, threads=0)
             total_src = int(vr.get_shape()[0])
-            start_src = int(round(start_s * src_fps))
+            start_src = int(round(start_s * src_fps))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             # max target frame count p_avail: for every p < p_avail, start_src + round(p*src_fps/24) < total_src
             # (byte-for-byte the same index mapping as ev_validation._load_test_clip).
             p = max(0, int((total_src - start_src) * 24.0 / src_fps) + 2)

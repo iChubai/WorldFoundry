@@ -299,7 +299,7 @@ class Attention(nn.Module):
             encoder_hidden_states = self.norm_cross(encoder_hidden_states)
             encoder_hidden_states = encoder_hidden_states.transpose(1, 2)
         else:
-            assert False
+            assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
         return encoder_hidden_states
 

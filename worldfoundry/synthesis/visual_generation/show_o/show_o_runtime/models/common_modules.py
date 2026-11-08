@@ -3,7 +3,7 @@ Modified from https://github.com/CompVis/taming-transformers/blob/master/taming/
 """
 
 import math as math
-from typing import Tuple as Tuple
+from typing import Tuple as Tuple  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Union as Union
 
 import numpy as np  # noqa: F401 - Re-exported under this name.

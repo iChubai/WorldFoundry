@@ -1361,7 +1361,7 @@ def generate_scene_projection_with_handler(
         torch.cuda.empty_cache()
 
     fg_prompts_only = list(dynamic_prompts) if dynamic_prompts else []
-    all_prompts_init = fg_prompts_only + ["sky"]
+    all_prompts_init = fg_prompts_only + ["sky"]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     sam3_segmenter = Sam3VideoSegmenter(
         checkpoint_path=options.sam3_model_path,
@@ -1485,7 +1485,7 @@ def process_iteration(
     # clip frame = t0 + 1 + generated_frame_index
     target_frame_indices = list(range(t0 + 1 + output_start, t0 + 1 + output_end))
 
-    if options.limit_projection_density and iter_idx == 0 and state.projection_density_max_pixels is None:
+    if options.limit_projection_density and iter_idx == 0 and state.projection_density_max_pixels is None:  # noqa: SIM102 - Statement form kept for readability.
         if state.points_world is not None and state.intrinsics is not None:
             intr_size = state.intrinsics_size
             state.projection_density_max_pixels = _compute_projection_density_max_pixels(
@@ -1768,7 +1768,7 @@ def process_iteration(
     if iter_idx == 0:
         # First iteration: prepend input first frame
         first_frame_np = np.array(state.current_first_frame)
-        frames_to_store = [first_frame_np] + frames_to_store
+        frames_to_store = [first_frame_np] + frames_to_store  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         print(f"  Storing {len(frames_to_store)} frames (first_frame + {len(generated_video)} generated)")
     else:
         print(f"  Storing all {len(frames_to_store)} generated frames (no overlap)")

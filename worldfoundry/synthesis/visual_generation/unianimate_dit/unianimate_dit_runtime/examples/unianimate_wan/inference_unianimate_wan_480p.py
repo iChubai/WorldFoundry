@@ -100,7 +100,7 @@ for path_dir_per in test_list_path:
     frame_list = []
     dwpose_list = []
 
-    random_ref_frame = frames_all[list(frames_all.keys())[0]]
+    random_ref_frame = frames_all[list(frames_all.keys())[0]]  # noqa: RUF015 - Keeps eager list construction and IndexError.
     if random_ref_frame.mode != "RGB":
         random_ref_frame = random_ref_frame.convert("RGB")
     random_ref_dwpose = frames_pose_ref

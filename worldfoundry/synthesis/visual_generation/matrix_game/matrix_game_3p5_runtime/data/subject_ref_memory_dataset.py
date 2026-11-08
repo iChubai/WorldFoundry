@@ -319,7 +319,7 @@ class SubjectRefMemoryDA3MosaicVideoDataset(DA3MosaicVideoDataset):
 
         slot_size = max(
             1,
-            int(round(min(height, width) * self.subject_ref_canvas_slot_ratio)),
+            int(round(min(height, width) * self.subject_ref_canvas_slot_ratio)),  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         )
         slot_size = min(slot_size, height, width)
         resized = cv2.resize(

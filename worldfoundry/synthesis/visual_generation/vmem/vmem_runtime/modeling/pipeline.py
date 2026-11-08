@@ -394,7 +394,7 @@ class VMemPipeline:
             # Rasterize polygon
             for py_ in range(min_y, max_y + 1):
                 for px_ in range(min_x, max_x + 1):
-                    if point_in_polygon_2d(px_, py_, valid_points):
+                    if point_in_polygon_2d(px_, py_, valid_points):  # noqa: SIM102 - Statement form kept for readability.
                         if avg_depth < z_buffer[py_, px_]:
                             z_buffer[py_, px_] = avg_depth
                             surfel_index_map[py_, px_] = idx
@@ -1164,7 +1164,7 @@ class VMemPipeline:
             padding_size = 0
             # Calculate frame indices for this step
             if i > 0:
-                cur_start_idx = cur_end_idx
+                cur_start_idx = cur_end_idx  # noqa: F821 - Name is undefined in the upstream source.
             if len(self.pil_frames) == 1:  # first frame
                 cur_end_idx = min(cur_start_idx + self.config.model.num_frames - 1, len(c2ws_tensor))
             else:

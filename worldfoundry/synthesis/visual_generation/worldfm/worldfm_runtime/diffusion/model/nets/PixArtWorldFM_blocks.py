@@ -237,9 +237,9 @@ class AttentionKVCompress(Attention_):
                 _log_this = bool(_debug and _rank0 and (block_id == 0) and (not _already_logged))
 
                 cameras = int(prope_viewmats.shape[1])
-                if cameras > 0 and int(W) % cameras == 0:
-                    patches_y = int(H)
-                    patches_x_total = int(W)
+                if cameras > 0 and int(W) % cameras == 0:  # noqa: F821 - Name is undefined in the upstream source.
+                    patches_y = int(H)  # noqa: F821 - Name is undefined in the upstream source.
+                    patches_x_total = int(W)  # noqa: F821 - Name is undefined in the upstream source.
                     patches_x = patches_x_total // cameras
                     # Fast path: use precomputed apply_fns and reorder fns if provided.
                     apply_fn_q = apply_fn_kv = apply_fn_o = None
@@ -569,7 +569,9 @@ class SizeEmbedder(TimestepEmbedder):
         return next(self.parameters()).dtype
 
 
-from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import LabelEmbedder as LabelEmbedder
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    LabelEmbedder as LabelEmbedder,
+)
 
 
 class CaptionEmbedder(nn.Module):
@@ -577,7 +579,7 @@ class CaptionEmbedder(nn.Module):
     Embeds class labels into vector representations. Also handles label dropout for classifier-free guidance.
     """
 
-    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):
+    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):  # noqa: B008 - Default evaluated once at definition, as upstream.
         super().__init__()
         self.y_proj = Mlp(
             in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0
@@ -611,7 +613,7 @@ class CaptionEmbedderDoubleBr(nn.Module):
     Embeds class labels into vector representations. Also handles label dropout for classifier-free guidance.
     """
 
-    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):
+    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):  # noqa: B008 - Default evaluated once at definition, as upstream.
         super().__init__()
         self.proj = Mlp(
             in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0

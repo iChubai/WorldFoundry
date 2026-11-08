@@ -20,7 +20,7 @@ from transformers.utils import logging
 
 from .qwen25_vl import Qwen2_5_VLForConditionalGeneration
 
-try:
+try:  # noqa: SIM105 - The handler carries an explanatory comment.
     from dinov3.hub.backbones import (
         dinov3_vitb16,
         dinov3_vits16,  # noqa: F401 - Import checks optional dependency availability.

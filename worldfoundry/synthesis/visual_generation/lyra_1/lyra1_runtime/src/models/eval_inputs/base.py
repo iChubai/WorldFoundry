@@ -26,7 +26,7 @@ class BaseDataset(ABC):
     subclassed / included in another dataset class.
     """
 
-    def __init__(self):
+    def __init__(self):  # noqa: B027 - Optional hook with a no-op default.
         pass
 
     @abstractmethod

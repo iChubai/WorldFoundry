@@ -130,7 +130,7 @@ def overlay_icon(
     if icon is None:
         return
     if icon.ndim == 3 and icon.shape[2] == 3:
-        alpha_channel = np.full(icon.shape[:2] + (1,), 255, dtype=icon.dtype)
+        alpha_channel = np.full(icon.shape[:2] + (1,), 255, dtype=icon.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         icon = np.concatenate([icon, alpha_channel], axis=2)
 
     x, y = position

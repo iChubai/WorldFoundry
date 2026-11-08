@@ -83,7 +83,7 @@ def get_config(variant: Variant) -> Config:
     raise ValueError(f"Unknown variant: {variant}")
 
 
-def _name(name, i):
+def _name(name, i):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     if i == -1:
         return f"{name}_mem"
     elif i == 0:

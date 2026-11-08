@@ -9,24 +9,33 @@ import torch
 import torch.distributed as dist
 
 warnings.filterwarnings("ignore")
-from PIL import Image
+from PIL import Image  # noqa: E402 - Follows the warnings configuration.
 
-from worldfoundry.base_models.diffusion_model.recipes.wan_configs.action_22 import MAX_AREA_CONFIGS, WAN_CONFIGS
-from worldfoundry.core.distributed.sequence_parallel.ops import init_distributed_group
-
-# isort: split
-from pipeline.inference_interactive_pipeline import MatrixGame3Pipeline as MatrixGame3InteractivePipeline
-
-# isort: split
-# isort: split
-from pipeline.inference_pipeline import MatrixGame3Pipeline
+from worldfoundry.base_models.diffusion_model.recipes.wan_configs.action_22 import (  # noqa: E402 - Follows the warnings configuration.
+    MAX_AREA_CONFIGS,
+    WAN_CONFIGS,
+)
+from worldfoundry.core.distributed.sequence_parallel.ops import (  # noqa: E402 - Follows the warnings configuration.
+    init_distributed_group,
+)
 
 # isort: split
-from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+from pipeline.inference_interactive_pipeline import (  # noqa: E402 - Follows the warnings configuration.
+    MatrixGame3Pipeline as MatrixGame3InteractivePipeline,
+)
+
+# isort: split
+# isort: split
+from pipeline.inference_pipeline import MatrixGame3Pipeline  # noqa: E402 - Follows the warnings configuration.
+
+# isort: split
+from worldfoundry.core.utils.tensors.torch import (  # noqa: E402 - Follows the warnings configuration.
+    set_seed_everywhere,
+)
 
 
 def _validate_args(args):
-    if args.ulysses_size <= 1:
+    if args.ulysses_size <= 1:  # noqa: SIM102 - Statement form kept for readability.
         if args.t5_fsdp or args.dit_fsdp:
             logging.info(
                 f"Single GPU detected (ulysses_size={args.ulysses_size}). Automatically disabling FSDP (t5_fsdp and dit_fsdp)."

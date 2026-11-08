@@ -166,7 +166,7 @@ class XR1Qwen3VLModel(_Qwen3VLModel):
 class XR1Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
     """Checkpoint-compatible Qwen wrapper reduced to policy inference outputs."""
 
-    _checkpoint_conversion_mapping: dict[str, str] = {}
+    _checkpoint_conversion_mapping: dict[str, str] = {}  # noqa: RUF012 - Shared class-level value, as upstream.
     _tied_weights_keys: ClassVar[dict] = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
     accepts_loss_kwargs = False
 

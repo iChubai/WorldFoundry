@@ -495,7 +495,7 @@ def _ring_flash_attention_fwd_tpu(q, k, v, attn_bias, segment_ids, axis_name, fl
     attn_bias = attn_bias[:, 0, 0]  # (batch, k_len)
 
     o = jnp.zeros((batch, num_heads, q_len, dim_per_head)).astype(q.dtype)
-    l = jnp.zeros((batch, num_heads, q_len)).astype(q.dtype)
+    l = jnp.zeros((batch, num_heads, q_len)).astype(q.dtype)  # noqa: E741 - Ambiguous upstream name kept as written.
     m = jnp.full((batch, num_heads, q_len), -jnp.inf).astype(q.dtype)
 
     axis_size = lax.psum(1, axis_name)
@@ -522,7 +522,7 @@ def _ring_flash_attention_fwd_tpu(q, k, v, attn_bias, segment_ids, axis_name, fl
     scale = q.shape[-1] ** -0.5
 
     def scan_kv_block(carry, idx):
-        o, l, m, k, v = carry
+        o, l, m, k, v = carry  # noqa: E741 - Ambiguous upstream name kept as written.
         attn_bias_slice = lax.dynamic_slice_in_dim(
             attn_bias, (lax.axis_index(axis_name) - idx) % axis_size * kv_len, kv_len, axis=-1
         )
@@ -538,7 +538,7 @@ def _ring_flash_attention_fwd_tpu(q, k, v, attn_bias, segment_ids, axis_name, fl
         k_block_idx = (lax.axis_index(axis_name) - idx) % axis_size
         q_chunk_idx_start = q_block_idx * (q_block_size // query_chunk_size)
         k_chunk_idx_start = k_block_idx * (kv_block_size // key_chunk_size)
-        o, l, m = _flash_attention_fwd(
+        o, l, m = _flash_attention_fwd(  # noqa: E741 - Ambiguous upstream name kept as written.
             q,
             k,
             v,
@@ -556,14 +556,14 @@ def _ring_flash_attention_fwd_tpu(q, k, v, attn_bias, segment_ids, axis_name, fl
         k, v = (lax.ppermute(x, axis_name, perm=[(i, (i + 1) % axis_size) for i in range(axis_size)]) for x in (k, v))
         return (o, l, m, k, v), None
 
-    (o, l, m, _, _), _ = lax.scan(scan_kv_block, init=(o, l, m, k, v), xs=jnp.arange(0, axis_size))
+    (o, l, m, _, _), _ = lax.scan(scan_kv_block, init=(o, l, m, k, v), xs=jnp.arange(0, axis_size))  # noqa: E741 - Ambiguous upstream name kept as written.
     output = rearrange(o.astype(v.dtype), "b h q d -> b q h d")
     return output, (o, q, k, v, attn_bias, segment_ids, l, m)
 
 
 def _ring_flash_attention_bwd_tpu(axis_name, float32_logits, blockwise_kwargs, res, g):
     del float32_logits
-    o, q, k, v, attn_bias, segment_ids, l, m = res
+    o, q, k, v, attn_bias, segment_ids, l, m = res  # noqa: E741 - Ambiguous upstream name kept as written.
     batch, num_heads, kv_len, dim_per_head = k.shape
     axis_size = lax.psum(1, axis_name)
     dq = jnp.zeros_like(q, dtype=jnp.float32)
@@ -787,7 +787,7 @@ def _flash_attention_fwd(
 ):
     if save_residuals:
         raise NotImplementedError("Higher-order AD not supported")
-    o, l, m = _flash_attention(
+    o, l, m = _flash_attention(  # noqa: E741 - Ambiguous upstream name kept as written.
         q,
         k,
         v,
@@ -819,7 +819,7 @@ def _flash_attention_bwd(
     """VJP rule for FlashAttention."""
     if save_residuals:
         raise NotImplementedError("Higher-order AD not supported")
-    (q, k, v, ab, segment_ids, o, l, m) = residuals
+    (q, k, v, ab, segment_ids, o, l, m) = residuals  # noqa: E741 - Ambiguous upstream name kept as written.
     if not block_sizes.has_backward_blocks:
         raise ValueError("Program is being differentiated, but not all backward blocks are specified")
 
@@ -1016,13 +1016,13 @@ def _flash_attention_kernel_single_batch(
 
             head_dim_repeats, rem = divmod(head_dim, MIN_BLOCK_SIZE)
 
-            def l_broadcast(l):
+            def l_broadcast(l):  # noqa: E741 - Ambiguous upstream name kept as written.
                 return pltpu.repeat(l, head_dim_repeats, 1)
 
             if rem:
                 if head_dim_repeats == 0:
 
-                    def l_broadcast(l):
+                    def l_broadcast(l):  # noqa: E741 - Ambiguous upstream name kept as written.
                         return l[:, :head_dim]
                 else:
                     raise NotImplementedError(f"{head_dim=} should be a multiple of {MIN_BLOCK_SIZE} if larger")
@@ -1148,7 +1148,7 @@ def _flash_attention_impl(
             pl.BlockSpec(lambda *_: (0, 0, 0, 0), acc_scratch.shape),
         ]
     else:
-        assert False
+        assert False  # noqa: B011 - Keeps the assertion semantics under -O.
         out_shape += [None, None, None]
         out_specs += [None, None, None]
 
@@ -1158,7 +1158,7 @@ def _flash_attention_impl(
             pl.BlockSpec(lm_index_map, (block_b, 1, block_q, MIN_BLOCK_SIZE)),
             pl.BlockSpec(lm_index_map, (block_b, 1, block_q, MIN_BLOCK_SIZE)),
         ]
-        l = jax.ShapeDtypeStruct((batch_size, num_heads, q_seq_len, MIN_BLOCK_SIZE), dtype=jnp.float32)
+        l = jax.ShapeDtypeStruct((batch_size, num_heads, q_seq_len, MIN_BLOCK_SIZE), dtype=jnp.float32)  # noqa: E741 - Ambiguous upstream name kept as written.
         m = jax.ShapeDtypeStruct((batch_size, num_heads, q_seq_len, MIN_BLOCK_SIZE), dtype=jnp.float32)
         out_shape = (*out_shape, l, m)
 
@@ -1246,7 +1246,7 @@ def _flash_attention_impl(
         kv_segment_ids,
     )
     if save_residuals:
-        l, m = (v[..., 0] for v in aux[-2:])
+        l, m = (v[..., 0] for v in aux[-2:])  # noqa: E741 - Ambiguous upstream name kept as written.
         return (o, l, m)
     else:
         return o
@@ -1299,7 +1299,7 @@ def _flash_attention_dkv_kernel(
             k = pl.load(k_tile_ref, (0, 0, pl.ds(start_k, block_k), slice(None)))
             v = pl.load(v_tile_ref, (0, 0, pl.ds(start_k, block_k), slice(None)))
             q = pl.load(q_tile_ref, (0, 0, pl.ds(start_q, block_q), slice(None)))  # [block_q, head_dim]
-            l = pl.load(l_tile_ref, (0, 0, pl.ds(start_q, block_q), slice(None)))  # [block_q, 128]
+            l = pl.load(l_tile_ref, (0, 0, pl.ds(start_q, block_q), slice(None)))  # noqa: E741 - Ambiguous upstream name kept as written.  # [block_q, 128]
             m = pl.load(m_tile_ref, (0, 0, pl.ds(start_q, block_q), slice(None)))  # [block_q, 128]
             do = pl.load(do_tile_ref, (0, 0, pl.ds(start_q, block_q), slice(None)))  # [block_q, 128]
             di = pl.load(di_tile_ref, (0, 0, pl.ds(start_q, block_q), slice(None))).astype(
@@ -1406,7 +1406,7 @@ def _flash_attention_bwd_dkv(
     v,
     ab,
     segment_ids,
-    l,
+    l,  # noqa: E741 - Ambiguous upstream name kept as written.
     m,
     do,
     di,
@@ -1433,7 +1433,7 @@ def _flash_attention_bwd_dkv(
 
     # Broadcast out scalar values
     m = jnp.broadcast_to(m[..., None], (*m.shape, MIN_BLOCK_SIZE))
-    l = jnp.broadcast_to(l[..., None], (*l.shape, MIN_BLOCK_SIZE))
+    l = jnp.broadcast_to(l[..., None], (*l.shape, MIN_BLOCK_SIZE))  # noqa: E741 - Ambiguous upstream name kept as written.
     # Preprocess contraction for bwd pass
     di = jnp.broadcast_to(di[..., None], (*di.shape, MIN_BLOCK_SIZE))
 
@@ -1666,7 +1666,7 @@ def _flash_attention_dq_kernel(
             v_tile_ref,
             (0, 0, k_slice, slice(None)),
         )  # [block_k, head_dim]
-        l = l_tile_ref[0, 0, :, :]  # [block_q_major, 128]
+        l = l_tile_ref[0, 0, :, :]  # noqa: E741 - Ambiguous upstream name kept as written.  # [block_q_major, 128]
         m = m_tile_ref[0, 0, :, :]  # [block_q_major, 128]
         do = do_tile_ref[0, 0, :, :]  # [block_q_major, head_dim]
         di = di_tile_ref[0, 0, :].astype(jnp.float32)  # [block_q_major, 128]
@@ -1769,7 +1769,7 @@ def _flash_attention_bwd_dq(
     v,
     ab,
     segment_ids,
-    l,
+    l,  # noqa: E741 - Ambiguous upstream name kept as written.
     m,
     do,
     di,
@@ -1794,7 +1794,7 @@ def _flash_attention_bwd_dq(
 
     # Broadcast out scalar values
     m = jnp.broadcast_to(m[..., None], (*m.shape, MIN_BLOCK_SIZE))
-    l = jnp.broadcast_to(l[..., None], (*l.shape, MIN_BLOCK_SIZE))
+    l = jnp.broadcast_to(l[..., None], (*l.shape, MIN_BLOCK_SIZE))  # noqa: E741 - Ambiguous upstream name kept as written.
     # Preprocess contraction for bwd pass
     di = jnp.broadcast_to(di[..., None], (*di.shape, block_k_major))
 

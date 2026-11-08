@@ -162,7 +162,7 @@ class Allegro:
         with third_party_lazy_import_guard():
             import transformers
 
-            transformers.AutoImageProcessor
+            transformers.AutoImageProcessor  # noqa: B018 - Attribute access resolves the lazy import, as upstream.
             components = load_allegro_components()
             import torch
             from diffusers.schedulers import EulerAncestralDiscreteScheduler

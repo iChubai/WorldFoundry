@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Tuple as Tuple
+from typing import Tuple as Tuple  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Union as Union
 
 import torch
@@ -87,7 +87,7 @@ class SpatialDownsample2x(Block):
         self.chan_in = chan_in
         self.chan_out = chan_out
         self.kernel_size = kernel_size
-        self.conv = CausalConv3d(self.chan_in, self.chan_out, (1,) + self.kernel_size, stride=(1,) + stride, padding=0)
+        self.conv = CausalConv3d(self.chan_in, self.chan_out, (1,) + self.kernel_size, stride=(1,) + stride, padding=0)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def forward(self, x):
         pad = (0, 1, 0, 1, 0, 0)
@@ -111,7 +111,11 @@ class SpatialUpsample2x_GC(Block):
         self.kernel_size = kernel_size
         self.unup = unup
         self.conv = CausalConv3d_GC(
-            self.chan_in, self.chan_out, (1,) + self.kernel_size, stride=(1,) + stride, padding=1
+            self.chan_in,
+            self.chan_out,
+            (1,) + self.kernel_size,  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            stride=(1,) + stride,  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            padding=1,
         )
 
     def forward(self, x):
@@ -138,7 +142,7 @@ class SpatialUpsample2x(Block):
         self.chan_out = chan_out
         self.kernel_size = kernel_size
         self.unup = unup
-        self.conv = CausalConv3d(self.chan_in, self.chan_out, (1,) + self.kernel_size, stride=(1,) + stride, padding=1)
+        self.conv = CausalConv3d(self.chan_in, self.chan_out, (1,) + self.kernel_size, stride=(1,) + stride, padding=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def forward(self, x):
         if not self.unup:

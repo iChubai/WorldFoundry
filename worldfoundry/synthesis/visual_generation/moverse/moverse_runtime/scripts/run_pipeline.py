@@ -21,11 +21,11 @@ SCRIPTS_DIR = os.path.join(ROOT_DIR, "scripts")
 if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
-from omegaconf import OmegaConf
-from PIL import Image
-from pipeline import CausalInferencePipeline
-from rendering.gaussian_renderer import GaussianRenderer, load_gaussians
-from traj_to_extrinsics import load_trajectory, trajectory_to_w2cs
+from omegaconf import OmegaConf  # noqa: E402 - Follows the sys.path setup.
+from PIL import Image  # noqa: E402 - Follows the sys.path setup.
+from pipeline import CausalInferencePipeline  # noqa: E402 - Follows the sys.path setup.
+from rendering.gaussian_renderer import GaussianRenderer, load_gaussians  # noqa: E402 - Follows the sys.path setup.
+from traj_to_extrinsics import load_trajectory, trajectory_to_w2cs  # noqa: E402 - Follows the sys.path setup.
 
 
 def parse_args():
@@ -86,7 +86,7 @@ def load_pipeline(args, config):
     # Load checkpoint
     ckpt_path = args.checkpoint_path
     if ckpt_path is None and hasattr(config, "checkpoint_paths"):
-        ckpt_path = list(config.checkpoint_paths)[0]
+        ckpt_path = list(config.checkpoint_paths)[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
         print(f"[init] Reading checkpoint from config.checkpoint_paths: {ckpt_path}")
 
     if ckpt_path:

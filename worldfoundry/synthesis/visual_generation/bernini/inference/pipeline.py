@@ -826,7 +826,7 @@ class BerniniPipeline:
                     index=order[: mask_len.long()],
                     src=torch.ones_like(mask),
                 ).bool()
-                if step >= planning_step - 1:
+                if step >= planning_step - 1:  # noqa: SIM108 - Branches carry per-case comments.
                     mask_to_pred = mask.bool()  # Predict the left mask tokens
                 else:
                     mask_to_pred = torch.logical_xor(mask.bool(), mask_next)

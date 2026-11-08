@@ -112,8 +112,8 @@ class Game:
 
             if action == 0:
                 pressed = pygame.key.get_pressed()
-                for keys, action in self.keymap.items():
-                    if all([pressed[key] for key in keys]):
+                for keys, action in self.keymap.items():  # noqa: B007 - The loop variable is read outside the loop.
+                    if all([pressed[key] for key in keys]):  # noqa: C419 - Evaluates every element before testing, as upstream.
                         break
                 else:
                     action = 0

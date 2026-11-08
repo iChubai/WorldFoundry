@@ -60,7 +60,7 @@ def _build_weight_map(ckpt_dir: str) -> dict:
     weight_map = {}
     for fn in shard_files:
         with safe_open(os.path.join(ckpt_dir, fn), framework="pt", device="cpu") as f:
-            for key in f.keys():
+            for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 weight_map[key] = fn
     return weight_map
 

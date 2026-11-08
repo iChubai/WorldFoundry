@@ -59,7 +59,7 @@ def retrieve_row_from_lmdb(lmdb_env, array_name, dtype, row_index, shape=None):
     with lmdb_env.begin() as txn:
         row_bytes = txn.get(data_key)
 
-    array = row_bytes.decode() if dtype == str else np.frombuffer(row_bytes, dtype=dtype)
+    array = row_bytes.decode() if dtype == str else np.frombuffer(row_bytes, dtype=dtype)  # noqa: E721 - Compares type objects by equality, as upstream.
 
     if shape is not None and len(shape) > 0:
         array = array.reshape(shape)

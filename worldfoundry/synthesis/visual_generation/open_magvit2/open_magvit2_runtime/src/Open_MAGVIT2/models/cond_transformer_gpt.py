@@ -26,7 +26,7 @@ class Net2NetTransformer(nn.Module):
         cond_stage_config,
         permuter_config=None,
         ckpt_path=None,
-        ignore_keys=[],
+        ignore_keys=[],  # noqa: B006 - Keeps the upstream default object and signature.
         first_stage_key="image",
         cond_stage_key="depth",
         downsample_cond_size=-1,
@@ -66,9 +66,9 @@ class Net2NetTransformer(nn.Module):
             if ("inception_model" not in k and "lpips_vgg" not in k and "lpips_alex" not in k)
         }
 
-    def init_from_ckpt(self, path, ignore_keys=[]):
+    def init_from_ckpt(self, path, ignore_keys=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         sd = torch.load(path, map_location="cpu")["state_dict"]
-        for k in sd.keys():
+        for k in sd.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             for ik in ignore_keys:
                 if k.startswith(ik):
                     print(f"Deleting key {k} from state_dict.")

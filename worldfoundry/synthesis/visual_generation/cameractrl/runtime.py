@@ -176,7 +176,7 @@ class CameraCtrlRuntime:
             raise RuntimeError("CameraCtrl requires CUDA because the official inference path moves modules to CUDA.")
         model_configs = OmegaConf.load(self.model_config)
         unet_additional_kwargs = (
-            model_configs["unet_additional_kwargs"] if "unet_additional_kwargs" in model_configs else None
+            model_configs["unet_additional_kwargs"] if "unet_additional_kwargs" in model_configs else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         )
         from .cameractrl_runtime.inference import get_pipeline
 

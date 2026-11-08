@@ -264,14 +264,14 @@ def load_first_frame_condition_tensor(
     image_aspect = float(image_width) / float(image_height)
     if image_aspect > geometry_aspect:
         crop_height = image_height
-        crop_width = max(1, int(round(crop_height * geometry_aspect)))
-        left = int(round((image_width - crop_width) / 2.0))
+        crop_width = max(1, int(round(crop_height * geometry_aspect)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        left = int(round((image_width - crop_width) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         top = 0
     else:
         crop_width = image_width
-        crop_height = max(1, int(round(crop_width / geometry_aspect)))
+        crop_height = max(1, int(round(crop_width / geometry_aspect)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         left = 0
-        top = int(round((image_height - crop_height) / 2.0))
+        top = int(round((image_height - crop_height) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     crop = image.crop((left, top, left + crop_width, top + crop_height))
     crop = crop.resize((target_width, target_height), resample=Image.BICUBIC)
     arr = np.asarray(crop, dtype=np.float32) / 255.0

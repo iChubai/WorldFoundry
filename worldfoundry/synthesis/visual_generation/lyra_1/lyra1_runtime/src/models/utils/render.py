@@ -280,7 +280,7 @@ def save_ply_orig(gaussians, path, compatible=True, scale_factor=None, prune_fac
     scales = scales.detach().cpu().numpy()
     rotations = rotations.detach().cpu().numpy()
 
-    l = ["x", "y", "z"]
+    l = ["x", "y", "z"]  # noqa: E741 - Ambiguous upstream name kept as written.
     # All channels except the 3 DC
     for i in range(f_dc.shape[1]):
         l.append(f"f_dc_{i}")

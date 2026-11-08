@@ -493,11 +493,11 @@ class WanModel(torch.nn.Module):
 
         if f > 16:  # with long-term memory
             long_num = f - 16
-            f_freq = dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1).clone()
-            f_freq_long_term = dit.freqs[0][50:51].view(1, 1, 1, -1).expand(long_num, h, w, -1).clone()
+            f_freq = dit.freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1).clone()  # noqa: F821 - Name is undefined in the upstream source.
+            f_freq_long_term = dit.freqs[0][50:51].view(1, 1, 1, -1).expand(long_num, h, w, -1).clone()  # noqa: F821 - Name is undefined in the upstream source.
             f_freq[-long_num:] = f_freq_long_term
-            h_freq = dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1)
-            w_freq = dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)
+            h_freq = dit.freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1)  # noqa: F821 - Name is undefined in the upstream source.
+            w_freq = dit.freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1)  # noqa: F821 - Name is undefined in the upstream source.
 
             freqs = torch.cat([f_freq, h_freq, w_freq], dim=-1).reshape(f * h * w, 1, -1).to(x.device)
 
@@ -625,10 +625,10 @@ class WanModelStateDictConverter:
             if name in rename_dict:
                 state_dict_[rename_dict[name]] = param
             else:
-                name_ = ".".join(name.split(".")[:1] + ["0"] + name.split(".")[2:])
+                name_ = ".".join(name.split(".")[:1] + ["0"] + name.split(".")[2:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 if name_ in rename_dict:
                     name_ = rename_dict[name_]
-                    name_ = ".".join(name_.split(".")[:1] + [name.split(".")[1]] + name_.split(".")[2:])
+                    name_ = ".".join(name_.split(".")[:1] + [name.split(".")[1]] + name_.split(".")[2:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     state_dict_[name_] = param
         if hash_state_dict_keys(state_dict) == "cb104773c6c2cb6df4f9529ad5c60d0b":
             config = {

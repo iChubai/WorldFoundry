@@ -4,17 +4,17 @@ import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 
-import argparse
-import warnings
+import argparse  # noqa: E402 - Follows module-level setup, as upstream.
+import warnings  # noqa: E402 - Follows module-level setup, as upstream.
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-import numpy as np
-import torch
-from diffusers import FlowMatchEulerDiscreteScheduler
-from omegaconf import OmegaConf
-from PIL import Image
-from transformers import AutoTokenizer
+import numpy as np  # noqa: E402 - Follows the warnings configuration.
+import torch  # noqa: E402 - Follows the warnings configuration.
+from diffusers import FlowMatchEulerDiscreteScheduler  # noqa: E402 - Follows the warnings configuration.
+from omegaconf import OmegaConf  # noqa: E402 - Follows the warnings configuration.
+from PIL import Image  # noqa: E402 - Follows the warnings configuration.
+from transformers import AutoTokenizer  # noqa: E402 - Follows the warnings configuration.
 
 current_file_path = os.path.abspath(__file__)
 project_roots = [
@@ -25,13 +25,13 @@ project_roots = [
 for project_root in project_roots:
     sys.path.insert(0, project_root) if project_root not in sys.path else None
 
-from videox_fun.utils.fp8_optimization import (
+from videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the sys.path setup.
     convert_model_weight_to_float8,
     convert_weight_dtype_wrapper,
     replace_parameters_by_name,
 )
-from videox_fun.utils.lora_utils import merge_lora, unmerge_lora
-from videox_fun.utils.utils import (
+from videox_fun.utils.lora_utils import merge_lora, unmerge_lora  # noqa: E402 - Follows the sys.path setup.
+from videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
     filter_kwargs,
     get_image_latent,
     get_image_to_video_latent,
@@ -39,28 +39,32 @@ from videox_fun.utils.utils import (
     save_videos_grid,
 )
 
-from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (
+from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (  # noqa: E402 - Follows the sys.path setup.
     load_wan_transformer,
 )
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import (
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import (  # noqa: E402 - Follows the sys.path setup.
     AutoencoderKLWan,
 )
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (  # noqa: E402 - Follows the sys.path setup.
     WanT5EncoderModel,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.versecrafter import (
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.versecrafter import (  # noqa: E402 - Follows the sys.path setup.
     VerseCrafterWanTransformer3DModel,
 )
-from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import FlowDPMSolverMultistepScheduler
-from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import FlowUniPCMultistepScheduler
-from worldfoundry.core.distributed.sequence_parallel.runtime import (
+from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (  # noqa: E402 - Follows the sys.path setup.
+    FlowDPMSolverMultistepScheduler,
+)
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (  # noqa: E402 - Follows the sys.path setup.
+    FlowUniPCMultistepScheduler,
+)
+from worldfoundry.core.distributed.sequence_parallel.runtime import (  # noqa: E402 - Follows the sys.path setup.
     set_multi_gpus_devices,
 )
-from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
-from worldfoundry.core.io.paths import resolve_data_path
+from worldfoundry.core.distributed.sharding.block_fsdp import shard_model  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.core.io.paths import resolve_data_path  # noqa: E402 - Follows the sys.path setup.
 
 # isort: split
-from versecrafter.pipeline import WanVerseCrafterPipeline
+from versecrafter.pipeline import WanVerseCrafterPipeline  # noqa: E402 - Follows the sys.path setup.
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Video generation inference script")
@@ -245,7 +249,7 @@ else:
             state_dict = load_file(transformer_path)
         else:
             state_dict = torch.load(transformer_path, map_location="cpu", weights_only=True)
-        state_dict = state_dict["state_dict"] if "state_dict" in state_dict else state_dict
+        state_dict = state_dict["state_dict"] if "state_dict" in state_dict else state_dict  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
         m, u = transformer.load_state_dict(state_dict, strict=False)
         print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")
@@ -264,7 +268,7 @@ if vae_path is not None:
         state_dict = load_file(vae_path)
     else:
         state_dict = torch.load(vae_path, map_location="cpu", weights_only=True)
-    state_dict = state_dict["state_dict"] if "state_dict" in state_dict else state_dict
+    state_dict = state_dict["state_dict"] if "state_dict" in state_dict else state_dict  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
     m, u = vae.load_state_dict(state_dict, strict=False)
     print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")

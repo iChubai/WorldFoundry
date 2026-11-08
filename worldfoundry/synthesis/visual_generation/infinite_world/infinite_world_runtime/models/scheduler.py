@@ -242,7 +242,7 @@ class RFlowScheduler:
         # prepare timesteps
         timesteps = list(np.linspace(self.num_timesteps, 1, self.num_sampling_steps, dtype=np.float32))
         if self.use_discrete_timesteps:
-            timesteps = [int(round(t)) for t in timesteps]
+            timesteps = [int(round(t)) for t in timesteps]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         timesteps = [torch.tensor([t] * z.shape[0], device=device) for t in timesteps]
         if self.use_timestep_transform:
             _latent_size = z_size[-3:]

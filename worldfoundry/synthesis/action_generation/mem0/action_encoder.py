@@ -20,6 +20,6 @@ def swish(x):
     return x * torch.sigmoid(x)
 
 
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamzero.action_encoder import (
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamzero.action_encoder import (  # noqa: E402 - Follows module-level definitions, as upstream.
     SinusoidalPositionalEncoding as SinusoidalPositionalEncoding,
 )

@@ -591,7 +591,7 @@ class DeepSpeedEngine(Module):
         random_ltd_queue = deque(sorted(random_ltd_config[RANDOM_LTD_LAYER_ID]))
         count = 0
         for name, layer in self.module.named_modules():
-            if isinstance(layer, RandomLayerTokenDrop):
+            if isinstance(layer, RandomLayerTokenDrop):  # noqa: SIM102 - Branches carry per-case comments.
                 if len(random_ltd_queue) != 0 and str(random_ltd_queue[0]) in name:  ###[1,2,3]
                     layer.init_config(random_ltd_config, self.random_ltd_scheduler, count)
                     random_ltd_queue.popleft()
@@ -1115,7 +1115,7 @@ class DeepSpeedEngine(Module):
     def _configure_distributed_model(self, model):
         self._set_client_model(model)
         is_zero_init_model = self.zero_optimization_partition_weights() and any(
-            [hasattr(param, "ds_id") for param in self.module.parameters()]
+            [hasattr(param, "ds_id") for param in self.module.parameters()]  # noqa: C419 - Evaluates every element before testing, as upstream.
         )
 
         if self.fp16_enabled():
@@ -1232,7 +1232,7 @@ class DeepSpeedEngine(Module):
                 logger.info(f"Initializing Apex amp from: {amp.__path__}")
             except NameError:
                 # If apex/amp is available it will be imported above
-                raise RuntimeError("Unable to import apex/amp, please make sure it is installed")
+                raise RuntimeError("Unable to import apex/amp, please make sure it is installed")  # noqa: B904 - Keeps the implicit exception context.
             return AMP
         # data type checks
         elif model_dtype == grad_accum_dtype:
@@ -1269,7 +1269,7 @@ class DeepSpeedEngine(Module):
                 basic_optimizer = client_optimizer(model_parameters)
                 log_dist("Using client callable to create basic optimizer", ranks=[0])
 
-            if self.zero_use_cpu_optimizer() and not isinstance(basic_optimizer, deepspeed.ops.adam.DeepSpeedCPUAdam):
+            if self.zero_use_cpu_optimizer() and not isinstance(basic_optimizer, deepspeed.ops.adam.DeepSpeedCPUAdam):  # noqa: SIM102 - Statement form kept for readability.
                 if self.zero_force_ds_cpu_optimizer():
                     msg = f'You are using ZeRO-Offload with a client provided optimizer ({type(basic_optimizer)}) which in most cases will yield poor performance. Please either use deepspeed.ops.adam.DeepSpeedCPUAdam or set an optimizer in your ds-config (https://www.deepspeed.ai/docs/config-json/#optimizer-parameters). If you really want to use a custom optimizer w. ZeRO-Offload and understand the performance impacts you can also set <"zero_force_ds_cpu_optimizer": false> in your configuration file.'
                     raise ZeRORuntimeException(msg)
@@ -1310,7 +1310,7 @@ class DeepSpeedEngine(Module):
         if optimizer_parameters is None:
             optimizer_parameters = {}
         # print(optimizer_parameters.keys())
-        if "max_grad_norm" in optimizer_parameters.keys():
+        if "max_grad_norm" in optimizer_parameters.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             raise ValueError(
                 "'max_grad_norm' is not supported as an optimizer parameter, please switch to using the deepspeed parameter 'gradient_clipping' see: https://www.deepspeed.ai/docs/config-json/#gradient-clipping for more details"
             )
@@ -1824,7 +1824,7 @@ class DeepSpeedEngine(Module):
             scaled_loss = prescaled_loss / self.gradient_accumulation_steps()
         elif isinstance(prescaled_loss, (tuple, list)):
             scaled_loss = []
-            for l in prescaled_loss:
+            for l in prescaled_loss:  # noqa: E741 - Ambiguous upstream name kept as written.
                 if isinstance(l, torch.Tensor):
                     scaled_loss.append(l / self.gradient_accumulation_steps())
                 else:
@@ -1877,7 +1877,7 @@ class DeepSpeedEngine(Module):
         if self.module.training and self.progressive_layer_drop:
             kwargs.update(self.progressive_layer_drop.get_state())
 
-        if self.__class__.__name__ != "PipelineEngine":
+        if self.__class__.__name__ != "PipelineEngine":  # noqa: SIM102 - Branches carry per-case comments.
             # TODO: The above if condition is a HACK since for PipelineEngine
             # it's difficult to inject argument in forward pass.
             if self.module.training and self.curriculum_enabled_legacy():
@@ -1952,7 +1952,7 @@ class DeepSpeedEngine(Module):
             # logger.info(f"Individual TopK gate time: {gate.gate_time:.2f} ms")
             gate_time += gate.gate_time
 
-        for l in self.moe_layers:
+        for l in self.moe_layers:  # noqa: E741 - Ambiguous upstream name kept as written.
             # logger.info(f"MoE layer; total: {l.time_moe:.2f} ms, first alltoall: {l.time_falltoall:.2f}, second alltoall: {l.time_salltoall:.2f}")
             moe_time += l.time_moe
             falltoall += l.time_falltoall
@@ -2120,7 +2120,7 @@ class DeepSpeedEngine(Module):
     def clip_fp32_gradients(self):
         clip_grad_norm_(parameters=self.module.parameters(), max_norm=self.gradient_clipping(), mpu=self.mpu)
 
-    def _take_model_step(self, lr_kwargs, block_eigenvalue={}):
+    def _take_model_step(self, lr_kwargs, block_eigenvalue={}):  # noqa: B006 - Keeps the upstream default object and signature.
         if self.gradient_clipping() > 0.0:
             if not (self.fp16_enabled() or self.bfloat16_enabled() or self.amp_enabled() or self.zero_optimization()):
                 self.clip_fp32_gradients()
@@ -2290,7 +2290,7 @@ class DeepSpeedEngine(Module):
             # Log micro timing and reset
             self.timers.log(names=self.engine_timers.micro_timers, memory_breakdown=self.memory_breakdown())
 
-        if self.wall_clock_breakdown() or self.flops_profiler_enabled():
+        if self.wall_clock_breakdown() or self.flops_profiler_enabled():  # noqa: SIM102 - Branches carry per-case comments.
             # Log global timing and reset
             if self.is_gradient_accumulation_boundary():
                 if self.monitor.enabled:
@@ -2329,9 +2329,9 @@ class DeepSpeedEngine(Module):
                 reset=False,
             )
             titer = 0.0
-            titer += msg[FORWARD_GLOBAL_TIMER] if FORWARD_GLOBAL_TIMER in msg else 0
-            titer += msg[BACKWARD_GLOBAL_TIMER] if BACKWARD_GLOBAL_TIMER in msg else 0
-            titer += msg[STEP_GLOBAL_TIMER] if STEP_GLOBAL_TIMER in msg else 0
+            titer += msg[FORWARD_GLOBAL_TIMER] if FORWARD_GLOBAL_TIMER in msg else 0  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+            titer += msg[BACKWARD_GLOBAL_TIMER] if BACKWARD_GLOBAL_TIMER in msg else 0  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+            titer += msg[STEP_GLOBAL_TIMER] if STEP_GLOBAL_TIMER in msg else 0  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             titer *= self.gradient_accumulation_steps()
             msg["latency"] = titer
             msg["FLOPS_per_gpu"] = self.flops * 1_000_000 * self.gradient_accumulation_steps() / titer
@@ -2424,7 +2424,7 @@ class DeepSpeedEngine(Module):
                 tensor_to_allreduce.mul_(1.0 / self.gradient_predivide_factor())
 
             dist.all_reduce(tensor_to_allreduce, group=dp_group)
-            if self.gradient_average:
+            if self.gradient_average:  # noqa: SIM102 - Statement form kept for readability.
                 if self.gradient_predivide_factor() != dist.get_world_size(group=dp_group):
                     tensor_to_allreduce.mul_(self.gradient_predivide_factor() / dist.get_world_size(group=dp_group))
         else:
@@ -2458,7 +2458,7 @@ class DeepSpeedEngine(Module):
         non_expert_grads = []
         expert_grads = {}
         if self.has_moe_layers:
-            for key in self.expert_data_parallel_group.keys():
+            for key in self.expert_data_parallel_group.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 expert_grads[key] = []
 
         for param_name, param in self.module.named_parameters():
@@ -2623,7 +2623,7 @@ class DeepSpeedEngine(Module):
         model=None,
         mpu=None,
         num_experts=1,
-        checkpoint_engine=TorchCheckpointEngine(),
+        checkpoint_engine=TorchCheckpointEngine(),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         if old_moe_load:
             expp_rank = groups._get_expert_data_parallel_rank(groups._get_max_expert_size_name())
@@ -3105,7 +3105,7 @@ class DeepSpeedEngine(Module):
             bf16_mode=bf16_mode,
         )
         for i, ckpt_name in enumerate(zero_ckpt_names):
-            if not os.path.exists(ckpt_name):
+            if not os.path.exists(ckpt_name):  # noqa: SIM102 - Branches carry per-case comments.
                 # transparently handle the old file pattern for optim_states
                 if "optim_states.pt" in ckpt_name:
                     ckpt_name_try = ckpt_name.replace("_optim_states.pt", "optim_states.pt")
@@ -3167,7 +3167,7 @@ class DeepSpeedEngine(Module):
             elif not valid:
                 logger.warning(msg)
 
-    def save_checkpoint(self, save_dir, tag=None, client_state={}, save_latest=True, exclude_frozen_parameters=False):
+    def save_checkpoint(self, save_dir, tag=None, client_state={}, save_latest=True, exclude_frozen_parameters=False):  # noqa: B006 - Keeps the upstream default object and signature.
         """Save training checkpoint
 
         Arguments:
@@ -3251,7 +3251,7 @@ class DeepSpeedEngine(Module):
 
         return full_state_dict
 
-    def _save_moe_checkpoint(self, save_dir, tag, client_state={}, exclude_frozen_parameters=False):
+    def _save_moe_checkpoint(self, save_dir, tag, client_state={}, exclude_frozen_parameters=False):  # noqa: B006 - Keeps the upstream default object and signature.
         save_path = self._get_ckpt_name(save_dir, tag)
         # A hack to save the checkpointing directory. Pipeline parallelism overrides
         # module_state_dict() and uses this path to save the model. module_state_dict()
@@ -3375,7 +3375,7 @@ class DeepSpeedEngine(Module):
 
         return success
 
-    def _save_checkpoint(self, save_dir, tag, client_state={}, exclude_frozen_parameters=False):
+    def _save_checkpoint(self, save_dir, tag, client_state={}, exclude_frozen_parameters=False):  # noqa: B006 - Keeps the upstream default object and signature.
         save_path = self._get_ckpt_name(save_dir, tag)
 
         zero_optimizer_state = self.zero_optimization() or self.bfloat16_enabled()

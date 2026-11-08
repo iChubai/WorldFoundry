@@ -534,7 +534,9 @@ def main():
             print(f"  Decoded {video_path} -> {vid_dec.shape}")
         video_out_path = video_path + f".reconstructed_by_{checkpoint_name}.mp4"
         video_out = VideoTensorWriter(
-            video_out_path, (vid_dec.shape[-1], vid_dec.shape[-2]), fps=int(round(video_in.fps))
+            video_out_path,
+            (vid_dec.shape[-1], vid_dec.shape[-2]),
+            fps=int(round(video_in.fps)),  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         )
         for frame in vid_dec.clamp_(0, 1).mul_(255).round_().byte().cpu()[0]:
             video_out.write(frame)

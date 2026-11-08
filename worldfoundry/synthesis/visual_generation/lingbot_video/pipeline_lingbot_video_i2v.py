@@ -90,8 +90,8 @@ class LingBotVideoImageToVideoPipeline(LingBotVideoPipeline):
         new_h = max(math.ceil(old_h * scale), height)
         new_w = max(math.ceil(old_w * scale), width)
         resized = F.interpolate(raw, size=(new_h, new_w), mode="bilinear", align_corners=False)
-        top = int(round((new_h - height) / 2.0))
-        left = int(round((new_w - width) / 2.0))
+        top = int(round((new_h - height) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        left = int(round((new_w - width) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         cropped = resized[:, :, top : top + height, left : left + width].float() / 255.0
         return cropped.unsqueeze(2)
 

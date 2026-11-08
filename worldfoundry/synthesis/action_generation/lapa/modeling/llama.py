@@ -520,10 +520,10 @@ class FlaxLLaMAAttention(nn.Module):
         )
 
     def _split_heads(self, hidden_states):
-        return hidden_states.reshape(hidden_states.shape[:2] + (self.num_heads, self.head_dim))
+        return hidden_states.reshape(hidden_states.shape[:2] + (self.num_heads, self.head_dim))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def _merge_heads(self, hidden_states):
-        return hidden_states.reshape(hidden_states.shape[:2] + (self.embed_dim,))
+        return hidden_states.reshape(hidden_states.shape[:2] + (self.embed_dim,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     @nn.compact
     def _concatenate_to_cache(self, key, value, query, attention_mask):
@@ -684,7 +684,7 @@ class FlaxLLaMAAttention(nn.Module):
                 segment_mask = segment_mask[:, None]
 
             batch_size = hidden_states.shape[0]
-            causal_mask = jnp.broadcast_to(causal_mask, (batch_size,) + causal_mask.shape[1:])
+            causal_mask = jnp.broadcast_to(causal_mask, (batch_size,) + causal_mask.shape[1:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             attention_mask = jnp.broadcast_to(jnp.expand_dims(attention_mask, axis=(-3, -2)), causal_mask.shape)
             attention_mask = combine_masks(attention_mask, causal_mask, fcm_mask, segment_mask)
@@ -890,7 +890,7 @@ class FlaxLLaMAPreTrainedModel(FlaxPreTrainedModel):
         rngs = {"params": params_rng, "dropout": dropout_rng}
 
         if self.config.add_cross_attention:
-            encoder_hidden_states = jnp.zeros(input_shape + (self.config.hidden_size,))
+            encoder_hidden_states = jnp.zeros(input_shape + (self.config.hidden_size,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             encoder_attention_mask = attention_mask
             module_init_outputs = self.module.init(
                 rngs,
@@ -1013,7 +1013,7 @@ class FlaxLLaMAPreTrainedModel(FlaxPreTrainedModel):
             return outputs
         elif past_key_values is not None and not return_dict:
             outputs, past_key_values = outputs
-            outputs = outputs[:1] + (unfreeze(past_key_values["cache"]),) + outputs[1:]
+            outputs = outputs[:1] + (unfreeze(past_key_values["cache"]),) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return outputs
 
@@ -1193,9 +1193,9 @@ class FlaxLLaMAModule(nn.Module):
 
         if output_hidden_states:
             all_hidden_states = outputs[1] + (hidden_states,)
-            outputs = (hidden_states, all_hidden_states) + outputs[2:]
+            outputs = (hidden_states, all_hidden_states) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         else:
-            outputs = (hidden_states,) + outputs[1:]
+            outputs = (hidden_states,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(v for v in outputs if v is not None)
@@ -1271,7 +1271,7 @@ class FlaxLLaMAForCausalLMModule(nn.Module):
             lm_logits = self.lm_head(hidden_states)
 
         if not return_dict:
-            return (lm_logits,) + outputs[1:]
+            return (lm_logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return FlaxCausalLMOutput(logits=lm_logits, hidden_states=outputs.hidden_states, attentions=outputs.attentions)
 
@@ -1448,7 +1448,7 @@ class LLaMATokenizer(PreTrainedTokenizer):
             output = output + token_ids_1
 
         if self.add_eos_token:
-            output = output + [self.eos_token_id]
+            output = output + [self.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return output
 

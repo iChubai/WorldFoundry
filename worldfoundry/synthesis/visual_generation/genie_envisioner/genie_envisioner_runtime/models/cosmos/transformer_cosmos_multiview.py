@@ -613,7 +613,7 @@ class MultiViewCosmosTransformer3DModel(ModelMixin, ConfigMixin):
                     for x in (temb, embedded_timestep)
                 )  # [BT, C] -> [B, T, 1, 1, C] -> [B, T, H, W, C] -> [B, THW, C]
             else:
-                assert False
+                assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
             if self.use_view_embed:
                 embedded_view = self.view_embed[:n_view].unsqueeze(0).repeat(batch_size // n_view, 1, 1)  # b v c

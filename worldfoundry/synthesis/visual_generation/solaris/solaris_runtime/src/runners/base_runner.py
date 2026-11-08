@@ -37,7 +37,7 @@ def _strip_optional_none_variables(tree, path=()):
         return placeholders
     for key in list(tree.keys()):
         value = tree[key]
-        next_path = path + (key,)
+        next_path = path + (key,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if _is_optional_none_variable(value):
             placeholders.append((next_path, value))
             del tree[key]
@@ -52,7 +52,7 @@ def _strip_empty_mappings(tree, path=()):
         return placeholders
     for key in list(tree.keys()):
         value = tree[key]
-        next_path = path + (key,)
+        next_path = path + (key,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         placeholders.extend(_strip_empty_mappings(value, next_path))
         if hasattr(value, "keys") and len(value) == 0:
             placeholders.append((next_path, value))

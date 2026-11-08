@@ -58,7 +58,7 @@ class MMDoubleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qkv_bias: bool = False,
-        action_config: dict = {},
+        action_config: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,
     ):
@@ -623,7 +623,7 @@ class MMSingleStreamBlock(nn.Module):
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qk_scale: float | None = None,
-        action_config: dict = {},
+        action_config: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,
     ):
@@ -997,7 +997,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
         self,
         text_states_dim,
         text_states_dim_2,
-        patch_size: list = [1, 2, 2],
+        patch_size: list = [1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         in_channels: int = 4,  # Should be VAE.config.latent_channels.
         out_channels: int | None = None,
         hidden_size: int = 3072,
@@ -1006,7 +1006,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
         mlp_act_type: str = "gelu_tanh",
         mm_double_blocks_depth: int = 20,
         mm_single_blocks_depth: int = 40,
-        rope_dim_list: list[int] = [16, 56, 56],
+        rope_dim_list: list[int] = [16, 56, 56],  # noqa: B006 - Keeps the upstream default object and signature.
         qkv_bias: bool = True,
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
@@ -1014,7 +1014,7 @@ class MGVideoDiffusionTransformerI2V(ModelMixin, ConfigMixin, PeftAdapterMixin):
         text_projection: str = "single_refiner",
         use_attention_mask: bool = True,
         rope_theta=256,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         i2v_condition_type="token_replace",
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,

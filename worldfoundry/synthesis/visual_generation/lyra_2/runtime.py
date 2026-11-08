@@ -523,7 +523,7 @@ class Lyra2Runtime:
         desired_dtype = self.model.tensor_kwargs.get("dtype", self.weight_dtype)
         neg_t5 = self.negative_prompt_data["t5_text_embeddings"].to(device=desired_device, dtype=desired_dtype)
         chunk_keys_int = (
-            sorted(int(key) for key in chunk_captions.keys() if int(key) < num_frames) if chunk_captions else []
+            sorted(int(key) for key in chunk_captions.keys() if int(key) < num_frames) if chunk_captions else []  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         )
 
         if len(chunk_keys_int) > 1:

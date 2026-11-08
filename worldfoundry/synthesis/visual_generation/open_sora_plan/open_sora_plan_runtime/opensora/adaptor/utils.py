@@ -256,7 +256,7 @@ class CheckOverflow:
 
     # `params` is a list / generator of torch.Variable
     def has_overflow_serial(self, params):
-        for i, p in enumerate(params):
+        for i, p in enumerate(params):  # noqa: SIM110 - Keeps the explicit loop.
             if p.grad is not None and self._has_inf_or_nan(p.grad.data, i):
                 return True
         return False
@@ -641,7 +641,7 @@ class PartitionedTensor:
         self.even_split = tensor.numel() % self.num_parts == 0
 
     @classmethod
-    def from_meta(cls, meta, local_part, group, device=get_accelerator().device_name()):
+    def from_meta(cls, meta, local_part, group, device=get_accelerator().device_name()):  # noqa: B008 - Default evaluated once at definition, as upstream.
         assert meta.dtype == torch.long
         dummy = torch.ones(dist.get_world_size(group=group))
         part_obj = cls(tensor=dummy, group=group)
@@ -767,7 +767,7 @@ def memory_status(msg, print_rank=-1, reset_max=False):
 
 
 def get_ma_status():
-    if dist.is_initialized() and not dist.get_rank() == 0:
+    if dist.is_initialized() and not dist.get_rank() == 0:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
         return 0
     return get_accelerator().memory_allocated()
 
@@ -780,7 +780,7 @@ def empty_cache():
 def see_memory_usage(message, force=False):
     if not force:
         return
-    if dist.is_initialized() and not dist.get_rank() == 0:
+    if dist.is_initialized() and not dist.get_rank() == 0:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
         return
 
     # python doesn't do real-time garbage collection so do it explicitly to get the correct RAM reports
@@ -868,7 +868,7 @@ def get_global_norm_of_tensors(input_tensors, norm_type=2, mpu=None, use_graph=F
         Total norm of the tensors (viewed as a single vector).
     """
     assert isinstance(input_tensors, Iterable), f"expected Iterable type not {type(input_tensors)}"
-    assert all([torch.is_tensor(t) for t in input_tensors]), "expected list of only tensors"
+    assert all([torch.is_tensor(t) for t in input_tensors]), "expected list of only tensors"  # noqa: C419 - Evaluates every element before testing, as upstream.
 
     norm_type = float(norm_type)
     if norm_type == inf:
@@ -948,7 +948,7 @@ def align_dense_tensors(tensor_list, alignment):
     if remaining:
         elements_to_add = alignment - remaining
         pad_tensor = torch.zeros(elements_to_add, device=tensor_list[0].device, dtype=tensor_list[0].dtype)
-        padded_tensor_list = tensor_list + [pad_tensor]
+        padded_tensor_list = tensor_list + [pad_tensor]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     else:
         padded_tensor_list = tensor_list
 

@@ -171,7 +171,7 @@ class VideoOlmo(ModelBase):
         self._image_high_res_id = self.special_ids[tokenizer.IMAGE_PATCH_TOKEN]
 
         if config.bi_directional_attn == "within_image":
-            if config.mm_preprocessor.image is not None:
+            if config.mm_preprocessor.image is not None:  # noqa: SIM102 - Statement form kept for readability.
                 if not config.mm_preprocessor.image.use_single_crop_start_token:
                     raise ValueError("within_image attention requires use_single_crop_start_token.")
             if not config.mm_preprocessor.use_frame_special_tokens:

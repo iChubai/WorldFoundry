@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 from flax import struct
 
 from ...openpi import array_typing as at

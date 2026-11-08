@@ -19,7 +19,7 @@ import torch.nn.functional as F
 import torch.nn.init as init
 from diffusers.models.attention import Attention, FeedForward
 from diffusers.models.attention_processor import (
-    Attention,
+    Attention,  # noqa: F811 - Later import provides the binding, as upstream.
     AttnProcessor2_0,
     HunyuanAttnProcessor2_0,
 )

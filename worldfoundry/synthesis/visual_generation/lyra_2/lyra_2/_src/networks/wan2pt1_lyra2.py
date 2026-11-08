@@ -234,7 +234,7 @@ class Lyra2WanModel(nn.Module):
         cross_attn_norm: bool = True,
         eps: float = 1e-6,
         concat_padding_mask: bool = False,
-        sac_config: SACConfig = SACConfig(),
+        sac_config: SACConfig = SACConfig(),  # noqa: B008 - Default evaluated once at definition, as upstream.
         cp_comm_type: str = "p2p",
         postpone_checkpoint: bool = False,
         conv_patchify: bool = False,

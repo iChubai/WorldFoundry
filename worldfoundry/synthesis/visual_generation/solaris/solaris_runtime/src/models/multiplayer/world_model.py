@@ -29,7 +29,7 @@ class MPSelfAttention(nnx.Module):
         sink_size=0,
         qk_norm=True,
         eps=1e-6,
-        rngs=nnx.Rngs(0),
+        rngs=nnx.Rngs(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
         platform="tpu",
     ):
         super().__init__()
@@ -157,10 +157,10 @@ class SolarisMPBlock(nnx.Module):
         sink_size=0,
         qk_norm=True,
         cross_attn_norm=False,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         action_module=False,
         eps=1e-6,
-        rngs=nnx.Rngs(0),
+        rngs=nnx.Rngs(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
         platform="tpu",
     ):
         super().__init__()
@@ -219,7 +219,7 @@ class SolarisMPBlock(nnx.Module):
         kv_cache_keyboard=None,
         crossattn_cache=None,
         current_start=0,
-        use_action_module=jnp.array([True]),
+        use_action_module=jnp.array([True]),  # noqa: B008 - Default evaluated once at definition, as upstream.
         mesh=None,
         teacher_forcing=False,
         bidirectional=False,
@@ -403,10 +403,10 @@ class SolarisMPModel(nnx.Module):
         sink_size=0,
         qk_norm=True,
         cross_attn_norm=True,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         inject_sample_info=False,
         eps=1e-6,
-        rngs=nnx.Rngs(0),
+        rngs=nnx.Rngs(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
         multiplayer_method="multiplayer_attn",
         num_players=2,
         platform="tpu",

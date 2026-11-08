@@ -128,7 +128,7 @@ def decode_latent_to_rgb(
 
         # WanVAEWrapper uses decode_to_pixel, expects [B, T, C, H, W]
         # Our latent is [1, C, T, H, W], need to permute to [1, T, C, H, W]
-        if latent.dim() == 5 and latent.shape[1] == 16:  # [1, C, T, H, W]
+        if latent.dim() == 5 and latent.shape[1] == 16:  # noqa: SIM108 - Branches carry per-case comments.  # [1, C, T, H, W]
             latent_for_vae = latent.permute(0, 2, 1, 3, 4)  # [1, T, C, H, W]
         else:
             latent_for_vae = latent

@@ -384,7 +384,7 @@ class GPT(nn.Module):
         multiple_of=256,
         n_kv_head=None,
         factorized_k=2,
-        factorized_bits=[9, 9],
+        factorized_bits=[9, 9],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
 

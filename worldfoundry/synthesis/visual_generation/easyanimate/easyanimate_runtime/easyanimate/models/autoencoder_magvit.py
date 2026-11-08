@@ -93,8 +93,8 @@ class AutoencoderKLMagvit(ModelMixin, ConfigMixin, FromOriginalVAEMixin):
         in_channels: int = 3,
         out_channels: int = 3,
         ch=128,
-        ch_mult=[1, 2, 4, 4],
-        block_out_channels=[128, 256, 512, 512],
+        ch_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
+        block_out_channels=[128, 256, 512, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         use_gc_blocks=None,
         down_block_types: tuple | None = None,
         up_block_types: tuple | None = None,

@@ -411,7 +411,7 @@ class XiaomiRobotics1Runtime:
         tokens = architecture["special_tokens"]
         state_tokens = str(tokens["state"]) * int(architecture["state_shape"][0])
         action_tokens = "".join(f"<a_{index}>" for index in range(int(architecture["action_shape"][0])))
-        messages = base_messages + [
+        messages = base_messages + [  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             {
                 "role": "user",
                 "content": [{"type": "text", "text": f"Robot state: {state_tokens}"}],

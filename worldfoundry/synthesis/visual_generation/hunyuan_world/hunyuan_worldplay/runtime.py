@@ -946,8 +946,8 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
             original_width, original_height = origin_size
 
             scale_factor = max(target_width / original_width, target_height / original_height)
-            resize_width = int(round(original_width * scale_factor))
-            resize_height = int(round(original_height * scale_factor))
+            resize_width = int(round(original_width * scale_factor))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+            resize_height = int(round(original_height * scale_factor))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
             ref_image_transform = transforms.Compose(
                 [
@@ -1995,7 +1995,7 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
             if device is None:
                 device = torch.device("cuda")
 
-        if enable_group_offloading:
+        if enable_group_offloading:  # noqa: SIM108 - Branches carry per-case comments.
             # Assuming the user does not have sufficient GPU memory, we initialize the models on CPU
             transformer_init_device = torch.device("cpu")
         else:

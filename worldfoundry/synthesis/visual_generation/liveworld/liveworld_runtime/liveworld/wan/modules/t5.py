@@ -60,7 +60,9 @@ class T5LayerNorm(nn.Module):
         return self.weight * x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5Attention
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5Attention,
+)
 
 
 class T5FeedForward(nn.Module):
@@ -83,7 +85,9 @@ class T5FeedForward(nn.Module):
         return x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5SelfAttention
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5SelfAttention,
+)
 
 
 class T5CrossAttention(nn.Module):
@@ -113,7 +117,9 @@ class T5CrossAttention(nn.Module):
         return x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5RelativeEmbedding,
+)
 
 
 class T5Encoder(nn.Module):
@@ -248,7 +254,7 @@ def _t5(
     encoder_only=False,
     decoder_only=False,
     return_tokenizer=False,
-    tokenizer_kwargs={},
+    tokenizer_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
     dtype=torch.float32,
     device="cpu",
     **kwargs,
@@ -309,7 +315,7 @@ class T5EncoderModel:
         self,
         text_len,
         dtype=torch.bfloat16,
-        device=torch.cuda.current_device(),
+        device=torch.cuda.current_device(),  # noqa: B008 - Default evaluated once at definition, as upstream.
         checkpoint_path=None,
         tokenizer_path=None,
         shard_fn=None,

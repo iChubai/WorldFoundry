@@ -363,7 +363,7 @@ class PerceptionEncoderWithDownsample(nn.Module):
         heads: int,
         mlp_ratio: float,
         act_layer: Callable = nn.GELU,
-        norm_layer: Callable = partial(nn.LayerNorm, eps=1e-5),
+        norm_layer: Callable = partial(nn.LayerNorm, eps=1e-5),  # noqa: B008 - Default evaluated once at definition, as upstream.
         use_ln_pre: bool = True,
         use_ln_post: bool = True,
         ls_init_value: float | None = None,
@@ -375,7 +375,7 @@ class PerceptionEncoderWithDownsample(nn.Module):
         output_dim: int | None = 1280,
         attn_pooler_heads: int = 8,
         pool_type: Literal["attn", "tok", "avg", "none"] = "attn",
-        layer_types: list[str] = [],
+        layer_types: list[str] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         sliding_window_size: int = -1,
         # config,
         # act_layer: Callable = nn.GELU,

@@ -89,7 +89,7 @@ def load_weights(
     animation_pipeline,
     # motion module
     motion_module_path="",
-    motion_module_lora_configs=[],
+    motion_module_lora_configs=[],  # noqa: B006 - Keeps the upstream default object and signature.
     # domain adapter
     adapter_lora_path="",
     adapter_lora_scale=1.0,
@@ -110,7 +110,7 @@ def load_weights(
             weights_only=True,
         )
         motion_module_state_dict = (
-            motion_module_state_dict["state_dict"]
+            motion_module_state_dict["state_dict"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "state_dict" in motion_module_state_dict
             else motion_module_state_dict
         )
@@ -135,7 +135,7 @@ def load_weights(
         if dreambooth_model_path.endswith(".safetensors"):
             dreambooth_state_dict = {}
             with safe_open(dreambooth_model_path, framework="pt", device="cpu") as f:
-                for key in f.keys():
+                for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     dreambooth_state_dict[key] = f.get_tensor(key)
         elif dreambooth_model_path.endswith(".ckpt"):
             dreambooth_state_dict = torch.load(
@@ -163,7 +163,7 @@ def load_weights(
         assert lora_model_path.endswith(".safetensors")
         lora_state_dict = {}
         with safe_open(lora_model_path, framework="pt", device="cpu") as f:
-            for key in f.keys():
+            for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 lora_state_dict[key] = f.get_tensor(key)
 
         animation_pipeline = convert_lora(animation_pipeline, lora_state_dict, alpha=lora_alpha)
@@ -180,7 +180,7 @@ def load_weights(
             weights_only=True,
         )
         domain_lora_state_dict = (
-            domain_lora_state_dict["state_dict"] if "state_dict" in domain_lora_state_dict else domain_lora_state_dict
+            domain_lora_state_dict["state_dict"] if "state_dict" in domain_lora_state_dict else domain_lora_state_dict  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         )
         domain_lora_state_dict.pop("animatediff_config", "")
 
@@ -195,7 +195,7 @@ def load_weights(
         print(f"load motion LoRA from {path}")
         motion_lora_state_dict = torch.load(path, map_location="cpu", weights_only=True)
         motion_lora_state_dict = (
-            motion_lora_state_dict["state_dict"] if "state_dict" in motion_lora_state_dict else motion_lora_state_dict
+            motion_lora_state_dict["state_dict"] if "state_dict" in motion_lora_state_dict else motion_lora_state_dict  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         )
         motion_lora_state_dict.pop("animatediff_config", "")
 

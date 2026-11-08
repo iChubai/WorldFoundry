@@ -130,7 +130,7 @@ class ARDroidRoboarenaPolicy:
                         self._frame_buffers[droid_key].append(data)
 
         # Determine how many frames to use
-        if self._is_first_call:
+        if self._is_first_call:  # noqa: SIM108 - Branches carry per-case comments.
             # First call: use only 1 frame
             num_frames = 1
         else:
@@ -173,7 +173,7 @@ class ARDroidRoboarenaPolicy:
             converted["state.gripper_position"] = np.zeros((1, 1), dtype=np.float64)
 
         # Convert prompt
-        if "prompt" in obs:
+        if "prompt" in obs:  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             converted["annotation.language.action_text"] = obs["prompt"]
         else:
             converted["annotation.language.action_text"] = ""

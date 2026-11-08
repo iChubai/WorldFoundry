@@ -42,7 +42,7 @@ def slice_trajdict_with_t(data_dict, start_idx=0, end_idx=None, step=1):
 
 def concat_trajdict(dcts):
     full_dct = {}
-    for k in dcts[0].keys():
+    for k in dcts[0].keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         if isinstance(dcts[0][k], np.ndarray):
             full_dct[k] = np.concatenate([dct[k] for dct in dcts], axis=1)
         elif isinstance(dcts[0][k], torch.Tensor):

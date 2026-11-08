@@ -43,8 +43,8 @@ class BaseDataConfig(ABC):
         embodiment_tag,
         use_fixed_view,
         max_view_num,
-        obs_indices=[0],
-        action_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        obs_indices=[0],  # noqa: B006 - Keeps the upstream default object and signature.
+        action_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         self.embodiment_tag = embodiment_tag
         self.use_fixed_view = use_fixed_view
@@ -138,7 +138,7 @@ class LiberoNoNormDataConfig(LiberoOriginDataConfig):
     STATE_KEYS: ClassVar[list] = ["state.eef_position", "state.eef_rotation", "state.libero_gripper_position"]
     ACTION_KEYS: ClassVar[list] = ["action.eef_position", "action.eef_rotation", "action.gripper_position"]
 
-    UNIFIED_MAPPING: dict[str, tuple[int, int]] = {
+    UNIFIED_MAPPING: dict[str, tuple[int, int]] = {  # noqa: RUF012 - Shared class-level value, as upstream.
         "state.eef_position": (0, 3),
         "state.eef_rotation": (3, 6),
         "state.libero_gripper_position": (44, 46),
@@ -209,7 +209,7 @@ class RobocasaHumanDataConfig(BaseDataConfig):
         "action.control_mode",
     ]
 
-    UNIFIED_MAPPING: dict[str, tuple[int, int]] = {
+    UNIFIED_MAPPING: dict[str, tuple[int, int]] = {  # noqa: RUF012 - Shared class-level value, as upstream.
         "state.eef_position": (0, 3),
         "state.eef_rotation": (3, 6),
         "state.gripper_qpos": (44, 46),

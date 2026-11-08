@@ -20,7 +20,7 @@ _code_dir = os.path.join(os.path.dirname(__file__), "..")
 if _code_dir not in sys.path:
     sys.path.insert(0, _code_dir)
 
-from depth.depth_utils import (
+from depth.depth_utils import (  # noqa: E402 - Follows the sys.path setup.
     align_ground_plane,
     save_depth_rgba_float,
     smooth_gaussian,

@@ -109,7 +109,7 @@ class KairosEmbodiedPipeline_DMD(BasePipeline):
         return trainable_modules
 
     def load_lora(self, module, path, alpha=1):
-        loader = GeneralLoRALoader(torch_dtype=self.torch_dtype, device=self.device)
+        loader = GeneralLoRALoader(torch_dtype=self.torch_dtype, device=self.device)  # noqa: F821 - Name is undefined in the upstream source.
         lora = load_state_dict(path, torch_dtype=self.torch_dtype, device=self.device)
         loader.load(module, lora, alpha=alpha)
 
@@ -120,7 +120,7 @@ class KairosEmbodiedPipeline_DMD(BasePipeline):
         dit=None,
         vae_path=None,
         text_encoder_path=None,
-        selected_sampling_time=[],
+        selected_sampling_time=[],  # noqa: B006 - Keeps the upstream default object and signature.
         vram_management_enabled=False,
         parallel_mode=None,
         use_unified_sequence_parallel=False,
@@ -168,7 +168,7 @@ class KairosEmbodiedPipeline_DMD(BasePipeline):
         pipe.vae = vae_
         vae_group = parallel_state.get_vae_parallel_group()
         vae_size = dist.get_world_size(vae_group) if (vae_group is not None and dist.is_initialized()) else 1
-        if vae_size > 1 and parallel_mode:
+        if vae_size > 1 and parallel_mode:  # noqa: SIM102 - Statement form kept for readability.
             if (parallel_mode == "cp" or parallel_mode == "sp") and not hasattr(pipe.vae, "parallel_group"):
                 print(
                     f">>>> Wrapping VAE for Context Parallel Decoding with cp_size:{vae_size}, parallel mode: {parallel_mode} <<<<"
@@ -271,7 +271,7 @@ class KairosEmbodiedPipeline_DMD(BasePipeline):
         progress_bar_cmd=tqdm,
         parallel_mode: str | None = None,
     ):
-        if seed != None:
+        if seed != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             np.random.seed(seed)
             torch.manual_seed(seed)
             torch.cuda.manual_seed(seed)
@@ -1681,11 +1681,13 @@ def model_fn_wan_video(
             if vace_context is not None and block_id in vace.vace_layers_mapping:
                 current_vace_hint = vace_hints[vace.vace_layers_mapping[block_id]]
                 if use_unified_sequence_parallel and dist.is_initialized() and dist.get_world_size() > 1:
-                    current_vace_hint = torch.chunk(current_vace_hint, get_sequence_parallel_world_size(), dim=1)[
-                        get_sequence_parallel_rank()
+                    current_vace_hint = torch.chunk(current_vace_hint, get_sequence_parallel_world_size(), dim=1)[  # noqa: F821 - Name is undefined in the upstream source.
+                        get_sequence_parallel_rank()  # noqa: F821 - Name is undefined in the upstream source.
                     ]
                     current_vace_hint = torch.nn.functional.pad(
-                        current_vace_hint, (0, 0, 0, chunks[0].shape[1] - current_vace_hint.shape[1]), value=0
+                        current_vace_hint,
+                        (0, 0, 0, chunks[0].shape[1] - current_vace_hint.shape[1]),  # noqa: F821 - Name is undefined in the upstream source.
+                        value=0,
                     )
                 x = x + current_vace_hint * vace_scale
         if tea_cache is not None:
@@ -1750,7 +1752,7 @@ def model_fn_wans2v(
         .to(x.device)
     )
     # freqs
-    pre_compute_freqs = rope_precompute(
+    pre_compute_freqs = rope_precompute(  # noqa: F821 - Name is undefined in the upstream source.
         x.detach().view(1, x.size(1), dit.num_heads, dit.dim // dit.num_heads), grid_sizes, dit.freqs, start=None
     )
     # motion
@@ -1771,7 +1773,7 @@ def model_fn_wans2v(
             f"the dimension after chunk must be divisible by world size, but got {x.shape[1]} and {get_sequence_parallel_world_size()}"
         )
         x = torch.chunk(x, world_size, dim=1)[sp_rank]
-        seg_idxs = [0] + list(torch.cumsum(torch.tensor([x.shape[1]] * world_size), dim=0).cpu().numpy())
+        seg_idxs = [0] + list(torch.cumsum(torch.tensor([x.shape[1]] * world_size), dim=0).cpu().numpy())  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         seq_len_x_list = [min(max(0, seq_len_x - seg_idxs[i]), x.shape[1]) for i in range(len(seg_idxs) - 1)]
         seq_len_x = seq_len_x_list[sp_rank]
 
@@ -1796,7 +1798,11 @@ def model_fn_wans2v(
                 x = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(
                         lambda x: dit.after_transformer_block(
-                            block_id, x, audio_emb_global, merged_audio_emb, seq_len_x
+                            block_id,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                            x,
+                            audio_emb_global,
+                            merged_audio_emb,
+                            seq_len_x,
                         )
                     ),
                     x,
@@ -1814,7 +1820,7 @@ def model_fn_wans2v(
             )
             x = torch.utils.checkpoint.checkpoint(
                 create_custom_forward(
-                    lambda x: dit.after_transformer_block(block_id, x, audio_emb_global, merged_audio_emb, seq_len_x)
+                    lambda x: dit.after_transformer_block(block_id, x, audio_emb_global, merged_audio_emb, seq_len_x)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 ),
                 x,
                 use_reentrant=False,

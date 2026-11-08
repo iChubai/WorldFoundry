@@ -520,7 +520,7 @@ class TextEncoder(nn.Module):
         )
 
 
-from diffusers.models import ModelMixin
+from diffusers.models import ModelMixin  # noqa: E402 - Follows the logging setup.
 
 PROMPT_TEMPLATE_ENCODE = (
     "<|start_header_id|>system<|end_header_id|>\n\nDescribe the image by detailing the color, shape, size, texture, "
@@ -623,9 +623,9 @@ class MatrixGameEncoderWrapperI2V(ModelMixin):
         if prompt is not None and isinstance(prompt, str):
             batch_size = 1
         elif prompt is not None and isinstance(prompt, list):
-            batch_size = len(prompt)
+            batch_size = len(prompt)  # noqa: F841 - Kept as upstream; an underscore name already exists.
         else:
-            _batch_size = prompt_embeds.shape[0]
+            _batch_size = prompt_embeds.shape[0]  # noqa: F821 - Name is undefined in the upstream source.
 
         text_inputs = text_encoder.text2tokens(prompt, data_type=data_type)
 

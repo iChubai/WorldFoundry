@@ -486,9 +486,9 @@ class AllegroTransformerTI2V3DModel(ModelMixin, ConfigMixin):
         hidden_states_first_frame, _ = self.pos_embed_first_frame[0](hidden_states.to(self.dtype), 1)
         hidden_states_first_frame = self.pos_embed_first_frame[1](hidden_states_first_frame)
 
-        timestep_vid, timestep_img = None, None
-        embedded_timestep_vid, embedded_timestep_img = None, None
-        encoder_hidden_states_vid, encoder_hidden_states_img = None, None
+        timestep_vid, timestep_img = None, None  # noqa: F841 - Kept as upstream; an underscore name already exists.
+        embedded_timestep_vid, embedded_timestep_img = None, None  # noqa: F841 - Kept as upstream; an underscore name already exists.
+        encoder_hidden_states_vid, encoder_hidden_states_img = None, None  # noqa: F841 - Kept as upstream; an underscore name already exists.
 
         if self.adaln_single is not None:
             if self.use_additional_conditions and added_cond_kwargs is None:

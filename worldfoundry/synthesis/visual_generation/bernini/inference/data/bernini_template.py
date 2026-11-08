@@ -166,7 +166,7 @@ class BerniniTemplate(Qwen2VLTemplate):
     def encode_messages(
         self,
         conversations: Sequence[dict[str, str]],
-        num_tokens: dict[str, list[int]] = defaultdict(list),
+        num_tokens: dict[str, list[int]] = defaultdict(list),  # noqa: B006 - Keeps the upstream default object and signature.
         task_name: str = "",
         drop_text: int = 0,
         drop_video: int = 0,

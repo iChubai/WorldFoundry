@@ -311,14 +311,14 @@ def run_model_and_save_samples(args, pipeline, caption_refiner_model=None, enhan
     if not isinstance(args.text_prompt, list):
         args.text_prompt = [args.text_prompt]
     if len(args.text_prompt) == 1 and args.text_prompt[0].endswith("txt"):
-        text_prompt = open(args.text_prompt[0]).readlines()
+        text_prompt = open(args.text_prompt[0]).readlines()  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         args.text_prompt = [i.strip() for i in text_prompt]
 
     if args.model_type == "inpaint" or args.model_type == "i2v":
         if not isinstance(args.conditional_pixel_values_path, list):
             args.conditional_pixel_values_path = [args.conditional_pixel_values_path]
         if len(args.conditional_pixel_values_path) == 1 and args.conditional_pixel_values_path[0].endswith("txt"):
-            temp = open(args.conditional_pixel_values_path[0]).readlines()
+            temp = open(args.conditional_pixel_values_path[0]).readlines()  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
             conditional_pixel_values_path = [i.strip().split(",") for i in temp]
 
         mask_type = args.mask_type if args.mask_type is not None else None

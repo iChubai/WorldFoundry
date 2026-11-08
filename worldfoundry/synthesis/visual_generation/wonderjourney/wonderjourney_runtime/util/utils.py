@@ -88,7 +88,7 @@ def edge_pad(img, mask, mode=1):
                 for yo, xo in offset:
                     yn = y + yo
                     xn = x + xo
-                    if 0 <= yn < h and 0 <= xn < w and nmask[yn][xn] < 1:
+                    if 0 <= yn < h and 0 <= xn < w and nmask[yn][xn] < 1:  # noqa: SIM102 - Statement form kept for readability.
                         if record.get((yn, xn), step) == step:
                             acc[yn][xn] = acc[yn][xn] * cnt[yn][xn] + val
                             cnt[yn][xn] += 1
@@ -194,7 +194,7 @@ def prepare_scheduler(scheduler):
     if hasattr(scheduler.config, "steps_offset") and scheduler.config.steps_offset != 1:
         new_config = dict(scheduler.config)
         new_config["steps_offset"] = 1
-        scheduler._internal_dict = FrozenDict(new_config)
+        scheduler._internal_dict = FrozenDict(new_config)  # noqa: F821 - Name is undefined in the upstream source.
     return scheduler
 
 

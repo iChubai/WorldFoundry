@@ -1,8 +1,9 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 from typing import ClassVar
 
 from einops import repeat
 
-from vwm.modules.attention import *
+from vwm.modules.attention import *  # noqa: F403 - Upstream star import kept as written.
 from vwm.modules.diffusionmodules.util import AlphaBlender, linear, timestep_embedding
 
 

@@ -15,7 +15,7 @@ def DPMS(
     model_type="noise",  # or "x_start" or "v" or "score"
     noise_schedule="linear",
     guidance_type="classifier-free",
-    model_kwargs={},
+    model_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
     diffusion_steps=1000,
 ):
     betas = torch.tensor(gd.get_named_beta_schedule(noise_schedule, diffusion_steps))

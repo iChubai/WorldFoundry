@@ -370,7 +370,7 @@ class ABotM0Runtime:
             action_layout = (
                 "dual_arm_14" if statistics_width == 14 and mask.shape == (14,) and not mask[-2:].any() else "identity"
             )
-        if action_layout == "dual_arm_14" and low.shape[-1] == 14:
+        if action_layout == "dual_arm_14" and low.shape[-1] == 14:  # noqa: SIM102 - Branches carry per-case comments.
             # Some deployment statistics are stored in interleaved modality order.
             if abs(float(low[6])) < 1e-6 and abs(float(low[12])) > 0.05:
                 low, high, mask = _dual_arm_to_training(low), _dual_arm_to_training(high), _dual_arm_to_training(mask)

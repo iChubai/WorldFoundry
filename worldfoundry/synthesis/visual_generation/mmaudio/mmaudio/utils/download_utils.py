@@ -67,7 +67,7 @@ def download_model_if_needed(model_path: Path):
         raise ValueError(f"No link found for {base_name}")
 
     model_path.parent.mkdir(parents=True, exist_ok=True)
-    if not model_path.exists() or hashlib.md5(open(model_path, "rb").read()).hexdigest() != target_link["md5"]:
+    if not model_path.exists() or hashlib.md5(open(model_path, "rb").read()).hexdigest() != target_link["md5"]:  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         log.info(f"Downloading {base_name} to {model_path}...")
         r = requests.get(target_link["url"], stream=True)
         total_size = int(r.headers.get("content-length", 0))
@@ -79,4 +79,4 @@ def download_model_if_needed(model_path: Path):
                 f.write(data)
         t.close()
         if total_size != 0 and t.n != total_size:
-            raise RuntimeError("Error while downloading %s" % base_name)
+            raise RuntimeError("Error while downloading %s" % base_name)  # noqa: UP031 - Keeps printf conversions that depend on argument types.

@@ -351,16 +351,16 @@ def reproject_pixels_nd_to_nd(
     # invert the unique 3x3 once and broadcast the result -- bit-identical
     # (same LAPACK inv on the same matrix) but ~N_pixels cheaper.
     _K_old_single = K_old.shape == (3, 3)
-    if not K_old.shape == lead + (
+    if not K_old.shape == lead + (  # noqa: SIM201, RUF005 - Keeps `not ==` for operands that may compare elementwise.; Keeps `+` semantics for the operand's runtime type.
         3,
         3,
     ):
-        K_old = np.broadcast_to(K_old, lead + (3, 3))
-    if not T_old_w2c.shape == lead + (
+        K_old = np.broadcast_to(K_old, lead + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+    if not T_old_w2c.shape == lead + (  # noqa: SIM201, RUF005 - Keeps `not ==` for operands that may compare elementwise.; Keeps `+` semantics for the operand's runtime type.
         4,
         4,
     ):
-        T_old_w2c = np.broadcast_to(T_old_w2c, lead + (4, 4))
+        T_old_w2c = np.broadcast_to(T_old_w2c, lead + (4, 4))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Normalize new cam shapes:
     # - if (3,3)/(4,4), broadcast to lead
@@ -371,18 +371,18 @@ def reproject_pixels_nd_to_nd(
         T_new_w2c = T_new_w2c[0]
 
     if K_new.shape == (3, 3):
-        K_new = np.broadcast_to(K_new, lead + (3, 3))
+        K_new = np.broadcast_to(K_new, lead + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if T_new_w2c.shape == (4, 4):
-        T_new_w2c = np.broadcast_to(T_new_w2c, lead + (4, 4))
+        T_new_w2c = np.broadcast_to(T_new_w2c, lead + (4, 4))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
-    assert K_new.shape == lead + (
+    assert K_new.shape == lead + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         3,
         3,
-    ), f"K_new must be {lead + (3, 3)} or (3,3), got {K_new.shape}"
-    assert T_new_w2c.shape == lead + (
+    ), f"K_new must be {lead + (3, 3)} or (3,3), got {K_new.shape}"  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+    assert T_new_w2c.shape == lead + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         4,
         4,
-    ), f"T_new_w2c must be {lead + (4, 4)} or (4,4), got {T_new_w2c.shape}"
+    ), f"T_new_w2c must be {lead + (4, 4)} or (4,4), got {T_new_w2c.shape}"  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # (h,w)->(v,u)
     v = pix_hw[..., 0]
@@ -395,7 +395,7 @@ def reproject_pixels_nd_to_nd(
     if _K_old_single:
         # Invert the unique 3x3 once, then broadcast: identical values to
         # ``inv(broadcast(K))`` but avoids the per-pixel re-inversion.
-        invK_old = np.broadcast_to(np.linalg.inv(K_old[(0,) * len(lead)]), lead + (3, 3))
+        invK_old = np.broadcast_to(np.linalg.inv(K_old[(0,) * len(lead)]), lead + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     else:
         invK_old = np.linalg.inv(K_old)  # (...,3,3)
     rays = np.einsum("...ij,...j->...i", invK_old, pix_homo)  # (...,3)
@@ -2064,7 +2064,7 @@ class FrustumHandler:
         # enough non-proximate options to honour the request. Clamp to the
         # total number of candidate groups available.
         if candidate_nms_mode is not None:
-            coarse_k = int(round(coarse_k * float(candidate_nms_pool_multiplier)))
+            coarse_k = int(round(coarse_k * float(candidate_nms_pool_multiplier)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             coarse_k = max(coarse_k, candidates_per_query_group)
             coarse_k = min(coarse_k, len(candidate_gids))
 
@@ -2452,7 +2452,7 @@ class FrustumHandler:
                 if candidate_nms_mode is None:
                     pool_topk = max(max_candidates, min(10, int(w2c.shape[0])))
                 else:
-                    pool_topk = int(
+                    pool_topk = int(  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                         round(max(max_candidates, min(10, int(w2c.shape[0]))) * float(candidate_nms_pool_multiplier))
                     )
                     pool_topk = min(max(pool_topk, max_candidates), int(w2c.shape[0]))
@@ -2466,7 +2466,7 @@ class FrustumHandler:
                     temporal_threshold=temporal_threshold,
                 )
                 if selection_mode == "pose_pool_temporal_earliest":
-                    temporal_pool_k = int(round(max_candidates * float(candidate_nms_pool_multiplier)))
+                    temporal_pool_k = int(round(max_candidates * float(candidate_nms_pool_multiplier)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                     temporal_pool_k = min(max(temporal_pool_k, max_candidates), len(ranked))
                     ranked_for_pick = sorted(ranked[:temporal_pool_k], key=lambda item: int(item[0]))
                 else:
@@ -3620,7 +3620,7 @@ class FrustumHandler:
                                 revgrid_out[rev_write] = rg[rev_write]
                                 view_change_out[rev_write] = vc[rev_write]
                                 source_fid_out[rev_write] = sf[rev_write]
-                    used += 1
+                    used += 1  # noqa: SIM113 - Keeps the explicit loop counter.
                     filled_ratio = float(filled.float().mean().item())
                     if used >= max_candidates or filled_ratio >= ratio_threshold:
                         break

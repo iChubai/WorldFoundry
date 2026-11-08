@@ -181,7 +181,7 @@ def prepare_images(
         images = torch.from_numpy(np.stack(images, axis=0))  # (n, c, h, w)
     img_masks = torch.tensor(img_masks, dtype=torch.bool)  # (*n)
 
-    if use_depth_align:
+    if use_depth_align:  # noqa: SIM108 - Branches carry per-case comments.
         pil_images = torch.from_numpy(np.stack(pil_images, axis=0))  # (n, c, h, w)
     else:
         pil_images = []

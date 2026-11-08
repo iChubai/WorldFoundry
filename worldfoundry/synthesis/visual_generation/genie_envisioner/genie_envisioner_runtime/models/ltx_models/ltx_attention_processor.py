@@ -530,7 +530,7 @@ class Attention(nn.Module):
             encoder_hidden_states = self.norm_cross(encoder_hidden_states)
             encoder_hidden_states = encoder_hidden_states.transpose(1, 2)
         else:
-            assert False
+            assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
         return encoder_hidden_states
 
@@ -660,4 +660,4 @@ class AttnProcessor:
         return hidden_states
 
 
-AttentionProcessor = Union[AttnProcessor,]
+AttentionProcessor = Union[AttnProcessor,]  # noqa: UP007 - Runtime type alias kept as typing.Union.

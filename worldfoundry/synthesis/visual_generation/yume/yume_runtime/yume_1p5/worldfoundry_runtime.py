@@ -311,7 +311,7 @@ class Yume1p5Runtime:
                 max_area=MAX_AREA_CONFIGS[size],
                 current_latent_num=current_latent_num,
                 current_frame_num=current_frame_num,
-                history_latents=history_latents if interaction_idx > 0 else None,
+                history_latents=history_latents if interaction_idx > 0 else None,  # noqa: F821 - Name is undefined in the upstream source.
             )
             output_video_list.append(output_video_per_interaction)
 

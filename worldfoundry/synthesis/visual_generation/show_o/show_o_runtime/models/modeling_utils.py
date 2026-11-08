@@ -46,16 +46,20 @@ WEIGHTS_NAME = "pytorch_model.bin"
 SAFETENSORS_WEIGHTS_NAME = "pytorch_model.safetensors"
 HUGGINGFACE_CO_RESOLVE_ENDPOINT = "https://huggingface.co"
 
-from diffusers.configuration_utils import ConfigMixin as ConfigMixin
-from diffusers.configuration_utils import register_to_config as register_to_config
-from diffusers.models.model_loading_utils import (
+from diffusers.configuration_utils import (  # noqa: E402 - Follows module-level setup, as upstream.
+    ConfigMixin as ConfigMixin,
+)
+from diffusers.configuration_utils import (  # noqa: E402 - Follows module-level setup, as upstream.
+    register_to_config as register_to_config,
+)
+from diffusers.models.model_loading_utils import (  # noqa: E402 - Follows module-level setup, as upstream.
     _determine_device_map,
     _fetch_index_file,
     _load_state_dict_into_model,
     load_model_dict_into_meta,
     load_state_dict,
 )
-from diffusers.utils.hub_utils import (
+from diffusers.utils.hub_utils import (  # noqa: E402 - Follows module-level setup, as upstream.
     PushToHubMixin,
 )
 
@@ -385,7 +389,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
         # Clean the folder from a previous save
         if is_main_process:
             for filename in os.listdir(save_directory):
-                if filename in state_dict_split.filename_to_tensors.keys():
+                if filename in state_dict_split.filename_to_tensors.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     continue
                 full_filename = os.path.join(save_directory, filename)
                 if not os.path.isfile(full_filename):
@@ -608,7 +612,7 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
             try:
                 device_map = {"": torch.device(device_map)}
             except RuntimeError:
-                raise ValueError(
+                raise ValueError(  # noqa: B904 - Keeps the implicit exception context.
                     "When passing device_map as a string, the value needs to be a device name (e.g. cpu, cuda:0) or "
                     f"'auto', 'balanced', 'balanced_low_0', 'sequential' but found {device_map}."
                 )

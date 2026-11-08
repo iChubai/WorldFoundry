@@ -144,17 +144,17 @@ class ActionModule(nn.Module):
         vae_time_compression_ratio: int,
         windows_size: int,
         heads_num: int = 24,
-        patch_size: list = [1, 2, 2],
+        patch_size: list = [1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         mlp_act_type: str = "gelu_tanh",
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
         qkv_bias: bool = False,
         drop: float = 0.0,
-        rope_dim_list: list = [16, 56, 56],
+        rope_dim_list: list = [16, 56, 56],  # noqa: B006 - Keeps the upstream default object and signature.
         dtype: torch.dtype | None = None,
         device: torch.device | None = None,
         rope_theta=256,
-        mouse_qk_dim_list=[24, 4, 4],
+        mouse_qk_dim_list=[24, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         enable_mouse=True,
         enable_keyboard=False,
     ):

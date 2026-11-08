@@ -40,7 +40,7 @@ IS_CUDA = torch.cuda.is_available()
 if not IS_CUDA:
     os.environ["TORCHDYNAMO_DISABLE"] = "1"
 
-from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM
+from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM  # noqa: E402 - Follows the environment setup.
 
 SUPPORTED_ARCHS = {80, 89, 120, 121}
 if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
@@ -54,17 +54,20 @@ if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
         SAGE_ATTN_AVAILABLE = True
     except ModuleNotFoundError:
         SAGE_ATTN_AVAILABLE = False
-import torch.distributed as dist
-from fla.layers import GatedDeltaNet
-from fla.models.utils import Cache as FlaCache
-from kairos.apis.builder import DITS
+import torch.distributed as dist  # noqa: E402 - Follows the conditional setup block.
+from fla.layers import GatedDeltaNet  # noqa: E402 - Follows the conditional setup block.
+from fla.models.utils import Cache as FlaCache  # noqa: E402 - Follows the conditional setup block.
+from kairos.apis.builder import DITS  # noqa: E402 - Follows the conditional setup block.
 
 # isort: split
-from kairos.modules.utils import FLAGS_KAIROS_IS_METAX, parallel_state
+from kairos.modules.utils import (  # noqa: E402 - Follows the conditional setup block.
+    FLAGS_KAIROS_IS_METAX,
+    parallel_state,
+)
 
 # isort: split
 # isort: split
-from kairos.modules.utils.tp_utils import (
+from kairos.modules.utils.tp_utils import (  # noqa: E402 - Follows the conditional setup block.
     all2all_head_to_seq,
     all2all_seq_to_head,
     build_tp_chunk_list,
@@ -75,9 +78,9 @@ from kairos.modules.utils.tp_utils import (
 # ================================================================
 # ====================rope_apply_for3d_triton当前只适用于沐曦========
 # ================================================================
-import triton
-import triton.language as tl
-from fla.utils import autotune_cache_kwargs
+import triton  # noqa: E402 - Follows the conditional setup block.
+import triton.language as tl  # noqa: E402 - Follows the conditional setup block.
+from fla.utils import autotune_cache_kwargs  # noqa: E402 - Follows the conditional setup block.
 
 
 def _optional_torch_compile(fn):
@@ -1153,7 +1156,7 @@ class KairosDiT(torch.nn.Module):
         require_vae_embedding: bool = True,
         require_clip_embedding: bool = True,
         fuse_vae_embedding_in_latents: bool = False,
-        dilated_lengths=[1, 1, 6, 1],
+        dilated_lengths=[1, 1, 6, 1],  # noqa: B006 - Keeps the upstream default object and signature.
         use_first_frame_cond: bool = False,
         use_seq_parallel=False,
         use_tp_in_getaeddeltanet=False,

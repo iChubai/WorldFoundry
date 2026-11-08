@@ -8,20 +8,27 @@ import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-import json
-import random
+import json  # noqa: E402 - Follows the warnings configuration.
+import random  # noqa: E402 - Follows the warnings configuration.
 
-import numpy as np
-import torch
-import torchvision.transforms as transforms
-from eval_inputs.utils.domain_table import DomainTable
-from eval_inputs.utils.get_actions import parse_h5
-from eval_inputs.utils.statistics import StatisticInfo, load_stat_file
-from eval_inputs.utils.utils import gen_crop_config, intrin_crop_transform, intrinsic_transform
-from moviepy.editor import VideoFileClip
-from torch.utils.data.dataset import Dataset
-from tqdm import tqdm
-from utils import zero_rank_print
+import numpy as np  # noqa: E402 - Follows the warnings configuration.
+import torch  # noqa: E402 - Follows the warnings configuration.
+import torchvision.transforms as transforms  # noqa: E402 - Follows the warnings configuration.
+from eval_inputs.utils.domain_table import DomainTable  # noqa: E402 - Follows the warnings configuration.
+from eval_inputs.utils.get_actions import parse_h5  # noqa: E402 - Follows the warnings configuration.
+from eval_inputs.utils.statistics import (  # noqa: E402 - Follows the warnings configuration.
+    StatisticInfo,
+    load_stat_file,
+)
+from eval_inputs.utils.utils import (  # noqa: E402 - Follows the warnings configuration.
+    gen_crop_config,
+    intrin_crop_transform,
+    intrinsic_transform,
+)
+from moviepy.editor import VideoFileClip  # noqa: E402 - Follows the warnings configuration.
+from torch.utils.data.dataset import Dataset  # noqa: E402 - Follows the warnings configuration.
+from tqdm import tqdm  # noqa: E402 - Follows the warnings configuration.
+from utils import zero_rank_print  # noqa: E402 - Follows the warnings configuration.
 
 
 class AgiBotWorld(Dataset):
@@ -36,7 +43,7 @@ class AgiBotWorld(Dataset):
         sample_size=(192, 256),
         sample_n_frames=64,
         preprocess="resize",
-        valid_cam=["head", "hand_left", "hand_right"],
+        valid_cam=["head", "hand_left", "hand_right"],  # noqa: B006 - Keeps the upstream default object and signature.
         chunk=1,
         action_chunk=None,
         n_previous=-1,
@@ -144,7 +151,7 @@ class AgiBotWorld(Dataset):
                             ]
                             self.dataset.append(info)
 
-        if specific_tasks is None:
+        if specific_tasks is None:  # noqa: SIM102 - Statement form kept for readability.
             if dataset_info_cache_path is not None and not (os.path.exists(dataset_info_cache_path)):
                 zero_rank_print(f"Save Cache Dataset Information to {dataset_info_cache_path}")
                 with open(dataset_info_cache_path, "w") as f:

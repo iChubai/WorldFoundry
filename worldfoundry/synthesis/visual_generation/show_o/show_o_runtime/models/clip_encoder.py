@@ -99,7 +99,7 @@ class CLIPVisionTowerS2(CLIPVisionTower):
         try:
             from s2wrapper import forward as multiscale_forward
         except ImportError:
-            raise ImportError(
+            raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
                 "Package s2wrapper not found! Please install by running: \npip install git+https://github.com/bfshi/scaling_on_scales.git"
             )
         self.multiscale_forward = multiscale_forward

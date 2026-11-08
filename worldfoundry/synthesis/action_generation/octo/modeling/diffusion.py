@@ -37,7 +37,7 @@ class ScoreActor(nn.Module):
         t_ff = self.time_preprocess(time)
         cond_enc = self.cond_encoder(t_ff, train=train)
         if obs_enc.shape[:-1] != cond_enc.shape[:-1]:
-            new_shape = cond_enc.shape[:-1] + (obs_enc.shape[-1],)
+            new_shape = cond_enc.shape[:-1] + (obs_enc.shape[-1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             logging.debug("Broadcasting obs_enc from %s to %s", obs_enc.shape, new_shape)
             obs_enc = jnp.broadcast_to(obs_enc, new_shape)
 

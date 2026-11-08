@@ -55,7 +55,7 @@ def load_yume_checkpoint(model: nn.Module, checkpoint_dir: str) -> nn.Module:
             if not os.path.exists(shard_path):
                 raise FileNotFoundError(f"Missing shard file: {shard_path}")
             with safe_open(shard_path, framework="pt") as f:
-                for key in f.keys():
+                for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     model_weights[key] = f.get_tensor(key).to(device)
     else:
         full_model_path = os.path.join(checkpoint_dir, "diffusion_pytorch_model.safetensors")
@@ -214,7 +214,7 @@ class YumeI2V:
         max_seq_len = (
             ((frame_num - 1) // self.vae_stride[0] + 1) * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
         )
-        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
+        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         noise = torch.randn_like(model_input)
 
@@ -354,7 +354,7 @@ class YumeI2V:
         max_seq_len = (
             ((frame_num - 1) // self.vae_stride[0] + 1) * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
         )
-        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
+        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         noise = torch.randn(
             16,

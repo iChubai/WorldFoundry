@@ -452,7 +452,7 @@ class PointCloudViewer:
         pose: 4x4 matrix
         K: 3x3 matrix
         """
-        fx, fy = K[0, 0], K[1, 1]
+        fx, fy = K[0, 0], K[1, 1]  # noqa: F841 - Upstream assignment kept.
         cx, cy = K[0, 2], K[1, 2]
         aspect = float(cx) / float(cy)
         fov = 2 * np.arctan(2 * cx / fx)
@@ -546,7 +546,7 @@ class PointCloudViewer:
                 print(e)
 
     @staticmethod
-    def set_color_border(image, border_width=5, color=[1, 0, 0]):
+    def set_color_border(image, border_width=5, color=[1, 0, 0]):  # noqa: B006 - Keeps the upstream default object and signature.
         image[:border_width, :, 0] = color[0]  # Red channel
         image[:border_width, :, 1] = color[1]  # Green channel
         image[:border_width, :, 2] = color[2]  # Blue channel
@@ -589,7 +589,7 @@ class PointCloudViewer:
         pc,
         color,
         conf=None,
-        edge_color=[0.251, 0.702, 0.902],
+        edge_color=[0.251, 0.702, 0.902],  # noqa: B006 - Keeps the upstream default object and signature.
         set_border_color=False,
     ):
         pred_pts = pc.reshape(-1, 3)  # [N, 3]

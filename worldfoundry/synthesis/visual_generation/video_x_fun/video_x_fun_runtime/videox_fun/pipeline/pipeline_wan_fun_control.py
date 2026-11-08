@@ -9,7 +9,9 @@ from diffusers import FlowMatchEulerDiscreteScheduler
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
-from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
+from diffusers.schedulers import (  # noqa: F811 - Later import provides the binding, as upstream.
+    FlowMatchEulerDiscreteScheduler,
+)
 from diffusers.utils import BaseOutput, replace_example_docstring
 from diffusers.video_processor import VideoProcessor
 from einops import rearrange
@@ -159,7 +161,7 @@ class WanFunControlPipeline(WanDiffusersInferenceMixin, DiffusionPipeline):
         | MultiPipelineCallbacks
         | None = None,
         attention_kwargs: dict[str, Any] | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         clip_image: Image = None,
         max_sequence_length: int = 512,
         comfyui_progressbar: bool = False,

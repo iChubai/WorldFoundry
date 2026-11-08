@@ -2034,7 +2034,7 @@ class _MosaicVideoDatasetBase(_MosaicVideoSharedDataset):
         G = g_orig + drift_frames
 
         is_starting = bool(data.get("is_starting", True))
-        if is_starting:
+        if is_starting:  # noqa: SIM108 - Branches carry per-case comments.
             # Section-0 bootstrap anchor is a genuine single-frame
             # (image-mode) latent, so replicate its one pose.
             clean_frame_indices = [G - 1] * self.VAE_T_SCALING

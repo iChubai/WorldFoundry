@@ -75,7 +75,7 @@ class BasePolicy(ABC):
         schemas.
         """
 
-    def reset(self) -> None:
+    def reset(self) -> None:  # noqa: B027 - Optional hook with a no-op default.
         """Reset episode state. Stateless models can leave this as no-op."""
 
     # ── batch helpers ────────────────────────────────────────────────────────

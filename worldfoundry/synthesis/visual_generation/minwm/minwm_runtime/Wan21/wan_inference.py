@@ -72,10 +72,10 @@ else:
     set_seed_everywhere(args.seed)
 
 # Refresh the shared VRAM helper after distributed init selects the local GPU.
-from worldfoundry.core.vram import memory as _mem
+from worldfoundry.core.vram import memory as _mem  # noqa: E402 - Follows the conditional setup block.
 
 _mem.gpu = torch.device(f"cuda:{local_rank}")
-gpu = _mem.gpu
+gpu = _mem.gpu  # noqa: F811 - Later definition replaces the earlier one, as upstream.
 
 print(f"Free VRAM {get_cuda_free_memory_gb(gpu)} GB")
 low_memory = get_cuda_free_memory_gb(gpu) < 40
@@ -85,7 +85,7 @@ torch.set_grad_enabled(False)
 config = OmegaConf.load(args.config_path)
 
 # Import pipeline AFTER distributed init so causal_model.py sees CleanCode SP infra
-from .pipeline import (
+from .pipeline import (  # noqa: E402 - Follows module-level setup, as upstream.
     BidirectionalDiffusionInferencePipeline,
     BidirectionalInferencePipeline,
     CausalDiffusionInferencePipeline,
@@ -175,7 +175,7 @@ if args.trajectory_path:
 chunk0_latencies = []
 
 
-for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
+for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):  # noqa: B007 - Loop target name kept as upstream.
     idx = batch_data["idx"].item()
 
     if isinstance(batch_data, dict):

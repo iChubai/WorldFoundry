@@ -48,7 +48,9 @@ class T5LayerNorm(nn.Module):
         return self.weight * x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5Attention
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5Attention,
+)
 
 
 class T5FeedForward(nn.Module):
@@ -95,7 +97,9 @@ class T5SelfAttention(nn.Module):
         return x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5RelativeEmbedding,
+)
 
 
 def init_weights(m):

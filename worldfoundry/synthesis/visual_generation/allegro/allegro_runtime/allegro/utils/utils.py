@@ -26,7 +26,7 @@ if is_bs4_available():
 if is_ftfy_available():
     import ftfy
 
-_tensor_or_tensors = Union[torch.Tensor, Iterable[torch.Tensor]]
+_tensor_or_tensors = Union[torch.Tensor, Iterable[torch.Tensor]]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 def ctime():
@@ -36,7 +36,7 @@ def ctime():
 
 def lprint(text):
     if os.environ.get("LOCAL_RANK", "0") == "0":
-        print("[%s] %s" % (ctime(), text), flush=True)
+        print("[%s] %s" % (ctime(), text), flush=True)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 def to_2tuple(x):

@@ -447,7 +447,7 @@ class ViTEncoder(nn.Module):
     ):
         super().__init__()
 
-        conv_last_layer = False  # duplicate argument
+        conv_last_layer = False  # noqa: F841 - Upstream assignment kept.  # duplicate argument
 
         # self.num_classes = num_classes
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
@@ -650,7 +650,7 @@ class ViTDecoder(nn.Module):
         )
         self.norm = norm_layer(embed_dim)
 
-        assert conv_last_layer == True, "Only support conv_last_layer=True"
+        assert conv_last_layer == True, "Only support conv_last_layer=True"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
         self.unpatch_channels = embed_dim // (patch_size * patch_size * patch_length)
         self.final_proj = nn.Identity()
@@ -766,7 +766,7 @@ class DiagonalGaussianDistribution:
                     dim=[1, 2, 3],
                 )
 
-    def nll(self, sample, dims=[1, 2, 3]):
+    def nll(self, sample, dims=[1, 2, 3]):  # noqa: B006 - Keeps the upstream default object and signature.
         if self.deterministic:
             return torch.Tensor([0.0])
         logtwopi = np.log(2.0 * np.pi)

@@ -543,8 +543,8 @@ class Encoder1D(nn.Module):
         dim: int,
         ch_mult: tuple[int] = (1, 2, 4, 8),
         num_res_blocks: int,
-        attn_layers: list[int] = [],
-        down_layers: list[int] = [],
+        attn_layers: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
+        down_layers: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         resamp_with_conv: bool = True,
         in_dim: int,
         embed_dim: int,
@@ -562,7 +562,7 @@ class Encoder1D(nn.Module):
         self.attn_layers = attn_layers
         self.conv_in = MPConv1D(in_dim, self.dim, kernel_size=kernel_size)
 
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.in_ch_mult = in_ch_mult
         # downsampling
         self.down = nn.ModuleList()
@@ -628,8 +628,8 @@ class Decoder1D(nn.Module):
         out_dim: int,
         ch_mult: tuple[int] = (1, 2, 4, 8),
         num_res_blocks: int,
-        attn_layers: list[int] = [],
-        down_layers: list[int] = [],
+        attn_layers: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
+        down_layers: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         kernel_size: int = 3,
         resamp_with_conv: bool = True,
         in_dim: int,

@@ -81,7 +81,7 @@ def checkpoint_shapes(root: str | Path) -> dict[str, tuple[int, ...]]:
         shapes: dict[str, tuple[int, ...]] = {}
         for path in safe_files:
             with safe_open(path, framework="pt", device="cpu") as handle:
-                shapes.update({key: tuple(handle.get_slice(key).get_shape()) for key in handle.keys()})
+                shapes.update({key: tuple(handle.get_slice(key).get_shape()) for key in handle.keys()})  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         normalized = _strip_uniform_prefix(shapes)
         return {key: tuple(value) for key, value in normalized.items()}
 

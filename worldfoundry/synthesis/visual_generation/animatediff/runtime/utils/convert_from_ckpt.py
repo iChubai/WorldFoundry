@@ -163,7 +163,7 @@ def assign_to_checkpoint(
 
             num_heads = old_tensor.shape[0] // config["num_head_channels"] // 3
 
-            old_tensor = old_tensor.reshape((num_heads, 3 * channels // num_heads) + old_tensor.shape[1:])
+            old_tensor = old_tensor.reshape((num_heads, 3 * channels // num_heads) + old_tensor.shape[1:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             query, key, value = old_tensor.split(channels // num_heads, dim=1)
 
             checkpoint[path_map["query"]] = query.reshape(target_shape)
@@ -226,7 +226,7 @@ def create_unet_diffusers_config(original_config, image_size: int, controlnet=Fa
             resolution *= 2
 
     up_block_types = []
-    for i in range(len(block_out_channels)):
+    for i in range(len(block_out_channels)):  # noqa: B007 - The loop variable is read outside the loop.
         block_type = "CrossAttnUpBlock2D" if resolution in unet_params.attention_resolutions else "UpBlock2D"
         up_block_types.append(block_type)
         resolution //= 2
@@ -237,7 +237,7 @@ def create_unet_diffusers_config(original_config, image_size: int, controlnet=Fa
     use_linear_projection = (
         unet_params.use_linear_in_transformer if "use_linear_in_transformer" in unet_params else False
     )
-    if use_linear_projection:
+    if use_linear_projection:  # noqa: SIM102 - Branches carry per-case comments.
         # stable diffusion 2-base-512 and 2-768
         if head_dim is None:
             head_dim = [5, 10, 20, 20]
@@ -309,7 +309,7 @@ def create_diffusers_schedular(original_config):
 
 def create_ldm_bert_config(original_config):
     bert_params = original_config.model.parms.cond_stage_config.params
-    config = LDMBertConfig(
+    config = LDMBertConfig(  # noqa: F821 - Name is undefined in the upstream source.
         d_model=bert_params.n_embed,
         encoder_layers=bert_params.n_layer,
         encoder_ffn_dim=bert_params.n_embed * 4,
@@ -683,7 +683,7 @@ def convert_ldm_bert_checkpoint(checkpoint, config):
             pt_layer = pt_layers[i : i + 2]
             _copy_layer(hf_layer, pt_layer)
 
-    hf_model = LDMBertModel(config).eval()
+    hf_model = LDMBertModel(config).eval()  # noqa: F821 - Name is undefined in the upstream source.
 
     # copy  embeds
     hf_model.model.embed_tokens.weight = checkpoint.transformer.token_emb.weight
@@ -742,7 +742,7 @@ textenc_pattern = re.compile("|".join(protected.keys()))
 
 def convert_paint_by_example_checkpoint(checkpoint):
     config = CLIPVisionConfig.from_pretrained("openai/clip-vit-large-patch14")
-    model = PaintByExampleImageEncoder(config)
+    model = PaintByExampleImageEncoder(config)  # noqa: F821 - Name is undefined in the upstream source.
 
     keys = list(checkpoint.keys())
 
@@ -905,7 +905,7 @@ def stable_unclip_image_noising_components(
         max_noise_level = noise_aug_config.noise_schedule_config.timesteps
         beta_schedule = noise_aug_config.noise_schedule_config.beta_schedule
 
-        image_normalizer = StableUnCLIPImageNormalizer(embedding_dim=embedding_dim)
+        image_normalizer = StableUnCLIPImageNormalizer(embedding_dim=embedding_dim)  # noqa: F821 - Name is undefined in the upstream source.
         image_noising_scheduler = DDPMScheduler(num_train_timesteps=max_noise_level, beta_schedule=beta_schedule)
 
         if "clip_stats_path" in noise_aug_config:
@@ -936,7 +936,7 @@ def convert_controlnet_checkpoint(
 
     ctrlnet_config.pop("sample_size")
 
-    controlnet_model = ControlNetModel(**ctrlnet_config)
+    controlnet_model = ControlNetModel(**ctrlnet_config)  # noqa: F821 - Name is undefined in the upstream source.
 
     converted_ctrl_checkpoint = convert_ldm_unet_checkpoint(
         checkpoint, ctrlnet_config, path=checkpoint_path, extract_ema=extract_ema, controlnet=True

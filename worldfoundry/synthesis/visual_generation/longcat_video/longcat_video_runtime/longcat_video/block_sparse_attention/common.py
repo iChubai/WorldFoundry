@@ -111,7 +111,7 @@ def _attn_fwd_gating(
 
 @triton.jit
 def _attn_bwd_preprocess(
-    O,
+    O,  # noqa: E741 - Ambiguous upstream name kept as written.
     DO,
     Delta,  # output
     N_CTX,

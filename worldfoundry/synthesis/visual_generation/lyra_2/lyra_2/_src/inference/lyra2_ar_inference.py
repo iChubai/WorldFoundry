@@ -758,7 +758,7 @@ class Lyra2InferencePipeline:
         torch.cuda.empty_cache()
         warp_pixels = getattr(self.model, "_latest_condition_state_pixels", None)
         if self.use_pose and warp_pixels is not None:
-            if isinstance(warp_pixels, torch.Tensor) and warp_pixels.dim() == 5:
+            if isinstance(warp_pixels, torch.Tensor) and warp_pixels.dim() == 5:  # noqa: SIM102 - Statement form kept for readability.
                 if int(warp_pixels.shape[1]) > 3:
                     warp_pixels = warp_pixels[:, :3]
             self.warp_video_collect.append(warp_pixels.detach().float().cpu())

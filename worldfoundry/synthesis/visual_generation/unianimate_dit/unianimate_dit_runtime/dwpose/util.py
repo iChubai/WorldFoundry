@@ -60,7 +60,7 @@ def padRightDownCorner(img, stride, padValue):
 
 def transfer(model, model_weights):
     transfered_model_weights = {}
-    for weights_name in model.state_dict().keys():
+    for weights_name in model.state_dict().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         transfered_model_weights[weights_name] = model_weights[".".join(weights_name.split(".")[1:])]
     return transfered_model_weights
 

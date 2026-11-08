@@ -254,13 +254,13 @@ def reflection_from_matrix(matrix):
     """
     M = numpy.array(matrix, dtype=numpy.float64, copy=False)
     # normal: unit eigenvector corresponding to eigenvalue -1
-    l, V = numpy.linalg.eig(M[:3, :3])
+    l, V = numpy.linalg.eig(M[:3, :3])  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) + 1.0) < 1e-8)[0]
     if not len(i):
         raise ValueError("no unit eigenvector corresponding to eigenvalue -1")
     normal = numpy.real(V[:, i[0]]).squeeze()
     # point: any unit eigenvector corresponding to eigenvalue 1
-    l, V = numpy.linalg.eig(M)
+    l, V = numpy.linalg.eig(M)  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) - 1.0) < 1e-8)[0]
     if not len(i):
         raise ValueError("no unit eigenvector corresponding to eigenvalue 1")
@@ -327,13 +327,13 @@ def rotation_from_matrix(matrix):
     R = numpy.array(matrix, dtype=numpy.float64, copy=False)
     R33 = R[:3, :3]
     # direction: unit eigenvector of R33 corresponding to eigenvalue of 1
-    l, W = numpy.linalg.eig(R33.T)
+    l, W = numpy.linalg.eig(R33.T)  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) - 1.0) < 1e-8)[0]
     if not len(i):
         raise ValueError("no unit eigenvector corresponding to eigenvalue 1")
     direction = numpy.real(W[:, i[-1]]).squeeze()
     # point: unit eigenvector of R33 corresponding to eigenvalue of 1
-    l, Q = numpy.linalg.eig(R)
+    l, Q = numpy.linalg.eig(R)  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) - 1.0) < 1e-8)[0]
     if not len(i):
         raise ValueError("no unit eigenvector corresponding to eigenvalue 1")
@@ -411,7 +411,7 @@ def scale_from_matrix(matrix):
     factor = numpy.trace(M33) - 2.0
     try:
         # direction: unit eigenvector corresponding to eigenvalue factor
-        l, V = numpy.linalg.eig(M33)
+        l, V = numpy.linalg.eig(M33)  # noqa: E741 - Ambiguous upstream name kept as written.
         i = numpy.where(abs(numpy.real(l) - factor) < 1e-8)[0][0]
         direction = numpy.real(V[:, i]).squeeze()
         direction /= vector_norm(direction)
@@ -420,7 +420,7 @@ def scale_from_matrix(matrix):
         factor = (factor + 2.0) / 3.0
         direction = None
     # origin: any eigenvector corresponding to eigenvalue 1
-    l, V = numpy.linalg.eig(M)
+    l, V = numpy.linalg.eig(M)  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) - 1.0) < 1e-8)[0]
     if not len(i):
         raise ValueError("no eigenvector corresponding to eigenvalue 1")
@@ -523,21 +523,21 @@ def projection_from_matrix(matrix, pseudo=False):
     """
     M = numpy.array(matrix, dtype=numpy.float64, copy=False)
     M33 = M[:3, :3]
-    l, V = numpy.linalg.eig(M)
+    l, V = numpy.linalg.eig(M)  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) - 1.0) < 1e-8)[0]
     if not pseudo and len(i):
         # point: any eigenvector corresponding to eigenvalue 1
         point = numpy.real(V[:, i[-1]]).squeeze()
         point /= point[3]
         # direction: unit eigenvector corresponding to eigenvalue 0
-        l, V = numpy.linalg.eig(M33)
+        l, V = numpy.linalg.eig(M33)  # noqa: E741 - Ambiguous upstream name kept as written.
         i = numpy.where(abs(numpy.real(l)) < 1e-8)[0]
         if not len(i):
             raise ValueError("no eigenvector corresponding to eigenvalue 0")
         direction = numpy.real(V[:, i[0]]).squeeze()
         direction /= vector_norm(direction)
         # normal: unit eigenvector of M33.T corresponding to eigenvalue 0
-        l, V = numpy.linalg.eig(M33.T)
+        l, V = numpy.linalg.eig(M33.T)  # noqa: E741 - Ambiguous upstream name kept as written.
         i = numpy.where(abs(numpy.real(l)) < 1e-8)[0]
         if len(i):
             # parallel projection
@@ -665,15 +665,15 @@ def shear_from_matrix(matrix):
     M = numpy.array(matrix, dtype=numpy.float64, copy=False)
     M33 = M[:3, :3]
     # normal: cross independent eigenvectors corresponding to the eigenvalue 1
-    l, V = numpy.linalg.eig(M33)
+    l, V = numpy.linalg.eig(M33)  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) - 1.0) < 1e-4)[0]
     if len(i) < 2:
-        raise ValueError("No two linear independent eigenvectors found %s" % l)
+        raise ValueError("No two linear independent eigenvectors found %s" % l)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     V = numpy.real(V[:, i]).squeeze().T
     lenorm = -1.0
     for i0, i1 in ((0, 1), (0, 2), (1, 2)):
         n = numpy.cross(V[i0], V[i1])
-        l = vector_norm(n)
+        l = vector_norm(n)  # noqa: E741 - Ambiguous upstream name kept as written.
         if l > lenorm:
             lenorm = l
             normal = n
@@ -684,7 +684,7 @@ def shear_from_matrix(matrix):
     direction /= angle
     angle = math.atan(angle)
     # point: eigenvector corresponding to eigenvalue 1
-    l, V = numpy.linalg.eig(M)
+    l, V = numpy.linalg.eig(M)  # noqa: E741 - Ambiguous upstream name kept as written.
     i = numpy.where(abs(numpy.real(l) - 1.0) < 1e-8)[0]
     if not len(i):
         raise ValueError("no eigenvector corresponding to eigenvalue 1")
@@ -944,7 +944,7 @@ def superimposition_matrix(v0, v1, scaling=False, usesvd=True):
             (xy - yx, zx + xz, yz + zy, -xx - yy + zz),
         )
         # quaternion: eigenvector corresponding to most positive eigenvalue
-        l, V = numpy.linalg.eig(N)
+        l, V = numpy.linalg.eig(N)  # noqa: E741 - Ambiguous upstream name kept as written.
         q = V[:, numpy.argmax(l)]
         q /= vector_norm(q)  # unit quaternion
         q = numpy.roll(q, -1)  # move w component to end
@@ -1431,7 +1431,7 @@ class Arcball:
 
     def setconstrain(self, constrain):
         """Set state of constrain to axis mode."""
-        self._constrain = constrain == True
+        self._constrain = constrain == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def getconstrain(self):
         """Return state of constrain to axis mode."""

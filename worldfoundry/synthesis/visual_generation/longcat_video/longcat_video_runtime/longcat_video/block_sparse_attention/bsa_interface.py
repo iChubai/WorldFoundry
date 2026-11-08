@@ -754,8 +754,8 @@ def flash_attn_bsa_3d(
     # bsa_params
     sparsity=0.875,
     cdf_threshold=None,
-    chunk_3d_shape_q=[4, 4, 8],
-    chunk_3d_shape_k=[4, 4, 8],
+    chunk_3d_shape_q=[4, 4, 8],  # noqa: B006 - Keeps the upstream default object and signature.
+    chunk_3d_shape_k=[4, 4, 8],  # noqa: B006 - Keeps the upstream default object and signature.
 ) -> torch.Tensor:
     _, _, Sq, head_dim_q = q.shape
     _, _, Sk, head_dim_k = k.shape

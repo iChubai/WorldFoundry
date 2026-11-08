@@ -22,17 +22,17 @@ class ActionModule(nnx.Module):
         vae_time_compression_ratio=4,
         windows_size=3,
         heads_num=16,
-        patch_size=[1, 2, 2],
+        patch_size=[1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         qk_norm=True,
         qkv_bias=False,
-        rope_dim_list=[8, 28, 28],
+        rope_dim_list=[8, 28, 28],  # noqa: B006 - Keeps the upstream default object and signature.
         rope_theta=256,
-        mouse_qk_dim_list=[8, 28, 28],
+        mouse_qk_dim_list=[8, 28, 28],  # noqa: B006 - Keeps the upstream default object and signature.
         enable_mouse=True,
         enable_keyboard=True,
         local_attn_size=6,
-        blocks=[],
-        rngs=nnx.Rngs(0),
+        blocks=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        rngs=nnx.Rngs(0),  # noqa: B008 - Default evaluated once at definition, as upstream.
         left_action_padding=11,
     ):
         super().__init__()

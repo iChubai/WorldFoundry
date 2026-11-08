@@ -60,7 +60,7 @@ def _preprocess_pil_to_tensor(
     w, h = img.size
     tgt_h, tgt_w = int(target_size_hw[0]), int(target_size_hw[1])
     scale = max(tgt_h / h, tgt_w / w)
-    new_h, new_w = int(round(h * scale)), int(round(w * scale))
+    new_h, new_w = int(round(h * scale)), int(round(w * scale))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     img = tv_resize(img, [new_h, new_w], interpolation=interpolation)
     img = center_crop(img, [tgt_h, tgt_w])
     t = to_tensor(img)
@@ -86,7 +86,7 @@ def _preprocess_u8_tensor(
     h, w = int(x.shape[2]), int(x.shape[3])
     tgt_h, tgt_w = int(target_size_hw[0]), int(target_size_hw[1])
     scale = max(tgt_h / h, tgt_w / w)
-    new_h, new_w = int(round(h * scale)), int(round(w * scale))
+    new_h, new_w = int(round(h * scale)), int(round(w * scale))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     x = torch.nn.functional.interpolate(x, size=(new_h, new_w), mode="bicubic", align_corners=False)
     crop_y = max(0, (new_h - tgt_h) // 2)
     crop_x = max(0, (new_w - tgt_w) // 2)

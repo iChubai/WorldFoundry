@@ -106,9 +106,9 @@ def get_current_action(mode="universal"):
                 idx_mouse = []
                 idx_keyboard = []
                 for i in indexes:
-                    if i in CAMERA_VALUE_MAP.keys():
+                    if i in CAMERA_VALUE_MAP.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                         idx_mouse += [i]
-                    elif i in KEYBOARD_IDX.keys():
+                    elif i in KEYBOARD_IDX.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                         idx_keyboard += [i]
                 if len(idx_mouse) == 0:
                     idx_mouse += ["q"]
@@ -142,7 +142,7 @@ def get_current_action(mode="universal"):
                 idx_keyboard = (
                     input("Please input the action: \n(e.g. `W` for forward, `Z` for turning left)\n").strip().lower()
                 )
-                if idx_keyboard in KEYBOARD_IDX.keys():
+                if idx_keyboard in KEYBOARD_IDX.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     flag = 1
             except BaseException:
                 pass

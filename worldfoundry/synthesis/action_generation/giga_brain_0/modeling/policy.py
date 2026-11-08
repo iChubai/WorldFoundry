@@ -160,7 +160,7 @@ class GigaBrain0Policy(ModelMixin, ConfigMixin):
             )
 
             # Detach KV cache for knowledge insulation
-            for key in past_key_values.keys():
+            for key in past_key_values.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 past_key_values[key]["key_states"] = past_key_values[key]["key_states"].detach()
                 past_key_values[key]["value_states"] = past_key_values[key]["value_states"].detach()
 

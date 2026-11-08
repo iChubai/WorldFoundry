@@ -158,7 +158,7 @@ def plot_images_and_actions(
     canvas = FigureCanvas(fig)
     canvas.draw()
     plot_array = np.frombuffer(canvas.tostring_rgb(), dtype="uint8")
-    plot_array = plot_array.reshape(canvas.get_width_height()[::-1] + (3,))
+    plot_array = plot_array.reshape(canvas.get_width_height()[::-1] + (3,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     plt.close(fig)
     return plot_array
 

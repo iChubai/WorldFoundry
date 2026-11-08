@@ -358,7 +358,7 @@ class RoboFlamingoRuntime:
         actions = diffusion.normalizer.unnormalize(sampled)[:, history_len:]
         actions[..., -1] = (actions[..., -1] > 0.5).to(actions.dtype) * 2 - 1
         first_action = actions[0, 0].detach().float().cpu().numpy()
-        self._diffusion_history = (self._diffusion_history + [first_action])[-history_len:]
+        self._diffusion_history = (self._diffusion_history + [first_action])[-history_len:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return actions
 
     def _load_model_bundle(self) -> tuple[Any, Any, Any]:

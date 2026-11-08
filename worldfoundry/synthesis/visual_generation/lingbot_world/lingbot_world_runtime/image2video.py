@@ -345,7 +345,7 @@ class WanI2V:
         w = lat_w * self.vae_stride[2]
         lat_f = (F - 1) // self.vae_stride[0] + 1
         max_seq_len = lat_f * lat_h * lat_w // (self.patch_size[1] * self.patch_size[2])
-        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size
+        max_seq_len = int(math.ceil(max_seq_len / self.sp_size)) * self.sp_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         seed = seed if seed >= 0 else random.randint(0, sys.maxsize)
         seed_g = torch.Generator(device=self.device)

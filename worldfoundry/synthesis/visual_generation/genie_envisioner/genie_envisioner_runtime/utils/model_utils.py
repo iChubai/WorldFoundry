@@ -79,10 +79,10 @@ def load_checkpoints(model, pretrained_ckpt, strict=False, ignore_mismatched_siz
             mismatched_keys = []
         missing, unexpected = model.load_state_dict(state_dict, strict=False)
 
-        print(">>> mismatched_keys: %s" % mismatched_keys)
-        print(">>> missing: %s" % missing)
-        print(">>> unexpected: %s" % unexpected)
-    print(">>> Loaded weights from pretrained checkpoint: %s" % pretrained_ckpt)
+        print(">>> mismatched_keys: %s" % mismatched_keys)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+        print(">>> missing: %s" % missing)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+        print(">>> unexpected: %s" % unexpected)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+    print(">>> Loaded weights from pretrained checkpoint: %s" % pretrained_ckpt)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 def load_condition_models(

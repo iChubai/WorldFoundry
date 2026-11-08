@@ -40,7 +40,7 @@ def _render_torch_zbuffer(
         points, colors = points[keep], colors[keep]
     points_h = torch.cat((points, torch.ones_like(points[:, :1])), dim=1)
     fx, fy, cx, cy = (float(value) for value in intrinsics)
-    splat_radius = max(1, int(round(float(radius) * min(height, width) / 2)))
+    splat_radius = max(1, int(round(float(radius) * min(height, width) / 2)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     offset = torch.arange(-splat_radius, splat_radius + 1, device=points.device)
     delta_y, delta_x = torch.meshgrid(offset, offset, indexing="ij")
     disk = delta_x.square() + delta_y.square() <= splat_radius * splat_radius

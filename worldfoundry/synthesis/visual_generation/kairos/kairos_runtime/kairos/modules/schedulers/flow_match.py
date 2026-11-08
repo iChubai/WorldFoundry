@@ -124,7 +124,11 @@ class FlowMatchScheduler:
 
 class DMDFlowMatchScheduler(FlowMatchScheduler):
     def set_timesteps(
-        self, selected_sampling_time=[1000, 750, 500, 250], dynamic_shift_len=None, num_frames=1, shift=None
+        self,
+        selected_sampling_time=[1000, 750, 500, 250],  # noqa: B006 - Keeps the upstream default object and signature.
+        dynamic_shift_len=None,
+        num_frames=1,
+        shift=None,
     ):
         self.sigmas = torch.tensor(selected_sampling_time) / self.num_train_timesteps
         if shift is not None:

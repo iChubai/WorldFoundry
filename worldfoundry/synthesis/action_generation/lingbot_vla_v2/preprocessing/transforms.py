@@ -251,7 +251,7 @@ def apply_visual_augmentation(
         raise ValueError(f"Expected image (C,H,W) or video (T,C,H,W), got {tuple(visual.shape)}")
 
     orig_dtype = visual.dtype
-    height, width = int(visual_bchw.shape[-2]), int(visual_bchw.shape[-1])
+    height, width = int(visual_bchw.shape[-2]), int(visual_bchw.shape[-1])  # noqa: F841 - Upstream assignment kept.
     image = visual_bchw.to(torch.float32)
     if image.max() > 1.0:
         image = image / 255.0
@@ -344,9 +344,9 @@ def prepare_images(
                 pil_images.append(pil_img)
         else:
             # zero padding
-            img = image_dict[list(image_dict.keys())[0]]
+            img = image_dict[list(image_dict.keys())[0]]  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if use_depth_align:
-                pil_img = pil_image_dict[list(pil_image_dict.keys())[0]]
+                pil_img = pil_image_dict[list(pil_image_dict.keys())[0]]  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if isinstance(img, torch.Tensor):
                 img = torch.full_like(img, fill_value=-1.0)  # paligemma [-1,1], now Qwen3vl
             else:
@@ -355,7 +355,7 @@ def prepare_images(
                     pil_img = np.zeros_like(pil_img)
             images.append(img)
             if return_image_grid_thw:
-                image_grid_thw_list.append(image_grid_thw_dict.get(list(image_dict.keys())[0], None))
+                image_grid_thw_list.append(image_grid_thw_dict.get(list(image_dict.keys())[0], None))  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if use_depth_align:
                 pil_images.append(pil_img)
             img_masks.append(False)
@@ -366,7 +366,7 @@ def prepare_images(
         images = torch.from_numpy(np.stack(images, axis=0))  # (n, c, h, w)
     img_masks = torch.tensor(img_masks, dtype=torch.bool)  # (*n)
 
-    if use_depth_align:
+    if use_depth_align:  # noqa: SIM108 - Branches carry per-case comments.
         # pil_images = np.stack(pil_images, axis=0)
         # pil_images = [pil_images[i].transpose(1,2,0) for i in range(pil_images.shape[0])]
         # pil_images = np.concatenate(pil_images, axis=1)

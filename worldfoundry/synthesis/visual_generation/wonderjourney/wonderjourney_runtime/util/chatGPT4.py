@@ -177,7 +177,7 @@ class TextpromptGen:
                 {"role": "user", "content": self.content},
             ]
 
-        for i in range(10):
+        for i in range(10):  # noqa: B007 - Loop target name kept as upstream.
             try:
                 response = openai.ChatCompletion.create(
                     model=self.model,

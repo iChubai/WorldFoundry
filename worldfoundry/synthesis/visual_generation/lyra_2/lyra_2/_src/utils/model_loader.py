@@ -38,7 +38,7 @@ def load_model_from_checkpoint(
     config_file="lyra_2/_src/configs/t2v_wan/config.py",
     enable_fsdp=False,
     seed=0,
-    experiment_opts: list[str] = [],
+    experiment_opts: list[str] = [],  # noqa: B006 - Keeps the upstream default object and signature.
     strict=True,
 ):
     """
@@ -50,7 +50,7 @@ def load_model_from_checkpoint(
     """
     config_module = get_config_module(config_file)
     config = importlib.import_module(config_module).make_config()
-    config = override(config, ["--", f"experiment={experiment_name}"] + experiment_opts)
+    config = override(config, ["--", f"experiment={experiment_name}"] + experiment_opts)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Check that the config is valid
     config.validate()

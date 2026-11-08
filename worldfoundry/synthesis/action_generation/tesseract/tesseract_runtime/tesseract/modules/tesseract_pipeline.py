@@ -22,7 +22,10 @@ from transformers import T5EncoderModel, T5Tokenizer
 
 # isort: split
 # CogVideoX supplies the latent-extraction helper used by both pipelines.
-from diffusers.pipelines.cogvideo.pipeline_cogvideox_image2video import retrieve_latents, retrieve_timesteps
+from diffusers.pipelines.cogvideo.pipeline_cogvideox_image2video import (  # noqa: F811 - Later import provides the binding, as upstream.
+    retrieve_latents,
+    retrieve_timesteps,
+)
 
 _LOW_CPU_MEM_USAGE_DEFAULT_LORA = False
 
@@ -74,7 +77,7 @@ class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
 
         # For CogVideoX1.5, the latent should add 1 for padding (Not use)
         if self.transformer.config.patch_size_t is not None:
-            shape = shape[:1] + (shape[1] + shape[1] % self.transformer.config.patch_size_t,) + shape[2:]
+            shape = shape[:1] + (shape[1] + shape[1] % self.transformer.config.patch_size_t,) + shape[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         image = image.unsqueeze(2)  # [B, C, F, H, W]
 
@@ -212,7 +215,7 @@ class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 226,
     ) -> CogVideoXPipelineOutput | tuple:
         """
@@ -476,7 +479,7 @@ class TesserActImageToDepthVideoPipeline(CogVideoXImageToVideoPipeline):
                 if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     progress_bar.update()
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             # Discard any padding frames that were added for CogVideoX 1.5
             latents = latents[:, additional_frames:]
             video = self.decode_latents(latents)
@@ -540,7 +543,7 @@ class TesserActImageToDepthNormalVideoPipeline(CogVideoXImageToVideoPipeline):
 
         # For CogVideoX1.5, the latent should add 1 for padding (Not use)
         if self.transformer.config.patch_size_t is not None:
-            shape = shape[:1] + (shape[1] + shape[1] % self.transformer.config.patch_size_t,) + shape[2:]
+            shape = shape[:1] + (shape[1] + shape[1] % self.transformer.config.patch_size_t,) + shape[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         image = image.unsqueeze(2)  # [B, C, F, H, W]
 
@@ -686,7 +689,7 @@ class TesserActImageToDepthNormalVideoPipeline(CogVideoXImageToVideoPipeline):
         | PipelineCallback
         | MultiPipelineCallbacks
         | None = None,
-        callback_on_step_end_tensor_inputs: list[str] = ["latents"],
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 226,
     ) -> CogVideoXPipelineOutput | tuple:
         """
@@ -980,7 +983,7 @@ class TesserActImageToDepthNormalVideoPipeline(CogVideoXImageToVideoPipeline):
                 if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     progress_bar.update()
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             # Free up memory
             del latent_model_input, latent_image_input, noise_pred
             gc.collect()

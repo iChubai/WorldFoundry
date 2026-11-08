@@ -113,7 +113,7 @@ class ActionTransformerBlock(nn.Module):
         if self.num_latent_downsample_block > 0:
             self.latent_downsample_block = nn.ModuleList()
             for _i in range(self.num_latent_downsample_block):
-                self.latent_downsample_block.append(downsampling_block())
+                self.latent_downsample_block.append(downsampling_block())  # noqa: F821 - Name is undefined in the upstream source.
 
     def forward(
         self,
@@ -261,7 +261,7 @@ def preprocessing_action_states(
     action_states: torch.Tensor = None,
     action_timestep: torch.LongTensor = None,
 ):
-    assert self.action_expert == True
+    assert self.action_expert == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
     assert action_states is not None and action_timestep is not None
 
     batch_size = action_states.shape[0]

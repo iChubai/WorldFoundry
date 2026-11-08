@@ -82,13 +82,13 @@ class FlexRobotHelper:
         pos_inv, orn_inv = p.invertTransform(local_inertial_pos, local_inertial_orn)
         pos, orn = p.multiplyTransforms(base_com_pos, base_com_orn, pos_inv, orn_inv)
 
-        state_cur.append(list(pos) + [1] + list(orn))
+        state_cur.append(list(pos) + [1] + list(orn))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
-        for l in range(self.num_link - 1):
+        for l in range(self.num_link - 1):  # noqa: E741 - Ambiguous upstream name kept as written.
             ls = p.getLinkState(self.robotId, l)
             pos = ls[4]
             orn = ls[5]
-            state_cur.append(list(pos) + [1] + list(orn))
+            state_cur.append(list(pos) + [1] + list(orn))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         state_cur = np.array(state_cur)
 

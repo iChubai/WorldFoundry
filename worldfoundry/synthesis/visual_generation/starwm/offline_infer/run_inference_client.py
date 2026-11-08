@@ -107,7 +107,7 @@ def main():
 
     flag = True
 
-    with open(args.output_file, "w", encoding="utf-8") as f_out:
+    with open(args.output_file, "w", encoding="utf-8") as f_out:  # noqa: SIM117 - Branches carry per-case comments.
         with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_workers) as executor:
             # Create a list of futures
             futures = [executor.submit(process_single_item, item, args) for item in data]

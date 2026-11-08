@@ -156,10 +156,10 @@ class NPUConfig:
         subprocess.run(command, shell=True, check=True)
         return f"Binding Cores:{self.rank}:{pid}:{cpu_cores_range}"
 
-    def replace_methods(self, target_class, source_class, skip_fcns=[], only_include_fcns=None):
+    def replace_methods(self, target_class, source_class, skip_fcns=[], only_include_fcns=None):  # noqa: B006 - Keeps the upstream default object and signature.
         for attr_name in dir(source_class):
             attr_value = getattr(source_class, attr_name)
-            attr_class_value = source_class.__dict__[attr_name] if attr_name in source_class.__dict__ else attr_value
+            attr_class_value = source_class.__dict__[attr_name] if attr_name in source_class.__dict__ else attr_value  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if isinstance(attr_class_value, (staticmethod, classmethod)) or attr_name in skip_fcns:
                 print(f"skip replace {attr_name}")
                 continue
@@ -419,7 +419,7 @@ class NPUConfig:
             output = output.view(output.shape[0], -1, head_num * output.shape[-1])
         return output
 
-    def print_tensor_with_rank(self, name, tensor, rank=[0], dim_print_cnt=[]):
+    def print_tensor_with_rank(self, name, tensor, rank=[0], dim_print_cnt=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         if type(rank) is not list:
             rank = [rank]
         if self.rank in rank:
@@ -431,7 +431,7 @@ class NPUConfig:
                     cur_dim = len(indices)
                     ret = ""
                     for x in range(0, tensor_.size(cur_dim), tensor_.size(cur_dim) // dim_print_cnt[cur_dim]):
-                        ret += print_dim(tensor_, indices + [x])
+                        ret += print_dim(tensor_, indices + [x])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     return ret + "\n"
 
             print(name, tensor.size(), self.rank, "\n", print_dim(tensor, []))

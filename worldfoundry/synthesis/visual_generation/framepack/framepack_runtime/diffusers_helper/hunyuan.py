@@ -98,7 +98,7 @@ def vae_decode(latents, vae, image_mode=False):
         image = vae.decode(latents.to(device=vae.device, dtype=vae.dtype)).sample
     else:
         latents = latents.to(device=vae.device, dtype=vae.dtype).unbind(2)
-        image = [vae.decode(l.unsqueeze(2)).sample for l in latents]
+        image = [vae.decode(l.unsqueeze(2)).sample for l in latents]  # noqa: E741 - Ambiguous upstream name kept as written.
         image = torch.cat(image, dim=2)
 
     return image

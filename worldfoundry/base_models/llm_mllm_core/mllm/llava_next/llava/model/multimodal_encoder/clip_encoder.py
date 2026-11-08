@@ -6,7 +6,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import r
 
 try:
     from s2wrapper import forward as multiscale_forward
-except:
+except BaseException:
     pass
 
 

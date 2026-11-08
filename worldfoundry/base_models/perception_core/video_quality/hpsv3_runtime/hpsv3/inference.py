@@ -97,7 +97,7 @@ class HPSv3RewardInferencer:
 
     def prepare_batch(self, image_paths, prompts):
         max_pixels = 256 * 28 * 28
-        min_pixels = 256 * 28 * 28
+        _min_pixels = 256 * 28 * 28
         message_list = []
         for text, image in zip(prompts, image_paths, strict=False):
             out_message = [

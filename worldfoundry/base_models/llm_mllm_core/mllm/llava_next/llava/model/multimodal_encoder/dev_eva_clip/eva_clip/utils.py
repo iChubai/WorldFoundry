@@ -78,7 +78,7 @@ def resize_visual_pos_embed(state_dict, model, interpolation: str = "bicubic", s
 
 
 def resize_evaclip_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_dim=1):
-    all_keys = list(state_dict.keys())
+    _all_keys = list(state_dict.keys())
     # interpolate position embedding
     if "visual.pos_embed" in state_dict:
         pos_embed_checkpoint = state_dict["visual.pos_embed"]
@@ -112,7 +112,7 @@ def resize_evaclip_pos_embed(state_dict, model, interpolation: str = "bicubic", 
 
 
 def resize_eva_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_dim=1):
-    all_keys = list(state_dict.keys())
+    _all_keys = list(state_dict.keys())
     # interpolate position embedding
     if "pos_embed" in state_dict:
         pos_embed_checkpoint = state_dict["pos_embed"]

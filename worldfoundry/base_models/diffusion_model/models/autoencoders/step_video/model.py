@@ -124,7 +124,7 @@ def cal_outsize(input_sizes, kernel_sizes, stride, padding):
     in_d = input_sizes[1]
     in_h = input_sizes[2]
     in_w = input_sizes[3]
-    in_channel = input_sizes[4]
+    _in_channel = input_sizes[4]
 
     kernel_d = kernel_sizes[2]
     kernel_h = kernel_sizes[3]
@@ -176,7 +176,6 @@ def base_conv3d_channel_last(x, conv_layer, residual=None):
             out_nhwc = residual
 
         assert B == 1
-        outs = []
         for i in range(chunks):
             if i == chunks - 1:
                 xi = x[:1, chunk_size * i :]
@@ -871,7 +870,7 @@ class VideoEncoder(nn.Module):
             attn = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for _i_block in range(self.num_res_blocks):
                 block.append(Resnet3DBlock(in_channels=block_in, out_channels=block_out, temb_channels=temb_ch))
                 block_in = block_out
             down = nn.Module()
@@ -1131,7 +1130,7 @@ class VideoDecoder(nn.Module):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks + 1):
+            for _i_block in range(self.num_res_blocks + 1):
                 block.append(Resnet3DBlock(in_channels=block_in, out_channels=block_out, temb_channels=temb_ch))
                 block_in = block_out
             up = nn.Module()

@@ -63,7 +63,7 @@ class MoGeModel_v2(nn.Module):
         """
         super(MoGeModel_v2, self).__init__()
         if deprecated_kwargs:
-            warnings.warn(f"The following deprecated/invalid arguments are ignored: {deprecated_kwargs}")
+            warnings.warn(f"The following deprecated/invalid arguments are ignored: {deprecated_kwargs}", stacklevel=1)
 
         self.remap_output = remap_output
         self.num_tokens_range = num_tokens_range
@@ -302,7 +302,7 @@ class MoGeModel_v2(nn.Module):
         image = image.to(dtype=self.dtype, device=self.device)
 
         original_height, original_width = image.shape[-2:]
-        area = original_height * original_width
+        _area = original_height * original_width
         aspect_ratio = original_width / original_height
 
         # Determine the number of base tokens to use

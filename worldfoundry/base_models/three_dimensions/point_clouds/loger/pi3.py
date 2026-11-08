@@ -124,7 +124,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         # ----------------------
         #        Decoder
         # ----------------------
-        enc_embed_dim = self.encoder.blocks[0].attn.qkv.in_features  # 1024
+        _enc_embed_dim = self.encoder.blocks[0].attn.qkv.in_features  # 1024
         if decoder_size == "small":
             dec_embed_dim = 384
             dec_num_heads = 6
@@ -477,7 +477,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             if (i % 2 == 1 and not layer_skip0) or (i % 2 == 0 and layer_skip0):
                 hidden_before_block = hidden_for_block
             else:
-                hidden_before_block = hidden_for_block  # dummy
+                _hidden_before_block = hidden_for_block  # dummy
 
             hidden = blk(hidden_for_block, xpos=pos_for_block)
 
@@ -1033,7 +1033,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 cam_b = pred_b.get("camera_poses", None)
                 lpts_a = pred_a.get("local_points", None)
                 lpts_b = pred_b.get("local_points", None)
-                conf_a = pred_a.get("conf", None)
+                _conf_a = pred_a.get("conf", None)
                 conf_b = pred_b.get("conf", None)
 
                 # Only collect when both sides have enough frames for a full overlap window

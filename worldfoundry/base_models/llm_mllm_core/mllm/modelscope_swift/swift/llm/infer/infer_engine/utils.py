@@ -34,7 +34,7 @@ class InferTools:
     def _is_chinese_char(cp: int) -> bool:
         """Checks whether CP is the codepoint of a CJK character."""
         # copy from transformers.generation.streamers.TextStreamer
-        if (
+        return bool(
             (0x4E00 <= cp <= 0x9FFF)
             or (0x3400 <= cp <= 0x4DBF)
             or (0x20000 <= cp <= 0x2A6DF)
@@ -43,10 +43,7 @@ class InferTools:
             or (0x2B820 <= cp <= 0x2CEAF)
             or (0xF900 <= cp <= 0xFAFF)
             or (0x2F800 <= cp <= 0x2FA1F)
-        ):
-            return True
-
-        return False
+        )
 
 
 class InferStreamer(InferTools):

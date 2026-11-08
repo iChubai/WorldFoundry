@@ -236,7 +236,7 @@ class BertSelfOutput(nn.Module):
             self.merge = False
 
     def forward(self, hidden_states, input_tensor):
-        if type(hidden_states) == list:
+        if type(hidden_states) is list:
             hidden_states0 = self.dense0(hidden_states[0])
             hidden_states1 = self.dense1(hidden_states[1])
             if self.merge:
@@ -297,7 +297,7 @@ class BertAttention(nn.Module):
         past_key_value=None,
         output_attentions=False,
     ):
-        if type(encoder_hidden_states) == list:
+        if type(encoder_hidden_states) is list:
             self_outputs0 = self.self0(
                 hidden_states,
                 attention_mask,
@@ -803,7 +803,7 @@ class BertModel(BertPreTrainedModel):
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if encoder_hidden_states is not None:
-            if type(encoder_hidden_states) == list:
+            if type(encoder_hidden_states) is list:
                 encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states[0].size()
             else:
                 (
@@ -813,7 +813,7 @@ class BertModel(BertPreTrainedModel):
                 ) = encoder_hidden_states.size()
             encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
 
-            if type(encoder_attention_mask) == list:
+            if type(encoder_attention_mask) is list:
                 encoder_extended_attention_mask = [self.invert_attention_mask(mask) for mask in encoder_attention_mask]
             elif encoder_attention_mask is None:
                 encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)

@@ -500,7 +500,7 @@ class AggregatorBase(nn.Module, ABC):
         intermediates = []
 
         # Process blocks
-        for i in range(self.aa_block_size):
+        for _i in range(self.aa_block_size):
             if self.training and self.use_gradient_checkpoint:
                 from torch.utils.checkpoint import checkpoint
 

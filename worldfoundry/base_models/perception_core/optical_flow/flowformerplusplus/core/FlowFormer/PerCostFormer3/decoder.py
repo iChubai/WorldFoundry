@@ -317,7 +317,7 @@ class MemoryDecoder(nn.Module):
         size = net.shape
         key, value = None, None
 
-        for idx in range(self.depth):
+        for _idx in range(self.depth):
             coords1 = coords1.detach()
 
             cost_forward = self.encode_flow_token(cost_maps, coords1)
@@ -426,7 +426,7 @@ class MemoryDecoder(nn.Module):
                 target = cost_maps_patches[:, :, idx_h, idx_w].reshape(B, H_inner, W_inner, 64).permute(0, 3, 1, 2)
                 loss += ((cost_forward_pred - target) ** 2).mean()
         elif self.cfg.gt_r > 0:
-            for idx in range(self.cfg.query_num):
+            for _idx in range(self.cfg.query_num):
                 coords_outter = torch.rand(B, 2, H_inner, W_inner, device=cost_memory.device)
                 radius = (self.cfg.gt_r - 1) // 2
                 if self.cfg.no_border:
@@ -472,7 +472,7 @@ class MemoryDecoder(nn.Module):
 
                 loss += ((cost_forward_pred - cost_forward_outter) ** 2).mean()
         else:
-            for idx in range(self.cfg.query_num):
+            for _idx in range(self.cfg.query_num):
                 coords_outter = torch.rand(B, 2, H_inner, W_inner, device=cost_memory.device)
                 if self.cfg.no_border:
                     coords_outter = (

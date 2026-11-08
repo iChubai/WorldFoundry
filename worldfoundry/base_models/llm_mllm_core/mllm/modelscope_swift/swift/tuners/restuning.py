@@ -130,7 +130,7 @@ class ResTuning(SwiftAdapter):
                 _args_main = getattr(self, f"forward_origin_{adapter_name}")(*args, **kwargs)
                 _arg = _args_main[self.target_hidden_pos] if isinstance(_args_main, (tuple, list, dict)) else _args_main
                 args_main = _forward_restuning(self, _arg)
-                if type(_args_main) != type(args_main):
+                if type(_args_main) is not type(args_main):
                     _args_main[self.target_hidden_pos] = args_main
                     args_main = _args_main
             return args_main

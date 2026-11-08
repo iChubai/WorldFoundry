@@ -74,7 +74,7 @@ class AlbefClassification(AlbefBase, MomentumDistilationMixin):
                 nn.Linear(hidden_size, num_classes),
             )
         else:
-            warnings.warn(f"Found num_classes=0, initializing {type(self)} without classifier.")
+            warnings.warn(f"Found num_classes=0, initializing {type(self)} without classifier.", stacklevel=1)
 
         if self.use_distill:
             self.visual_encoder_m = deepcopy(self.visual_encoder)

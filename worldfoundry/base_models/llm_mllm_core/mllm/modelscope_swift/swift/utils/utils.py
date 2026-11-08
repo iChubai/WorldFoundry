@@ -262,7 +262,7 @@ def copy_files_by_pattern(source_dir, dest_dir, patterns):
             subdir_pattern = os.path.sep.join(pattern_parts[:-1])
             file_pattern = pattern_parts[-1]
 
-            for root, dirs, files in os.walk(source_dir):
+            for root, _dirs, files in os.walk(source_dir):
                 rel_path = os.path.relpath(root, source_dir)
                 if rel_path == "." or (rel_path != "." and not fnmatch.fnmatch(rel_path, subdir_pattern)):
                     continue

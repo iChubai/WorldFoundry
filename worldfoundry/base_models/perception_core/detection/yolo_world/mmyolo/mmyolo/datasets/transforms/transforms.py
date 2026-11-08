@@ -1305,7 +1305,7 @@ class PPYOLOERandomCrop(BaseTransform):
                 return results
 
             found = False
-            for i in range(self.num_attempts):
+            for _i in range(self.num_attempts):
                 crop_h, crop_w = self._get_crop_size((orig_img_h, orig_img_w))
                 if self.aspect_ratio is None:
                     if crop_h / crop_w < 0.5 or crop_h / crop_w > 2.0:

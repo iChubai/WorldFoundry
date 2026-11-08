@@ -261,7 +261,7 @@ class FramePackMotioner(nn.Module):
             motion_latents: The motion latents.
             add_last_motion: The add last motion.
         """
-        motion_frames = motion_latents[0].shape[1]
+        _motion_frames = motion_latents[0].shape[1]
         mot = []
         mot_remb = []
         for m in motion_latents:

@@ -138,7 +138,7 @@ def batch_np_matrix_to_pycolmap(
         try:
             image.points2D = pycolmap.ListPoint2D(points2D_list)
             image.registered = True
-        except:
+        except BaseException:
             print(f"frame {fidx + 1} is out of BA")
             image.registered = False
 
@@ -283,7 +283,7 @@ def batch_np_matrix_to_pycolmap_wo_track(
         try:
             image.points2D = pycolmap.ListPoint2D(points2D_list)
             image.registered = True
-        except:
+        except BaseException:
             print(f"frame {fidx + 1} does not have any points")
             image.registered = False
 

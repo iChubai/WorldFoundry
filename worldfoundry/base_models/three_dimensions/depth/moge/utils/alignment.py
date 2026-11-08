@@ -305,7 +305,7 @@ def align_depth_affine_irls(
     x = torch.stack([depth_src, torch.ones_like(depth_src)], dim=-1)
     y = depth_tgt
 
-    for i in range(max_iter):
+    for _i in range(max_iter):
         beta = (x.transpose(-1, -2) @ (w * y)) @ (x.transpose(-1, -2) @ (w[..., None] * x)).inverse().transpose(-2, -1)
         w = 1 / (y - (x @ beta[..., None])[..., 0]).abs().clamp_min(eps)
 

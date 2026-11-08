@@ -115,7 +115,7 @@ class ResidualFusion3D_Stack(nn.Module):
         x, r: [B, F*H*W, C]
         returns v: [B, F*H*W, C]
         """
-        B = x.shape[0]
+        _B = x.shape[0]
         C = x.shape[-1]
         assert C == self.C, f"Expected channel {self.C}, got {C}"
 

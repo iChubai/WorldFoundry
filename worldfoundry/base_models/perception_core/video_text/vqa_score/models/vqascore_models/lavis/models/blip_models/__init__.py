@@ -46,7 +46,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
 
             all_encoder_weights = set([module_name + "/" + sub_name for sub_name in encoder_modules.keys()])
             encoder_layer_pos = 0
-            for name, module in decoder_modules.items():
+            for name, _module in decoder_modules.items():
                 if name.isdigit():
                     encoder_name = str(int(name) + encoder_layer_pos)
                     decoder_name = name

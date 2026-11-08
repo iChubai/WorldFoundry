@@ -31,10 +31,11 @@ def _init():
         sources = [os.path.join(os.path.dirname(__file__), s) for s in sources]
         try:
             _plugin = custom_ops.get_plugin("upfirdn2d_plugin", sources=sources, extra_cuda_cflags=["--use_fast_math"])
-        except:
+        except BaseException:
             warnings.warn(
                 "Failed to build CUDA kernels for upfirdn2d. Falling back to slow reference implementation. Details:\n\n"
-                + traceback.format_exc()
+                + traceback.format_exc(),
+                stacklevel=1,
             )
     return _plugin is not None
 

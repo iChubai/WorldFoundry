@@ -513,7 +513,7 @@ class CausalWanSelfAttention(nn.Module):
                             and rr_pos["q_last"] == self.relative_rope_pmax - 1
                             and (not getattr(CausalWanSelfAttention, "_rr_long_logged", False))
                         ):
-                            mem_str = (
+                            _mem_str = (
                                 f"mem[{rr_pos['mem_start']}..{rr_pos['mem_end']}]"
                                 if rr_pos["use_memory"]
                                 else "mem=(inactive)"
@@ -986,9 +986,8 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         if self.relative_rope:
             first_attn = self.blocks[0].self_attn
             sink_s = first_attn.sink_size
-            N_L = first_attn.max_attention_size // 1560 - sink_s
-            N_Q_est = 3
-            pmax_m1 = self.relative_rope_pmax - 1
+            _N_L = first_attn.max_attention_size // 1560 - sink_s
+            _pmax_m1 = self.relative_rope_pmax - 1
         self.head = CausalHead(dim, out_dim, patch_size, eps)
         assert dim % num_heads == 0 and dim // num_heads % 2 == 0
         d = dim // num_heads
@@ -1214,7 +1213,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         frame_indices = torch.arange(
             start=frame_seqlen, end=total_length, step=frame_seqlen * num_frame_per_block, device=device
         )
-        for idx, tmp in enumerate(frame_indices):
+        for _idx, tmp in enumerate(frame_indices):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):
@@ -1445,7 +1444,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                     else:
                         x, block_cache_update_info = result
                     cache_update_infos.append((block_index, block_cache_update_info))
-                    cache_update_info = block_cache_update_info[:2]
+                    _cache_update_info = block_cache_update_info[:2]
                 else:
                     x = result
         if kv_cache is not None and (not dist.is_initialized() or dist.get_rank() == 0):
@@ -1455,7 +1454,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             if _has_memory and cache_update_infos:
                 last_block_idx = cache_update_infos[-1][0]
                 last_update_info = cache_update_infos[-1][1]
-                local_end_idx = last_update_info[1]
+                _local_end_idx = last_update_info[1]
                 update_dict = last_update_info[2] if len(last_update_info) > 2 else None
                 sink_tok = self.blocks[0].self_attn.sink_size * 1560
                 sink_frames = self.blocks[0].self_attn.sink_size

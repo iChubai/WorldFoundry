@@ -172,7 +172,9 @@ class SparseSampler:
             idx_nnz = torch.nonzero(prior.view(-1) > self.min_depth, as_tuple=False)
             num_idx = len(idx_nnz)
             if num_idx < num_sample:
-                warnings.warn(f"Aiming to sample {num_sample} points, but only {num_idx} valid points in the map.")
+                warnings.warn(
+                    f"Aiming to sample {num_sample} points, but only {num_idx} valid points in the map.", stacklevel=1
+                )
 
             idx_sample = torch.randperm(num_idx)[:num_sample]
             idx_nnz = idx_nnz[idx_sample[:]]

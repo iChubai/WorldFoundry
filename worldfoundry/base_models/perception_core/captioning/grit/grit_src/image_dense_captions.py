@@ -29,7 +29,7 @@ class ObjDescription:
         self.data = object_descriptions
 
     def __getitem__(self, item):
-        assert type(item) == torch.Tensor
+        assert type(item) is torch.Tensor
         assert item.dim() == 1
         if len(item) > 0:
             assert item.dtype == torch.int64 or item.dtype == torch.bool

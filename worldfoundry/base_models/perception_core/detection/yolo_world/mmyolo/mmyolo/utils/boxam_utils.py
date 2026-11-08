@@ -88,7 +88,8 @@ def init_detector(
         else:
             warnings.simplefilter("once")
             warnings.warn(
-                "dataset_meta or class names are not saved in the checkpoint's meta data, use COCO classes by default."
+                "dataset_meta or class names are not saved in the checkpoint's meta data, use COCO classes by default.",
+                stacklevel=1,
             )
             model.dataset_meta = {"classes": get_classes("coco"), "palette": palette}
 

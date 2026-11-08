@@ -225,7 +225,7 @@ class SimpleTokenizer:
                     j = word.index(first, i)
                     new_word.extend(word[i:j])
                     i = j
-                except:
+                except BaseException:
                     new_word.extend(word[i:])
                     break
                 if word[i] == first and i < len(word) - 1 and word[i + 1] == second:

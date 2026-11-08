@@ -52,7 +52,7 @@ def detect_face(detector, img, align=True):
 
         # note that, by design, opencv's haarcascade scores are >0 but not capped at 1
         faces, _, scores = detector["face_detector"].detectMultiScale3(img, 1.1, 10, outputRejectLevels=True)
-    except:
+    except BaseException:
         pass
 
     if len(faces) > 0:

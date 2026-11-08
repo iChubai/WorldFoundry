@@ -16,7 +16,7 @@ def inverse_sigmoid(x):
     Args:
         x: The x.
     """
-    if type(x) == torch.Tensor:
+    if type(x) is torch.Tensor:
         return torch.log(x / (1 - x))
     else:
         return math.log(x / (1 - x))
@@ -29,7 +29,7 @@ def inverse_softplus(x, beta=1):
         x: The x.
         beta: The beta.
     """
-    if type(x) == torch.Tensor:
+    if type(x) is torch.Tensor:
         return (torch.exp(beta * x) - 1).log() / beta
     else:
         return math.log(math.exp(beta * x) - 1) / beta
@@ -122,7 +122,7 @@ class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
             x = self.decoder.mid_block(x, None, [0])
 
         ## upsamples
-        for i, up_block in enumerate(self.decoder.up_blocks):
+        for _i, up_block in enumerate(self.decoder.up_blocks):
             if self.network_checkpointing and torch.is_grad_enabled():
                 x = torch.utils.checkpoint.checkpoint(up_block, x, None, [0], True, use_reentrant=False)
             else:

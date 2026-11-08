@@ -164,13 +164,13 @@ import torch.nn.functional as F
 
 try:
     from timm.models.layers import drop_path, to_2tuple, trunc_normal_
-except:
+except BaseException:
     from timm.layers import drop_path, to_2tuple, trunc_normal_
 
 if os.getenv("ENV_TYPE") == "deepspeed":
     try:
         from deepspeed.runtime.activation_checkpointing.checkpointing import checkpoint
-    except:
+    except BaseException:
         from torch.utils.checkpoint import checkpoint
 else:
     from torch.utils.checkpoint import checkpoint
@@ -829,7 +829,7 @@ from dataclasses import dataclass
 
 try:
     from apex.normalization import FusedLayerNorm
-except:
+except BaseException:
     FusedLayerNorm = LayerNorm
     # print("Please build and install Nvidia apex package with option '--cuda_ext' according to https://github.com/NVIDIA/apex#from-source .")
 

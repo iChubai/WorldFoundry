@@ -95,7 +95,7 @@ class PaliGemmaModel(VQAScoreModel):
         for data, question, answer in zip(processed_data, questions, answers, strict=False):
             model_inputs = self.processor(text=question, images=data, return_tensors="pt")
             model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
-            input_len = model_inputs["input_ids"].shape[-1]
+            _input_len = model_inputs["input_ids"].shape[-1]
 
             with torch.inference_mode():
                 outputs = self.model.generate(

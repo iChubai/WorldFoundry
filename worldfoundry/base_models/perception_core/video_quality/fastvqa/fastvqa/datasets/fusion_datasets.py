@@ -148,7 +148,7 @@ def get_arp_resized_video(
             rnd_h = random.randrange(res_h - ori_short_edge)
             video = video[..., rnd_h : rnd_h + ori_short_edge, :]
         elif res_w > ori_short_edge:
-            rnd_w = random.randrange(res_w - ori_short_edge)
+            _rnd_w = random.randrange(res_w - ori_short_edge)
             video = video[..., :, rnd_h : rnd_h + ori_short_edge]
     ori_short_edge = min(video.shape[-2:])
     scale_factor = short_edge / ori_short_edge
@@ -172,7 +172,7 @@ def get_arp_fragment_video(
             rnd_h = random.randrange(res_h - ori_short_edge)
             video = video[..., rnd_h : rnd_h + ori_short_edge, :]
         elif res_w > ori_short_edge:
-            rnd_w = random.randrange(res_w - ori_short_edge)
+            _rnd_w = random.randrange(res_w - ori_short_edge)
             video = video[..., :, rnd_h : rnd_h + ori_short_edge]
     kwargs["fsize_h"], kwargs["fsize_w"] = fsize, fsize
     res_h, res_w = video.shape[-2:]
@@ -410,7 +410,7 @@ class FragmentSampleFrames:
     def __call__(self, total_frames, train=False, start_index=0):
         frame_inds = []
 
-        for i in range(self.num_clips):
+        for _i in range(self.num_clips):
             frame_inds += [self.get_frame_indices(total_frames)]
 
         frame_inds = np.concatenate(frame_inds)
@@ -455,7 +455,7 @@ class SimpleDataset(torch.utils.data.Dataset):
         frame_inds = self.sampler(len(vreader), self.phase == "train")
         frame_dict = {idx: vreader[idx] for idx in np.unique(frame_inds)}
         imgs = [frame_dict[idx] for idx in frame_inds]
-        img_shape = imgs[0].shape
+        _img_shape = imgs[0].shape
         video = torch.stack(imgs, 0)
         video = video.permute(3, 0, 1, 2)
         ## Process Frames
@@ -521,7 +521,7 @@ class FusionDataset(torch.utils.data.Dataset):
                         label = float(label)
                         filename = osp.join(self.data_prefix, filename)
                         self.video_infos.append(dict(filename=filename, label=label))
-            except:
+            except BaseException:
                 #### No Label Testing
                 video_filenames = sorted(glob.glob(self.data_prefix + "/*.mp4"))
                 print(video_filenames)
@@ -628,7 +628,7 @@ class FusionDatasetK400(torch.utils.data.Dataset):
                         label = int(label)
                         filename = osp.join(self.data_prefix, filename)
                         self.video_infos.append(dict(filename=filename, label=label))
-            except:
+            except BaseException:
                 #### No Label Testing
                 video_filenames = sorted(glob.glob(self.data_prefix + "/*.mp4"))
                 print(video_filenames)
@@ -679,7 +679,7 @@ class FusionDatasetK400(torch.utils.data.Dataset):
             frame_inds = self.sampler(len(vreader), self.phase == "train")
             frame_dict = {idx: vreader[idx] for idx in np.unique(frame_inds)}
             imgs = [frame_dict[idx] for idx in frame_inds]
-        img_shape = imgs[0].shape
+        _img_shape = imgs[0].shape
         video = torch.stack(imgs, 0)
         video = video.permute(3, 0, 1, 2)
         ## Process Frames
@@ -781,7 +781,7 @@ class LSVQPatchDataset(torch.utils.data.Dataset):
         frame_inds = self.sampler(min(len(vreader), tt - ts), self.phase == "train") + ts
         frame_dict = {idx: vreader[idx] for idx in np.unique(frame_inds)}
         imgs = [frame_dict[idx][y0:y1, x0:x1] for idx in frame_inds]
-        img_shape = imgs[0].shape
+        _img_shape = imgs[0].shape
         video = torch.stack(imgs, 0)
         video = video.permute(3, 0, 1, 2)
         ## Process Frames

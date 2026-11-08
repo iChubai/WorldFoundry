@@ -197,7 +197,7 @@ class SLConfig:
             elif isinstance(b, list):
                 try:
                     _ = int(k)
-                except:
+                except BaseException:
                     raise TypeError(f"b is a list, index {k} should be an int when input but {type(k)}")
                 b[int(k)] = SLConfig._merge_a_into_b(v, b[int(k)])
             else:

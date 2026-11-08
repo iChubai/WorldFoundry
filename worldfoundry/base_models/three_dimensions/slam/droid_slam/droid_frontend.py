@@ -91,7 +91,7 @@ class DroidFrontend:
             self.video.disps[self.t1 - 1],
         )
 
-        for itr in range(self.iters1):
+        for _itr in range(self.iters1):
             self.graph.update(None, None, use_inactive=True)
 
         # set initial pose for next frame
@@ -105,7 +105,7 @@ class DroidFrontend:
                 self.t1 -= 1
 
         else:
-            for itr in range(self.iters2):
+            for _itr in range(self.iters2):
                 self.graph.update(None, None, use_inactive=True)
 
         # set pose for next itration
@@ -123,12 +123,12 @@ class DroidFrontend:
 
         self.graph.add_neighborhood_factors(self.t0, self.t1, r=3)
 
-        for itr in range(8):
+        for _itr in range(8):
             self.graph.update(1, use_inactive=True)
 
         self.graph.add_proximity_factors(0, 0, rad=2, nms=2, thresh=self.frontend_thresh, remove=False)
 
-        for itr in range(8):
+        for _itr in range(8):
             self.graph.update(1, use_inactive=True)
 
         # self.video.normalize()

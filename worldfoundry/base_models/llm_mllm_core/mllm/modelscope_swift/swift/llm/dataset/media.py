@@ -72,7 +72,7 @@ class MediaResource:
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
 
-        for dirpath, dirnames, filenames in os.walk(src_dir):
+        for dirpath, _dirnames, filenames in os.walk(src_dir):
             relative_path = os.path.relpath(dirpath, src_dir)
             target_dir = os.path.join(dst_dir, relative_path)
 

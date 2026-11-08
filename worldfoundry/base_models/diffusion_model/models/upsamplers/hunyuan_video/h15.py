@@ -178,7 +178,7 @@ class SRTo1080pUpsampler(nn.Module, NativeConfigMixin):
         self.conv_in = CausalConv3d(z_channels, block_in, kernel_size=3)
 
         self.up = nn.ModuleList()
-        for i_level, ch in enumerate(block_out_channels):
+        for _i_level, ch in enumerate(block_out_channels):
             block = nn.ModuleList()
             block_out = ch
             for _ in range(self.num_res_blocks + 1):

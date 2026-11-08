@@ -147,7 +147,7 @@ class Tag2Text_Caption(nn.Module):
         # ==============generate tag==============#
         if tag_input == None:
             image_spatial_embeds = image_embeds[:, 1:, :]
-            image_cls_embeds = image_embeds[:, 0, :]
+            _image_cls_embeds = image_embeds[:, 0, :]
 
             bs = image_spatial_embeds.shape[0]
             label_embed = self.label_embed.weight.unsqueeze(0).repeat(bs, 1, 1)
@@ -182,7 +182,7 @@ class Tag2Text_Caption(nn.Module):
             image_atts = image_atts.repeat_interleave(num_beams, dim=0)
             tag_input_temp = []
             for tag in tag_input:
-                for i in range(num_beams):
+                for _i in range(num_beams):
                     tag_input_temp.append(tag)
             tag_input = tag_input_temp
 
@@ -303,7 +303,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
 
             all_encoder_weights = set([module_name + "/" + sub_name for sub_name in encoder_modules.keys()])
             encoder_layer_pos = 0
-            for name, module in decoder_modules.items():
+            for name, _module in decoder_modules.items():
                 if name.isdigit():
                     encoder_name = str(int(name) + encoder_layer_pos)
                     decoder_name = name

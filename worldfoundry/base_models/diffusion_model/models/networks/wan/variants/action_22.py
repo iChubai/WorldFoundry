@@ -1283,7 +1283,7 @@ class WanModel(nn.Module, NativeConfigMixin):
                 if m.action_model.proj_keyboard.bias is not None:
                     nn.init.zeros_(m.action_model.proj_keyboard.bias)
 
-            except:
+            except BaseException:
                 pass
         if self.use_memory:
             nn.init.xavier_uniform_(self.patch_embedding_wancamctrl.weight)

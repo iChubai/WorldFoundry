@@ -630,7 +630,7 @@ class StagedDiffusionPipeline(torch.nn.Module):
             verbose: The verbose.
         """
         cleared_num = 0
-        for name, module in self.named_modules():
+        for _name, module in self.named_modules():
             if isinstance(module, AutoWrappedLinear):
                 if hasattr(module, "lora_A_weights"):
                     if len(module.lora_A_weights) > 0:

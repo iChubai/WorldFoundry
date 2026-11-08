@@ -39,7 +39,7 @@ class ImageBindWrapper(nn.Module):
 
     @torch.no_grad()
     def forward(self, x):
-        if type(x) == dict:
+        if type(x) is dict:
             if x["audios"] is not None:
                 inputs = {ModalityType.AUDIO: load_and_transform_audio_data(x["audios"], device=self.device).half()}
                 embeddings = self.vision_tower(inputs)

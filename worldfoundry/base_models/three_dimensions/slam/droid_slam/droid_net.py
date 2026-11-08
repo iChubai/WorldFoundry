@@ -188,7 +188,7 @@ class DroidNet(nn.Module):
     def forward(self, Gs, images, disps, intrinsics, graph=None, num_steps=12, fixedp=2):
         """Estimates SE3 or Sim3 between pair of frames"""
 
-        u = keyframe_indicies(graph)
+        _u = keyframe_indicies(graph)
         ii, jj, kk = graph_to_edge_list(graph)
 
         ii = ii.to(device=images.device, dtype=torch.long)
@@ -205,7 +205,7 @@ class DroidNet(nn.Module):
         target = coords1.clone()
 
         Gs_list, disp_list, residual_list = [], [], []
-        for step in range(num_steps):
+        for _step in range(num_steps):
             Gs = Gs.detach()
             disps = disps.detach()
             coords1 = coords1.detach()
@@ -223,7 +223,7 @@ class DroidNet(nn.Module):
 
             target = coords1 + delta
 
-            for i in range(2):
+            for _i in range(2):
                 Gs, disps = BA(target, weight, eta, Gs, disps, intrinsics, ii, jj, fixedp=2)
 
             coords1, valid_mask = pops.projective_transform(Gs, disps, intrinsics, ii, jj)

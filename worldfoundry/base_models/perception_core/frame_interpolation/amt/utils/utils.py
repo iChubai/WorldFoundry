@@ -251,7 +251,7 @@ def readFloat(name):
 
     dims = []
     count = 1
-    for i in range(dim):
+    for _i in range(dim):
         d = int(f.readline())
         dims.append(d)
         count *= d

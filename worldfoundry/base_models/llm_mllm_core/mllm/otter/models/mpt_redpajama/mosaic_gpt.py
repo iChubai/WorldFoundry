@@ -253,7 +253,8 @@ class MosaicGPT(PreTrainedModel):
             elif (self.attn_uses_sequence_id is False) and (sequence_id is not None):
                 warnings.warn(
                     "MosaicGPT received non-None input for `sequence_id` but is configured with attn_uses_sequence_id=False. "
-                    + "This input will be ignored. If you want the model to use `sequence_id`, set attn_uses_sequence_id to True."
+                    + "This input will be ignored. If you want the model to use `sequence_id`, set attn_uses_sequence_id to True.",
+                    stacklevel=1,
                 )
 
         S = input_ids.size(1)
@@ -338,7 +339,8 @@ class MosaicGPT(PreTrainedModel):
         if self.logit_scale is not None:
             if self.logit_scale == 0:
                 warnings.warn(
-                    f"Multiplying logits by {self.logit_scale=}. This will produce uniform (uninformative) outputs."
+                    f"Multiplying logits by {self.logit_scale=}. This will produce uniform (uninformative) outputs.",
+                    stacklevel=1,
                 )
             logits *= self.logit_scale
 
@@ -366,7 +368,7 @@ class MosaicGPT(PreTrainedModel):
     def param_init_fn(self, module):
         init_fn_name = self.config.param_init_fn
         if self.config.verbose > 1:
-            warnings.warn(f"Using {init_fn_name} initialization.")
+            warnings.warn(f"Using {init_fn_name} initialization.", stacklevel=1)
         MODEL_INIT_REGISTRY[init_fn_name](module=module, **self.config.to_dict())
 
     # FSDP Wrap function

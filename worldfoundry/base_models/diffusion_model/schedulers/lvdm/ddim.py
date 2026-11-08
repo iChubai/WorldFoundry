@@ -40,7 +40,7 @@ class DDIMSampler:
             name: The name.
             attr: The attr.
         """
-        if type(attr) == torch.Tensor:
+        if type(attr) is torch.Tensor:
             target_device = torch.device(self.model.device)
             if attr.device != target_device:
                 attr = attr.to(target_device)

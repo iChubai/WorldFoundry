@@ -612,7 +612,7 @@ class BertLayer(nn.Module):
         if self.has_cross_attention:
             assert encoder_hidden_states is not None, "encoder_hidden_states must be given for cross-attention layers"
 
-            if type(encoder_hidden_states) == list:
+            if type(encoder_hidden_states) is list:
                 cross_attention_outputs = self.crossattention(
                     attention_output,
                     attention_mask,
@@ -1155,13 +1155,13 @@ class BertModel(BertPreTrainedModel):
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if encoder_hidden_states is not None:
-            if type(encoder_hidden_states) == list:
+            if type(encoder_hidden_states) is list:
                 encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states[0].size()
             else:
                 encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states.size()
             encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
 
-            if type(encoder_attention_mask) == list:
+            if type(encoder_attention_mask) is list:
                 encoder_extended_attention_mask = [self.invert_attention_mask(mask) for mask in encoder_attention_mask]
             elif encoder_attention_mask is None:
                 encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)
@@ -1667,6 +1667,7 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
             warnings.warn(
                 "The `next_sentence_label` argument is deprecated and will be removed in a future version, use `labels` instead.",
                 FutureWarning,
+                stacklevel=1,
             )
             labels = kwargs.pop("next_sentence_label")
 

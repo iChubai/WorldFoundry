@@ -71,7 +71,7 @@ class EvaluationPredictor(torch.nn.Module):
 
             for pind in range(N):
                 query = queries[:, pind : pind + 1]
-                t = query[0, 0, 0].long()
+                _t = query[0, 0, 0].long()
                 start_ind = 0
                 traj_e_pind, vis_e_pind, conf_e_pind = self._process_one_point(video[:, start_ind:], query)
                 traj_e[:, start_ind:, pind : pind + 1] = traj_e_pind[:, :, :1]
@@ -131,7 +131,7 @@ class EvaluationPredictor(torch.nn.Module):
         return traj_e, vis_e
 
     def _process_one_point(self, video, query):
-        t = query[0, 0, 0].long()
+        _t = query[0, 0, 0].long()
         B, T, C, H, W = video.shape
         device = query.device
         if self.local_grid_size > 0:

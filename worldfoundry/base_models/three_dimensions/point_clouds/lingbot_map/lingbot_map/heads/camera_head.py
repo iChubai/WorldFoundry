@@ -546,7 +546,7 @@ class CameraDecoder(nn.Module):
         hidden = self.projects(hidden)
         B, V, P, C = hidden.shape
         hidden = hidden.view(hidden.shape[0] * hidden.shape[1], hidden.shape[2], hidden.shape[3])
-        for i, blk in enumerate(self.blocks):
+        for _i, blk in enumerate(self.blocks):
             if self.use_checkpoint and self.training:
                 hidden = checkpoint(blk, hidden, pos=xpos, use_reentrant=False)
             else:

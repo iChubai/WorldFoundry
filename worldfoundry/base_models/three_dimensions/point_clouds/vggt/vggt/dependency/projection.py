@@ -121,7 +121,7 @@ def project_3D_points(points3D, extrinsics, intrinsics=None, extra_params=None, 
                and points_cam is of shape Bx3xN.
     """
     with torch.cuda.amp.autocast(dtype=torch.double):
-        N = points3D.shape[0]  # Number of points
+        _N = points3D.shape[0]  # Number of points
         B = extrinsics.shape[0]  # Batch size, i.e., number of cameras
         points3D_homogeneous = torch.cat([points3D, torch.ones_like(points3D[..., 0:1])], dim=1)  # Nx4
         # Reshape for batch processing

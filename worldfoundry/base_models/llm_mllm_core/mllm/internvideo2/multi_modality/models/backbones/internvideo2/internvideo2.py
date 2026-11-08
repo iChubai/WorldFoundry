@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 
 try:
     from flash_attn.modules.mlp import FusedMLP
-except:
+except BaseException:
     # logger.warn(f'FusedMLP of flash_attn is not installed!!!')
     pass
 
 try:
     from flash_attn.ops.rms_norm import DropoutAddRMSNorm
-except:
+except BaseException:
     # logger.warn(f'DropoutAddRMSNorm of flash_attn is not installed!!!')
     pass
 
@@ -832,7 +832,7 @@ def pretrain_internvideo2_1b_patch14_224(config):
             if k.startswith("vision_encoder.")
         }
         # message = model.load_state_dict(state_dict, strict=True)
-        message = model.load_state_dict(filtered_state_dict, strict=True)
+        _message = model.load_state_dict(filtered_state_dict, strict=True)
         # import pdb; pdb.set_trace()
         # logger.info(message)
     else:
@@ -877,7 +877,7 @@ def pretrain_internvideo2_6b_patch14_224(config):
         # logger.info(f"Loading pretrained weights from {config.vision_encoder.pretrained}")
         state_dict = torch.load(config.vision_encoder.pretrained, map_location="cpu")
         interpolate_pos_embed_internvideo2(state_dict, model, orig_t_size=8)
-        msg = model.load_state_dict(state_dict, strict=False)
+        _msg = model.load_state_dict(state_dict, strict=False)
         # logger.info(msg)
     else:
         logger.info("No pretrained weights!!!")

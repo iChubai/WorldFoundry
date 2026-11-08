@@ -611,7 +611,7 @@ def _sanity_check():
         return torch.randn(tokens_per_frame, 16, 64, dtype=torch.bfloat16, device=device)
 
     for block in range(2):
-        for t in range(100):
+        for _t in range(100):
             k, v = make_kv()
             mgr.append_frame(block, k, v)
             mgr.evict_frames(block, scale_frames=8, sliding_window=64)

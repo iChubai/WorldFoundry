@@ -203,14 +203,18 @@ def lazy_import_all_from(globals: Dict[str, Any], module: str) -> List[str]:
         exec(code, namespace)
         all_members = namespace.get("__all__", [])
     else:
-        warnings.warn(f"Meta file {meta_filepath} not found. Creating one by importing the module.", LazyImportWarning)
+        warnings.warn(
+            f"Meta file {meta_filepath} not found. Creating one by importing the module.",
+            LazyImportWarning,
+            stacklevel=1,
+        )
         # Import and dump the meta file
         imported_module = importlib.import_module(module, current_package)
         all_members = list(_get_all_members_from_module(imported_module).keys())
         try:
             _write_all_members(meta_filepath, all_members)
         except Exception as e:
-            warnings.warn(f"Failed to write meta file {meta_filepath}: {e}", LazyImportWarning)
+            warnings.warn(f"Failed to write meta file {meta_filepath}: {e}", LazyImportWarning, stacklevel=1)
 
     # Overiding __getattr__
     @suppress_traceback
@@ -229,6 +233,7 @@ def lazy_import_all_from(globals: Dict[str, Any], module: str) -> List[str]:
                     f"lazy_import_all_from: The members in meta file {meta_filepath} do not match the actual members in module {module}. "
                     "A new meta file will be generated.",
                     LazyImportWarning,
+                    stacklevel=1,
                 )
                 _write_all_members(meta_filepath, list(imported_all_members.keys()))
 

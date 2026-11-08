@@ -136,7 +136,7 @@ class PerceptionLMModel:
         video_frames = vr.get_batch(frame_idx).numpy()
 
         # Convert to PIL Image list
-        frames = [Image.fromarray(frame) for frame in video_frames]
+        _frames = [Image.fromarray(frame) for frame in video_frames]
         # Apply video transform
         transform = get_video_transform(
             image_res=self.model.vision_model.image_size,
@@ -169,9 +169,9 @@ class PerceptionLMModel:
         processed_data = self.load_images(paths, num_tiles)
 
         lm_probs = []
-        for data, question, answer in zip(processed_data, questions, answers, strict=False):
+        for data, question, _answer in zip(processed_data, questions, answers, strict=False):
             # Determine if this is a video or image
-            media_type = "video" if isinstance(data, torch.Tensor) and data.dim() > 3 else "image"
+            _media_type = "video" if isinstance(data, torch.Tensor) and data.dim() > 3 else "image"
 
             # Create prompt
             prompts = [(question, data)]
@@ -217,7 +217,7 @@ class PerceptionLMModel:
 
         for data, prompt in zip(processed_data, texts, strict=False):
             # Determine if this is a video or image
-            media_type = "video" if isinstance(data, torch.Tensor) and data.dim() > 3 else "image"
+            _media_type = "video" if isinstance(data, torch.Tensor) and data.dim() > 3 else "image"
 
             # Create prompt
             prompts = [(prompt, data)]
@@ -231,9 +231,9 @@ class PerceptionLMModel:
             generator = PackedCausalTransformerGenerator(gen_cfg, self.model, self.tokenizer)
 
             # Run generation
-            start_time = time.time()
+            _start_time = time.time()
             generation, _, _ = generator.generate(prompts)
-            end_time = time.time()
+            _end_time = time.time()
             print(generation)
             for gen in generation:
                 generated_texts.append(gen)

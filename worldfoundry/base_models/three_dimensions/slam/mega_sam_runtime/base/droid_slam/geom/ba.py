@@ -69,7 +69,7 @@ def focal_retr(intrinsics, df):
 def compute_preconditioner(poses, intrinsics, disps_sens, ii, jj, t0, t1, iterations, lm, ep):
     """Full Bundle Adjustment"""
     B, _, ht, wd = disps_sens.shape
-    P = t1 - t0
+    _P = t1 - t0
     N = ii.shape[0]
 
     ### 1: commpute jacobians and residuals ###
@@ -83,8 +83,8 @@ def compute_preconditioner(poses, intrinsics, disps_sens, ii, jj, t0, t1, iterat
     ### 2: construct linear system ###
     Ji = Ji.reshape(B, N, -1, D).float()
     Jj = Jj.reshape(B, N, -1, D).float()
-    wJiT = (w * Ji).transpose(2, 3)
-    wJjT = (w * Jj).transpose(2, 3)
+    _wJiT = (w * Ji).transpose(2, 3)
+    _wJjT = (w * Jj).transpose(2, 3)
 
     Jz = Jz.reshape(B, N, ht * wd, -1)
 
@@ -101,8 +101,8 @@ def compute_preconditioner(poses, intrinsics, disps_sens, ii, jj, t0, t1, iterat
     kx, kk = torch.unique(ii, return_inverse=True)
     M = kx.shape[0]
 
-    ii_ = ii - t0  # line 1378 in cuda code
-    jj_ = jj - t0
+    _ii_ = ii - t0  # line 1378 in cuda code
+    _jj_ = jj - t0
 
     C_0 = safe_scatter_add_vec(Ck, kk, M)
     # w = safe_scatter_add_vec(wk, kk, M)
@@ -118,7 +118,7 @@ def compute_preconditioner(poses, intrinsics, disps_sens, ii, jj, t0, t1, iterat
         # Plot the probability map
         im = ax.imshow(C_0_viz_inv, cmap="jet", vmin=0.0)
         # Add a colorbar
-        cbar = fig.colorbar(im, ax=ax)
+        _cbar = fig.colorbar(im, ax=ax)
         plt.axis("off")
         plt.tight_layout()
         # cbar.set_label('Probability')
@@ -199,7 +199,7 @@ def precond_BA(
     #     P_inv_disp_ii = torch.index_select(P_inv_disp, dim=1, index=ii)
     #     P_inv_disp_ii = P_inv_disp_ii.view(P_inv_disp_ii.shape[0], P_inv_disp_ii.shape[1], ht, wd)[..., None, None] #expand(1, ii.shape[0], ht, wd, 6, 6)
 
-    for itr in range(iterations):
+    for _itr in range(iterations):
         ### 1: commpute jacobians and residuals ###
         coords, valid, (Ji, Jj, Jz) = pops.projective_transform(poses, disps, intrinsics, ii, jj, jacobian=True)
 
@@ -374,7 +374,7 @@ def BA_f(
     P = t1 - t0
     N = ii.shape[0]
 
-    for itr in range(iterations):
+    for _itr in range(iterations):
         ### 1: commpute jacobians and residuals ###
         coords, valid, (Ji, Jj, Jz, Jf) = pops.projective_transform_f(poses, disps, intrinsics, ii, jj, jacobian=True)
 
@@ -384,7 +384,7 @@ def BA_f(
         r = (target - coords).contiguous().view(B, N, -1, 1).float()
         w = 0.001 * (valid * weight).contiguous().view(B, N, -1, 1).float()
 
-        cost = torch.sum((valid * weight) * (target - coords) ** 2) / torch.sum(valid * weight)
+        _cost = torch.sum((valid * weight) * (target - coords) ** 2) / torch.sum(valid * weight)
         # print("cost focal ", torch.mean(cost))
 
         ### 2: construct linear system ###
@@ -572,10 +572,10 @@ def getJacobian(
 ):
     """Compute Focal included Jacobian for second order BA"""
     B, _, ht, wd = disps.shape
-    P = t1 - t0
+    _P = t1 - t0
     N = ii.shape[0]
 
-    for itr in range(iterations):
+    for _itr in range(iterations):
         ### 1: commpute jacobians and residuals ###
         coords, valid, (Ji, Jj, Jz, Jf) = pops.projective_transform_f(poses, disps, intrinsics, ii, jj, jacobian=True)
 
@@ -609,7 +609,7 @@ def getJacobian(
         Hs = torch.cat([Hii, Hij, Hji, Hjj], dim=0).float()
 
         kx, kk = torch.unique(ii, return_inverse=True)
-        M = kx.shape[0]
+        _M = kx.shape[0]
 
         # information matrix between intrinsic and poses
         Hfi = torch.matmul(wJfT, Ji)
@@ -654,8 +654,8 @@ def getJacobian(
         # ii = ii // rig - fixedp
         # jj = jj // rig - fixedp
 
-        ii_ = ii - t0  # line 1378 in cuda code
-        jj_ = jj - t0
+        _ii_ = ii - t0  # line 1378 in cuda code
+        _jj_ = jj - t0
 
         # Check correct!
         # H_fc = safe_scatter_add_vec(Hfi, ii_, P) + \
@@ -728,7 +728,7 @@ def BA(
     P = t1 - t0
     N = ii.shape[0]
 
-    for itr in range(iterations):
+    for _itr in range(iterations):
         ### 1: commpute jacobians and residuals ###
         coords, valid, (Ji, Jj, Jz) = pops.projective_transform(poses, disps, intrinsics, ii, jj, jacobian=True)
 

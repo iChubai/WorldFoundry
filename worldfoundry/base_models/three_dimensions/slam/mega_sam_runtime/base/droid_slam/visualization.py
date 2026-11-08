@@ -73,7 +73,7 @@ def droid_visualization(video, device="cuda:0"):
 
         with torch.no_grad():
             with video.get_lock():
-                t = video.counter.value
+                _t = video.counter.value
                 (dirty_index,) = torch.where(video.dirty.clone())
                 dirty_index = dirty_index
 

@@ -451,7 +451,7 @@ class AttentionLayers(nn.Module):
         ff_kwargs, kwargs = groupby_prefix_and_trim("ff_", kwargs)
         attn_kwargs, _ = groupby_prefix_and_trim("attn_", kwargs)
 
-        dim_head = attn_kwargs.get("dim_head", DEFAULT_DIM_HEAD)
+        _dim_head = attn_kwargs.get("dim_head", DEFAULT_DIM_HEAD)
 
         self.dim = dim
         self.depth = depth

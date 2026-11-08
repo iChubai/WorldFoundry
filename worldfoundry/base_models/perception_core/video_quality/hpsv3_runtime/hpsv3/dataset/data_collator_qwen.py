@@ -119,7 +119,7 @@ class QWen2VLDataCollator:
         """
         images_1, images_2, texts_1, texts_2 = [], [], [], []
 
-        for idx, batch in enumerate(inputs):
+        for _idx, batch in enumerate(inputs):
             texts_1.append(batch["text_1"])
             texts_2.append(batch["text_2"])
             images_1.append(batch["image_1"])

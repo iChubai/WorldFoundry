@@ -551,7 +551,7 @@ def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=No
         for i in range(rotations.shape[1]):
             l.append(f"rot_{i}")
 
-        dtype_full = [(attribute, "f4") for attribute in l]
+        _dtype_full = [(attribute, "f4") for attribute in l]
 
         attributes = torch.cat((xyzs, f_dc, opacities, scales, rotations), dim=1).cpu().numpy()
 
@@ -636,7 +636,7 @@ def sample_from_dense_cameras(dense_cameras, t, noise_strengths=[0, 0, 0, 0]):
         noise_strengths: The noise strengths.
     """
     N, C = dense_cameras.shape
-    M = t.shape
+    _M = t.shape
 
     left = torch.floor(t * (N - 1)).long().clamp(0, N - 2)
     right = left + 1

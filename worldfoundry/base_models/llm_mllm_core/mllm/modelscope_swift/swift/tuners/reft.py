@@ -120,7 +120,7 @@ class Reft(SwiftAdapter):
         logger.info(f"Applying Reft to module: {module_list_key}")
         module_list: nn.ModuleList = model.get_submodule(module_list_key)
         representations = []
-        for idx, layer in enumerate(module_list):
+        for idx, _layer in enumerate(module_list):
             if config.layers and idx not in config.layers:
                 continue
             intervention_config = {

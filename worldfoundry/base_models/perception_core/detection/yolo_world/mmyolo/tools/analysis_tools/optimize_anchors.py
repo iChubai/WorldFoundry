@@ -496,7 +496,7 @@ class YOLODEAnchorOptimizer(BaseAnchorOptimizer):
         bboxes = self.get_zero_center_bbox_tensor()
 
         bounds = []
-        for i in range(self.num_anchors):
+        for _i in range(self.num_anchors):
             bounds.extend([(0, self.input_shape[0]), (0, self.input_shape[1])])
 
         result = differential_evolution(

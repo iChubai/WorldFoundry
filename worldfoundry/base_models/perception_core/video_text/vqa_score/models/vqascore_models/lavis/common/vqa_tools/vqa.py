@@ -43,7 +43,7 @@ class VQA:
         self.imgToQA = {}
         if not annotation_file == None and not question_file == None:
             print("loading VQA annotations and questions into memory...")
-            time_t = datetime.datetime.utcnow()
+            _time_t = datetime.datetime.utcnow()
             dataset = json.load(open(annotation_file))
             questions = json.load(open(question_file))
             self.dataset = dataset
@@ -84,9 +84,9 @@ class VQA:
                         ansTypes  (str array)   : get question ids for given answer types
         :return:    ids   (int array)   : integer array of question ids
         """
-        imgIds = imgIds if type(imgIds) == list else [imgIds]
-        quesTypes = quesTypes if type(quesTypes) == list else [quesTypes]
-        ansTypes = ansTypes if type(ansTypes) == list else [ansTypes]
+        imgIds = imgIds if type(imgIds) is list else [imgIds]
+        quesTypes = quesTypes if type(quesTypes) is list else [quesTypes]
+        ansTypes = ansTypes if type(ansTypes) is list else [ansTypes]
 
         if len(imgIds) == len(quesTypes) == len(ansTypes) == 0:
             anns = self.dataset["annotations"]
@@ -111,9 +111,9 @@ class VQA:
         ansTypes  (str array)   : get image ids for given answer types
          :return: ids     (int array)   : integer array of image ids
         """
-        quesIds = quesIds if type(quesIds) == list else [quesIds]
-        quesTypes = quesTypes if type(quesTypes) == list else [quesTypes]
-        ansTypes = ansTypes if type(ansTypes) == list else [ansTypes]
+        quesIds = quesIds if type(quesIds) is list else [quesIds]
+        quesTypes = quesTypes if type(quesTypes) is list else [quesTypes]
+        ansTypes = ansTypes if type(ansTypes) is list else [ansTypes]
 
         if len(quesIds) == len(quesTypes) == len(ansTypes) == 0:
             anns = self.dataset["annotations"]
@@ -133,9 +133,9 @@ class VQA:
         :param ids (int array)       : integer ids specifying question ids
         :return: qa (object array)   : loaded qa objects
         """
-        if type(ids) == list:
+        if type(ids) is list:
             return [self.qa[id] for id in ids]
-        elif type(ids) == int:
+        elif type(ids) is int:
             return [self.qa[ids]]
 
     def showQA(self, anns):
@@ -169,7 +169,7 @@ class VQA:
         print("Loading and preparing results...     ")
         time_t = datetime.datetime.utcnow()
         anns = json.load(open(resFile))
-        assert type(anns) == list, "results is not an array of objects"
+        assert type(anns) is list, "results is not an array of objects"
         annsQuesIds = [ann["question_id"] for ann in anns]
         assert set(annsQuesIds) == set(self.getQuesIds()), (
             "Results do not correspond to current VQA set. Either the results do not have predictions for all question ids in annotation file or there is atleast one question id that does not belong to the question ids in the annotation file."

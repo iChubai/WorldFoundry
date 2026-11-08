@@ -639,9 +639,7 @@ def is_dist_avail_and_initialized():
     """Is dist avail and initialized."""
     if not dist.is_available():
         return False
-    if not dist.is_initialized():
-        return False
-    return True
+    return not (not dist.is_initialized())
 
 
 def get_world_size():

@@ -126,7 +126,7 @@ class RAFT(
             fmap2_8x = self.fnet(image2)
             corr_fn = CorrBlock(fmap1_8x, fmap2_8x, self.args)
 
-        for itr in range(iters):
+        for _itr in range(iters):
             N, _, H, W = flow_8x.shape
             flow_8x = flow_8x.detach()
             coords2 = (coords_grid(N, H, W, device=image1.device) + flow_8x).detach()

@@ -586,6 +586,7 @@ class RWModel(RWPreTrainedModel):
                 "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
                 " passing `position_ids`.",
                 FutureWarning,
+                stacklevel=1,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")
@@ -787,6 +788,7 @@ class RWForCausalLM(RWPreTrainedModel):
                 "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
                 " passing `position_ids`.",
                 FutureWarning,
+                stacklevel=1,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")
@@ -902,6 +904,7 @@ class RWForSequenceClassification(RWPreTrainedModel):
                 "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
                 " passing `position_ids`.",
                 FutureWarning,
+                stacklevel=1,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")
@@ -1028,6 +1031,7 @@ class RWForTokenClassification(RWPreTrainedModel):
                 "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
                 " passing `position_ids`.",
                 FutureWarning,
+                stacklevel=1,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")

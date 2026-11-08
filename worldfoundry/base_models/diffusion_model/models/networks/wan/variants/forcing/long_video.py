@@ -855,7 +855,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             start=frame_seqlen, end=total_length, step=frame_seqlen * num_frame_per_block, device=device
         )
 
-        for idx, tmp in enumerate(frame_indices):
+        for _idx, tmp in enumerate(frame_indices):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):

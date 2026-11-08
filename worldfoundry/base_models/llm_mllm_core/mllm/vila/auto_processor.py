@@ -113,7 +113,7 @@ def pad_fn(input_ids_list: list[torch.Tensor], padding_value=0, target_len=None,
         max_len = target_len
 
     new_input_ids_list = []
-    for i, input_ids in enumerate(input_ids_list):
+    for _i, input_ids in enumerate(input_ids_list):
         pad_tensor = torch.ones_like(input_ids) * padding_value
         curr_len = input_ids.shape[1]
         pad_tensor = pad_tensor[:, : max_len - curr_len]
@@ -311,7 +311,7 @@ class VILAProcessor(ProcessorMixin):
         attention_mask = torch.ones_like(input_ids, dtype=torch.bool)
         attention_mask[input_ids == self.pad_token_id] = False
         # print("[DEBUGAAA]", self.pad_token_id, self.tokenizer.pad_token_id); exit(0)
-        input_texts = self.tokenizer.batch_decode(input_ids)
+        _input_texts = self.tokenizer.batch_decode(input_ids)
         bdata = BatchFeature(
             data={
                 # "input_texts": input_texts,

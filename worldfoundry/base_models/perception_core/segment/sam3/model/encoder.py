@@ -433,7 +433,7 @@ class TransformerEncoder(nn.Module):
             spatial_shapes,
         ) = self._prepare_multilevel_features(src, src_key_padding_masks, pos)
 
-        reference_points = self.get_reference_points(spatial_shapes, valid_ratios, device=src_flatten.device)
+        _reference_points = self.get_reference_points(spatial_shapes, valid_ratios, device=src_flatten.device)
 
         output = src_flatten
         for layer in self.layers:

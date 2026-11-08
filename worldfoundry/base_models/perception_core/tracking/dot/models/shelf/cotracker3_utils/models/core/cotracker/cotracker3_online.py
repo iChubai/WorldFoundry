@@ -66,9 +66,6 @@ class CoTrackerThreeBase(nn.Module):
         self.linear_layer_for_vis_conf = linear_layer_for_vis_conf
         self.fnet = BasicEncoder(input_dim=3, output_dim=self.latent_dim, stride=stride)
 
-        highres_dim = 128
-        lowres_dim = 256
-
         self.num_virtual_tracks = num_virtual_tracks
         self.model_resolution = model_resolution
 
@@ -175,11 +172,10 @@ class CoTrackerThreeOnline(CoTrackerThreeBase):
         r = 2 * self.corr_radius + 1
 
         coord_preds, vis_preds, conf_preds = [], [], []
-        for it in range(iters):
+        for _it in range(iters):
             coords = coords.detach()  # B T N 2
             coords_init = coords.view(B * S, N, 2)
             corr_embs = []
-            corr_feats = []
             for i in range(self.corr_levels):
                 corr_feat = self.get_correlation_feat(fmaps_pyramid[i], coords_init / 2**i)
                 track_feat_support = (
@@ -394,7 +390,6 @@ class CoTrackerThreeOnline(CoTrackerThreeBase):
                 track_feat_pyramid.append(track_feat.repeat(1, T_pad, 1, 1))
                 track_feat_support_pyramid.append(track_feat_support.unsqueeze(1))
 
-        D_coords = 2
         coord_preds, vis_preds, confidence_preds = [], [], []
 
         vis_init = torch.zeros((B, S, N, 1), device=device).float()

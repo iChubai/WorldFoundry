@@ -17,7 +17,7 @@ def generate_permute_matrix(dim, num, keep_first=True, gpu_id=0):
         gpu_id: The gpu id.
     """
     all_matrix = []
-    for idx in range(num):
+    for _idx in range(num):
         random_matrix = torch.eye(dim, device=torch.device("cuda", gpu_id))
         if keep_first:
             fg = random_matrix[1:][torch.randperm(dim - 1)]

@@ -153,7 +153,7 @@ def get_arp_resized_video(
             rnd_h = random.randrange(res_h - ori_short_edge)
             video = video[..., rnd_h : rnd_h + ori_short_edge, :]
         elif res_w > ori_short_edge:
-            rnd_w = random.randrange(res_w - ori_short_edge)
+            _rnd_w = random.randrange(res_w - ori_short_edge)
             video = video[..., :, rnd_h : rnd_h + ori_short_edge]
     ori_short_edge = min(video.shape[-2:])
     scale_factor = short_edge / ori_short_edge
@@ -177,7 +177,7 @@ def get_arp_fragment_video(
             rnd_h = random.randrange(res_h - ori_short_edge)
             video = video[..., rnd_h : rnd_h + ori_short_edge, :]
         elif res_w > ori_short_edge:
-            rnd_w = random.randrange(res_w - ori_short_edge)
+            _rnd_w = random.randrange(res_w - ori_short_edge)
             video = video[..., :, rnd_h : rnd_h + ori_short_edge]
     kwargs["fsize_h"], kwargs["fsize_w"] = fsize, fsize
     res_h, res_w = video.shape[-2:]
@@ -302,7 +302,7 @@ class UnifiedFrameSampler:
     def __call__(self, total_frames, train=False, start_index=0):
         frame_inds = []
 
-        for i in range(self.num_clips):
+        for _i in range(self.num_clips):
             frame_inds += [self.get_frame_indices(total_frames)]
 
         frame_inds = np.concatenate(frame_inds)
@@ -369,10 +369,10 @@ class ViewDecompositionDataset(torch.utils.data.Dataset):
                             label = float(label)
                         filename = osp.join(self.data_prefix, filename)
                         self.video_infos.append(dict(filename=filename, label=label))
-            except:
+            except BaseException:
                 #### No Label Testing
                 video_filenames = []
-                for root, dirs, files in os.walk(self.data_prefix, topdown=True):
+                for root, _dirs, files in os.walk(self.data_prefix, topdown=True):
                     for file in files:
                         if file.endswith(".mp4"):
                             video_filenames += [os.path.join(root, file)]
@@ -406,7 +406,7 @@ class ViewDecompositionDataset(torch.utils.data.Dataset):
             data["frame_inds"] = frame_inds
             data["gt_label"] = label
             data["name"] = filename  # osp.basename(video_info["filename"])
-        except:
+        except BaseException:
             # exception flow
             return {"name": filename}
 

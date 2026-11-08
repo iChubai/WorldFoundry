@@ -438,7 +438,7 @@ def get_text_len(text_line):
 def filter_ocr_polygon(response, area_threshold=0.0005):
     try:
         resp = json.loads(response)
-    except:
+    except BaseException:
         return response
     new_resp = []
     for coords, text_line in resp:

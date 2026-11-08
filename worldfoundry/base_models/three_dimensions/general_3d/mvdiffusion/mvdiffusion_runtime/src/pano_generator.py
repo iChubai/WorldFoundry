@@ -175,7 +175,7 @@ class PanoGenerator(nn.Module):
         self.scheduler.set_timesteps(self.diff_timestep, device=device)
         timesteps = self.scheduler.timesteps
 
-        for i, t in enumerate(timesteps):
+        for _i, t in enumerate(timesteps):
             _timestep = torch.cat([t[None, None]] * m, dim=1)
 
             noise_pred = self.forward_cls_free(latents, _timestep, prompt_embd, batch, self.mv_base_model)

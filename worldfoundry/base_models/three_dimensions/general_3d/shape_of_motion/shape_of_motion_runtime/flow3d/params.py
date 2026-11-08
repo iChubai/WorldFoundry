@@ -115,7 +115,7 @@ class CameraPoses(nn.Module):
     def invert(self, use_inverse: bool = False):
         """invert the camera pose"""
         Rs = self.params["Rs"]
-        ts = self.params["ts"]
+        _ts = self.params["ts"]
         Rs_inv = Rs.inverse() if use_inverse else R.transpose(-1, -2)
         ts_inv = (-R_inv @ t)[..., 0]
         return self(Rs_inv, ts_inv)

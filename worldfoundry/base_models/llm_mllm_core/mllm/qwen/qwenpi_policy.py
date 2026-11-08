@@ -180,8 +180,8 @@ class PolicyPreprocessMixin:
             images (torch.Tensor): (*b, n, c, h, w) images in range [-1.0, 1.0]
             img_masks (torch.Tensor): (*b, n) masks for images, True if image is present, False if missing
         """
-        dtype = observation["state"].dtype
-        bsize = observation["state"].shape[0]
+        _dtype = observation["state"].dtype
+        _bsize = observation["state"].shape[0]
         device = observation["state"].device
         images, img_masks = [], []
         for key in IMAGE_KEYS:

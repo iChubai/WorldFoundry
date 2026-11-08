@@ -92,7 +92,7 @@ class LoraConfig(peft.LoraConfig):
         else:
             self = super(LoraConfig, cls).from_pretrained(pretrained_model_name_or_path, subfolder, **kwargs)
 
-        if type(self) == peft.LoraConfig:
+        if type(self) is peft.LoraConfig:
             self = LoraConfig(**self.to_dict())
 
         if os.path.isfile(os.path.join(pretrained_model_name_or_path, "additional_config.json")):
@@ -331,7 +331,7 @@ def hot_patch_peft_module():
         for active_adapter in active_adapters:
             active_config = config[active_adapter] if isinstance(config, dict) else config
             if hasattr(active_config, "lora_dtype"):
-                for name, module in model.named_modules():
+                for _name, module in model.named_modules():
                     if isinstance(module, LoraLayer):
                         _convert_dtype(module, active_adapter, active_config.lora_dtype)
                         for lora in list(module.lora_A.values()) + list(module.lora_B.values()):

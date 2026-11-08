@@ -37,7 +37,8 @@ def _check_ratio(image_ratio, ratio_bounds):
         warnings.warn(
             f"Input image ratio ({image_ratio:.3f}) is out of training "
             f"distribution: {ratio_bounds}. This may lead to unexpected results. "
-            f"Consider resizing/padding the image to match the training distribution."
+            f"Consider resizing/padding the image to match the training distribution.",
+            stacklevel=1,
         )
 
 
@@ -46,7 +47,8 @@ def _check_resolution(shape_constraints, resolution_level):
         warnings.warn(
             "Resolution level is not set. Using max resolution. "
             "You can tradeoff resolution for speed by setting a number in [0,10]. "
-            "This can be achieved by setting model's `resolution_level` attribute."
+            "This can be achieved by setting model's `resolution_level` attribute.",
+            stacklevel=1,
         )
         resolution_level = RESOLUTION_LEVELS
     pixel_bounds = sorted(shape_constraints["pixels_bounds_ori"])
@@ -55,7 +57,8 @@ def _check_resolution(shape_constraints, resolution_level):
     if clipped_resolution_level != resolution_level:
         warnings.warn(
             f"Resolution level {resolution_level} is out of bounds ([0,{RESOLUTION_LEVELS}]). "
-            f"Clipping to {clipped_resolution_level}."
+            f"Clipping to {clipped_resolution_level}.",
+            stacklevel=1,
         )
     shape_constraints["pixels_bounds"] = [
         pixel_bounds[0] + ceil(pixel_range * clipped_resolution_level / RESOLUTION_LEVELS),

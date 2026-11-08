@@ -429,7 +429,7 @@ class GaussianSplatRenderer(nn.Module):
                 else:
                     # Expand indices to match tensor dimensions
                     expand_idx = topk_idx.clone()
-                    for i in range(x.ndim - 2):
+                    for _i in range(x.ndim - 2):
                         expand_idx = expand_idx.unsqueeze(-1)
                     expand_idx = expand_idx.expand(-1, -1, *x.shape[2:])
                     filtered[key] = torch.gather(x, 1, expand_idx)

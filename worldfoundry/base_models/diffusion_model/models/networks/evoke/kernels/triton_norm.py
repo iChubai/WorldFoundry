@@ -12,7 +12,7 @@ from .utils import calculate_settings, torch_gpu_device
 def replace_all_norms_with_flash_norms(model):
     patched_count = {"LayerNorm": 0, "RMSNorm": 0}
 
-    for name, module in model.named_modules():
+    for _name, module in model.named_modules():
         if isinstance(module, (LayerNorm, FP32LayerNorm)):
             if hasattr(module, "elementwise_affine") and module.elementwise_affine:
                 module.forward = (lambda self, x: flash_layernorm(self, x)).__get__(module, module.__class__)

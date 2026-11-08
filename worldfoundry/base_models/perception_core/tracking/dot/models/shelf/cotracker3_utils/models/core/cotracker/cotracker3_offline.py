@@ -130,11 +130,10 @@ class CoTrackerThreeOffline(CoTrackerThreeBase):
 
         r = 2 * self.corr_radius + 1
 
-        for it in range(iters):
+        for _it in range(iters):
             coords = coords.detach()  # B T N 2
             coords_init = coords.view(B * T, N, 2)
             corr_embs = []
-            corr_feats = []
             for i in range(self.corr_levels):
                 corr_feat = self.get_correlation_feat(fmaps_pyramid[i], coords_init / 2**i)
                 track_feat_support = (

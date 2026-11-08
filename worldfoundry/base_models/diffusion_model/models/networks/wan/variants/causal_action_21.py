@@ -1081,5 +1081,5 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                     nn.init.zeros_(m.action_model.proj_keyboard.weight)
                     if m.action_model.proj_keyboard.bias is not None:
                         nn.init.zeros_(m.action_model.proj_keyboard.bias)
-                except:
+                except BaseException:
                     pass

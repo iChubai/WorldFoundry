@@ -495,7 +495,7 @@ class MemoryEncoder(nn.Module):
         feat_t_16 = None
 
         B, C, H, W = feat_s.shape
-        size = (H, W)
+        _size = (H, W)
 
         if self.cfg.use_convertor:
             feat_s = self.channel_convertor(feat_s)

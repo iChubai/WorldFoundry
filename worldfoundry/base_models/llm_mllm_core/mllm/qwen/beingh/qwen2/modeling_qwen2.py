@@ -385,7 +385,7 @@ class Qwen2Attention(nn.Module):
             if attention_mask is not None:  # no matter the length, we just slice it
                 causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
                 attn_weights = attn_weights + causal_mask
-        except:
+        except BaseException:
             breakpoint()
         # upcast attention to fp32
         attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
@@ -481,7 +481,7 @@ class Qwen2FlashAttention2(Qwen2Attention):
         # key_states = repeat_kv(key_states, self.num_key_value_groups)
         # value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        dropout_rate = 0.0 if not self.training else self.attention_dropout
+        _dropout_rate = 0.0 if not self.training else self.attention_dropout
 
         # In PEFT, usually we cast the layer norms in float32 for training stability reasons
         # therefore the input hidden states gets silently casted in float32. Hence, we need
@@ -1044,7 +1044,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
             )
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
-            except:
+            except BaseException:
                 logger.info(f"'{name}' not initialized")
         return mllm_state_dict
 

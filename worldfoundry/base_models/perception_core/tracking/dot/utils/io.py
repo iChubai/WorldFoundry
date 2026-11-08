@@ -17,7 +17,7 @@ def create_folder(path, verbose=False, exist_ok=True, safe=True):
         return False
     try:
         os.makedirs(path)
-    except:
+    except BaseException:
         if not safe:
             raise OSError
         return False

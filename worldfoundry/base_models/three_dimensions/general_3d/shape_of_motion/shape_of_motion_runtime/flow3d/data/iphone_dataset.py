@@ -309,7 +309,7 @@ class iPhoneDataset(BaseDataset):
                             np.float32,
                         )
                     )
-                except:
+                except BaseException:
                     print("No monocular normal found")
 
                 # Load depths.
@@ -795,7 +795,7 @@ class iPhoneDataset(BaseDataset):
             # (H, W, 3).
             try:
                 data["normals"] = self.normals[index]
-            except:
+            except BaseException:
                 pass
 
             # (H, W).

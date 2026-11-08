@@ -98,7 +98,7 @@ def analysis(
                             facial_area["h"],
                         )
                     )
-            except:  # to avoid exception if no face detected
+            except BaseException:  # to avoid exception if no face detected
                 faces = []
 
             if len(faces) == 0:

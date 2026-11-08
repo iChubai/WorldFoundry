@@ -250,7 +250,7 @@ class OffloadHelper:
         md5 = hashlib.md5(key.encode("utf-8")).hexdigest()
         sub_folder = os.path.join(self.cache_dir, md5)
         state_dict = {}
-        for key, value in self.index[md5].items():
+        for key, _value in self.index[md5].items():
             file = os.path.join(sub_folder, f"{key}.dat")
             state_dict[key] = OffloadHelper.load_offloaded_weight(file, self.index[md5][key])
         if version.parse(torch.__version__) >= version.parse("2.1.0"):

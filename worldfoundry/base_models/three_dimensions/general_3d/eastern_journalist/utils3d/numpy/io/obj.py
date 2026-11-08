@@ -358,7 +358,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
             if isinstance(fn, tuple):
                 fn_data, f_offsets = fn
                 fn = np.split(fn_data, f_offsets[1:-1])
-            for i, (f_i, ft_i, fn_i) in enumerate(
+            for _i, (f_i, ft_i, fn_i) in enumerate(
                 zip(
                     f if f is not None else repeat(None),
                     ft if ft is not None else repeat(None),
@@ -392,7 +392,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
             if isinstance(lt, tuple):
                 lt_data, l_offsets = lt
                 lt = np.split(lt_data, l_offsets[1:-1])
-            for i, (l_i, lt_i) in enumerate(
+            for _i, (l_i, lt_i) in enumerate(
                 zip(l if l is not None else repeat(None), lt if lt is not None else repeat(None), strict=False)
             ):
                 if l_i is not None and lt_i is None:
@@ -414,7 +414,7 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
         if "p" in obj or "pt" in obj:
             p = obj.get("p", None)
             pt = obj.get("pt", None)
-            for i, (p_i, pt_i) in enumerate(
+            for _i, (p_i, pt_i) in enumerate(
                 zip(p if p is not None else repeat(None), pt if pt is not None else repeat(None), strict=False)
             ):
                 if p_i is not None and pt_i is None:

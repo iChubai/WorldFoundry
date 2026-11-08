@@ -103,7 +103,7 @@ def flash_attention(
         q = q * q_scale
 
     if version is not None and version == 3 and not FLASH_ATTN_3_AVAILABLE:
-        warnings.warn("Flash attention 3 is not available, use flash attention 2 instead.")
+        warnings.warn("Flash attention 3 is not available, use flash attention 2 instead.", stacklevel=1)
 
     # apply attention
     if (version is None or version == 3) and FLASH_ATTN_3_AVAILABLE:
@@ -149,7 +149,7 @@ def flash_attention(
             ).unflatten(0, (b, lq))
         else:
             if window_size != (-1, -1):
-                warnings.warn("Sliding-window attention is ignored by the PyTorch SDPA fallback.")
+                warnings.warn("Sliding-window attention is ignored by the PyTorch SDPA fallback.", stacklevel=1)
             outputs = []
             q_start = 0
             k_start = 0
@@ -229,7 +229,8 @@ def attention(
     else:
         if q_lens is not None or k_lens is not None:
             warnings.warn(
-                "Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance."
+                "Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance.",
+                stacklevel=1,
             )
         attn_mask = None
 

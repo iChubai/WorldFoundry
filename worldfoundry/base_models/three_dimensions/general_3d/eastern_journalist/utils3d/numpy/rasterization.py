@@ -286,7 +286,7 @@ class RastContext:
             try:
                 # Default
                 self.mgl_ctx = moderngl.create_context()
-            except:
+            except BaseException:
                 pass
             if not hasattr(self, "mgl_ctx"):
                 try:
@@ -295,13 +295,13 @@ class RastContext:
                         standalone=True,
                         backend="egl",
                     )
-                except:
+                except BaseException:
                     pass
             if not hasattr(self, "mgl_ctx"):
                 try:
                     # Default standalone
                     self.mgl_ctx = moderngl.create_context(standalone=True)
-                except:
+                except BaseException:
                     pass
             if not hasattr(self, "mgl_ctx"):
                 try:
@@ -309,7 +309,7 @@ class RastContext:
                     self.mgl_ctx = moderngl.create_context(
                         standalone=True, backend="egl", libgl="libGL.so.1", libegl="libEGL.so.1"
                     )
-                except:
+                except BaseException:
                     pass
             if not hasattr(self, "mgl_ctx"):
                 raise RuntimeError(
@@ -343,9 +343,9 @@ class RastContext:
         """Del."""
         try:
             self.mgl_ctx.release()
-            for prog_name, prog in self.programs.items():
+            for _prog_name, prog in self.programs.items():
                 prog.release()
-        except:
+        except BaseException:
             pass
 
     @staticmethod

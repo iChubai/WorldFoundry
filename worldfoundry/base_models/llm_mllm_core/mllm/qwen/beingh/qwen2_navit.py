@@ -1544,7 +1544,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
             )
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
-            except:
+            except BaseException:
                 logger.info(f"'{name}' not initialized")
         return mllm_state_dict
 
@@ -1567,7 +1567,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
             # param.data.copy_(mllm_state_dict.pop(original_name).data)
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
-            except:
+            except BaseException:
                 print(f"'{name}' not initialized")
                 # breakpoint()
         return mllm_state_dict

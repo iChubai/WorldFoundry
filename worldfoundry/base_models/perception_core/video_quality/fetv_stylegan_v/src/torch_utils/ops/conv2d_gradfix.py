@@ -87,7 +87,8 @@ def _should_use_custom_op(input):
     if any(torch.__version__.startswith(x) for x in ["1.7.", "1.8.", "1.9", "1.10"]):
         return True
     warnings.warn(
-        f"conv2d_gradfix not supported on PyTorch {torch.__version__}. Falling back to torch.nn.functional.conv2d()."
+        f"conv2d_gradfix not supported on PyTorch {torch.__version__}. Falling back to torch.nn.functional.conv2d().",
+        stacklevel=1,
     )
     return False
 

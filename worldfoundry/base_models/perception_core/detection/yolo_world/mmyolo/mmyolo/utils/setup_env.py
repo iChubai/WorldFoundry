@@ -35,7 +35,8 @@ def register_all_modules(init_default_scope: bool = True):
                 f'"{current_scope.scope_name}" is not "mmyolo", '
                 "`register_all_modules` will force the current"
                 'default scope to be "mmyolo". If this is not '
-                "expected, please set `init_default_scope=False`."
+                "expected, please set `init_default_scope=False`.",
+                stacklevel=1,
             )
             # avoid name conflict
             new_instance_name = f"mmyolo-{datetime.datetime.now()}"

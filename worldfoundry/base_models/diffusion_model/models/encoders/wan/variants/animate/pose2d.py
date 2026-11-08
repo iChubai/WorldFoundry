@@ -57,7 +57,7 @@ def read_img(image, convert="RGB", check_exist=False):
             img = Image.open(image)
             if convert:
                 img = img.convert(convert)
-        except:
+        except BaseException:
             raise OSError("File error: ", image)
         return np.asarray(img)
     else:
@@ -107,10 +107,7 @@ class AAPoseMeta:
             threshold: The threshold.
         """
         x, y = kp
-        if x < 0 or y < 0 or x > self.width or y > self.height or p < threshold:
-            return False
-        else:
-            return True
+        return not (x < 0 or y < 0 or x > self.width or y > self.height or p < threshold)
 
     def get_bbox(self, kp, kp_p, threshold=0.5):
         """Get bbox.
@@ -393,8 +390,7 @@ class AAPoseMeta:
         else:
             new_height = int(width / ori_width * ori_height)
             padding = int((height - new_height) / 2)
-            padding_width = 0
-            padding_height = padding
+            _padding_height = padding
             scale = width / ori_width
             for kps in all_kps:
                 if kps is not None:
@@ -972,24 +968,32 @@ def keypoints_from_heatmaps(
 
     # normalize configs
     if post_process is False:
-        warnings.warn("post_process=False is deprecated, please use post_process=None instead", DeprecationWarning)
+        warnings.warn(
+            "post_process=False is deprecated, please use post_process=None instead", DeprecationWarning, stacklevel=1
+        )
         post_process = None
     elif post_process is True:
         if unbiased is True:
             warnings.warn(
                 "post_process=True, unbiased=True is deprecated, please use post_process='unbiased' instead",
                 DeprecationWarning,
+                stacklevel=1,
             )
             post_process = "unbiased"
         else:
             warnings.warn(
                 "post_process=True, unbiased=False is deprecated, please use post_process='default' instead",
                 DeprecationWarning,
+                stacklevel=1,
             )
             post_process = "default"
     elif post_process == "default":
         if unbiased is True:
-            warnings.warn("unbiased=True is deprecated, please use post_process='unbiased' instead", DeprecationWarning)
+            warnings.warn(
+                "unbiased=True is deprecated, please use post_process='unbiased' instead",
+                DeprecationWarning,
+                stacklevel=1,
+            )
             post_process = "unbiased"
 
     # start processing
@@ -1188,7 +1192,7 @@ def crop(img, center, scale, res):
     br = np.array(transform([res[1] + 1, res[0] + 1], center, max(scale), res, invert=1)) - 1
 
     # Padding so that when rotated proper amount of context is included
-    pad = int(np.linalg.norm(br - ul) / 2 - float(br[1] - ul[1]) / 2)
+    _pad = int(np.linalg.norm(br - ul) / 2 - float(br[1] - ul[1]) / 2)
 
     new_shape = [br[1] - ul[1], br[0] - ul[0]]
     if len(img.shape) > 2:
@@ -1248,7 +1252,7 @@ def load_pose_metas_from_kp2ds_seq_list(kp2ds_seq, width, height):
 
         if kp2ds_body[:, :2].min(axis=1).max() < 0:
             kp2ds_body = last_kp2ds_body
-        last_kp2ds_body = kp2ds_body
+        _last_kp2ds_body = kp2ds_body
 
         meta = {
             "width": width,
@@ -1280,7 +1284,7 @@ def load_pose_metas_from_kp2ds_seq(kp2ds_seq, width, height):
         # 排除全部小于0的情况
         if kp2ds_body[:, :2].min(axis=1).max() < 0:
             kp2ds_body = last_kp2ds_body
-        last_kp2ds_body = kp2ds_body
+        _last_kp2ds_body = kp2ds_body
 
         meta = {
             "width": width,

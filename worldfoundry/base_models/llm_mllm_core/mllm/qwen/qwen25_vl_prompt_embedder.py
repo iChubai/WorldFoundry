@@ -67,7 +67,7 @@ User Prompt:"""
             dtype=torch.bfloat16,
             device=torch.cuda.current_device(),
         )
-        hidden_states = torch.zeros(
+        _hidden_states = torch.zeros(
             len(text_list),
             self.max_length,
             self.model.config.hidden_size,
@@ -80,9 +80,6 @@ User Prompt:"""
             dtype=torch.long,
             device=torch.cuda.current_device(),
         )
-        input_ids_list = []
-        attention_mask_list = []
-        emb_list = []
 
         def split_string(s):
             """Split string.

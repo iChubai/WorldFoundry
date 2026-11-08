@@ -206,7 +206,7 @@ class ConvHead(nn.Module):
 
         x = self.projects(hidden_states).permute(0, 2, 1).unflatten(2, (patch_h, patch_w)).contiguous()
 
-        for i, block in enumerate(self.upsample_blocks):
+        for _i, block in enumerate(self.upsample_blocks):
             if self.using_uv:
                 uv = normalized_view_plane_uv(
                     width=x.shape[-1], height=x.shape[-2], aspect_ratio=img_w / img_h, dtype=x.dtype, device=x.device

@@ -125,7 +125,7 @@ class FragmentSampleFrames:
 
     def __call__(self, total_frames, train=False, start_index=0):
         frame_inds = []
-        for i in range(self.num_clips):
+        for _i in range(self.num_clips):
             frame_inds += [self.get_frame_indices(total_frames)]
         frame_inds = np.concatenate(frame_inds)
         frame_inds = np.mod(frame_inds + start_index, total_frames)
@@ -307,7 +307,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
                     aligned=self.aligned,
                     fallback_type=self.fallback_type,
                 )
-                for i in range(1, self.nfrags):
+                for _i in range(1, self.nfrags):
                     vfrag = torch.cat(
                         (
                             vfrag,
@@ -432,7 +432,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
                 vfrag = get_spatial_fragments(video, fragments, fragments, fsize, fsize, aligned=self.aligned)
             else:
                 vfrag = get_spatial_fragments(video, fragments, fragments, fsize, fsize, aligned=self.aligned)
-                for i in range(1, self.nfrags):
+                for _i in range(1, self.nfrags):
                     vfrag = torch.cat(
                         (
                             vfrag,
@@ -631,7 +631,7 @@ class FragmentImageDataset(torch.utils.data.Dataset):
             label = image_info["label"]
             try:
                 img = torchvision.io.read_image(filename)
-            except:
+            except BaseException:
                 img = cv2.imread(filename)
                 img = torch.from_numpy(img[:, :, [2, 1, 0]]).permute(2, 0, 1)
             img_shape = img.shape[1:]
@@ -640,7 +640,7 @@ class FragmentImageDataset(torch.utils.data.Dataset):
                 ifrag = get_spatial_fragments(image, fragments, fragments, fsize, fsize)
             else:
                 ifrag = get_spatial_fragments(image, fragments, fragments, fsize, fsize)
-                for i in range(1, self.nfrags):
+                for _i in range(1, self.nfrags):
                     ifrag = torch.cat(
                         (
                             ifrag,
@@ -720,7 +720,7 @@ class ResizedImageDataset(torch.utils.data.Dataset):
                 ifrag = get_spatial_fragments(image, fragments, fsize)
             else:
                 ifrag = get_spatial_fragments(image, fragments, fsize)
-                for i in range(1, self.nfrags):
+                for _i in range(1, self.nfrags):
                     ifrag = torch.cat((ifrag, get_spatial_fragments(image, fragments, fsize)), 1)
             if tocache:
                 return (ifrag, label, img_shape)

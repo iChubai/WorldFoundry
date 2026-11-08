@@ -132,7 +132,7 @@ class StepVideoModel(nn.Module):
     ):
         """Run the AdaLN transformer stack on ``B (F·S) C`` video tokens."""
 
-        for i, block in enumerate(self.transformer_blocks):
+        for _i, block in enumerate(self.transformer_blocks):
             hidden_states = block(
                 hidden_states,
                 encoder_hidden_states,

@@ -42,7 +42,7 @@ def build_bert(model_config, pretrain, checkpoint, encoder_width=None):
                 output_loading_info=True,
                 local_files_only=True,
             )
-        except:
+        except BaseException:
             text_encoder, loading_info = BertForMaskedLM.from_pretrained(
                 model_config.text_encoder.pretrained,
                 config=bert_config,
@@ -58,7 +58,7 @@ def build_bert(model_config, pretrain, checkpoint, encoder_width=None):
                 output_loading_info=True,
                 local_files_only=True,
             )
-        except:
+        except BaseException:
             text_encoder, loading_info = BertModel.from_pretrained(
                 model_config.text_encoder.pretrained,
                 config=bert_config,

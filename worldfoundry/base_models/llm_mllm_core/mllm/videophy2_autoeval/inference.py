@@ -133,7 +133,7 @@ def main():
             ckpt = torch.load(f, map_location=torch.device("cpu"))
         try:
             model.load_state_dict(ckpt)
-        except:
+        except BaseException:
             ckpt = modify_keys(ckpt)
             model.load_state_dict(ckpt)
         print("LOADED")

@@ -121,7 +121,7 @@ def get_query_value(query, key_value, xy_l, homo_r, img_h_l, img_w_l, img_h_r=No
         img_h_r = img_h_l
         img_w_r = img_w_l
 
-    b = query.shape[0]
+    _b = query.shape[0]
     m = key_value.shape[1]
 
     key_values = []

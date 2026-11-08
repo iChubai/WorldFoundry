@@ -393,7 +393,7 @@ class Sam3VideoSegmenter:
             padded_frames, orig_hw, resized_hw, pad_xy = self._letterbox_frames(frames, self.resize_input_to)
             pil_frames = [Image.fromarray(frame) for frame in padded_frames]
             video_resource = pil_frames
-            expected_frames = len(pil_frames)
+            _expected_frames = len(pil_frames)
             resize_meta = (orig_hw, resized_hw, pad_xy)
             del frames, padded_frames
 

@@ -377,7 +377,7 @@ class SpatialTransformer(nn.Module):
         x = rearrange(x, "b c h w -> b (h w) c").contiguous()
         if self.use_linear:
             x = self.proj_in(x)
-        for i, block in enumerate(self.transformer_blocks):
+        for _i, block in enumerate(self.transformer_blocks):
             x = block(x, context=context, **kwargs)
         if self.use_linear:
             x = self.proj_out(x)
@@ -485,13 +485,13 @@ class TemporalTransformer(nn.Module):
 
         if self.only_self_att:
             ## note: if no context is given, cross-attention defaults to self-attention
-            for i, block in enumerate(self.transformer_blocks):
+            for _i, block in enumerate(self.transformer_blocks):
                 x = block(x, mask=mask)
             x = rearrange(x, "(b hw) t c -> b hw t c", b=b).contiguous()
         else:
             x = rearrange(x, "(b hw) t c -> b hw t c", b=b).contiguous()
             context = rearrange(context, "(b t) l con -> b t l con", t=t).contiguous()
-            for i, block in enumerate(self.transformer_blocks):
+            for _i, block in enumerate(self.transformer_blocks):
                 # calculate each batch one by one (since number in shape could not greater then 65,535 for some package)
                 for j in range(b):
                     context_j = repeat(context[j], "t l con -> (t r) l con", r=(h * w) // t, t=t).contiguous()

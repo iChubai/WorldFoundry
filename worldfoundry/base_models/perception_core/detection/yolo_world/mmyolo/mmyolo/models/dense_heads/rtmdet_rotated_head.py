@@ -285,7 +285,9 @@ class RTMDetRotatedHead(RTMDetHead):
         self.angle_coder = TASK_UTILS.build(angle_coder)
         self.angle_out_dim = self.angle_coder.encode_size
         if head_module.get("angle_out_dim") is not None:
-            warnings.warn("angle_out_dim will be overridden by angle_coder and does not need to be set manually")
+            warnings.warn(
+                "angle_out_dim will be overridden by angle_coder and does not need to be set manually", stacklevel=1
+            )
 
         head_module["angle_out_dim"] = self.angle_out_dim
         super().__init__(

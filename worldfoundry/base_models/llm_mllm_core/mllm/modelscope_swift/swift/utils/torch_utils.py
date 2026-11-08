@@ -266,12 +266,13 @@ def find_all_linears(model, model_arch=None, extra_layers=None, sub_module=None)
 
     def _cond(name, module):
         module_name = module.__class__.__name__.lower()
-        if (
-            (extra_layers and isinstance(module, tuple(extra_layers)))
-            or ("linear" in module_name and all(linear_cls not in module_name for linear_cls in ignore_linear_cls))
-        ) and all(layer not in name for layer in ignore_layers):
-            return True
-        return False
+        return bool(
+            (
+                (extra_layers and isinstance(module, tuple(extra_layers)))
+                or ("linear" in module_name and all(linear_cls not in module_name for linear_cls in ignore_linear_cls))
+            )
+            and all(layer not in name for layer in ignore_layers)
+        )
 
     return find_layers(model, _cond, sub_module=sub_module)
 

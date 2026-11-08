@@ -47,7 +47,7 @@ def generate_video(image_paths, out_dir, gen_video=True):
         img = img[margin:-margin]
     size = (img.shape[1], img.shape[0])
 
-    tmp_video_path = "/tmp/" + str(uuid.uuid4()) + ".mp4"
+    _tmp_video_path = "/tmp/" + str(uuid.uuid4()) + ".mp4"
     save_video_path = os.path.join(out_dir, "video.mp4")
     out = cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*"MP4V"), 60, size)
 
@@ -58,7 +58,7 @@ def generate_video(image_paths, out_dir, gen_video=True):
         img = equ.GetPerspective(
             fov, deg, 0, video_size[0], video_size[1]
         )  # Specify parameters(FOV, theta, phi, height, width)
-        h = img.shape[0]
+        _h = img.shape[0]
         if margin > 0:
             img = img[margin:-margin]
         img = np.clip(img, 0, 255).astype(np.uint8)

@@ -153,13 +153,11 @@ class BaseArguments(
 
     @staticmethod
     def _check_is_adapter(adapter_dir: str) -> bool:
-        if (
+        return bool(
             os.path.exists(os.path.join(adapter_dir, "adapter_config.json"))
             or os.path.exists(os.path.join(adapter_dir, "default", "adapter_config.json"))
             or os.path.exists(os.path.join(adapter_dir, "reft"))
-        ):
-            return True
-        return False
+        )
 
     def _init_adapters(self):
         if isinstance(self.adapters, str):

@@ -62,7 +62,7 @@ class Blip2VicunaInstruct(Blip2Base):
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
         )
         if freeze_vit:
-            for name, param in self.visual_encoder.named_parameters():
+            for _name, param in self.visual_encoder.named_parameters():
                 param.requires_grad = False
             self.visual_encoder = self.visual_encoder.eval()
             self.visual_encoder.train = disabled_train
@@ -94,7 +94,7 @@ class Blip2VicunaInstruct(Blip2Base):
         #     self.llm_tokenizer.eos_token, add_special_tokens=False
         # ).input_ids[0]
 
-        for name, param in self.llm_model.named_parameters():
+        for _name, param in self.llm_model.named_parameters():
             param.requires_grad = False
 
         self.llm_proj = nn.Linear(self.Qformer.config.hidden_size, self.llm_model.config.hidden_size)
@@ -136,7 +136,7 @@ class Blip2VicunaInstruct(Blip2Base):
             image_embeds = self.ln_vision(self.visual_encoder(image))
         image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(image.device)
 
-        bs = image.size(0)
+        _bs = image.size(0)
 
         query_tokens = self.query_tokens.expand(image_embeds.shape[0], -1, -1)
         if self.qformer_text_input:
@@ -412,7 +412,7 @@ class Blip2VicunaInstruct(Blip2Base):
         self.llm_tokenizer.padding_side = "left"
 
         # If candidates is a list of lists, each sample has its candidates, then we need to iterate one by one
-        if type(candidates[0]) == list:
+        if type(candidates[0]) is list:
             results = []
 
             for i in range(samples["image"].size(0)):
@@ -438,7 +438,7 @@ class Blip2VicunaInstruct(Blip2Base):
 
             try:
                 results = torch.cat(results, dim=0)
-            except:
+            except BaseException:
                 results = [res.tolist()[0] for res in results]
 
             return results
@@ -462,7 +462,7 @@ class Blip2VicunaInstruct(Blip2Base):
             assert len(prompt) == bs, "The number of prompts must be equal to the batch size."
 
         if "text_input" in samples.keys():
-            if type(samples["text_input"][0]) == list:
+            if type(samples["text_input"][0]) is list:
                 prompt = [prompt[i].format(*samples["text_input"][i]) for i in range(len(prompt))]
             else:
                 prompt = [prompt[i].format(samples["text_input"][i]) for i in range(len(prompt))]

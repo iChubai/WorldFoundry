@@ -127,7 +127,6 @@ class Validator:
         if self.val_img_loader is None:
             return
 
-        per_img_psnrs = []
         for batch in tqdm(self.val_img_loader, desc="render val images"):
             batch = to_device(batch, self.device)
             frame_name = batch["frame_names"][0]
@@ -293,7 +292,7 @@ class Validator:
         masks = []
         depth_min, depth_max = 1e6, 0
         normals = []
-        for batch_idx, batch in enumerate(tqdm(self.train_loader, desc="Rendering video", leave=False)):
+        for _batch_idx, batch in enumerate(tqdm(self.train_loader, desc="Rendering video", leave=False)):
             batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
             # ().
             t = batch["ts"][0]

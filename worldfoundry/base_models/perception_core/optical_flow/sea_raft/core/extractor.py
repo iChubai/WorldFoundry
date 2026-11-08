@@ -96,7 +96,7 @@ class ResNetFPN(nn.Module):
         """
         layers = []
         layers.append(block(self.in_planes, dim, stride=stride, norm_layer=norm_layer))
-        for i in range(num - 1):
+        for _i in range(num - 1):
             layers.append(block(dim, dim, stride=1, norm_layer=norm_layer))
         self.in_planes = dim
         return nn.Sequential(*layers)

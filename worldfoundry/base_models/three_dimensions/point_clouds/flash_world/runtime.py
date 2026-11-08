@@ -355,7 +355,7 @@ class GenerationSystem(nn.Module):
         )
 
         with torch.no_grad():
-            for name, module in self.vae.named_modules():
+            for _name, module in self.vae.named_modules():
                 if isinstance(module, WanCausalConv3d):
                     time_pad = module._padding[4]
                     module.padding = (0, module._padding[2], module._padding[0])

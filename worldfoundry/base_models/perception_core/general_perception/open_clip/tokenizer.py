@@ -637,7 +637,7 @@ class HFTokenizer:
         if hasattr(self, "set_lang_fn"):
             self.set_lang_fn(src_lang)
         else:
-            warnings.warn("Cannot set language for the tokenizer.")
+            warnings.warn("Cannot set language for the tokenizer.", stacklevel=1)
 
     def _clips_tokenize(self, texts: list[str], context_length: int) -> torch.Tensor:
         """Use standard HF tokenizer but apply custom post-processing"""

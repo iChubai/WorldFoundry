@@ -354,7 +354,7 @@ class FactorGraph:
             itrs (int): number of iterations for BA within each step
         """
         if self.incremental:
-            warnings.warn("Calling update_batch with incremental=True could be slow.")
+            warnings.warn("Calling update_batch with incremental=True could be slow.", stacklevel=1)
         assert self.f_net is not None
 
         # alternate corr implementation

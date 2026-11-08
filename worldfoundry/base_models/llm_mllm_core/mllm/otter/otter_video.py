@@ -106,7 +106,7 @@ class OtterVideo(BaseModel):
         return parsed_output
 
     def generate(self, input_data):
-        video_dir = input_data.get("video_root", "")
+        _video_dir = input_data.get("video_root", "")
         frames_list = self.extract_frames(input_data["video_path"])
 
         object_description = input_data["object_description"]

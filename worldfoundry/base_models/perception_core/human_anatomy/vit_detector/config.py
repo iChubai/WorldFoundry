@@ -223,9 +223,7 @@ def update_config(config, args):
         config.merge_from_list(args.opts)
 
     def _check_args(name):
-        if hasattr(args, name) and eval(f"args.{name}"):
-            return True
-        return False
+        return bool(hasattr(args, name) and eval(f"args.{name}"))
 
     # merge from specific arguments
     if _check_args("batch_size"):

@@ -742,7 +742,6 @@ class WanModel(nn.Module, NativeConfigMixin):
         # assert e.dtype == torch.float32 and e0.dtype == torch.float32
 
         # context
-        context_lens = None
         # context = self.text_embedding(
         #     torch.stack([
         #         torch.cat(
@@ -786,7 +785,7 @@ class WanModel(nn.Module, NativeConfigMixin):
 
             return custom_forward
 
-        for ii, block in enumerate(self.blocks):
+        for _ii, block in enumerate(self.blocks):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(block),

@@ -217,7 +217,7 @@ def is_pickleable(obj: Any) -> bool:
         with io.BytesIO() as stream:
             pickle.dump(obj, stream)
         return True
-    except:
+    except BaseException:
         return False
 
 
@@ -243,7 +243,7 @@ def get_module_from_obj_name(obj_name: str) -> tuple[types.ModuleType, str]:
             module = importlib.import_module(module_name)  # may raise ImportError
             get_obj_from_module(module, local_obj_name)  # may raise AttributeError
             return module, local_obj_name
-        except:
+        except BaseException:
             pass
 
     # maybe some of the modules themselves contain errors?
@@ -384,7 +384,7 @@ def is_url(obj: Any, allow_file_urls: bool = False) -> bool:
         res = requests.compat.urlparse(requests.compat.urljoin(obj, "/"))
         if not res.scheme or not res.netloc or "." not in res.netloc:
             return False
-    except:
+    except BaseException:
         return False
     return True
 
@@ -471,7 +471,7 @@ def open_url(
                     break
             except KeyboardInterrupt:
                 raise
-            except:
+            except BaseException:
                 if not attempts_left:
                     if verbose:
                         print(" failed")

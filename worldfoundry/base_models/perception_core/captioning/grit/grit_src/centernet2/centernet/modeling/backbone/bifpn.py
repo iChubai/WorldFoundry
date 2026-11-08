@@ -235,7 +235,7 @@ class FpnCombine(nn.Module):
         self.weight_method = weight_method
 
         self.resample = nn.ModuleDict()
-        for idx, offset in enumerate(inputs_offsets):
+        for _idx, offset in enumerate(inputs_offsets):
             in_channels = fpn_channels
             if offset < len(feature_info):
                 in_channels = feature_info[offset]["num_chs"]
@@ -464,7 +464,7 @@ class BiFPN(Backbone):
         x = [bottom_up_features[f] for f in self.in_features]
         assert len(self.resample) == self.num_levels - len(x)
         x = self.resample(x)
-        shapes = [xx.shape for xx in x]
+        _shapes = [xx.shape for xx in x]
         # print('resample shapes', shapes)
         x = self.cell(x)
         out = {f: xx for f, xx in zip(self._out_features, x, strict=False)}

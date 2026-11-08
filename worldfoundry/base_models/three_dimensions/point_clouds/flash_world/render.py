@@ -113,7 +113,7 @@ class GaussianRendererWithCheckpoint(torch.autograd.Function):
         with torch.no_grad():
             V, _ = test_intr.shape
             renderings = torch.zeros(V, H, W, 4).to(xyz.device)
-            alphas = torch.rand(V, device=xyz.device)
+            _alphas = torch.rand(V, device=xyz.device)
             for iv in range(V):
                 rendering = GaussianRendererWithCheckpoint.render(
                     xyz,

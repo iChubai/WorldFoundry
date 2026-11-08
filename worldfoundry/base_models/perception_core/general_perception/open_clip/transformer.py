@@ -1925,7 +1925,7 @@ def lock_text_tower(
         elif isinstance(module, nn.Parameter):
             module.requires_grad = True
         elif isinstance(module, nn.Module):
-            for name, param in module.named_parameters():
+            for _name, param in module.named_parameters():
                 param.requires_grad = True
 
     # Unlock the specified number of layer groups from the end

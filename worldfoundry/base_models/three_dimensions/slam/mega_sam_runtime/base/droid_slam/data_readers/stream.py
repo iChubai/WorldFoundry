@@ -37,7 +37,7 @@ class RGBDStream(data.Dataset):
 
         try:
             tstamp = self.tstamps[index]
-        except:
+        except BaseException:
             tstamp = index
 
         pose = torch.from_numpy(self.poses[index]).float()
@@ -101,7 +101,7 @@ class ImageStream(data.Dataset):
 
         try:
             tstamp = self.timestamps[index]
-        except:
+        except BaseException:
             tstamp = index
 
         ht0, wd0 = image.shape[:2]

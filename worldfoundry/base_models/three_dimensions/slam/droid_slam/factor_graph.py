@@ -277,7 +277,7 @@ class FactorGraph:
         num, rig, ch, ht, wd = self.video.fmaps.shape
         corr_op = AltCorrBlock(self.video.fmaps.view(1, num * rig, ch, ht, wd))
 
-        for step in range(steps):
+        for _step in range(steps):
             # print("Global BA Iteration #{}".format(step+1))
             with CudaTimer("backend", enabled=False):
                 with autocast(enabled=False):

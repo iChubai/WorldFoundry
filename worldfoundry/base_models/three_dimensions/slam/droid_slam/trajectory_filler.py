@@ -80,7 +80,7 @@ class PoseTrajectoryFiller:
         graph.add_factors(t0.cuda(), torch.arange(N, N + M).cuda())
         graph.add_factors(t1.cuda(), torch.arange(N, N + M).cuda())
 
-        for itr in range(6):
+        for _itr in range(6):
             graph.update(N, N + M, motion_only=True)
 
         Gs = SE3(self.video.poses[N : N + M].clone())

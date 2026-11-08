@@ -136,7 +136,7 @@ def _prepare_apply_fns_all_dim(
     Callable[[torch.Tensor], torch.Tensor],
 ]:
     """Prepare transforms for PRoPE-style positional encoding."""
-    device = viewmats.device
+    _device = viewmats.device
     (batch, cameras, _, _) = viewmats.shape
 
     # Normalize camera intrinsics.
@@ -321,7 +321,7 @@ def add_prope_parameters(model, zero_init: bool = True):
 
     attn_types = tuple(filter(None, [WanSelfAttention, ActionWanSelfAttention, CausalWanSelfAttention]))
 
-    for name, module in model.named_modules():
+    for _name, module in model.named_modules():
         if isinstance(module, attn_types) and not isinstance(module, cross_attn_types):
             if not hasattr(module, "prope_o"):
                 # Get dim from existing projection layer

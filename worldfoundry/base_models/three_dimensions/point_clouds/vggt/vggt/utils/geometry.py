@@ -221,7 +221,7 @@ def project_world_points_to_cam(
     device = world_points.device
     # with torch.autocast(device_type=device.type, dtype=torch.double):
     with torch.autocast(device_type=device.type, enabled=False):
-        N = world_points.shape[0]  # Number of points
+        _N = world_points.shape[0]  # Number of points
         B = cam_extrinsics.shape[0]  # Batch size, i.e., number of cameras
         world_points_homogeneous = torch.cat([world_points, torch.ones_like(world_points[..., 0:1])], dim=1)  # Nx4
         # Reshape for batch processing
@@ -302,7 +302,7 @@ def cam_from_img(pred_tracks, intrinsics, extra_params=None):
         # Apply iterative undistortion
         try:
             tracks_normalized = iterative_undistortion(extra_params, tracks_normalized)
-        except:
+        except BaseException:
             tracks_normalized = single_undistortion(extra_params, tracks_normalized)
 
     return tracks_normalized

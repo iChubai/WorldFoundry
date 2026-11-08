@@ -405,7 +405,7 @@ class ApolloMMLoader:
             eval_=True,
         )
 
-        num_clips = len(video[0])
+        _num_clips = len(video[0])
         # num_tokens = num_clips * self.num_repeat_token
         video = [v.to(device=self.device, dtype=torch.bfloat16) for v in video]
         # replace_string = self.vidprompt(num_clips, video_duration)
@@ -435,7 +435,7 @@ def get_frame_from_vcap(vidcap, num_frames=10, fps=None, frame_count=None):
             Image.new("RGB", (720, 720)),
         ] * num_frames
 
-    duration = frame_count / fps
+    _duration = frame_count / fps
     frame_interval = frame_count // num_frames
     if frame_interval == 0 and frame_count <= 1:
         print("frame_interval is equal to 0. return empty image.")

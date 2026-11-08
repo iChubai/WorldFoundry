@@ -96,9 +96,7 @@ def _uses_low_rank_branch(name: str) -> bool:
         return True
     if name.startswith("repfeature.blocks."):
         return True
-    if name.startswith("repfeature.final_block."):
-        return True
-    return False
+    return bool(name.startswith("repfeature.final_block."))
 
 
 def _parent_and_child(model: nn.Module, dotted_name: str) -> tuple[nn.Module, str]:

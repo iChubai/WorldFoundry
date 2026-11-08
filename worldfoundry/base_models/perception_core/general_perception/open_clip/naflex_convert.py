@@ -94,9 +94,7 @@ def _is_standard_native_vit_cfg(vision_cfg: dict[str, Any]) -> bool:
     )
     if unsupported_custom_block:
         return False
-    if vision_cfg.get("act_kwargs") is not None or vision_cfg.get("norm_kwargs") is not None:
-        return False
-    return True
+    return not (vision_cfg.get("act_kwargs") is not None or vision_cfg.get("norm_kwargs") is not None)
 
 
 def _force_naflex_native_vit_vision(vision_cfg: dict[str, Any], quick_gelu: bool = False) -> None:

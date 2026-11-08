@@ -77,10 +77,7 @@ class ReactORM(ORM):
                     except Exception:
                         f1.append(0.0)
 
-        if f1[0] == 1.0:
-            return True
-        else:
-            return False
+        return bool(f1[0] == 1.0)
 
     @staticmethod
     def parse_action(text):

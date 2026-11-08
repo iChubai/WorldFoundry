@@ -84,7 +84,7 @@ class AggregatorStream(AggregatorBase):
 
         # Pop kwargs that are passed but not needed by base class
         kwargs.pop("enable_stream_inference", None)
-        use_flashinfer = kwargs.pop("use_flashinfer", True)
+        _use_flashinfer = kwargs.pop("use_flashinfer", True)
         kwargs.pop("use_flexflash", None)
         use_sdpa = kwargs.pop("use_sdpa", False)
 

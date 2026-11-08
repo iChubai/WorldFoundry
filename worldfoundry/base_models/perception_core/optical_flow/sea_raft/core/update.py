@@ -83,7 +83,7 @@ class BasicUpdateBlock(nn.Module):
         self.args = args
         self.encoder = BasicMotionEncoder(args, dim=cdim)
         self.refine = []
-        for i in range(args.num_blocks):
+        for _i in range(args.num_blocks):
             self.refine.append(ConvNextBlock(2 * cdim + hdim, hdim))
         self.refine = nn.ModuleList(self.refine)
 

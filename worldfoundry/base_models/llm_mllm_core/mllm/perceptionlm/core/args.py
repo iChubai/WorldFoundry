@@ -16,7 +16,7 @@ def set_struct_recursively(cfg, strict: bool = True):
 
     # Traverse through nested dictionaries and lists
     if isinstance(cfg, DictConfig):
-        for key, value in cfg.items():
+        for _key, value in cfg.items():
             if isinstance(value, (DictConfig, ListConfig)):
                 set_struct_recursively(value, strict)
     elif isinstance(cfg, ListConfig):

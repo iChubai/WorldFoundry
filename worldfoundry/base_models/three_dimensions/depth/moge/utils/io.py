@@ -149,7 +149,7 @@ def write_depth(
     mask_values, mask_nan, mask_inf = np.isfinite(depth), np.isnan(depth), np.isinf(depth)
 
     depth = depth.astype(np.float32)
-    mask_finite = depth
+    _mask_finite = depth
     near = max(depth[mask_values].min(), 1e-5)
     far = max(near * 1.1, min(depth[mask_values].max(), near * max_range))
     depth = 1 + np.round(

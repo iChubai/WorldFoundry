@@ -127,7 +127,7 @@ class MergedPanoramaVideoStream(VideoStream):
 
         last_inv_scale = 1.0
 
-        for frame_idx, (pano_frame_data, *projected_frame_data) in enumerate(
+        for frame_idx, (pano_frame_data, *_projected_frame_data) in enumerate(
             zip(self.pano_stream, *self.projected_streams, strict=False)
         ):
             pano_frame_data.intrinsics = torch.zeros(4).float().cuda()
@@ -331,7 +331,7 @@ class PanoramaAnnotationPipeline(Pipeline):
         cached_video_stream = CachedVideoStream(video_stream)
 
         slam_streams: list[VideoStream] = []
-        for rig_transform, rig_name in zip(rig_transforms, rig_names, strict=False):
+        for rig_transform, _rig_name in zip(rig_transforms, rig_names, strict=False):
             projectors: list[StreamProcessor] = [
                 EquirectProjectionProcessor(
                     se3_to_so3(rig_transform),

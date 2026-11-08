@@ -168,7 +168,7 @@ class DenseOpticalTracker(nn.Module):
         visited_cells = torch.zeros(B, T, ch, cw, device=video.device)
         src_steps = torch.linspace(0, T - 1, T // ct).long()
         tracks = [[] for _ in range(B)]
-        for k, src_step in enumerate(tqdm(src_steps, desc="Refine source step", leave=False)):
+        for _k, src_step in enumerate(tqdm(src_steps, desc="Refine source step", leave=False)):
             if visited_cells[:, src_step].all():
                 continue
             src_points = init[:, src_step]

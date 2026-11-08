@@ -23,7 +23,7 @@ except ImportError:
 
 
 if version.parse(torch.__version__) < version.parse("1.7.1"):
-    warnings.warn("PyTorch version 1.7.1 or higher is recommended")
+    warnings.warn("PyTorch version 1.7.1 or higher is recommended", stacklevel=1)
 
 
 __all__ = ["available_models", "clear_checkpoint_cache", "load", "tokenize"]
@@ -56,7 +56,10 @@ def _download(url: str, root: str):
         if file_sha256(download_target) == expected_sha256:
             return download_target
         else:
-            warnings.warn(f"{download_target} exists, but the SHA256 checksum does not match; re-downloading the file")
+            warnings.warn(
+                f"{download_target} exists, but the SHA256 checksum does not match; re-downloading the file",
+                stacklevel=1,
+            )
 
     with urllib.request.urlopen(url) as source, open(download_target, "wb") as output:
         with tqdm(
@@ -177,7 +180,7 @@ def load(
     try:
         model = torch.jit.load(model_path, map_location=device).eval()
     except RuntimeError:
-        warnings.warn(f"File {model_path} is not a JIT archive. Loading as a state dict instead")
+        warnings.warn(f"File {model_path} is not a JIT archive. Loading as a state dict instead", stacklevel=1)
         model = build_model(dict(_checkpoint_state_dict(model_path))).to(device)
         if str(device) == "cpu":
             model.float()

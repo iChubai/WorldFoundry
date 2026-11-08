@@ -85,7 +85,7 @@ class ControlSanaMSBlock(Module):
         Args:
             base_block: The base block.
         """
-        for name, param in self.named_parameters():
+        for _name, param in self.named_parameters():
             param.requires_grad_(True)
 
         self.copied_block.load_state_dict(base_block.state_dict())

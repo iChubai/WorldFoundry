@@ -147,7 +147,7 @@ class CausalWanSelfAttention(nn.Module):
         q, k, v = qkv_fn(x)
 
         frame_seqlen = math.prod(grid_sizes[0][1:]).item()
-        current_start_frame = current_start // frame_seqlen
+        _current_start_frame = current_start // frame_seqlen
         current_end = current_start + q.shape[1]
         total_sink_tokens = self.sink_size * frame_seqlen
 
@@ -637,7 +637,7 @@ class CausalWanModel(WanTransformerMethodsMixin, nn.Module, NativeConfigMixin):
             start=frame_seqlen, end=total_length, step=frame_seqlen * num_frame_per_block, device=device
         )
 
-        for idx, tmp in enumerate(frame_indices):
+        for _idx, tmp in enumerate(frame_indices):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):

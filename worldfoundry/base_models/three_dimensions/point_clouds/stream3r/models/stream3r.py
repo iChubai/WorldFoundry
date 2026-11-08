@@ -13,7 +13,7 @@ from huggingface_hub import PyTorchModelHubMixin  # used for model hub
 def freeze_all_params(modules):
     for module in modules:
         try:
-            for n, param in module.named_parameters():
+            for _n, param in module.named_parameters():
                 param.requires_grad = False
         except AttributeError:
             module.requires_grad = False

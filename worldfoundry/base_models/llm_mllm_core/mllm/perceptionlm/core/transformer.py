@@ -122,7 +122,7 @@ def lengths_to_start_ids(lengths):
 
 def lengths_to_local_ids(lengths):
     assert lengths.ndim == 1
-    nb_seqs = lengths.size(0)
+    _nb_seqs = lengths.size(0)
     total_seqlen = lengths.sum()
     # This gives the document id of each token
     doc_id = torch.repeat_interleave(lengths)
@@ -605,7 +605,7 @@ class BaseTransformer(nn.Module):
     ):
         freq_cis = self.rope_embeddings(seqlen=self.max_seqlen, tok_idx=tok_idx)
 
-        for i, layer in enumerate(self.layers):
+        for _i, layer in enumerate(self.layers):
             h = layer(h, freq_cis, tok_idx=tok_idx, mask=mask, attn_impl=attn_impl)
         return h
 

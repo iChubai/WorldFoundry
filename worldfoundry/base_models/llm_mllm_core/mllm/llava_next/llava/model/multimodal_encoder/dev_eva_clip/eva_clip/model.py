@@ -13,7 +13,7 @@ from torch import nn
 
 try:
     from .hf_model import HFTextEncoder
-except:
+except BaseException:
     HFTextEncoder = None
 from .eva_vit_model import EVAVisionTransformer
 from .modified_resnet import ModifiedResNet
@@ -22,7 +22,7 @@ from .transformer import Attention, LayerNorm, QuickGELU, TextTransformer, Visio
 
 try:
     from apex.normalization import FusedLayerNorm
-except:
+except BaseException:
     FusedLayerNorm = LayerNorm
     # print("Please 'pip install apex'")
 

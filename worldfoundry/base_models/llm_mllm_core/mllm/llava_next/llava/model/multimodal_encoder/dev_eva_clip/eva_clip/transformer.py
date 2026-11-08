@@ -10,7 +10,7 @@ from torch.nn import functional as F
 
 try:
     from timm.models.layers import trunc_normal_
-except:
+except BaseException:
     from timm.layers import trunc_normal_  # noqa: F401 - Version fallback of the import above, kept as upstream.
 
 from .utils import to_2tuple
@@ -19,7 +19,7 @@ if os.getenv("ENV_TYPE") == "deepspeed":
     try:
         import deepspeed
         from deepspeed.runtime.activation_checkpointing.checkpointing import checkpoint
-    except:
+    except BaseException:
         print("Please 'pip install deepspeed'")
         deepspeed = None
         from torch.utils.checkpoint import checkpoint

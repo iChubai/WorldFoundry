@@ -107,7 +107,7 @@ class HFVisionTower(nn.Module):
     def hidden_size(self):
         try:
             _hidden_size = self.config.hidden_size
-        except:
+        except BaseException:
             _hidden_size = self.config.vision_config.hidden_size
         if "slicefour" in self.select_feature:
             _hidden_size *= 4

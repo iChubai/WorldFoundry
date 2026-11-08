@@ -1123,7 +1123,7 @@ class WanModel(nn.Module, NativeConfigMixin):
             context_lens=context_lens,
         )
 
-        for i, block in enumerate(self.blocks):
+        for _i, block in enumerate(self.blocks):
             if self.gradient_checkpointing:
                 x = torch.utils.checkpoint.checkpoint(block, x, **kwargs, use_reentrant=False)
             else:
@@ -1405,7 +1405,7 @@ class WanLinearAttentionModel(WanModel):
             context_clip = self.img_emb(clip_fea)  # bs x 257 x dim
             context = torch.concat([context_clip, context], dim=1)
 
-        for i, block in enumerate(self.blocks):
+        for _i, block in enumerate(self.blocks):
             # arguments
             kwargs = dict(
                 e=e0,

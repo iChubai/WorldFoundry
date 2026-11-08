@@ -44,7 +44,7 @@ class DDIMSampler:
             name: The name.
             attr: The attr.
         """
-        if type(attr) == torch.Tensor:
+        if type(attr) is torch.Tensor:
             target_device = torch.device(self.model.device)
             if attr.device != target_device:
                 attr = attr.to(target_device)
@@ -165,7 +165,7 @@ class DDIMSampler:
             if isinstance(conditioning, dict):
                 try:
                     cbs = conditioning[list(conditioning.keys())[0]].shape[0]
-                except:
+                except BaseException:
                     cbs = conditioning[list(conditioning.keys())[0]][0].shape[0]
 
                 if cbs != batch_size:

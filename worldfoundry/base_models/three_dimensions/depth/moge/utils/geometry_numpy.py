@@ -206,7 +206,7 @@ def recover_focal_shift_numpy(
     assert points.shape[-1] == 3, "Points should (H, W, 3)"
 
     height, width = points.shape[-3], points.shape[-2]
-    diagonal = (height**2 + width**2) ** 0.5
+    _diagonal = (height**2 + width**2) ** 0.5
 
     uv = normalized_view_plane_uv_numpy(width=width, height=height)
 

@@ -107,7 +107,7 @@ def build_pycolmap_reconstruction(
         try:
             frame_image.points2D = pycolmap.ListPoint2D(frame_points)
             frame_image.registered = True
-        except:
+        except BaseException:
             print(f"Warning: Frame {frame_idx + 1} has no valid points")
             frame_image.registered = False
 

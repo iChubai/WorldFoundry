@@ -950,7 +950,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
             device=tracker_obj_scores_global.device
         )
         trk_obj_ids_t = torch.tensor(trk_obj_ids, device=tracker_obj_scores_global.device)
-        det_indices_t = torch.tensor(det_indices, device=tracker_obj_scores_global.device)
+        _det_indices_t = torch.tensor(det_indices, device=tracker_obj_scores_global.device)
 
         # Batched lookup: find obj_idx for each trk_obj_id
         # Shape: (num_trk, num_all_obj) -> find matching indices
@@ -1124,7 +1124,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
             # if warm-up is not complete, we don't remove any objects
             N_obj = tracker_low_res_masks_global.size(0)
             to_remove_mask = torch.zeros(N_obj, dtype=torch.bool, device=tracker_low_res_masks_global.device)
-            to_suppress_mask = torch.zeros(N_obj, dtype=torch.bool, device=tracker_low_res_masks_global.device)
+            _to_suppress_mask = torch.zeros(N_obj, dtype=torch.bool, device=tracker_low_res_masks_global.device)
         tracker_metadata_new["rank0_metadata"] = rank0_metadata_new
 
         # Step 3 (optional): recondition masklets based on high-confidence detections before memory encoding
@@ -1434,11 +1434,10 @@ class Sam3MultiplexBase(Sam3VideoBase):
             assert len(obj_ids_global) == batch_size, (
                 f"Mismatch in number of objects: {len(obj_ids_global)} vs {batch_size}"
             )
-            NEVER_OCCLUDED = -1
             ALWAYS_OCCLUDED = 100000  # This value should be larger than any possible frame index, indicates that the object was removed by hotstart logic
 
             # GPU-vectorized: Build last_occluded_prev tensor without iteration/syncs
-            device = binary_tracker_low_res_masks_global.device
+            _device = binary_tracker_low_res_masks_global.device
 
             # Get last_occluded from UPDATED gpu_metadata (already in correct index space from _process_hotstart_gpu)
             gpu_metadata_new = tracker_metadata_new["gpu_metadata"]

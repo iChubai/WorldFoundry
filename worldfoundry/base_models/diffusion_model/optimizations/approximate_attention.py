@@ -512,9 +512,7 @@ class _ApproxState:
             return False
         if active_step < d:
             return True
-        if active_total_steps is not None and active_step >= active_total_steps - d:
-            return True
-        return False
+        return bool(active_total_steps is not None and active_step >= active_total_steps - d)
 
     def current_invocation(self) -> _ApproxInvocation | None:
         return self._current_invocation.get()

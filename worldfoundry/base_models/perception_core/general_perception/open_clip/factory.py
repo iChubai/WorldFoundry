@@ -504,9 +504,9 @@ def create_model(
         model_cfg["quick_gelu"] = True
     if is_audio_model:
         if force_patch_dropout is not None:
-            warnings.warn("force_patch_dropout is ignored for CLAP audio models.", UserWarning)
+            warnings.warn("force_patch_dropout is ignored for CLAP audio models.", UserWarning, stacklevel=1)
         if force_image_size is not None:
-            warnings.warn("force_image_size is ignored for CLAP audio models.", UserWarning)
+            warnings.warn("force_image_size is ignored for CLAP audio models.", UserWarning, stacklevel=1)
         if force_naflex_vision:
             raise ValueError("force_naflex_vision is only valid for image models.")
     else:
@@ -530,6 +530,7 @@ def create_model(
                 f"QuickGELU mismatch between final model config (quick_gelu={model_quick_gelu}) "
                 f"and pretrained tag '{pretrained}' (quick_gelu={tag_quick_gelu}).",
                 UserWarning,
+                stacklevel=1,
             )
 
     # Decide whether to use the checkpoint path based on load_weights

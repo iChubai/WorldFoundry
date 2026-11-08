@@ -18,7 +18,7 @@ try:
     import xformers.ops
 
     XFORMERS_IS_AVAILBLE = True
-except:
+except BaseException:
     XFORMERS_IS_AVAILBLE = False
 
 from worldfoundry.core.nn.diffusion.convolution import conv_nd, normalization, zero_module

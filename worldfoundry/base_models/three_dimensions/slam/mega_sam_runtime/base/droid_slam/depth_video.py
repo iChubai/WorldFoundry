@@ -232,7 +232,7 @@ class DepthVideo:
             t1 = max(ii.max().item(), jj.max().item()) + 1
 
         # if use_mono:
-        disps_sens = self.disps_sens
+        _disps_sens = self.disps_sens
         # else: # not using mono depeth
         #     disps_sens = self.disps_sens * 0.
 

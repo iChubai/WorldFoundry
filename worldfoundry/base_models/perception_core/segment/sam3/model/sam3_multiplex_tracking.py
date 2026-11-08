@@ -1611,7 +1611,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
         """
         logger.info("Running add_prompt on frame %d", frame_idx)
 
-        device = inference_state["device"]
+        _device = inference_state["device"]
         num_frames = inference_state["num_frames"]
         assert text_str is not None or points is not None or boxes_xywh is not None, (
             "at least one type of prompt (text, points, boxes) must be provided"

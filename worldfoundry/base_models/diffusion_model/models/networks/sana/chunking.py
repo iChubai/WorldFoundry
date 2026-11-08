@@ -66,9 +66,7 @@ def is_chunk_causal_request(
     """
     if chunk_size is not None and chunk_size < T_effective:
         return True
-    if chunk_index is not None:
-        return True
-    return False
+    return chunk_index is not None
 
 
 def chunk_index_from_chunk_size(

@@ -118,7 +118,6 @@ def sampler_gaussian_fix(latent, mean, image_size, point_num=49):
     # mean [B, 2, H, W]
     H, W = image_size
     B, HW, D = latent.shape
-    STD_MAX = 20
     latent = rearrange(latent, "b (h w) c -> b c h w", h=H, w=W)  # latent = latent.view(B, H, W, D).permute(0, 3, 1, 2)
     mean = mean.permute(0, 2, 3, 1)  # [B, H, W, 2]
 
@@ -146,7 +145,6 @@ def sampler_gaussian_fix_pyramid(latent, feat_pyramid, scale_weight, mean, image
 
     H, W = image_size
     B, HW, D = latent.shape
-    STD_MAX = 20
     latent = rearrange(latent, "b (h w) c -> b c h w", h=H, w=W)  # latent = latent.view(B, H, W, D).permute(0, 3, 1, 2)
     mean = mean.permute(0, 2, 3, 1)  # [B, H, W, 2]
 
@@ -183,11 +181,10 @@ def sampler_gaussian_pyramid(latent, feat_pyramid, scale_weight, mean, std, imag
 
     H, W = image_size
     B, HW, D = latent.shape
-    STD_MAX = 20
     latent = rearrange(latent, "b (h w) c -> b c h w", h=H, w=W)  # latent = latent.view(B, H, W, D).permute(0, 3, 1, 2)
     mean = mean.permute(0, 2, 3, 1)  # [B, H, W, 2]
 
-    radius = int((int(point_num**0.5) - 1) / 2)
+    _radius = int((int(point_num**0.5) - 1) / 2)
 
     dx = torch.linspace(-1, 1, int(point_num**0.5))
     dy = torch.linspace(-1, 1, int(point_num**0.5))
@@ -224,7 +221,6 @@ def sampler_gaussian_fix_MH(latent, mean, image_size, point_num=25):
     H, W = image_size
     B, HW, D = latent.shape
     _, _, _, _, HEADS = mean.shape
-    STD_MAX = 20
     latent = rearrange(latent, "b (h w) c -> b c h w", h=H, w=W)
     mean = mean.permute(0, 2, 3, 4, 1)  # [B, H, W, heads, 2]
 

@@ -1490,7 +1490,7 @@ class SanaMSVideoCamCtrl(Sana):
         mask_mod = generate_temporal_head_mask_mod(context_length, prompt_length, num_frame, frame_size, mul=multiplier)
         block_mask = create_block_mask_cached(mask_mod, None, None, seq_len, seq_len, device=device, _compile=True)
 
-        hidden_states = flex_attention(query, key, value, block_mask=block_mask)
+        _hidden_states = flex_attention(query, key, value, block_mask=block_mask)
 
         return block_mask
 
@@ -1778,7 +1778,7 @@ class SanaMSVideoCamCtrl(Sana):
 
     def init_cam_branch_from_base(self):
         """Init cam branch from base."""
-        for i, block in enumerate(self.blocks):
+        for _i, block in enumerate(self.blocks):
             if hasattr(block.attn, "init_cam_branch_weights"):
                 block.attn.init_cam_branch_weights()
 

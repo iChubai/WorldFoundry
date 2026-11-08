@@ -555,7 +555,7 @@ class LatentDiffusion(DDPM):
 
         try:
             self.num_downs = len(first_stage_config.params.ddconfig.ch_mult) - 1
-        except:
+        except BaseException:
             self.num_downs = 0
         if not scale_by_std:
             self.scale_factor = scale_factor
@@ -774,7 +774,7 @@ class LatentDiffusion(DDPM):
         ## get caption condition
         cond = batch[self.cond_stage_key]
         if random_uncond and self.uncond_type == "empty_seq":
-            for i, ci in enumerate(cond):
+            for i, _ci in enumerate(cond):
                 if random.random() < self.uncond_prob:
                     cond[i] = ""
         if isinstance(cond, dict) or isinstance(cond, list):
@@ -782,7 +782,7 @@ class LatentDiffusion(DDPM):
         else:
             cond_emb = self.get_learned_conditioning(cond.to(self.device))
         if random_uncond and self.uncond_type == "zero_embed":
-            for i, ci in enumerate(cond):
+            for i, _ci in enumerate(cond):
                 if random.random() < self.uncond_prob:
                     cond_emb[i] = torch.zeros_like(cond_emb[i])
 

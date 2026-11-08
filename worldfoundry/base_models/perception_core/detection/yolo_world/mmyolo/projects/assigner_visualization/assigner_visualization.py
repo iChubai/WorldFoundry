@@ -82,7 +82,8 @@ def main():
     elif isinstance(model.bbox_head, (YOLOv7HeadAssigner, RTMHeadAssigner)):
         warnings.warn(
             "if you use dynamic_assignment methods such as YOLOv7 or "
-            "YOLOv8 or RTMDet assigner, please load the checkpoint."
+            "YOLOv8 or RTMDet assigner, please load the checkpoint.",
+            stacklevel=1,
         )
     assert isinstance(model.bbox_head, (YOLOv5HeadAssigner, YOLOv7HeadAssigner, YOLOv8HeadAssigner, RTMHeadAssigner)), (
         "Now, this script only support YOLOv5, YOLOv7, YOLOv8 and RTMdet, "

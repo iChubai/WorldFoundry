@@ -401,8 +401,8 @@ class PCAAug:
 
     def pca_image(self, rgb):
         eig = np.dot(rgb, self.eigvec)
-        max_rgb = np.clip(rgb, 0, np.inf).max((0, 1))
-        min_rgb = rgb.min((0, 1))
+        _max_rgb = np.clip(rgb, 0, np.inf).max((0, 1))
+        _min_rgb = rgb.min((0, 1))
         mean_rgb = rgb.mean((0, 1))
         max_abs_eig = np.abs(eig).max((0, 1))
         max_l = np.sqrt(np.sum(max_abs_eig * max_abs_eig))

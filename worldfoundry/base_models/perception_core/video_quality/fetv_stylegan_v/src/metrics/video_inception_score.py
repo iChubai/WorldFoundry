@@ -23,7 +23,7 @@ def compute_isv(opts, num_gen: int, num_splits: int, backbone: str):
         raise NotImplementedError(f"Backbone {backbone} is not supported.")
 
     num_frames = 16
-    batch_size = NUM_FRAMES_IN_BATCH[opts.dataset_kwargs.resolution] // num_frames
+    _batch_size = NUM_FRAMES_IN_BATCH[opts.dataset_kwargs.resolution] // num_frames
 
     if opts.generator_as_dataset:
         compute_gen_stats_fn = metric_utils.compute_feature_stats_for_dataset

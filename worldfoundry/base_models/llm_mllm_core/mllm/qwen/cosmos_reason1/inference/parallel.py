@@ -243,10 +243,10 @@ def apply_fsdp(
         dp_mesh (DeviceMesh): The device mesh to use for data parallelism.
     """
     if model.visual is not None:
-        for layer_id, block in enumerate(model.visual.blocks):
+        for _layer_id, block in enumerate(model.visual.blocks):
             fully_shard(block, mesh=dp_mesh)
 
-    for layer_id, transformer_block in enumerate(model.model.layers):
+    for _layer_id, transformer_block in enumerate(model.model.layers):
         fully_shard(
             transformer_block,
             mesh=dp_mesh,

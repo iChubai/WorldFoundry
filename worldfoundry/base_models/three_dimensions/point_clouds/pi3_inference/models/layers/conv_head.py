@@ -198,7 +198,7 @@ class ConvHead(nn.Module):
 
         # Upsample stage
         # (patch_h, patch_w) -> (patch_h * 2, patch_w * 2) -> (patch_h * 4, patch_w * 4) -> (patch_h * 8, patch_w * 8)
-        for i, block in enumerate(self.upsample_blocks):
+        for _i, block in enumerate(self.upsample_blocks):
             # UV coordinates is for awareness of image aspect ratio
             if self.using_uv:
                 uv = normalized_view_plane_uv(

@@ -210,7 +210,7 @@ def calculate_infonce_metrics(embeddings, labels):
                 all_tensors.append(tensor[1:])
             sentences = np.concatenate(all_tensors, axis=0)
             length = 0
-            for idx, tensor in enumerate(split_tensors):
+            for _idx, tensor in enumerate(split_tensors):
                 similarity_matrix = np.matmul(tensor[0], sentences.T)
                 all_similarity_matrix.append(similarity_matrix)
                 labels = np.zeros_like(similarity_matrix)

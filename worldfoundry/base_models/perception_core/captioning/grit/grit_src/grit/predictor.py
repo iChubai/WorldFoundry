@@ -58,7 +58,7 @@ class Visualizer_GRiT(Visualizer):
 
     def draw_instance_predictions(self, predictions):
         boxes = predictions.pred_boxes if predictions.has("pred_boxes") else None
-        scores = predictions.scores if predictions.has("scores") else None
+        _scores = predictions.scores if predictions.has("scores") else None
         classes = predictions.pred_classes.tolist() if predictions.has("pred_classes") else None
         object_description = predictions.pred_object_descriptions.data
         # uncomment to output scores in visualized images

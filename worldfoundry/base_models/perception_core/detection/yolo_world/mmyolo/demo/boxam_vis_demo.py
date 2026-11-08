@@ -200,7 +200,7 @@ def main():
         pred_instances = pred_instances[pred_instances.scores > args.score_thr]
 
         if len(pred_instances) == 0:
-            warnings.warn("empty detection results! skip this")
+            warnings.warn("empty detection results! skip this", stacklevel=1)
             continue
 
         if args.topk > 0:

@@ -116,7 +116,7 @@ class SKBlock(nn.Module):
         x = shortcut + self.conv_s(x)
         shortcut = x.clone()
         x = shortcut + self.conv_l(x)
-        short_cut = x.clone()
+        _short_cut = x.clone()
         x = shortcut + sefl.conv_pw(x)
         return x
 
@@ -192,7 +192,7 @@ class SKBlock(nn.Module):
         x = shortcut + self.conv_s(x)
         shortcut = x.clone()
         x = shortcut + self.conv_l(x)
-        short_cut = x.clone()
+        _short_cut = x.clone()
         x = shortcut + self.conv_pw(x)
         return x
 

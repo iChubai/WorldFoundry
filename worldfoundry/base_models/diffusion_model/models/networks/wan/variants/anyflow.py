@@ -1344,7 +1344,7 @@ class AnyFlowWanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, Fr
             encoder_hidden_states = torch.concat([encoder_hidden_states_image, encoder_hidden_states], dim=1)
 
         # 4. Transformer blocks
-        for index_block, block in enumerate(self.blocks):
+        for _index_block, block in enumerate(self.blocks):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 hidden_states = self._gradient_checkpointing_func(
                     block,

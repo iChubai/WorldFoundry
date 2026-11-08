@@ -152,8 +152,8 @@ class LLaMA32VisionModel:
                 )
 
             scores = outputs.scores[0]
-            probs = torch.nn.functional.softmax(scores, dim=-1)
-            yes_token_id = self.processor.tokenizer.encode(answer)[1]
+            _probs = torch.nn.functional.softmax(scores, dim=-1)
+            _yes_token_id = self.processor.tokenizer.encode(answer)[1]
 
             lm_probs.append(lm_prob)
 

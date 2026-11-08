@@ -861,7 +861,7 @@ def laplacian_hc_smooth_mesh(
 ):
     """HC algorithm from Improved Laplacian Smoothing of Noisy Surface Meshes by J.Vollmer et al."""
     p = vertices
-    for i in range(times):
+    for _i in range(times):
         q = p
         p = laplacian_smooth_mesh(vertices, faces, weight)
         b = p - (alpha * vertices + (1 - alpha) * q)

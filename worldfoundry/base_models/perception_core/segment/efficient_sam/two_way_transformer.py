@@ -89,7 +89,7 @@ class TwoWayTransformer(nn.Module):
         keys = image_embedding
 
         # Apply transformer blocks and final layernorm
-        for idx, layer in enumerate(self.layers):
+        for _idx, layer in enumerate(self.layers):
             queries, keys = layer(
                 queries=queries,
                 keys=keys,

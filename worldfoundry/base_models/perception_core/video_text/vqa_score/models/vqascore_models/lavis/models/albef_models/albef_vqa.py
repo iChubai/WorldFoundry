@@ -318,7 +318,7 @@ class AlbefVQA(AlbefBase, MomentumDistilationMixin):
         # answer input: [num_question*k, answer_len]
         input_ids = []
         input_atts = []
-        for b, topk_id in enumerate(topk_ids):
+        for _b, topk_id in enumerate(topk_ids):
             input_ids.append(answer_ids.index_select(dim=0, index=topk_id))
             input_atts.append(answer_atts.index_select(dim=0, index=topk_id))
         input_ids = torch.cat(input_ids, dim=0)

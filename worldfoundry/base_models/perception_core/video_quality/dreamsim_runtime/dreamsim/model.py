@@ -137,7 +137,7 @@ class PerceptualModel(torch.nn.Module):
     def _validate_args(self):
         assert len(self.model_list) == len(self.feat_type_list) == len(self.stride_list)
 
-        for model_type, feat_type, stride in zip(self.model_list, self.feat_type_list, self.stride_list, strict=False):
+        for model_type, feat_type, _stride in zip(self.model_list, self.feat_type_list, self.stride_list, strict=False):
             if feat_type == "cls_patch" and "dino" not in model_type:
                 raise ValueError(f"cls_patch only available for dino_vitb16 and dinov2_vitb14, not {model_type}")
             if feat_type == "embedding" and ("dino" in model_type or "mae" in model_type):
@@ -172,7 +172,6 @@ class PerceptualModel(torch.nn.Module):
         return out
 
     def _extract_cls(self, img, extractor_index=0):
-        layer = 11
         return self._extract_cls_and_patch(img, extractor_index)[:, :, :, 0, :]
 
     def _extract_embedding(self, img, extractor_index=0):

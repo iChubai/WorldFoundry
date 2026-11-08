@@ -177,7 +177,7 @@ class BottleneckBlock(CNNBlockBase):
 
         convs = []
         bns = []
-        for i in range(self.nums):
+        for _i in range(self.nums):
             convs.append(
                 nn.Conv2d(
                     width,
@@ -362,7 +362,7 @@ class DeformBottleneckBlock(ResNetBlockBase):
         conv2_offsets = []
         convs = []
         bns = []
-        for i in range(self.nums):
+        for _i in range(self.nums):
             conv2_offsets.append(
                 Conv2d(
                     width,

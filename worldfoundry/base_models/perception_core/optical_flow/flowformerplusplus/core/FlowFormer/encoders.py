@@ -42,7 +42,6 @@ class twins_svt_large(nn.Module):
         return x, x_16
 
     def extract_ml_features(self, x, data=None, layer=2):
-        res = []
         B = x.shape[0]
         for i, (embed, drop, blocks, pos_blk) in enumerate(
             zip(self.svt.patch_embeds, self.svt.pos_drops, self.svt.blocks, self.svt.pos_block, strict=False)
@@ -141,7 +140,7 @@ class nat_base(nn.Module):
         x = self.nat.pos_drop(x)
         x = self.nat.levels[0](x)
 
-        for idx, blk in enumerate(self.nat.levels[1].blocks):
+        for _idx, blk in enumerate(self.nat.levels[1].blocks):
             x = blk(x)
         x = x.permute(0, 3, 1, 2)
         return x

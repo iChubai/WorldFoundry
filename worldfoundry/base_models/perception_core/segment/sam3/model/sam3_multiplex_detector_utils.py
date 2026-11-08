@@ -101,7 +101,7 @@ def _nms_masks_core_batched(
       - keep: (B, num_det) bool Tensor
     """
     B, num_det, H, W = pred_masks.shape
-    device = pred_masks.device
+    _device = pred_masks.device
 
     is_valid = pred_probs > prob_threshold  # (B, num_det)
     masks_binary = pred_masks > 0  # (B, num_det, H, W)

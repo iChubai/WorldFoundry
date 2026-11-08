@@ -273,7 +273,7 @@ class GeminiModel(VQAScoreModel):
 
         except Exception as e:
             try:  # Second try
-                config = GenerateContentConfig(
+                _config = GenerateContentConfig(
                     temperature=0.7,
                     top_p=0.95,
                     top_k=40,
@@ -319,7 +319,7 @@ class GeminiModel(VQAScoreModel):
 
         generated_outputs = []
 
-        for idx, (data, question) in enumerate(zip(loaded_data, questions, strict=False)):
+        for _idx, (data, question) in enumerate(zip(loaded_data, questions, strict=False)):
             generated_text = self.generate_single(data, question, max_new_tokens)
             generated_outputs.append(generated_text)
 

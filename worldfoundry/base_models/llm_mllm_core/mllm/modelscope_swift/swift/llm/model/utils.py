@@ -415,10 +415,7 @@ class InitModelStrategy:
 
             # Use empirically safe threshold
             MAX_THRESHOLD = 1e7
-            if mean_abs > MAX_THRESHOLD or std > MAX_THRESHOLD:
-                return True
-
-            return False
+            return bool(mean_abs > MAX_THRESHOLD or std > MAX_THRESHOLD)
 
     @staticmethod
     def constant_init(param: torch.Tensor, c: float = 0) -> None:

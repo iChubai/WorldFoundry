@@ -102,7 +102,8 @@ def load_pretrained_model(
         # Load LLaVA model
         if "lora" in model_name.lower() and model_base is None:
             warnings.warn(
-                "There is `lora` in model name but no `model_base` is provided. If you are loading a LoRA model, please provide the `model_base` argument. Detailed instruction: https://github.com/haotian-liu/LLaVA#launch-a-model-worker-lora-weights-unmerged."
+                "There is `lora` in model name but no `model_base` is provided. If you are loading a LoRA model, please provide the `model_base` argument. Detailed instruction: https://github.com/haotian-liu/LLaVA#launch-a-model-worker-lora-weights-unmerged.",
+                stacklevel=1,
             )
         if "lora" in model_name.lower() and model_base is not None:
             lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
@@ -413,7 +414,7 @@ def load_pretrained_model(
                         config=llava_cfg,
                         **kwargs,
                     )
-                except:
+                except BaseException:
                     raise ValueError(f"Model {model_name} not supported")
 
     else:
@@ -433,7 +434,6 @@ def load_pretrained_model(
             print("Convert to FP16...")
             model.to(torch.float16)
         else:
-            use_fast = False
             if "mpt" in model_name.lower().replace("prompt", ""):
                 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
                 model = AutoModelForCausalLM.from_pretrained(

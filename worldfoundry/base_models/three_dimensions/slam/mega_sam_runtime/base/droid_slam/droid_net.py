@@ -282,7 +282,6 @@ class UpdateModule(nn.Module):
             eta, upmask_d = self.agg(net, ii.to(net.device))
 
             mot_prob = None
-            upmask_m = None
             new_eta, mot_prob, refined_w = self.agg_motion(net, ii.to(net.device), weight, eta, disps_sensor)
 
             return net, delta, weight, eta, upmask_d, mot_prob, refined_w
@@ -334,7 +333,7 @@ class DroidNet(nn.Module):
         motion_only=False,
     ):
         """Estimates SE3 or Sim3 between pair of frames"""
-        u = keyframe_indicies(graph)
+        _u = keyframe_indicies(graph)
         ii, jj, kk = graph_to_edge_list(graph)
 
         ii = ii.to(device=images.device, dtype=torch.long)
@@ -355,7 +354,7 @@ class DroidNet(nn.Module):
         Gs_list, disp_list, residual_list = [], [], []
         intrinsic_list = []
         mot_mask_list = []
-        for step in range(num_steps):
+        for _step in range(num_steps):
             Gs = Gs.detach()
             disps = disps.detach()
             coords1 = coords1.detach()
@@ -381,7 +380,7 @@ class DroidNet(nn.Module):
             # disps_init = disps.clone()
             intrinsics_init = intrinsics.clone()
 
-            for i in range(2):
+            for _i in range(2):
                 Gs, disps, intrinsics = BA_f_train(
                     target,
                     weight_,

@@ -354,7 +354,7 @@ class CorrBlock:
         self.multiple_track_feats = multiple_track_feats
 
         self.fmaps_pyramid.append(fmaps)
-        for i in range(self.num_levels - 1):
+        for _i in range(self.num_levels - 1):
             fmaps_ = fmaps.reshape(B * S, C, H, W)
             fmaps_ = F.avg_pool2d(fmaps_, 2, stride=2)
             _, _, H, W = fmaps_.shape

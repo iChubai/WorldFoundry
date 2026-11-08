@@ -139,7 +139,6 @@ class ActionModule(nn.Module):
             local_attn_size: The local attn size.
             blocks: The blocks.
         """
-        device = None
 
         super().__init__()
         self.local_attn_size = local_attn_size
@@ -660,7 +659,7 @@ class ActionModule(nn.Module):
                         current_end = current_start + k.shape[1]
                         assert k.shape[1] == num_frame_per_block
                         sink_size = 0
-                        local_attn_size = self.local_attn_size
+                        _local_attn_size = self.local_attn_size
                         max_attention_size = self.local_attn_size
                         sink_tokens = sink_size * 1
                         kv_cache_size = kv_cache_keyboard["k"].shape[1]

@@ -136,7 +136,7 @@ class DepthCompletion(torch.nn.Module):
 
         # Preprocess pred_disparities.
         if geometric_depths is not None:
-            warnings.warn("The geometric depth is provided by the user. ")
+            warnings.warn("The geometric depth is provided by the user. ", stacklevel=1)
             pred_disparities = depth2disparity(geometric_depths)
         else:
             # heit = sparse_depths.shape[-2] // 14 * 14

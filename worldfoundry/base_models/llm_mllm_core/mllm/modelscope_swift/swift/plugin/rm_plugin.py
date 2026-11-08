@@ -101,7 +101,7 @@ class GenRMPlugin(DefaultRMPlugin):
             List[Dict]: Processed inputs for the reward model.
         """
         rm_inputs = []
-        for idx, infer_request in enumerate(inputs):
+        for _idx, infer_request in enumerate(inputs):
             # Deep copy to prevent modification of original input
             rm_infer_request = deepcopy(infer_request)
 
@@ -205,7 +205,7 @@ class GenRMPlugin(DefaultRMPlugin):
             List[float]: A list of average reward scores.
         """
         rewards = []
-        for idx, output in enumerate(results):
+        for _idx, output in enumerate(results):
             try:
                 cur_rewards = []
                 for choice in output.choices:

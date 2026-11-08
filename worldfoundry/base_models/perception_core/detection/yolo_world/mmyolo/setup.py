@@ -150,7 +150,7 @@ def add_mim_extension():
                 elif osp.isdir(src_path):
                     shutil.copytree(src_path, tar_path)
                 else:
-                    warnings.warn(f"Cannot copy file {src_path}.")
+                    warnings.warn(f"Cannot copy file {src_path}.", stacklevel=1)
             else:
                 raise ValueError(f"Invalid mode {mode}")
 

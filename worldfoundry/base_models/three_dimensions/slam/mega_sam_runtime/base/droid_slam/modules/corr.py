@@ -105,7 +105,7 @@ class AltCorrBlock:
 
         corr_list = []
         for i in range(self.num_levels):
-            r = self.radius
+            _r = self.radius
             fmap1_i = self.pyramid[0][:, ii]
             fmap2_i = self.pyramid[i][:, jj]
 

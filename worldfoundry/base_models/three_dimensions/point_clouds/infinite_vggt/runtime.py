@@ -157,9 +157,9 @@ class InfiniteVGGTRepresentation:
             raise RuntimeError("Model not loaded. Use from_pretrained() first.")
 
         images_input = data["images"]
-        predict_cameras = data.get("predict_cameras", True)
-        predict_depth = data.get("predict_depth", True)
-        predict_points = data.get("predict_points", True)
+        _predict_cameras = data.get("predict_cameras", True)
+        _predict_depth = data.get("predict_depth", True)
+        _predict_points = data.get("predict_points", True)
         self.preprocess_mode = data.get("preprocess_mode", self.preprocess_mode)
         self.resolution = data.get("resolution", self.resolution)
 

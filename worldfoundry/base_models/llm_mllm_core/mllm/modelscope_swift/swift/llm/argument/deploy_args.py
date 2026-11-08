@@ -51,7 +51,7 @@ class DeployArguments(InferArguments):
             self.adapters = [self.adapters]
         self.adapter_mapping = {}
         adapters = []
-        for i, adapter in enumerate(self.adapters):
+        for _i, adapter in enumerate(self.adapters):
             adapter_path = adapter.split("=")
             if len(adapter_path) == 1:
                 adapter_path = (None, adapter_path[0])

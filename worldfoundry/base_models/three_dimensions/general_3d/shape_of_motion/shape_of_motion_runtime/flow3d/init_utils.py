@@ -313,7 +313,7 @@ def run_initial_optim(
         ],
     )
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.1 ** (1 / num_iters))
-    G = fg.params.means.shape[0]
+    _G = fg.params.means.shape[0]
     num_frames = bases.num_frames
     device = bases.params["rots"].device
 

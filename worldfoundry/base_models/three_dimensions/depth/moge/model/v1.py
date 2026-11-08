@@ -247,7 +247,7 @@ class Head(nn.Module):
 
         # Upsample stage
         # (patch_h, patch_w) -> (patch_h * 2, patch_w * 2) -> (patch_h * 4, patch_w * 4) -> (patch_h * 8, patch_w * 8)
-        for i, block in enumerate(self.upsample_blocks):
+        for _i, block in enumerate(self.upsample_blocks):
             # UV coordinates is for awareness of image aspect ratio
             uv = normalized_view_plane_uv(
                 width=x.shape[-1], height=x.shape[-2], aspect_ratio=img_w / img_h, dtype=x.dtype, device=x.device
@@ -323,7 +323,7 @@ class MoGeModel(nn.Module):
                     deprecated_kwargs["trained_area_range"][1] // 14**2,
                 ]
                 del deprecated_kwargs["trained_area_range"]
-            warnings.warn(f"The following deprecated/invalid arguments are ignored: {deprecated_kwargs}")
+            warnings.warn(f"The following deprecated/invalid arguments are ignored: {deprecated_kwargs}", stacklevel=1)
 
         self.encoder = encoder
         self.remap_output = remap_output

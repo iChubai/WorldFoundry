@@ -907,10 +907,8 @@ class WanModel(nn.Module, NativeConfigMixin):
             return custom_forward
 
         # TODO: Tune the number of blocks for feature extraction
-        final_x = None
 
-        gan_idx = 0
-        for ii, block in enumerate(self.blocks):
+        for _ii, block in enumerate(self.blocks):
             if torch.is_grad_enabled() and self.gradient_checkpointing:
                 # with torch.autograd.graph.save_on_cpu():
                 x = torch.utils.checkpoint.checkpoint(

@@ -145,7 +145,7 @@ class PanoOutpaintGenerator(nn.Module):
             x_input: The x input.
             vae: The vae.
         """
-        b = x_input.shape[0]
+        _b = x_input.shape[0]
 
         z = vae.encode(x_input).latent_dist  # (bs, 2, 4, 64, 64)
 
@@ -290,7 +290,7 @@ class PanoOutpaintGenerator(nn.Module):
         self.scheduler.set_timesteps(self.diff_timestep, device=device)
         timesteps = self.scheduler.timesteps
 
-        for i, t in enumerate(timesteps):
+        for _i, t in enumerate(timesteps):
             _timestep = torch.cat([t[None, None]] * m, dim=1)
             latent_model_input = torch.cat([latents, mask_latnets, masked_image_latents], dim=2)
 

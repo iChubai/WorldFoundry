@@ -878,7 +878,7 @@ class SwinTransformer3D(nn.Module):
                 wd = self.window_size[i_layer][0]
             else:
                 L2 = (2 * self.window_size[1] - 1) * (2 * self.window_size[2] - 1)
-                wd = self.window_size[0]
+                _wd = self.window_size[0]
             if nH1 != nH2:
                 print(f"Error in loading {k}, passing")
             else:
@@ -955,7 +955,7 @@ class SwinTransformer3D(nn.Module):
         x = self.pos_drop(x)
         feats = [x]
 
-        for l, mlayer in enumerate(self.layers):
+        for _l, mlayer in enumerate(self.layers):
             x = mlayer(x.contiguous(), resized_window_size)
             feats += [x]
 

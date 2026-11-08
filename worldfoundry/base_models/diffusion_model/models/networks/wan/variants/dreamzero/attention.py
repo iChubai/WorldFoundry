@@ -74,7 +74,8 @@ def _sdpa_attention_fallback(
     if q_lens is not None or k_lens is not None:
         warnings.warn(
             "Padding mask is disabled when using scaled_dot_product_attention on this GPU. "
-            "It can have a slight impact on quality."
+            "It can have a slight impact on quality.",
+            stacklevel=1,
         )
     q = q.transpose(1, 2).to(dtype)
     k = k.transpose(1, 2).to(dtype)
@@ -183,7 +184,7 @@ def flash_attention(
         q = q * q_scale
 
     if version == 3 and not FLASH_ATTN_3_AVAILABLE:
-        warnings.warn("Flash attention 3 is not available, use flash attention 2 instead.")
+        warnings.warn("Flash attention 3 is not available, use flash attention 2 instead.", stacklevel=1)
     zeros = torch.zeros([1], dtype=torch.int32, device=q.device)
     cu_seqlens_q = torch.cat([zeros, q_lens]).cumsum(0).to(torch.int32)
     cu_seqlens_k = torch.cat([zeros, k_lens]).cumsum(0).to(torch.int32)
@@ -448,7 +449,8 @@ class AttentionModule(torch.nn.Module):
         ):
             if q_lens is not None or k_lens is not None:
                 warnings.warn(
-                    "Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance."
+                    "Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance.",
+                    stacklevel=1,
                 )
             return self.attn_func(q, k, v)  # type: ignore[call-arg]
         else:

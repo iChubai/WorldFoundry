@@ -29,7 +29,7 @@ class Logger:
 
     def log_scalar(self, name, scalar, global_iter):
         if scalar is not None:
-            if type(scalar) == list:
+            if type(scalar) is list:
                 for i, x in enumerate(scalar):
                     self.log_scalar(f"{name}_{i}", x, global_iter)
             else:

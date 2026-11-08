@@ -325,7 +325,7 @@ class DinoVisionTransformer(nn.Module):
         x = rearrange(x, "b s c h w -> (b s) c h w")
         x = self.prepare_tokens_with_masks(x)
 
-        for i, blk in enumerate(self.blocks):
+        for _i, blk in enumerate(self.blocks):
             x = blk(x)
 
         x_norm = self.norm(x)

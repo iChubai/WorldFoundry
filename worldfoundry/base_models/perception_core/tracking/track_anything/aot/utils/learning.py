@@ -134,7 +134,7 @@ def calculate_params(state_dict):
     """
     memo = set()
     total_param = 0
-    for key, value in state_dict.items():
+    for _key, value in state_dict.items():
         if value in memo:
             continue
         memo.add(value)

@@ -184,7 +184,8 @@ def dispatch_default(
         if kwargs["fan_in_fan_out"]:
             warnings.warn(
                 "fan_in_fan_out is set to True but the target module is `torch.nn.Linear`. "
-                "Setting fan_in_fan_out to False."
+                "Setting fan_in_fan_out to False.",
+                stacklevel=1,
             )
             kwargs["fan_in_fan_out"] = lora_config.fan_in_fan_out = False
         kwargs.update(lora_config.loftq_config)
@@ -192,7 +193,8 @@ def dispatch_default(
     elif isinstance(target_base_layer, Conv1D):
         if not kwargs["fan_in_fan_out"]:
             warnings.warn(
-                "fan_in_fan_out is set to False but the target module is `Conv1D`. Setting fan_in_fan_out to True."
+                "fan_in_fan_out is set to False but the target module is `Conv1D`. Setting fan_in_fan_out to True.",
+                stacklevel=1,
             )
             kwargs["fan_in_fan_out"] = lora_config.fan_in_fan_out = True
         kwargs.update(lora_config.loftq_config)

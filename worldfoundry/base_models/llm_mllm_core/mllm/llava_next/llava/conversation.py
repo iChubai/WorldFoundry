@@ -231,11 +231,11 @@ class Conversation:
 
     def get_images(self, return_pil=False, return_path=False):
         images = []
-        for i, (role, msg) in enumerate(self.messages[self.offset :]):
+        for i, (_role, msg) in enumerate(self.messages[self.offset :]):
             if i % 2 == 0:
                 if type(msg) is tuple:
                     msg, image, image_process_mode = msg
-                    if type(image) != list:
+                    if type(image) is not list:
                         image = [image]
                     for img in image:
                         if not return_path and self.is_image_file(img):
@@ -254,11 +254,11 @@ class Conversation:
 
     def to_gradio_chatbot(self):
         ret = []
-        for i, (role, msg) in enumerate(self.messages[self.offset :]):
+        for i, (_role, msg) in enumerate(self.messages[self.offset :]):
             if i % 2 == 0:
                 if type(msg) is tuple:
                     msg, image, image_process_mode = msg
-                    if type(image) != list:
+                    if type(image) is not list:
                         image = [image]
                     if len(image) == 1:
                         msg = "<image>\n" + msg.replace("<image>", "").strip()

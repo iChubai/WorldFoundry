@@ -219,7 +219,8 @@ class MultiScaleDeformableAttention(nn.Module):
                 """
                 You'd better set d_model in MSDeformAttn to make sure that
                 each dim of the attention head a power of 2, which is more efficient.
-                """
+                """,
+                stacklevel=1,
             )
 
         self.im2col_step = img2col_step

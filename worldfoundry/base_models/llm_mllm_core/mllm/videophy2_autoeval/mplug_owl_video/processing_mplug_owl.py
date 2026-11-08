@@ -229,7 +229,7 @@ def _tokenize_prompt(prompt, tokenizer, add_BOS=False, media_info={"<image>": 65
         pattern = "|".join(map(re.escape, list(media_tokens.keys())))
         chunk_strs = re.split(f"({pattern})", prompt)
         chunk_strs = [x for x in chunk_strs if len(x) > 0]
-        for idx, chunk_str in enumerate(chunk_strs):
+        for _idx, chunk_str in enumerate(chunk_strs):
             if chunk_str in media_tokens:
                 enc_chunk += [media_tokens[chunk_str]] * media_lengths[chunk_str]
             else:

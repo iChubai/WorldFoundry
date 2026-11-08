@@ -461,9 +461,7 @@ class MessagesPreprocessor(RowPreprocessor):
 
     @staticmethod
     def _is_sharegpt_format(message: dict[str, str]) -> bool:
-        if "role" in message or "content" in message:
-            return False
-        return True
+        return not ("role" in message or "content" in message)
 
     def sharegpt_to_messages(self, messages: list[dict[str, str]], system: str | None) -> list[dict[str, str]]:
         self._to_std_key(messages, "user", self.user_roles)

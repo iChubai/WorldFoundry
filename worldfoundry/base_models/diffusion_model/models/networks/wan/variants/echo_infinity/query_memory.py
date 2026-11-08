@@ -138,7 +138,7 @@ class QueryMemoryEncoder(nn.Module):
         self.query_state = None
         self.has_history = False
         self._update_count = 0
-        total_params = sum(p.numel() for p in self.parameters())
+        _total_params = sum(p.numel() for p in self.parameters())
 
     def reset(self, batch_size=1, device=None, dtype=None):
         def _expand_init(init):
@@ -162,7 +162,7 @@ class QueryMemoryEncoder(nn.Module):
         self._update_count = 0
         self._evicted_k_buffer = []
         self._evicted_v_buffer = []
-        shape = list(self.query_states[0].shape) if self.num_query_groups > 1 else list(self.query_state.shape)
+        _shape = list(self.query_states[0].shape) if self.num_query_groups > 1 else list(self.query_state.shape)
 
     def update(self, evicted_k, evicted_v, sink_k=None, sink_v=None):
         if self.query_state is None:
@@ -223,8 +223,8 @@ class QueryMemoryEncoder(nn.Module):
             if self.use_vib:
                 new_state = self.mu_proj(new_state)
             self.query_state = new_state
-            gate_str = f"{('residual_update' if gate_mean is None else f'gate_mean={gate_mean:.3f}')}"
-            norm_str = f"{new_state.norm().item():.1f}"
+            _gate_str = f"{('residual_update' if gate_mean is None else f'gate_mean={gate_mean:.3f}')}"
+            _norm_str = f"{new_state.norm().item():.1f}"
         self.has_history = True
         self._update_count += 1
         return kl_loss

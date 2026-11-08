@@ -21,7 +21,7 @@ try:
     from flash_attn.flash_attn_interface import flash_attn_unpadded_func
 
     flash_attn_func = flash_attn_unpadded_func
-except:
+except BaseException:
     flash_attn_func = None
     print("install flash-attn first.")
 from dataclasses import dataclass
@@ -201,7 +201,7 @@ class MplugOwlVisionLocalTemporal(nn.Module):
 
     def forward(self, x):
         # [b, t, s, c]
-        T = x.size(1)
+        _T = x.size(1)
         H = int((self.num_patches - 1) ** 0.5)
         cls_token, x = x[:, :, 0:1], x[:, :, 1:]
         x = self.ln(x)
@@ -611,7 +611,7 @@ class MplugOwlVisionEncoder(nn.Module):
         all_attentions = () if output_attentions else None
 
         hidden_states = inputs_embeds
-        for idx, encoder_layer in enumerate(self.layers):
+        for _idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
                 encoder_states = encoder_states + (hidden_states,)
             if self.gradient_checkpointing and self.training:
@@ -1124,7 +1124,7 @@ class MplugOwlVisualAbstractorModel(MplugOwlPreTrainedModel):
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if encoder_hidden_states is not None:
-            if type(encoder_hidden_states) == list:
+            if type(encoder_hidden_states) is list:
                 encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states[0].size()
             else:
                 (
@@ -1134,7 +1134,7 @@ class MplugOwlVisualAbstractorModel(MplugOwlPreTrainedModel):
                 ) = encoder_hidden_states.size()
             encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
 
-            if type(encoder_attention_mask) == list:
+            if type(encoder_attention_mask) is list:
                 encoder_extended_attention_mask = [self.invert_attention_mask(mask) for mask in encoder_attention_mask]
             elif encoder_attention_mask is None:
                 encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)

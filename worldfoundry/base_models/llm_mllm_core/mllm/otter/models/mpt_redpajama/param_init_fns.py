@@ -16,7 +16,7 @@ def torch_default_param_init_fn_(
 ):
     del kwargs  # unused, just to capture any extra args from the config
     if verbose > 1:
-        warnings.warn("Initializing network using module's reset_parameters attribute")
+        warnings.warn("Initializing network using module's reset_parameters attribute", stacklevel=1)
 
     if hasattr(module, "reset_parameters"):
         module.reset_parameters()  # type: ignore
@@ -56,7 +56,7 @@ def generic_param_init_fn_(
 ):
     del kwargs  # unused, just to capture any extra args from the config
     if verbose > 1:
-        warnings.warn("If model has bias parameters they are initialized to 0.")
+        warnings.warn("If model has bias parameters they are initialized to 0.", stacklevel=1)
 
     # enable user to divide _is_residual weights by
     # a value which defaults to math.sqrt(2 * cfg.n_layers)
@@ -81,7 +81,8 @@ def generic_param_init_fn_(
         if verbose > 1:
             warnings.warn(
                 f"Initializing _is_residual layers then dividing them by {div_is_residual}."
-                + "set `init_div_is_residual: false` in model config to disable this."
+                + "set `init_div_is_residual: false` in model config to disable this.",
+                stacklevel=1,
             )
 
     if isinstance(module, nn.Linear):
@@ -102,25 +103,27 @@ def generic_param_init_fn_(
         if emb_init_std is not None:
             std = emb_init_std
             if std == 0:
-                warnings.warn("Embedding layer initialized to 0.")
+                warnings.warn("Embedding layer initialized to 0.", stacklevel=1)
             emb_init_fn_ = partial(torch.nn.init.normal_, mean=0.0, std=std)
             if verbose > 1:
-                warnings.warn(f"Embedding layer initialized using normal distribution with mean=0 and {std=}.")
+                warnings.warn(
+                    f"Embedding layer initialized using normal distribution with mean=0 and {std=}.", stacklevel=1
+                )
         elif emb_init_uniform_lim is not None:
             lim = emb_init_uniform_lim
             if isinstance(lim, Sequence):
                 if len(lim) > 2:
                     raise ValueError(f"Uniform init requires a min and a max limit. User input: {lim}.")
                 if lim[0] == lim[1]:
-                    warnings.warn(f"Embedding layer initialized to {lim[0]}.")
+                    warnings.warn(f"Embedding layer initialized to {lim[0]}.", stacklevel=1)
             else:
                 if lim == 0:
-                    warnings.warn("Embedding layer initialized to 0.")
+                    warnings.warn("Embedding layer initialized to 0.", stacklevel=1)
                 lim = [-lim, lim]
             a, b = lim
             emb_init_fn_ = partial(torch.nn.init.uniform_, a=a, b=b)
             if verbose > 1:
-                warnings.warn(f"Embedding layer initialized using uniform distribution in range {lim}.")
+                warnings.warn(f"Embedding layer initialized using uniform distribution in range {lim}.", stacklevel=1)
         else:
             emb_init_fn_ = init_fn_
 
@@ -129,7 +132,9 @@ def generic_param_init_fn_(
     elif isinstance(module, nn.LayerNorm):
         # LayerNorm
         if verbose > 1:
-            warnings.warn("LayerNorm gamma weights are set to 1. If the layer has a bias it is initialized to 0.")
+            warnings.warn(
+                "LayerNorm gamma weights are set to 1. If the layer has a bias it is initialized to 0.", stacklevel=1
+            )
         torch.nn.init.ones_(module.weight)
         if module.bias is not None:
             torch.nn.init.zeros_(module.bias)
@@ -197,7 +202,7 @@ def _normal_param_init_fn_(
     init_fn_ = _normal_init_(std=std)
 
     if verbose > 1:
-        warnings.warn(f"Using torch.nn.init.normal_ init fn mean=0.0, std={std}")
+        warnings.warn(f"Using torch.nn.init.normal_ init fn mean=0.0, std={std}", stacklevel=1)
 
     generic_param_init_fn_(
         module=module,
@@ -282,7 +287,7 @@ def neox_param_init_fn_(
     residual_div = n_layers / math.sqrt(10)  # small std / wang std
 
     if verbose > 1:
-        warnings.warn(f"setting init_div_is_residual to {residual_div}")
+        warnings.warn(f"setting init_div_is_residual to {residual_div}", stacklevel=1)
 
     small_param_init_fn_(
         module=module,
@@ -313,7 +318,8 @@ def kaiming_uniform_param_init_fn_(
     if verbose > 1:
         warnings.warn(
             "Using nn.init.kaiming_uniform_ init fn with parameters: "
-            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
+            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}",
+            stacklevel=1,
         )
 
     kaiming_uniform_ = partial(
@@ -353,7 +359,8 @@ def kaiming_normal_param_init_fn_(
     if verbose > 1:
         warnings.warn(
             "Using nn.init.kaiming_normal_ init fn with parameters: "
-            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}"
+            + f"a={init_gain}, mode={fan_mode}, nonlinearity={init_nonlinearity}",
+            stacklevel=1,
         )
 
     kaiming_normal_ = partial(
@@ -390,7 +397,9 @@ def xavier_uniform_param_init_fn_(
     xavier_uniform_ = partial(torch.nn.init.xavier_uniform_, gain=init_gain)
 
     if verbose > 1:
-        warnings.warn("Using torch.nn.init.xavier_uniform_ init fn with parameters: " + f"gain={init_gain}")
+        warnings.warn(
+            "Using torch.nn.init.xavier_uniform_ init fn with parameters: " + f"gain={init_gain}", stacklevel=1
+        )
 
     generic_param_init_fn_(
         module=module,
@@ -418,7 +427,9 @@ def xavier_normal_param_init_fn_(
     xavier_normal_ = partial(torch.nn.init.xavier_normal_, gain=init_gain)
 
     if verbose > 1:
-        warnings.warn("Using torch.nn.init.xavier_normal_ init fn with parameters: " + f"gain={init_gain}")
+        warnings.warn(
+            "Using torch.nn.init.xavier_normal_ init fn with parameters: " + f"gain={init_gain}", stacklevel=1
+        )
 
     generic_param_init_fn_(
         module=module,

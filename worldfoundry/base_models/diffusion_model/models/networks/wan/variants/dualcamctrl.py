@@ -146,13 +146,11 @@ class WanControlNet(WanModel):
         # print(f"Start copying weights from main branch to control blocks.")
         if self.control_blocks is None:
             return
-        miss_keys = []
-        unexpected_keys = []
         for idx, block in enumerate(self.blocks):
             if idx in self.control_block_index:
                 c_block_id = self.control_block_index.index(idx)
                 # print(f"copy main block {idx} to control block {c_block_id}")
-                state = self.control_blocks[c_block_id].load_state_dict(block.state_dict(), strict=True)
+                _state = self.control_blocks[c_block_id].load_state_dict(block.state_dict(), strict=True)
         return
 
     # def zero_init_linear(self):

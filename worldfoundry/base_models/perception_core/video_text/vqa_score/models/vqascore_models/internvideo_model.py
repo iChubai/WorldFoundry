@@ -216,8 +216,6 @@ class InternVideo2Model(VQAScoreModel):
                 else:
                     conversation += ""
 
-                total_len = 0
-                indexs = []
                 # ilen = media_tensor.shape[1]
 
                 # conversation = ""
@@ -372,8 +370,6 @@ class InternVideo2Model(VQAScoreModel):
                 else:
                     conversation += ""
 
-                total_len = 0
-                indexs = []
                 # ilen = media_tensor.shape[1]
 
                 # conversation = ""
@@ -606,7 +602,7 @@ class InternVideo2Model(VQAScoreModel):
         # calculate the target width and height
         target_width = image_size * target_aspect_ratio[0]
         target_height = image_size * target_aspect_ratio[1]
-        blocks = target_aspect_ratio[0] * target_aspect_ratio[1]
+        _blocks = target_aspect_ratio[0] * target_aspect_ratio[1]
 
         # resize the frames
         resized_frame = F.interpolate(frames, size=(target_height, target_width), mode="bicubic", align_corners=False)

@@ -114,7 +114,7 @@ class CameraHead(nn.Module):
         curr_pred = None
         pred_seq = []
 
-        for step in range(steps):
+        for _step in range(steps):
             # Use learned initial token for first iteration
             if curr_pred is None:
                 net_input = self.param_embed(self.init_token.expand(b, seq_len, -1))

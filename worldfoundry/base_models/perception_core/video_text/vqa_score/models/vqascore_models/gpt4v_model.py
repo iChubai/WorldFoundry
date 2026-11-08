@@ -92,7 +92,7 @@ class GPT4VModel(VQAScoreModel):
                 top_logprobs=self.top_logprobs,
             )
 
-        except:
+        except BaseException:
             try:  # Second try
                 if data["type"] == "video":
                     content = [
@@ -190,7 +190,7 @@ class GPT4VModel(VQAScoreModel):
                 max_tokens=max_new_tokens,
             )
 
-        except:
+        except BaseException:
             try:  # Second try
                 if data["type"] == "video":
                     content = [
@@ -231,7 +231,7 @@ class GPT4VModel(VQAScoreModel):
 
         generated_outputs = []
 
-        for idx, (data, question) in enumerate(zip(loaded_data, questions, strict=False)):
+        for _idx, (data, question) in enumerate(zip(loaded_data, questions, strict=False)):
             generated_text = self.generate_single(data, question, max_new_tokens)
             generated_outputs.append(generated_text)
 

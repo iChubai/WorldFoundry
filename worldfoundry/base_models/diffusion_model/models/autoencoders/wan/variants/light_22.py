@@ -825,7 +825,7 @@ class Up_ResidualBlock(nn.Module):
             profiler: The profiler.
         """
         x_main = x.clone()
-        for i, module in enumerate(self.upsamples):
+        for _i, module in enumerate(self.upsamples):
             x_main = module(x_main, feat_cache, feat_idx, first_chunk)
 
         if self.avg_shortcut is not None:
@@ -1001,7 +1001,7 @@ class Decoder3d(nn.Module):
 
         # dimensions
         dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # [1024, 1024, 1024, 512, 256]
-        scale = 1.0 / 2 ** (len(dim_mult) - 2)  # 0.25
+        _scale = 1.0 / 2 ** (len(dim_mult) - 2)  # 0.25
         # init block
         self.conv1 = CausalConv3d(z_dim, dims[0], 3, padding=1)
         # middle blocks

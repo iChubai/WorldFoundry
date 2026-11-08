@@ -65,7 +65,7 @@ def to_cam_open3d(viewpoint_stack, Ks, W, H):
         H: The h.
     """
     camera_traj = []
-    for i, (extrinsic, intrins) in enumerate(zip(viewpoint_stack, Ks, strict=False)):
+    for _i, (extrinsic, intrins) in enumerate(zip(viewpoint_stack, Ks, strict=False)):
         intrinsic = o3d.camera.PinholeCameraIntrinsic(
             width=H,
             height=W,
@@ -107,7 +107,7 @@ class MeshExtractor:
         """
         if bg_color is None:
             bg_color = [0.0, 0.0, 0.0]
-        background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
+        _background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 
         self.clean()
 
@@ -188,13 +188,13 @@ class MeshExtractor:
         """
         self.clean()
         self.viewpoint_stack = viewpoint_stack
-        for i, viewpoint_cam in tqdm(enumerate(self.viewpoint_stack), desc="reconstruct radiance fields"):
+        for _i, viewpoint_cam in tqdm(enumerate(self.viewpoint_stack), desc="reconstruct radiance fields"):
             render_pkg = self.render(viewpoint_cam, self.gaussians)
             rgb = render_pkg["render"]
-            alpha = render_pkg["rend_alpha"]
-            normal = torch.nn.functional.normalize(render_pkg["rend_normal"], dim=0)
+            _alpha = render_pkg["rend_alpha"]
+            _normal = torch.nn.functional.normalize(render_pkg["rend_normal"], dim=0)
             depth = render_pkg["surf_depth"]
-            depth_normal = render_pkg["surf_normal"]
+            _depth_normal = render_pkg["surf_normal"]
             self.rgbmaps.append(rgb.cpu())
             self.depthmaps.append(depth.cpu())
 

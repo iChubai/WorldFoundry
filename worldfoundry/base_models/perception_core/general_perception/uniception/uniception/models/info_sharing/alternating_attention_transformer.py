@@ -281,7 +281,7 @@ class MultiViewAlternatingAttentionTransformer(UniCeptionInfoSharingBase):
 
             # Concatenate per-view additional tokens to each view's features
             multi_view_features_with_tokens = []
-            for view_idx, (view_features, view_tokens) in enumerate(
+            for _view_idx, (view_features, view_tokens) in enumerate(
                 zip(multi_view_features, additional_tokens_per_view, strict=False)
             ):
                 # view_features: (N, C, H, W)
@@ -695,7 +695,7 @@ class MultiViewAlternatingAttentionTransformerIFR(
 
             # Concatenate per-view additional tokens to each view's features
             multi_view_features_with_tokens = []
-            for view_idx, (view_features, view_tokens) in enumerate(
+            for _view_idx, (view_features, view_tokens) in enumerate(
                 zip(multi_view_features, additional_tokens_per_view, strict=False)
             ):
                 # view_features: (N, C, H, W)

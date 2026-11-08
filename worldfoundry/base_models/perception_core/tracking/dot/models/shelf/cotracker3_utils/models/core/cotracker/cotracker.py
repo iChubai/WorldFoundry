@@ -438,7 +438,6 @@ class EfficientUpdateFormer(nn.Module):
 
         _, N, _, _ = tokens.shape
         j = 0
-        layers = []
         for i in range(len(self.time_blocks)):
             time_tokens = tokens.contiguous().view(B * N, T, -1)  # B N T C -> (B N) T C
             time_tokens = self.time_blocks[i](time_tokens)

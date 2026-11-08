@@ -249,7 +249,7 @@ def render_interpolated_video(
     if effects is not None:
         try:
             pruned_splats = gs_renderer.prune_gs(splats, gs_renderer.voxel_size)
-        except:
+        except BaseException:
             pruned_splats = splats
         # indices = [x for x in range(0, all_ext.shape[1], 2)][:4]
         # add_ext, add_int = build_interpolated_traj(indices, 150)
@@ -264,7 +264,7 @@ def render_interpolated_video(
         flag = None
         try:
             raw_splats = gs_renderer.rasterizer.runner.splats
-        except:
+        except BaseException:
             pass
         for st in range(add_ext.shape[1]):
             ed = min(st + 1, add_ext.shape[1])
@@ -300,7 +300,7 @@ def render_interpolated_video(
                     height=h,
                     sh_degree=gs_renderer.sh_degree,
                 )
-            except:
+            except BaseException:
                 colors, depths, _ = gs_renderer.rasterizer.rasterize_batches(
                     effects_splats["means"][None],
                     effects_splats["quats"][None],
@@ -336,7 +336,7 @@ def render_interpolated_video(
                     "opacities": pruned_splats["opacities"][0],
                     "colors": SH2RGB(pruned_splats["sh"][0].reshape(-1, 3)),
                 }
-            except:
+            except BaseException:
                 sample_gsplat = {
                     "means": (pruned_splats["means"][0] - shift) / scale_factor,
                     "quats": pruned_splats["quats"][0],
@@ -375,7 +375,7 @@ def render_interpolated_video(
                     height=h,
                     sh_degree=gs_renderer.sh_degree,
                 )
-            except:
+            except BaseException:
                 colors, depths, _ = gs_renderer.rasterizer.rasterize_batches(
                     effects_splats["means"][None],
                     effects_splats["quats"][None],
@@ -474,6 +474,6 @@ def render_interpolated_video(
     if effects is not None:
         try:
             gs_renderer.rasterizer.runner.splats = raw_splats
-        except:
+        except BaseException:
             pass
     torch.cuda.empty_cache()

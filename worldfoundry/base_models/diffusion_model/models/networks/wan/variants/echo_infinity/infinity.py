@@ -761,7 +761,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         frame_indices = torch.arange(
             start=frame_seqlen, end=total_length, step=frame_seqlen * num_frame_per_block, device=device
         )
-        for idx, tmp in enumerate(frame_indices):
+        for _idx, tmp in enumerate(frame_indices):
             ends[tmp : tmp + frame_seqlen * num_frame_per_block] = tmp + frame_seqlen * num_frame_per_block
 
         def attention_mask(b, h, q_idx, kv_idx):
@@ -939,7 +939,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                 if kv_cache is not None and isinstance(result, tuple):
                     x, block_cache_update_info = result
                     cache_update_infos.append((block_index, block_cache_update_info))
-                    cache_update_info = block_cache_update_info[:2]
+                    _cache_update_info = block_cache_update_info[:2]
                 else:
                     x = result
         if kv_cache is not None and cache_update_infos:

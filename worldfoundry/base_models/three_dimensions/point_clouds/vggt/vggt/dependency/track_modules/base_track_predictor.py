@@ -122,7 +122,7 @@ class BaseTrackerPredictor(nn.Module):
         coord_preds = []
 
         # Iterative Refinement
-        for itr in range(iters):
+        for _itr in range(iters):
             # Detach the gradients from the last iteration
             # (in my experience, not very important for performance)
             coords = coords.detach()

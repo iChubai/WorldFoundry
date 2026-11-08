@@ -262,7 +262,10 @@ def multi_head_attention_forward(
     # prep attention mask
     if attn_mask is not None:
         if attn_mask.dtype == torch.uint8:
-            warnings.warn("Byte tensor for attn_mask in nn.MultiheadAttention is deprecated. Use bool tensor instead.")
+            warnings.warn(
+                "Byte tensor for attn_mask in nn.MultiheadAttention is deprecated. Use bool tensor instead.",
+                stacklevel=1,
+            )
             attn_mask = attn_mask.to(torch.bool)
         else:
             assert attn_mask.is_floating_point() or attn_mask.dtype == torch.bool, (

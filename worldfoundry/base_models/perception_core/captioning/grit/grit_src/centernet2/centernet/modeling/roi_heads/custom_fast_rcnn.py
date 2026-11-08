@@ -21,7 +21,7 @@ class CustomFastRCNNOutputLayers(FastRCNNOutputLayers):
         """
         scores, proposal_deltas = predictions
         gt_classes = cat([p.gt_classes for p in proposals], dim=0) if len(proposals) else torch.empty(0)
-        num_classes = self.num_classes
+        _num_classes = self.num_classes
         _log_classification_stats(scores, gt_classes)
 
         if len(proposals):

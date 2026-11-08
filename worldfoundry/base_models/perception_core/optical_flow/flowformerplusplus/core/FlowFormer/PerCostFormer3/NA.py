@@ -16,7 +16,7 @@ try:
         "nattenqkrpb_cuda", ["core/cuda/nattenqkrpb_cuda.cpp", "core/cuda/nattenqkrpb_cuda_kernel.cu"], verbose=False
     )
     print("[Finished 2/2]")
-except:
+except BaseException:
     print("Failed to load nat cuda")
     exit()
 
@@ -139,7 +139,6 @@ class NATwins(nn.Module):
 
         embed_dim = dim
         mlp_ratio = 4
-        ws = 7
         sr_ratio = 4
         dpr = cfg.droppath
         drop_rate = cfg.dropout

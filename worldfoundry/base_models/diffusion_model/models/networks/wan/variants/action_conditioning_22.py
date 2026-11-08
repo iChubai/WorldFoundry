@@ -257,7 +257,7 @@ class ActionModule(nn.Module):
             N_feats = int((N_frames - 1) / self.vae_time_compression_ratio) + 1
         else:
             N_feats = N_frames // self.vae_time_compression_ratio
-        num_frame_per_block = tt
+        _num_frame_per_block = tt
 
         if self.enable_mouse and mouse_condition is not None:
             hidden_states = rearrange(x, "B (T S) C -> (B S) T C", T=tt, S=th * tw)

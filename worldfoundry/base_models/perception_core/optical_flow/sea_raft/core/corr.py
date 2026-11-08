@@ -9,7 +9,7 @@ from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.utils.u
 
 try:
     import alt_cuda_corr  # noqa: F401 - Import checks optional dependency availability.
-except:
+except BaseException:
     # alt_cuda_corr is not compiled
     pass
 
@@ -75,7 +75,7 @@ def bilinear_sampling_corr(corr, idx1, idx2):
     # reshape idx: [M * n_points, (bhw)]
     idx1 = idx1.unsqueeze(1).repeat(1, n_points, 1).view(-1, 3)
     idx2 = idx2.view(-1, 3)
-    device = corr.device
+    _device = corr.device
     offset = idx2 - idx2.floor()
     dx, dy = offset[:, 1], offset[:, 2]
     b = idx2[:, 0].long()
@@ -106,7 +106,7 @@ class CorrBlock:
         self.args = args
         self.corr_pyramid = []
         # all pairs correlation
-        for i in range(self.num_levels):
+        for _i in range(self.num_levels):
             corr = CorrBlock.corr(fmap1, fmap2, 1)
             batch, h1, w1, dim, h2, w2 = corr.shape
             corr = corr.reshape(batch * h1 * w1, dim, h2, w2)

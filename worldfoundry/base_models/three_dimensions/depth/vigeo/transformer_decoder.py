@@ -58,7 +58,7 @@ class TransformerDecoder(nn.Module):
         hidden = rearrange(hidden, "b s n c -> (b s) n c")
         hidden = self.projects(hidden)
 
-        for i, blk in enumerate(self.blocks):
+        for _i, blk in enumerate(self.blocks):
             if self.use_checkpoint and self.training:
                 hidden = checkpoint(blk, hidden, pos, use_reentrant=False)
             else:

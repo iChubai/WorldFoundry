@@ -67,7 +67,8 @@ def scaled_multihead_dot_product_attention(
                 + "and applying it within the attention module can cause "
                 + "unneccessary computation/memory usage. Consider integrating "
                 + "into attn_bias once and passing that to each attention "
-                + "module instead."
+                + "module instead.",
+                stacklevel=1,
             )
         attn_weight = attn_weight.masked_fill(~key_padding_mask.view((b, 1, 1, s_k)), min_val)
 
@@ -116,7 +117,7 @@ def flash_attn_fn(
 ):
     try:
         from flash_attn import bert_padding, flash_attn_interface
-    except:
+    except BaseException:
         raise RuntimeError("Please install flash_attn==0.2.8")
 
     check_valid_inputs(query, key, value)
@@ -176,7 +177,7 @@ def triton_flash_attn_fn(
 ):
     try:
         from flash_attn import flash_attn_triton  # type: ignore
-    except:
+    except BaseException:
         raise RuntimeError("Please install flash_attn==0.2.8 and triton==2.0.0.dev20221202.")
 
     check_valid_inputs(query, key, value)
@@ -193,7 +194,8 @@ def triton_flash_attn_fn(
             + "and applying it within the attention module can cause "
             + "unnecessary computation/memory usage. Consider integrating "
             + "into attn_bias once and passing that to each attention "
-            + "module instead."
+            + "module instead.",
+            stacklevel=1,
         )
         b_size, s_k = key_padding_mask.shape[:2]
 
@@ -264,7 +266,8 @@ class MultiheadAttention(nn.Module):
                 "While `attn_impl: triton` can be faster than `attn_impl: flash` "
                 + "it uses more memory. When training larger models this can trigger "
                 + "alloc retries which hurts performance. If encountered, we recommend "
-                + "using `attn_impl: flash` if your model does not use `alibi` or `prefix_lm`."
+                + "using `attn_impl: flash` if your model does not use `alibi` or `prefix_lm`.",
+                stacklevel=1,
             )
         elif self.attn_impl == "torch":
             self.attn_fn = scaled_multihead_dot_product_attention
@@ -272,7 +275,8 @@ class MultiheadAttention(nn.Module):
                 warnings.warn(
                     "Using `attn_impl: torch`. If your model does not use `alibi` or "
                     + "`prefix_lm` we recommend using `attn_impl: flash` otherwise "
-                    + "we recommend using `attn_impl: triton`."
+                    + "we recommend using `attn_impl: triton`.",
+                    stacklevel=1,
                 )
         else:
             raise ValueError(f"{attn_impl=} is an invalid setting.")

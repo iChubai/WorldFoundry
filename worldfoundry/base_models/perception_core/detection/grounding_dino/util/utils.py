@@ -384,7 +384,7 @@ class NiceRepr:
             classname = self.__class__.__name__
             return f"<{classname}({nice}) at {hex(id(self))}>"
         except NotImplementedError as ex:
-            warnings.warn(str(ex), category=RuntimeWarning)
+            warnings.warn(str(ex), category=RuntimeWarning, stacklevel=1)
             return object.__repr__(self)
 
     def __str__(self):
@@ -394,7 +394,7 @@ class NiceRepr:
             nice = self.__nice__()
             return f"<{classname}({nice})>"
         except NotImplementedError as ex:
-            warnings.warn(str(ex), category=RuntimeWarning)
+            warnings.warn(str(ex), category=RuntimeWarning, stacklevel=1)
             return object.__repr__(self)
 
 

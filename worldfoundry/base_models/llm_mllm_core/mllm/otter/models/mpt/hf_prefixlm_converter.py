@@ -273,6 +273,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
                 "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. "
                 + "You can safely ignore passing `position_ids`.",
                 FutureWarning,
+                stacklevel=1,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")
@@ -414,6 +415,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
                 "`position_ids` have no functionality in BLOOM and will be removed "
                 + "in v5.0.0. You can safely ignore passing `position_ids`.",
                 FutureWarning,
+                stacklevel=1,
             )
         if len(deprecated_arguments) > 0:
             raise ValueError(f"Got unexpected arguments: {deprecated_arguments}")

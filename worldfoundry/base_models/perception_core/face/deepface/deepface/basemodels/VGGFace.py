@@ -92,7 +92,7 @@ def loadModel(
 
     # -----------------------------------
 
-    home = functions.get_deepface_home()
+    _home = functions.get_deepface_home()
     output = "../../checkpoints/vgg_face_weights.h5"
     print("VGG:", output)
     if os.path.isfile(output) != True:

@@ -488,7 +488,7 @@ class CausalWanModelInfinityMemory(CausalWanModelInfinityBase):
                 if kv_cache is not None and isinstance(result, tuple):
                     x, block_cache_update_info = result
                     cache_update_infos.append((block_index, block_cache_update_info))
-                    cache_update_info = block_cache_update_info[:2]
+                    _cache_update_info = block_cache_update_info[:2]
                 else:
                     x = result
         if kv_cache is not None and cache_update_infos:

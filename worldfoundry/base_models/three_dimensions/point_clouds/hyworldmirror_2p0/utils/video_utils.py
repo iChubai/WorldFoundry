@@ -76,7 +76,7 @@ def video_to_image_frames(input_video_path, save_directory=None, fps=1):
             # Get video FPS first
             cap = cv2.VideoCapture(input_video_path)
             source_fps = cap.get(cv2.CAP_PROP_FPS) or fps
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            _total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             cap.release()
 
             output_frame_pattern = os.path.join(save_directory, "frame_%04d.jpg")
@@ -98,7 +98,7 @@ def video_to_image_frames(input_video_path, save_directory=None, fps=1):
                         # Estimate original frame index based on fps ratio
                         frame_idx = int(frame_num * source_fps / fps)
                         frame_indices.append(frame_idx)
-                    except:
+                    except BaseException:
                         frame_indices.append(len(frame_indices))
 
             if extracted_frame_paths:
@@ -560,7 +560,7 @@ def video_to_image_frames_new(
             writer.writerow(["frame_index", "time_sec", "motion", "selected"])
             for s in sparse_samples:
                 writer.writerow([s["idx"], s["idx"] / fps, s["motion"], 1 if s["idx"] in final_indices else 0])
-    except:
+    except BaseException:
         pass
 
     print(f"Extracted {len(extracted_paths)} frames using DIS flow + local clarity refinement.")

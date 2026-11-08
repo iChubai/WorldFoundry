@@ -646,7 +646,7 @@ class Template(ProcessorMixin):
         res_loss_scale: list[float] = []  # result of loss_scale_list
         temp: list[str] = []
         temp_loss_scale = 0.0
-        for i, (context, loss_scale) in enumerate(zip(context_list, loss_scale_list, strict=False)):
+        for _i, (context, loss_scale) in enumerate(zip(context_list, loss_scale_list, strict=False)):
             if isinstance(context, str) and (loss_scale == temp_loss_scale):
                 temp.append(context)
             else:

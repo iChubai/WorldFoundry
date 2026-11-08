@@ -26,7 +26,7 @@ from .param_init_fns import MODEL_INIT_REGISTRY
 
 try:
     from .flash_attn_triton import flash_attn_func  # noqa: F401 - Import checks optional dependency availability.
-except:
+except BaseException:
     pass
 Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]
 
@@ -87,7 +87,7 @@ class MPTModel(MPTPreTrainedModel):
             for module in self.modules():
                 if hasattr(module, "bias") and isinstance(module.bias, nn.Parameter):
                     if config.verbose:
-                        warnings.warn(f"Removing bias ({module.bias}) from {module}.")
+                        warnings.warn(f"Removing bias ({module.bias}) from {module}.", stacklevel=1)
                     module.register_parameter("bias", None)
         if config.verbose and config.verbose > 2:
             print(self)
@@ -95,7 +95,7 @@ class MPTModel(MPTPreTrainedModel):
             self.config.init_config["verbose"] = self.config.verbose
         if self.config.init_config["verbose"] > 1:
             init_fn_name = self.config.init_config["name"]
-            warnings.warn(f"Using {init_fn_name} initialization.")
+            warnings.warn(f"Using {init_fn_name} initialization.", stacklevel=1)
 
     def get_input_embeddings(self):
         return self.wte
@@ -238,7 +238,8 @@ class MPTModel(MPTPreTrainedModel):
             elif (self.attn_uses_sequence_id is False) and (sequence_id is not None):
                 warnings.warn(
                     "MPT received non-None input for `sequence_id` but is configured with attn_uses_sequence_id=False. "
-                    + "This input will be ignored. If you want the model to use `sequence_id`, set attn_uses_sequence_id to True."
+                    + "This input will be ignored. If you want the model to use `sequence_id`, set attn_uses_sequence_id to True.",
+                    stacklevel=1,
                 )
 
         S = input_ids.size(1)
@@ -456,7 +457,8 @@ class MPTForCausalLM(MPTPreTrainedModel):
         if self.logit_scale is not None:
             if self.logit_scale == 0:
                 warnings.warn(
-                    f"Multiplying logits by {self.logit_scale=}. This will produce uniform (uninformative) outputs."
+                    f"Multiplying logits by {self.logit_scale=}. This will produce uniform (uninformative) outputs.",
+                    stacklevel=1,
                 )
             logits *= self.logit_scale
 

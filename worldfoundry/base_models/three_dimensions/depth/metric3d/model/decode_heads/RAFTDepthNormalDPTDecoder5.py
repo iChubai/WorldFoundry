@@ -1627,7 +1627,7 @@ class RAFTDepthNormalDPT5(nn.Module):
             normal_outs = []
             low_resolution_init = []
 
-        for itr in range(self.iters):
+        for _itr in range(self.iters):
             # coords1 = coords1.detach()
             flow = coords1 - coords0
             if self.n_gru_layers == 3 and self.slow_fast_gru:  # Update low-res GRU

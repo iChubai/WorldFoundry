@@ -121,7 +121,6 @@ class Detector:
                         color = (0, 0, 255)
                     else:
                         label = "unknown"
-                        color = (0, 255, 255)
 
                     result_item = {
                         "frame_index": frame_idx,

@@ -186,7 +186,7 @@ class CorrBlock:
         # Build pyramid: each level is half the spatial resolution of the previous
         self.fmaps_pyramid = [fmaps]  # level 0 is full resolution
         current_fmaps = fmaps
-        for i in range(num_levels - 1):
+        for _i in range(num_levels - 1):
             B, S, C, H, W = current_fmaps.shape
             # Merge batch & sequence dimensions
             current_fmaps = current_fmaps.reshape(B * S, C, H, W)

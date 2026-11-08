@@ -89,7 +89,7 @@ def iterative_undistortion(params, tracks_normalized, max_iterations=100, max_st
     original_u, original_v = u.clone(), v.clone()
 
     eps = torch.finfo(u.dtype).eps
-    for idx in range(max_iterations):
+    for _idx in range(max_iterations):
         u_undist, v_undist = apply_distortion(params, u, v)
         dx = original_u - u_undist
         dy = original_v - v_undist

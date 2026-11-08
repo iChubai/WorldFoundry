@@ -55,11 +55,11 @@ class DroidFrontend:
             self.video.disps[self.t1 - 1],
         )
 
-        for itr in range(self.iters1):
+        for _itr in range(self.iters1):
             self.graph.update(None, None, use_inactive=True, viz_itr=None, use_mono=True)
 
         # set initial pose for next frame
-        poses = SE3(self.video.poses)
+        _poses = SE3(self.video.poses)
         d = self.video.distance([self.t1 - 3], [self.t1 - 2], beta=self.beta, bidirectional=True)
 
         if d.item() < self.keyframe_thresh:
@@ -70,7 +70,7 @@ class DroidFrontend:
                 self.t1 -= 1
 
         else:
-            for itr in range(self.iters2):
+            for _itr in range(self.iters2):
                 self.graph.update(None, None, use_inactive=True)
 
         # set pose for next itration
@@ -88,15 +88,15 @@ class DroidFrontend:
 
         self.graph.add_neighborhood_factors(self.t0, self.t1, r=3)
 
-        for itr in range(10):
+        for _itr in range(10):
             self.graph.update(1, use_inactive=True, use_mono=True, motion_only=True)
 
         self.graph.add_proximity_factors(0, 0, rad=2, nms=2, thresh=self.frontend_thresh, remove=False)
 
-        for itr in range(10):
+        for _itr in range(10):
             self.graph.update(1, use_inactive=True, use_mono=True, motion_only=True, viz_itr=None)
 
-        for itr in range(10):
+        for _itr in range(10):
             self.graph.update(1, use_inactive=True, use_mono=True, motion_only=False, viz_itr=None)
 
         # print("error ", error)

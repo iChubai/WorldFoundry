@@ -22,7 +22,7 @@ def read_video_from_path(path):
         print("Error opening video file: ", e)
         return None
     frames = []
-    for i, im in enumerate(reader):
+    for _i, im in enumerate(reader):
         frames.append(np.array(im))
     return np.stack(frames)
 

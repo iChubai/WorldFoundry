@@ -235,7 +235,7 @@ class VariableSizeImageTransform:
         return image
 
     def _pad(self, image: Image.Image, new_width: int, new_height: int) -> Image.Image:
-        mean_per_channel = tuple(np.clip(np.array(image).mean(axis=(0, 1)), 0, 255).astype(np.uint8))
+        _mean_per_channel = tuple(np.clip(np.array(image).mean(axis=(0, 1)), 0, 255).astype(np.uint8))
         new_im = Image.new(mode="RGB", size=(new_width, new_height), color=(0, 0, 0))  # type: ignore
         new_im.paste(image)
         return new_im

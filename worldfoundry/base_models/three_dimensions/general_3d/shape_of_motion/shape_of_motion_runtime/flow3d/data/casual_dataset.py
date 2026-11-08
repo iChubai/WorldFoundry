@@ -320,7 +320,7 @@ class CasualDataset(BaseDataset):
         r = self.mask_erosion_radius
         try:
             mask = imageio.imread(path)
-        except:
+        except BaseException:
             path = f"{self.mask_dir}/{self.frame_names[index]}.jpg"
             mask = imageio.imread(path)
         fg_mask = mask.reshape((*mask.shape[:2], -1)).max(axis=-1) > 0

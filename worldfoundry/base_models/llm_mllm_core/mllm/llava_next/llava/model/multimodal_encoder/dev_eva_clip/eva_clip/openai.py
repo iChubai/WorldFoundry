@@ -67,7 +67,7 @@ def load_openai_model(
     except RuntimeError:
         # loading saved state dict
         if jit:
-            warnings.warn(f"File {model_path} is not a JIT archive. Loading as a state dict instead")
+            warnings.warn(f"File {model_path} is not a JIT archive. Loading as a state dict instead", stacklevel=1)
             jit = False
         state_dict = torch.load(model_path, map_location="cpu")
 

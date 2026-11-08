@@ -129,7 +129,7 @@ class TransNetV2(nn.Module):
         # Note: This may impact performance but ensures consistency
         try:
             torch.use_deterministic_algorithms(True, warn_only=True)
-        except:
+        except BaseException:
             # Fallback for older PyTorch versions
             pass
 
@@ -310,7 +310,7 @@ class TransNetV2(nn.Module):
         pbar = None if quiet else tqdm(total=len(frames), desc="Processing frames", unit="frame")
 
         try:
-            for batch_input, batch_num in input_iterator():
+            for batch_input, _batch_num in input_iterator():
                 with torch.no_grad():  # Ensure no gradients are computed
                     single_frame_pred, all_frames_pred = self.predict_raw(batch_input)
 

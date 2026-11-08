@@ -111,8 +111,8 @@ def schur_solve_f(H, E, C, v, w, H_fc, Hff, vf, Efd, ep=0.01, lm=0.0001, sless=F
 
     Et = E.transpose(1, 2)
 
-    S_A = torch.matmul(E, Q * Et)
-    S_b = torch.matmul(E, Q * w)
+    _S_A = torch.matmul(E, Q * Et)
+    _S_b = torch.matmul(E, Q * w)
 
     S = H - torch.matmul(E, Q * Et)
     v = v - torch.matmul(E, Q * w)

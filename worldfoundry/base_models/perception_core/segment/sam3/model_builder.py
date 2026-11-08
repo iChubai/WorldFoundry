@@ -285,7 +285,7 @@ def _create_geometry_encoder():
     # Create position encoding for geometry encoder
     geo_pos_enc = _create_position_encoding()
     # Create CX block for fuser
-    cx_block = CXBlock(
+    _cx_block = CXBlock(
         dim=256,
         kernel_size=7,
         padding=3,

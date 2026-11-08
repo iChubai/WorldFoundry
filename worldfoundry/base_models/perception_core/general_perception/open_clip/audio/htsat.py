@@ -1132,7 +1132,7 @@ class HTSATEncoder(nn.Module):
         if self.ape:
             x = x + self.absolute_pos_embed
         x = self.pos_drop(x)
-        for i, layer in enumerate(self.layers):
+        for _i, layer in enumerate(self.layers):
             x, attn = layer(x)
         # for x
         x = self.norm(x)

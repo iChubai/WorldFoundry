@@ -445,7 +445,7 @@ class VisionTransformerEncoder(VisionTransformer, BaseEncoder):
                 )
                 state_dict = checkpoint["model"]
                 state_dict["pos_embed"] = interpolate_pos_embed(state_dict["pos_embed"], visual_encoder)
-                msg = visual_encoder.load_state_dict(state_dict, strict=False)
+                _msg = visual_encoder.load_state_dict(state_dict, strict=False)
 
         elif vit_type == "large":
             vision_width = 1024

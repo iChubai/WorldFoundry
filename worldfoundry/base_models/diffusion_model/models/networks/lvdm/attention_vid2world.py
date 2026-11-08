@@ -16,7 +16,7 @@ try:
     import xformers.ops
 
     XFORMERS_IS_AVAILBLE = True
-except:
+except BaseException:
     XFORMERS_IS_AVAILBLE = False
 from worldfoundry.core.nn.diffusion.convolution import zero_module
 from worldfoundry.core.nn.diffusion.utils import (
@@ -462,7 +462,7 @@ class SpatialTransformer(nn.Module):
         x = rearrange(x, "b c h w -> b (h w) c").contiguous()
         if self.use_linear:
             x = self.proj_in(x)
-        for i, block in enumerate(self.transformer_blocks):
+        for _i, block in enumerate(self.transformer_blocks):
             x = block(x, context=context, **kwargs)
         if self.use_linear:
             x = self.proj_out(x)

@@ -176,7 +176,7 @@ def depth_to_world_coords_points(
         return None, None, None
 
     # Valid depth mask
-    point_mask = depth_map > eps
+    _point_mask = depth_map > eps
 
     # Convert depth map to camera coordinates
     cam_coords_points = depth_to_cam_coords_points(depth_map, intrinsic)
@@ -223,7 +223,7 @@ def render_from_cameras_videos(points, colors, extrinsics, intrinsics, height, w
         pixel_coords_valid = pixel_coords[valid_pixels]  # (h*w, 2) to (valid_count, 2)
         colors_valid = colors[valid_pixels]
         depths_valid = depths[valid_pixels]
-        uv_valid = uv[valid_pixels]
+        _uv_valid = uv[valid_pixels]
 
         valid_mask = (depths_valid > 0) & (depths_valid < 60000)  # & normal_angle_mask
         colors_valid = colors_valid[valid_mask]

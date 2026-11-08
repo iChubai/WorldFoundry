@@ -102,7 +102,6 @@ class InternLMXComposer25Model(VQAScoreModel):
             streamer = None
             num_beams = 1
             do_sample = False
-            infer_mode = "base"
             hd_num = 24
 
             # Ensure all input images are in RGB:
@@ -186,7 +185,6 @@ class InternLMXComposer25Model(VQAScoreModel):
             streamer = None
             num_beams = 5
             do_sample = False
-            infer_mode = "base"
             hd_num = 24
 
             # with Image.open(path) as img:

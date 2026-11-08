@@ -837,6 +837,6 @@ def build_x_clip_model(
         if key in state_dict:
             del state_dict[key]
 
-    msg = model.load_state_dict(state_dict, strict=False)
+    _msg = model.load_state_dict(state_dict, strict=False)
 
     return model.eval()

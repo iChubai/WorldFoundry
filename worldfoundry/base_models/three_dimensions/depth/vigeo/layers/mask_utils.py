@@ -27,7 +27,7 @@ def depth_masking(
         mask_info: dict, containing masking information
     """
     B, N, D = x.shape
-    device = x.device
+    _device = x.device
 
     assert patch_num_h * patch_num_w == N, f"N={N} must equal patch_num_h * patch_num_w = {patch_num_h * patch_num_w}"
 

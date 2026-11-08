@@ -232,10 +232,12 @@ def _read_video_torchvision(
     video_path = ele["video"]
     if version.parse(torchvision.__version__) < version.parse("0.19.0"):
         if "http://" in video_path or "https://" in video_path:
-            warnings.warn("torchvision < 0.19.0 does not support http/https video path, please upgrade to 0.19.0.")
+            warnings.warn(
+                "torchvision < 0.19.0 does not support http/https video path, please upgrade to 0.19.0.", stacklevel=1
+            )
         if "file://" in video_path:
             video_path = video_path[7:]
-    st = time.time()
+    _st = time.time()
     video, audio, info = io.read_video(
         video_path,
         start_pts=ele.get("video_start", 0.0),
@@ -290,7 +292,7 @@ def _read_video_decord(
     import decord
 
     video_path = ele["video"]
-    st = time.time()
+    _st = time.time()
     vr = decord.VideoReader(video_path)
     # TODO: support start_pts and end_pts
     if "video_start" in ele or "video_end" in ele:

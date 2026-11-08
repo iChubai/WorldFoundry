@@ -1062,7 +1062,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         obj_ids = [obj_id]
 
         point_inputs_per_frame = inference_state["point_inputs_per_obj"][obj_idx]
-        mask_inputs_per_frame = inference_state["mask_inputs_per_obj"][obj_idx]
+        _mask_inputs_per_frame = inference_state["mask_inputs_per_obj"][obj_idx]
 
         if points.dim() == 2:
             points = points.unsqueeze(0)
@@ -1088,7 +1088,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         if is_init_cond_frame:
             reverse = False
         else:
-            reverse = inference_state["frames_already_tracked"][frame_idx]["reverse"]
+            _reverse = inference_state["frames_already_tracked"][frame_idx]["reverse"]
 
         is_cond = is_init_cond_frame or self.add_all_frames_to_correct_as_cond
         storage_key = "cond_frame_outputs" if is_cond else "non_cond_frame_outputs"
@@ -1737,7 +1737,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         # Collect per-object outputs (masks and scores) to build consolidated output
         # When reconstructing from per-object outputs, we also need to collect obj_ptr and object_score_logits
         obj_score_logits_list = []
-        obj_ptr_list = [] if need_to_reconstruct_from_per_obj else None
+        _obj_ptr_list = [] if need_to_reconstruct_from_per_obj else None
         iou_scores_list = [] if need_to_reconstruct_from_per_obj and self.use_memory_selection else None
 
         # When reconstructing from per-object outputs, initialize the mask tensor

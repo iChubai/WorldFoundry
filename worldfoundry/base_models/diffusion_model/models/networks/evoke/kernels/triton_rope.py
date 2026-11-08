@@ -367,7 +367,7 @@ def test_in_training_loop_comparison():
     print(f"{'Max difference:':<20} {'':<15} {'':<15} {max_diff:<15.2e}")
 
     weight_diffs = []
-    for (name_o, param_o), (name_f, param_f) in zip(
+    for (_name_o, param_o), (_name_f, param_f) in zip(
         model_orig.named_parameters(), model_fast.named_parameters(), strict=False
     ):
         diff = (param_o - param_f).abs().max().item()

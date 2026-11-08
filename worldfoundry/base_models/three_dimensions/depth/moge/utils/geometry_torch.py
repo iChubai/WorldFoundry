@@ -234,7 +234,7 @@ def recover_focal_shift(
     """
     shape = points.shape
     height, width = points.shape[-3], points.shape[-2]
-    diagonal = (height**2 + width**2) ** 0.5
+    _diagonal = (height**2 + width**2) ** 0.5
 
     points = points.reshape(-1, *shape[-3:])
     mask = None if mask is None else mask.reshape(-1, *shape[-3:-1])

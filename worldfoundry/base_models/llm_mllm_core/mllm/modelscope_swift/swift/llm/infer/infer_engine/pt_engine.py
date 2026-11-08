@@ -218,7 +218,7 @@ class PtEngine(InferEngine):
             return
 
         res = []
-        for i in range(seq_len):
+        for _i in range(seq_len):
             res.append(logits_streamer.queue.get())
         new_batched_logprobs = PtEngine.preprocess_logits(res, generate_ids[:, -seq_len:], top_logprobs)
         for logprobs, new_logprobs in zip(batched_logprobs, new_batched_logprobs, strict=False):

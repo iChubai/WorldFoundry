@@ -91,7 +91,7 @@ class YOLOv5GeneralGroundingDataset(BatchShapePolicyDataset, CocoDataset):
         data_info["texts"] = texts
 
         instances = []
-        for i, ann in enumerate(ann_info):
+        for _i, ann in enumerate(ann_info):
             instance = {}
 
             if ann.get("ignore", False):
@@ -143,7 +143,7 @@ class YOLOv5GeneralGroundingDataset(BatchShapePolicyDataset, CocoDataset):
         ids_with_ann = set(data_info["img_id"] for data_info in self.data_list)
 
         valid_data_infos = []
-        for i, data_info in enumerate(self.data_list):
+        for _i, data_info in enumerate(self.data_list):
             img_id = data_info["img_id"]
             width = int(data_info["width"])
             height = int(data_info["height"])

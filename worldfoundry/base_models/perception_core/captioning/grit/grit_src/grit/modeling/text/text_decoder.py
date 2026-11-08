@@ -403,6 +403,7 @@ class AutoRegressiveBeamSearch:
                 "Empty object description predicted. You may want to increase beam"
                 "size or ensure your step function is working properly.",
                 RuntimeWarning,
+                stacklevel=1,
             )
             if only_return_best:
                 return start_predicted_classes, start_top_logprobs
@@ -504,6 +505,7 @@ class AutoRegressiveBeamSearch:
                 " the number of valid (non-zero probability) transitions that "
                 "the step function produces.",
                 RuntimeWarning,
+                stacklevel=1,
             )
 
         # Optionally select best beam and its logprobs.

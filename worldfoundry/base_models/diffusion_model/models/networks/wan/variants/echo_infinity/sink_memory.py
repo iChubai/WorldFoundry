@@ -127,5 +127,5 @@ class SinkMemory:
         self._update_count += 1
         if self._update_count <= 100 or self._update_count % 10 == 0:
             sample_layers = [0, self.num_blocks // 2, self.num_blocks - 1]
-            norms_k = [f"L{i}={self.memory_k[i].norm().item():.1f}" for i in sample_layers]
-            norms_v = [f"L{i}={self.memory_v[i].norm().item():.1f}" for i in sample_layers]
+            _norms_k = [f"L{i}={self.memory_k[i].norm().item():.1f}" for i in sample_layers]
+            _norms_v = [f"L{i}={self.memory_v[i].norm().item():.1f}" for i in sample_layers]

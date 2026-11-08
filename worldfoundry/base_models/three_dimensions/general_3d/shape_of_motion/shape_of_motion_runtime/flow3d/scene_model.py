@@ -349,7 +349,7 @@ class SceneModel(nn.Module):
 
         if self.use_2dgs:
             colors_override = torch.nan_to_num(colors_override, nan=1e-6)
-            backgrounds = torch.nan_to_num(bg_color, nan=1.0)
+            _backgrounds = torch.nan_to_num(bg_color, nan=1.0)
 
             outputs = rasterization_2dgs(
                 means=means,

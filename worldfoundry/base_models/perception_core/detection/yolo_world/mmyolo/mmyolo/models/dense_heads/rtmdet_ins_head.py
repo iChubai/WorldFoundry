@@ -224,7 +224,7 @@ class RTMDetInsSepBNHeadModule(RTMDetSepBNHeadModule):
             if is_norm(m):
                 constant_init(m, 1)
         bias_cls = bias_init_with_prob(0.01)
-        for rtm_cls, rtm_reg, rtm_kernel in zip(self.rtm_cls, self.rtm_reg, self.rtm_kernel, strict=False):
+        for rtm_cls, rtm_reg, _rtm_kernel in zip(self.rtm_cls, self.rtm_reg, self.rtm_kernel, strict=False):
             normal_init(rtm_cls, std=0.01, bias=bias_cls)
             normal_init(rtm_reg, std=0.01, bias=1)
 
@@ -254,7 +254,7 @@ class RTMDetInsSepBNHeadModule(RTMDetSepBNHeadModule):
         cls_scores = []
         bbox_preds = []
         kernel_preds = []
-        for idx, (x, stride) in enumerate(zip(feats, self.featmap_strides, strict=False)):
+        for idx, (x, _stride) in enumerate(zip(feats, self.featmap_strides, strict=False)):
             cls_feat = x
             reg_feat = x
             kernel_feat = x

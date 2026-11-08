@@ -87,6 +87,7 @@ STREAMING_CPU_CONTRACTS = \
 	tests/studio_visualization/test_realtime_presentation.py \
 	tests/studio_visualization/test_realtime_shutdown_ownership.py \
 	tests/studio_visualization/test_world_realtime.py \
+	tests/studio_visualization/test_realtime_postprocess_presets.py \
 	tests/studio_visualization/test_realtime_input.py \
 	tests/studio_visualization/test_realtime_input_consumers.py \
 	tests/runtime/test_inference_benchmark_correctness.py \

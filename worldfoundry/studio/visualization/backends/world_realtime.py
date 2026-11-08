@@ -708,7 +708,8 @@ def _realtime_postprocess_stream(
         rtx_variables = [name for name in _REALTIME_RTX_VARIABLES if os.getenv(name, "").strip()]
         if rtx_variables:
             raise ValueError(
-                f"{', '.join(rtx_variables)} apply only to RTX postprocess presets; "
+                f"{', '.join(rtx_variables)} apply only to RTX postprocess presets "
+                f"({', '.join(RTX_POSTPROCESS_PRESET_NAMES)}); "
                 f"WORLDFOUNDRY_REALTIME_POSTPROCESS_PRESET selects {preset!r}."
             )
     processor = build_postprocessor(

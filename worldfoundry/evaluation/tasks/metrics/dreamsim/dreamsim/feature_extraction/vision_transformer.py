@@ -157,7 +157,11 @@ class PatchEmbed(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    """Vision Transformer"""
+    """DINO ViT backbone that maps (B, in_chans, H, W) images to their [CLS] embedding of shape (B, embed_dim).
+
+    ``forward`` returns the [CLS] token after the final norm layer. Position embeddings are interpolated for inputs
+    other than ``img_size[0]`` squared; ``num_classes`` only sizes ``head``, which ``forward`` does not apply.
+    """
 
     def __init__(
         self,

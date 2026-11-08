@@ -67,7 +67,13 @@ def causal_rope_apply(x, grid_sizes, freqs, start_frame=0):
     return torch.stack(output).type_as(x)
 
 
-def kv_cache_relative_rope_apply(q, cached_k, grid_sizes, freqs, query_start_frame):
+def kv_cache_relative_rope_apply(
+    q: torch.Tensor,
+    cached_k: torch.Tensor,
+    grid_sizes: torch.Tensor,
+    freqs: torch.Tensor,
+    query_start_frame: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Rotate ``q`` and the whole cache read with positions taken from cache slots.
 
     Cached keys are stored without RoPE. On every read, cache slot ``i`` takes

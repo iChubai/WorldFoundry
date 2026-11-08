@@ -130,7 +130,7 @@ metadata:
     filename_template: scorecard.json
   runtime:
     kind: in_tree_result_importer
-    root: worldfoundry/evaluation/tasks/execution/runners/phyground/runtime/phyground
+    root: worldfoundry/data/benchmarks/assets/phyground
     root_env: WORLDFOUNDRY_PHYGROUND_ROOT
   official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:

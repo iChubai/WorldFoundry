@@ -2,8 +2,8 @@
 
 Each public name is mapped to the submodule that defines it.  Accessing any
 exported symbol triggers a lazy ``import_module`` so that heavyweight
-sub-modules (YAML parsing, plugin discovery, etc.) are only loaded when
-actually needed.
+sub-modules (YAML parsing, pipeline imports) are only loaded when actually
+needed.
 """
 
 from __future__ import annotations
@@ -18,8 +18,6 @@ _EXPORT_MODULES: dict[str, str] = {
     "CONSUMED_INPUT_KEYS": "worldfoundry.evaluation.models.pipelines.invocation",
     "DEFAULT_PIPELINE_ALIASES_ROOT": "worldfoundry.evaluation.models.pipelines.aliases",
     "DEFAULT_PIPELINE_BINDINGS_ROOT": "worldfoundry.evaluation.models.pipelines.bindings",
-    "ENTRY_POINT_GROUP": "worldfoundry.evaluation.models.pipelines.discovery",
-    "ENV_VAR": "worldfoundry.evaluation.models.pipelines.discovery",
     "IMAGE_INPUT_KEYS": "worldfoundry.evaluation.models.pipelines.invocation",
     "PipelineAliasGroup": "worldfoundry.evaluation.models.pipelines.aliases",
     "PipelineAliasRegistry": "worldfoundry.evaluation.models.pipelines.aliases",
@@ -40,7 +38,6 @@ _EXPORT_MODULES: dict[str, str] = {
     "build_pipeline_invocation": "worldfoundry.evaluation.models.pipelines.invocation",
     "build_pipeline_runner_spec": "worldfoundry.evaluation.models.pipelines.loading",
     "call_pipeline_from_pretrained": "worldfoundry.evaluation.models.pipelines.loading",
-    "discover_pipeline_bindings": "worldfoundry.evaluation.models.pipelines.discovery",
     "failed_generation_result": "worldfoundry.evaluation.models.pipelines.results",
     "first_text": "worldfoundry.evaluation.models.pipelines.bindings",
     "generation_result_from_pipeline": "worldfoundry.evaluation.models.pipelines.results",
@@ -51,11 +48,9 @@ _EXPORT_MODULES: dict[str, str] = {
     "load_pipeline_alias_registry": "worldfoundry.evaluation.models.pipelines.aliases",
     "load_pipeline_binding": "worldfoundry.evaluation.models.pipelines.bindings",
     "load_pipeline_binding_registry": "worldfoundry.evaluation.models.pipelines.bindings",
-    "load_pipeline_binding_registry_with_plugins": "worldfoundry.evaluation.models.pipelines.bindings",
     "load_pipeline_bindings": "worldfoundry.evaluation.models.pipelines.bindings",
     "load_pipeline_from_config": "worldfoundry.evaluation.models.pipelines.loading",
     "load_pipeline_from_spec": "worldfoundry.evaluation.models.pipelines.loading",
-    "merge_pipeline_binding_plugins": "worldfoundry.evaluation.models.pipelines.bindings",
     "pipeline_metadata": "worldfoundry.evaluation.models.pipelines.results",
     "pipeline_result_error": "worldfoundry.evaluation.models.pipelines.results",
     "pipeline_result_status": "worldfoundry.evaluation.models.pipelines.results",

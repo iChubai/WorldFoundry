@@ -21,7 +21,6 @@ from worldfoundry.evaluation.tasks.execution.framework.runner_common import (
 from worldfoundry.evaluation.utils import write_jsonl
 
 BENCHMARK_ID = "phyground"
-IN_TREE_PHYGROUND_ROOT = Path(__file__).resolve().parent / "runtime" / "phyground"
 PROMPTS_JSON_REL = Path("data/prompts/phyground.json")
 PROMPTS_JSON_ALT_REL = Path("prompts/phyground.json")
 FIRST_IMAGES_REL = Path("data/first_images")
@@ -33,7 +32,6 @@ def resolve_phyground_root(explicit: Path | None = None) -> Path | None:
     return first_existing_dir(
         explicit,
         resolve_env_path("WORLDFOUNDRY_PHYGROUND_ROOT"),
-        IN_TREE_PHYGROUND_ROOT,
         bundled_benchmark_assets_root(BENCHMARK_ID),
     )
 

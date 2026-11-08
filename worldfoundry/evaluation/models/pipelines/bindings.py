@@ -278,8 +278,7 @@ def load_pipeline_binding_registry(root: str | Path | None = None) -> PipelineBi
     """Load and cache the PipelineBindingRegistry from the bindings root.
 
     The returned registry is a process-wide cached instance and is frozen —
-    ``register`` raises.  Use :func:`merge_pipeline_binding_plugins` for
-    per-call overlays.  Call :func:`clear_pipeline_binding_registry_cache`
+    ``register`` raises.  Call :func:`clear_pipeline_binding_registry_cache`
     after editing binding YAML inside a long-lived process.
     """
     root_text = "" if root is None else str(Path(root))
@@ -291,42 +290,7 @@ def clear_pipeline_binding_registry_cache() -> None:
     _cached_pipeline_binding_registry.cache_clear()
 
 
-# ── Merge & resolution ────────────────────────────────────────────────
-
-
-def merge_pipeline_binding_plugins(
-    registry: PipelineBindingRegistry,
-    plugin_bindings: Mapping[str, PipelineBinding],
-) -> PipelineBindingRegistry:
-    """Return a per-call registry with built-ins first and plugins second."""
-
-    merged = PipelineBindingRegistry(registry.list())
-    for slug, binding in sorted(plugin_bindings.items(), key=lambda item: item[0]):
-        try:
-            merged.register(binding)
-        except ValueError as exc:
-            LOGGER.warning(
-                "Skipping plugin pipeline binding %r from slug %r: %s",
-                binding.binding_id,
-                slug,
-                exc,
-            )
-            continue
-    return merged
-
-
-def load_pipeline_binding_registry_with_plugins(
-    root: str | Path | None = None,
-    *,
-    include_plugins: bool = True,
-) -> PipelineBindingRegistry:
-    """Load the PipelineBindingRegistry with both built-ins and discovered plugins."""
-    registry = load_pipeline_binding_registry(root)
-    if not include_plugins:
-        return registry
-    from .discovery import discover_pipeline_bindings
-
-    return merge_pipeline_binding_plugins(registry, discover_pipeline_bindings())
+# ── Resolution ────────────────────────────────────────────────────────
 
 
 def _default_alias_root_for_binding_root(root: str | Path | None) -> Path | None:
@@ -346,10 +310,9 @@ def resolve_pipeline_binding(
     *,
     root: str | Path | None = None,
     alias_root: str | Path | None = None,
-    include_plugins: bool = True,
 ) -> PipelineBinding:
     """Resolve a PipelineBinding by model ID, registry key, or alias."""
-    registry = load_pipeline_binding_registry_with_plugins(root, include_plugins=include_plugins)
+    registry = load_pipeline_binding_registry(root)
     try:
         return registry.get(key)
     except KeyError:
@@ -371,7 +334,6 @@ def resolve_pipeline_route(
     binding_root: str | Path | None = None,
     alias_root: str | Path | None = None,
     include_model_id_binding: bool = True,
-    include_plugins: bool = True,
 ) -> PipelineRoute | None:
     """Resolve a pipeline route from the binding catalog without importing model code.
 
@@ -394,7 +356,6 @@ def resolve_pipeline_route(
         binding_root: Root directory for YAML binding files.
         alias_root: Root directory for alias YAML files.
         include_model_id_binding: Whether to add ``model_id`` as a candidate binding key.
-        include_plugins: Whether to include discovered plugin bindings.
 
     Returns:
         A :data:`PipelineRoute` ``(pipeline_target, binding_id, source)`` triple,
@@ -429,7 +390,6 @@ def resolve_pipeline_route(
                 binding_id,
                 root=binding_root,
                 alias_root=alias_root,
-                include_plugins=include_plugins,
             )
         except KeyError:
             continue
@@ -455,9 +415,7 @@ __all__ = [
     "first_text",
     "load_pipeline_binding",
     "load_pipeline_binding_registry",
-    "load_pipeline_binding_registry_with_plugins",
     "load_pipeline_bindings",
-    "merge_pipeline_binding_plugins",
     "resolve_pipeline_binding",
     "resolve_pipeline_route",
     "runtime_profile_execution_metadata",

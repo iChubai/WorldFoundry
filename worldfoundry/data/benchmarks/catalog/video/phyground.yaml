@@ -126,7 +126,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_result_importer
-    root: worldfoundry/evaluation/tasks/execution/runners/phyground/runtime/phyground
+    root: worldfoundry/data/benchmarks/assets/phyground
     root_env: WORLDFOUNDRY_PHYGROUND_ROOT
     results_path_env: WORLDFOUNDRY_PHYGROUND_RESULTS_PATH
     generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR

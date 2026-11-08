@@ -11,15 +11,15 @@ tracks, captions, embeddings).
 | --- | --- |
 | `general_perception/` | Feature backbones and embeddings: DINO, DINOv2, DINOv3, OpenAI CLIP, OpenCLIP, UniCeption, Qwen3-VL entity features |
 | `detection/` | Open-vocabulary detection: Grounding DINO, YOLO-World |
-| `segment/` | SAM v1, SAM 2, SAM 3, EfficientSAM, MobileSAM, RepViT-SAM, Grounded-SAM, scene segmentation |
+| `segment/` | SAM v1, SAM 2, SAM 3, MobileSAM, RepViT-SAM, Grounded-SAM, scene segmentation |
 | `tracking/` | CoTracker, DOT, AOT, Track-Anything |
 | `optical_flow/` | RAFT, SEA-RAFT, FlowFormer++ |
 | `video_quality/` | DOVER, FAST-VQA, LPIPS, DreamSim, HPSv3, TransNetV2, FETV StyleGAN-V |
 | `video_text/` | Video–text alignment: ViCLIP, VQAScore, BLIP-2 features, FETV BLIP, OpenS2V-Nexus |
 | `captioning/` | Tag2Text, GRiT |
-| `action_recognition/` | VideoMAE (MMAction), UMT, latent-action models |
+| `action_recognition/` | UMT, latent-action models |
 | `frame_interpolation/` | AMT, VFIMamba |
-| `face/` | ArcFace, DeepFace, RetinaFace |
+| `face/` | ArcFace, RetinaFace |
 | `human_anatomy/` | ViT-based body detector |
 | `safety/` | NudeNet |
 | `visualization/` | Colormaps and rendering helpers for perception outputs |

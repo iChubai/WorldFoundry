@@ -11,7 +11,7 @@ Each submodule is a checkpoint-shaped variant.  Typical additions:
   :mod:`.lingbot`, :mod:`.magic_world`, :mod:`.moverse`, :mod:`.dreamx_world`.
 - Linear attention / TeaCache-friendly processors: :mod:`.linear`,
   :mod:`.linear_attention`, :mod:`.sage_attention`.
-- Other recipes: :mod:`.s2v`, :mod:`.pusa`, :mod:`.sama`, :mod:`.anyflow`,
+- Other recipes: :mod:`.s2v`, :mod:`.pusa`, :mod:`.sama`,
   :mod:`.versecrafter`, :mod:`.video_x_fun`.
 
 Import the concrete class from the submodule; this package re-exports

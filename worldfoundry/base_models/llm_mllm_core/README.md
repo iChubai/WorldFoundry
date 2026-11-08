@@ -17,7 +17,6 @@ All models live under `mllm/`:
 | `mllm/videophy2_autoeval/`, `mllm/videocon_physics/` | Physical-commonsense judges (VideoPhy-2 AutoEval, VideoCon-Physics) |
 | `mllm/instance_anomaly_detector/` | Instance-level anomaly detection for generated videos |
 | `mllm/open_flamingo/` | OpenFlamingo backbone (used by RoboFlamingo) |
-| `mllm/otter/` | Otter image/video models (VideoScore evaluator baselines) |
 | `mllm/modelscope_swift/` | ModelScope Swift inference framework (used by the anomaly detector) |
 
 ## Usage

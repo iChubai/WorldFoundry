@@ -472,13 +472,9 @@ and runtime profile must name its Python executable or setup command, assets,
 and verified scope. If no reproducible environment recipe exists, the affected
 metric remains blocked rather than being reported through a fallback score.
 
-The in-tree code keeps reusable foundation models under `worldfoundry/base_models`.
-These components are available for future full-suite work; their presence does
-not mean the bounded EvalCrafter runner currently executes them:
-
-- **DeepFace runtime** (`worldfoundry/base_models/perception_core/face/deepface`) — Available for future celebrity identity integration; the supported CLIP subset does not execute it.
-- **DOVER runtime** (`worldfoundry/base_models/perception_core/video_quality/dover`) — Available for future video-quality integration; the supported CLIP subset does not execute it.
-- **VideoMAE action recipe** (`worldfoundry/base_models/perception_core/action_recognition/videomae_mmaction`) — Only the EvalCrafter-used VideoMAEv2 config and Kinetics-400 label map are vendored. MMAction2 is installed as an environment dependency, not copied as framework source.
+The in-tree DOVER runtime (`worldfoundry/base_models/perception_core/video_quality/dover`)
+is available for future EvalCrafter video-quality integration; the supported CLIP
+subset does not execute it.
 
 For the supported subset, stage CLIP ViT-B/32 under the standard checkpoint
 root or set its explicit override:

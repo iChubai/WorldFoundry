@@ -141,6 +141,14 @@ SELF_FORCING_WAN21_T2V_1P3B_CONFIG = {
     "eps": 1e-6,
 }
 
+# Approximate long-rollout preset, after FlashDreams' Self-Forcing
+# ``sink5-window7-rerope`` pipeline: the first five latent frames stay in the
+# cache as a static sink, a rolling window holds the seven newest (the recent
+# four plus the current block of three), and RoPE positions are cache slots.
+SELF_FORCING_LONG_ROLLOUT_KV_WINDOW = "sink5-window7-rerope"
+SELF_FORCING_LONG_ROLLOUT_SINK_FRAMES = 5
+SELF_FORCING_LONG_ROLLOUT_WINDOW_FRAMES = 7
+
 _WAN_DENOISER_OPTION_KEYS = frozenset(
     {
         "accelerations",
@@ -2431,6 +2439,12 @@ class SelfForcingWanDenoiser:
     calendar, float64 arithmetic, result in the network dtype. Cache commits
     use the same call; the network appends the block keys and values to the
     KV cache.
+
+    With ``kv_window="sink5-window7-rerope"`` the cache is a static sink of
+    five latent frames plus a rolling window of seven, and the network must be
+    built with the matching ``local_attn_size``, ``sink_size`` and
+    ``kv_cache_relative_rope``. Rollouts are then unbounded and approximate:
+    they match the global cache until the window first rolls.
     """
 
     variant = "self-forcing-wan2.1"
@@ -2443,15 +2457,26 @@ class SelfForcingWanDenoiser:
         cache_frames: int = 21,
         timestep_shift: float = 5.0,
         compute_dtype: torch.dtype = torch.bfloat16,
+        kv_window: str | None = None,
     ) -> None:
-        """Wrap ``model`` with ``block_size``-frame blocks over a ``cache_frames``-frame global cache."""
+        """Wrap ``model`` with ``block_size``-frame blocks over a ``cache_frames``-frame global cache.
+
+        ``kv_window`` selects the rolling long-rollout cache instead; ``cache_frames``
+        then does not apply.
+        """
         if min(int(block_size), int(cache_frames)) <= 0:
             raise ValueError("Self-Forcing block_size and cache_frames must be positive")
         if int(cache_frames) % int(block_size):
             raise ValueError("Self-Forcing cache_frames must be divisible by block_size")
+        if kv_window not in (None, SELF_FORCING_LONG_ROLLOUT_KV_WINDOW):
+            raise ValueError(
+                f"unsupported Self-Forcing kv_window {kv_window!r}; "
+                f"expected {SELF_FORCING_LONG_ROLLOUT_KV_WINDOW!r}"
+            )
         self.model = model
         self.block_size = int(block_size)
         self.cache_frames = int(cache_frames)
+        self.kv_window = kv_window
         self.compute_dtype = compute_dtype
         self.training_schedule = InferenceFlowMatchScheduler(
             num_inference_steps=1000,
@@ -2470,25 +2495,42 @@ class SelfForcingWanDenoiser:
         device: torch.device,
         dtype: torch.dtype,
     ) -> dict[str, Any]:
-        """Allocate the official global-attention cache of ``cache_frames`` latent frames."""
+        """Allocate the official global-attention cache of ``cache_frames`` latent frames.
+
+        The long-rollout ``kv_window`` allocates its sink-plus-window cache instead,
+        whatever the rollout length.
+        """
 
         if int(n_views) != 1:
             raise ValueError("Self-Forcing supports one temporal view per rollout")
-        if int(latent_frames_per_view) > self.cache_frames:
+        if self.kv_window is None and int(latent_frames_per_view) > self.cache_frames:
             raise ValueError(
                 f"Self-Forcing attends globally over at most {self.cache_frames} latent frames; "
-                f"got {latent_frames_per_view}"
+                f"got {latent_frames_per_view}. Longer rollouts need "
+                f"kv_window={SELF_FORCING_LONG_ROLLOUT_KV_WINDOW!r}"
             )
         num_heads = int(getattr(self.model, "num_heads"))
+        if self.kv_window is None:
+            cache_frames = self.cache_frames
+            window = {}
+        else:
+            # The rolling cache bounds memory, not the rollout: its logical
+            # length is its capacity.
+            cache_frames = SELF_FORCING_LONG_ROLLOUT_SINK_FRAMES + SELF_FORCING_LONG_ROLLOUT_WINDOW_FRAMES
+            window = {
+                "local_attention_frames": cache_frames,
+                "sink_frames": SELF_FORCING_LONG_ROLLOUT_SINK_FRAMES,
+            }
         return allocate_causal_video_cache(
             CausalVideoCacheGeometry(
                 batch_size=batch_size,
-                total_frames=self.cache_frames,
+                total_frames=cache_frames,
                 frame_tokens=frame_sequence_length,
                 frames_per_block=self.block_size,
                 num_layers=int(getattr(self.model, "num_layers")),
                 num_heads=num_heads,
                 head_dim=int(getattr(self.model, "dim")) // num_heads,
+                **window,
             ),
             device=device,
             dtype=dtype,
@@ -2534,7 +2576,11 @@ class SelfForcingWanDenoiser:
 def build_self_forcing_wan21_denoiser(
     context: ComponentBuildContext,
 ) -> SelfForcingWanDenoiser:
-    """Load a released Self-Forcing generator checkpoint strictly onto the causal Wan graph."""
+    """Load a released Self-Forcing generator checkpoint strictly onto the causal Wan graph.
+
+    The ``kv_window`` runtime option ``"sink5-window7-rerope"`` builds the graph
+    with the rolling sink-plus-window cache and cache-relative RoPE.
+    """
 
     from ..networks.wan.variants.forcing.self_forcing import CausalWanModel
 
@@ -2543,10 +2589,22 @@ def build_self_forcing_wan21_denoiser(
     if unknown:
         raise ValueError(f"unsupported Self-Forcing denoiser options: {unknown}")
     block_size = int(options.get("block_size", 3))
+    kv_window = context.policy.options.get("kv_window")
+    config = dict(SELF_FORCING_WAN21_T2V_1P3B_CONFIG)
+    if kv_window == SELF_FORCING_LONG_ROLLOUT_KV_WINDOW:
+        config.update(
+            local_attn_size=SELF_FORCING_LONG_ROLLOUT_SINK_FRAMES + SELF_FORCING_LONG_ROLLOUT_WINDOW_FRAMES,
+            sink_size=SELF_FORCING_LONG_ROLLOUT_SINK_FRAMES,
+            kv_cache_relative_rope=True,
+        )
+    elif kv_window is not None:
+        raise ValueError(
+            f"unsupported Self-Forcing kv_window {kv_window!r}; expected {SELF_FORCING_LONG_ROLLOUT_KV_WINDOW!r}"
+        )
     model = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=CausalWanModel,
-            config=SELF_FORCING_WAN21_T2V_1P3B_CONFIG,
+            config=config,
             state_dict_converter=convert_self_forcing_generator_state_dict,
             layer_container="blocks",
             compile_regions=("blocks",),
@@ -2561,6 +2619,7 @@ def build_self_forcing_wan21_denoiser(
         cache_frames=int(options.get("cache_frames", 21)),
         timestep_shift=float(options.get("timestep_shift", 5.0)),
         compute_dtype=context.policy.dtype,
+        kv_window=kv_window,
     )
 
 
